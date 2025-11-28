@@ -64,9 +64,14 @@ public:
     bool Set_ConnectionTimerUp(unsigned char up_cnt);
 
     void Set_Dout(unsigned int p_no, int value);
+    int  Get_Dout(unsigned int p_no);
     void Set_Aout(unsigned int p_no, float value);
 
     void Set_Din_Filter_Count(unsigned int p_no, int t_count);
+
+    void Set_Dout_Pulse(unsigned int p_no, unsigned char direction, float t1, float t2, float t3);
+    bool Get_Dout_Pulse_State(unsigned int p_no);
+    void Update_Dout_Pulse(float dt);
 
     CAN_MSG CmdRequestVersion();
     CAN_MSG CmdIOControl();
@@ -84,5 +89,12 @@ private:
     CAN_MSG                 current_output_state;
 
     rb_math::SignalFilter   sig_filter_din[NO_OF_DIN];
+
+    bool                    pulse_Dout_OnOff[NO_OF_DOUT];
+    unsigned char           pulse_Dout_Direction[NO_OF_DOUT];
+    float                   pulse_Dout_Timer[NO_OF_DOUT];
+    float                   pulse_Dout_T1[NO_OF_DOUT];
+    float                   pulse_Dout_T2[NO_OF_DOUT];
+    float                   pulse_Dout_T3[NO_OF_DOUT];
 };
 #endif // SIDE_IO_H

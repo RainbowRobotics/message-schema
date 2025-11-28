@@ -161,6 +161,24 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("call_side_dout_toggle", {
+                    if (a.size() == 1){
+                        return {rb_system::Set_Box_Digital_Output_Toggle(std::stoi(a[0])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_side_dout_bitcombination", {
+                    if (a.size() == 4){
+                        return {rb_system::Set_Box_Digital_Output_Bit(std::stoi(a[0]), std::stoi(a[1]), std::stoi(a[2]), std::stoi(a[3])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_side_dout_pulse", {
+                    if (a.size() == 6){
+                        return {rb_system::Set_Box_Digital_Output_Pulse(std::stoi(a[0]), std::stoi(a[1]), std::stoi(a[2]), std::stof(a[3]), std::stof(a[4]), std::stof(a[5])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Flage
                 // -----------------------------------------------------------------------

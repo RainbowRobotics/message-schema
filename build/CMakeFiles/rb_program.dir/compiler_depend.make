@@ -8369,6 +8369,7 @@ CMakeFiles/rb_program.dir/rb_ipc/ipc.cpp.o: /root/Desktop/test_project/rb_ipc/ip
   /root/Desktop/test_project/rb_ipc/comm_generated/func_config_generated.h \
   /root/Desktop/test_project/rb_ipc/comm_generated/func_arm_generated.h \
   /root/Desktop/test_project/rb_ipc/comm_generated/func_box_generated.h \
+  /root/Desktop/test_project/rb_ipc/comm_generated/func_flage_generated.h \
   /root/Desktop/test_project/rb_ipc/comm_generated/func_set_generated.h \
   /root/Desktop/test_project/rb_ipc/comm_generated/func_get_generated.h \
   /root/Desktop/test_project/rb_core/system.h \
@@ -17817,6 +17818,8 @@ CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: /root/Desk
 /usr/include/x86_64-linux-gnu/bits/ss_flags.h:
 
 /usr/include/x86_64-linux-gnu/sys/syscall.h:
+
+/root/Desktop/test_project/rb_ipc/comm_generated/func_flage_generated.h:
 
 /usr/xenomai/include/boilerplate/lock.h:
 

@@ -1,0 +1,509 @@
+W 09:22:53.472   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:22:53.498   [MOTION]       Motion Mode Changed: 0->2
+I 09:22:55.950   [MOTION]       Motion Mode Changed: 2->0
+W 09:22:55.951   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:22:56.097   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:23:01.129   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:23:01.354   [MOTION]       Motion Mode Changed: 0->2
+I 09:23:01.384   [MOTION]       Motion Mode Changed: 2->0
+W 09:23:01.384   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:23:01.555   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:29:32.065   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:29:32.226   [MOTION]       Motion Mode Changed: 0->2
+I 09:29:32.234   [MOTION]       Motion Mode Changed: 2->0
+W 09:29:32.234   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:29:32.433   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:34:45.308   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:34:45.443   [MOTION]       Motion Mode Changed: 0->2
+I 09:34:45.448   [MOTION]       Motion Mode Changed: 2->0
+W 09:34:45.448   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:34:45.649   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:35:32.787   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:35:32.859   [MOTION]       Motion Mode Changed: 0->2
+I 09:35:32.862   [MOTION]       Motion Mode Changed: 2->0
+W 09:35:32.862   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:35:32.954   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:36:04.998   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:36:05.067   [MOTION]       Motion Mode Changed: 0->2
+I 09:36:05.070   [MOTION]       Motion Mode Changed: 2->0
+W 09:36:05.070   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:36:05.233   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:37:01.673   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:37:01.819   [MOTION]       Motion Mode Changed: 0->2
+I 09:37:01.822   [MOTION]       Motion Mode Changed: 2->0
+W 09:37:01.822   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:37:02.183   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:44:54.354   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:44:54.520   [MOTION]       Motion Mode Changed: 0->2
+I 09:44:54.522   [MOTION]       Motion Mode Changed: 2->0
+W 09:44:54.522   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:44:54.714   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:46:35.128   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:46:35.194   [MOTION]       Motion Mode Changed: 0->2
+I 09:46:35.196   [MOTION]       Motion Mode Changed: 2->0
+W 09:46:35.196   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:46:35.348   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:47:35.607   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:47:45.114   [MOTION]       Motion Mode Changed: 0->5
+I 09:47:45.118   [MOTION]       Motion-Time Done
+I 09:47:45.118   [MOTION]       Motion Mode Changed: 5->0
+W 09:49:03.721   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:49:03.766   [MOTION]       Motion Mode Changed: 0->2
+I 09:49:03.768   [MOTION]       Motion Mode Changed: 2->0
+W 09:49:03.768   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:49:03.855   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 09:52:42.331   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 09:52:42.634   [MOTION]       Motion Mode Changed: 0->2
+I 09:52:42.638   [MOTION]       Motion Mode Changed: 2->0
+W 09:52:42.638   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 09:52:42.827   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:06:24.463   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:06:24.649   [MOTION]       Motion Mode Changed: 0->2
+I 10:06:24.652   [MOTION]       Motion Mode Changed: 2->0
+W 10:06:24.652   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:06:24.895   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:10:37.333   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:10:37.507   [MOTION]       Motion Mode Changed: 0->2
+I 10:10:37.510   [MOTION]       Motion Mode Changed: 2->0
+W 10:10:37.510   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:10:37.631   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:29:07.686   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:29:07.725   [MOTION]       Motion Mode Changed: 0->2
+I 10:29:07.728   [MOTION]       Motion Mode Changed: 2->0
+W 10:29:07.728   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:29:07.810   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:29:15.187   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:29:15.497   [MOTION]       Motion Mode Changed: 0->2
+I 10:29:15.500   [MOTION]       Motion Mode Changed: 2->0
+W 10:29:15.500   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:29:15.721   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:29:20.905   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:29:20.975   [MOTION]       Motion Mode Changed: 0->2
+I 10:29:20.978   [MOTION]       Motion Mode Changed: 2->0
+W 10:29:20.978   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:29:21.065   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:29:27.330   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:29:27.359   [MOTION]       Motion Mode Changed: 0->2
+I 10:29:27.362   [MOTION]       Motion Mode Changed: 2->0
+W 10:29:27.362   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:29:27.447   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:29:40.525   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:29:40.668   [MOTION]       Motion Mode Changed: 0->2
+I 10:29:40.670   [MOTION]       Motion Mode Changed: 2->0
+W 10:29:40.670   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:29:40.748   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:30:03.740   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:30:03.783   [MOTION]       Motion Mode Changed: 0->2
+I 10:30:03.786   [MOTION]       Motion Mode Changed: 2->0
+W 10:30:03.786   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:30:03.874   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:33:30.462   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:33:30.616   [MOTION]       Motion Mode Changed: 0->2
+I 10:33:30.618   [MOTION]       Motion Mode Changed: 2->0
+W 10:33:30.618   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:33:30.830   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:33:41.548   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:33:41.589   [MOTION]       Motion Mode Changed: 0->2
+I 10:33:41.592   [MOTION]       Motion Mode Changed: 2->0
+W 10:33:41.592   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:33:41.669   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:33:56.455   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:33:56.912   [MOTION]       Motion Mode Changed: 0->2
+I 10:33:56.914   [MOTION]       Motion Mode Changed: 2->0
+W 10:33:56.914   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:33:57.135   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:34:49.944   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:34:50.069   [MOTION]       Motion Mode Changed: 0->2
+I 10:34:50.072   [MOTION]       Motion Mode Changed: 2->0
+W 10:34:50.072   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:34:50.294   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:35:07.356   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:35:07.405   [MOTION]       Motion Mode Changed: 0->2
+I 10:35:07.408   [MOTION]       Motion Mode Changed: 2->0
+W 10:35:07.408   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:35:07.492   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:35:51.337   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:35:51.378   [MOTION]       Motion Mode Changed: 0->2
+I 10:35:51.380   [MOTION]       Motion Mode Changed: 2->0
+W 10:35:51.380   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:35:51.460   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:36:08.960   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:36:09.127   [MOTION]       Motion Mode Changed: 0->2
+I 10:36:09.130   [MOTION]       Motion Mode Changed: 2->0
+W 10:36:09.130   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:36:09.334   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:36:59.748   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:36:59.769   [MOTION]       Motion Mode Changed: 0->2
+I 10:36:59.772   [MOTION]       Motion Mode Changed: 2->0
+W 10:36:59.772   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:36:59.860   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+M 10:37:01.804   [SYSTEM]       MSG:0/MSG_OK
+W 10:37:18.406   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:37:18.453   [MOTION]       Motion Mode Changed: 0->2
+I 10:37:18.456   [MOTION]       Motion Mode Changed: 2->0
+W 10:37:18.456   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:37:18.534   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:37:32.914   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:37:33.081   [MOTION]       Motion Mode Changed: 0->2
+I 10:37:33.084   [MOTION]       Motion Mode Changed: 2->0
+W 10:37:33.084   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:37:33.235   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:37:42.489   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:37:42.556   [MOTION]       Motion Mode Changed: 0->2
+I 10:37:42.558   [MOTION]       Motion Mode Changed: 2->0
+W 10:37:42.558   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:37:42.637   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:38:43.460   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:38:43.495   [MOTION]       Motion Mode Changed: 0->2
+I 10:38:43.498   [MOTION]       Motion Mode Changed: 2->0
+W 10:38:43.498   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:38:43.578   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:40:50.940   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:40:51.176   [MOTION]       Motion Mode Changed: 0->2
+I 10:40:51.178   [MOTION]       Motion Mode Changed: 2->0
+W 10:40:51.178   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:40:51.436   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:40:56.233   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:40:56.284   [MOTION]       Motion Mode Changed: 0->2
+I 10:40:56.286   [MOTION]       Motion Mode Changed: 2->0
+W 10:40:56.286   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:40:56.376   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:41:09.053   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:41:09.344   [MOTION]       Motion Mode Changed: 0->2
+I 10:41:09.346   [MOTION]       Motion Mode Changed: 2->0
+W 10:41:09.346   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:41:09.422   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:41:17.642   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:41:17.745   [MOTION]       Motion Mode Changed: 0->2
+I 10:41:17.748   [MOTION]       Motion Mode Changed: 2->0
+W 10:41:17.748   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:41:17.986   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:41:35.312   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:41:35.377   [MOTION]       Motion Mode Changed: 0->2
+I 10:41:35.380   [MOTION]       Motion Mode Changed: 2->0
+W 10:41:35.380   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:41:35.446   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:44:04.913   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:44:05.063   [MOTION]       Motion Mode Changed: 0->2
+I 10:44:05.066   [MOTION]       Motion Mode Changed: 2->0
+W 10:44:05.066   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:44:05.224   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:44:10.037   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:44:10.088   [MOTION]       Motion Mode Changed: 0->2
+I 10:44:10.090   [MOTION]       Motion Mode Changed: 2->0
+W 10:44:10.090   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:44:10.171   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:44:50.001   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:44:50.064   [MOTION]       Motion Mode Changed: 0->2
+I 10:44:50.066   [MOTION]       Motion Mode Changed: 2->0
+W 10:44:50.066   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:44:50.152   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:44:54.774   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:44:54.829   [MOTION]       Motion Mode Changed: 0->2
+I 10:44:54.832   [MOTION]       Motion Mode Changed: 2->0
+W 10:44:54.832   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:44:54.913   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:45:51.608   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:45:51.665   [MOTION]       Motion Mode Changed: 0->2
+I 10:45:51.668   [MOTION]       Motion Mode Changed: 2->0
+W 10:45:51.668   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:45:51.746   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:46:29.883   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:46:29.923   [MOTION]       Motion Mode Changed: 0->2
+I 10:46:29.926   [MOTION]       Motion Mode Changed: 2->0
+W 10:46:29.926   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:46:30.010   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:49:43.719   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:49:43.889   [MOTION]       Motion Mode Changed: 0->2
+I 10:49:43.892   [MOTION]       Motion Mode Changed: 2->0
+W 10:49:43.892   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:49:44.089   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:49:48.486   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:49:48.519   [MOTION]       Motion Mode Changed: 0->2
+I 10:49:48.522   [MOTION]       Motion Mode Changed: 2->0
+W 10:49:48.522   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:49:48.610   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:49:57.778   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:49:57.835   [MOTION]       Motion Mode Changed: 0->2
+I 10:49:57.838   [MOTION]       Motion Mode Changed: 2->0
+W 10:49:57.838   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:49:57.933   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:50:04.320   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:50:04.633   [MOTION]       Motion Mode Changed: 0->2
+I 10:50:04.636   [MOTION]       Motion Mode Changed: 2->0
+W 10:50:04.636   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:50:04.882   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:51:50.126   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:51:50.190   [MOTION]       Motion Mode Changed: 0->2
+I 10:51:50.192   [MOTION]       Motion Mode Changed: 2->0
+W 10:51:50.192   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:51:50.282   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+M 10:51:57.493   [SYSTEM]       MSG:0/MSG_OK
+W 10:52:04.385   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:52:04.583   [MOTION]       Motion Mode Changed: 0->2
+I 10:52:04.586   [MOTION]       Motion Mode Changed: 2->0
+W 10:52:04.586   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:52:04.651   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+M 10:52:06.150   [SYSTEM]       MSG:0/MSG_OK
+W 10:52:12.595   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:52:12.653   [MOTION]       Motion Mode Changed: 0->2
+I 10:52:12.656   [MOTION]       Motion Mode Changed: 2->0
+W 10:52:12.656   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:52:12.745   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 10:53:49.229   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 10:53:49.295   [MOTION]       Motion Mode Changed: 0->2
+I 10:53:49.298   [MOTION]       Motion Mode Changed: 2->0
+W 10:53:49.298   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 10:53:49.418   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+M 10:53:52.315   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:02.076   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:08.475   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:14.898   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:21.680   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:28.799   [SYSTEM]       MSG:0/MSG_OK
+M 10:54:36.803   [SYSTEM]       MSG:0/MSG_OK
+W 10:55:00.551   [SYSTEM]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+W 10:55:42.771   [SYSTEM]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+W 11:03:38.035   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:03:38.067   [MOTION]       Motion Mode Changed: 0->2
+I 11:03:38.070   [MOTION]       Motion Mode Changed: 2->0
+W 11:03:38.070   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:03:38.159   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:03:42.817   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:03:42.881   [MOTION]       Motion Mode Changed: 0->2
+I 11:03:42.884   [MOTION]       Motion Mode Changed: 2->0
+W 11:03:42.884   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:03:42.973   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:03:51.245   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:03:51.376   [MOTION]       Motion Mode Changed: 0->2
+I 11:03:51.378   [MOTION]       Motion Mode Changed: 2->0
+W 11:03:51.378   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:03:51.636   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:04:48.861   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:04:49.034   [MOTION]       Motion Mode Changed: 0->2
+I 11:04:49.036   [MOTION]       Motion Mode Changed: 2->0
+W 11:04:49.036   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:04:49.367   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:04:54.312   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:04:54.384   [MOTION]       Motion Mode Changed: 0->2
+I 11:04:54.386   [MOTION]       Motion Mode Changed: 2->0
+W 11:04:54.386   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:04:54.461   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:04:59.120   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:04:59.175   [MOTION]       Motion Mode Changed: 0->2
+I 11:04:59.178   [MOTION]       Motion Mode Changed: 2->0
+W 11:04:59.178   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:04:59.259   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:05:04.849   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:05:05.026   [MOTION]       Motion Mode Changed: 0->2
+I 11:05:05.028   [MOTION]       Motion Mode Changed: 2->0
+W 11:05:05.028   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:05:05.219   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:05:09.951   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:05:10.421   [MOTION]       Motion Mode Changed: 0->2
+I 11:05:10.424   [MOTION]       Motion Mode Changed: 2->0
+W 11:05:10.424   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:05:10.858   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:07:57.182   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:07:57.227   [MOTION]       Motion Mode Changed: 0->2
+I 11:07:57.230   [MOTION]       Motion Mode Changed: 2->0
+W 11:07:57.230   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:07:57.322   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:01.870   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:01.987   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:01.990   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:01.990   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:02.204   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:07.017   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:07.218   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:07.220   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:07.226   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:07.386   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:12.327   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:12.396   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:12.398   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:12.398   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:12.483   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:17.130   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:17.159   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:17.162   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:17.162   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:17.261   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:22.768   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:22.922   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:22.924   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:22.924   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:23.041   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:28.472   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:28.506   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:28.508   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:28.509   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:28.596   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:35.073   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:35.115   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:35.118   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:35.118   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:35.325   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:08:42.500   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:08:42.581   [MOTION]       Motion Mode Changed: 0->2
+I 11:08:42.584   [MOTION]       Motion Mode Changed: 2->0
+W 11:08:42.584   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:08:42.750   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:09:10.129   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:09:10.195   [MOTION]       Motion Mode Changed: 0->2
+I 11:09:10.198   [MOTION]       Motion Mode Changed: 2->0
+W 11:09:10.198   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:09:10.289   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:09:40.308   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:09:40.627   [MOTION]       Motion Mode Changed: 0->2
+I 11:09:40.630   [MOTION]       Motion Mode Changed: 2->0
+W 11:09:40.630   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:09:40.821   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:14:01.236   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:14:01.311   [MOTION]       Motion Mode Changed: 0->2
+I 11:14:01.314   [MOTION]       Motion Mode Changed: 2->0
+W 11:14:01.314   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:14:01.391   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:16:53.628   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:16:53.672   [MOTION]       Motion Mode Changed: 0->2
+I 11:16:53.674   [MOTION]       Motion Mode Changed: 2->0
+W 11:16:53.674   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:16:53.746   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:17:01.177   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:17:01.340   [MOTION]       Motion Mode Changed: 0->2
+I 11:17:01.342   [MOTION]       Motion Mode Changed: 2->0
+W 11:17:01.342   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:17:01.539   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:17:57.779   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:17:58.066   [MOTION]       Motion Mode Changed: 0->2
+I 11:17:58.070   [MOTION]       Motion Mode Changed: 2->0
+W 11:17:58.070   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:17:58.174   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:34:51.834   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:34:51.883   [MOTION]       Motion Mode Changed: 0->2
+I 11:34:51.886   [MOTION]       Motion Mode Changed: 2->0
+W 11:34:51.886   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:34:51.979   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 11:35:42.210   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 11:35:52.362   [MOTION]       Motion Mode Changed: 0->2
+I 11:35:52.364   [MOTION]       Motion Mode Changed: 2->0
+W 11:35:52.364   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 11:35:52.466   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+W 17:26:52.021   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 17:26:52.022   [SYSTEM]       Servo Call: 1/1
+I 17:26:52.022   [SYSTEM]       ServoState: 0
+W 17:26:52.022   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+W 17:26:58.904   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 17:26:58.905   [SYSTEM]       Servo Call: 1/1
+I 17:26:58.905   [SYSTEM]       ServoState: 0
+W 17:26:58.905   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+W 17:36:21.053   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 17:36:21.101   [MOTION]       Motion Mode Changed: 0->2
+I 17:36:21.104   [MOTION]       Motion Mode Changed: 2->0
+W 17:36:21.104   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+I 17:36:21.149   [MOTION]       Motion Mode Changed: 0->2
+I 17:36:21.152   [MOTION]       Motion Mode Changed: 2->0
+W 17:36:21.152   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+I 17:36:21.199   [MOTION]       Motion Mode Changed: 0->2
+I 17:36:21.202   [MOTION]       Motion Mode Changed: 2->0
+W 17:36:21.202   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+W 17:36:21.294   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 17:36:51.876   [MOTION]       Motion Mode Changed: 0->1
+I 17:36:53.312   [MOTION]       Motion-Time Done
+I 17:36:53.312   [MOTION]       Motion Mode Changed: 1->0
+I 17:37:04.424   [MOTION]       Motion Mode Changed: 0->1
+I 17:37:04.426   [MOTION]       Motion-Time Done
+I 17:37:04.426   [MOTION]       Motion Mode Changed: 1->0
+I 17:37:16.718   [MOTION]       Motion Mode Changed: 0->1
+I 17:37:16.720   [MOTION]       Motion-Time Done
+I 17:37:16.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:37:21.160   [MOTION]       Motion Mode Changed: 0->1
+I 17:37:21.162   [MOTION]       Motion-Time Done
+I 17:37:21.162   [MOTION]       Motion Mode Changed: 1->0
+I 17:37:26.635   [MOTION]       Motion Mode Changed: 0->1
+I 17:37:26.638   [MOTION]       Motion-Time Done
+I 17:37:26.638   [MOTION]       Motion Mode Changed: 1->0
+I 17:38:06.288   [MAIN]         System Version: 1.0.0
+I 17:38:07.298   [LAN2CAN]      Succeed to create socket
+I 17:38:07.801   [DAEMON]       Succeed to start read thread
+I 17:38:07.801   [DAEMON]       Succeed to start real-time thread
+I 17:38:11.312   [MAIN]         SYSTEM STARTING
+I 17:38:20.002   [MOTION]       Motion Mode Changed: 0->1
+I 17:38:20.005   [MOTION]       Motion-Time Done
+I 17:38:20.005   [MOTION]       Motion Mode Changed: 1->0
+I 17:38:29.485   [MOTION]       Motion Mode Changed: 0->1
+I 17:38:29.489   [MOTION]       Motion-Time Done
+I 17:38:29.489   [MOTION]       Motion Mode Changed: 1->0
+I 17:38:36.652   [MOTION]       Motion Mode Changed: 0->1
+I 17:38:36.655   [MOTION]       Motion-Time Done
+I 17:38:36.655   [MOTION]       Motion Mode Changed: 1->0
+I 17:38:48.254   [MOTION]       Motion Mode Changed: 0->1
+I 17:38:48.257   [MOTION]       Motion-Time Done
+I 17:38:48.257   [MOTION]       Motion Mode Changed: 1->0
+I 17:38:53.602   [MOTION]       Motion Mode Changed: 0->1
+I 17:38:53.605   [MOTION]       Motion-Time Done
+I 17:38:53.605   [MOTION]       Motion Mode Changed: 1->0
+I 17:39:09.142   [MAIN]         System Version: 1.0.0
+I 17:39:10.153   [LAN2CAN]      Succeed to create socket
+I 17:39:10.656   [DAEMON]       Succeed to start read thread
+I 17:39:10.656   [DAEMON]       Succeed to start real-time thread
+I 17:39:14.167   [MAIN]         SYSTEM STARTING
+I 17:40:13.057   [MAIN]         System Version: 1.0.0
+I 17:40:14.075   [LAN2CAN]      Succeed to create socket
+I 17:40:14.578   [DAEMON]       Succeed to start read thread
+I 17:40:14.578   [DAEMON]       Succeed to start real-time thread
+I 17:40:18.090   [MAIN]         SYSTEM STARTING
+I 17:41:25.344   [MAIN]         System Version: 1.0.0
+I 17:41:26.355   [LAN2CAN]      Succeed to create socket
+I 17:41:26.858   [DAEMON]       Succeed to start read thread
+I 17:41:26.858   [DAEMON]       Succeed to start real-time thread
+I 17:41:30.369   [MAIN]         SYSTEM STARTING
+I 17:43:29.247   [MOTION]       Motion Mode Changed: 0->1
+W 17:43:29.279   [MOTION]       MSG:300/MSG_MOVE_COMMAND_ERR
+I 17:43:31.248   [MOTION]       Motion-Time Done
+I 17:43:31.248   [MOTION]       Motion Mode Changed: 1->0
+I 17:43:37.994   [MOTION]       Motion Mode Changed: 0->1
+I 17:43:39.996   [MOTION]       Motion-Time Done
+I 17:43:39.996   [MOTION]       Motion Mode Changed: 1->0
+I 17:44:01.682   [MOTION]       Motion Mode Changed: 0->2
+I 17:44:01.826   [MOTION]       Motion-Time Done
+I 17:44:01.826   [MOTION]       Motion Mode Changed: 2->0
+I 17:44:07.134   [MOTION]       Motion Mode Changed: 0->2
+I 17:44:07.314   [MOTION]       Motion-Time Done
+I 17:44:07.314   [MOTION]       Motion Mode Changed: 2->0
+I 17:44:09.130   [MOTION]       Motion Mode Changed: 0->2
+I 17:44:09.826   [MOTION]       Motion-Time Done
+I 17:44:09.826   [MOTION]       Motion Mode Changed: 2->0
+I 17:44:11.546   [MOTION]       Motion Mode Changed: 0->2
+I 17:44:11.652   [MOTION]       Motion-Time Done
+I 17:44:11.652   [MOTION]       Motion Mode Changed: 2->0
+I 18:05:15.752   [MOTION]       Motion Mode Changed: 0->1
+I 18:05:16.690   [MOTION]       Motion-Time Done
+I 18:05:16.690   [MOTION]       Motion Mode Changed: 1->0
+I 18:05:16.721   [MOTION]       Motion Mode Changed: 0->1
+I 18:05:16.724   [MOTION]       Motion-Time Done
+I 18:05:16.724   [MOTION]       Motion Mode Changed: 1->0
+I 18:05:21.457   [MOTION]       Motion Mode Changed: 0->1
+I 18:05:21.460   [MOTION]       Motion-Time Done
+I 18:05:21.460   [MOTION]       Motion Mode Changed: 1->0
+I 18:05:21.475   [MOTION]       Motion Mode Changed: 0->1
+I 18:05:21.478   [MOTION]       Motion-Time Done
+I 18:05:21.478   [MOTION]       Motion Mode Changed: 1->0
+I 18:08:31.783   [MOTION]       Motion Mode Changed: 0->1
+I 18:08:31.786   [MOTION]       Motion-Time Done
+I 18:08:31.786   [MOTION]       Motion Mode Changed: 1->0
+I 18:08:31.842   [MOTION]       Motion Mode Changed: 0->1
+I 18:08:31.846   [MOTION]       Motion-Time Done
+I 18:08:31.846   [MOTION]       Motion Mode Changed: 1->0
+I 18:08:37.800   [MOTION]       Motion Mode Changed: 0->1
+I 18:08:37.804   [MOTION]       Motion-Time Done
+I 18:08:37.804   [MOTION]       Motion Mode Changed: 1->0
+I 18:08:38.015   [MOTION]       Motion Mode Changed: 0->1
+I 18:08:38.018   [MOTION]       Motion-Time Done
+I 18:08:38.018   [MOTION]       Motion Mode Changed: 1->0
+I 18:10:06.206   [MOTION]       Motion Mode Changed: 0->1
+I 18:10:06.210   [MOTION]       Motion-Time Done
+I 18:10:06.210   [MOTION]       Motion Mode Changed: 1->0
+I 18:10:06.292   [MOTION]       Motion Mode Changed: 0->1
+I 18:10:06.294   [MOTION]       Motion-Time Done
+I 18:10:06.294   [MOTION]       Motion Mode Changed: 1->0

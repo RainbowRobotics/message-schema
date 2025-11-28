@@ -180,6 +180,11 @@ void side_io::Set_Dout(unsigned int p_no, int value){
     desired_Dout[p_no] = value;
 }
 
+int side_io::Get_Dout(unsigned int p_no){
+    if(p_no >= NO_OF_DOUT)  return 0;
+    return desired_Dout[p_no];
+}
+
 void side_io::Set_Aout(unsigned int p_no, float value){
     if(p_no >= NO_OF_AOUT)   return;
     value = rb_math::saturation_L_and_U(value, 0, 10);
@@ -193,6 +198,38 @@ void side_io::Set_Din_Filter_Count(unsigned int p_no, int t_count){
     }
     
     sig_filter_din[t_count].setThreshold(t_count);
+}
+
+void side_io::Set_Dout_Pulse(unsigned int p_no, unsigned char direction, float t1, float t2, float t3){
+    if(p_no >= NO_OF_DOUT)  return;
+    pulse_Dout_T1[p_no] = fabs(t1);
+    pulse_Dout_T2[p_no] = fabs(t2);
+    pulse_Dout_T3[p_no] = fabs(t3);
+    pulse_Dout_Direction[p_no] = direction;
+    pulse_Dout_Timer[p_no] = 0.;
+    pulse_Dout_OnOff[p_no] = true;
+}
+bool side_io::Get_Dout_Pulse_State(unsigned int p_no){
+    if(p_no >= NO_OF_DOUT)  return false;
+    return pulse_Dout_OnOff[p_no];
+}
+void side_io::Update_Dout_Pulse(float dt){
+    for(int k = 0; k < NO_OF_DOUT; ++k){
+        if(pulse_Dout_OnOff[k]){
+            if(pulse_Dout_Timer[k] < pulse_Dout_T1[k]){
+                Set_Dout(k, (pulse_Dout_Direction[k]));
+            }else if(pulse_Dout_Timer[k] < pulse_Dout_T2[k]){
+                Set_Dout(k, (!pulse_Dout_Direction[k]));
+            }else if(pulse_Dout_Timer[k] < pulse_Dout_T3[k]){
+                Set_Dout(k, (pulse_Dout_Direction[k]));
+            }else{
+                pulse_Dout_OnOff[k] = false;
+            }
+            pulse_Dout_Timer[k] += dt;
+        }else{
+            pulse_Dout_Timer[k] = 0.;
+        }
+    }
 }
 
 CAN_MSG side_io::CmdRequestVersion(){

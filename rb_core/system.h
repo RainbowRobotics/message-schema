@@ -231,6 +231,9 @@ namespace rb_system {
     int                                 Save_Box_FilterCount_Din(unsigned int p_num, unsigned int f_cnt);
 
     int                                 Set_Box_Digital_Output(int p_num, unsigned int value);
+    int                                 Set_Box_Digital_Output_Toggle(int p_num);
+    int                                 Set_Box_Digital_Output_Bit(unsigned int p_num_start, unsigned int p_num_end, int value, unsigned char option_dir);
+    int                                 Set_Box_Digital_Output_Pulse(unsigned int p_num, unsigned int mode, unsigned int direction, float t1, float t2, float t3);
     int                                 Set_Box_Analog_Output(int p_num, float value);
 
     int                                 Set_Flange_Power(int desired_voltage);

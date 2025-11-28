@@ -596,6 +596,7 @@ namespace rb_system {
         }
 
         void RT_IO_Handler(){
+            _gv_Handler_Side->Update_Dout_Pulse(RT_PERIOD_SEC);
             std::array<int, NO_OF_DIN> din_mode;
             std::array<int, NO_OF_DOUT> dout_mode;
             din_mode.fill(0);
@@ -614,7 +615,6 @@ namespace rb_system {
             //---------------------------------------------
             // Special Input
             //---------------------------------------------
-
             static sSTAT old_state = _gv_Handler_Side->Get_State();
             sSTAT cur_state = _gv_Handler_Side->Get_State();
             for(int i = 0; i < NO_OF_DIN; ++i){
@@ -1467,6 +1467,93 @@ namespace rb_system {
             }
         }else{
             _gv_Handler_Side->Set_Dout(p_num, value);
+        }
+        return MSG_OK;
+    }
+    int Set_Box_Digital_Output_Toggle(int p_num){
+        if(p_num >= NO_OF_DOUT){
+            return MSG_DESIRED_PORT_IS_OVER_BOUND;
+        }
+        if(p_num < 0){
+            for(unsigned int i = 0; i < NO_OF_DOUT; ++i){
+                int value = !_gv_Handler_Side->Get_Dout(i);
+                _gv_Handler_Side->Set_Dout(i, value);
+            }
+        }else{
+            int value = !_gv_Handler_Side->Get_Dout(p_num);
+            std::cout<<"value: "<<value<<std::endl;
+            _gv_Handler_Side->Set_Dout(p_num, value);
+        }
+        return MSG_OK;
+    }
+    int Set_Box_Digital_Output_Bit(unsigned int p_num_start, unsigned int p_num_end, int value, unsigned char option_dir){
+        // option_dir
+        // 0 : normal direction
+        // 1 : inverse direction
+
+        bool is_any_problem = false;
+        if(p_num_start >= NO_OF_DOUT || p_num_end >= NO_OF_DOUT || p_num_end < p_num_start){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_PORT_IS_OVER_BOUND);
+        }
+        unsigned int bit_length = p_num_end - p_num_start + 1;
+        int max_value = (int)(round(pow(2, bit_length)));
+        if(value < 0 || value >= max_value){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
+        }
+        unsigned char is_every_port_is_normal = true;
+        for(int k = p_num_start; k <= p_num_end; ++k){
+            if(parameter_special_dout_box[k] != 0){
+                return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_PORT_IS_NOT_AVAIL);
+            }
+        }
+
+
+        for(int k = p_num_start; k <= p_num_end; ++k){
+            int off = k - p_num_start;
+            int index = k;
+            if(option_dir == 1){
+                // inverse direction
+                index = (p_num_start + p_num_end) - k;
+            }
+            _gv_Handler_Side->Set_Dout(index, ((value >> off) & 0b01));
+        }
+        return MSG_OK;
+    }
+    int Set_Box_Digital_Output_Pulse(unsigned int p_num, unsigned int mode, unsigned int direction, float t1, float t2, float t3){
+        // mode : 
+        // 0 : block
+        // 1 : nonblock
+        // direction :
+        // 0 : 010
+        // 1 : 101
+
+        if(mode != 1)       mode = 0;
+        if(direction != 1)  direction = 0;
+
+        if(p_num >= NO_OF_DOUT){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_PORT_IS_OVER_BOUND);
+        }
+        if(parameter_special_dout_box[p_num] != 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_PORT_IS_NOT_AVAIL);
+        }
+        if(t1 < 0. || t2 < 0. || t3 < 0. || t1 > 3. || t2 > 3. || t3 > 3.){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
+        }
+        t3 = rb_math::saturation_Low(t3, 0.003);
+        
+        _gv_Handler_Side->Set_Dout_Pulse(p_num, direction, t1, (t1 + t2), (t1 + t2 + t3));
+        if(mode == 0){
+            float timeout_sec = 0.;
+            while(1){
+                if(_gv_Handler_Side->Get_Dout_Pulse_State(p_num) == false){
+                    break;
+                }
+                if(timeout_sec >= 10.){
+                    return MESSAGE(MSG_LEVEL_WARN, MSG_COMMAND_TIME_OUT);
+                }
+                timeout_sec += 0.01;
+                std::this_thread::sleep_for(10ms);
+            }
         }
         return MSG_OK;
     }

@@ -46,6 +46,18 @@ struct Request_SideAout_General;
 struct Request_SideAout_GeneralBuilder;
 struct Request_SideAout_GeneralT;
 
+struct Request_SideDout_Toggle;
+struct Request_SideDout_ToggleBuilder;
+struct Request_SideDout_ToggleT;
+
+struct Request_SideDout_Bitcombination;
+struct Request_SideDout_BitcombinationBuilder;
+struct Request_SideDout_BitcombinationT;
+
+struct Request_SideDout_Pulse;
+struct Request_SideDout_PulseBuilder;
+struct Request_SideDout_PulseT;
+
 struct Request_Save_Area_ParaT : public ::flatbuffers::NativeTable {
   typedef Request_Save_Area_Para TableType;
   int32_t area_no = 0;
@@ -719,6 +731,250 @@ inline ::flatbuffers::Offset<Request_SideAout_General> CreateRequest_SideAout_Ge
 
 ::flatbuffers::Offset<Request_SideAout_General> CreateRequest_SideAout_General(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideAout_GeneralT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_SideDout_ToggleT : public ::flatbuffers::NativeTable {
+  typedef Request_SideDout_Toggle TableType;
+  int32_t port_num = 0;
+};
+
+struct Request_SideDout_Toggle FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_SideDout_ToggleT NativeTableType;
+  typedef Request_SideDout_ToggleBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PORT_NUM = 4
+  };
+  int32_t port_num() const {
+    return GetField<int32_t>(VT_PORT_NUM, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PORT_NUM, 4) &&
+           verifier.EndTable();
+  }
+  Request_SideDout_ToggleT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_SideDout_ToggleT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_SideDout_Toggle> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_ToggleT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_SideDout_ToggleBuilder {
+  typedef Request_SideDout_Toggle Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_port_num(int32_t port_num) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Toggle::VT_PORT_NUM, port_num, 0);
+  }
+  explicit Request_SideDout_ToggleBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_SideDout_Toggle> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_SideDout_Toggle>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_SideDout_Toggle> CreateRequest_SideDout_Toggle(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t port_num = 0) {
+  Request_SideDout_ToggleBuilder builder_(_fbb);
+  builder_.add_port_num(port_num);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_SideDout_Toggle> CreateRequest_SideDout_Toggle(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_ToggleT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_SideDout_BitcombinationT : public ::flatbuffers::NativeTable {
+  typedef Request_SideDout_Bitcombination TableType;
+  int32_t port_start = 0;
+  int32_t port_end = 0;
+  int32_t desired_value = 0;
+  int32_t direction_option = 0;
+};
+
+struct Request_SideDout_Bitcombination FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_SideDout_BitcombinationT NativeTableType;
+  typedef Request_SideDout_BitcombinationBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PORT_START = 4,
+    VT_PORT_END = 6,
+    VT_DESIRED_VALUE = 8,
+    VT_DIRECTION_OPTION = 10
+  };
+  int32_t port_start() const {
+    return GetField<int32_t>(VT_PORT_START, 0);
+  }
+  int32_t port_end() const {
+    return GetField<int32_t>(VT_PORT_END, 0);
+  }
+  int32_t desired_value() const {
+    return GetField<int32_t>(VT_DESIRED_VALUE, 0);
+  }
+  int32_t direction_option() const {
+    return GetField<int32_t>(VT_DIRECTION_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PORT_START, 4) &&
+           VerifyField<int32_t>(verifier, VT_PORT_END, 4) &&
+           VerifyField<int32_t>(verifier, VT_DESIRED_VALUE, 4) &&
+           VerifyField<int32_t>(verifier, VT_DIRECTION_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_SideDout_BitcombinationT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_SideDout_BitcombinationT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_SideDout_Bitcombination> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_BitcombinationT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_SideDout_BitcombinationBuilder {
+  typedef Request_SideDout_Bitcombination Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_port_start(int32_t port_start) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Bitcombination::VT_PORT_START, port_start, 0);
+  }
+  void add_port_end(int32_t port_end) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Bitcombination::VT_PORT_END, port_end, 0);
+  }
+  void add_desired_value(int32_t desired_value) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Bitcombination::VT_DESIRED_VALUE, desired_value, 0);
+  }
+  void add_direction_option(int32_t direction_option) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Bitcombination::VT_DIRECTION_OPTION, direction_option, 0);
+  }
+  explicit Request_SideDout_BitcombinationBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_SideDout_Bitcombination> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_SideDout_Bitcombination>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_SideDout_Bitcombination> CreateRequest_SideDout_Bitcombination(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t port_start = 0,
+    int32_t port_end = 0,
+    int32_t desired_value = 0,
+    int32_t direction_option = 0) {
+  Request_SideDout_BitcombinationBuilder builder_(_fbb);
+  builder_.add_direction_option(direction_option);
+  builder_.add_desired_value(desired_value);
+  builder_.add_port_end(port_end);
+  builder_.add_port_start(port_start);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_SideDout_Bitcombination> CreateRequest_SideDout_Bitcombination(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_BitcombinationT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_SideDout_PulseT : public ::flatbuffers::NativeTable {
+  typedef Request_SideDout_Pulse TableType;
+  int32_t port_num = 0;
+  int32_t block_mode = 0;
+  int32_t direction = 0;
+  float time_1 = 0.0f;
+  float time_2 = 0.0f;
+  float time_3 = 0.0f;
+};
+
+struct Request_SideDout_Pulse FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_SideDout_PulseT NativeTableType;
+  typedef Request_SideDout_PulseBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PORT_NUM = 4,
+    VT_BLOCK_MODE = 6,
+    VT_DIRECTION = 8,
+    VT_TIME_1 = 10,
+    VT_TIME_2 = 12,
+    VT_TIME_3 = 14
+  };
+  int32_t port_num() const {
+    return GetField<int32_t>(VT_PORT_NUM, 0);
+  }
+  int32_t block_mode() const {
+    return GetField<int32_t>(VT_BLOCK_MODE, 0);
+  }
+  int32_t direction() const {
+    return GetField<int32_t>(VT_DIRECTION, 0);
+  }
+  float time_1() const {
+    return GetField<float>(VT_TIME_1, 0.0f);
+  }
+  float time_2() const {
+    return GetField<float>(VT_TIME_2, 0.0f);
+  }
+  float time_3() const {
+    return GetField<float>(VT_TIME_3, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PORT_NUM, 4) &&
+           VerifyField<int32_t>(verifier, VT_BLOCK_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_DIRECTION, 4) &&
+           VerifyField<float>(verifier, VT_TIME_1, 4) &&
+           VerifyField<float>(verifier, VT_TIME_2, 4) &&
+           VerifyField<float>(verifier, VT_TIME_3, 4) &&
+           verifier.EndTable();
+  }
+  Request_SideDout_PulseT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_SideDout_PulseT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_SideDout_Pulse> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_PulseT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_SideDout_PulseBuilder {
+  typedef Request_SideDout_Pulse Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_port_num(int32_t port_num) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Pulse::VT_PORT_NUM, port_num, 0);
+  }
+  void add_block_mode(int32_t block_mode) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Pulse::VT_BLOCK_MODE, block_mode, 0);
+  }
+  void add_direction(int32_t direction) {
+    fbb_.AddElement<int32_t>(Request_SideDout_Pulse::VT_DIRECTION, direction, 0);
+  }
+  void add_time_1(float time_1) {
+    fbb_.AddElement<float>(Request_SideDout_Pulse::VT_TIME_1, time_1, 0.0f);
+  }
+  void add_time_2(float time_2) {
+    fbb_.AddElement<float>(Request_SideDout_Pulse::VT_TIME_2, time_2, 0.0f);
+  }
+  void add_time_3(float time_3) {
+    fbb_.AddElement<float>(Request_SideDout_Pulse::VT_TIME_3, time_3, 0.0f);
+  }
+  explicit Request_SideDout_PulseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_SideDout_Pulse> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_SideDout_Pulse>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_SideDout_Pulse> CreateRequest_SideDout_Pulse(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t port_num = 0,
+    int32_t block_mode = 0,
+    int32_t direction = 0,
+    float time_1 = 0.0f,
+    float time_2 = 0.0f,
+    float time_3 = 0.0f) {
+  Request_SideDout_PulseBuilder builder_(_fbb);
+  builder_.add_time_3(time_3);
+  builder_.add_time_2(time_2);
+  builder_.add_time_1(time_1);
+  builder_.add_direction(direction);
+  builder_.add_block_mode(block_mode);
+  builder_.add_port_num(port_num);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_SideDout_Pulse> CreateRequest_SideDout_Pulse(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_PulseT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Save_Area_ParaT *Request_Save_Area_Para::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Save_Area_ParaT>(new Request_Save_Area_ParaT());
   UnPackTo(_o.get(), _resolver);
@@ -968,6 +1224,108 @@ inline ::flatbuffers::Offset<Request_SideAout_General> CreateRequest_SideAout_Ge
       _fbb,
       _port_num,
       _desired_voltage);
+}
+
+inline Request_SideDout_ToggleT *Request_SideDout_Toggle::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_SideDout_ToggleT>(new Request_SideDout_ToggleT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_SideDout_Toggle::UnPackTo(Request_SideDout_ToggleT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = port_num(); _o->port_num = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Toggle> Request_SideDout_Toggle::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_ToggleT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_SideDout_Toggle(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Toggle> CreateRequest_SideDout_Toggle(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_ToggleT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_SideDout_ToggleT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _port_num = _o->port_num;
+  return IPC::CreateRequest_SideDout_Toggle(
+      _fbb,
+      _port_num);
+}
+
+inline Request_SideDout_BitcombinationT *Request_SideDout_Bitcombination::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_SideDout_BitcombinationT>(new Request_SideDout_BitcombinationT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_SideDout_Bitcombination::UnPackTo(Request_SideDout_BitcombinationT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = port_start(); _o->port_start = _e; }
+  { auto _e = port_end(); _o->port_end = _e; }
+  { auto _e = desired_value(); _o->desired_value = _e; }
+  { auto _e = direction_option(); _o->direction_option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Bitcombination> Request_SideDout_Bitcombination::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_BitcombinationT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_SideDout_Bitcombination(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Bitcombination> CreateRequest_SideDout_Bitcombination(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_BitcombinationT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_SideDout_BitcombinationT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _port_start = _o->port_start;
+  auto _port_end = _o->port_end;
+  auto _desired_value = _o->desired_value;
+  auto _direction_option = _o->direction_option;
+  return IPC::CreateRequest_SideDout_Bitcombination(
+      _fbb,
+      _port_start,
+      _port_end,
+      _desired_value,
+      _direction_option);
+}
+
+inline Request_SideDout_PulseT *Request_SideDout_Pulse::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_SideDout_PulseT>(new Request_SideDout_PulseT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_SideDout_Pulse::UnPackTo(Request_SideDout_PulseT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = port_num(); _o->port_num = _e; }
+  { auto _e = block_mode(); _o->block_mode = _e; }
+  { auto _e = direction(); _o->direction = _e; }
+  { auto _e = time_1(); _o->time_1 = _e; }
+  { auto _e = time_2(); _o->time_2 = _e; }
+  { auto _e = time_3(); _o->time_3 = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Pulse> Request_SideDout_Pulse::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_PulseT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_SideDout_Pulse(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_SideDout_Pulse> CreateRequest_SideDout_Pulse(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_PulseT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_SideDout_PulseT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _port_num = _o->port_num;
+  auto _block_mode = _o->block_mode;
+  auto _direction = _o->direction;
+  auto _time_1 = _o->time_1;
+  auto _time_2 = _o->time_2;
+  auto _time_3 = _o->time_3;
+  return IPC::CreateRequest_SideDout_Pulse(
+      _fbb,
+      _port_num,
+      _block_mode,
+      _direction,
+      _time_1,
+      _time_2,
+      _time_3);
 }
 
 }  // namespace IPC

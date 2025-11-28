@@ -56,3 +56,23 @@ table Request_SideAout_General {
   port_num: int;
   desired_voltage: float;
 }
+
+table Request_SideDout_Toggle {
+  port_num: int;
+}
+
+table Request_SideDout_Bitcombination {
+  port_start      : int;
+  port_end        : int;
+  desired_value   : int;
+  direction_option : int;
+}
+
+table Request_SideDout_Pulse {
+  port_num : int;
+  block_mode : int;
+  direction : int;
+  time_1 : float;
+  time_2 : float;
+  time_3 : float;
+}

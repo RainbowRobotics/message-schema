@@ -194,6 +194,15 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_side_aout", IPC::Request_SideAout_General, IPC::Response_Functions, {
                 return_int = rb_system::Set_Box_Analog_Output(req->port_num(), req->desired_voltage());
             });
+            ADD_SERVE_SIMPLE("call_side_dout_toggle", IPC::Request_SideDout_Toggle, IPC::Response_Functions, {
+                return_int = rb_system::Set_Box_Digital_Output_Toggle(req->port_num());
+            });
+            ADD_SERVE_SIMPLE("call_side_dout_bitcombination", IPC::Request_SideDout_Bitcombination, IPC::Response_Functions, {
+                return_int = rb_system::Set_Box_Digital_Output_Bit(req->port_start(), req->port_end(), req->desired_value(), req->direction_option());
+            });
+            ADD_SERVE_SIMPLE("call_side_dout_pulse", IPC::Request_SideDout_Pulse, IPC::Response_Functions, {
+                return_int = rb_system::Set_Box_Digital_Output_Pulse(req->port_num(), req->block_mode(), req->direction(), req->time_1(), req->time_2(), req->time_3());
+            });
             // -----------------------------------------------------------------------
             // Flange
             // -----------------------------------------------------------------------
@@ -573,6 +582,9 @@ namespace rb_ipc {
                 float vel_para      = req->speed()->spd_vel_para();
                 float acc_para      = req->speed()->spd_acc_para();
 
+                std::cout<<"target_frame: "<<input.target_frame<<std::endl;
+                std::cout<<"spd_mode: "<<spd_mode<<" = "<<vel_para<<", "<<acc_para<<std::endl;
+
                 return_int = rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
             });
             ADD_SERVE_SIMPLE("call_move_l", IPC::Request_Move_L, IPC::Response_Functions, {
@@ -762,8 +774,14 @@ namespace rb_ipc {
                     state_coreT.motion_is_pause = static_cast<uint8_t>(rb_system::Get_MovePauseState());
                     
                     state_coreT.status_lan2can       = static_cast<uint8_t>(rb_system::Get_Lan2Can_State());
-                    state_coreT.status_switch_emg    = static_cast<uint8_t>(rb_system::Get_Power_Switch());
-                    state_coreT.status_power_out     = static_cast<uint8_t>(rb_system::Get_Power());
+                    if(rb_system::Get_Lan2Can_State()){
+                        state_coreT.status_switch_emg    = static_cast<uint8_t>(rb_system::Get_Power_Switch());
+                        state_coreT.status_power_out     = static_cast<uint8_t>(rb_system::Get_Power());
+                    }else{
+                        state_coreT.status_switch_emg    = 0;
+                        state_coreT.status_power_out = 0;
+                    }
+                    
                     state_coreT.status_servo_num     = static_cast<uint8_t>(rb_system::Get_Servo());
                     state_coreT.status_is_refon      = static_cast<uint8_t>(rb_system::Get_ReferenceOnOff());
                     state_coreT.status_out_coll      = static_cast<uint8_t>(rb_system::Get_Flag_Out_Collision_Occur());

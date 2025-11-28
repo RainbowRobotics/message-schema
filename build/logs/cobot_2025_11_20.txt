@@ -1,0 +1,2879 @@
+W 01:25:20.540   [LAN2CAN]      Header footer not match
+W 01:25:20.543   [LAN2CAN]      Header footer not match
+W 01:25:20.548   [LAN2CAN]      Header footer not match
+W 01:25:20.675   [LAN2CAN]      Header footer not match
+W 01:25:24.970   [LAN2CAN]      Header footer not match
+W 01:25:24.970   [LAN2CAN]      Header footer not match
+W 08:29:34.457   [LAN2CAN]      Header footer not match
+W 08:29:34.457   [LAN2CAN]      Header footer not match
+I 16:04:47.470   [MOTION]       Motion Mode Changed: 0->2
+I 16:04:49.924   [MOTION]       Motion Mode Changed: 2->0
+W 16:04:49.924   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_ARM_OCCUR
+I 16:19:13.651   [MOTION]       Motion Mode Changed: 0->1
+I 16:19:15.088   [MOTION]       Motion-Time Done
+I 16:19:15.088   [MOTION]       Motion Mode Changed: 1->0
+I 16:21:07.511   [MOTION]       Motion Mode Changed: 0->2
+E 16:21:07.568   [MOTION]       IK ERR ... !!! 5
+E 16:21:07.568   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:21:07.568   [MOTION]       Motion-Ik Problem
+I 16:21:07.568   [MOTION]       Motion Mode Changed: 2->0
+I 16:21:14.373   [MOTION]       Motion Mode Changed: 0->2
+E 16:21:14.430   [MOTION]       IK ERR ... !!! 5
+E 16:21:14.430   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:21:14.430   [MOTION]       Motion-Ik Problem
+I 16:21:14.430   [MOTION]       Motion Mode Changed: 2->0
+W 16:22:48.226   [TOOLFLANGE]   TFB DISCON
+E 16:22:48.226   [SYSTEM]       MSG:501/MSG_TFB_DISCONNECTED_DURING_RUN
+E 16:22:48.227   [SYSTEM]       COMM ERR 7
+W 16:22:48.227   [SYSTEM]       CMD Power Off
+I 16:22:48.227   [SYSTEM]       ServoState: 0
+W 16:22:48.230   [MOTOR]        MOTOR DISCON 3
+W 16:22:48.232   [MOTOR]        MOTOR DISCON 0
+W 16:22:48.232   [MOTOR]        MOTOR DISCON 2
+W 16:22:48.232   [MOTOR]        MOTOR DISCON 5
+W 16:22:48.232   [MOTOR]        MOTOR DISCON 6
+W 16:22:48.232   [SIDE_IO]      SIDE DISCON
+W 16:22:48.234   [MOTOR]        MOTOR DISCON 1
+W 16:22:48.234   [MOTOR]        MOTOR DISCON 4
+W 16:22:48.234   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 16:22:48.234   [SYSTEM]       STATE POWER DIS-ENGAGED
+W 16:22:48.236   [SYSTEM]       CMD Power Off
+I 16:22:48.236   [SYSTEM]       ServoState: 0
+I 16:29:02.509   [MOTION]       Motion Mode Changed: 0->2
+W 16:35:17.676   [MOTION]       MSG:300/MSG_MOVE_COMMAND_ERR
+I 16:40:50.323   [MAIN]         System Version: 1.0.0
+I 16:40:51.340   [LAN2CAN]      Succeed to create socket
+I 16:40:51.843   [DAEMON]       Succeed to start read thread
+I 16:40:51.843   [DAEMON]       Succeed to start real-time thread
+I 16:40:55.356   [MAIN]         SYSTEM STARTING
+I 16:41:04.334   [MOTION]       Motion Mode Changed: 0->2
+E 16:41:04.390   [MOTION]       IK ERR ... !!! 5
+E 16:41:04.391   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:41:04.391   [MOTION]       Motion-Ik Problem
+I 16:41:04.391   [MOTION]       Motion Mode Changed: 2->0
+I 16:49:07.320   [MOTION]       Motion Mode Changed: 0->2
+E 16:49:07.376   [MOTION]       IK ERR ... !!! 5
+E 16:49:07.376   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:49:07.376   [MOTION]       Motion-Ik Problem
+I 16:49:07.376   [MOTION]       Motion Mode Changed: 2->0
+I 16:49:31.854   [MOTION]       Motion Mode Changed: 0->2
+E 16:49:31.910   [MOTION]       IK ERR ... !!! 5
+E 16:49:31.910   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:49:31.910   [MOTION]       Motion-Ik Problem
+I 16:49:31.911   [MOTION]       Motion Mode Changed: 2->0
+I 16:49:36.884   [SYSTEM]       Servo Call: 0/1
+I 16:49:36.884   [SYSTEM]       ServoState: 0
+W 16:49:36.884   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 16:50:11.450   [MOTION]       Motion Mode Changed: 0->2
+E 16:50:11.506   [MOTION]       IK ERR ... !!! 5
+E 16:50:11.506   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:50:11.506   [MOTION]       Motion-Ik Problem
+I 16:50:11.506   [MOTION]       Motion Mode Changed: 2->0
+I 16:50:39.085   [MOTION]       Motion Mode Changed: 0->2
+E 16:50:39.142   [MOTION]       IK ERR ... !!! 5
+E 16:50:39.142   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 16:50:39.143   [MOTION]       Motion-Ik Problem
+I 16:50:39.143   [MOTION]       Motion Mode Changed: 2->0
+I 16:51:02.529   [MOTION]       Motion Mode Changed: 0->1
+I 16:51:03.456   [MOTION]       Motion-Time Done
+I 16:51:03.456   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:12.214   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:12.216   [MOTION]       Motion-Time Done
+I 16:56:12.216   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:52.683   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:52.686   [MOTION]       Motion-Time Done
+I 16:56:52.686   [MOTION]       Motion Mode Changed: 1->0
+W 16:57:11.105   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 17:09:05.270   [SYSTEM]       Servo Call: 0/1
+I 17:09:05.270   [SYSTEM]       ServoState: 0
+W 17:09:05.270   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 17:56:00.961   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:01.888   [MOTION]       Motion-Time Done
+I 17:56:01.888   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:01.937   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:01.940   [MOTION]       Motion-Time Done
+I 17:56:01.940   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:01.982   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:01.984   [MOTION]       Motion-Time Done
+I 17:56:01.984   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.024   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.028   [MOTION]       Motion-Time Done
+I 17:56:02.028   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.082   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.084   [MOTION]       Motion-Time Done
+I 17:56:02.084   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.126   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.128   [MOTION]       Motion-Time Done
+I 17:56:02.128   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.173   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.176   [MOTION]       Motion-Time Done
+I 17:56:02.176   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.229   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.232   [MOTION]       Motion-Time Done
+I 17:56:02.232   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.275   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.278   [MOTION]       Motion-Time Done
+I 17:56:02.278   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.326   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.328   [MOTION]       Motion-Time Done
+I 17:56:02.328   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.374   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.376   [MOTION]       Motion-Time Done
+I 17:56:02.376   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.430   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.432   [MOTION]       Motion-Time Done
+I 17:56:02.432   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.476   [MOTION]       Motion-Time Done
+I 17:56:02.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.524   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.528   [MOTION]       Motion-Time Done
+I 17:56:02.528   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.582   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.584   [MOTION]       Motion-Time Done
+I 17:56:02.584   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.629   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.632   [MOTION]       Motion-Time Done
+I 17:56:02.632   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.676   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.678   [MOTION]       Motion-Time Done
+I 17:56:02.678   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.728   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.730   [MOTION]       Motion-Time Done
+I 17:56:02.730   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.775   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.778   [MOTION]       Motion-Time Done
+I 17:56:02.778   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.834   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.836   [MOTION]       Motion-Time Done
+I 17:56:02.836   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.879   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.882   [MOTION]       Motion-Time Done
+I 17:56:02.882   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.931   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.934   [MOTION]       Motion-Time Done
+I 17:56:02.934   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:02.976   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:02.978   [MOTION]       Motion-Time Done
+I 17:56:02.978   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.024   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.026   [MOTION]       Motion-Time Done
+I 17:56:03.026   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.083   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.086   [MOTION]       Motion-Time Done
+I 17:56:03.086   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.123   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.126   [MOTION]       Motion-Time Done
+I 17:56:03.126   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.182   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.184   [MOTION]       Motion-Time Done
+I 17:56:03.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.225   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.228   [MOTION]       Motion-Time Done
+I 17:56:03.228   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.284   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.286   [MOTION]       Motion-Time Done
+I 17:56:03.286   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.331   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.334   [MOTION]       Motion-Time Done
+I 17:56:03.334   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.379   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.382   [MOTION]       Motion-Time Done
+I 17:56:03.382   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.430   [MOTION]       Motion-Time Done
+I 17:56:03.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.474   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.476   [MOTION]       Motion-Time Done
+I 17:56:03.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.535   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.538   [MOTION]       Motion-Time Done
+I 17:56:03.538   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.577   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.580   [MOTION]       Motion-Time Done
+I 17:56:03.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.634   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.636   [MOTION]       Motion-Time Done
+I 17:56:03.636   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.677   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.680   [MOTION]       Motion-Time Done
+I 17:56:03.680   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.727   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.730   [MOTION]       Motion-Time Done
+I 17:56:03.730   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.791   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.794   [MOTION]       Motion-Time Done
+I 17:56:03.794   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.828   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.830   [MOTION]       Motion-Time Done
+I 17:56:03.830   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.874   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.876   [MOTION]       Motion-Time Done
+I 17:56:03.876   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.929   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.932   [MOTION]       Motion-Time Done
+I 17:56:03.932   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:03.976   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:03.978   [MOTION]       Motion-Time Done
+I 17:56:03.978   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.026   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.028   [MOTION]       Motion-Time Done
+I 17:56:04.028   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.079   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.082   [MOTION]       Motion-Time Done
+I 17:56:04.082   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.134   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.136   [MOTION]       Motion-Time Done
+I 17:56:04.136   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.181   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.184   [MOTION]       Motion-Time Done
+I 17:56:04.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.238   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.240   [MOTION]       Motion-Time Done
+I 17:56:04.240   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.284   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.286   [MOTION]       Motion-Time Done
+I 17:56:04.286   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.337   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.340   [MOTION]       Motion-Time Done
+I 17:56:04.340   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.381   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.384   [MOTION]       Motion-Time Done
+I 17:56:04.384   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.442   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.446   [MOTION]       Motion-Time Done
+I 17:56:04.446   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.484   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.486   [MOTION]       Motion-Time Done
+I 17:56:04.486   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.534   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.536   [MOTION]       Motion-Time Done
+I 17:56:04.536   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.580   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.582   [MOTION]       Motion-Time Done
+I 17:56:04.582   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.631   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.634   [MOTION]       Motion-Time Done
+I 17:56:04.634   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.690   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.692   [MOTION]       Motion-Time Done
+I 17:56:04.692   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.743   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.746   [MOTION]       Motion-Time Done
+I 17:56:04.746   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.782   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.784   [MOTION]       Motion-Time Done
+I 17:56:04.784   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.831   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.834   [MOTION]       Motion-Time Done
+I 17:56:04.834   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.895   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.898   [MOTION]       Motion-Time Done
+I 17:56:04.898   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.935   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.938   [MOTION]       Motion-Time Done
+I 17:56:04.938   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:04.981   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:04.984   [MOTION]       Motion-Time Done
+I 17:56:04.984   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.047   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.050   [MOTION]       Motion-Time Done
+I 17:56:05.050   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.079   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.082   [MOTION]       Motion-Time Done
+I 17:56:05.082   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.136   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.138   [MOTION]       Motion-Time Done
+I 17:56:05.138   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.186   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.188   [MOTION]       Motion-Time Done
+I 17:56:05.188   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.245   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.248   [MOTION]       Motion-Time Done
+I 17:56:05.248   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.289   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.292   [MOTION]       Motion-Time Done
+I 17:56:05.292   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.332   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.336   [MOTION]       Motion-Time Done
+I 17:56:05.336   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.412   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.416   [MOTION]       Motion-Time Done
+I 17:56:05.416   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.476   [MOTION]       Motion-Time Done
+I 17:56:05.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.554   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.556   [MOTION]       Motion-Time Done
+I 17:56:05.556   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.590   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.592   [MOTION]       Motion-Time Done
+I 17:56:05.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.640   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.642   [MOTION]       Motion-Time Done
+I 17:56:05.642   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.711   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.714   [MOTION]       Motion-Time Done
+I 17:56:05.714   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:05.743   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:05.746   [MOTION]       Motion-Time Done
+I 17:56:05.746   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.009   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.012   [MOTION]       Motion-Time Done
+I 17:56:06.012   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.071   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.074   [MOTION]       Motion-Time Done
+I 17:56:06.074   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.231   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.234   [MOTION]       Motion-Time Done
+I 17:56:06.234   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.286   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.288   [MOTION]       Motion-Time Done
+I 17:56:06.288   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.354   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.356   [MOTION]       Motion-Time Done
+I 17:56:06.356   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.391   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.394   [MOTION]       Motion-Time Done
+I 17:56:06.394   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.445   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.448   [MOTION]       Motion-Time Done
+I 17:56:06.448   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.500   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.502   [MOTION]       Motion-Time Done
+I 17:56:06.502   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.544   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.546   [MOTION]       Motion-Time Done
+I 17:56:06.546   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.590   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.592   [MOTION]       Motion-Time Done
+I 17:56:06.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.633   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.636   [MOTION]       Motion-Time Done
+I 17:56:06.636   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.731   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.734   [MOTION]       Motion-Time Done
+I 17:56:06.734   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.783   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.786   [MOTION]       Motion-Time Done
+I 17:56:06.786   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.909   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.912   [MOTION]       Motion-Time Done
+I 17:56:06.912   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:06.984   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:06.986   [MOTION]       Motion-Time Done
+I 17:56:06.986   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.032   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.034   [MOTION]       Motion-Time Done
+I 17:56:07.034   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.101   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.104   [MOTION]       Motion-Time Done
+I 17:56:07.104   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.139   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.142   [MOTION]       Motion-Time Done
+I 17:56:07.142   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.211   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.214   [MOTION]       Motion-Time Done
+I 17:56:07.214   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.247   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.250   [MOTION]       Motion-Time Done
+I 17:56:07.250   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.291   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.294   [MOTION]       Motion-Time Done
+I 17:56:07.294   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.358   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.360   [MOTION]       Motion-Time Done
+I 17:56:07.360   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.393   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.396   [MOTION]       Motion-Time Done
+I 17:56:07.396   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.439   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.442   [MOTION]       Motion-Time Done
+I 17:56:07.442   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.498   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.500   [MOTION]       Motion-Time Done
+I 17:56:07.500   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.644   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.648   [MOTION]       Motion-Time Done
+I 17:56:07.648   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.733   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.736   [MOTION]       Motion-Time Done
+I 17:56:07.736   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:07.882   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:07.884   [MOTION]       Motion-Time Done
+I 17:56:07.884   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.052   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.054   [MOTION]       Motion-Time Done
+I 17:56:08.054   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.230   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.232   [MOTION]       Motion-Time Done
+I 17:56:08.232   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.397   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.400   [MOTION]       Motion-Time Done
+I 17:56:08.400   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.574   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.578   [MOTION]       Motion-Time Done
+I 17:56:08.578   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.767   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.770   [MOTION]       Motion-Time Done
+I 17:56:08.770   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.918   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.920   [MOTION]       Motion-Time Done
+I 17:56:08.920   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:08.936   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:08.938   [MOTION]       Motion-Time Done
+I 17:56:08.938   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:09.083   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:09.086   [MOTION]       Motion-Time Done
+I 17:56:09.086   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:09.263   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:09.266   [MOTION]       Motion-Time Done
+I 17:56:09.266   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:09.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:09.430   [MOTION]       Motion-Time Done
+I 17:56:09.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:09.624   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:09.626   [MOTION]       Motion-Time Done
+I 17:56:09.626   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:09.651   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:09.654   [MOTION]       Motion-Time Done
+I 17:56:09.654   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.052   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.054   [MOTION]       Motion-Time Done
+I 17:56:10.054   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.225   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.228   [MOTION]       Motion-Time Done
+I 17:56:10.228   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.249   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.252   [MOTION]       Motion-Time Done
+I 17:56:10.252   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.394   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.396   [MOTION]       Motion-Time Done
+I 17:56:10.396   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.574   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.576   [MOTION]       Motion-Time Done
+I 17:56:10.576   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.659   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.662   [MOTION]       Motion-Time Done
+I 17:56:10.662   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.757   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.760   [MOTION]       Motion-Time Done
+I 17:56:10.760   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.869   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.872   [MOTION]       Motion-Time Done
+I 17:56:10.872   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.896   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.898   [MOTION]       Motion-Time Done
+I 17:56:10.898   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:10.989   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:10.992   [MOTION]       Motion-Time Done
+I 17:56:10.992   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.121   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.124   [MOTION]       Motion-Time Done
+I 17:56:11.124   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.143   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.146   [MOTION]       Motion-Time Done
+I 17:56:11.146   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.240   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.242   [MOTION]       Motion-Time Done
+I 17:56:11.242   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.335   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.338   [MOTION]       Motion-Time Done
+I 17:56:11.338   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.462   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.464   [MOTION]       Motion-Time Done
+I 17:56:11.464   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.549   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.552   [MOTION]       Motion-Time Done
+I 17:56:11.552   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.595   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.598   [MOTION]       Motion-Time Done
+I 17:56:11.598   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.650   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.652   [MOTION]       Motion-Time Done
+I 17:56:11.652   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.704   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.706   [MOTION]       Motion-Time Done
+I 17:56:11.706   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.760   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.762   [MOTION]       Motion-Time Done
+I 17:56:11.762   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.820   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.822   [MOTION]       Motion-Time Done
+I 17:56:11.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.847   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.850   [MOTION]       Motion-Time Done
+I 17:56:11.850   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.896   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.898   [MOTION]       Motion-Time Done
+I 17:56:11.898   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.947   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.950   [MOTION]       Motion-Time Done
+I 17:56:11.950   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:11.994   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:11.998   [MOTION]       Motion-Time Done
+I 17:56:11.998   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:12.495   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:12.498   [MOTION]       Motion-Time Done
+I 17:56:12.498   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:12.675   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:12.678   [MOTION]       Motion-Time Done
+I 17:56:12.678   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:12.703   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:12.706   [MOTION]       Motion-Time Done
+I 17:56:12.706   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:12.878   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:12.880   [MOTION]       Motion-Time Done
+I 17:56:12.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.044   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.046   [MOTION]       Motion-Time Done
+I 17:56:13.046   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.233   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.236   [MOTION]       Motion-Time Done
+I 17:56:13.236   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.253   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.256   [MOTION]       Motion-Time Done
+I 17:56:13.256   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.541   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.544   [MOTION]       Motion-Time Done
+I 17:56:13.544   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.727   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.730   [MOTION]       Motion-Time Done
+I 17:56:13.730   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:13.762   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:13.764   [MOTION]       Motion-Time Done
+I 17:56:13.764   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:14.094   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:14.096   [MOTION]       Motion-Time Done
+I 17:56:14.096   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:14.550   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:14.552   [MOTION]       Motion-Time Done
+I 17:56:14.552   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:14.724   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:14.726   [MOTION]       Motion-Time Done
+I 17:56:14.726   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:14.883   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:14.886   [MOTION]       Motion-Time Done
+I 17:56:14.886   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.068   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.070   [MOTION]       Motion-Time Done
+I 17:56:15.070   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.223   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.226   [MOTION]       Motion-Time Done
+I 17:56:15.226   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.259   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.262   [MOTION]       Motion-Time Done
+I 17:56:15.262   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.370   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.372   [MOTION]       Motion-Time Done
+I 17:56:15.372   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.468   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.470   [MOTION]       Motion-Time Done
+I 17:56:15.470   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.581   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.584   [MOTION]       Motion-Time Done
+I 17:56:15.584   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.613   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.616   [MOTION]       Motion-Time Done
+I 17:56:15.616   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.814   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.816   [MOTION]       Motion-Time Done
+I 17:56:15.816   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:15.940   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:15.942   [MOTION]       Motion-Time Done
+I 17:56:15.942   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.051   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.054   [MOTION]       Motion-Time Done
+I 17:56:16.054   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.119   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.122   [MOTION]       Motion-Time Done
+I 17:56:16.122   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.160   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.162   [MOTION]       Motion-Time Done
+I 17:56:16.162   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.217   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.220   [MOTION]       Motion-Time Done
+I 17:56:16.220   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.260   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.262   [MOTION]       Motion-Time Done
+I 17:56:16.262   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.319   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.322   [MOTION]       Motion-Time Done
+I 17:56:16.322   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.362   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.364   [MOTION]       Motion-Time Done
+I 17:56:16.364   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.407   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.410   [MOTION]       Motion-Time Done
+I 17:56:16.410   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.471   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.474   [MOTION]       Motion-Time Done
+I 17:56:16.474   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.505   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.508   [MOTION]       Motion-Time Done
+I 17:56:16.508   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.731   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.734   [MOTION]       Motion-Time Done
+I 17:56:16.734   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.841   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.844   [MOTION]       Motion-Time Done
+I 17:56:16.844   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.938   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.940   [MOTION]       Motion-Time Done
+I 17:56:16.940   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:16.964   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:16.966   [MOTION]       Motion-Time Done
+I 17:56:16.966   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.014   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.016   [MOTION]       Motion-Time Done
+I 17:56:17.016   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.066   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.068   [MOTION]       Motion-Time Done
+I 17:56:17.068   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.114   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.116   [MOTION]       Motion-Time Done
+I 17:56:17.116   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.163   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.166   [MOTION]       Motion-Time Done
+I 17:56:17.166   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.219   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.222   [MOTION]       Motion-Time Done
+I 17:56:17.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.267   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.270   [MOTION]       Motion-Time Done
+I 17:56:17.270   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.312   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.314   [MOTION]       Motion-Time Done
+I 17:56:17.314   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.362   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.364   [MOTION]       Motion-Time Done
+I 17:56:17.364   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.414   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.416   [MOTION]       Motion-Time Done
+I 17:56:17.416   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.467   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.470   [MOTION]       Motion-Time Done
+I 17:56:17.470   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.509   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.512   [MOTION]       Motion-Time Done
+I 17:56:17.512   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.574   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.576   [MOTION]       Motion-Time Done
+I 17:56:17.576   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.615   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.618   [MOTION]       Motion-Time Done
+I 17:56:17.618   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.659   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.662   [MOTION]       Motion-Time Done
+I 17:56:17.662   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.713   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.716   [MOTION]       Motion-Time Done
+I 17:56:17.716   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.757   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.760   [MOTION]       Motion-Time Done
+I 17:56:17.760   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.811   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.814   [MOTION]       Motion-Time Done
+I 17:56:17.814   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:17.864   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:17.866   [MOTION]       Motion-Time Done
+I 17:56:17.866   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:23.467   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.394   [MOTION]       Motion-Time Done
+I 17:56:24.394   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.430   [MOTION]       Motion-Time Done
+I 17:56:24.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.483   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.486   [MOTION]       Motion-Time Done
+I 17:56:24.486   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.532   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.534   [MOTION]       Motion-Time Done
+I 17:56:24.534   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.583   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.586   [MOTION]       Motion-Time Done
+I 17:56:24.586   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.631   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.634   [MOTION]       Motion-Time Done
+I 17:56:24.634   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.732   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.736   [MOTION]       Motion-Time Done
+I 17:56:24.736   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.822   [MOTION]       Motion-Time Done
+I 17:56:24.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:24.929   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:24.932   [MOTION]       Motion-Time Done
+I 17:56:24.932   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.035   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.038   [MOTION]       Motion-Time Done
+I 17:56:25.038   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.155   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.158   [MOTION]       Motion-Time Done
+I 17:56:25.158   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.545   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.548   [MOTION]       Motion-Time Done
+I 17:56:25.548   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.585   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.588   [MOTION]       Motion-Time Done
+I 17:56:25.588   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.631   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.634   [MOTION]       Motion-Time Done
+I 17:56:25.634   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.681   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.684   [MOTION]       Motion-Time Done
+I 17:56:25.684   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.734   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.736   [MOTION]       Motion-Time Done
+I 17:56:25.736   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.782   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.784   [MOTION]       Motion-Time Done
+I 17:56:25.784   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.830   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.832   [MOTION]       Motion-Time Done
+I 17:56:25.832   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.878   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.880   [MOTION]       Motion-Time Done
+I 17:56:25.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.934   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.936   [MOTION]       Motion-Time Done
+I 17:56:25.936   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:25.986   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:25.988   [MOTION]       Motion-Time Done
+I 17:56:25.988   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.033   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.036   [MOTION]       Motion-Time Done
+I 17:56:26.036   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.090   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.092   [MOTION]       Motion-Time Done
+I 17:56:26.092   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.148   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.150   [MOTION]       Motion-Time Done
+I 17:56:26.150   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.179   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.182   [MOTION]       Motion-Time Done
+I 17:56:26.182   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.236   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.238   [MOTION]       Motion-Time Done
+I 17:56:26.238   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.280   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.282   [MOTION]       Motion-Time Done
+I 17:56:26.282   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.333   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.336   [MOTION]       Motion-Time Done
+I 17:56:26.336   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.383   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.386   [MOTION]       Motion-Time Done
+I 17:56:26.386   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.435   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.438   [MOTION]       Motion-Time Done
+I 17:56:26.438   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.489   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.492   [MOTION]       Motion-Time Done
+I 17:56:26.492   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.529   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.532   [MOTION]       Motion-Time Done
+I 17:56:26.532   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.582   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.584   [MOTION]       Motion-Time Done
+I 17:56:26.584   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.634   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.636   [MOTION]       Motion-Time Done
+I 17:56:26.636   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.683   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.686   [MOTION]       Motion-Time Done
+I 17:56:26.686   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.730   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.732   [MOTION]       Motion-Time Done
+I 17:56:26.732   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.815   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.818   [MOTION]       Motion-Time Done
+I 17:56:26.818   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.852   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.854   [MOTION]       Motion-Time Done
+I 17:56:26.854   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.888   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.890   [MOTION]       Motion-Time Done
+I 17:56:26.890   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:26.932   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:26.934   [MOTION]       Motion-Time Done
+I 17:56:26.934   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.008   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.012   [MOTION]       Motion-Time Done
+I 17:56:27.012   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.051   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.054   [MOTION]       Motion-Time Done
+I 17:56:27.054   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.141   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.144   [MOTION]       Motion-Time Done
+I 17:56:27.144   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.288   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.290   [MOTION]       Motion-Time Done
+I 17:56:27.290   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.335   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.338   [MOTION]       Motion-Time Done
+I 17:56:27.338   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.538   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.540   [MOTION]       Motion-Time Done
+I 17:56:27.540   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.717   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.720   [MOTION]       Motion-Time Done
+I 17:56:27.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:27.877   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:27.880   [MOTION]       Motion-Time Done
+I 17:56:27.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:28.044   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:28.046   [MOTION]       Motion-Time Done
+I 17:56:28.046   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:28.212   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:28.216   [MOTION]       Motion-Time Done
+I 17:56:28.216   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:28.235   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:28.238   [MOTION]       Motion-Time Done
+I 17:56:28.238   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:28.899   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:28.902   [MOTION]       Motion-Time Done
+I 17:56:28.902   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:29.115   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:29.118   [MOTION]       Motion-Time Done
+I 17:56:29.118   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:29.439   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:29.442   [MOTION]       Motion-Time Done
+I 17:56:29.442   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:29.630   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:29.634   [MOTION]       Motion-Time Done
+I 17:56:29.634   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.219   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:30.222   [MOTION]       Motion-Time Done
+I 17:56:30.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.446   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:30.448   [MOTION]       Motion-Time Done
+I 17:56:30.448   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.649   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:30.652   [MOTION]       Motion-Time Done
+I 17:56:30.652   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.769   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:30.772   [MOTION]       Motion-Time Done
+I 17:56:30.772   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.799   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:30.802   [MOTION]       Motion-Time Done
+I 17:56:30.802   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:30.998   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.000   [MOTION]       Motion-Time Done
+I 17:56:31.000   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.125   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.128   [MOTION]       Motion-Time Done
+I 17:56:31.128   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.148   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.152   [MOTION]       Motion-Time Done
+I 17:56:31.152   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.250   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.254   [MOTION]       Motion-Time Done
+I 17:56:31.254   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.293   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.296   [MOTION]       Motion-Time Done
+I 17:56:31.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.345   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.348   [MOTION]       Motion-Time Done
+I 17:56:31.348   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.392   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.396   [MOTION]       Motion-Time Done
+I 17:56:31.396   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.441   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.444   [MOTION]       Motion-Time Done
+I 17:56:31.444   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.495   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.498   [MOTION]       Motion-Time Done
+I 17:56:31.498   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.547   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.550   [MOTION]       Motion-Time Done
+I 17:56:31.550   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.596   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.598   [MOTION]       Motion-Time Done
+I 17:56:31.598   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.765   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.768   [MOTION]       Motion-Time Done
+I 17:56:31.768   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:31.799   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:31.802   [MOTION]       Motion-Time Done
+I 17:56:31.802   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:32.003   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:32.006   [MOTION]       Motion-Time Done
+I 17:56:32.006   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:32.351   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:32.354   [MOTION]       Motion-Time Done
+I 17:56:32.354   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:32.521   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:32.524   [MOTION]       Motion-Time Done
+I 17:56:32.524   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:32.682   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:32.684   [MOTION]       Motion-Time Done
+I 17:56:32.684   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:33.048   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:33.050   [MOTION]       Motion-Time Done
+I 17:56:33.050   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:33.384   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:33.386   [MOTION]       Motion-Time Done
+I 17:56:33.386   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:33.569   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:33.572   [MOTION]       Motion-Time Done
+I 17:56:33.572   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:33.737   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:33.740   [MOTION]       Motion-Time Done
+I 17:56:33.740   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:33.938   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:33.940   [MOTION]       Motion-Time Done
+I 17:56:33.940   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:34.139   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:34.142   [MOTION]       Motion-Time Done
+I 17:56:34.142   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:34.538   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:34.540   [MOTION]       Motion-Time Done
+I 17:56:34.540   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:34.887   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:34.890   [MOTION]       Motion-Time Done
+I 17:56:34.890   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.165   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.168   [MOTION]       Motion-Time Done
+I 17:56:35.168   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.500   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.504   [MOTION]       Motion-Time Done
+I 17:56:35.504   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.655   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.658   [MOTION]       Motion-Time Done
+I 17:56:35.658   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.741   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.744   [MOTION]       Motion-Time Done
+I 17:56:35.744   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.822   [MOTION]       Motion-Time Done
+I 17:56:35.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.863   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.866   [MOTION]       Motion-Time Done
+I 17:56:35.866   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.915   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.918   [MOTION]       Motion-Time Done
+I 17:56:35.918   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.961   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:35.964   [MOTION]       Motion-Time Done
+I 17:56:35.964   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:35.999   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.002   [MOTION]       Motion-Time Done
+I 17:56:36.002   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.094   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.096   [MOTION]       Motion-Time Done
+I 17:56:36.096   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.175   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.178   [MOTION]       Motion-Time Done
+I 17:56:36.178   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.224   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.226   [MOTION]       Motion-Time Done
+I 17:56:36.226   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.253   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.256   [MOTION]       Motion-Time Done
+I 17:56:36.256   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.323   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.326   [MOTION]       Motion-Time Done
+I 17:56:36.326   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.350   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.352   [MOTION]       Motion-Time Done
+I 17:56:36.352   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.412   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.414   [MOTION]       Motion-Time Done
+I 17:56:36.414   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.455   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.458   [MOTION]       Motion-Time Done
+I 17:56:36.458   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.582   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.586   [MOTION]       Motion-Time Done
+I 17:56:36.586   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.661   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.664   [MOTION]       Motion-Time Done
+I 17:56:36.664   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.718   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.720   [MOTION]       Motion-Time Done
+I 17:56:36.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.820   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.822   [MOTION]       Motion-Time Done
+I 17:56:36.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.855   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.858   [MOTION]       Motion-Time Done
+I 17:56:36.858   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:36.918   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:36.920   [MOTION]       Motion-Time Done
+I 17:56:36.920   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.076   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.078   [MOTION]       Motion-Time Done
+I 17:56:37.078   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.128   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.130   [MOTION]       Motion-Time Done
+I 17:56:37.130   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.215   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.218   [MOTION]       Motion-Time Done
+I 17:56:37.218   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.264   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.266   [MOTION]       Motion-Time Done
+I 17:56:37.266   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.324   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.328   [MOTION]       Motion-Time Done
+I 17:56:37.328   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.359   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.362   [MOTION]       Motion-Time Done
+I 17:56:37.362   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.413   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.416   [MOTION]       Motion-Time Done
+I 17:56:37.416   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.463   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.466   [MOTION]       Motion-Time Done
+I 17:56:37.466   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.508   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.510   [MOTION]       Motion-Time Done
+I 17:56:37.510   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.555   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.558   [MOTION]       Motion-Time Done
+I 17:56:37.558   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.612   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.616   [MOTION]       Motion-Time Done
+I 17:56:37.616   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.661   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.664   [MOTION]       Motion-Time Done
+I 17:56:37.664   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.717   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.720   [MOTION]       Motion-Time Done
+I 17:56:37.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.755   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.758   [MOTION]       Motion-Time Done
+I 17:56:37.758   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.821   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.824   [MOTION]       Motion-Time Done
+I 17:56:37.824   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.874   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.876   [MOTION]       Motion-Time Done
+I 17:56:37.876   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.904   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.906   [MOTION]       Motion-Time Done
+I 17:56:37.906   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:37.953   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:37.956   [MOTION]       Motion-Time Done
+I 17:56:37.956   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.028   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.030   [MOTION]       Motion-Time Done
+I 17:56:38.030   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.055   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.058   [MOTION]       Motion-Time Done
+I 17:56:38.058   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.104   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.108   [MOTION]       Motion-Time Done
+I 17:56:38.108   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.159   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.162   [MOTION]       Motion-Time Done
+I 17:56:38.162   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.211   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.214   [MOTION]       Motion-Time Done
+I 17:56:38.214   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.308   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.310   [MOTION]       Motion-Time Done
+I 17:56:38.310   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.356   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.358   [MOTION]       Motion-Time Done
+I 17:56:38.358   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.426   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.428   [MOTION]       Motion-Time Done
+I 17:56:38.428   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.466   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.468   [MOTION]       Motion-Time Done
+I 17:56:38.468   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.518   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.520   [MOTION]       Motion-Time Done
+I 17:56:38.520   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.577   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.580   [MOTION]       Motion-Time Done
+I 17:56:38.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.615   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.618   [MOTION]       Motion-Time Done
+I 17:56:38.618   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.660   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.662   [MOTION]       Motion-Time Done
+I 17:56:38.662   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.719   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.722   [MOTION]       Motion-Time Done
+I 17:56:38.722   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.755   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.758   [MOTION]       Motion-Time Done
+I 17:56:38.758   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.828   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.830   [MOTION]       Motion-Time Done
+I 17:56:38.830   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.861   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.864   [MOTION]       Motion-Time Done
+I 17:56:38.864   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.904   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.906   [MOTION]       Motion-Time Done
+I 17:56:38.906   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:38.984   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:38.986   [MOTION]       Motion-Time Done
+I 17:56:38.986   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.029   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.032   [MOTION]       Motion-Time Done
+I 17:56:39.032   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.074   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.076   [MOTION]       Motion-Time Done
+I 17:56:39.076   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.110   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.112   [MOTION]       Motion-Time Done
+I 17:56:39.112   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.207   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.210   [MOTION]       Motion-Time Done
+I 17:56:39.210   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.294   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.296   [MOTION]       Motion-Time Done
+I 17:56:39.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.362   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.364   [MOTION]       Motion-Time Done
+I 17:56:39.364   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.409   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.412   [MOTION]       Motion-Time Done
+I 17:56:39.412   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.465   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.468   [MOTION]       Motion-Time Done
+I 17:56:39.468   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.608   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.610   [MOTION]       Motion-Time Done
+I 17:56:39.610   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.672   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.674   [MOTION]       Motion-Time Done
+I 17:56:39.674   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.797   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.800   [MOTION]       Motion-Time Done
+I 17:56:39.800   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:39.936   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:39.940   [MOTION]       Motion-Time Done
+I 17:56:39.940   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.014   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.016   [MOTION]       Motion-Time Done
+I 17:56:40.016   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.066   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.070   [MOTION]       Motion-Time Done
+I 17:56:40.070   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.116   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.118   [MOTION]       Motion-Time Done
+I 17:56:40.118   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.166   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.168   [MOTION]       Motion-Time Done
+I 17:56:40.168   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.213   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.216   [MOTION]       Motion-Time Done
+I 17:56:40.216   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.294   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.296   [MOTION]       Motion-Time Done
+I 17:56:40.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.316   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.320   [MOTION]       Motion-Time Done
+I 17:56:40.320   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.388   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.390   [MOTION]       Motion-Time Done
+I 17:56:40.390   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.483   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.486   [MOTION]       Motion-Time Done
+I 17:56:40.486   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.659   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.662   [MOTION]       Motion-Time Done
+I 17:56:40.662   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.719   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.722   [MOTION]       Motion-Time Done
+I 17:56:40.722   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.765   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.768   [MOTION]       Motion-Time Done
+I 17:56:40.768   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.814   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.818   [MOTION]       Motion-Time Done
+I 17:56:40.818   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.867   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.870   [MOTION]       Motion-Time Done
+I 17:56:40.870   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.911   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.914   [MOTION]       Motion-Time Done
+I 17:56:40.914   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:40.962   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:40.964   [MOTION]       Motion-Time Done
+I 17:56:40.964   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.020   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.022   [MOTION]       Motion-Time Done
+I 17:56:41.022   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.158   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.160   [MOTION]       Motion-Time Done
+I 17:56:41.160   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.263   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.266   [MOTION]       Motion-Time Done
+I 17:56:41.266   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.326   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.328   [MOTION]       Motion-Time Done
+I 17:56:41.328   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.381   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.384   [MOTION]       Motion-Time Done
+I 17:56:41.384   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.418   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.420   [MOTION]       Motion-Time Done
+I 17:56:41.420   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.465   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.468   [MOTION]       Motion-Time Done
+I 17:56:41.468   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.529   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.532   [MOTION]       Motion-Time Done
+I 17:56:41.532   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.566   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.568   [MOTION]       Motion-Time Done
+I 17:56:41.568   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.629   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.632   [MOTION]       Motion-Time Done
+I 17:56:41.632   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.672   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.674   [MOTION]       Motion-Time Done
+I 17:56:41.674   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.771   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.774   [MOTION]       Motion-Time Done
+I 17:56:41.774   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.822   [MOTION]       Motion-Time Done
+I 17:56:41.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.879   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.882   [MOTION]       Motion-Time Done
+I 17:56:41.882   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.913   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.916   [MOTION]       Motion-Time Done
+I 17:56:41.916   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:41.966   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:41.968   [MOTION]       Motion-Time Done
+I 17:56:41.968   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.019   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.022   [MOTION]       Motion-Time Done
+I 17:56:42.022   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.070   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.072   [MOTION]       Motion-Time Done
+I 17:56:42.072   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.211   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.214   [MOTION]       Motion-Time Done
+I 17:56:42.214   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.266   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.268   [MOTION]       Motion-Time Done
+I 17:56:42.268   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.314   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.316   [MOTION]       Motion-Time Done
+I 17:56:42.316   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.371   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.374   [MOTION]       Motion-Time Done
+I 17:56:42.374   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.423   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.426   [MOTION]       Motion-Time Done
+I 17:56:42.426   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.476   [MOTION]       Motion-Time Done
+I 17:56:42.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.562   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.564   [MOTION]       Motion-Time Done
+I 17:56:42.564   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.616   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.618   [MOTION]       Motion-Time Done
+I 17:56:42.618   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.667   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.670   [MOTION]       Motion-Time Done
+I 17:56:42.670   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.722   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.724   [MOTION]       Motion-Time Done
+I 17:56:42.724   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.767   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.770   [MOTION]       Motion-Time Done
+I 17:56:42.770   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.815   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.818   [MOTION]       Motion-Time Done
+I 17:56:42.818   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.872   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.874   [MOTION]       Motion-Time Done
+I 17:56:42.874   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.926   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.930   [MOTION]       Motion-Time Done
+I 17:56:42.930   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:42.972   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:42.974   [MOTION]       Motion-Time Done
+I 17:56:42.974   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.015   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.018   [MOTION]       Motion-Time Done
+I 17:56:43.018   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.072   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.074   [MOTION]       Motion-Time Done
+I 17:56:43.074   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.126   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.130   [MOTION]       Motion-Time Done
+I 17:56:43.130   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.170   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.174   [MOTION]       Motion-Time Done
+I 17:56:43.174   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.222   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.224   [MOTION]       Motion-Time Done
+I 17:56:43.224   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.278   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.280   [MOTION]       Motion-Time Done
+I 17:56:43.280   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.325   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.328   [MOTION]       Motion-Time Done
+I 17:56:43.328   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.395   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.398   [MOTION]       Motion-Time Done
+I 17:56:43.398   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.439   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.442   [MOTION]       Motion-Time Done
+I 17:56:43.442   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.535   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.538   [MOTION]       Motion-Time Done
+I 17:56:43.538   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.577   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.580   [MOTION]       Motion-Time Done
+I 17:56:43.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.645   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.648   [MOTION]       Motion-Time Done
+I 17:56:43.648   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.691   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.694   [MOTION]       Motion-Time Done
+I 17:56:43.694   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.716   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.720   [MOTION]       Motion-Time Done
+I 17:56:43.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.780   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.782   [MOTION]       Motion-Time Done
+I 17:56:43.782   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.815   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.818   [MOTION]       Motion-Time Done
+I 17:56:43.818   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.881   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.884   [MOTION]       Motion-Time Done
+I 17:56:43.884   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.917   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.920   [MOTION]       Motion-Time Done
+I 17:56:43.920   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:43.968   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:43.970   [MOTION]       Motion-Time Done
+I 17:56:43.970   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.022   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.024   [MOTION]       Motion-Time Done
+I 17:56:44.024   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.074   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.076   [MOTION]       Motion-Time Done
+I 17:56:44.076   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.127   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.130   [MOTION]       Motion-Time Done
+I 17:56:44.130   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.441   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.444   [MOTION]       Motion-Time Done
+I 17:56:44.444   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.479   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.482   [MOTION]       Motion-Time Done
+I 17:56:44.482   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.529   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.532   [MOTION]       Motion-Time Done
+I 17:56:44.532   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.578   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.580   [MOTION]       Motion-Time Done
+I 17:56:44.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.623   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.626   [MOTION]       Motion-Time Done
+I 17:56:44.626   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.668   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.670   [MOTION]       Motion-Time Done
+I 17:56:44.670   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.721   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.724   [MOTION]       Motion-Time Done
+I 17:56:44.724   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.775   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.778   [MOTION]       Motion-Time Done
+I 17:56:44.778   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.829   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.832   [MOTION]       Motion-Time Done
+I 17:56:44.832   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.868   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.870   [MOTION]       Motion-Time Done
+I 17:56:44.870   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.920   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.922   [MOTION]       Motion-Time Done
+I 17:56:44.922   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:44.974   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:44.976   [MOTION]       Motion-Time Done
+I 17:56:44.976   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.022   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.024   [MOTION]       Motion-Time Done
+I 17:56:45.024   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.070   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.072   [MOTION]       Motion-Time Done
+I 17:56:45.072   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.130   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.132   [MOTION]       Motion-Time Done
+I 17:56:45.132   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.180   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.182   [MOTION]       Motion-Time Done
+I 17:56:45.182   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.225   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.228   [MOTION]       Motion-Time Done
+I 17:56:45.228   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.292   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.294   [MOTION]       Motion-Time Done
+I 17:56:45.294   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.324   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.326   [MOTION]       Motion-Time Done
+I 17:56:45.326   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.401   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.404   [MOTION]       Motion-Time Done
+I 17:56:45.404   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.491   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.494   [MOTION]       Motion-Time Done
+I 17:56:45.494   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.552   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.556   [MOTION]       Motion-Time Done
+I 17:56:45.556   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.579   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.582   [MOTION]       Motion-Time Done
+I 17:56:45.582   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.630   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.632   [MOTION]       Motion-Time Done
+I 17:56:45.632   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.673   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.676   [MOTION]       Motion-Time Done
+I 17:56:45.676   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.731   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.734   [MOTION]       Motion-Time Done
+I 17:56:45.734   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.773   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.776   [MOTION]       Motion-Time Done
+I 17:56:45.776   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.834   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.836   [MOTION]       Motion-Time Done
+I 17:56:45.836   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.878   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.880   [MOTION]       Motion-Time Done
+I 17:56:45.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.922   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.924   [MOTION]       Motion-Time Done
+I 17:56:45.924   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:45.972   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:45.974   [MOTION]       Motion-Time Done
+I 17:56:45.974   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.033   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.036   [MOTION]       Motion-Time Done
+I 17:56:46.036   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.086   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.088   [MOTION]       Motion-Time Done
+I 17:56:46.088   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.130   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.132   [MOTION]       Motion-Time Done
+I 17:56:46.132   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.181   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.184   [MOTION]       Motion-Time Done
+I 17:56:46.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.242   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.244   [MOTION]       Motion-Time Done
+I 17:56:46.244   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.291   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.294   [MOTION]       Motion-Time Done
+I 17:56:46.294   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.349   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.352   [MOTION]       Motion-Time Done
+I 17:56:46.352   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.406   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.408   [MOTION]       Motion-Time Done
+I 17:56:46.408   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.476   [MOTION]       Motion-Time Done
+I 17:56:46.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.578   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.580   [MOTION]       Motion-Time Done
+I 17:56:46.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.680   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.682   [MOTION]       Motion-Time Done
+I 17:56:46.682   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.727   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.730   [MOTION]       Motion-Time Done
+I 17:56:46.730   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.781   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.784   [MOTION]       Motion-Time Done
+I 17:56:46.784   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.841   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.844   [MOTION]       Motion-Time Done
+I 17:56:46.844   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:46.964   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:46.966   [MOTION]       Motion-Time Done
+I 17:56:46.966   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.227   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.230   [MOTION]       Motion-Time Done
+I 17:56:47.230   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.378   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.380   [MOTION]       Motion-Time Done
+I 17:56:47.380   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.575   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.578   [MOTION]       Motion-Time Done
+I 17:56:47.578   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.740   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.744   [MOTION]       Motion-Time Done
+I 17:56:47.744   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.908   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.912   [MOTION]       Motion-Time Done
+I 17:56:47.912   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:47.928   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:47.930   [MOTION]       Motion-Time Done
+I 17:56:47.930   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.077   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.080   [MOTION]       Motion-Time Done
+I 17:56:48.080   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.256   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.258   [MOTION]       Motion-Time Done
+I 17:56:48.258   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.403   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.406   [MOTION]       Motion-Time Done
+I 17:56:48.406   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.433   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.436   [MOTION]       Motion-Time Done
+I 17:56:48.436   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.590   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.592   [MOTION]       Motion-Time Done
+I 17:56:48.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.787   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.790   [MOTION]       Motion-Time Done
+I 17:56:48.790   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:48.940   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:48.942   [MOTION]       Motion-Time Done
+I 17:56:48.942   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:49.119   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:49.122   [MOTION]       Motion-Time Done
+I 17:56:49.122   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:49.299   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:49.302   [MOTION]       Motion-Time Done
+I 17:56:49.302   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:49.396   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:49.398   [MOTION]       Motion-Time Done
+I 17:56:49.398   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:49.705   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:49.708   [MOTION]       Motion-Time Done
+I 17:56:49.708   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.201   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.204   [MOTION]       Motion-Time Done
+I 17:56:50.204   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.307   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.310   [MOTION]       Motion-Time Done
+I 17:56:50.310   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.334   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.338   [MOTION]       Motion-Time Done
+I 17:56:50.338   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.445   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.448   [MOTION]       Motion-Time Done
+I 17:56:50.448   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.565   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.568   [MOTION]       Motion-Time Done
+I 17:56:50.568   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.675   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.678   [MOTION]       Motion-Time Done
+I 17:56:50.678   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.807   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.810   [MOTION]       Motion-Time Done
+I 17:56:50.810   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.893   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.896   [MOTION]       Motion-Time Done
+I 17:56:50.896   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.935   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.938   [MOTION]       Motion-Time Done
+I 17:56:50.938   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:50.993   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:50.996   [MOTION]       Motion-Time Done
+I 17:56:50.996   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.037   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.040   [MOTION]       Motion-Time Done
+I 17:56:51.040   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.085   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.088   [MOTION]       Motion-Time Done
+I 17:56:51.088   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.170   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.172   [MOTION]       Motion-Time Done
+I 17:56:51.172   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.191   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.194   [MOTION]       Motion-Time Done
+I 17:56:51.194   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.248   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.250   [MOTION]       Motion-Time Done
+I 17:56:51.250   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.292   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.296   [MOTION]       Motion-Time Done
+I 17:56:51.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.340   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.342   [MOTION]       Motion-Time Done
+I 17:56:51.342   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.467   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.470   [MOTION]       Motion-Time Done
+I 17:56:51.470   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.486   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.488   [MOTION]       Motion-Time Done
+I 17:56:51.488   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:51.686   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:51.688   [MOTION]       Motion-Time Done
+I 17:56:51.688   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:52.011   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:52.014   [MOTION]       Motion-Time Done
+I 17:56:52.014   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:52.205   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:52.208   [MOTION]       Motion-Time Done
+I 17:56:52.208   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:52.383   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:52.386   [MOTION]       Motion-Time Done
+I 17:56:52.386   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:52.589   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:52.592   [MOTION]       Motion-Time Done
+I 17:56:52.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:56:53.464   [MOTION]       Motion Mode Changed: 0->1
+I 17:56:53.466   [MOTION]       Motion-Time Done
+I 17:56:53.466   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:33.730   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:33.732   [MOTION]       Motion-Time Done
+I 17:57:33.732   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.075   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.078   [MOTION]       Motion-Time Done
+I 17:57:34.078   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.206   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.208   [MOTION]       Motion-Time Done
+I 17:57:34.208   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.429   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.432   [MOTION]       Motion-Time Done
+I 17:57:34.432   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.547   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.550   [MOTION]       Motion-Time Done
+I 17:57:34.550   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.737   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.740   [MOTION]       Motion-Time Done
+I 17:57:34.740   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.824   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.826   [MOTION]       Motion-Time Done
+I 17:57:34.826   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.854   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.856   [MOTION]       Motion-Time Done
+I 17:57:34.856   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.917   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.920   [MOTION]       Motion-Time Done
+I 17:57:34.920   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:34.955   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:34.958   [MOTION]       Motion-Time Done
+I 17:57:34.958   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.061   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.064   [MOTION]       Motion-Time Done
+I 17:57:35.064   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.102   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.104   [MOTION]       Motion-Time Done
+I 17:57:35.104   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.174   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.176   [MOTION]       Motion-Time Done
+I 17:57:35.176   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.212   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.214   [MOTION]       Motion-Time Done
+I 17:57:35.214   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.313   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.316   [MOTION]       Motion-Time Done
+I 17:57:35.316   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.371   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.374   [MOTION]       Motion-Time Done
+I 17:57:35.374   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.410   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.412   [MOTION]       Motion-Time Done
+I 17:57:35.412   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.452   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.454   [MOTION]       Motion-Time Done
+I 17:57:35.454   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.504   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.506   [MOTION]       Motion-Time Done
+I 17:57:35.506   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.555   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.558   [MOTION]       Motion-Time Done
+I 17:57:35.558   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.616   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.618   [MOTION]       Motion-Time Done
+I 17:57:35.618   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.652   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.654   [MOTION]       Motion-Time Done
+I 17:57:35.654   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.714   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.716   [MOTION]       Motion-Time Done
+I 17:57:35.716   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.756   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.758   [MOTION]       Motion-Time Done
+I 17:57:35.758   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.852   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.854   [MOTION]       Motion-Time Done
+I 17:57:35.854   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.904   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.906   [MOTION]       Motion-Time Done
+I 17:57:35.906   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:35.951   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:35.954   [MOTION]       Motion-Time Done
+I 17:57:35.954   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.015   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.018   [MOTION]       Motion-Time Done
+I 17:57:36.018   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.096   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.098   [MOTION]       Motion-Time Done
+I 17:57:36.098   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.201   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.204   [MOTION]       Motion-Time Done
+I 17:57:36.204   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.291   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.294   [MOTION]       Motion-Time Done
+I 17:57:36.294   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.348   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.350   [MOTION]       Motion-Time Done
+I 17:57:36.350   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.405   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.408   [MOTION]       Motion-Time Done
+I 17:57:36.408   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.482   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.484   [MOTION]       Motion-Time Done
+I 17:57:36.484   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.554   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.556   [MOTION]       Motion-Time Done
+I 17:57:36.556   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.623   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.626   [MOTION]       Motion-Time Done
+I 17:57:36.626   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.657   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.660   [MOTION]       Motion-Time Done
+I 17:57:36.660   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.713   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.716   [MOTION]       Motion-Time Done
+I 17:57:36.716   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.754   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.756   [MOTION]       Motion-Time Done
+I 17:57:36.756   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.808   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.810   [MOTION]       Motion-Time Done
+I 17:57:36.810   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.865   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.868   [MOTION]       Motion-Time Done
+I 17:57:36.868   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.921   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.924   [MOTION]       Motion-Time Done
+I 17:57:36.924   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:36.961   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:36.964   [MOTION]       Motion-Time Done
+I 17:57:36.964   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.002   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.004   [MOTION]       Motion-Time Done
+I 17:57:37.004   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.053   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.056   [MOTION]       Motion-Time Done
+I 17:57:37.056   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.112   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.114   [MOTION]       Motion-Time Done
+I 17:57:37.114   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.151   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.154   [MOTION]       Motion-Time Done
+I 17:57:37.154   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.204   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.208   [MOTION]       Motion-Time Done
+I 17:57:37.208   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.268   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.270   [MOTION]       Motion-Time Done
+I 17:57:37.270   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.309   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.312   [MOTION]       Motion-Time Done
+I 17:57:37.312   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.352   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.354   [MOTION]       Motion-Time Done
+I 17:57:37.354   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.430   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.432   [MOTION]       Motion-Time Done
+I 17:57:37.432   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.455   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.458   [MOTION]       Motion-Time Done
+I 17:57:37.458   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.513   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.516   [MOTION]       Motion-Time Done
+I 17:57:37.516   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.558   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.560   [MOTION]       Motion-Time Done
+I 17:57:37.560   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.627   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.630   [MOTION]       Motion-Time Done
+I 17:57:37.630   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.730   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.734   [MOTION]       Motion-Time Done
+I 17:57:37.734   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.817   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.820   [MOTION]       Motion-Time Done
+I 17:57:37.820   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.857   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.860   [MOTION]       Motion-Time Done
+I 17:57:37.860   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.916   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.918   [MOTION]       Motion-Time Done
+I 17:57:37.918   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:37.979   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:37.982   [MOTION]       Motion-Time Done
+I 17:57:37.982   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.088   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.090   [MOTION]       Motion-Time Done
+I 17:57:38.090   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.109   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.112   [MOTION]       Motion-Time Done
+I 17:57:38.112   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.251   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.254   [MOTION]       Motion-Time Done
+I 17:57:38.254   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.312   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.316   [MOTION]       Motion-Time Done
+I 17:57:38.316   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.359   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.362   [MOTION]       Motion-Time Done
+I 17:57:38.362   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.423   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.426   [MOTION]       Motion-Time Done
+I 17:57:38.426   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.457   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.460   [MOTION]       Motion-Time Done
+I 17:57:38.460   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.556   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.560   [MOTION]       Motion-Time Done
+I 17:57:38.560   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.653   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.656   [MOTION]       Motion-Time Done
+I 17:57:38.656   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.766   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.768   [MOTION]       Motion-Time Done
+I 17:57:38.768   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.809   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.812   [MOTION]       Motion-Time Done
+I 17:57:38.812   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.858   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.862   [MOTION]       Motion-Time Done
+I 17:57:38.862   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:38.967   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:38.970   [MOTION]       Motion-Time Done
+I 17:57:38.970   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.030   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.032   [MOTION]       Motion-Time Done
+I 17:57:39.032   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.120   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.122   [MOTION]       Motion-Time Done
+I 17:57:39.122   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.166   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.168   [MOTION]       Motion-Time Done
+I 17:57:39.168   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.219   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.222   [MOTION]       Motion-Time Done
+I 17:57:39.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.262   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.264   [MOTION]       Motion-Time Done
+I 17:57:39.264   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.311   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.314   [MOTION]       Motion-Time Done
+I 17:57:39.314   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.365   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.368   [MOTION]       Motion-Time Done
+I 17:57:39.368   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.426   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.428   [MOTION]       Motion-Time Done
+I 17:57:39.428   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.492   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.494   [MOTION]       Motion-Time Done
+I 17:57:39.494   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.650   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.654   [MOTION]       Motion-Time Done
+I 17:57:39.654   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.769   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.772   [MOTION]       Motion-Time Done
+I 17:57:39.772   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.822   [MOTION]       Motion-Time Done
+I 17:57:39.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.910   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.912   [MOTION]       Motion-Time Done
+I 17:57:39.912   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:39.974   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:39.976   [MOTION]       Motion-Time Done
+I 17:57:39.976   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.077   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.080   [MOTION]       Motion-Time Done
+I 17:57:40.080   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.110   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.112   [MOTION]       Motion-Time Done
+I 17:57:40.112   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.164   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.166   [MOTION]       Motion-Time Done
+I 17:57:40.166   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.231   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.234   [MOTION]       Motion-Time Done
+I 17:57:40.234   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.276   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.280   [MOTION]       Motion-Time Done
+I 17:57:40.280   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.396   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.398   [MOTION]       Motion-Time Done
+I 17:57:40.398   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.733   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.736   [MOTION]       Motion-Time Done
+I 17:57:40.736   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.831   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.834   [MOTION]       Motion-Time Done
+I 17:57:40.834   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.934   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.936   [MOTION]       Motion-Time Done
+I 17:57:40.936   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:40.995   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:40.998   [MOTION]       Motion-Time Done
+I 17:57:40.998   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.013   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.016   [MOTION]       Motion-Time Done
+I 17:57:41.016   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.077   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.080   [MOTION]       Motion-Time Done
+I 17:57:41.080   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.176   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.178   [MOTION]       Motion-Time Done
+I 17:57:41.178   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.279   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.282   [MOTION]       Motion-Time Done
+I 17:57:41.282   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.310   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.312   [MOTION]       Motion-Time Done
+I 17:57:41.312   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.361   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.364   [MOTION]       Motion-Time Done
+I 17:57:41.364   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.416   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.418   [MOTION]       Motion-Time Done
+I 17:57:41.418   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.467   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.470   [MOTION]       Motion-Time Done
+I 17:57:41.470   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.516   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.518   [MOTION]       Motion-Time Done
+I 17:57:41.518   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.637   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.640   [MOTION]       Motion-Time Done
+I 17:57:41.640   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.671   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.674   [MOTION]       Motion-Time Done
+I 17:57:41.674   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.717   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.720   [MOTION]       Motion-Time Done
+I 17:57:41.720   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.773   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.776   [MOTION]       Motion-Time Done
+I 17:57:41.776   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.825   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.828   [MOTION]       Motion-Time Done
+I 17:57:41.828   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.922   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.924   [MOTION]       Motion-Time Done
+I 17:57:41.924   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:41.970   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:41.972   [MOTION]       Motion-Time Done
+I 17:57:41.972   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.088   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.090   [MOTION]       Motion-Time Done
+I 17:57:42.090   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.176   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.180   [MOTION]       Motion-Time Done
+I 17:57:42.180   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.379   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.382   [MOTION]       Motion-Time Done
+I 17:57:42.382   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.424   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.428   [MOTION]       Motion-Time Done
+I 17:57:42.428   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.476   [MOTION]       Motion-Time Done
+I 17:57:42.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.520   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.522   [MOTION]       Motion-Time Done
+I 17:57:42.522   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.571   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.574   [MOTION]       Motion-Time Done
+I 17:57:42.574   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.639   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.642   [MOTION]       Motion-Time Done
+I 17:57:42.642   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.712   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.714   [MOTION]       Motion-Time Done
+I 17:57:42.714   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.822   [MOTION]       Motion-Time Done
+I 17:57:42.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.866   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.868   [MOTION]       Motion-Time Done
+I 17:57:42.868   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.933   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.936   [MOTION]       Motion-Time Done
+I 17:57:42.936   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:42.974   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:42.978   [MOTION]       Motion-Time Done
+I 17:57:42.978   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.018   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.020   [MOTION]       Motion-Time Done
+I 17:57:43.020   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.073   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.076   [MOTION]       Motion-Time Done
+I 17:57:43.076   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.123   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.126   [MOTION]       Motion-Time Done
+I 17:57:43.126   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.181   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.184   [MOTION]       Motion-Time Done
+I 17:57:43.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.219   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.222   [MOTION]       Motion-Time Done
+I 17:57:43.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.274   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.276   [MOTION]       Motion-Time Done
+I 17:57:43.276   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.316   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.318   [MOTION]       Motion-Time Done
+I 17:57:43.318   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.370   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.372   [MOTION]       Motion-Time Done
+I 17:57:43.372   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.420   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.422   [MOTION]       Motion-Time Done
+I 17:57:43.422   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.469   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.472   [MOTION]       Motion-Time Done
+I 17:57:43.472   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.525   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.528   [MOTION]       Motion-Time Done
+I 17:57:43.528   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.568   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.570   [MOTION]       Motion-Time Done
+I 17:57:43.570   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.621   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.624   [MOTION]       Motion-Time Done
+I 17:57:43.624   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.670   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.672   [MOTION]       Motion-Time Done
+I 17:57:43.672   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.760   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.762   [MOTION]       Motion-Time Done
+I 17:57:43.762   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.833   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.836   [MOTION]       Motion-Time Done
+I 17:57:43.836   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.884   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.888   [MOTION]       Motion-Time Done
+I 17:57:43.888   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:43.987   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:43.990   [MOTION]       Motion-Time Done
+I 17:57:43.990   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.025   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.028   [MOTION]       Motion-Time Done
+I 17:57:44.028   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.083   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.086   [MOTION]       Motion-Time Done
+I 17:57:44.086   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.120   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.122   [MOTION]       Motion-Time Done
+I 17:57:44.122   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.176   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.178   [MOTION]       Motion-Time Done
+I 17:57:44.178   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.219   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.222   [MOTION]       Motion-Time Done
+I 17:57:44.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.267   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.270   [MOTION]       Motion-Time Done
+I 17:57:44.270   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.342   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.344   [MOTION]       Motion-Time Done
+I 17:57:44.344   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.372   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.374   [MOTION]       Motion-Time Done
+I 17:57:44.374   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.425   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.428   [MOTION]       Motion-Time Done
+I 17:57:44.428   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.469   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.472   [MOTION]       Motion-Time Done
+I 17:57:44.472   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.521   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.524   [MOTION]       Motion-Time Done
+I 17:57:44.524   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.568   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.570   [MOTION]       Motion-Time Done
+I 17:57:44.570   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.626   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.628   [MOTION]       Motion-Time Done
+I 17:57:44.628   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.675   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.678   [MOTION]       Motion-Time Done
+I 17:57:44.678   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.722   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.724   [MOTION]       Motion-Time Done
+I 17:57:44.724   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.776   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.778   [MOTION]       Motion-Time Done
+I 17:57:44.778   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.823   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.826   [MOTION]       Motion-Time Done
+I 17:57:44.826   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.878   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.880   [MOTION]       Motion-Time Done
+I 17:57:44.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.927   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.930   [MOTION]       Motion-Time Done
+I 17:57:44.930   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:44.979   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:44.982   [MOTION]       Motion-Time Done
+I 17:57:44.982   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.023   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.026   [MOTION]       Motion-Time Done
+I 17:57:45.026   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.084   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.088   [MOTION]       Motion-Time Done
+I 17:57:45.088   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.131   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.134   [MOTION]       Motion-Time Done
+I 17:57:45.134   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.171   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.174   [MOTION]       Motion-Time Done
+I 17:57:45.174   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.222   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.224   [MOTION]       Motion-Time Done
+I 17:57:45.224   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.288   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.292   [MOTION]       Motion-Time Done
+I 17:57:45.292   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.322   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.326   [MOTION]       Motion-Time Done
+I 17:57:45.326   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.382   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.384   [MOTION]       Motion-Time Done
+I 17:57:45.384   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.430   [MOTION]       Motion-Time Done
+I 17:57:45.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.498   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.500   [MOTION]       Motion-Time Done
+I 17:57:45.500   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.531   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.534   [MOTION]       Motion-Time Done
+I 17:57:45.534   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.579   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.582   [MOTION]       Motion-Time Done
+I 17:57:45.582   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.638   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.642   [MOTION]       Motion-Time Done
+I 17:57:45.642   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.697   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.700   [MOTION]       Motion-Time Done
+I 17:57:45.700   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.792   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.794   [MOTION]       Motion-Time Done
+I 17:57:45.794   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.842   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.844   [MOTION]       Motion-Time Done
+I 17:57:45.844   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:45.985   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:45.988   [MOTION]       Motion-Time Done
+I 17:57:45.988   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:46.233   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:46.236   [MOTION]       Motion-Time Done
+I 17:57:46.236   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:46.551   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:46.554   [MOTION]       Motion-Time Done
+I 17:57:46.554   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:46.740   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:46.742   [MOTION]       Motion-Time Done
+I 17:57:46.742   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:46.924   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:46.926   [MOTION]       Motion-Time Done
+I 17:57:46.926   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.095   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.098   [MOTION]       Motion-Time Done
+I 17:57:47.098   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.258   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.260   [MOTION]       Motion-Time Done
+I 17:57:47.260   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.425   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.428   [MOTION]       Motion-Time Done
+I 17:57:47.428   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.600   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.602   [MOTION]       Motion-Time Done
+I 17:57:47.602   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.628   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.630   [MOTION]       Motion-Time Done
+I 17:57:47.630   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:47.957   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:47.960   [MOTION]       Motion-Time Done
+I 17:57:47.960   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:48.147   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:48.150   [MOTION]       Motion-Time Done
+I 17:57:48.150   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:48.312   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:48.314   [MOTION]       Motion-Time Done
+I 17:57:48.314   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:48.589   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:48.592   [MOTION]       Motion-Time Done
+I 17:57:48.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:48.905   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:48.908   [MOTION]       Motion-Time Done
+I 17:57:48.908   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:49.089   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:49.092   [MOTION]       Motion-Time Done
+I 17:57:49.092   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:49.595   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:49.598   [MOTION]       Motion-Time Done
+I 17:57:49.598   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:49.840   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:49.842   [MOTION]       Motion-Time Done
+I 17:57:49.842   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:49.932   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:49.934   [MOTION]       Motion-Time Done
+I 17:57:49.934   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:49.982   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:49.986   [MOTION]       Motion-Time Done
+I 17:57:49.986   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.043   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.046   [MOTION]       Motion-Time Done
+I 17:57:50.046   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.097   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.100   [MOTION]       Motion-Time Done
+I 17:57:50.100   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.182   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.184   [MOTION]       Motion-Time Done
+I 17:57:50.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.230   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.232   [MOTION]       Motion-Time Done
+I 17:57:50.232   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.347   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.350   [MOTION]       Motion-Time Done
+I 17:57:50.350   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:50.483   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:50.486   [MOTION]       Motion-Time Done
+I 17:57:50.486   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:51.022   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:51.024   [MOTION]       Motion-Time Done
+I 17:57:51.024   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:51.247   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:51.250   [MOTION]       Motion-Time Done
+I 17:57:51.250   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:51.595   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:51.598   [MOTION]       Motion-Time Done
+I 17:57:51.598   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:51.922   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:51.924   [MOTION]       Motion-Time Done
+I 17:57:51.924   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:52.255   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:52.258   [MOTION]       Motion-Time Done
+I 17:57:52.258   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:52.428   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:52.430   [MOTION]       Motion-Time Done
+I 17:57:52.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:52.619   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:52.622   [MOTION]       Motion-Time Done
+I 17:57:52.622   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:52.804   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:52.806   [MOTION]       Motion-Time Done
+I 17:57:52.806   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:53.044   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:53.046   [MOTION]       Motion-Time Done
+I 17:57:53.046   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:53.378   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:53.380   [MOTION]       Motion-Time Done
+I 17:57:53.380   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:53.580   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:53.582   [MOTION]       Motion-Time Done
+I 17:57:53.582   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:53.706   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:53.708   [MOTION]       Motion-Time Done
+I 17:57:53.708   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:53.933   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:53.936   [MOTION]       Motion-Time Done
+I 17:57:53.936   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.161   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.164   [MOTION]       Motion-Time Done
+I 17:57:54.164   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.284   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.288   [MOTION]       Motion-Time Done
+I 17:57:54.288   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.406   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.410   [MOTION]       Motion-Time Done
+I 17:57:54.410   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.446   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.448   [MOTION]       Motion-Time Done
+I 17:57:54.448   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.505   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.508   [MOTION]       Motion-Time Done
+I 17:57:54.508   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.539   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.542   [MOTION]       Motion-Time Done
+I 17:57:54.542   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.589   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.592   [MOTION]       Motion-Time Done
+I 17:57:54.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.641   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.644   [MOTION]       Motion-Time Done
+I 17:57:54.644   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.689   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.692   [MOTION]       Motion-Time Done
+I 17:57:54.692   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.774   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.776   [MOTION]       Motion-Time Done
+I 17:57:54.776   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:54.929   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:54.932   [MOTION]       Motion-Time Done
+I 17:57:54.932   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.054   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.058   [MOTION]       Motion-Time Done
+I 17:57:55.058   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.111   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.114   [MOTION]       Motion-Time Done
+I 17:57:55.114   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.148   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.152   [MOTION]       Motion-Time Done
+I 17:57:55.152   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.196   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.198   [MOTION]       Motion-Time Done
+I 17:57:55.198   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.254   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.256   [MOTION]       Motion-Time Done
+I 17:57:55.256   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.294   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.296   [MOTION]       Motion-Time Done
+I 17:57:55.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.357   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.360   [MOTION]       Motion-Time Done
+I 17:57:55.360   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.398   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.400   [MOTION]       Motion-Time Done
+I 17:57:55.400   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.447   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.450   [MOTION]       Motion-Time Done
+I 17:57:55.450   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.497   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.500   [MOTION]       Motion-Time Done
+I 17:57:55.500   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.549   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.552   [MOTION]       Motion-Time Done
+I 17:57:55.552   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.592   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.594   [MOTION]       Motion-Time Done
+I 17:57:55.594   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.646   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.648   [MOTION]       Motion-Time Done
+I 17:57:55.648   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.698   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.702   [MOTION]       Motion-Time Done
+I 17:57:55.702   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.747   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.750   [MOTION]       Motion-Time Done
+I 17:57:55.750   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.796   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.798   [MOTION]       Motion-Time Done
+I 17:57:55.798   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.883   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.886   [MOTION]       Motion-Time Done
+I 17:57:55.886   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:55.966   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:55.968   [MOTION]       Motion-Time Done
+I 17:57:55.968   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.023   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.026   [MOTION]       Motion-Time Done
+I 17:57:56.026   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.067   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.070   [MOTION]       Motion-Time Done
+I 17:57:56.070   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.127   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.130   [MOTION]       Motion-Time Done
+I 17:57:56.130   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.189   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.192   [MOTION]       Motion-Time Done
+I 17:57:56.192   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.232   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.234   [MOTION]       Motion-Time Done
+I 17:57:56.234   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.277   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.280   [MOTION]       Motion-Time Done
+I 17:57:56.280   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.320   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.322   [MOTION]       Motion-Time Done
+I 17:57:56.322   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.372   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.376   [MOTION]       Motion-Time Done
+I 17:57:56.376   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.421   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.424   [MOTION]       Motion-Time Done
+I 17:57:56.424   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.478   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.480   [MOTION]       Motion-Time Done
+I 17:57:56.480   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.522   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.524   [MOTION]       Motion-Time Done
+I 17:57:56.524   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.584   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.588   [MOTION]       Motion-Time Done
+I 17:57:56.588   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.624   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.628   [MOTION]       Motion-Time Done
+I 17:57:56.628   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.669   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.672   [MOTION]       Motion-Time Done
+I 17:57:56.672   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.730   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.732   [MOTION]       Motion-Time Done
+I 17:57:56.732   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.778   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.780   [MOTION]       Motion-Time Done
+I 17:57:56.780   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.820   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.822   [MOTION]       Motion-Time Done
+I 17:57:56.822   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.900   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.902   [MOTION]       Motion-Time Done
+I 17:57:56.902   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:56.979   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:56.982   [MOTION]       Motion-Time Done
+I 17:57:56.982   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.028   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.030   [MOTION]       Motion-Time Done
+I 17:57:57.030   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.073   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.076   [MOTION]       Motion-Time Done
+I 17:57:57.076   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.127   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.130   [MOTION]       Motion-Time Done
+I 17:57:57.130   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.205   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.208   [MOTION]       Motion-Time Done
+I 17:57:57.208   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.318   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.320   [MOTION]       Motion-Time Done
+I 17:57:57.320   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.376   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.378   [MOTION]       Motion-Time Done
+I 17:57:57.378   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.432   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.434   [MOTION]       Motion-Time Done
+I 17:57:57.434   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.471   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.474   [MOTION]       Motion-Time Done
+I 17:57:57.474   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.527   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.530   [MOTION]       Motion-Time Done
+I 17:57:57.530   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.569   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.572   [MOTION]       Motion-Time Done
+I 17:57:57.572   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.621   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.624   [MOTION]       Motion-Time Done
+I 17:57:57.624   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.675   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.678   [MOTION]       Motion-Time Done
+I 17:57:57.678   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.728   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.730   [MOTION]       Motion-Time Done
+I 17:57:57.730   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.794   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.796   [MOTION]       Motion-Time Done
+I 17:57:57.796   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.829   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.832   [MOTION]       Motion-Time Done
+I 17:57:57.832   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.872   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.874   [MOTION]       Motion-Time Done
+I 17:57:57.874   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.920   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.922   [MOTION]       Motion-Time Done
+I 17:57:57.922   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:57.973   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:57.976   [MOTION]       Motion-Time Done
+I 17:57:57.976   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.023   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.026   [MOTION]       Motion-Time Done
+I 17:57:58.026   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.071   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.074   [MOTION]       Motion-Time Done
+I 17:57:58.074   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.120   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.122   [MOTION]       Motion-Time Done
+I 17:57:58.122   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.171   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.174   [MOTION]       Motion-Time Done
+I 17:57:58.174   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.220   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.222   [MOTION]       Motion-Time Done
+I 17:57:58.222   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.271   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.274   [MOTION]       Motion-Time Done
+I 17:57:58.274   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.323   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.326   [MOTION]       Motion-Time Done
+I 17:57:58.326   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.373   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.376   [MOTION]       Motion-Time Done
+I 17:57:58.376   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.430   [MOTION]       Motion-Time Done
+I 17:57:58.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.475   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.478   [MOTION]       Motion-Time Done
+I 17:57:58.478   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.524   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.526   [MOTION]       Motion-Time Done
+I 17:57:58.526   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.577   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.580   [MOTION]       Motion-Time Done
+I 17:57:58.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.622   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.624   [MOTION]       Motion-Time Done
+I 17:57:58.624   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.678   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.680   [MOTION]       Motion-Time Done
+I 17:57:58.680   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.723   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.726   [MOTION]       Motion-Time Done
+I 17:57:58.726   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.775   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.778   [MOTION]       Motion-Time Done
+I 17:57:58.778   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.831   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.834   [MOTION]       Motion-Time Done
+I 17:57:58.834   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.875   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.878   [MOTION]       Motion-Time Done
+I 17:57:58.878   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.926   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.928   [MOTION]       Motion-Time Done
+I 17:57:58.928   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:58.976   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:58.978   [MOTION]       Motion-Time Done
+I 17:57:58.978   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.024   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.026   [MOTION]       Motion-Time Done
+I 17:57:59.026   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.075   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.078   [MOTION]       Motion-Time Done
+I 17:57:59.078   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.178   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.180   [MOTION]       Motion-Time Done
+I 17:57:59.180   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.225   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.228   [MOTION]       Motion-Time Done
+I 17:57:59.228   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.274   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.276   [MOTION]       Motion-Time Done
+I 17:57:59.276   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.329   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.332   [MOTION]       Motion-Time Done
+I 17:57:59.332   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.374   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.376   [MOTION]       Motion-Time Done
+I 17:57:59.376   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.456   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.458   [MOTION]       Motion-Time Done
+I 17:57:59.458   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.473   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.476   [MOTION]       Motion-Time Done
+I 17:57:59.476   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.531   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.534   [MOTION]       Motion-Time Done
+I 17:57:59.534   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.572   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.576   [MOTION]       Motion-Time Done
+I 17:57:59.576   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.627   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.630   [MOTION]       Motion-Time Done
+I 17:57:59.630   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.725   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.728   [MOTION]       Motion-Time Done
+I 17:57:59.728   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.773   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.776   [MOTION]       Motion-Time Done
+I 17:57:59.776   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.827   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.830   [MOTION]       Motion-Time Done
+I 17:57:59.830   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.877   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.880   [MOTION]       Motion-Time Done
+I 17:57:59.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.926   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.928   [MOTION]       Motion-Time Done
+I 17:57:59.928   [MOTION]       Motion Mode Changed: 1->0
+I 17:57:59.977   [MOTION]       Motion Mode Changed: 0->1
+I 17:57:59.980   [MOTION]       Motion-Time Done
+I 17:57:59.980   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.026   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.028   [MOTION]       Motion-Time Done
+I 17:58:00.028   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.083   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.086   [MOTION]       Motion-Time Done
+I 17:58:00.086   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.131   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.134   [MOTION]       Motion-Time Done
+I 17:58:00.134   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.179   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.182   [MOTION]       Motion-Time Done
+I 17:58:00.182   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.293   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.296   [MOTION]       Motion-Time Done
+I 17:58:00.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.331   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.334   [MOTION]       Motion-Time Done
+I 17:58:00.334   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.388   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.390   [MOTION]       Motion-Time Done
+I 17:58:00.390   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.427   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.430   [MOTION]       Motion-Time Done
+I 17:58:00.430   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.481   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.484   [MOTION]       Motion-Time Done
+I 17:58:00.484   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.534   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.536   [MOTION]       Motion-Time Done
+I 17:58:00.536   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.578   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.580   [MOTION]       Motion-Time Done
+I 17:58:00.580   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.634   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.636   [MOTION]       Motion-Time Done
+I 17:58:00.636   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.683   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.686   [MOTION]       Motion-Time Done
+I 17:58:00.686   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.781   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.784   [MOTION]       Motion-Time Done
+I 17:58:00.784   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.850   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.852   [MOTION]       Motion-Time Done
+I 17:58:00.852   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.878   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.880   [MOTION]       Motion-Time Done
+I 17:58:00.880   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:00.978   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:00.980   [MOTION]       Motion-Time Done
+I 17:58:00.980   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.043   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.046   [MOTION]       Motion-Time Done
+I 17:58:01.046   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.145   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.148   [MOTION]       Motion-Time Done
+I 17:58:01.148   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.280   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.284   [MOTION]       Motion-Time Done
+I 17:58:01.284   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.343   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.346   [MOTION]       Motion-Time Done
+I 17:58:01.346   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.384   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.386   [MOTION]       Motion-Time Done
+I 17:58:01.386   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.435   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.438   [MOTION]       Motion-Time Done
+I 17:58:01.438   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.489   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.492   [MOTION]       Motion-Time Done
+I 17:58:01.492   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.549   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.552   [MOTION]       Motion-Time Done
+I 17:58:01.552   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.637   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.640   [MOTION]       Motion-Time Done
+I 17:58:01.640   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.693   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.696   [MOTION]       Motion-Time Done
+I 17:58:01.696   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.731   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.734   [MOTION]       Motion-Time Done
+I 17:58:01.734   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.808   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.810   [MOTION]       Motion-Time Done
+I 17:58:01.810   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.844   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.846   [MOTION]       Motion-Time Done
+I 17:58:01.846   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.882   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.884   [MOTION]       Motion-Time Done
+I 17:58:01.884   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.930   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.932   [MOTION]       Motion-Time Done
+I 17:58:01.932   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:01.986   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:01.988   [MOTION]       Motion-Time Done
+I 17:58:01.988   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.029   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.032   [MOTION]       Motion-Time Done
+I 17:58:02.032   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.082   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.084   [MOTION]       Motion-Time Done
+I 17:58:02.084   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.131   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.134   [MOTION]       Motion-Time Done
+I 17:58:02.134   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.181   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.184   [MOTION]       Motion-Time Done
+I 17:58:02.184   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.232   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.234   [MOTION]       Motion-Time Done
+I 17:58:02.234   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.284   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.286   [MOTION]       Motion-Time Done
+I 17:58:02.286   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.332   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.336   [MOTION]       Motion-Time Done
+I 17:58:02.336   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.381   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.384   [MOTION]       Motion-Time Done
+I 17:58:02.384   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.432   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.434   [MOTION]       Motion-Time Done
+I 17:58:02.434   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.488   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.490   [MOTION]       Motion-Time Done
+I 17:58:02.490   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.538   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.540   [MOTION]       Motion-Time Done
+I 17:58:02.540   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.583   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.586   [MOTION]       Motion-Time Done
+I 17:58:02.586   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.633   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.636   [MOTION]       Motion-Time Done
+I 17:58:02.636   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.682   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.684   [MOTION]       Motion-Time Done
+I 17:58:02.684   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.733   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.736   [MOTION]       Motion-Time Done
+I 17:58:02.736   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.795   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.798   [MOTION]       Motion-Time Done
+I 17:58:02.798   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.841   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.844   [MOTION]       Motion-Time Done
+I 17:58:02.844   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.887   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.890   [MOTION]       Motion-Time Done
+I 17:58:02.890   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.934   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.936   [MOTION]       Motion-Time Done
+I 17:58:02.936   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:02.982   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:02.984   [MOTION]       Motion-Time Done
+I 17:58:02.984   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.032   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.034   [MOTION]       Motion-Time Done
+I 17:58:03.034   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.088   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.090   [MOTION]       Motion-Time Done
+I 17:58:03.090   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.139   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.142   [MOTION]       Motion-Time Done
+I 17:58:03.142   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.190   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.192   [MOTION]       Motion-Time Done
+I 17:58:03.192   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.259   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.262   [MOTION]       Motion-Time Done
+I 17:58:03.262   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.338   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.342   [MOTION]       Motion-Time Done
+I 17:58:03.342   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.387   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.390   [MOTION]       Motion-Time Done
+I 17:58:03.390   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.440   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.442   [MOTION]       Motion-Time Done
+I 17:58:03.442   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.485   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.488   [MOTION]       Motion-Time Done
+I 17:58:03.488   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.536   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.538   [MOTION]       Motion-Time Done
+I 17:58:03.538   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.589   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.592   [MOTION]       Motion-Time Done
+I 17:58:03.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.645   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.648   [MOTION]       Motion-Time Done
+I 17:58:03.648   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.686   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.690   [MOTION]       Motion-Time Done
+I 17:58:03.690   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.735   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.738   [MOTION]       Motion-Time Done
+I 17:58:03.738   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.807   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.810   [MOTION]       Motion-Time Done
+I 17:58:03.810   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.849   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.852   [MOTION]       Motion-Time Done
+I 17:58:03.852   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.937   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.940   [MOTION]       Motion-Time Done
+I 17:58:03.940   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:03.986   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:03.988   [MOTION]       Motion-Time Done
+I 17:58:03.988   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.039   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.042   [MOTION]       Motion-Time Done
+I 17:58:04.042   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.095   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.098   [MOTION]       Motion-Time Done
+I 17:58:04.098   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.144   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.146   [MOTION]       Motion-Time Done
+I 17:58:04.146   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.186   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.188   [MOTION]       Motion-Time Done
+I 17:58:04.188   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.243   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.246   [MOTION]       Motion-Time Done
+I 17:58:04.246   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.293   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.296   [MOTION]       Motion-Time Done
+I 17:58:04.296   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.344   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.346   [MOTION]       Motion-Time Done
+I 17:58:04.346   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.400   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.402   [MOTION]       Motion-Time Done
+I 17:58:04.402   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.478   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.482   [MOTION]       Motion-Time Done
+I 17:58:04.482   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.541   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.544   [MOTION]       Motion-Time Done
+I 17:58:04.544   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.590   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.592   [MOTION]       Motion-Time Done
+I 17:58:04.592   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.644   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.646   [MOTION]       Motion-Time Done
+I 17:58:04.646   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.688   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.692   [MOTION]       Motion-Time Done
+I 17:58:04.692   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.737   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.740   [MOTION]       Motion-Time Done
+I 17:58:04.740   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.786   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.788   [MOTION]       Motion-Time Done
+I 17:58:04.788   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.882   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.884   [MOTION]       Motion-Time Done
+I 17:58:04.884   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.956   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.958   [MOTION]       Motion-Time Done
+I 17:58:04.958   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:04.993   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:04.996   [MOTION]       Motion-Time Done
+I 17:58:04.996   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:05.048   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:05.052   [MOTION]       Motion-Time Done
+I 17:58:05.052   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:05.095   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:05.098   [MOTION]       Motion-Time Done
+I 17:58:05.098   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:05.165   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:05.168   [MOTION]       Motion-Time Done
+I 17:58:05.168   [MOTION]       Motion Mode Changed: 1->0
+I 17:58:58.431   [MOTION]       Motion Mode Changed: 0->1
+I 17:58:58.434   [MOTION]       Motion-Time Done
+I 17:58:58.434   [MOTION]       Motion Mode Changed: 1->0

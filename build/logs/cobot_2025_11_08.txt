@@ -1,1 +1,0 @@
-W 22:24:57.747   [LAN2CAN]      Header footer not match
