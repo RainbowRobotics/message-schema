@@ -717,6 +717,9 @@ namespace rb_system {
     }
 
     bool initialize(std::string domain, int th_cpu){
+        // ------------------------------------------------------
+        // Call DB infomation
+        // ------------------------------------------------------
         parameter_code = rb_config::READ_Robot_Model();
         parameter_robot = rb_config::READ_Robot_Parameter(parameter_code);
 
@@ -734,17 +737,23 @@ namespace rb_system {
         Recover_Box_Special_Din(-1);
         Recover_Box_FilterCount_Din(-1);
 
+        // ------------------------------------------------------
+        // Make Instances
+        // ------------------------------------------------------
+
         _gv_Handler_Lan = new lan2can();
         _gv_Handler_SCB = new scb_v1();
         _gv_Handler_Side = new side_io(1);
-        for(int i = 0; i < NO_OF_DIN; ++i){
-            _gv_Handler_Side->Set_Din_Filter_Count(i, parameter_filter_count_din_box[i]);
-        }
         for(int i = 0; i < NO_OF_JOINT; ++i){
             _gv_Handler_Motor[i] = new motor(i, parameter_robot.can_Ch[i]);
         }
         _gv_Handler_Ledlight = new ledlight(parameter_robot.can_Ch[2]);
         _gv_Handler_Toolflange = new toolflange(parameter_robot.can_Ch[NO_OF_JOINT]);
+
+        // ------------------------------------------------------
+        for(int i = 0; i < NO_OF_DIN; ++i){
+            _gv_Handler_Side->Set_Din_Filter_Count(i, parameter_filter_count_din_box[i]);
+        }
 
 
         _gv_Handler_Lan->CAN_registerObserver(_gv_Handler_SCB);
@@ -794,9 +803,6 @@ namespace rb_system {
             setting_mot.para_shake_pulse = module_INFO.shake_pulse;
             
             _gv_Handler_Motor[i]->Set_Parameters(setting_mot);
-        }
-
-        for(int i = 0; i < NO_OF_JOINT; ++i){
             torque_limit_A[i] = -1;
         }
 
@@ -807,9 +813,7 @@ namespace rb_system {
         Config_TimeScaler(SystemTimeScaler::COLLISION_OUT, 1.0, 0.96);
         Config_TimeScaler(SystemTimeScaler::COLLISION_SELF, 1.0, 0.0);
 
-        std::string th_name = "RB_" + domain + "_SYSGEN";
-
-        if(rb_common::thread_create(thread_system_general, th_cpu, th_name.c_str(), hThread_sys_gen, NULL) != 0){
+        if(rb_common::thread_create(thread_system_general, th_cpu, std::string("RB_" + domain + "_SYSGEN"), hThread_sys_gen, NULL) != 0){
             return false;
         }
 
@@ -824,6 +828,20 @@ namespace rb_system {
         return {s_category, s_model, s_version, s_alias};
     }
 
+    int Save_Robot_Code(int t_code, int option){
+        // auto [temp_valid, temp_para] = rb_config::READ_Robot_Parameter(t_code);
+        // if(temp_valid == false){
+        //     return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
+        // }
+        if(!rb_config::WRITE_Robot_Model(t_code)){
+            return MSG_SAVE_TO_DB_FAIL;
+        }
+
+        // ADJUST
+        // NO ADJUST !!!!!!!!!!!!!!!!!!!!!!!!
+
+        return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
     ROBOT_CONFIG Get_CurrentRobotParameter(){
         return parameter_robot;
     }

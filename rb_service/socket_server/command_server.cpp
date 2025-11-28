@@ -149,6 +149,12 @@ namespace rb_socket_command_server {
                 // -----------------------------------------------------------------------
                 // BOX
                 // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("save_robot_code", {
+                    if (a.size() == 2){
+                        return {rb_system::Save_Robot_Code(std::stoi(a[0]), std::stoi(a[1])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 ADD_CMD_HANDLER("call_side_dout", {
                     if (a.size() == 2){
                         return {rb_system::Set_Box_Digital_Output(std::stoi(a[0]), std::stoi(a[1])), ""};

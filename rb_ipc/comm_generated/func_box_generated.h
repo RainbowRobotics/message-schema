@@ -18,6 +18,10 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace IPC {
 
+struct Request_Save_Robot_Code;
+struct Request_Save_Robot_CodeBuilder;
+struct Request_Save_Robot_CodeT;
+
 struct Request_Save_Area_Para;
 struct Request_Save_Area_ParaBuilder;
 struct Request_Save_Area_ParaT;
@@ -57,6 +61,69 @@ struct Request_SideDout_BitcombinationT;
 struct Request_SideDout_Pulse;
 struct Request_SideDout_PulseBuilder;
 struct Request_SideDout_PulseT;
+
+struct Request_Save_Robot_CodeT : public ::flatbuffers::NativeTable {
+  typedef Request_Save_Robot_Code TableType;
+  int32_t code = 0;
+  int32_t option = 0;
+};
+
+struct Request_Save_Robot_Code FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Save_Robot_CodeT NativeTableType;
+  typedef Request_Save_Robot_CodeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CODE = 4,
+    VT_OPTION = 6
+  };
+  int32_t code() const {
+    return GetField<int32_t>(VT_CODE, 0);
+  }
+  int32_t option() const {
+    return GetField<int32_t>(VT_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_CODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_Save_Robot_CodeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Save_Robot_CodeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Save_Robot_Code> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_Robot_CodeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Save_Robot_CodeBuilder {
+  typedef Request_Save_Robot_Code Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_code(int32_t code) {
+    fbb_.AddElement<int32_t>(Request_Save_Robot_Code::VT_CODE, code, 0);
+  }
+  void add_option(int32_t option) {
+    fbb_.AddElement<int32_t>(Request_Save_Robot_Code::VT_OPTION, option, 0);
+  }
+  explicit Request_Save_Robot_CodeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Save_Robot_Code> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Save_Robot_Code>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Save_Robot_Code> CreateRequest_Save_Robot_Code(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t code = 0,
+    int32_t option = 0) {
+  Request_Save_Robot_CodeBuilder builder_(_fbb);
+  builder_.add_option(option);
+  builder_.add_code(code);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Save_Robot_Code> CreateRequest_Save_Robot_Code(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_Robot_CodeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct Request_Save_Area_ParaT : public ::flatbuffers::NativeTable {
   typedef Request_Save_Area_Para TableType;
@@ -974,6 +1041,35 @@ inline ::flatbuffers::Offset<Request_SideDout_Pulse> CreateRequest_SideDout_Puls
 }
 
 ::flatbuffers::Offset<Request_SideDout_Pulse> CreateRequest_SideDout_Pulse(::flatbuffers::FlatBufferBuilder &_fbb, const Request_SideDout_PulseT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+inline Request_Save_Robot_CodeT *Request_Save_Robot_Code::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Save_Robot_CodeT>(new Request_Save_Robot_CodeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Save_Robot_Code::UnPackTo(Request_Save_Robot_CodeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = code(); _o->code = _e; }
+  { auto _e = option(); _o->option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Save_Robot_Code> Request_Save_Robot_Code::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_Robot_CodeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Save_Robot_Code(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Save_Robot_Code> CreateRequest_Save_Robot_Code(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_Robot_CodeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Save_Robot_CodeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _code = _o->code;
+  auto _option = _o->option;
+  return IPC::CreateRequest_Save_Robot_Code(
+      _fbb,
+      _code,
+      _option);
+}
 
 inline Request_Save_Area_ParaT *Request_Save_Area_Para::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Save_Area_ParaT>(new Request_Save_Area_ParaT());

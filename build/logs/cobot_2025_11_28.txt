@@ -444,3 +444,102 @@ I 15:31:23.246   [DAEMON]       Succeed to start real-time thread
 I 15:31:23.247   [DAEMON]       Succeed to start read thread
 I 15:31:23.745   [LAN2CAN]      Succeed to connect l2c
 I 15:31:26.757   [MAIN]         SYSTEM STARTING
+I 16:24:00.271   [MAIN]         System Version: 1.0.0
+I 16:24:01.282   [LAN2CAN]      Succeed to create socket
+I 16:24:01.784   [DAEMON]       Succeed to start read thread
+I 16:24:01.784   [DAEMON]       Succeed to start real-time thread
+I 16:24:02.282   [LAN2CAN]      Succeed to connect l2c
+I 16:24:05.297   [MAIN]         SYSTEM STARTING
+I 16:30:32.364   [MAIN]         System Version: 1.0.0
+I 16:30:33.375   [LAN2CAN]      Succeed to create socket
+I 16:30:33.877   [DAEMON]       Succeed to start read thread
+I 16:30:33.877   [DAEMON]       Succeed to start real-time thread
+I 16:30:34.375   [LAN2CAN]      Succeed to connect l2c
+I 16:30:37.389   [MAIN]         SYSTEM STARTING
+I 16:38:34.552   [SYSTEM]       CMD Power On
+I 16:38:34.785   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 16:38:34.797   [SYSTEM]       STATE POWER ENGAGED
+I 16:38:35.314   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:70.311630
+I 16:38:35.314   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-10.031279
+I 16:38:35.314   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-5.385259
+I 16:38:35.314   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:42.234926
+I 16:38:35.314   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:-8.500807
+I 16:38:35.314   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:5.223401
+I 16:38:35.314   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:76.002983
+I 16:38:35.824   [SYSTEM]       Servo Call: 1/1
+I 16:38:35.824   [SYSTEM]       ServoState: 0
+I 16:38:35.824   [SYSTEM]       ServoState: 1
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 16:38:35.919   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 16:38:35.919   [SYSTEM]       Side Firmware : 29
+I 16:38:35.919   [SYSTEM]       ToolFlange Firmware : 92
+I 16:38:35.919   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 16:38:35.919   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 16:38:35.919   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 16:38:35.919   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 16:38:35.919   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 16:38:35.919   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 16:38:35.919   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 16:38:35.919   [SYSTEM]       ServoState: 2
+I 16:38:35.919   [SYSTEM]       ServoState: 3
+I 16:38:37.480   [SYSTEM]       Motor Acts: 0[-0.171865,0.172083/0.174041]
+I 16:38:37.480   [SYSTEM]       Motor Acts: 1[-0.172518,0.171865/0.174041]
+I 16:38:37.481   [SYSTEM]       Motor Acts: 2[-0.171430,0.170125/0.174041]
+I 16:38:37.481   [SYSTEM]       Motor Acts: 3[-0.171213,0.171430/0.174041]
+I 16:38:37.481   [SYSTEM]       Motor Acts: 4[-0.117042,0.124439/0.130531]
+I 16:38:37.481   [SYSTEM]       Motor Acts: 5[-0.117695,0.119436/0.130531]
+I 16:38:37.481   [SYSTEM]       Motor Acts: 6[-0.119000,0.123787/0.130531]
+I 16:38:37.481   [SYSTEM]       ServoState: 4
+I 16:38:37.481   [SYSTEM]       ServoState: 5
+I 16:38:37.481   [SYSTEM]       ServoState: 6
+I 16:38:37.481   [SYSTEM]       Reference On
+I 16:39:58.193   [SYSTEM]       PAUSE
+I 16:39:59.474   [SYSTEM]       RESUME from PAUSE
+I 16:40:19.638   [MOTION]       Motion Mode Changed: 0->8
+I 16:40:20.728   [SYSTEM]       Break Called
+I 16:40:21.029   [SYSTEM]       Break Finished
+I 16:40:21.029   [MOTION]       Motion Mode Changed: 8->0
+I 16:40:45.722   [MOTION]       Motion Mode Changed: 0->1
+I 16:40:47.633   [MOTION]       Motion-Time Done
+I 16:40:47.633   [MOTION]       Motion Mode Changed: 1->0
+I 16:40:47.650   [MOTION]       Motion Mode Changed: 0->1
+I 16:40:49.561   [MOTION]       Motion-Time Done
+I 16:40:49.561   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:01.654   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:03.565   [MOTION]       Motion-Time Done
+I 16:41:03.565   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:03.578   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:05.489   [MOTION]       Motion-Time Done
+I 16:41:05.489   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:09.604   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:11.515   [MOTION]       Motion-Time Done
+I 16:41:11.515   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:11.527   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:13.437   [MOTION]       Motion-Time Done
+I 16:41:13.437   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:23.614   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:25.525   [MOTION]       Motion-Time Done
+I 16:41:25.525   [MOTION]       Motion Mode Changed: 1->0
+I 16:41:25.535   [MOTION]       Motion Mode Changed: 0->1
+I 16:41:27.447   [MOTION]       Motion-Time Done
+I 16:41:27.447   [MOTION]       Motion Mode Changed: 1->0
+I 16:45:26.970   [MOTION]       Motion Mode Changed: 0->1
+I 16:46:18.055   [MOTION]       Motion Mode Changed: 1->0
+I 16:46:24.461   [MOTION]       Motion Mode Changed: 0->1
+I 16:46:24.563   [MOTION]       Motion-Time Done
+I 16:46:24.563   [MOTION]       Motion Mode Changed: 1->0
+I 16:46:24.583   [MOTION]       Motion Mode Changed: 0->1
+I 16:46:26.495   [MOTION]       Motion-Time Done
+I 16:46:26.495   [MOTION]       Motion Mode Changed: 1->0
+I 16:46:32.817   [MOTION]       Motion Mode Changed: 0->1
+I 16:46:34.727   [MOTION]       Motion-Time Done
+I 16:46:34.727   [MOTION]       Motion Mode Changed: 1->0
+I 16:46:34.738   [MOTION]       Motion Mode Changed: 0->1
+I 16:46:36.649   [MOTION]       Motion-Time Done
+I 16:46:36.649   [MOTION]       Motion Mode Changed: 1->0
+W 17:34:46.841   [LAN2CAN]      Header footer not match

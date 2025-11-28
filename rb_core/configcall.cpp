@@ -114,10 +114,12 @@ namespace rb_config {
     }
 
     ROBOT_CONFIG READ_Robot_Parameter(int r_code){
+        bool valid_number = false;
         ROBOT_CONFIG ret;
         ret.self_coll_check_list.clear();
         
         if(r_code == 3001200){
+            valid_number = true;
             ret.arm_name = "CB3-1200E";
             ret.arm_max_payload = 3;
             ret.redundancy_type = -1;
@@ -209,6 +211,7 @@ namespace rb_config {
 
         }else if(r_code == 500920){//7DOF
             #if NO_OF_JOINT == 7
+            valid_number = true;
             ret.arm_name = "SB5-920E";
             ret.arm_max_payload = 5;
             ret.redundancy_type = 2;
@@ -367,7 +370,7 @@ namespace rb_config {
     }
 
     int READ_Robot_Model(){
-        return Call_Value_I(DB_ADDR_LIST::ARM_CODE, 3001200);
+        return Call_Value_I(DB_ADDR_LIST::ARM_CODE, 500920);
     }
     bool WRITE_Robot_Model(int mcode){
         return Write_Value_I(DB_ADDR_LIST::ARM_CODE, mcode);

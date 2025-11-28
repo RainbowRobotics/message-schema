@@ -2,6 +2,10 @@ include "func_return.fbs";
 include "common_struct.fbs";
 
 namespace IPC;
+table Request_Save_Robot_Code {
+  code: int;
+  option: int;
+}
 
 table Request_Save_Area_Para {
     area_no: int;

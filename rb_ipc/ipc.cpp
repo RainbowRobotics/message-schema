@@ -161,6 +161,9 @@ namespace rb_ipc {
             // -----------------------------------------------------------------------
             // BOX
             // -----------------------------------------------------------------------
+            ADD_SERVE_SIMPLE("save_robot_code", IPC::Request_Save_Robot_Code, IPC::Response_Functions, {
+                return_int = rb_system::Save_Robot_Code(req->code(), req->option());
+            });
             ADD_SERVE_SIMPLE("save_user_frame_parameter", IPC::Request_Save_User_Frame, IPC::Response_Functions, {
                 USERF_CONFIG tar_conf;
                 tar_conf.userf_name = req->userf_name()->c_str();

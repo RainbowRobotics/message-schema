@@ -128,6 +128,7 @@ namespace rb_system {
 
     
     // Robot Parameter
+    int             Save_Robot_Code(int t_code, int option);
     ROBOT_CONFIG    Get_CurrentRobotParameter();
     
     // ---------------------------------------------------------------
