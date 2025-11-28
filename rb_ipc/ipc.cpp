@@ -468,6 +468,20 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("set_freedrive", IPC::Request_Set_Free_Drive, IPC::Response_Functions, {
                 return_int = rb_system::Set_Free_Drive_Mode(req->onoff(), req->sensitivity());
             });
+            ADD_SERVE_SIMPLE("set_userframe_6dof", IPC::Request_Set_User_Frame_6Dof, IPC::Response_Functions, {
+                return_int = rb_system::Set_UserFrame_6DOF(req->user_frame_num(), req->setting_option()
+                                                        , req->target_x(), req->target_y(), req->target_z()
+                                                        , req->target_rx(), req->target_ry(), req->target_rz());
+            });
+            ADD_SERVE_SIMPLE("set_userframe_tcp", IPC::Request_Set_User_Frame_TCP, IPC::Response_Functions, {
+                return_int = rb_system::Set_UserFrame_TCP(req->user_frame_num(), req->setting_option());
+            });
+            ADD_SERVE_SIMPLE("set_userframe_3points", IPC::Request_Set_User_Frame_3Points, IPC::Response_Functions, {
+                return_int = rb_system::Set_UserFrame_3Points(req->user_frame_num(), req->setting_option(), req->order_option()
+                                                        , req->point_1_x(), req->point_1_y(), req->point_1_z()
+                                                        , req->point_2_x(), req->point_2_y(), req->point_2_z()
+                                                        , req->point_3_x(), req->point_3_y(), req->point_3_z());
+            });
             // -----------------------------------------------------------------------
             // Get Call
             // -----------------------------------------------------------------------

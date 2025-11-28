@@ -340,6 +340,28 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("set_userframe_6dof", {
+                    if(a.size() == 8){
+                        return {rb_system::Set_UserFrame_6DOF(std::stoi(a[0]), std::stoi(a[1])
+                            , std::stof(a[2]), std::stof(a[3]), std::stof(a[4]), std::stof(a[5]), std::stof(a[6]), std::stof(a[7])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("set_userframe_tcp", {
+                    if(a.size() == 2){
+                        return {rb_system::Set_UserFrame_TCP(std::stoi(a[0]), std::stoi(a[1])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("set_userframe_3points", {
+                    if(a.size() == 12){
+                        return {rb_system::Set_UserFrame_3Points(std::stoi(a[0]), std::stoi(a[1]), std::stoi(a[2])
+                            , std::stof(a[3]), std::stof(a[4]), std::stof(a[5])
+                            , std::stof(a[6]), std::stof(a[7]), std::stof(a[8])
+                            , std::stof(a[9]), std::stof(a[10]), std::stof(a[11])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Get Call
                 // -----------------------------------------------------------------------

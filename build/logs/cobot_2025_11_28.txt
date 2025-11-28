@@ -85,3 +85,9 @@ I 08:44:06.499   [SYSTEM]       RUN DT Mode
 I 08:44:10.267   [SYSTEM]       STOP DT Mode
 I 08:44:10.319   [SYSTEM]       RUN DT Mode
 I 08:44:16.647   [SYSTEM]       STOP DT Mode
+I 09:15:01.890   [MAIN]         System Version: 1.0.0
+I 09:15:02.906   [LAN2CAN]      Succeed to create socket
+I 09:15:03.409   [DAEMON]       Succeed to start read thread
+I 09:15:03.409   [DAEMON]       Succeed to start real-time thread
+I 09:15:03.907   [LAN2CAN]      Succeed to connect l2c
+I 09:15:06.922   [MAIN]         SYSTEM STARTING

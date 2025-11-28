@@ -153,6 +153,10 @@ namespace rb_system {
     USERF_CONFIG    Get_CurrentUserFrameParameter();
     USERF_CONFIG    Get_DesiredUserFrameParameter(unsigned int u_num);
     int             Save_UserFrameParameter(unsigned int u_num, USERF_CONFIG u_conf);
+
+    int             Set_UserFrame_6DOF(unsigned int u_num, unsigned int option, float x, float y, float z, float rx, float ry, float rz);
+    int             Set_UserFrame_TCP(unsigned int u_num, unsigned int option);
+    int             Set_UserFrame_3Points(unsigned int u_num, unsigned int option, unsigned int point_mode, float p1x, float p1y, float p1z, float p2x, float p2y, float p2z, float p3x, float p3y, float p3z);
     // ---------------------------------------------------------------
     // AREA
     // ---------------------------------------------------------------

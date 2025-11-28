@@ -1009,7 +1009,72 @@ namespace rb_system {
             , rb_motion::Get_Wrapper_X()[3], rb_motion::Get_Wrapper_X()[4], rb_motion::Get_Wrapper_X()[5]);
     }
     int Set_UserFrame_3Points(unsigned int u_num, unsigned int option, unsigned int point_mode, float p1x, float p1y, float p1z, float p2x, float p2y, float p2z, float p3x, float p3y, float p3z){
-        return MSG_OK;
+        Eigen::Vector3d point_1 = Eigen::Vector3d(p1x, p1y, p1z);
+        Eigen::Vector3d point_2 = Eigen::Vector3d(p2x, p2y, p2z);
+        Eigen::Vector3d point_3 = Eigen::Vector3d(p3x, p3y, p3z);
+
+        Eigen::Vector3d vec_p12 = point_2 - point_1;
+        Eigen::Vector3d vec_p23 = point_3 - point_2;
+        Eigen::Vector3d vec_p13 = point_3 - point_1;
+
+        double del_p12 = vec_p12.norm();
+        double del_p23 = vec_p23.norm();
+        double del_p13 = vec_p13.norm();
+
+        if(vec_p12.norm() < 0.7 || vec_p23.norm() < 0.7 || vec_p13.norm() < 0.7){
+            return MSG_POINTS_TOO_CLOSE;
+        }
+
+        Eigen::Vector3d temp_vec1 = vec_p12/vec_p12.norm();
+        Eigen::Vector3d temp_vec2 = vec_p13/vec_p13.norm();
+        if(fabs(temp_vec1.dot(temp_vec2)) > 0.99){
+            return MSG_POINTS_ARE_IN_LINE;
+        }
+
+        Eigen::Vector3d x_Axis = Eigen::Vector3d(1, 0, 0);
+        Eigen::Vector3d y_Axis = Eigen::Vector3d(0, 1, 0);
+        Eigen::Vector3d z_Axis = Eigen::Vector3d(0, 0, 1);
+
+        if(point_mode == 0){
+            x_Axis = point_2 - point_1;
+            x_Axis = x_Axis/x_Axis.norm();
+
+            Eigen::Vector3d temp_vec = point_3 - point_1;
+            z_Axis = x_Axis.cross(temp_vec);
+            z_Axis = z_Axis/z_Axis.norm();
+
+            y_Axis = z_Axis.cross(x_Axis);
+            y_Axis = y_Axis/y_Axis.norm();
+        }else if(point_mode == 1){
+            y_Axis = point_2 - point_1;
+            y_Axis = y_Axis/y_Axis.norm();
+
+            Eigen::Vector3d temp_vec = point_3 - point_1;
+            z_Axis = temp_vec.cross(y_Axis);
+            z_Axis = z_Axis/z_Axis.norm();
+
+            x_Axis = y_Axis.cross(z_Axis);
+            x_Axis = x_Axis/x_Axis.norm();
+        }else if(point_mode == 2){
+            z_Axis = point_2 - point_1;
+            z_Axis = z_Axis/z_Axis.norm();
+
+            Eigen::Vector3d temp_vec = point_3 - point_1;
+            x_Axis = temp_vec.cross(z_Axis);
+            x_Axis = x_Axis/x_Axis.norm();
+
+            y_Axis = z_Axis.cross(x_Axis);
+            y_Axis = y_Axis/y_Axis.norm();
+        }
+
+        Eigen::Matrix3d temp_R;
+        temp_R.block(0, 0, 3, 1) = x_Axis;
+        temp_R.block(0, 1, 3, 1) = y_Axis;
+        temp_R.block(0, 2, 3, 1) = z_Axis;
+        Eigen::Vector3d temp_E = rb_math::R_to_RPY(temp_R);
+        return Set_UserFrame_6DOF(u_num, option
+            , point_1(0), point_1(1), point_1(2)
+            , temp_E(0), temp_E(1), temp_E(2));
     }
 
     // ---------------------------------------------------------------

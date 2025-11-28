@@ -46,6 +46,18 @@ struct Request_Set_Free_Drive;
 struct Request_Set_Free_DriveBuilder;
 struct Request_Set_Free_DriveT;
 
+struct Request_Set_User_Frame_6Dof;
+struct Request_Set_User_Frame_6DofBuilder;
+struct Request_Set_User_Frame_6DofT;
+
+struct Request_Set_User_Frame_TCP;
+struct Request_Set_User_Frame_TCPBuilder;
+struct Request_Set_User_Frame_TCPT;
+
+struct Request_Set_User_Frame_3Points;
+struct Request_Set_User_Frame_3PointsBuilder;
+struct Request_Set_User_Frame_3PointsT;
+
 struct Request_Set_Tool_ListT : public ::flatbuffers::NativeTable {
   typedef Request_Set_Tool_List TableType;
   int32_t target_tool_num = 0;
@@ -518,6 +530,371 @@ inline ::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Driv
 
 ::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Drive(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Free_DriveT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Set_User_Frame_6DofT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_User_Frame_6Dof TableType;
+  int32_t user_frame_num = 0;
+  int32_t setting_option = 0;
+  float target_x = 0.0f;
+  float target_y = 0.0f;
+  float target_z = 0.0f;
+  float target_rx = 0.0f;
+  float target_ry = 0.0f;
+  float target_rz = 0.0f;
+};
+
+struct Request_Set_User_Frame_6Dof FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_User_Frame_6DofT NativeTableType;
+  typedef Request_Set_User_Frame_6DofBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_USER_FRAME_NUM = 4,
+    VT_SETTING_OPTION = 6,
+    VT_TARGET_X = 8,
+    VT_TARGET_Y = 10,
+    VT_TARGET_Z = 12,
+    VT_TARGET_RX = 14,
+    VT_TARGET_RY = 16,
+    VT_TARGET_RZ = 18
+  };
+  int32_t user_frame_num() const {
+    return GetField<int32_t>(VT_USER_FRAME_NUM, 0);
+  }
+  int32_t setting_option() const {
+    return GetField<int32_t>(VT_SETTING_OPTION, 0);
+  }
+  float target_x() const {
+    return GetField<float>(VT_TARGET_X, 0.0f);
+  }
+  float target_y() const {
+    return GetField<float>(VT_TARGET_Y, 0.0f);
+  }
+  float target_z() const {
+    return GetField<float>(VT_TARGET_Z, 0.0f);
+  }
+  float target_rx() const {
+    return GetField<float>(VT_TARGET_RX, 0.0f);
+  }
+  float target_ry() const {
+    return GetField<float>(VT_TARGET_RY, 0.0f);
+  }
+  float target_rz() const {
+    return GetField<float>(VT_TARGET_RZ, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_USER_FRAME_NUM, 4) &&
+           VerifyField<int32_t>(verifier, VT_SETTING_OPTION, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_X, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_Y, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_Z, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_RX, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_RY, 4) &&
+           VerifyField<float>(verifier, VT_TARGET_RZ, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_User_Frame_6DofT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_User_Frame_6DofT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_User_Frame_6Dof> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_6DofT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_User_Frame_6DofBuilder {
+  typedef Request_Set_User_Frame_6Dof Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_user_frame_num(int32_t user_frame_num) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_6Dof::VT_USER_FRAME_NUM, user_frame_num, 0);
+  }
+  void add_setting_option(int32_t setting_option) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_6Dof::VT_SETTING_OPTION, setting_option, 0);
+  }
+  void add_target_x(float target_x) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_X, target_x, 0.0f);
+  }
+  void add_target_y(float target_y) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_Y, target_y, 0.0f);
+  }
+  void add_target_z(float target_z) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_Z, target_z, 0.0f);
+  }
+  void add_target_rx(float target_rx) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_RX, target_rx, 0.0f);
+  }
+  void add_target_ry(float target_ry) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_RY, target_ry, 0.0f);
+  }
+  void add_target_rz(float target_rz) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_6Dof::VT_TARGET_RZ, target_rz, 0.0f);
+  }
+  explicit Request_Set_User_Frame_6DofBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_User_Frame_6Dof> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_User_Frame_6Dof>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_6Dof> CreateRequest_Set_User_Frame_6Dof(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t user_frame_num = 0,
+    int32_t setting_option = 0,
+    float target_x = 0.0f,
+    float target_y = 0.0f,
+    float target_z = 0.0f,
+    float target_rx = 0.0f,
+    float target_ry = 0.0f,
+    float target_rz = 0.0f) {
+  Request_Set_User_Frame_6DofBuilder builder_(_fbb);
+  builder_.add_target_rz(target_rz);
+  builder_.add_target_ry(target_ry);
+  builder_.add_target_rx(target_rx);
+  builder_.add_target_z(target_z);
+  builder_.add_target_y(target_y);
+  builder_.add_target_x(target_x);
+  builder_.add_setting_option(setting_option);
+  builder_.add_user_frame_num(user_frame_num);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_User_Frame_6Dof> CreateRequest_Set_User_Frame_6Dof(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_6DofT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Set_User_Frame_TCPT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_User_Frame_TCP TableType;
+  int32_t user_frame_num = 0;
+  int32_t setting_option = 0;
+};
+
+struct Request_Set_User_Frame_TCP FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_User_Frame_TCPT NativeTableType;
+  typedef Request_Set_User_Frame_TCPBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_USER_FRAME_NUM = 4,
+    VT_SETTING_OPTION = 6
+  };
+  int32_t user_frame_num() const {
+    return GetField<int32_t>(VT_USER_FRAME_NUM, 0);
+  }
+  int32_t setting_option() const {
+    return GetField<int32_t>(VT_SETTING_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_USER_FRAME_NUM, 4) &&
+           VerifyField<int32_t>(verifier, VT_SETTING_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_User_Frame_TCPT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_User_Frame_TCPT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_User_Frame_TCP> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_TCPT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_User_Frame_TCPBuilder {
+  typedef Request_Set_User_Frame_TCP Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_user_frame_num(int32_t user_frame_num) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_TCP::VT_USER_FRAME_NUM, user_frame_num, 0);
+  }
+  void add_setting_option(int32_t setting_option) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_TCP::VT_SETTING_OPTION, setting_option, 0);
+  }
+  explicit Request_Set_User_Frame_TCPBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_User_Frame_TCP> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_User_Frame_TCP>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_TCP> CreateRequest_Set_User_Frame_TCP(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t user_frame_num = 0,
+    int32_t setting_option = 0) {
+  Request_Set_User_Frame_TCPBuilder builder_(_fbb);
+  builder_.add_setting_option(setting_option);
+  builder_.add_user_frame_num(user_frame_num);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_User_Frame_TCP> CreateRequest_Set_User_Frame_TCP(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_TCPT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Set_User_Frame_3PointsT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_User_Frame_3Points TableType;
+  int32_t user_frame_num = 0;
+  int32_t setting_option = 0;
+  int32_t order_option = 0;
+  float point_1_x = 0.0f;
+  float point_1_y = 0.0f;
+  float point_1_z = 0.0f;
+  float point_2_x = 0.0f;
+  float point_2_y = 0.0f;
+  float point_2_z = 0.0f;
+  float point_3_x = 0.0f;
+  float point_3_y = 0.0f;
+  float point_3_z = 0.0f;
+};
+
+struct Request_Set_User_Frame_3Points FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_User_Frame_3PointsT NativeTableType;
+  typedef Request_Set_User_Frame_3PointsBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_USER_FRAME_NUM = 4,
+    VT_SETTING_OPTION = 6,
+    VT_ORDER_OPTION = 8,
+    VT_POINT_1_X = 10,
+    VT_POINT_1_Y = 12,
+    VT_POINT_1_Z = 14,
+    VT_POINT_2_X = 16,
+    VT_POINT_2_Y = 18,
+    VT_POINT_2_Z = 20,
+    VT_POINT_3_X = 22,
+    VT_POINT_3_Y = 24,
+    VT_POINT_3_Z = 26
+  };
+  int32_t user_frame_num() const {
+    return GetField<int32_t>(VT_USER_FRAME_NUM, 0);
+  }
+  int32_t setting_option() const {
+    return GetField<int32_t>(VT_SETTING_OPTION, 0);
+  }
+  int32_t order_option() const {
+    return GetField<int32_t>(VT_ORDER_OPTION, 0);
+  }
+  float point_1_x() const {
+    return GetField<float>(VT_POINT_1_X, 0.0f);
+  }
+  float point_1_y() const {
+    return GetField<float>(VT_POINT_1_Y, 0.0f);
+  }
+  float point_1_z() const {
+    return GetField<float>(VT_POINT_1_Z, 0.0f);
+  }
+  float point_2_x() const {
+    return GetField<float>(VT_POINT_2_X, 0.0f);
+  }
+  float point_2_y() const {
+    return GetField<float>(VT_POINT_2_Y, 0.0f);
+  }
+  float point_2_z() const {
+    return GetField<float>(VT_POINT_2_Z, 0.0f);
+  }
+  float point_3_x() const {
+    return GetField<float>(VT_POINT_3_X, 0.0f);
+  }
+  float point_3_y() const {
+    return GetField<float>(VT_POINT_3_Y, 0.0f);
+  }
+  float point_3_z() const {
+    return GetField<float>(VT_POINT_3_Z, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_USER_FRAME_NUM, 4) &&
+           VerifyField<int32_t>(verifier, VT_SETTING_OPTION, 4) &&
+           VerifyField<int32_t>(verifier, VT_ORDER_OPTION, 4) &&
+           VerifyField<float>(verifier, VT_POINT_1_X, 4) &&
+           VerifyField<float>(verifier, VT_POINT_1_Y, 4) &&
+           VerifyField<float>(verifier, VT_POINT_1_Z, 4) &&
+           VerifyField<float>(verifier, VT_POINT_2_X, 4) &&
+           VerifyField<float>(verifier, VT_POINT_2_Y, 4) &&
+           VerifyField<float>(verifier, VT_POINT_2_Z, 4) &&
+           VerifyField<float>(verifier, VT_POINT_3_X, 4) &&
+           VerifyField<float>(verifier, VT_POINT_3_Y, 4) &&
+           VerifyField<float>(verifier, VT_POINT_3_Z, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_User_Frame_3PointsT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_User_Frame_3PointsT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_User_Frame_3Points> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_3PointsT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_User_Frame_3PointsBuilder {
+  typedef Request_Set_User_Frame_3Points Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_user_frame_num(int32_t user_frame_num) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_3Points::VT_USER_FRAME_NUM, user_frame_num, 0);
+  }
+  void add_setting_option(int32_t setting_option) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_3Points::VT_SETTING_OPTION, setting_option, 0);
+  }
+  void add_order_option(int32_t order_option) {
+    fbb_.AddElement<int32_t>(Request_Set_User_Frame_3Points::VT_ORDER_OPTION, order_option, 0);
+  }
+  void add_point_1_x(float point_1_x) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_1_X, point_1_x, 0.0f);
+  }
+  void add_point_1_y(float point_1_y) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_1_Y, point_1_y, 0.0f);
+  }
+  void add_point_1_z(float point_1_z) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_1_Z, point_1_z, 0.0f);
+  }
+  void add_point_2_x(float point_2_x) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_2_X, point_2_x, 0.0f);
+  }
+  void add_point_2_y(float point_2_y) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_2_Y, point_2_y, 0.0f);
+  }
+  void add_point_2_z(float point_2_z) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_2_Z, point_2_z, 0.0f);
+  }
+  void add_point_3_x(float point_3_x) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_3_X, point_3_x, 0.0f);
+  }
+  void add_point_3_y(float point_3_y) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_3_Y, point_3_y, 0.0f);
+  }
+  void add_point_3_z(float point_3_z) {
+    fbb_.AddElement<float>(Request_Set_User_Frame_3Points::VT_POINT_3_Z, point_3_z, 0.0f);
+  }
+  explicit Request_Set_User_Frame_3PointsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_User_Frame_3Points> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_User_Frame_3Points>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_User_Frame_3Points(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t user_frame_num = 0,
+    int32_t setting_option = 0,
+    int32_t order_option = 0,
+    float point_1_x = 0.0f,
+    float point_1_y = 0.0f,
+    float point_1_z = 0.0f,
+    float point_2_x = 0.0f,
+    float point_2_y = 0.0f,
+    float point_2_z = 0.0f,
+    float point_3_x = 0.0f,
+    float point_3_y = 0.0f,
+    float point_3_z = 0.0f) {
+  Request_Set_User_Frame_3PointsBuilder builder_(_fbb);
+  builder_.add_point_3_z(point_3_z);
+  builder_.add_point_3_y(point_3_y);
+  builder_.add_point_3_x(point_3_x);
+  builder_.add_point_2_z(point_2_z);
+  builder_.add_point_2_y(point_2_y);
+  builder_.add_point_2_x(point_2_x);
+  builder_.add_point_1_z(point_1_z);
+  builder_.add_point_1_y(point_1_y);
+  builder_.add_point_1_x(point_1_x);
+  builder_.add_order_option(order_option);
+  builder_.add_setting_option(setting_option);
+  builder_.add_user_frame_num(user_frame_num);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_User_Frame_3Points(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_3PointsT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Set_Tool_ListT *Request_Set_Tool_List::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Set_Tool_ListT>(new Request_Set_Tool_ListT());
   UnPackTo(_o.get(), _resolver);
@@ -751,6 +1128,141 @@ inline ::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Driv
       _fbb,
       _onoff,
       _sensitivity);
+}
+
+inline Request_Set_User_Frame_6DofT *Request_Set_User_Frame_6Dof::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_User_Frame_6DofT>(new Request_Set_User_Frame_6DofT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_User_Frame_6Dof::UnPackTo(Request_Set_User_Frame_6DofT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = user_frame_num(); _o->user_frame_num = _e; }
+  { auto _e = setting_option(); _o->setting_option = _e; }
+  { auto _e = target_x(); _o->target_x = _e; }
+  { auto _e = target_y(); _o->target_y = _e; }
+  { auto _e = target_z(); _o->target_z = _e; }
+  { auto _e = target_rx(); _o->target_rx = _e; }
+  { auto _e = target_ry(); _o->target_ry = _e; }
+  { auto _e = target_rz(); _o->target_rz = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_6Dof> Request_Set_User_Frame_6Dof::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_6DofT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_User_Frame_6Dof(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_6Dof> CreateRequest_Set_User_Frame_6Dof(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_6DofT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_User_Frame_6DofT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _user_frame_num = _o->user_frame_num;
+  auto _setting_option = _o->setting_option;
+  auto _target_x = _o->target_x;
+  auto _target_y = _o->target_y;
+  auto _target_z = _o->target_z;
+  auto _target_rx = _o->target_rx;
+  auto _target_ry = _o->target_ry;
+  auto _target_rz = _o->target_rz;
+  return IPC::CreateRequest_Set_User_Frame_6Dof(
+      _fbb,
+      _user_frame_num,
+      _setting_option,
+      _target_x,
+      _target_y,
+      _target_z,
+      _target_rx,
+      _target_ry,
+      _target_rz);
+}
+
+inline Request_Set_User_Frame_TCPT *Request_Set_User_Frame_TCP::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_User_Frame_TCPT>(new Request_Set_User_Frame_TCPT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_User_Frame_TCP::UnPackTo(Request_Set_User_Frame_TCPT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = user_frame_num(); _o->user_frame_num = _e; }
+  { auto _e = setting_option(); _o->setting_option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_TCP> Request_Set_User_Frame_TCP::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_TCPT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_User_Frame_TCP(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_TCP> CreateRequest_Set_User_Frame_TCP(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_TCPT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_User_Frame_TCPT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _user_frame_num = _o->user_frame_num;
+  auto _setting_option = _o->setting_option;
+  return IPC::CreateRequest_Set_User_Frame_TCP(
+      _fbb,
+      _user_frame_num,
+      _setting_option);
+}
+
+inline Request_Set_User_Frame_3PointsT *Request_Set_User_Frame_3Points::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_User_Frame_3PointsT>(new Request_Set_User_Frame_3PointsT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_User_Frame_3Points::UnPackTo(Request_Set_User_Frame_3PointsT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = user_frame_num(); _o->user_frame_num = _e; }
+  { auto _e = setting_option(); _o->setting_option = _e; }
+  { auto _e = order_option(); _o->order_option = _e; }
+  { auto _e = point_1_x(); _o->point_1_x = _e; }
+  { auto _e = point_1_y(); _o->point_1_y = _e; }
+  { auto _e = point_1_z(); _o->point_1_z = _e; }
+  { auto _e = point_2_x(); _o->point_2_x = _e; }
+  { auto _e = point_2_y(); _o->point_2_y = _e; }
+  { auto _e = point_2_z(); _o->point_2_z = _e; }
+  { auto _e = point_3_x(); _o->point_3_x = _e; }
+  { auto _e = point_3_y(); _o->point_3_y = _e; }
+  { auto _e = point_3_z(); _o->point_3_z = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_3Points> Request_Set_User_Frame_3Points::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_3PointsT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_User_Frame_3Points(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_User_Frame_3Points(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_3PointsT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_User_Frame_3PointsT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _user_frame_num = _o->user_frame_num;
+  auto _setting_option = _o->setting_option;
+  auto _order_option = _o->order_option;
+  auto _point_1_x = _o->point_1_x;
+  auto _point_1_y = _o->point_1_y;
+  auto _point_1_z = _o->point_1_z;
+  auto _point_2_x = _o->point_2_x;
+  auto _point_2_y = _o->point_2_y;
+  auto _point_2_z = _o->point_2_z;
+  auto _point_3_x = _o->point_3_x;
+  auto _point_3_y = _o->point_3_y;
+  auto _point_3_z = _o->point_3_z;
+  return IPC::CreateRequest_Set_User_Frame_3Points(
+      _fbb,
+      _user_frame_num,
+      _setting_option,
+      _order_option,
+      _point_1_x,
+      _point_1_y,
+      _point_1_z,
+      _point_2_x,
+      _point_2_y,
+      _point_2_z,
+      _point_3_x,
+      _point_3_y,
+      _point_3_z);
 }
 
 }  // namespace IPC
