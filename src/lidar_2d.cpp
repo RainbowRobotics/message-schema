@@ -141,6 +141,8 @@ void LIDAR_2D::open()
     // stop first
     close();
 
+    is_connected = true;
+
     // deskewing loop start
     int lidar_num = config->get_lidar_2d_num();
     for(int idx = 0; idx < lidar_num; idx++)
@@ -342,18 +344,13 @@ void LIDAR_2D::deskewing_loop(int idx)
     double pre_loop_time = get_time();
 
     //printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
-    spdlog::info("[LIDAR_2D] dsk_loop[%d] start", idx);
+    spdlog::info("[LIDAR_2D] dsk_loop[{}] start, is_connected: {}", idx, is_connected.load());
 
     while(deskewing_flag[idx])
     {
         if(!is_connected)
         {
-            is_connected = true;
-        }
-
-        if(is_connected == false)
-        {
-            // drop
+            // Wait for connection to be established
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }

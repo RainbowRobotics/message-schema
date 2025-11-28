@@ -1198,6 +1198,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
 
         std::vector<double> costs;
         std::vector<COST_JACOBIAN> cj_set;
+
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index

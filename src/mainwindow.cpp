@@ -446,6 +446,10 @@ void MainWindow::init_modules()
             LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
             LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
             LIDAR_2D::instance()->init();
+            
+            spdlog::info("[MAIN] Waiting 3 seconds for MOBILE pose collection and triggering auto sync...");
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            
             LIDAR_2D::instance()->open();
         }
     }
