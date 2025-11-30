@@ -43,7 +43,6 @@ class Zenoh_Controller(BaseController):
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_stop(self, task_id: str, step_id: str) -> None:
-        print(f"on_stop >>> {task_id} {step_id}", flush=True)
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.STOPPED)
         # TODO: zenoh publish stop
 
@@ -61,6 +60,7 @@ class Zenoh_Controller(BaseController):
             self._zenoh_client.publish("rrs/resume", payload={})
 
     def on_next(self, task_id: str, step_id: str) -> None:
+
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:

@@ -6,11 +6,12 @@
     },
   },
   scouting: {
-    multicast: { enabled: true, ttl: 1 },
+    multicast: { enabled: true, ttl: 1, interface: "0.0.0.0" },
     gossip: { enabled: true, target: { router: ["router", "peer"] } },
   },
-
   routing: {
-    router: { peers_failover_brokering: true },
+    router: {
+      peers_failover_brokering: true,
+    },
   },
 }

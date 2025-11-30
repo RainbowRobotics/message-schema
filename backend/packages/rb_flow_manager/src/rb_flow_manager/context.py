@@ -33,7 +33,10 @@ class ExecutionContext:
         self.resume_event = resume_event
         self.stop_event = stop_event
         self.result_queue = result_queue
-        self.variables: dict[str, Any] = {}
+        self.variables: dict[str, dict[str, Any]] = {
+            "local": {},
+            "global": {},
+        }
         self.sdk_functions: dict[str, Callable] | None = None
         self._arg_scope: list[dict[str, Any]] = []
         self._generation = state_dict.get("generation")
@@ -42,8 +45,11 @@ class ExecutionContext:
 
         self.initialize_sdk_functions()
 
-    def update_variables(self, variables: dict[str, Any]):
-        self.variables.update(variables)
+    def update_local_variables(self, variables: dict[str, Any]):
+        self.variables["local"].update(variables)
+
+    def update_global_variables(self, variables: dict[str, Any]):
+        self.variables["global"].update(variables)
 
     def get_global_variable(self, var_name: str) -> Any:
         if self.sdk_functions is None:

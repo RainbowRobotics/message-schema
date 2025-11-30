@@ -41,6 +41,7 @@ from app.features.info.info_schema import RobotInfo
 from app.socket.socket_client import socket_client
 
 from .program_schema import (
+    PlayState,
     Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
     Request_Create_Multiple_TaskPD,
@@ -92,9 +93,12 @@ class ProgramService(BaseService):
         # )
         # traceback.print_stack(limit=5)
 
-        self._robot_models = read_json_file("data", "robot_models.json")
+        self._robot_models: dict[str, Any] = read_json_file("data", "robot_models.json")
 
-        self._play_state = "stop"
+        self._play_state: PlayState = PlayState.IDLE
+        self._task_play_state: dict[str, PlayState] = {
+            robot_model: PlayState.IDLE for robot_model in self._robot_models
+        }
 
         self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
@@ -214,7 +218,10 @@ class ProgramService(BaseService):
         }[state]
 
     def get_play_state(self):
-        return self._play_state
+        return {
+            "playState": self._play_state,
+            "taskPlayState": self._task_play_state,
+        }
 
     def update_executor_state(self, state: int, error: str | None = None) -> None:
         str_state = self.convert_state_to_string(state)
@@ -223,16 +230,16 @@ class ProgramService(BaseService):
             str_state == RB_Flow_Manager_ProgramState.RUNNING
             or str_state == RB_Flow_Manager_ProgramState.WAITING
         ):
-            self._play_state = "play"
+            self._play_state = PlayState.PLAY
         elif str_state == RB_Flow_Manager_ProgramState.PAUSED:
-            self._play_state = "pause"
+            self._play_state = PlayState.PAUSE
         elif (
             str_state == RB_Flow_Manager_ProgramState.STOPPED
             or str_state == RB_Flow_Manager_ProgramState.ERROR
         ):
-            self._play_state = "stop"
+            self._play_state = PlayState.STOP
         elif str_state == RB_Flow_Manager_ProgramState.IDLE:
-            self._play_state = "idle"
+            self._play_state = PlayState.IDLE
 
         fire_and_log(
             socket_client.emit(
@@ -489,6 +496,19 @@ class ProgramService(BaseService):
 
         query: dict[str, Any] = {"scriptName": task_id}
 
+        if state in [
+            RB_Flow_Manager_ProgramState.RUNNING,
+            RB_Flow_Manager_ProgramState.WAITING,
+            RB_Flow_Manager_ProgramState.COMPLETED,
+        ]:
+            self._task_play_state[task_id] = PlayState.PLAY
+        elif state == RB_Flow_Manager_ProgramState.PAUSED:
+            self._task_play_state[task_id] = PlayState.PAUSE
+        elif state in [RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.ERROR]:
+            self._task_play_state[task_id] = PlayState.STOP
+        elif state == RB_Flow_Manager_ProgramState.IDLE:
+            self._task_play_state[task_id] = PlayState.IDLE
+
         if ObjectId.is_valid(task_id):
             query = {"_id": ObjectId(task_id)}
 
@@ -533,8 +553,6 @@ class ProgramService(BaseService):
         state = request_dict["state"]
         error_value: str | None = request_dict.get("error")
 
-        steps_col = db["steps"]
-
         fire_and_log(
             socket_client.emit(
                 f"program/task/{task_id}/update_state",
@@ -546,6 +564,8 @@ class ProgramService(BaseService):
             ),
             name="emit_step_update_state",
         )
+
+        steps_col = db["steps"]
 
         if not ObjectId.is_valid(step_id):
             return
@@ -685,7 +705,7 @@ class ProgramService(BaseService):
         """
         Steps tree를 컨텍스트로 변환하는 함수.
         """
-        category = self._robot_models[robot_model].get("be_service", None)
+        category = self._robot_models.get(robot_model or "", {}).get("be_service", None)
 
         body_context = "\n".join(
             self.parse_step_context(step, depth=8, to_string=True) for step in steps_tree

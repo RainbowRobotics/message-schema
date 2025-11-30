@@ -37,8 +37,6 @@ class RBManipulateSDK(RBBaseSDK):
         if dict_res is None or dict_res.get("valid") == 0:
             return None
 
-        print("dict_res >>>", dict_res, flush=True)
-
         if dict_res.get("type") == 0:
             return dict_res["payloadNum"]
         elif dict_res.get("type") == 1:
@@ -156,9 +154,6 @@ class RBManipulateSDK(RBBaseSDK):
             req.target = move_input_target
             req.speed = move_input_speed
 
-            print("movej req >>>", req, flush=True)
-            print("zenoh_client session >>>", self.zenoh_client.session, flush=True)
-
             # 명령 전송
             res = self.zenoh_client.query_one(
                 f"{robot_model}/call_move_j",
@@ -167,8 +162,6 @@ class RBManipulateSDK(RBBaseSDK):
                 flatbuffer_buf_size=256,
                 timeout=2,
             )
-
-            print("movej res >>>", res, flush=True)
 
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None:
@@ -194,8 +187,6 @@ class RBManipulateSDK(RBBaseSDK):
                         topic, mv, obj, attachment = await self.zenoh_client.receive_one(
                             f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
                         )
-
-                        print("movej state_core >>>", obj and obj.get("motionMode"), flush=True)
 
                         if obj is not None and obj.get("motionMode") == 0:
                             flow_manager_args.done()

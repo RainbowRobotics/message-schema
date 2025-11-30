@@ -230,7 +230,6 @@ class ScriptExecutor:
 
         self.processes[process_id] = process
 
-        print(f"Started process: {process_id}")
         return True
 
     def _drain_events(self, process_id: str):
@@ -255,15 +254,12 @@ class ScriptExecutor:
 
             cur_gen = self._pid_generation.get(pid)
 
-            print(f"evt >>> {evt}", flush=True)
-            print(f"evt_gen >>> {evt_gen}", flush=True)
-            print(f"cur_gen >>> {cur_gen}", flush=True)
-
             if cur_gen is None or evt_gen != cur_gen:
                 print(f"ignore stale event: {evt}", flush=True)
                 continue
 
             if self.state_dicts.get(pid) is None:
+                print(f"ignore process not found: {pid}", flush=True)
                 continue
 
             try:
@@ -333,14 +329,23 @@ class ScriptExecutor:
 
     def _monitor_processes(self):
         """프로세스 완료 감시 → 자원 정리"""
+        POLLING_INTERVAL = 0.1
+        EVENT_BATCH_INTERVAL = 0.05
+
+        last_event_process_time = time.time()
+
         while not self._stop_monitor.is_set():
             if not self.processes:
                 # 아직 아무 것도 없으면 살짝 쉰다
-                time.sleep(0.2)
+                time.sleep(0.02)
                 continue
 
-            for pid in self.processes:
-                self._drain_events(pid)
+            current_time = time.time()
+
+            if current_time - last_event_process_time >= EVENT_BATCH_INTERVAL:
+                for pid in self.processes:
+                    self._drain_events(pid)
+                last_event_process_time = current_time
 
             finished: list[str] = []
 
@@ -379,6 +384,8 @@ class ScriptExecutor:
 
                 self._auto_cleanup()
                 break
+
+            time.sleep(POLLING_INTERVAL)
 
     def _auto_cleanup(self):
         """모든 스크립트가 끝났을 때만 실행되는 정리"""
@@ -518,8 +525,6 @@ class ScriptExecutor:
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
         self.stop_events[process_id].set()
-
-        print(f"step_id >>> {step_id}", flush=True)
 
         if self._on_stop is not None and step_id is not None:
             self._on_stop(process_id, step_id)

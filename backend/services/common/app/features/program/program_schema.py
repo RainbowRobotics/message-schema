@@ -20,6 +20,7 @@ class Step_Base(BaseModel):
     parentStepId: str | None = Field(default=None)
     taskId: str
     programId: str
+    groupId: str | None = Field(default=None)
     syncStepIds: list[str] | None = Field(default=None)
     name: str
     variable: dict[str, Any] | None = Field(default=None)
@@ -281,3 +282,15 @@ class Request_Preview_Stop_ProgramPD(BaseModel):
 class Request_Get_Script_ContextPD(BaseModel):
     taskId: str
     steps: list[Client_StepPD]
+
+
+class PlayState(str, Enum):
+    PLAY = "play"
+    PAUSE = "pause"
+    STOP = "stop"
+    IDLE = "idle"
+
+
+class Response_Get_Current_Program_StatePD(BaseModel):
+    playState: PlayState
+    taskPlayState: dict[str, PlayState]

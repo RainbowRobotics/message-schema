@@ -5,7 +5,7 @@ from multiprocessing import Event
 from typing import Any
 
 from rb_schemas.sdk import FlowManagerArgs
-from rb_utils.flow_manager import call_with_matching_args, safe_eval_expr
+from rb_utils.flow_manager import call_with_matching_args, eval_value, safe_eval_expr
 
 from .context import ExecutionContext
 from .exception import StopExecution
@@ -17,34 +17,43 @@ class Step:
 
     def __init__(
         self,
+        *,
         step_id: str,
         name: str,
         variable: dict[str, Any] | None = None,
         disabled: bool | None = None,
+        method: str | None = None,
         func: Callable | None = None,
         # repeat_count: int | str | None = None,
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
-        *,
         func_name: str | None = None,
         args: dict[str, Any] | None = None,
+        **kwargs,
     ):
-        self._class_name = "Step"
+        self._class_name = getattr(self, "_class_name", "Step")
+        self._start_ts: float = 0
         self.step_id = step_id
         self.name = name
         self.variable = variable
         self.disabled = disabled
+        self.method = method
         self.func_name = func_name
         self.done_script = done_script
         self.children = children or []
         self.args = args or {}
-
+        self.kwargs = kwargs
         self.func = func
 
     @staticmethod
     def from_dict(d) -> "Step":
+        print("method:", d.get("method"), flush=True)
         if d.get("method") == "Repeat":
             return RepeatStep.from_dict(d)
+
+        if d.get("method") in ["If", "ElseIf", "Else"]:
+            d["conditionType"] = d.get("method")
+            return ConditionStep.from_dict(d)
 
         return Step(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
@@ -100,6 +109,13 @@ class Step:
             a = format_dict(self.args, depth + 4)
             args_block = _indent(f"args={a},\n\n", depth + 4)
 
+        other_kwargs_block = ""
+        if self.kwargs:
+            for k, v in self.kwargs.items():
+                other_kwargs_block += (
+                    _indent(f"{k}={repr(v)},\n\n", depth + 4) if v is not None else ""
+                )
+
         return (
             (" " * depth)
             + f"{self._class_name}(\n"
@@ -120,23 +136,39 @@ class Step:
                 if self.done_script is not None
                 else ""
             )
+            + other_kwargs_block
             + (" " * (depth + 4))
             + f"children={children_block},\n"
             + (" " * depth)
             + ")"
         )
 
+    def _pre_execute(self, ctx: ExecutionContext, *, reset_condition_result: bool = True):
+        if reset_condition_result:
+            ctx.data["condition_result"] = None
+
+        self._start_ts = time.monotonic()
+
+        ctx.push_args(self.args)
+
+    def _post_execute(self, ctx: ExecutionContext):
+        ctx.pop_args()
+
+        min_step_interval = getattr(ctx, "min_step_interval", 0)
+        elapsed = time.monotonic() - self._start_ts
+        remaining = min_step_interval - elapsed
+
+        if remaining > 0:
+            time.sleep(remaining)
+
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
-        _start_ts = time.monotonic()
+        self._pre_execute(ctx)
 
         ctx.emit_next(self.step_id)
 
-        # ctx.initialize_sdk_functions()
-
         done_called = False
 
-        ctx.push_args(self.args)
         ctx.check_stop()
 
         try:
@@ -178,7 +210,7 @@ class Step:
                     eval_args = {}
 
                     for k, v in args.items():
-                        eval_args[k] = safe_eval_expr(
+                        eval_args[k] = eval_value(
                             v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
                         )
 
@@ -192,7 +224,7 @@ class Step:
                                     attr = v[len("$args.") :]
                                     v = eval_args.get(attr)
                                 else:
-                                    v = safe_eval_expr(
+                                    v = eval_value(
                                         v,
                                         variables=ctx.variables,
                                         get_global_variable=ctx.get_global_variable,
@@ -200,7 +232,7 @@ class Step:
 
                             self.variable[k] = v
 
-                        ctx.update_variables(self.variable)
+                        ctx.update_local_variables(self.variable)
 
                     call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
                 except RuntimeError as e:
@@ -226,23 +258,40 @@ class Step:
                 ctx.check_stop()
                 child.execute(ctx)
         finally:
-            ctx.pop_args()
-
-            min_step_interval = getattr(ctx, "min_step_interval", 0)
-            elapsed = time.monotonic() - _start_ts
-            remaining = min_step_interval - elapsed
-
-            if remaining > 0:
-                time.sleep(remaining)
+            self._post_execute(ctx)
 
 
 class RepeatStep(Step):
     """반복 Step"""
 
-    def __init__(self, step_id: str, name: str, count: int, children: list | None = None):
-        super().__init__(step_id, name, func=None, children=children)
+    _class_name = "RepeatStep"
+
+    def __init__(
+        self,
+        *,
+        step_id: str,
+        name: str,
+        count: int,
+        while_cond: str | Callable | None = None,
+        do_while: str | Callable | None = None,
+        args: dict[str, Any] | None = None,
+        children: list | None = None,
+    ):
+        super().__init__(
+            step_id=step_id,
+            name=name,
+            func=None,
+            count=count,
+            while_cond=while_cond,
+            do_while=do_while,
+            args=args,
+            children=children,
+        )
         self.count = count
-        self._class_name = "RepeatStep"
+        self.while_cond = while_cond
+        self.do_while = do_while
+        self.args = args or {}
+        self.children = children or []
 
     @staticmethod
     def from_dict(d) -> "RepeatStep":
@@ -250,6 +299,8 @@ class RepeatStep(Step):
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             name=d["name"],
             count=int(d.get("count", 1)),
+            while_cond=d.get("whileCond"),
+            do_while=d.get("doWhile"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -257,62 +308,160 @@ class RepeatStep(Step):
         return {
             "stepId": self.step_id,
             "name": self.name,
-            "method": "Repeat",
             "count": self.count,
+            "whileCond": self.while_cond,
+            "doWhile": self.do_while,
             "children": [child.to_dict() for child in self.children],
         }
 
-    def to_py_string(self, depth: int = 0):
-        def _indent(s: str, n: int) -> str:
-            pad = " " * n
-            return "\n".join(pad + line if line else line for line in s.splitlines())
-
-        if self.children:
-            inner_steps = [child.to_py_string(depth + 8) for child in self.children]
-            inner_src = ",\n".join(inner_steps)
-
-            children_block = "[\n" + inner_src + "\n" + (" " * (depth + 4)) + "]"
-        else:
-            children_block = "[]"
-
-        return (
-            (" " * depth)
-            + f"{self._class_name}(\n"
-            + _indent(f"step_id={repr(self.step_id)},", depth + 4)
-            + "\n"
-            + _indent(f"name={repr(self.name)},", depth + 4)
-            + "\n"
-            + _indent(f"count={self.count},", depth + 4)
-            + "\n"
-            + (" " * (depth + 4))
-            + f"children={children_block},\n"
-            + _indent(f"args={repr(self.args)},", depth + 4)
-            + "\n"
-            + (" " * depth)
-            + ")"
-        )
-
     def execute(self, ctx: ExecutionContext):
         """지정된 횟수만큼 자식 Step 반복 실행"""
-        for i in range(self.count):
+        self._pre_execute(ctx)
+
+        ctx.emit_next(self.step_id)
+
+        ctx.check_stop()
+
+        try:
+            if self.count is not None:
+                for i in range(self.count):
+                    ctx.check_stop()
+                    ctx.data["repeat_index"] = i
+                    self._execute_children(ctx)
+
+            elif self.while_cond is not None:
+                if isinstance(self.while_cond, str):
+                    while safe_eval_expr(
+                        self.while_cond,
+                        variables=ctx.variables,
+                        get_global_variable=ctx.get_global_variable,
+                    ):
+                        ctx.check_stop()
+                        self._execute_children(ctx)
+                else:
+                    while self.while_cond(ctx):
+                        ctx.check_stop()
+                        self._execute_children(ctx)
+
+            elif self.do_while is not None:
+                while True:
+                    ctx.check_stop()
+                    self._execute_children(ctx)
+                    if isinstance(self.do_while, str):
+                        if not safe_eval_expr(
+                            self.do_while,
+                            variables=ctx.variables,
+                            get_global_variable=ctx.get_global_variable,
+                        ):
+                            break
+                    else:
+                        if not self.do_while(ctx):
+                            break
+
+            ctx.emit_done(self.step_id)
+        finally:
+            self._post_execute(ctx)
+
+    def _execute_children(self, ctx):
+        """자식 step 실행을 한 번의 반복 루프에서 수행."""
+        for child in self.children:
             ctx.check_stop()
-            ctx.data["repeat_index"] = i
-            for child in self.children:
-                ctx.check_stop()
-                child.execute(ctx)
+            child.execute(ctx)
 
 
 class ConditionStep(Step):
     """조건 Step"""
 
-    def __init__(self, step_id: str, name: str, condition: Callable, children: list | None = None):
-        super().__init__(step_id, name, func=None, children=children)
+    _class_name = "ConditionStep"
+
+    def __init__(
+        self,
+        *,
+        step_id: str,
+        name: str,
+        condition_type: str,
+        condition: str | Callable | None = None,
+        args: dict[str, Any] | None = None,
+        children: list | None = None,
+    ):
+        super().__init__(
+            step_id=step_id,
+            name=name,
+            func=None,
+            args=args,
+            condition_type=condition_type,
+            condition=condition,
+            children=children,
+        )
         self.condition = condition
+        self.condition_type = condition_type
+        self.args = args or {}
+        self.children = children or []
+
+    @staticmethod
+    def from_dict(d) -> "ConditionStep":
+        return ConditionStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            condition_type=d.get("conditionType"),
+            condition=d.get("condition"),
+            children=[Step.from_dict(child) for child in (d.get("children") or [])],
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "conditionType": self.condition_type,
+            "condition": self.condition,
+            "children": [child.to_dict() for child in self.children],
+        }
 
     def execute(self, ctx: ExecutionContext):
         """조건이 참일 때만 자식 Step 실행"""
+        self._pre_execute(ctx, reset_condition_result=False)
+
+        ctx.emit_next(self.step_id)
+
         ctx.check_stop()
-        if self.condition(ctx):
-            for child in self.children:
-                ctx.check_stop()
-                child.execute(ctx)
+        try:
+            condition_result = ctx.data.get("condition_result", None)
+
+            if self.condition_type == "If":
+                if condition_result is not None:
+                    raise RuntimeError("If must be the first condition")
+
+                ctx.data["condition_result"] = False
+            elif self.condition_type == "ElseIf":
+                if condition_result is None:
+                    raise RuntimeError("ElseIf must be preceded by an If or ElseIf")
+
+            if self.condition_type == "Else" and self.condition is not None:
+                raise RuntimeError("Else must not have a condition")
+
+            if condition_result:
+                ctx.emit_done(self.step_id)
+                return
+
+            if isinstance(self.condition, str):
+                if safe_eval_expr(
+                    self.condition,
+                    variables=ctx.variables,
+                    get_global_variable=ctx.get_global_variable,
+                ):
+                    ctx.data["condition_result"] = True
+                    for child in self.children:
+                        ctx.check_stop()
+                        child.execute(ctx)
+
+                    ctx.emit_done(self.step_id)
+            elif self.condition is not None and not callable(self.condition) and self.condition():
+                ctx.data["condition_result"] = True
+
+                for child in self.children:
+                    ctx.check_stop()
+                    child.execute(ctx)
+
+                ctx.emit_done(self.step_id)
+        finally:
+            self._post_execute(ctx)
