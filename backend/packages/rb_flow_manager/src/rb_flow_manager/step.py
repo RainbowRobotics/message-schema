@@ -51,8 +51,7 @@ class Step:
         if d.get("method") == "Repeat":
             return RepeatStep.from_dict(d)
 
-        if d.get("method") in ["If", "ElseIf", "Else"]:
-            d["conditionType"] = d.get("method")
+        if d.get("method") in ["If", "ElseIf", "Else", "Condition"]:
             return ConditionStep.from_dict(d)
 
         return Step(
@@ -295,12 +294,19 @@ class RepeatStep(Step):
 
     @staticmethod
     def from_dict(d) -> "RepeatStep":
+        count = d.get("count") or d.get("args", {}).get("count", 1)
+        while_cond = d.get("whileCond") or d.get("args", {}).get("while_cond")
+        do_while = d.get("doWhile") or d.get("args", {}).get("do_while")
+
+        if count is None and while_cond is None and do_while is None:
+            raise RuntimeError("count, while_cond, or do_while is required")
+
         return RepeatStep(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             name=d["name"],
-            count=int(d.get("count", 1)),
-            while_cond=d.get("whileCond"),
-            do_while=d.get("doWhile"),
+            count=count,
+            while_cond=while_cond,
+            do_while=do_while,
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -312,6 +318,11 @@ class RepeatStep(Step):
             "whileCond": self.while_cond,
             "doWhile": self.do_while,
             "children": [child.to_dict() for child in self.children],
+            "args": {
+                "count": self.count,
+                "while_cond": self.while_cond,
+                "do_while": self.do_while,
+            },
         }
 
     def execute(self, ctx: ExecutionContext):
@@ -380,7 +391,7 @@ class ConditionStep(Step):
         step_id: str,
         name: str,
         condition_type: str,
-        condition: str | Callable | None = None,
+        condition: str | Callable | bool | None = True,
         args: dict[str, Any] | None = None,
         children: list | None = None,
     ):
@@ -400,11 +411,20 @@ class ConditionStep(Step):
 
     @staticmethod
     def from_dict(d) -> "ConditionStep":
+        condition_type = d.get("conditionType") or d.get("args", {}).get("condition_type")
+        condition = d.get("condition") or d.get("args", {}).get("condition", True)
+
+        if condition == "":
+            condition = True
+
+        if condition_type is None:
+            raise RuntimeError("condition_type is required")
+
         return ConditionStep(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             name=d["name"],
-            condition_type=d.get("conditionType"),
-            condition=d.get("condition"),
+            condition_type=condition_type,
+            condition=condition,
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -415,6 +435,10 @@ class ConditionStep(Step):
             "conditionType": self.condition_type,
             "condition": self.condition,
             "children": [child.to_dict() for child in self.children],
+            "args": {
+                "condition_type": self.condition_type,
+                "condition": self.condition,
+            },
         }
 
     def execute(self, ctx: ExecutionContext):
@@ -443,7 +467,17 @@ class ConditionStep(Step):
                 ctx.emit_done(self.step_id)
                 return
 
-            if isinstance(self.condition, str):
+            if isinstance(self.condition, bool):
+                if self.condition:
+                    ctx.data["condition_result"] = True
+                    for child in self.children:
+                        ctx.check_stop()
+                        child.execute(ctx)
+
+                    ctx.emit_done(self.step_id)
+                    return
+
+            elif isinstance(self.condition, str):
                 if safe_eval_expr(
                     self.condition,
                     variables=ctx.variables,
