@@ -610,6 +610,15 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
         path.push_back(path_item);
     }
 
+    QString cur_node_id = unimap->get_node_id_edge(loc->get_cur_tf().block(0,3,3,1));
+    if(!cur_node_id.isEmpty())
+    {
+        if(path.size() == 0 || path[0] != cur_node_id)
+        {
+            path.insert(path.begin(), cur_node_id);
+        }
+    }
+
     const int preset = msg.preset;
 
     qDebug()<<"slot : "<<msg.method;
@@ -623,11 +632,6 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
         cmd_method = CommandMethod::METHOD_PP;
     }
     move(path, preset);
-
-//    else if(msg.direction == "backward")
-//    {
-//        backwardmove(path, preset);
-//    }
 }
 
 void AUTOCONTROL::slot_path()
