@@ -25,6 +25,8 @@ public:
     // load map from path
     void load_map(QString path);
 
+    void save_map();
+
     QString is_load_map_check(QString path);
     bool load_topo(); // load topo.json
     bool load_node(); // load node.json
@@ -86,6 +88,15 @@ public:
     // map dir
     QString map_path;
 
+    // for additional cloud
+    bool add_additional_cloud(const std::vector<Eigen::Vector3d>& pts);
+    std::vector<Eigen::Vector3d> get_additional_cloud();
+    void clear_additional_cloud();
+
+    // Removed cloud management - NEW
+    std::vector<Eigen::Vector3d> get_removed_cloud();
+    void clear_removed_cloud();
+    bool remove_unmatched_points(const std::vector<Eigen::Vector3d>& scan_pts, const Eigen::Matrix4d& cur_tf);
 private:
     explicit UNIMAP(QObject *parent = nullptr);
     ~UNIMAP();
@@ -127,6 +138,9 @@ private:
 
     // additional cloud storage
     std::vector<Eigen::Vector3d> additional_cloud;
+
+    // Removed cloud points storage
+    std::vector<Eigen::Vector3d> removed_cloud;
 
     // bounding box
     double map_max_x = std::numeric_limits<double>::min();

@@ -2826,9 +2826,9 @@ Start</string>
                </widget>
               </item>
               <item row="2" column="9">
-               <widget class="QPushButton" name="bt_QuickAddAruco">
+               <widget class="QPushButton" name="bt_QuickAddCloud2">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="font">
                  <font>
@@ -2837,7 +2837,7 @@ Start</string>
                 </property>
                 <property name="text">
                  <string>QA
-Aruco</string>
+Cloud2</string>
                 </property>
                </widget>
               </item>
@@ -2996,7 +2996,7 @@ Node</string>
               <item row="2" column="7">
                <widget class="QPushButton" name="bt_QuickAddCloud">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="font">
                  <font>
@@ -3009,15 +3009,7 @@ Cloud</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="9">
-               <widget class="QPushButton" name="bt_AnnotReload">
-                <property name="text">
-                 <string>Annot
-Reload</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="5" colspan="3">
+              <item row="0" column="5">
                <widget class="QPushButton" name="bt_AnnotSave">
                 <property name="enabled">
                  <bool>true</bool>
@@ -3030,6 +3022,22 @@ Reload</string>
                 <property name="text">
                  <string>Annot
 Save</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="7">
+               <widget class="QPushButton" name="bt_AnnotReload">
+                <property name="text">
+                 <string>Annot
+Reload</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="9">
+               <widget class="QPushButton" name="bt_MapSave2">
+                <property name="text">
+                 <string>Map
+Save2</string>
                 </property>
                </widget>
               </item>

@@ -278,8 +278,9 @@ public Q_SLOTS:
     void bt_ReplaceNode();
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
-    void bt_QuickAddAruco();
     void bt_QuickAddCloud();
+    void bt_QuickAddCloud2();
+
 
     // for safety debug
     void bt_ClearMismatch();
