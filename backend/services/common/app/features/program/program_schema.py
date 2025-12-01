@@ -106,16 +106,11 @@ class TaskType(str, Enum):
 class TaskExtension(str, Enum):
     PYTHON = "py"
 
-class MainTaskBegin(BaseModel):
-    position: Any
-    isEnable: bool
-    speedRatio: float | None = Field(default=0.3)
-
 
 class MainTaskBegin(BaseModel):
     position: Any
-    isEnable: bool
-    speedRatio: float | None = Field(default=None)
+    is_enable: bool
+    speed_ratio: float | None = Field(default=None)
 
 
 class Task_Base(BaseModel):
@@ -132,6 +127,8 @@ class Task_Base(BaseModel):
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
 
+class Response_Get_TaskInfoPD(BaseModel):
+    task: Task_Base
 
 class Request_Create_TaskPD(Omit(Task_Base, "taskId")):
     pass

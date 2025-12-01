@@ -85,6 +85,8 @@ class ExecutionContext:
                 if callable(getattr(sdk, name)) and not name.startswith("_")
             }
 
+            print("public_methods >>>", public_methods, flush=True)
+
             if self.sdk_functions is not None:
                 self.sdk_functions.update(public_methods)
 

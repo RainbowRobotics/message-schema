@@ -26,12 +26,12 @@ from .program_schema import (
     Response_Get_Script_ContextPD,
     Response_Get_StepListPD,
     Response_Get_Task_ListPD,
+    Response_Get_TaskInfoPD,
     Response_Script_ExecutionPD,
     Response_Update_Multiple_TaskPD,
     Response_Update_ProgramPD,
     Response_Upsert_StepsPD,
     Step_Base,
-    Task_Base,
 )
 
 program_service = ProgramService()
@@ -104,7 +104,7 @@ async def get_current_program_state():
     return JSONResponse(res)
 
 
-@program_router.get("/program/task/{task_id}", response_model=Task_Base)
+@program_router.get("/program/task/{task_id}", response_model=Response_Get_TaskInfoPD)
 async def get_task_info(task_id: str, db: MongoDB):
     res = await program_service.get_task_info(task_id=task_id, db=db)
     return JSONResponse(res)

@@ -46,8 +46,14 @@ class RBManipulateSDK(RBBaseSDK):
 
         return None
 
-    async def set_begin(self, *, robot_model: str, position: Any, isEnable: bool = True, speedRatio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+    async def set_begin(self, *, robot_model: str, position: Any, is_enable: bool = True, speed_ratio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
         """메인 태스크 시작 위치 설정"""
+
+        if not is_enable:
+            if flow_manager_args is not None:
+                flow_manager_args.done()
+            return
+
         req = Request_Move_JT()
         move_input_target = MoveInput_TargetT()
         move_input_speed = MoveInput_SpeedT()
@@ -63,9 +69,9 @@ class RBManipulateSDK(RBBaseSDK):
         move_input_speed.spdVelPara = 60
         move_input_speed.spdAccPara = 120
 
-        if speedRatio is not None:
+        if speed_ratio is not None:
             move_input_speed.spdMode = 0
-            move_input_speed.spdVelPara = speedRatio
+            move_input_speed.spdVelPara = speed_ratio
             move_input_speed.spdAccPara = 0.1
 
         req.target = move_input_target

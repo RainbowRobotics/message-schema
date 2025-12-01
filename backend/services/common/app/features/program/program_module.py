@@ -679,14 +679,27 @@ class ProgramService(BaseService):
         step_obj = Step.from_dict(step)
         return step_obj.to_py_string(depth) if to_string else step_obj
 
-    def build_tree_from_client(self, steps_tree: list[dict[str, Any]], task_id: str):
+    def build_tree_from_client(self, steps_tree: list[dict[str, Any]], task_id: str, robot_model: str | None = None, category: str | None = None, begin: dict[str, Any] | None = None):
         """
         프론트에서 받은 JSON(dict)을 실제 Step / RepeatStep 트리 객체로 변환하는 함수.
         """
+        root_func_name: str | None = None
+        root_args: dict[str, Any] = {}
+
+        if begin is not None and robot_model is not None:
+            root_func_name = f"rb_{category}_sdk.set_begin"
+            root_args = {
+                "robot_model": robot_model,
+                "position": begin.get("position", None),
+                "is_enable": begin.get("is_enable", True),
+                "speed_ratio": begin.get("speed_ratio", None),
+            }
 
         return Step(
             step_id=task_id,
             name=task_id,
+            func_name=root_func_name,
+            args=root_args,
             children=[self.parse_step_context(step, depth=8) for step in steps_tree],
         )
 
@@ -731,6 +744,7 @@ class ProgramService(BaseService):
 
         print("begin >>>", begin, flush=True)
 
+
         begin_dict = t_to_dict(begin) if begin is not None else None
 
         if begin_dict is not None and robot_model is not None:
@@ -738,9 +752,9 @@ class ProgramService(BaseService):
             args_part = (
                 f"    args={{\n"
                 f"        'robot_model': '{robot_model}',\n"
-                f"        'position': {begin_dict['position']},\n"
-                f"        'isEnable': {begin_dict['isEnable']},\n"
-                f"        'speedRatio': {begin_dict['speedRatio']},\n"
+                f"        'position': {begin_dict.get('position', None)},\n"
+                f"        'is_enable': {begin_dict.get('is_enable', True)},\n"
+                f"        'speed_ratio': {begin_dict.get('speed_ratio', None)},\n"
                 f"    }},\n"
             )
 
@@ -842,7 +856,15 @@ class ProgramService(BaseService):
 
         tasks_col = db["tasks"]
         task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
-        return task_doc
+
+        if not task_doc:
+            raise HTTPException(status_code=400, detail=f"No task found with taskId: {task_id}")
+
+        task_doc["taskId"] = str(task_doc.pop("_id"))
+
+        return {
+            "task": task_doc,
+        }
 
     async def create_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
         """
@@ -928,7 +950,11 @@ class ProgramService(BaseService):
         tasks_col = db["tasks"]
         program_col = db["programs"]
 
-        tasks = [t_to_dict(task) for task in request.tasks]
+        request_dict = Request_Update_Multiple_TaskPD.model_validate(
+                t_to_dict(request)
+            ).model_dump(exclude_none=True, exclude_unset=True)
+
+        tasks = request_dict["tasks"]
 
         program_ids = {t["programId"] for t in tasks}
 
@@ -1550,8 +1576,9 @@ class ProgramService(BaseService):
 
             robot_model = task_doc["robotModel"]
             category = self._robot_models[robot_model].get("be_service", None)
+            begin = task_doc.get("begin", None)
 
-            tree = self.build_tree_from_client(steps_tree, task_id)
+            tree = self.build_tree_from_client(steps_tree, task_id, robot_model, category, begin)
 
             tree_list.append(
                 {
