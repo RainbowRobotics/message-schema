@@ -105,6 +105,12 @@ class TaskExtension(str, Enum):
     PYTHON = "py"
 
 
+class MainTaskBegin(BaseModel):
+    position: Any
+    isEnable: bool
+    speedRatio: float | None = Field(default=None)
+
+
 class Task_Base(BaseModel):
     taskId: PyObjectId
     programId: str
@@ -113,6 +119,7 @@ class Task_Base(BaseModel):
     type: TaskType = Field(default=TaskType.MAIN)
     scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
+    begin: MainTaskBegin | None = Field(default=None)
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
@@ -130,6 +137,7 @@ class Request_Update_TaskPD(Pick(Task_Base, "taskId")):
     type: TaskType | None = Field(default=None)
     scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
+    begin: MainTaskBegin | None = Field(default=None)
     extension: TaskExtension | None = Field(default=None)
 
 
@@ -139,6 +147,9 @@ class Request_Create_Multiple_TaskPD(BaseModel):
 
 class Request_Update_Multiple_TaskPD(BaseModel):
     tasks: list[Request_Update_TaskPD]
+
+class Response_Update_Multiple_TaskPD(BaseModel):
+    tasks: list[Task_Base]
 
 
 class Request_Delete_TasksPD(BaseModel):

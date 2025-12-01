@@ -639,6 +639,7 @@ class ProgramService(BaseService):
         """
         Steps tree를 컨텍스트로 변환하는 함수.
         """
+        print("robot_model >>>", robot_model, flush=True)
         category = self._robot_models[robot_model].get("be_service", None)
 
         body_context = "\n".join(
