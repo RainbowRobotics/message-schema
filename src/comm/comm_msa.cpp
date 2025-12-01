@@ -3185,8 +3185,28 @@ void COMM_MSA::send_status()
     motorObj2->get_map()["status"]     = sio::double_message::create(ms.status_m1);
     motorObj2->get_map()["temp"]       = sio::double_message::create(ms.temp_m1);
     motorObj2->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m1) / 10.0);
+    
     motorArray->get_vector().push_back(motorObj2);
+    
+    if(config -> get_robot_wheel_type() == "MECANUM")
+    {
+    sio::object_message::ptr motorObj3 = sio::object_message::create();
+    motorObj3->get_map()["connection"] = sio::bool_message::create((ms.connection_m2 == 1) ? "true" : "false");
+    motorObj3->get_map()["status"]     = sio::double_message::create(ms.status_m2);
+    motorObj3->get_map()["temp"]       = sio::double_message::create(ms.temp_m2);
+    motorObj3->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m2) / 10.0);
 
+    motorArray->get_vector().push_back(motorObj1);
+
+    sio::object_message::ptr motorObj4 = sio::object_message::create();
+    motorObj4->get_map()["connection"] = sio::bool_message::create((ms.connection_m3 == 1) ? "true" : "false");
+    motorObj4->get_map()["status"]     = sio::double_message::create(ms.status_m3);
+    motorObj4->get_map()["temp"]       = sio::double_message::create(ms.temp_m3);
+    motorObj4->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m3) / 10.0);
+                
+    motorArray->get_vector().push_back(motorObj4);
+    }
+    
     rootObj->get_map()["motor"] = motorArray;
     // Adding the condition object
     Eigen::Vector2d ieir = loc->get_cur_ieir();
