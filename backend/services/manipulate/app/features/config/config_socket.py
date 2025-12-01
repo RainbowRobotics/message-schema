@@ -33,6 +33,14 @@ async def on_call_config_controlbox(data, robot_model: str):
     return to_json(res)
 
 
+@config_socket_router.on("{robot_model}/save_robot_code")
+async def on_save_robot_code(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = await config_service.save_robot_code(robot_model, request=dict_data)
+    return to_json(res)
+
+
 @config_socket_router.on("{robot_model}/save_area_parameter")
 async def on_save_area_parameter(data, robot_model: str):
     dict_data = t_to_dict(data)
@@ -165,4 +173,28 @@ async def on_set_freedrive(data, robot_model: str):
     dict_data = t_to_dict(data)
     
     res = await config_service.set_freedrive(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_userframe_6dof")
+async def on_set_userframe_6dof(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_userframe_6dof(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_userframe_tcp")
+async def on_set_userframe_tcp(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_userframe_tcp(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_userframe_3points")
+async def on_set_userframe_3points(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_userframe_3points(robot_model=robot_model, request=dict_data)
     return to_json(res)

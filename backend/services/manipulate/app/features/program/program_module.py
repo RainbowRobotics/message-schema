@@ -5,6 +5,7 @@ from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_TypeT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
+from rb_flat_buffers.IPC.Request_MotionResume import Request_MotionResumeT
 from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_JB_ADD import Request_Move_JB_ADDT
@@ -22,6 +23,8 @@ from rb_flat_buffers.IPC.Request_Move_TickJogL import Request_Move_TickJogLT
 from rb_flat_buffers.IPC.Request_Move_XB_ADD import Request_Move_XB_ADDT
 from rb_flat_buffers.IPC.Request_Move_XB_CLR import Request_Move_XB_CLRT
 from rb_flat_buffers.IPC.Request_Move_XB_RUN import Request_Move_XB_RUNT
+from rb_flat_buffers.IPC.Request_ProgramAfter import Request_ProgramAfterT
+from rb_flat_buffers.IPC.Request_ProgramBefore import Request_ProgramBeforeT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_utils.parser import t_to_dict
@@ -45,7 +48,7 @@ class ProgramService(BaseService):
         pass
 
     async def call_resume(self, *, robot_model: str):
-        req = Request_MotionPauseT()
+        req = Request_MotionResumeT()
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_resume",
@@ -79,6 +82,34 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
+
+    async def call_program_before(self, *, robot_model: str, option : int):
+        req = Request_ProgramBeforeT()
+        req.option = option
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_program_before",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+
+        return res["dict_payload"]
+
+
+    async def call_program_after(self, *, robot_model: str, option : int):
+        req = Request_ProgramAfterT()
+        req.option = option
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_program_after",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+
+        return res["dict_payload"]
+    
 
     async def call_speedbar(self, *, robot_model: str, speedbar: float):
         req = Request_MotionSpeedBarT()
