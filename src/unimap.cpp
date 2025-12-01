@@ -2079,3 +2079,152 @@ bool UNIMAP::node_exists_by_name(const QString& name)
     }
     return false;
 }
+
+bool UNIMAP::add_additional_cloud(const std::vector<Eigen::Vector3d>& pts)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    
+    try
+    {
+        additional_cloud.insert(additional_cloud.end(), pts.begin(), pts.end());
+        return true;
+    }
+    catch(const std::exception& e)
+    {
+        log_error("[UNIMAP] Failed to add additional cloud: {}", e.what());
+        return false;
+    }
+}
+
+std::vector<Eigen::Vector3d> UNIMAP::get_additional_cloud()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return additional_cloud;
+}
+
+void UNIMAP::clear_additional_cloud()
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    additional_cloud.clear();
+}
+
+std::vector<Eigen::Vector3d> UNIMAP::get_removed_cloud()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return removed_cloud;
+}
+
+void UNIMAP::clear_removed_cloud()
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    removed_cloud.clear();
+}
+
+bool UNIMAP::remove_unmatched_points(const std::vector<Eigen::Vector3d>& scan_pts, const Eigen::Matrix4d& cur_tf)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    
+    if(!kdtree_cloud_2d || kdtree_cloud_2d->pts.empty())
+    {
+        spdlog::warn("[UNIMAP] No existing map to process");
+        return false;
+    }
+
+    if(scan_pts.empty())
+    {
+        spdlog::warn("[UNIMAP] No scan points provided");
+        return false;
+    }
+
+    const double match_threshold = 0.15;  // default 0.15m
+
+    // Calculate update radius from actual scan data
+    Eigen::Vector3d robot_pos = cur_tf.block(0,3,3,1);
+    
+    const double robot_radius = CONFIG::instance()->get_robot_radius();
+    const double update_radius = robot_radius * 2.5;  
+
+    log_info("[UNIMAP] Update radius set to robot radius x2.5: {:.2f}m", update_radius);
+
+    // Clear previous removed points
+    //removed_cloud.clear();
+    
+    // Build KD-tree for scan points using XYZR_CLOUD
+    XYZR_CLOUD scan_cloud;
+    scan_cloud.pts.reserve(scan_pts.size());
+    for(const auto& pt : scan_pts)
+    {
+        PT_XYZR scan_pt;
+        scan_pt.x = pt.x();
+        scan_pt.y = pt.y();
+        scan_pt.z = pt.z();
+        scan_pt.r = 128.0;  // temp reflectance value
+        scan_cloud.pts.push_back(scan_pt);
+    }
+    
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<double, XYZR_CLOUD>,
+        XYZR_CLOUD,
+        3> SCAN_KD_TREE;
+    
+    SCAN_KD_TREE scan_tree(3, scan_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    scan_tree.buildIndex();
+    
+    // Process map points
+    size_t removed_count = 0;
+    size_t kept_count = 0;
+    std::vector<PT_XYZR> updated_map_pts;
+    
+    for(size_t i = 0; i < kdtree_cloud_2d->pts.size(); i++)
+    {
+        PT_XYZR& map_pt = kdtree_cloud_2d->pts[i];
+        Eigen::Vector3d map_pos(map_pt.x, map_pt.y, map_pt.z);
+        
+        // range limit
+        double dist_to_robot = (map_pos - robot_pos).norm();
+        if(dist_to_robot > update_radius)
+        {
+            updated_map_pts.push_back(map_pt);
+            kept_count++;
+            continue;
+        }
+        
+        // check matching in scan points
+        double query_pt[3] = {map_pt.x, map_pt.y, map_pt.z};
+        std::vector<unsigned int> ret_index(1);
+        std::vector<double> out_dist_sqr(1);
+        
+        scan_tree.knnSearch(&query_pt[0], 1, &ret_index[0], &out_dist_sqr[0]);
+        
+        double match_dist = std::sqrt(out_dist_sqr[0]);
+        
+        // If matched, keep; if not matched, remove
+        if(match_dist < match_threshold)
+        {
+            updated_map_pts.push_back(map_pt);
+            kept_count++;
+        }
+        else
+        {
+            // If not matched, add to removed_cloud (for visualization in purple)
+            removed_cloud.push_back(map_pos);
+            removed_count++;
+        }
+    }
+    
+    // Replace map with updated points
+    kdtree_cloud_2d->pts = updated_map_pts;
+    
+    // Rebuild KD-tree
+    if(kdtree_cloud_2d_index)
+    {
+        kdtree_cloud_2d_index.reset();
+    }
+    kdtree_cloud_2d_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud_2d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    kdtree_cloud_2d_index->buildIndex();
+    
+    spdlog::info("[UNIMAP] Points processed - Kept: {}, Removed: {}, Total remaining: {}", 
+                 kept_count, removed_count, kdtree_cloud_2d->pts.size());
+    
+    return removed_count > 0;  // Return true if any points were removed
+}

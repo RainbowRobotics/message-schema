@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-namespace 
+namespace
 {
 const char* MODULE_NAME = "MAIN";
 }
@@ -132,8 +132,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_ReplaceNode,      SIGNAL(clicked()), this, SLOT(bt_ReplaceNode()));
     connect(ui->bt_QuickAnnotStart,   SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
-    connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
     connect(ui->bt_QuickAddCloud,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
+    connect(ui->bt_QuickAddCloud2,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud2()));
+
     connect(ui->ckb_UseNodeSize,      SIGNAL(stateChanged(int)),    this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeX,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeY,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
@@ -348,7 +349,7 @@ void MainWindow::init_modules()
             QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
-                        
+
             if (CONFIG::instance ()->get_update_use_config() == true)
             {
                 CONFIG::instance()->set_update_config_file();
@@ -446,10 +447,10 @@ void MainWindow::init_modules()
             LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
             LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
             LIDAR_2D::instance()->init();
-            
+
             spdlog::info("[MAIN] Waiting 3 seconds for MOBILE pose collection and triggering auto sync...");
             std::this_thread::sleep_for(std::chrono::seconds(3));
-            
+
             LIDAR_2D::instance()->open();
         }
     }
@@ -1614,7 +1615,7 @@ void MainWindow::bt_MapLoad()
 {
     //spdlog::info("[MAIN] bt_MapLoad");
     log_info("bt_MapLoad");
-    
+
     //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
@@ -2051,7 +2052,7 @@ void MainWindow::bt_DockStop()
     {
         MOBILE::instance()->set_detect_mode(0.0);
     }
-    
+
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
 }
@@ -2437,7 +2438,7 @@ void MainWindow::bt_QuickAnnotStart()
             auto nodes = UNIMAP::instance()->get_nodes_origin();
             if(nodes && !nodes->empty())
             {
-                qa_last_node = nodes->back().id; 
+                qa_last_node = nodes->back().id;
                 log_info("[QA] Initial GOAL node added: {}", qa_last_node.toStdString());
             }
             else
@@ -2475,10 +2476,10 @@ void MainWindow::bt_QuickAnnotStop()
     }
 
     //UNIMAP::instance()->stop_annotation();
-    
+
     is_qa_running = false;
     qa_timer->stop();
-    
+
 
     NODE* last_node = UNIMAP::instance()->get_node_by_id(qa_last_node);
     if(last_node == nullptr)
@@ -2496,7 +2497,7 @@ void MainWindow::bt_QuickAnnotStop()
     double d = (cur_tf.block(0,3,3,1) - last_node->tf.block(0,3,3,1)).norm();
     log_info("[QA] Distance from last node: {:.2f} m, qa_distance: {:.2f} m", d, qa_step_distance);
 
-    const double qa_stop_min_d = qa_step_distance * qa_stop_min_distance; 
+    const double qa_stop_min_d = qa_step_distance * qa_stop_min_distance;
 
     if(d >= qa_stop_min_d)
     {
@@ -2533,12 +2534,172 @@ void MainWindow::bt_QuickAddCloud()
 {
     log_info("bt_QuickAddCloud called");
 
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("[QA_CLOUD] check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("[QA_CLOUD] check localization");
+        return;
+    }
+
+    // Get current lidar scan and transform
+    std::vector<Eigen::Vector3d> pts;
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+
+    // Get scan based on localization mode
+    if(CONFIG::instance()->get_loc_mode() == "3D" && CONFIG::instance()->get_use_lidar_3d())
+    {
+        // Get 3D lidar scan
+        for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); idx++)
+        {
+            LVX_FRM cur_frm = LIDAR_3D::instance()->get_cur_raw(idx);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                Eigen::Vector3d pt(cur_frm.pts[p].x, cur_frm.pts[p].y, cur_frm.pts[p].z);
+                pts.push_back(pt);
+            }
+        }
+        log_info("[QA_CLOUD] Captured 3D lidar scan with {} points", pts.size());
+    }
+    else if(CONFIG::instance()->get_use_lidar_2d())
+    {
+        // Get 2D lidar scan
+        for(int idx = 0; idx < CONFIG::instance()->get_lidar_2d_num(); idx++)
+        {
+            RAW_FRAME cur_frm = LIDAR_2D::instance()->get_cur_raw(idx);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                pts.push_back(cur_frm.pts[p]);
+            }
+        }
+        log_info("[QA_CLOUD] Captured 2D lidar scan with {} points", pts.size());
+    }
+    else
+    {
+        log_error("[QA_CLOUD] No lidar available");
+        return;
+    }
+
+    if(pts.empty())
+    {
+        log_warn("[QA_CLOUD] No points in current scan");
+        return;
+    }
+
+    // Transform local points to global coordinates
+    Eigen::Matrix3d R = cur_tf.block(0,0,3,3);
+    Eigen::Vector3d t = cur_tf.block(0,3,3,1);
+
+    std::vector<Eigen::Vector3d> global_pts;
+    global_pts.reserve(pts.size());
+
+    for(size_t p = 0; p < pts.size(); p++)
+    {
+        Eigen::Vector3d P = R * pts[p] + t;
+        global_pts.push_back(P);
+    }
+
+    // Add to unimap additional cloud
+    if(UNIMAP::instance()->add_additional_cloud(global_pts))
+    {
+        log_info("[QA_CLOUD] Added {} points to additional cloud", global_pts.size());
+        map_update();
+    }
+    else
+    {
+        log_error("[QA_CLOUD] Failed to add points to additional cloud");
+    }
 }
 
-void MainWindow::bt_QuickAddAruco()
+void MainWindow::bt_QuickAddCloud2()
 {
-    log_info("bt_QuickAddAruco called");
+    log_info("bt_QuickAddCloud2 called");
 
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("[QA_CLOUD2] check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("[QA_CLOUD2] check localization");
+        return;
+    }
+
+    // Get current lidar scan and transform
+    std::vector<Eigen::Vector3d> pts;
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+
+    // Get scan based on localization mode
+    if(CONFIG::instance()->get_loc_mode() == "3D" && CONFIG::instance()->get_use_lidar_3d())
+    {
+        // Get 3D lidar scan
+        for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); idx++)
+        {
+            LVX_FRM cur_frm = LIDAR_3D::instance()->get_cur_raw(idx);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                Eigen::Vector3d pt(cur_frm.pts[p].x, cur_frm.pts[p].y, cur_frm.pts[p].z);
+                pts.push_back(pt);
+            }
+        }
+        log_info("[QA_CLOUD2] Captured 3D lidar scan with {} points", pts.size());
+    }
+    else if(CONFIG::instance()->get_use_lidar_2d())
+    {
+        // Get 2D lidar scan
+        for(int idx = 0; idx < CONFIG::instance()->get_lidar_2d_num(); idx++)
+        {
+            RAW_FRAME cur_frm = LIDAR_2D::instance()->get_cur_raw(idx);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                pts.push_back(cur_frm.pts[p]);
+            }
+        }
+        log_info("[QA_CLOUD2] Captured 2D lidar scan with {} points", pts.size());
+    }
+    else
+    {
+        log_error("[QA_CLOUD2] No lidar available");
+        return;
+    }
+
+    if(pts.empty())
+    {
+        log_warn("[QA_CLOUD2] No points in current scan");
+        return;
+    }
+
+    // Transform local points to global coordinates
+    Eigen::Matrix3d R = cur_tf.block(0,0,3,3);
+    Eigen::Vector3d t = cur_tf.block(0,3,3,1);
+
+    std::vector<Eigen::Vector3d> global_pts;
+    global_pts.reserve(pts.size());
+
+    for(size_t p = 0; p < pts.size(); p++)
+    {
+        Eigen::Vector3d P = R * pts[p] + t;
+        global_pts.push_back(P);
+    }
+
+    // Remove unmatched points from map
+    log_info("[QA_CLOUD2] Attempting to remove unmatched points with {} scan points", global_pts.size());
+
+    if(UNIMAP::instance()->remove_unmatched_points(global_pts, cur_tf))
+    {
+        log_info("[QA_CLOUD2] Successfully removed unmatched points from map");
+        map_update();
+    }
+    else
+    {
+        log_error("[QA_CLOUD2] Failed to remove unmatched points (no points removed or error occurred)");
+    }
 }
 
 
@@ -3706,7 +3867,7 @@ void MainWindow::plot_safety()
     {
         ui->le_Setting_Wheel_Type->setText("MECANUM");
     }
-    
+
     ui->le_Setting_Lx->setText(QString().sprintf("%.2f", cur_setting.lx));
     ui->le_Setting_Ly->setText(QString().sprintf("%.2f", cur_setting.ly));
 
@@ -5364,7 +5525,7 @@ int MainWindow::led_handler()
             return led_out;
         }
     }
-    
+
 
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
@@ -5377,7 +5538,7 @@ int MainWindow::led_handler()
             led_out = SAFETY_LED_CONTRACTING_GREEN;
             return led_out;
         }
-        
+
         else if (ms.charge_state == CHARGING_STATION_CHARGE_FINISH)
         {
             led_out = SAFETY_LED_GREEN_BLINKING;
@@ -5526,10 +5687,12 @@ void MainWindow::qa_loop()
             if(nodes && !nodes->empty())
             {
                 QString new_node_id = nodes->back().id;
-                
                 //UNIMAP::instance()->add_link2(qa_last_node, new_node_id);
+                PICKING qa_pick;
+                qa_pick.pre_node = qa_last_node;
+                qa_pick.cur_node = new_node_id;
+                UNIMAP::instance()->add_link2(qa_pick);
                 qa_last_node = new_node_id;
-
                 topo_update();
                 log_info("[QA] Added new route node at distance: {:.2f}m", d);
             }
