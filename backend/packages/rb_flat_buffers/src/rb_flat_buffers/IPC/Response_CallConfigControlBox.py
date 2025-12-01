@@ -354,26 +354,47 @@ except:
 class Response_CallConfigControlBoxT(object):
 
     # Response_CallConfigControlBoxT
-    def __init__(self):
-        self.doutSpecialFunc = None  # type: Optional[N_DOUT_uT]
-        self.dinSpecialFunc = None  # type: Optional[N_DIN_uT]
-        self.dinFilterCount = None  # type: Optional[N_DIN_uT]
-        self.areaConfigs0 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs1 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs2 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs3 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs4 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs5 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs6 = None  # type: Optional[ST_Config_AreaT]
-        self.areaConfigs7 = None  # type: Optional[ST_Config_AreaT]
-        self.userFrame0 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame1 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame2 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame3 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame4 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame5 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame6 = None  # type: Optional[ST_Config_UserFrameT]
-        self.userFrame7 = None  # type: Optional[ST_Config_UserFrameT]
+    def __init__(
+        self,
+        doutSpecialFunc = None,
+        dinSpecialFunc = None,
+        dinFilterCount = None,
+        areaConfigs0 = None,
+        areaConfigs1 = None,
+        areaConfigs2 = None,
+        areaConfigs3 = None,
+        areaConfigs4 = None,
+        areaConfigs5 = None,
+        areaConfigs6 = None,
+        areaConfigs7 = None,
+        userFrame0 = None,
+        userFrame1 = None,
+        userFrame2 = None,
+        userFrame3 = None,
+        userFrame4 = None,
+        userFrame5 = None,
+        userFrame6 = None,
+        userFrame7 = None,
+    ):
+        self.doutSpecialFunc = doutSpecialFunc  # type: Optional[N_DOUT_uT]
+        self.dinSpecialFunc = dinSpecialFunc  # type: Optional[N_DIN_uT]
+        self.dinFilterCount = dinFilterCount  # type: Optional[N_DIN_uT]
+        self.areaConfigs0 = areaConfigs0  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs1 = areaConfigs1  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs2 = areaConfigs2  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs3 = areaConfigs3  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs4 = areaConfigs4  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs5 = areaConfigs5  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs6 = areaConfigs6  # type: Optional[ST_Config_AreaT]
+        self.areaConfigs7 = areaConfigs7  # type: Optional[ST_Config_AreaT]
+        self.userFrame0 = userFrame0  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame1 = userFrame1  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame2 = userFrame2  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame3 = userFrame3  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame4 = userFrame4  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame5 = userFrame5  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame6 = userFrame6  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame7 = userFrame7  # type: Optional[ST_Config_UserFrameT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

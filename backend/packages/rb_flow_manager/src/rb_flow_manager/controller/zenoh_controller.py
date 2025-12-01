@@ -36,6 +36,9 @@ class Zenoh_Controller(BaseController):
                 raise RuntimeError("Zenoh session not established within 3 seconds.")
             time.sleep(0.1)
 
+        if self._zenoh_client is not None:
+            self._zenoh_client.publish("rrs/stop", payload={})
+
     def on_start(self, task_id: str) -> None:
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
@@ -57,10 +60,15 @@ class Zenoh_Controller(BaseController):
             self._zenoh_client.publish("rrs/resume", payload={})
 
     def on_next(self, task_id: str, step_id: str) -> None:
+
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
-        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.ERROR)
+        str_error = str(error)
+        self.update_step_state(
+            step_id, task_id, RB_Flow_Manager_ProgramState.ERROR, error=str_error
+        )
+        self.update_executor_state(RB_Flow_Manager_ProgramState.ERROR, error=str_error)
 
     def on_done(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.COMPLETED)
@@ -72,6 +80,9 @@ class Zenoh_Controller(BaseController):
         # if self._zenoh_client is not None and not self._zenoh_client.is_current_process_client():
         #     self._zenoh_client.close()
         #     self._zenoh_client = None
+
+        if self._zenoh_client is not None:
+            self._zenoh_client.publish("rrs/stop", payload={})
 
         if self._bg_task is not None:
             self._bg_task.cancel()
@@ -86,7 +97,9 @@ class Zenoh_Controller(BaseController):
     def on_all_pause(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.PAUSED)
 
-    def update_step_state(self, step_id: str, task_id: str, state: int) -> None:
+    def update_step_state(
+        self, step_id: str, task_id: str, state: int, error: str | None = ""
+    ) -> None:
         """Step 상태 업데이트"""
         try:
             if self._zenoh_client is not None:
@@ -94,6 +107,7 @@ class Zenoh_Controller(BaseController):
                 req.stepId = step_id
                 req.taskId = task_id
                 req.state = state
+                req.error = error
 
                 self._zenoh_client.publish(
                     "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
@@ -113,20 +127,23 @@ class Zenoh_Controller(BaseController):
                 self._zenoh_client.publish(
                     "rrs/task/update_all_step_state",
                     flatbuffer_req_obj=req,
-                    flatbuffer_buf_size=256,
+                    flatbuffer_buf_size=32,
                 )
         except Exception as e:
             print(f"Error updating all task step state: {e}")
             raise e
 
-    def update_executor_state(self, state: int) -> None:
+    def update_executor_state(self, state: int, error: str | None = "") -> None:
         """Executor 상태 업데이트"""
         try:
             if self._zenoh_client is not None:
                 req = Request_Update_Executor_StateT()
                 req.state = state
+                req.error = error
                 self._zenoh_client.publish(
-                    "rrs/executor/state", flatbuffer_req_obj=req, flatbuffer_buf_size=32
+                    "rrs/executor/state",
+                    flatbuffer_req_obj=req,
+                    flatbuffer_buf_size=256 if error is not None else 32,
                 )
         except Exception as e:
             print(f"Error updating executor state: {e}")

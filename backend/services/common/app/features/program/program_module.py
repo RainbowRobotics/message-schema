@@ -20,6 +20,7 @@ from rb_database.utils import make_check_include_query, make_check_search_text_q
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import (
     RB_Flow_Manager_ProgramState as RB_Flow_Manager_ProgramState_FB,
 )
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
@@ -40,6 +41,8 @@ from app.features.info.info_schema import RobotInfo
 from app.socket.socket_client import socket_client
 
 from .program_schema import (
+    MainTaskBegin,
+    PlayState,
     Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
     Request_Create_Multiple_TaskPD,
@@ -59,6 +62,24 @@ from .program_schema import (
     TaskType,
 )
 
+_executor: ScriptExecutor | None = None
+_zenoh_controller: Zenoh_Controller | None = None
+
+
+def _get_zenoh_controller() -> Zenoh_Controller:
+    global _zenoh_controller
+    if _zenoh_controller is None:
+        _zenoh_controller = Zenoh_Controller()
+    return _zenoh_controller
+
+
+def _get_executor() -> ScriptExecutor:
+    global _executor
+    if _executor is None:
+        _executor = ScriptExecutor(controller=_get_zenoh_controller())
+    return _executor
+
+
 zenoh_client = ZenohClient()
 
 info_service = InfoService()
@@ -66,15 +87,21 @@ info_service = InfoService()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
-        # multiprocessing.set_start_method("spawn", force=True)
+        # print(
+        #     f"[ProgramService.__init__] pid={os.getpid()} "
+        #     f"id={id(self)} thread={threading.current_thread().name}",
+        #     flush=True,
+        # )
+        # traceback.print_stack(limit=5)
 
-        zenoh_controller = Zenoh_Controller()
+        self._robot_models: dict[str, Any] = read_json_file("data", "robot_models.json")
 
-        self._robot_models = read_json_file("data", "robot_models.json")
+        self._play_state: PlayState = PlayState.IDLE
+        self._task_play_state: dict[str, PlayState] = {
+            robot_model: PlayState.IDLE for robot_model in self._robot_models
+        }
 
-        self._play_state = "stop"
-
-        self.script_executor = ScriptExecutor(controller=zenoh_controller)
+        self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
     async def call_resume_or_pause(
@@ -129,6 +156,23 @@ class ProgramService(BaseService):
             ),
         }
 
+    def call_stop(self):
+        manipulate_req = Request_MotionHaltT()
+
+        res_manipulate_halt = zenoh_client.query_one(
+            "*/call_halt",
+            flatbuffer_req_obj=manipulate_req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+        return {
+            "manipulateReturnValue": (
+                res_manipulate_halt["dict_payload"]["returnValue"]
+                if res_manipulate_halt and res_manipulate_halt.get("dict_payload")
+                else None
+            ),
+        }
+
     async def call_smoothjog_stop(self, *, stoptime: float):
         """
         SmoothJog Stop을 호출하는 함수.
@@ -175,26 +219,34 @@ class ProgramService(BaseService):
         }[state]
 
     def get_play_state(self):
-        return self._play_state
+        return {
+            "playState": self._play_state,
+            "taskPlayState": self._task_play_state,
+        }
 
-    def update_executor_state(self, state: int) -> None:
+    def update_executor_state(self, state: int, error: str | None = None) -> None:
         str_state = self.convert_state_to_string(state)
 
         if (
             str_state == RB_Flow_Manager_ProgramState.RUNNING
             or str_state == RB_Flow_Manager_ProgramState.WAITING
         ):
-            self._play_state = "play"
+            self._play_state = PlayState.PLAY
         elif str_state == RB_Flow_Manager_ProgramState.PAUSED:
-            self._play_state = "pause"
+            self._play_state = PlayState.PAUSE
         elif (
             str_state == RB_Flow_Manager_ProgramState.STOPPED
             or str_state == RB_Flow_Manager_ProgramState.ERROR
-            or str_state == RB_Flow_Manager_ProgramState.IDLE
         ):
-            self._play_state = "stop"
+            self._play_state = PlayState.STOP
+        elif str_state == RB_Flow_Manager_ProgramState.IDLE:
+            self._play_state = PlayState.IDLE
 
-        fire_and_log(socket_client.emit("program/play_state", {"playState": self._play_state}))
+        fire_and_log(
+            socket_client.emit(
+                "program/play_state", {"playState": self._play_state, "error": error}
+            )
+        )
 
     async def load_program(self, *, request: Request_Load_ProgramPD, db: MongoDB):
         """
@@ -445,6 +497,19 @@ class ProgramService(BaseService):
 
         query: dict[str, Any] = {"scriptName": task_id}
 
+        if state in [
+            RB_Flow_Manager_ProgramState.RUNNING,
+            RB_Flow_Manager_ProgramState.WAITING,
+            RB_Flow_Manager_ProgramState.COMPLETED,
+        ]:
+            self._task_play_state[task_id] = PlayState.PLAY
+        elif state == RB_Flow_Manager_ProgramState.PAUSED:
+            self._task_play_state[task_id] = PlayState.PAUSE
+        elif state in [RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.ERROR]:
+            self._task_play_state[task_id] = PlayState.STOP
+        elif state == RB_Flow_Manager_ProgramState.IDLE:
+            self._task_play_state[task_id] = PlayState.IDLE
+
         if ObjectId.is_valid(task_id):
             query = {"_id": ObjectId(task_id)}
 
@@ -487,8 +552,7 @@ class ProgramService(BaseService):
         step_id = request_dict["stepId"]
         task_id = request_dict["taskId"]
         state = request_dict["state"]
-
-        steps_col = db["steps"]
+        error_value: str | None = request_dict.get("error")
 
         fire_and_log(
             socket_client.emit(
@@ -496,10 +560,13 @@ class ProgramService(BaseService):
                 {
                     "stepId": step_id,
                     "state": state,
+                    "error": error_value,
                 },
             ),
             name="emit_step_update_state",
         )
+
+        steps_col = db["steps"]
 
         if not ObjectId.is_valid(step_id):
             return
@@ -594,6 +661,7 @@ class ProgramService(BaseService):
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             task_doc["robotModel"],
+            task_doc.get("begin", None),
         )
 
         os.makedirs(task_doc["scriptPath"], exist_ok=True)
@@ -635,12 +703,12 @@ class ProgramService(BaseService):
         script_name: str,
         repeat_count: int,
         robot_model: str | None = None,
+        begin: MainTaskBegin | None = None,
     ):
         """
         Steps tree를 컨텍스트로 변환하는 함수.
         """
-        print("robot_model >>>", robot_model, flush=True)
-        category = self._robot_models[robot_model].get("be_service", None)
+        category = self._robot_models.get(robot_model or "", {}).get("be_service", None)
 
         body_context = "\n".join(
             self.parse_step_context(step, depth=8, to_string=True) for step in steps_tree
@@ -650,7 +718,7 @@ class ProgramService(BaseService):
             body_context = ""
 
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, Step\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, Step\n"
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )
@@ -658,10 +726,30 @@ class ProgramService(BaseService):
         header_context += "zenoh_controller = Zenoh_Controller()\n\n"
         header_context += "executor = ScriptExecutor(controller=zenoh_controller)\n\n"
 
+        func_part = ""
+        args_part = ""
+
+        print("begin >>>", begin, flush=True)
+
+        begin_dict = t_to_dict(begin) if begin is not None else None
+
+        if begin_dict is not None and robot_model is not None:
+            func_part = f"    func_name='rb_{category}_sdk.set_begin',\n"
+            args_part = (
+                f"    args={{\n"
+                f"        'robot_model': '{robot_model}',\n"
+                f"        'position': {begin_dict['position']},\n"
+                f"        'isEnable': {begin_dict['isEnable']},\n"
+                f"        'speedRatio': {begin_dict['speedRatio']},\n"
+                f"    }},\n"
+            )
+
         root_block = (
             "tree = Step(\n"
             f"    step_id='{task_id}',\n"
             f"    name='{script_name}',\n"
+            f"{func_part}"
+            f"{args_part}"
             "    children=[\n"
             f"{body_context}\n"
             "    ],\n"
@@ -702,6 +790,7 @@ class ProgramService(BaseService):
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             task_doc["robotModel"],
+            task_doc.get("begin", None),
         )
 
         return {
@@ -773,6 +862,9 @@ class ProgramService(BaseService):
                 parent_task_id = task.get("parentTaskId")
                 if task.get("type") == TaskType.SUB and parent_task_id is None:
                     raise HTTPException(status_code=400, detail="Sub task must have parentTaskId")
+
+                if task.get("type") == TaskType.MAIN and task.get("begin") is None:
+                    raise HTTPException(status_code=400, detail="Main task must have begin")
 
                 if not task["scriptPath"]:
                     task["scriptPath"] = str((self._script_base_path).resolve())

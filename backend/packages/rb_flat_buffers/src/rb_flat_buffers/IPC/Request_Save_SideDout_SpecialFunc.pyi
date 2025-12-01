@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFunc
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Request_Save_SideDout_SpecialFunc(object):
 class Request_Save_SideDout_SpecialFuncT(object):
   portNum: int
   desiredFunction: int
+  def __init__(
+    self,
+    portNum: int = ...,
+    desiredFunction: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_SideDout_SpecialFuncT: ...
   @classmethod

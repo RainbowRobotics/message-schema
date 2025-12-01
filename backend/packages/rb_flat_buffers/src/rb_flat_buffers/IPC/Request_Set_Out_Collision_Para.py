@@ -80,10 +80,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_Out_Collision_ParaT(object):
 
     # Request_Set_Out_Collision_ParaT
-    def __init__(self):
-        self.onoff = 0  # type: int
-        self.reactMode = 0  # type: int
-        self.threshold = 0.0  # type: float
+    def __init__(
+        self,
+        onoff = 0,
+        reactMode = 0,
+        threshold = 0.0,
+    ):
+        self.onoff = onoff  # type: int
+        self.reactMode = reactMode  # type: int
+        self.threshold = threshold  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

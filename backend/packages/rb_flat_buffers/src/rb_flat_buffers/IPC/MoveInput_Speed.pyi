@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class MoveInput_SpeedT(object):
   spdMode: int
   spdVelPara: float
   spdAccPara: float
+  def __init__(
+    self,
+    spdMode: int = ...,
+    spdVelPara: float = ...,
+    spdAccPara: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> MoveInput_SpeedT: ...
   @classmethod
