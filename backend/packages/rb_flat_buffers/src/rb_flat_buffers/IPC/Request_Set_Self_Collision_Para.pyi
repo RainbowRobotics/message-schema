@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Set_Self_Collision_Para import Request_Set_Self_Collision_Para
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class Request_Set_Self_Collision_ParaT(object):
   mode: int
   distInt: float
   distExt: float
+  def __init__(
+    self,
+    mode: int = ...,
+    distInt: float = ...,
+    distExt: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_Self_Collision_ParaT: ...
   @classmethod

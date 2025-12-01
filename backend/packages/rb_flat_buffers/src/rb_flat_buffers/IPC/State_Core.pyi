@@ -3,7 +3,6 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
 from rb_flat_buffers.IPC.N_AIN_f import N_AIN_f, N_AIN_fT
 from rb_flat_buffers.IPC.N_AOUT_f import N_AOUT_f, N_AOUT_fT
@@ -11,7 +10,6 @@ from rb_flat_buffers.IPC.N_CARTE_f import N_CARTE_f, N_CARTE_fT
 from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
 from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
-from rb_flat_buffers.IPC.State_Core import State_Core
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -112,6 +110,54 @@ class State_CoreT(object):
   statusOutColl: int
   statusSelfColl: int
   statusDtMode: int
+  def __init__(
+    self,
+    heartBeat: int = ...,
+    jointQRef: 'N_JOINT_fT' | None = ...,
+    jointQEnc: 'N_JOINT_fT' | None = ...,
+    jointTEsti: 'N_JOINT_fT' | None = ...,
+    jointTMeas: 'N_JOINT_fT' | None = ...,
+    jointTemper: 'N_JOINT_fT' | None = ...,
+    carteXRef: 'N_CARTE_fT' | None = ...,
+    carteXEnc: 'N_CARTE_fT' | None = ...,
+    userfSelectionNo: int = ...,
+    userfXRef: 'N_CARTE_fT' | None = ...,
+    toolSelectionNo: int = ...,
+    toolName: str | None = ...,
+    toolTcpX: float = ...,
+    toolTcpY: float = ...,
+    toolTcpZ: float = ...,
+    toolTcpRx: float = ...,
+    toolTcpRy: float = ...,
+    toolTcpRz: float = ...,
+    toolComM: float = ...,
+    toolComX: float = ...,
+    toolComY: float = ...,
+    toolComZ: float = ...,
+    cboxDigitalInput: 'N_DIN_uT' | None = ...,
+    cboxDigitalOutput: 'N_DOUT_uT' | None = ...,
+    cboxAnalogInput: 'N_AIN_fT' | None = ...,
+    cboxAnalogOutput: 'N_AOUT_fT' | None = ...,
+    exDigitalInput: 'N_DIN_uT' | None = ...,
+    exDigitalOutput: 'N_DOUT_uT' | None = ...,
+    exAnalogInput: 'N_AIN_fT' | None = ...,
+    exAnalogOutput: 'N_AOUT_fT' | None = ...,
+    toolDigitalInput: 'N_DIN_uT' | None = ...,
+    toolDigitalOutput: 'N_DOUT_uT' | None = ...,
+    toolAnalogInput: 'N_AIN_fT' | None = ...,
+    toolAnalogOutput: 'N_AOUT_fT' | None = ...,
+    motionMode: int = ...,
+    motionSpeedBar: float = ...,
+    motionIsPause: int = ...,
+    statusLan2can: int = ...,
+    statusSwitchEmg: int = ...,
+    statusPowerOut: int = ...,
+    statusServoNum: int = ...,
+    statusIsRefon: int = ...,
+    statusOutColl: int = ...,
+    statusSelfColl: int = ...,
+    statusDtMode: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> State_CoreT: ...
   @classmethod

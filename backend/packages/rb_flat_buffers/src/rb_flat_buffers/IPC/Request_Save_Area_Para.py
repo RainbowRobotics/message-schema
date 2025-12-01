@@ -198,19 +198,33 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_Area_ParaT(object):
 
     # Request_Save_Area_ParaT
-    def __init__(self):
-        self.areaNo = 0  # type: int
-        self.areaName = None  # type: str
-        self.areaType = 0  # type: int
-        self.areaX = 0.0  # type: float
-        self.areaY = 0.0  # type: float
-        self.areaZ = 0.0  # type: float
-        self.areaRx = 0.0  # type: float
-        self.areaRy = 0.0  # type: float
-        self.areaRz = 0.0  # type: float
-        self.areaPara0 = 0.0  # type: float
-        self.areaPara1 = 0.0  # type: float
-        self.areaPara2 = 0.0  # type: float
+    def __init__(
+        self,
+        areaNo = 0,
+        areaName = None,
+        areaType = 0,
+        areaX = 0.0,
+        areaY = 0.0,
+        areaZ = 0.0,
+        areaRx = 0.0,
+        areaRy = 0.0,
+        areaRz = 0.0,
+        areaPara0 = 0.0,
+        areaPara1 = 0.0,
+        areaPara2 = 0.0,
+    ):
+        self.areaNo = areaNo  # type: int
+        self.areaName = areaName  # type: Optional[str]
+        self.areaType = areaType  # type: int
+        self.areaX = areaX  # type: float
+        self.areaY = areaY  # type: float
+        self.areaZ = areaZ  # type: float
+        self.areaRx = areaRx  # type: float
+        self.areaRy = areaRy  # type: float
+        self.areaRz = areaRz  # type: float
+        self.areaPara0 = areaPara0  # type: float
+        self.areaPara1 = areaPara1  # type: float
+        self.areaPara2 = areaPara2  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

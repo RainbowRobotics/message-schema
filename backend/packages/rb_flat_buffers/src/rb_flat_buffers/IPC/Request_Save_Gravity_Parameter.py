@@ -93,11 +93,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_Gravity_ParameterT(object):
 
     # Request_Save_Gravity_ParameterT
-    def __init__(self):
-        self.mode = 0  # type: int
-        self.gx = 0.0  # type: float
-        self.gy = 0.0  # type: float
-        self.gz = 0.0  # type: float
+    def __init__(
+        self,
+        mode = 0,
+        gx = 0.0,
+        gy = 0.0,
+        gz = 0.0,
+    ):
+        self.mode = mode  # type: int
+        self.gx = gx  # type: float
+        self.gy = gy  # type: float
+        self.gz = gz  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

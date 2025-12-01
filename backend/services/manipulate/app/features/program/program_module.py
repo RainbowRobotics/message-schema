@@ -400,7 +400,7 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
-    
+
     async def call_move_xb_add(self, *, robot_model: str, request: Request_MoveXBAddPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
@@ -435,7 +435,7 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
-    
+
     async def call_move_xb_run(self, *, robot_model: str, request: Request_MoveXBRunPD):
         running_mode = t_to_dict(request.running_mode)
 

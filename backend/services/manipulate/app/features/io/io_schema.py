@@ -25,9 +25,32 @@ class Request_Save_SideDin_FilterCountPD(BaseModel):
     port_num: int
     desired_count: int
 
+
 class Request_Flange_PowerPD(BaseModel):
     desired_voltage: int
+
 
 class Request_Flange_Digital_OutPD(BaseModel):
     port_num: int
     desired_out: int
+
+
+class Request_SideDout_TogglePD(BaseModel):
+    port_num: int
+    desired_out: int
+
+
+class Request_SideDout_BitcombinationPD(BaseModel):
+    port_start: int
+    port_end: int
+    desired_value: int
+    direction_option: int
+
+
+class Request_SideDout_PulsePD(BaseModel):
+    port_num: int
+    block_mode: int
+    direction: int
+    time_1: float
+    time_2: float
+    time_3: float

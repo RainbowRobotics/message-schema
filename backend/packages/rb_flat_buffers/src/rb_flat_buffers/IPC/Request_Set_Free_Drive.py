@@ -67,9 +67,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_Free_DriveT(object):
 
     # Request_Set_Free_DriveT
-    def __init__(self):
-        self.onoff = 0  # type: int
-        self.sensitivity = 0.0  # type: float
+    def __init__(
+        self,
+        onoff = 0,
+        sensitivity = 0.0,
+    ):
+        self.onoff = onoff  # type: int
+        self.sensitivity = sensitivity  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

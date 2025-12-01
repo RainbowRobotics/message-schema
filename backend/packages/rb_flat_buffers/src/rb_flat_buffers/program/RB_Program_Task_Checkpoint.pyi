@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.program.RB_Program_Task_Checkpoint import RB_Program_Task_Checkpoint
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -32,6 +30,15 @@ class RB_Program_Task_CheckpointT(object):
   nodePath: typing.List[str]
   offset: int
   status: str | None
+  def __init__(
+    self,
+    taskId: str | None = ...,
+    programId: str | None = ...,
+    syncTaskIds: typing.List[str] | None = ...,
+    nodePath: typing.List[str] | None = ...,
+    offset: int = ...,
+    status: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> RB_Program_Task_CheckpointT: ...
   @classmethod

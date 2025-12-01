@@ -7,7 +7,10 @@ from .io_schema import (
     Request_Flange_Digital_OutPD,
     Request_Flange_PowerPD,
     Request_SideAout_GeneralPD,
+    Request_SideDout_BitcombinationPD,
     Request_SideDout_GeneralPD,
+    Request_SideDout_PulsePD,
+    Request_SideDout_TogglePD,
 )
 
 io_router = APIRouter(tags=["IO"])
@@ -35,4 +38,38 @@ async def flange_power(robot_model: str, request: Request_Flange_PowerPD):
 @io_router.post("/{robot_model}/call_flange_dout", response_model=Response_ReturnValuePD)
 async def flange_dout(robot_model: str, request: Request_Flange_Digital_OutPD):
     res = await io_service.flange_dout(robot_model, request.port_num, request.desired_out)
+    return JSONResponse(res)
+
+
+@io_router.post("/{robot_model}/call_side_dout_toggle", response_model=Response_ReturnValuePD)
+async def side_dout_toggle(robot_model: str, request: Request_SideDout_TogglePD):
+    res = await io_service.side_dout_toggle(robot_model, request.port_num)
+    return JSONResponse(res)
+
+
+@io_router.post(
+    "/{robot_model}/call_side_dout_bitcombination", response_model=Response_ReturnValuePD
+)
+async def side_dout_bitcombination(robot_model: str, request: Request_SideDout_BitcombinationPD):
+    res = await io_service.side_dout_bitcombination(
+        robot_model,
+        request.port_start,
+        request.port_end,
+        request.desired_value,
+        request.direction_option,
+    )
+    return JSONResponse(res)
+
+
+@io_router.post("/{robot_model}/call_side_dout_pulse", response_model=Response_ReturnValuePD)
+async def side_dout_pulse(robot_model: str, request: Request_SideDout_PulsePD):
+    res = await io_service.side_dout_pulse(
+        robot_model,
+        request.port_num,
+        request.block_mode,
+        request.direction,
+        request.time_1,
+        request.time_2,
+        request.time_3,
+    )
     return JSONResponse(res)
