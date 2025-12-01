@@ -1,5 +1,5 @@
 import asyncio
-from typing import Literal
+from typing import Any, Literal
 
 from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
@@ -45,6 +45,68 @@ class RBManipulateSDK(RBBaseSDK):
             return dict_res["payloadStr"]
 
         return None
+
+    async def set_begin(self, *, robot_model: str, position: Any, isEnable: bool = True, speedRatio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+        """메인 태스크 시작 위치 설정"""
+        req = Request_Move_JT()
+        move_input_target = MoveInput_TargetT()
+        move_input_speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = position
+
+        move_input_target.tarValues = ni
+        move_input_target.tarFrame = -1
+        move_input_target.tarUnit = 0
+
+        move_input_speed.spdMode = 1
+        move_input_speed.spdVelPara = 60
+        move_input_speed.spdAccPara = 120
+
+        if speedRatio is not None:
+            move_input_speed.spdMode = 0
+            move_input_speed.spdVelPara = speedRatio
+            move_input_speed.spdAccPara = 0.1
+
+        req.target = move_input_target
+        req.speed = move_input_speed
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_j",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+            timeout=2,
+        )
+
+        if flow_manager_args is not None:
+            if res.get("dict_payload") is None:
+                raise RuntimeError("Move failed")
+
+            while True:
+                try:
+                    if not self._is_alive:
+                        break
+
+                    topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
+
+                    if obj is not None and obj.get("motionMode") == 0:
+                        flow_manager_args.ctx.update_local_variables({
+                            "BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
+                        })
+                        flow_manager_args.ctx.update_global_variables({
+                            "BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
+                        })
+                        flow_manager_args.done()
+                        break
+                except asyncio.CancelledError:
+                    print("CancelledError", flush=True)
+                    break
+                except Exception as e:
+                    print("Exception >>", e, flush=True)
+                    raise RuntimeError(e) from e
 
     async def call_smoothjog_stop(
         self,

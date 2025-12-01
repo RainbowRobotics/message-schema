@@ -6,7 +6,8 @@ import os
 import sys
 import threading
 import time as time_module
-from typing import ClassVar, TypeVar
+from abc import abstractmethod
+from typing import Any, ClassVar, TypeVar
 
 from rb_schemas.sdk import FlowManagerArgs
 from rb_zenoh.client import ZenohClient
@@ -173,6 +174,11 @@ class RBBaseSDK:
     #     for i in range(count):
     #         if flow_manager_args is not None:
     #             flow_manager_args.done()
+
+    @abstractmethod
+    async def set_begin(self, *, robot_model: str, position: Any, isEnable: bool = True, speedRatio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+        """메인 태스크 시작 위치 설정"""
+
 
     def close(self):
         """SDK 종료 (현재 프로세스 + 현재 클래스용 인스턴스만)"""

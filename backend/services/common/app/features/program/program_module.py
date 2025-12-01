@@ -41,6 +41,7 @@ from app.features.info.info_schema import RobotInfo
 from app.socket.socket_client import socket_client
 
 from .program_schema import (
+    MainTaskBegin,
     PlayState,
     Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
@@ -660,6 +661,7 @@ class ProgramService(BaseService):
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             task_doc["robotModel"],
+            task_doc.get("begin", None),
         )
 
         os.makedirs(task_doc["scriptPath"], exist_ok=True)
@@ -701,6 +703,7 @@ class ProgramService(BaseService):
         script_name: str,
         repeat_count: int,
         robot_model: str | None = None,
+        begin: MainTaskBegin | None = None,
     ):
         """
         Steps tree를 컨텍스트로 변환하는 함수.
@@ -715,7 +718,7 @@ class ProgramService(BaseService):
             body_context = ""
 
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, Step\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, Step\n"
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )
@@ -723,10 +726,26 @@ class ProgramService(BaseService):
         header_context += "zenoh_controller = Zenoh_Controller()\n\n"
         header_context += "executor = ScriptExecutor(controller=zenoh_controller)\n\n"
 
+        func_part = ""
+        args_part = ""
+
+        if begin:
+            func_part = f"    func_name='rb_{category}_sdk.set_begin',\n"
+            args_part = (
+                f"    args={{\n"
+                f"        'robot_model': '{robot_model}',\n"
+                f"        'position': {begin.position},\n"
+                f"        'isEnable': {begin.isEnable},\n"
+                f"        'speedRatio': {begin.speedRatio},\n"
+                f"    }},\n"
+            )
+
         root_block = (
             "tree = Step(\n"
             f"    step_id='{task_id}',\n"
             f"    name='{script_name}',\n"
+            f"{func_part}"
+            f"{args_part}"
             "    children=[\n"
             f"{body_context}\n"
             "    ],\n"
@@ -767,6 +786,7 @@ class ProgramService(BaseService):
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             task_doc["robotModel"],
+            task_doc.get("begin", None),
         )
 
         return {
@@ -838,6 +858,9 @@ class ProgramService(BaseService):
                 parent_task_id = task.get("parentTaskId")
                 if task.get("type") == TaskType.SUB and parent_task_id is None:
                     raise HTTPException(status_code=400, detail="Sub task must have parentTaskId")
+
+                if task.get("type") == TaskType.MAIN and task.get("begin") is None:
+                    raise HTTPException(status_code=400, detail="Main task must have begin")
 
                 if not task["scriptPath"]:
                     task["scriptPath"] = str((self._script_base_path).resolve())

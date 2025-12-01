@@ -389,7 +389,6 @@ class ConditionStep(Step):
         self,
         *,
         step_id: str,
-        name: str,
         condition_type: str,
         condition: str | Callable | bool | None = True,
         args: dict[str, Any] | None = None,
@@ -397,7 +396,7 @@ class ConditionStep(Step):
     ):
         super().__init__(
             step_id=step_id,
-            name=name,
+            name=condition_type,
             func=None,
             args=args,
             condition_type=condition_type,
@@ -422,7 +421,6 @@ class ConditionStep(Step):
 
         return ConditionStep(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
-            name=d["name"],
             condition_type=condition_type,
             condition=condition,
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
@@ -431,7 +429,7 @@ class ConditionStep(Step):
     def to_dict(self):
         return {
             "stepId": self.step_id,
-            "name": self.name,
+            "name": self.condition_type,
             "conditionType": self.condition_type,
             "condition": self.condition,
             "children": [child.to_dict() for child in self.children],
@@ -452,16 +450,13 @@ class ConditionStep(Step):
             condition_result = ctx.data.get("condition_result", None)
 
             if self.condition_type == "If":
-                if condition_result is not None:
-                    raise RuntimeError("If must be the first condition")
-
-                ctx.data["condition_result"] = False
-            elif self.condition_type == "ElseIf":
-                if condition_result is None:
+                condition_result = False
+            else:
+                if self.condition_type == "ElseIf" and condition_result is None:
                     raise RuntimeError("ElseIf must be preceded by an If or ElseIf")
 
-            if self.condition_type == "Else" and self.condition is not None:
-                raise RuntimeError("Else must not have a condition")
+                if self.condition_type == "Else" and self.condition is not None:
+                    raise RuntimeError("Else must not have a condition")
 
             if condition_result:
                 ctx.emit_done(self.step_id)

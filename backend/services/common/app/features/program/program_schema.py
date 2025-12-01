@@ -106,6 +106,11 @@ class TaskType(str, Enum):
 class TaskExtension(str, Enum):
     PYTHON = "py"
 
+class MainTaskBegin(BaseModel):
+    position: Any
+    isEnable: bool
+    speedRatio: float | None = Field(default=0.3)
+
 
 class Task_Base(BaseModel):
     taskId: PyObjectId
@@ -115,6 +120,7 @@ class Task_Base(BaseModel):
     type: TaskType = Field(default=TaskType.MAIN)
     scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
+    begin: MainTaskBegin | None = Field(default=None)
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
