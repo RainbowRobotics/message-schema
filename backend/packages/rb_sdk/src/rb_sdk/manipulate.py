@@ -51,6 +51,18 @@ class RBManipulateSDK(RBBaseSDK):
 
         if not is_enable:
             if flow_manager_args is not None:
+                topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
+
+                if obj is not None:
+                    flow_manager_args.ctx.update_local_variables({
+                        "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
+                    })
+                    flow_manager_args.ctx.update_global_variables({
+                        "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
+                    })
+
                 flow_manager_args.done()
             return
 
@@ -188,6 +200,7 @@ class RBManipulateSDK(RBBaseSDK):
         spd_acc_para: float = 120,
         finish_at: bool | None = None,
         stop_time: float | int | None = None,
+        variable_name: str | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """관절 공간 이동 명령
@@ -200,6 +213,9 @@ class RBManipulateSDK(RBBaseSDK):
             spd_mode: 속도 측정 설정 방식 (0: %기반 설정, 1: 절대값(물리값))
             spd_vel_para: 속도
             spd_acc_para: 가속도
+            finish_at: 이동 정지 여부
+            stop_time: 이동 정지까지 시간
+            variable_name: 변수 이름
             flow_manager_args: Flow Manager 인자 (done 콜백 등)
         """
         try:
@@ -234,12 +250,19 @@ class RBManipulateSDK(RBBaseSDK):
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None:
                 if res.get("dict_payload") is None:
-                    raise RuntimeError("Move failed")
+                    raise RuntimeError("Move failed: dict_payload is None")
+                
+                is_break = False
 
                 while True:
                     try:
                         if not self._is_alive:
                             break
+
+                        topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                            f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                        )
+
 
                         stop_move = await self.move_finish_at_stop(
                             robot_model=robot_model,
@@ -249,16 +272,20 @@ class RBManipulateSDK(RBBaseSDK):
                         )
 
                         if stop_move:
-                            flow_manager_args.done()
-                            break
-
-                        topic, mv, obj, attachment = await self.zenoh_client.receive_one(
-                            f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
-                        )
+                            is_break = True
 
                         if obj is not None and obj.get("motionMode") == 0:
+                            is_break = True
+
+                        if is_break:
+                            if variable_name is not None and obj is not None:
+                                flow_manager_args.ctx.update_local_variables({
+                                    variable_name: obj.get("jointQRef", {}).get("f", [])
+                                })
+                            
                             flow_manager_args.done()
                             break
+
                     except asyncio.CancelledError:
                         print("CancelledError", flush=True)
                         break
@@ -287,6 +314,7 @@ class RBManipulateSDK(RBBaseSDK):
         spd_acc_para: float = 1000,
         finish_at: bool | None = None,
         stop_time: float | int | None = None,
+        variable_name: str | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """직선 공간 이동 명령
@@ -301,6 +329,7 @@ class RBManipulateSDK(RBBaseSDK):
             spd_acc_para: 가속도
             finish_at: 이동 정지 여부
             stop_time: 이동 정지까지 시간
+            variable_name: 변수 이름
             flow_manager_args: Flow Manager 인자 (done 콜백 등)
         """
         req = Request_Move_LT()
@@ -326,11 +355,20 @@ class RBManipulateSDK(RBBaseSDK):
         )
 
         if flow_manager_args is not None and res.get("dict_payload"):
+            if res.get("dict_payload") is None:
+                raise RuntimeError("Move failed: dict_payload is None")
+            
+            is_break = False
+            
             while True:
                 try:
                     if not self._is_alive:
                         break
 
+                    topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
+                    
                     stop_move = await self.move_finish_at_stop(
                         robot_model=robot_model,
                         finish_at=finish_at,
@@ -339,14 +377,17 @@ class RBManipulateSDK(RBBaseSDK):
                     )
 
                     if stop_move:
-                        flow_manager_args.done()
-                        break
-
-                    topic, mv, obj, attachment = await self.zenoh_client.receive_one(
-                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
-                    )
+                        is_break = True
 
                     if obj is not None and obj.get("motionMode") == 0:
+                        is_break = True
+
+                    if is_break:
+                        if variable_name is not None and obj is not None:
+                            flow_manager_args.ctx.update_local_variables({
+                                variable_name: obj.get("carteXRef", {}).get("f", [])
+                            })
+
                         flow_manager_args.done()
                         break
                 except asyncio.CancelledError:
