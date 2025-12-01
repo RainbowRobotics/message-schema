@@ -14,6 +14,7 @@ from .program_schema import (
     Request_Preview_Stop_ProgramPD,
     Request_Program_ExecutionPD,
     Request_Tasks_ExecutionPD,
+    Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
     Response_Clone_ProgramPD,
     Response_Create_Program_And_TasksPD,
@@ -26,6 +27,7 @@ from .program_schema import (
     Response_Get_StepListPD,
     Response_Get_Task_ListPD,
     Response_Script_ExecutionPD,
+    Response_Update_Multiple_TaskPD,
     Response_Update_ProgramPD,
     Response_Upsert_StepsPD,
     Step_Base,
@@ -107,6 +109,10 @@ async def get_task_info(task_id: str, db: MongoDB):
     res = await program_service.get_task_info(task_id=task_id, db=db)
     return JSONResponse(res)
 
+@program_router.post("/program/tasks/update", response_model=Response_Update_Multiple_TaskPD)
+async def update_tasks(request: Request_Update_Multiple_TaskPD, db: MongoDB):
+    res = await program_service.update_tasks(request=request, db=db)
+    return JSONResponse(res)
 
 @program_router.get("/program/step/{step_id}", response_model=Step_Base)
 async def get_step(step_id: str, db: MongoDB):

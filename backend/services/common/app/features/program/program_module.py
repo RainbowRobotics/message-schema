@@ -729,14 +729,18 @@ class ProgramService(BaseService):
         func_part = ""
         args_part = ""
 
-        if begin:
+        print("begin >>>", begin, flush=True)
+
+        begin_dict = t_to_dict(begin) if begin is not None else None
+
+        if begin_dict is not None and robot_model is not None:
             func_part = f"    func_name='rb_{category}_sdk.set_begin',\n"
             args_part = (
                 f"    args={{\n"
                 f"        'robot_model': '{robot_model}',\n"
-                f"        'position': {begin.position},\n"
-                f"        'isEnable': {begin.isEnable},\n"
-                f"        'speedRatio': {begin.speedRatio},\n"
+                f"        'position': {begin_dict['position']},\n"
+                f"        'isEnable': {begin_dict['isEnable']},\n"
+                f"        'speedRatio': {begin_dict['speedRatio']},\n"
                 f"    }},\n"
             )
 
