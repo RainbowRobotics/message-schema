@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_SideAout_General import Request_SideAout_General
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Request_SideAout_General(object):
 class Request_SideAout_GeneralT(object):
   portNum: int
   desiredVoltage: float
+  def __init__(
+    self,
+    portNum: int = ...,
+    desiredVoltage: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_SideAout_GeneralT: ...
   @classmethod

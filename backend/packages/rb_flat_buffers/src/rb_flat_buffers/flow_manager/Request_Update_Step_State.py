@@ -81,10 +81,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Update_Step_StateT(object):
 
     # Request_Update_Step_StateT
-    def __init__(self):
-        self.stepId = None  # type: str
-        self.taskId = None  # type: str
-        self.state = 0  # type: int
+    def __init__(
+        self,
+        stepId = None,
+        taskId = None,
+        state = 0,
+    ):
+        self.stepId = stepId  # type: Optional[str]
+        self.taskId = taskId  # type: Optional[str]
+        self.state = state  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

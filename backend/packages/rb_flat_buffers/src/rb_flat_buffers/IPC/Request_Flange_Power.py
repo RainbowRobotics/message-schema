@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Flange_PowerT(object):
 
     # Request_Flange_PowerT
-    def __init__(self):
-        self.desiredVoltage = 0  # type: int
+    def __init__(
+        self,
+        desiredVoltage = 0,
+    ):
+        self.desiredVoltage = desiredVoltage  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
