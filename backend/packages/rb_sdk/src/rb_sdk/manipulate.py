@@ -1,5 +1,5 @@
 import asyncio
-from typing import Literal
+from typing import Any, Literal
 
 from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
@@ -37,8 +37,6 @@ class RBManipulateSDK(RBBaseSDK):
         if dict_res is None or dict_res.get("valid") == 0:
             return None
 
-        print("dict_res >>>", dict_res, flush=True)
-
         if dict_res.get("type") == 0:
             return dict_res["payloadNum"]
         elif dict_res.get("type") == 1:
@@ -47,6 +45,68 @@ class RBManipulateSDK(RBBaseSDK):
             return dict_res["payloadStr"]
 
         return None
+
+    async def set_begin(self, *, robot_model: str, position: Any, isEnable: bool = True, speedRatio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+        """메인 태스크 시작 위치 설정"""
+        req = Request_Move_JT()
+        move_input_target = MoveInput_TargetT()
+        move_input_speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = position
+
+        move_input_target.tarValues = ni
+        move_input_target.tarFrame = -1
+        move_input_target.tarUnit = 0
+
+        move_input_speed.spdMode = 1
+        move_input_speed.spdVelPara = 60
+        move_input_speed.spdAccPara = 120
+
+        if speedRatio is not None:
+            move_input_speed.spdMode = 0
+            move_input_speed.spdVelPara = speedRatio
+            move_input_speed.spdAccPara = 0.1
+
+        req.target = move_input_target
+        req.speed = move_input_speed
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_j",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+            timeout=2,
+        )
+
+        if flow_manager_args is not None:
+            if res.get("dict_payload") is None:
+                raise RuntimeError("Move failed")
+
+            while True:
+                try:
+                    if not self._is_alive:
+                        break
+
+                    topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
+
+                    if obj is not None and obj.get("motionMode") == 0:
+                        flow_manager_args.ctx.update_local_variables({
+                            "BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
+                        })
+                        flow_manager_args.ctx.update_global_variables({
+                            "BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
+                        })
+                        flow_manager_args.done()
+                        break
+                except asyncio.CancelledError:
+                    print("CancelledError", flush=True)
+                    break
+                except Exception as e:
+                    print("Exception >>", e, flush=True)
+                    raise RuntimeError(e) from e
 
     async def call_smoothjog_stop(
         self,
@@ -165,8 +225,6 @@ class RBManipulateSDK(RBBaseSDK):
                 timeout=2,
             )
 
-            print("movej res >>>", res, flush=True)
-
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None:
                 if res.get("dict_payload") is None:
@@ -174,6 +232,9 @@ class RBManipulateSDK(RBBaseSDK):
 
                 while True:
                     try:
+                        if not self._is_alive:
+                            break
+
                         stop_move = await self.move_finish_at_stop(
                             robot_model=robot_model,
                             finish_at=finish_at,
@@ -188,8 +249,6 @@ class RBManipulateSDK(RBBaseSDK):
                         topic, mv, obj, attachment = await self.zenoh_client.receive_one(
                             f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
                         )
-
-                        print("movej state_core >>>", obj and obj.get("motionMode"), flush=True)
 
                         if obj is not None and obj.get("motionMode") == 0:
                             flow_manager_args.done()
@@ -263,6 +322,9 @@ class RBManipulateSDK(RBBaseSDK):
         if flow_manager_args is not None and res.get("dict_payload"):
             while True:
                 try:
+                    if not self._is_alive:
+                        break
+
                     stop_move = await self.move_finish_at_stop(
                         robot_model=robot_model,
                         finish_at=finish_at,
@@ -359,8 +421,6 @@ class RBManipulateSDK(RBBaseSDK):
             flow_manager_args: Flow Manager 인자 (done 콜백 등)
         """
 
-        print("flow_manager_arg", flow_manager_args, flush=True)
-
         if tcp_num != -1:
             self.set_toolist_num(robot_model=robot_model, tool_num=tcp_num)
 
@@ -436,7 +496,7 @@ class RBManipulateSDK(RBBaseSDK):
         req.targetToolNum = tool_num
 
         res = self.zenoh_client.query_one(
-            f"{robot_model}/set_toolist_num",
+            f"{robot_model}/set_toollist_num",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,

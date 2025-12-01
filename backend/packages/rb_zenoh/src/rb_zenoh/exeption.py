@@ -14,7 +14,7 @@ class ZenohReplyError(ZenohQueryException):
 
 class ZenohNoReply(ZenohQueryException):
     def __init__(self, timeout_ms: float):
-        super().__init__(f"No reply before timeout_ms={timeout_ms}")
+        super().__init__(f"No reply before timeout={timeout_ms}")
         self.timeout_ms = timeout_ms
 
 

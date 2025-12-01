@@ -20,6 +20,7 @@ class Step_Base(BaseModel):
     parentStepId: str | None = Field(default=None)
     taskId: str
     programId: str
+    groupId: str | None = Field(default=None)
     syncStepIds: list[str] | None = Field(default=None)
     name: str
     variable: dict[str, Any] | None = Field(default=None)
@@ -73,6 +74,7 @@ class Request_Update_StepStatePD(BaseModel):
     stepId: str
     taskId: str
     state: RB_Flow_Manager_ProgramState
+    error: str | None = None
 
 
 class Request_Create_Multiple_StepPD(BaseModel):
@@ -104,6 +106,11 @@ class TaskType(str, Enum):
 class TaskExtension(str, Enum):
     PYTHON = "py"
 
+class MainTaskBegin(BaseModel):
+    position: Any
+    isEnable: bool
+    speedRatio: float | None = Field(default=0.3)
+
 
 class Task_Base(BaseModel):
     taskId: PyObjectId
@@ -113,6 +120,7 @@ class Task_Base(BaseModel):
     type: TaskType = Field(default=TaskType.MAIN)
     scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
+    begin: MainTaskBegin | None = Field(default=None)
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
@@ -280,3 +288,15 @@ class Request_Preview_Stop_ProgramPD(BaseModel):
 class Request_Get_Script_ContextPD(BaseModel):
     taskId: str
     steps: list[Client_StepPD]
+
+
+class PlayState(str, Enum):
+    PLAY = "play"
+    PAUSE = "pause"
+    STOP = "stop"
+    IDLE = "idle"
+
+
+class Response_Get_Current_Program_StatePD(BaseModel):
+    playState: PlayState
+    taskPlayState: dict[str, PlayState]

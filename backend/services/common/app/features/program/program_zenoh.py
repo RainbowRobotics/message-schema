@@ -7,7 +7,6 @@ from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
     Request_Update_Executor_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
-from rb_utils.parser import t_to_dict, to_json
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
 
@@ -32,6 +31,11 @@ async def on_resume(*, topic, mv, obj, attachment):
     return await program_service.call_resume_or_pause(db=db, is_pause=False)
 
 
+@zenoh_program_router.subscribe("rrs/stop", opts=SubscribeOptions(allowed_same_sender=True))
+async def on_stop(*, topic, mv, obj, attachment):
+    return program_service.call_stop()
+
+
 @zenoh_program_router.subscribe(
     "rrs/task/update_all_step_state",
     flatbuffer_obj_t=Request_Update_All_Step_StateT,
@@ -50,13 +54,15 @@ async def on_update_all_step_state(*, topic, mv, obj, attachment):
     opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_update_step_state(*, topic, mv, obj, attachment):
-    print("obj >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
     db = await get_db()
     step_id = obj["stepId"]
     task_id = obj["taskId"]
     state = convert_state_to_string(obj["state"])
+    error_value: str | None = obj.get("error")
     return await program_service.update_step_state(
-        request=Request_Update_StepStatePD(stepId=step_id, taskId=task_id, state=state),
+        request=Request_Update_StepStatePD(
+            stepId=step_id, taskId=task_id, state=state, error=error_value
+        ),
         db=db,
     )
 
@@ -79,5 +85,5 @@ def convert_state_to_string(state: RB_Flow_Manager_ProgramState) -> RB_Flow_Mana
     opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_executor_state(*, topic, mv, obj, attachment):
-    print("on_executor_state >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
-    program_service.update_executor_state(state=obj["state"])
+    error_value: str | None = obj.get("error")
+    program_service.update_executor_state(state=obj["state"], error=error_value)

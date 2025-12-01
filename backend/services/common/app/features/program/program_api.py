@@ -19,6 +19,7 @@ from .program_schema import (
     Response_Create_Program_And_TasksPD,
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
+    Response_Get_Current_Program_StatePD,
     Response_Get_Program_ListPD,
     Response_Get_ProgramPD,
     Response_Get_Script_ContextPD,
@@ -92,6 +93,12 @@ async def get_sub_task_list(program_id: str, parent_task_id: str, db: MongoDB):
     res = await program_service.get_sub_task_list(
         program_id=program_id, parent_task_id=parent_task_id, db=db
     )
+    return JSONResponse(res)
+
+
+@program_router.get("/program/current/state", response_model=Response_Get_Current_Program_StatePD)
+async def get_current_program_state():
+    res = program_service.get_play_state()
     return JSONResponse(res)
 
 

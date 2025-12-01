@@ -25,6 +25,7 @@ class ExecutionContext:
         pause_event: EventType,
         resume_event: EventType,
         stop_event: EventType,
+        min_step_interval: float | None = None,
     ):
         self.process_id = process_id
         self.state_dict = state_dict
@@ -32,17 +33,28 @@ class ExecutionContext:
         self.resume_event = resume_event
         self.stop_event = stop_event
         self.result_queue = result_queue
-        self.variables: dict[str, Any] = {}
-        self.sdk_functions: dict[str, Callable] = {}
+        self.variables: dict[str, dict[str, Any]] = {
+            "local": {},
+            "global": {},
+        }
+        self.sdk_functions: dict[str, Callable] | None = None
         self._arg_scope: list[dict[str, Any]] = []
+        self._generation = state_dict.get("generation")
+        self.min_step_interval = min_step_interval
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
 
-        self._make_rb_sdk_method_key_value_map()
+        self.initialize_sdk_functions()
 
-    def update_variables(self, variables: dict[str, Any]):
-        self.variables.update(variables)
+    def update_local_variables(self, variables: dict[str, Any]):
+        self.variables["local"].update(variables)
+
+    def update_global_variables(self, variables: dict[str, Any]):
+        self.variables["global"].update(variables)
 
     def get_global_variable(self, var_name: str) -> Any:
+        if self.sdk_functions is None:
+            return None
+
         robot_model = self.state_dict.get("robot_model", None)
         category = self.state_dict.get("category", None)
 
@@ -73,7 +85,16 @@ class ExecutionContext:
                 if callable(getattr(sdk, name)) and not name.startswith("_")
             }
 
-            self.sdk_functions.update(public_methods)
+            if self.sdk_functions is not None:
+                self.sdk_functions.update(public_methods)
+
+    def initialize_sdk_functions(self):
+        if self.sdk_functions is not None:
+            return
+
+        self.sdk_functions = {}
+
+        self._make_rb_sdk_method_key_value_map()
 
     def push_args(self, mapping: dict[str, Any] | None):
         self._arg_scope.append(mapping or {})
@@ -140,6 +161,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -152,6 +174,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -164,6 +187,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -176,6 +200,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -189,6 +214,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": str(error),
             }
         )
@@ -201,6 +227,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )

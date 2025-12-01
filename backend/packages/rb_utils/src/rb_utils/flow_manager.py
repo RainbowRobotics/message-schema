@@ -116,11 +116,10 @@ def safe_eval_expr(
             if name == "math":  # math.* 전용
                 return "math"
             if name in vars_.get("local", {}):
-                return vars_["local"][name]
+                return vars_["local"].get(name)
 
             if name.startswith("RB_"):
                 global_val = get_global_variable(name) if get_global_variable is not None else None
-                print(f"global_val >>> {global_val}", flush=True)
                 if global_val is not None:
                     return global_val
                 return name
@@ -278,3 +277,41 @@ def call_with_matching_args(func, **provided):
 
     # 3) 동기 함수면 결과 그대로 반환
     return result
+
+
+def eval_value(
+    value: Any,
+    variables: dict[str, dict[str, Any]] | None = None,
+    get_global_variable: Callable[[str], Any] | None = None,
+) -> Any:
+    # 1) 문자열이면 → 기존 safe_eval_expr 호출
+    if isinstance(value, str):
+        return safe_eval_expr(
+            value,
+            variables=variables,
+            get_global_variable=get_global_variable,
+        )
+
+    # 2) 리스트면 → 각 요소를 재귀적으로 평가
+    if isinstance(value, list):
+        return [
+            eval_value(v, variables=variables, get_global_variable=get_global_variable)
+            for v in value
+        ]
+
+    # 3) 튜플도 동일
+    if isinstance(value, tuple):
+        return tuple(
+            eval_value(v, variables=variables, get_global_variable=get_global_variable)
+            for v in value
+        )
+
+    # 4) 딕셔너리면 → value만 재귀적으로 평가 (key는 그대로)
+    if isinstance(value, dict):
+        return {
+            k: eval_value(v, variables=variables, get_global_variable=get_global_variable)
+            for k, v in value.items()
+        }
+
+    # 5) 나머지(int/float/bool/None 등)는 그대로
+    return value
