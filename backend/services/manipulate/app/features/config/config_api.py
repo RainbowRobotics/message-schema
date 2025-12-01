@@ -8,6 +8,7 @@ from .config_schema import (
     Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
     Request_Save_Gravity_ParameterPD,
+    Request_Save_Robot_CodePD,
     Request_Save_SelfColl_ParameterPD,
     Request_Save_SideDin_FilterPD,
     Request_Save_SideDin_FunctionPD,
@@ -20,6 +21,9 @@ from .config_schema import (
     Request_Set_Self_Collision_ParaPD,
     Request_Set_ShiftPD,
     Request_Set_Tool_ListPD,
+    Request_Set_User_Frame_3PointsPD,
+    Request_Set_User_Frame_6DofPD,
+    Request_Set_User_Frame_TCPPD,
     Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
     Response_CallConfigRobotArmPD,
@@ -40,12 +44,6 @@ async def config_toollist(robot_model: str):
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_toollist_num", response_model=Response_ReturnValuePD)
-async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
-    res = await config_service.set_toollist_num(robot_model, request=request)
-    return JSONResponse(res)
-
-
 @config_router.get(
     "/{robot_model}/call_config_robotarm", response_model=Response_CallConfigRobotArmPD
 )
@@ -59,6 +57,12 @@ async def config_robotarm(robot_model: str):
 )
 async def config_controlbox(robot_model: str):
     res = await config_service.config_control_box(robot_model)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/save_robot_code", response_model=Response_ReturnValuePD)
+async def save_robot_code(robot_model: str, *, request: Request_Save_Robot_CodePD):
+    res = await config_service.save_robot_code(robot_model, request=request)
     return JSONResponse(res)
 
 
@@ -129,6 +133,12 @@ async def save_user_frame_parameter(robot_model: str, *, request: Request_Save_U
     return JSONResponse(res)
 
 
+@config_router.post("/{robot_model}/save_gravity_parameter", response_model=Response_ReturnValuePD)
+async def save_gravity_parameter(robot_model: str, *, request: Request_Save_Gravity_ParameterPD):
+    res = await config_service.save_gravity_parameter(robot_model, request=request)
+    return JSONResponse(res)
+
+
 @config_router.get(
     "/{robot_model}/rb_api/user_frames", response_model=Response_UserFrameParameterPD
 )
@@ -138,15 +148,15 @@ async def get_user_frames(robot_model: str):
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_userframe_num", response_model=Response_ReturnValuePD)
-async def set_userframe_num(robot_model: str, *, request: Request_Set_User_FramePD):
-    res = await config_service.set_userframe_num(robot_model, request=request)
+@config_router.post("/{robot_model}/set_toollist_num", response_model=Response_ReturnValuePD)
+async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
+    res = await config_service.set_toollist_num(robot_model, request=request)
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/save_gravity_parameter", response_model=Response_ReturnValuePD)
-async def save_gravity_parameter(robot_model: str, *, request: Request_Save_Gravity_ParameterPD):
-    res = await config_service.save_gravity_parameter(robot_model, request=request)
+@config_router.post("/{robot_model}/set_userframe_num", response_model=Response_ReturnValuePD)
+async def set_userframe_num(robot_model: str, *, request: Request_Set_User_FramePD):
+    res = await config_service.set_userframe_num(robot_model, request=request)
     return JSONResponse(res)
 
 
@@ -177,4 +187,22 @@ async def set_joint_impedance(robot_model: str, request: Request_Set_Joint_Imped
 @config_router.post("/{robot_model}/set_freedrive", response_model=Response_ReturnValuePD)
 async def set_freedrive(robot_model: str, request: Request_Set_Free_DrivePD):
     res = await config_service.set_freedrive(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_userframe_6dof", response_model=Response_ReturnValuePD)
+async def set_userframe_6dof(robot_model: str, request: Request_Set_User_Frame_6DofPD):
+    res = await config_service.set_userframe_6dof(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_userframe_tcp", response_model=Response_ReturnValuePD)
+async def set_userframe_tcp(robot_model: str, request: Request_Set_User_Frame_TCPPD):
+    res = await config_service.set_userframe_tcp(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_userframe_3points", response_model=Response_ReturnValuePD)
+async def set_userframe_3points(robot_model: str, request: Request_Set_User_Frame_3PointsPD):
+    res = await config_service.set_userframe_3points(robot_model=robot_model, request=request)
     return JSONResponse(res)

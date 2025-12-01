@@ -28,6 +28,28 @@ async def on_call_halt(data, robot_model: str):
     return to_json(res)
 
 
+@program_socket_router.on("{robot_model}/call_program_before")
+async def on_call_program_before(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = await program_service.call_program_before(
+        robot_model=robot_model, option=dict_data["option"]
+    )
+
+    return to_json(res)
+
+
+@program_socket_router.on("{robot_model}/call_program_after")
+async def on_call_program_after(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = await program_service.call_program_after(
+        robot_model=robot_model, option=dict_data["option"]
+    )
+
+    return to_json(res)
+
+
 @program_socket_router.on("{robot_model}/call_speedbar")
 async def on_call_speedbar(data, robot_model: str):
     dict_data = t_to_dict(data)

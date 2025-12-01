@@ -17,6 +17,14 @@ class HaltRequestPD(BaseModel):
     pass
 
 
+class Request_ProgramBeforePD(BaseModel):
+    option: int
+
+
+class Request_ProgramAfterPD(BaseModel):
+    option: int
+
+
 class SmoothJogJRequestPD(BaseModel):
     targetspeed: list[float]
     frame: int

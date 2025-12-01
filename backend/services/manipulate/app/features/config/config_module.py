@@ -11,6 +11,7 @@ from rb_flat_buffers.IPC.Request_Save_Direct_Teach_Sensitivity import (
     Request_Save_Direct_Teach_SensitivityT,
 )
 from rb_flat_buffers.IPC.Request_Save_Gravity_Parameter import Request_Save_Gravity_ParameterT
+from rb_flat_buffers.IPC.Request_Save_Robot_Code import Request_Save_Robot_CodeT
 from rb_flat_buffers.IPC.Request_Save_SelfColl_Parameter import Request_Save_SelfColl_ParameterT
 from rb_flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCountT
 from rb_flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
@@ -24,6 +25,9 @@ from rb_flat_buffers.IPC.Request_Set_Self_Collision_Para import Request_Set_Self
 from rb_flat_buffers.IPC.Request_Set_Shift import Request_Set_ShiftT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
 from rb_flat_buffers.IPC.Request_Set_User_Frame import Request_Set_User_FrameT
+from rb_flat_buffers.IPC.Request_Set_User_Frame_3Points import Request_Set_User_Frame_3PointsT
+from rb_flat_buffers.IPC.Request_Set_User_Frame_6Dof import Request_Set_User_Frame_6DofT
+from rb_flat_buffers.IPC.Request_Set_User_Frame_TCP import Request_Set_User_Frame_TCPT
 from rb_flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigControlBoxT
 from rb_flat_buffers.IPC.Response_CallConfigRobotArm import Response_CallConfigRobotArmT
 from rb_flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigToolListT
@@ -38,6 +42,7 @@ from .config_schema import (
     Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
     Request_Save_Gravity_ParameterPD,
+    Request_Save_Robot_CodePD,
     Request_Save_SelfColl_ParameterPD,
     Request_Save_SideDin_FilterPD,
     Request_Save_SideDin_FunctionPD,
@@ -50,6 +55,9 @@ from .config_schema import (
     Request_Set_Self_Collision_ParaPD,
     Request_Set_ShiftPD,
     Request_Set_Tool_ListPD,
+    Request_Set_User_Frame_3PointsPD,
+    Request_Set_User_Frame_6DofPD,
+    Request_Set_User_Frame_TCPPD,
     Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
 )
@@ -72,6 +80,7 @@ class ConfigService(BaseService):
         )
 
         return res["dict_payload"]
+
 
 
     def socket_emit_config_toollist(self, robot_model: str):
@@ -162,6 +171,24 @@ class ConfigService(BaseService):
                 config_control_box_res_dict["userFrame7"],
             ]
         }
+
+
+
+    async def save_robot_code(self, robot_model: str, request: Request_Save_Robot_CodePD):
+        req = Request_Save_Robot_CodeT()
+        
+        req.code = request.code
+        req.option = request.option
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_robot_code",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        return res["dict_payload"]
+
 
     async def save_area_parameter(self, robot_model: str, *, request: Request_Save_Area_ParameterPD):
         request_dict = {**request.model_dump()}
@@ -503,6 +530,69 @@ class ConfigService(BaseService):
 
         res = zenoh_client.query_one(
             f"{robot_model}/set_freedrive",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+
+    async def set_userframe_6dof(self, *, robot_model: str, request: Request_Set_User_Frame_6DofPD):
+        req = Request_Set_User_Frame_6DofT()
+
+        req.userFrameNum= request.user_frame_num
+        req.settingOption = request.setting_option
+        req.targetX = request.target_x
+        req.targetY = request.target_y
+        req.targetZ = request.target_z
+        req.targetRx = request.target_rx
+        req.targetRy = request.target_ry
+        req.targetRz = request.target_rz
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_6dof",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+    async def set_userframe_tcp(self, *, robot_model: str, request: Request_Set_User_Frame_TCPPD):
+        req = Request_Set_User_Frame_TCPT()
+
+        req.userFrameNum = request.user_frame_num
+        req.settingOption = request.setting_option
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_tcp",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+
+    async def set_userframe_3points(self, *, robot_model: str, request: Request_Set_User_Frame_3PointsPD):
+        req = Request_Set_User_Frame_3PointsT()
+
+        req.userFrameNum = request.user_frame_num
+        req.settingOption = request.setting_option
+        req.orderOption = request.order_option
+        req.point1X = request.point_1_x
+        req.point1Y = request.point_1_y
+        req.point1Z = request.point_1_z
+        req.point2X = request.point_2_x
+        req.point2Y = request.point_2_y
+        req.point2Z = request.point_2_z
+        req.point3X = request.point_3_x
+        req.point3Y = request.point_3_y
+        req.point3Z = request.point_3_z
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_3points",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=256,

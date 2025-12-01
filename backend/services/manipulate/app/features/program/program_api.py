@@ -15,6 +15,8 @@ from .program_schema import (
     Request_MoveTickJogLPD,
     Request_MoveXBAddPD,
     Request_MoveXBRunPD,
+    Request_ProgramAfterPD,
+    Request_ProgramBeforePD,
     ResumeRequestPD,
     SmoothJogJRequestPD,
     SmoothJogLRequestPD,
@@ -42,6 +44,18 @@ async def pause(robot_model: str, request: PauseRequestPD):
 @program_router.post("/{robot_model}/call_halt", response_model=Response_ReturnValuePD)
 async def halt(robot_model: str, request: HaltRequestPD):
     res = await program_service.call_halt(robot_model=robot_model)
+    return JSONResponse(res)
+
+
+@program_router.post("/{robot_model}/call_program_before", response_model=Response_ReturnValuePD)
+async def program_before(robot_model: str, request: Request_ProgramBeforePD):
+    res = await program_service.call_program_before(robot_model=robot_model, option=request.option)
+    return JSONResponse(res)
+
+
+@program_router.post("/{robot_model}/call_program_after", response_model=Response_ReturnValuePD)
+async def program_after(robot_model: str, request: Request_ProgramAfterPD):
+    res = await program_service.call_program_after(robot_model=robot_model, option=request.option)
     return JSONResponse(res)
 
 
