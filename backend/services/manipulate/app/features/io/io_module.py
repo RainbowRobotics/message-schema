@@ -15,7 +15,7 @@ class IoService:
     def __init__(self):
         pass
 
-    async def side_dout(self, robot_model: str, port_num: int, desired_out: int):
+    async def call_side_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_SideDout_GeneralT()
         req.portNum = port_num
         req.desiredOut = desired_out
@@ -29,7 +29,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
+    async def call_side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
         req = Request_SideAout_GeneralT()
         req.portNum = port_num
         req.desiredVoltage = desired_voltage
@@ -43,7 +43,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def flange_power(self, robot_model: str, desired_voltage: int):
+    async def call_flange_power(self, robot_model: str, desired_voltage: int):
         req = Request_Flange_PowerT()
         req.desiredVoltage = desired_voltage
 
@@ -56,7 +56,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def flange_dout(self, robot_model: str, port_num: int, desired_out: int):
+    async def call_flange_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_Flange_Digital_OutT()
         req.portNum = port_num
         req.desiredOut = desired_out
@@ -70,7 +70,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_toggle(self, robot_model: str, port_num: int):
+    async def call_side_dout_toggle(self, robot_model: str, port_num: int):
         req = Request_SideDout_ToggleT()
         req.portNum = port_num
 
@@ -83,7 +83,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_bitcombination(
+    async def call_side_dout_bitcombination(
         self,
         robot_model: str,
         port_start: int,
@@ -106,7 +106,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_pulse(
+    async def call_side_dout_pulse(
         self,
         robot_model: str,
         port_num: int,

@@ -8,21 +8,21 @@ program_service = ProgramService()
 
 
 @program_socket_router.on("{robot_model}/call_resume")
-async def on_call_resume(data, robot_model: str):
+async def on_call_resume(robot_model: str):
     res = await program_service.call_resume(robot_model=robot_model)
 
     return to_json(res)
 
 
 @program_socket_router.on("{robot_model}/call_pause")
-async def on_call_pause(data, robot_model: str):
+async def on_call_pause(robot_model: str):
     res = await program_service.call_pause(robot_model=robot_model)
 
     return to_json(res)
 
 
 @program_socket_router.on("{robot_model}/call_halt")
-async def on_call_halt(data, robot_model: str):
+async def on_call_halt(robot_model: str):
     res = await program_service.call_halt(robot_model=robot_model)
 
     return to_json(res)
@@ -141,7 +141,7 @@ async def on_call_tickjog_l(data, robot_model: str):
 
 
 @program_socket_router.on("{robot_model}/call_move_jb_clr")
-async def on_call_move_jb_clr(data, robot_model: str):
+async def on_call_move_jb_clr(robot_model: str):
     res = await program_service.call_move_jb_clr(robot_model=robot_model)
 
     return to_json(res)
@@ -156,14 +156,14 @@ async def on_call_move_jb_add(data, robot_model: str):
 
 
 @program_socket_router.on("{robot_model}/call_move_jb_run")
-async def on_call_move_jb_run(data, robot_model: str):
+async def on_call_move_jb_run(robot_model: str):
     res = await program_service.call_move_jb_run(robot_model=robot_model)
 
     return to_json(res)
 
 
 @program_socket_router.on("{robot_model}/call_move_lb_clr")
-async def on_call_move_lb_clr(data, robot_model: str):
+async def on_call_move_lb_clr(robot_model: str):
     res = await program_service.call_move_lb_clr(robot_model=robot_model)
 
     return to_json(res)
@@ -183,7 +183,7 @@ async def on_call_move_lb_run(data, robot_model: str):
     return to_json(res)
 
 @program_socket_router.on("{robot_model}/call_move_xb_clr")
-async def on_call_move_xb_clr(data, robot_model: str):
+async def on_call_move_xb_clr(robot_model: str):
     res = await program_service.call_move_xb_clr(robot_model=robot_model)
 
     return to_json(res)

@@ -10,14 +10,14 @@ io_service = IoService()
 @io_socket_router.on("{robot_model}/call_side_dout")
 async def on_call_side_dout(data, robot_model: str):
     dict_data = t_to_dict(data)
-    res = await io_service.side_dout(robot_model, dict_data["port_num"], dict_data["desired_out"])
+    res = await io_service.call_side_dout(robot_model, dict_data["port_num"], dict_data["desired_out"])
     return to_json(res)
 
 
 @io_socket_router.on("{robot_model}/call_side_aout")
 async def on_call_side_aout(data, robot_model: str):
     dict_data = t_to_dict(data)
-    res = await io_service.side_aout(
+    res = await io_service.call_side_aout(
         robot_model, dict_data["port_num"], dict_data["desired_voltage"]
     )
     return to_json(res)
@@ -26,14 +26,14 @@ async def on_call_side_aout(data, robot_model: str):
 @io_socket_router.on("{robot_model}/call_flange_power")
 async def on_call_flange_power(data, robot_model: str):
     dict_data = t_to_dict(data)
-    res = await io_service.flange_power(robot_model, dict_data["desired_voltage"])
+    res = await io_service.call_flange_power(robot_model, dict_data["desired_voltage"])
     return to_json(res)
 
 
 @io_socket_router.on("{robot_model}/call_side_dout_bitcombination")
 async def on_call_side_dout_bitcombination(data, robot_model: str):
     dict_data = t_to_dict(data)
-    res = await io_service.side_dout_bitcombination(
+    res = await io_service.call_side_dout_bitcombination(
         robot_model,
         dict_data["port_start"],
         dict_data["port_end"],
@@ -46,7 +46,7 @@ async def on_call_side_dout_bitcombination(data, robot_model: str):
 @io_socket_router.on("{robot_model}/call_side_dout_pulse")
 async def on_call_side_dout_pulse(data, robot_model: str):
     dict_data = t_to_dict(data)
-    res = await io_service.side_dout_pulse(
+    res = await io_service.call_side_dout_pulse(
         robot_model,
         dict_data["port_num"],
         dict_data["block_mode"],

@@ -69,7 +69,7 @@ class ConfigService(BaseService):
     def __init__(self):
         pass
 
-    async def config_tool_list(self, robot_model: str):
+    async def call_config_toollist(self, robot_model: str):
         req = Request_CallConfigToolListT()
 
         res = zenoh_client.query_one(
@@ -84,14 +84,14 @@ class ConfigService(BaseService):
 
 
     def socket_emit_config_toollist(self, robot_model: str):
-        config_toollist_res = self.config_tool_list(robot_model)
+        config_toollist_res = self.call_config_toollist(robot_model)
 
         fire_and_log(
             socket_client.emit(f"{robot_model}/call_config_toollist", to_json(config_toollist_res))
         )
 
 
-    async def config_robot_arm(self, robot_model: str):
+    async def call_config_robotarm(self, robot_model: str):
         req = Request_CallConfigRobotArmT()
 
         res = zenoh_client.query_one(
@@ -105,18 +105,18 @@ class ConfigService(BaseService):
 
 
     def socket_emit_config_robot_arm(self, robot_model: str):
-        config_robot_arm_res = self.config_robot_arm(robot_model)
+        config_robot_arm_res = self.call_config_robotarm(robot_model)
 
         fire_and_log(
             socket_client.emit(f"{robot_model}/call_config_robotarm", to_json(config_robot_arm_res))
         )
 
 
-    async def config_control_box(self, robot_model: str):
+    async def call_config_controlbox(self, robot_model: str):
         req = Request_CallConfigControlBoxT()
 
         res = zenoh_client.query_one(
-            f"{robot_model}/call_config_controlbox",
+            f"{robot_model}/save_area_parameter",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_CallConfigControlBoxT,
             flatbuffer_buf_size=8,
@@ -126,7 +126,7 @@ class ConfigService(BaseService):
 
 
     async def socket_emit_config_control_box(self, robot_model: str, *, emit_user_frames: bool = False):
-        config_control_box_res = await self.config_control_box(robot_model)
+        config_control_box_res = await self.call_config_controlbox(robot_model)
 
         fire_and_log(
             socket_client.emit(
@@ -372,7 +372,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     async def get_user_frames(self, robot_model: str):
-        res = await self.config_control_box(robot_model)
+        res = await self.call_config_controlbox(robot_model)
 
         user_frames_res = self.parse_get_user_frames(res)
 
@@ -468,7 +468,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
     
-    async def set_out_collision_parameter(self, *, robot_model: str, request: Request_Set_Out_Collision_ParaPD):
+    async def set_out_collision_para(self, *, robot_model: str, request: Request_Set_Out_Collision_ParaPD):
         req = Request_Set_Out_Collision_ParaT()
 
         req.onoff = request.onoff
@@ -485,7 +485,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
 
-    async def set_self_collision_parameter(self, *, robot_model: str, request: Request_Set_Self_Collision_ParaPD):
+    async def set_self_collision_para(self, *, robot_model: str, request: Request_Set_Self_Collision_ParaPD):
         req = Request_Set_Self_Collision_ParaT()
 
         req.mode = request.mode

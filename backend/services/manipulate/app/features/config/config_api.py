@@ -39,24 +39,24 @@ config_router = APIRouter(tags=["Config"])
 @config_router.get(
     "/{robot_model}/call_config_toollist", response_model=Response_CallConfigToolListPD
 )
-async def config_toollist(robot_model: str):
-    res = await config_service.config_tool_list(robot_model)
+async def call_config_toollist(robot_model: str):
+    res = await config_service.call_config_toollist(robot_model)
     return JSONResponse(res)
 
 
 @config_router.get(
     "/{robot_model}/call_config_robotarm", response_model=Response_CallConfigRobotArmPD
 )
-async def config_robotarm(robot_model: str):
-    res = await config_service.config_robot_arm(robot_model)
+async def call_config_robotarm(robot_model: str):
+    res = await config_service.call_config_robotarm(robot_model)
     return JSONResponse(res)
 
 
 @config_router.get(
     "/{robot_model}/call_config_controlbox", response_model=Response_CallConfigControlBoxPD
 )
-async def config_controlbox(robot_model: str):
-    res = await config_service.config_control_box(robot_model)
+async def call_config_controlbox(robot_model: str):
+    res = await config_service.call_config_controlbox(robot_model)
     return JSONResponse(res)
 
 
@@ -149,7 +149,7 @@ async def get_user_frames(robot_model: str):
 
 
 @config_router.post("/{robot_model}/set_toollist_num", response_model=Response_ReturnValuePD)
-async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
+async def set_toollist_num(robot_model: str, *, request: Request_Set_Tool_ListPD):
     res = await config_service.set_toollist_num(robot_model, request=request)
     return JSONResponse(res)
 
@@ -168,13 +168,13 @@ async def set_shift(robot_model: str, request: Request_Set_ShiftPD):
 
 @config_router.post("/{robot_model}/set_out_collision_para", response_model=Response_ReturnValuePD)
 async def set_out_collision_parameter(robot_model: str, request: Request_Set_Out_Collision_ParaPD):
-    res = await config_service.set_out_collision_parameter(robot_model=robot_model, request=request)
+    res = await config_service.set_out_collision_para(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @config_router.post("/{robot_model}/set_self_collision_para", response_model=Response_ReturnValuePD)
 async def set_self_collision_parameter(robot_model: str, request: Request_Set_Self_Collision_ParaPD):
-    res = await config_service.set_self_collision_parameter(robot_model=robot_model, request=request)
+    res = await config_service.set_self_collision_para(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 

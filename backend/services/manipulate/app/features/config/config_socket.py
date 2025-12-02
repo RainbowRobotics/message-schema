@@ -8,8 +8,8 @@ config_service = ConfigService()
 
 
 @config_socket_router.on("{robot_model}/call_config_toollist")
-async def on_call_config_toollist(data, robot_model: str):
-    res = await config_service.config_tool_list(robot_model)
+async def on_call_config_toollist(robot_model: str):
+    res = await config_service.call_config_toollist(robot_model)
     return to_json(res)
 
 
@@ -22,14 +22,14 @@ async def on_set_toollist_num(data, robot_model: str):
 
 
 @config_socket_router.on("{robot_model}/call_config_robotarm")
-async def on_call_config_robotarm(data, robot_model: str):
-    res = await config_service.config_robot_arm(robot_model)
+async def on_call_config_robotarm(robot_model: str):
+    res = await config_service.call_config_robotarm(robot_model)
     return to_json(res)
 
 
 @config_socket_router.on("{robot_model}/call_config_controlbox")
-async def on_call_config_controlbox(data, robot_model: str):
-    res = await config_service.config_control_box(robot_model)
+async def on_call_config_controlbox(robot_model: str):
+    res = await config_service.call_config_controlbox(robot_model)
     return to_json(res)
 
 
@@ -114,7 +114,7 @@ async def on_save_user_frame_parameter(data, robot_model: str):
 
 
 @config_socket_router.on("{robot_model}/rb_api/user_frames")
-def on_rb_api_user_frames(data, robot_model: str):
+def on_rb_api_user_frames(robot_model: str):
     res = config_service.get_user_frames(robot_model)
     return to_json(res)
 
@@ -135,7 +135,6 @@ async def on_save_gravity_parameter(data, robot_model: str):
     return to_json(res)
 
 
-
 @config_socket_router.on("{robot_model}/set_shift")
 async def on_set_shift(data, robot_model: str):
     dict_data = t_to_dict(data)
@@ -145,18 +144,18 @@ async def on_set_shift(data, robot_model: str):
 
 
 @config_socket_router.on("{robot_model}/set_out_collision_para")
-async def on_set_out_collision_parameter(data, robot_model: str):
+async def on_set_out_collision_para(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_out_collision_parameter(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_out_collision_para(robot_model=robot_model, request=dict_data)
     return to_json(res)
 
 
 @config_socket_router.on("{robot_model}/set_self_collision_para")
-async def on_set_self_collision_parameter(data, robot_model: str):
+async def on_set_self_collision_para(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_self_collision_parameter(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_self_collision_para(robot_model=robot_model, request=dict_data)
     return to_json(res)
 
 

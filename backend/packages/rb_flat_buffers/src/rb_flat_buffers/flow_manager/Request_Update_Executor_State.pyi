@@ -19,6 +19,11 @@ class Request_Update_Executor_State(object):
 class Request_Update_Executor_StateT(object):
   state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED]
   error: str | None
+  def __init__(
+    self,
+    state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED] = ...,
+    error: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Update_Executor_StateT: ...
   @classmethod

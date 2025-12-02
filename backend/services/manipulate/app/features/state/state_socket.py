@@ -11,7 +11,7 @@ state_service = StateService()
 async def on_call_powercontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = await state_service.power_control(
+    res = await state_service.call_powercontrol(
         robot_model=robot_model,
         power_option=dict_data["power_option"],
         sync_servo=dict_data["sync_servo"],
@@ -24,7 +24,7 @@ async def on_call_powercontrol(data, robot_model: str):
 async def on_call_servocontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = await state_service.servo_control(
+    res = await state_service.call_servocontrol(
         robot_model=robot_model,
         servo_option=dict_data["servo_option"],
     )
@@ -36,7 +36,7 @@ async def on_call_servocontrol(data, robot_model: str):
 async def on_call_referencecontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = await state_service.reference_control(
+    res = await state_service.call_referencecontrol(
         robot_model=robot_model,
         reference_option=dict_data["reference_option"],
     )
