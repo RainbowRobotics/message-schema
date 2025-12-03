@@ -34,6 +34,7 @@ for dir in "$BE/services"/*; do
   [ -n "$PORT" ] || continue
 
   CONF_PATH="./services/${NAME}/config.env"
+  COMMON_ENV_PATH="./.env"
   # 개발용
   cat >&3 <<EOF
   ${NAME}:
@@ -53,6 +54,7 @@ for dir in "$BE/services"/*; do
       - zenoh-router
     env_file:
       - ${CONF_PATH}
+      - ${COMMON_ENV_PATH}
     networks: [rb_net]
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
@@ -105,6 +107,7 @@ EOF
     ipc: host
     env_file:
       - ${CONF_PATH}
+      - ${COMMON_ENV_PATH}
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
@@ -141,7 +144,7 @@ for FD in 3 4 5; do
     image: zenoh-router:latest
     container_name: ${ZENOH_ROUTER_CONTAINER_NAME}
     volumes:
-      - ../zenoh-router/zenoh.json5:/etc/zenoh/zenoh.json5:ro
+      - ../zenoh-router/zenoh.json5:/etc/zenoh/config.json5:ro
     ports:
       - "7447:7447/tcp"
       - "7446:7446/udp"

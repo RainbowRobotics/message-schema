@@ -55,6 +55,7 @@ RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
     --collect-all zenoh \
     --add-data "packages/rb_resources/src/rb_resources/data:rb_resources/data" \
     --add-data "packages/rb_resources/src/rb_resources/swagger-ui:rb_resources/swagger-ui" \
+    --add-data ".env" \
     ./services/${SERVICE}/run.py
 
 FROM scratch AS artifacts
