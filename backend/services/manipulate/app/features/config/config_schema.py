@@ -135,21 +135,6 @@ class Request_Save_Direct_Teach_SensitivityPD(BaseModel):
     sensitivity: list[float]
 
 
-class Request_Save_SideDin_FilterPD(BaseModel):
-    port_num: int
-    desired_count: int
-
-
-class Request_Save_SideDin_FunctionPD(BaseModel):
-    port_num: int
-    desired_function: int
-
-
-class Request_Save_SideDout_FunctionPD(BaseModel):
-    port_num: int
-    desired_function: int
-
-
 class Request_Save_Collision_ParameterPD(BaseModel):
     onoff: int
     react: int

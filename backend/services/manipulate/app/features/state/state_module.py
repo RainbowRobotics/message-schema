@@ -14,11 +14,11 @@ class StateService:
     def __init__(self):
         pass
 
-    async def power_control(
+    async def call_powercontrol(
         self, *, robot_model: str, power_option: int, sync_servo: bool, stoptime: int | None = 3
     ):
         if power_option == 0:
-            dict_reference_res = await self.reference_control(
+            dict_reference_res = await self.call_referencecontrol(
                 robot_model=robot_model, reference_option=0
             )
 
@@ -40,7 +40,7 @@ class StateService:
                     return dict_smoothjog_stop_res
 
             if sync_servo:
-                dict_servo_res = await self.servo_control(robot_model=robot_model, servo_option=1)
+                dict_servo_res = await self.call_servocontrol(robot_model=robot_model, servo_option=1)
 
                 servo_return_value = dict_servo_res.get("returnValue", None)
 
@@ -59,7 +59,7 @@ class StateService:
         )
 
         if power_option == 1 and sync_servo:
-            dict_servo_res = await self.servo_control(robot_model=robot_model, servo_option=1)
+            dict_servo_res = await self.call_servocontrol(robot_model=robot_model, servo_option=1)
 
             servo_return_value = dict_servo_res.get("returnValue", None)
 
@@ -73,7 +73,7 @@ class StateService:
 
         return dict_power_res
 
-    async def servo_control(self, *, robot_model: str, servo_option: int):
+    async def call_servocontrol(self, *, robot_model: str, servo_option: int):
         req = Request_ServoControlT()
         req.servoOption = servo_option
 
@@ -86,7 +86,7 @@ class StateService:
 
         return servo_res["dict_payload"]
 
-    async def reference_control(self, *, robot_model: str, reference_option: int):
+    async def call_referencecontrol(self, *, robot_model: str, reference_option: int):
         req = Request_ReferenceControlT()
         req.refcontrolOption = reference_option
 

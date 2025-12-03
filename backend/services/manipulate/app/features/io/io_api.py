@@ -17,6 +17,7 @@ io_router = APIRouter(tags=["IO"])
 io_service = IoService()
 
 
+
 @io_router.post("/{robot_model}/call_side_dout", response_model=Response_ReturnValuePD)
 async def call_side_dout(robot_model: str, request: Request_SideDout_GeneralPD):
     res = await io_service.call_side_dout(robot_model, request.port_num, request.desired_out)
