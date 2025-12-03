@@ -45,7 +45,7 @@ async def call_config_controlbox(robot_model: str):
     return JSONResponse(await config_service.call_config_controlbox(robot_model=robot_model))
 
 
-@config_router.post("/{robot_model}/save_robot_code", response_model=Response_ReturnValuePD)
+@config_router.post("/{robot_model}/save_robot_code", response_model=Response_ReturnValuePD, deprecated=True)
 async def save_robot_code(robot_model: str, request: Request_Save_Robot_CodePD):
     return JSONResponse(await config_service.save_robot_code(robot_model=robot_model, request=request))
 
