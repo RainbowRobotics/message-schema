@@ -2,34 +2,29 @@ from rb_flat_buffers.IPC.Request_Flange_Digital_Out import Request_Flange_Digita
 from rb_flat_buffers.IPC.Request_Flange_Power import Request_Flange_PowerT
 from rb_flat_buffers.IPC.Request_SideAout_General import Request_SideAout_GeneralT
 from rb_flat_buffers.IPC.Request_SideDout_Bitcombination import Request_SideDout_BitcombinationT
-from rb_flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
 from rb_flat_buffers.IPC.Request_SideDout_Pulse import Request_SideDout_PulseT
 from rb_flat_buffers.IPC.Request_SideDout_Toggle import Request_SideDout_ToggleT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
+from rb_modules.service import BaseService
 from rb_zenoh.client import ZenohClient
 
 zenoh_client = ZenohClient()
 
 
-class IoService:
+
+class IoService(BaseService):
     def __init__(self):
         pass
 
-    async def side_dout(self, robot_model: str, port_num: int, desired_out: int):
-        req = Request_SideDout_GeneralT()
-        req.portNum = port_num
-        req.desiredOut = desired_out
-
-        res = zenoh_client.query_one(
-            f"{robot_model}/call_side_dout",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+    async def call_side_dout(self, robot_model: str, port_num: int, desired_out: int):
+        res = self.manipulate_sdk.call_side_dout(
+            robot_model=robot_model,
+            port_num=port_num,
+            desired_out=desired_out,
         )
+        return res
 
-        return res["dict_payload"]
-
-    async def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
+    async def call_side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
         req = Request_SideAout_GeneralT()
         req.portNum = port_num
         req.desiredVoltage = desired_voltage
@@ -43,7 +38,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def flange_power(self, robot_model: str, desired_voltage: int):
+    async def call_flange_power(self, robot_model: str, desired_voltage: int):
         req = Request_Flange_PowerT()
         req.desiredVoltage = desired_voltage
 
@@ -56,7 +51,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def flange_dout(self, robot_model: str, port_num: int, desired_out: int):
+    async def call_flange_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_Flange_Digital_OutT()
         req.portNum = port_num
         req.desiredOut = desired_out
@@ -70,7 +65,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_toggle(self, robot_model: str, port_num: int):
+    async def call_side_dout_toggle(self, robot_model: str, port_num: int):
         req = Request_SideDout_ToggleT()
         req.portNum = port_num
 
@@ -83,7 +78,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_bitcombination(
+    async def call_side_dout_bitcombination(
         self,
         robot_model: str,
         port_start: int,
@@ -106,7 +101,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    async def side_dout_pulse(
+    async def call_side_dout_pulse(
         self,
         robot_model: str,
         port_num: int,

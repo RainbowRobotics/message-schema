@@ -217,6 +217,13 @@ async def init_indexes(db: AsyncIOMotorDatabase):
         name="state_logs_sw_level_created_idx",
     )
     await ensure_index(db, "state_logs", [("contents", "text")], name="state_logs_text_idx")
+    await ensure_index(
+        db,
+        "state_logs",
+        [("createdAtDt", 1)],
+        name="state_logs_createdAtDt_ttl",
+        expireAfterSeconds=60 * 60 * 24 * 90,  # 90일
+    )
     await ensure_index(db, "programs", [("name", 1)], name="uniq_program_name", unique=True)
 
 

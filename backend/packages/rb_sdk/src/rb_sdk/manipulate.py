@@ -9,6 +9,7 @@ from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
+from rb_flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_DataT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
@@ -550,6 +551,35 @@ class RBManipulateSDK(RBBaseSDK):
         )
 
         if flow_manager_args is not None and res.get("dict_payload"):
+            flow_manager_args.done()
+
+        return res["dict_payload"]
+
+    def call_side_dout(
+        self,
+        *,
+        robot_model: str,
+        port_num: int,
+        desired_out: bool,
+        flow_manager_args: FlowManagerArgs | None = None,
+        ):
+        """Side Digital Out 호출"""
+
+        req = Request_SideDout_GeneralT()
+        req.portNum = port_num
+        req.desiredOut = desired_out
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_side_dout",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if flow_manager_args is not None and res.get("dict_payload"):
+            if res.get("dict_payload") is None:
+                raise RuntimeError("Side Digital Out failed: dict_payload is None")
+
             flow_manager_args.done()
 
         return res["dict_payload"]

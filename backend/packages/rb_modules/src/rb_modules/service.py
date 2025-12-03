@@ -1,6 +1,7 @@
 import asyncio
 import functools
 
+from rb_sdk.manipulate import RBManipulateSDK
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
 from .log import rb_log
@@ -8,6 +9,7 @@ from .log import rb_log
 
 class BaseService:
     """모든 서비스 공통 에러 핸들링 (sync/async 모두 자동 적용)"""
+    manipulate_sdk: RBManipulateSDK
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -25,6 +27,9 @@ class BaseService:
             if callable(attr):
                 wrapped = cls._safe_call(attr)
                 setattr(cls, name, wrapped)
+
+    def __init__(self):
+        self.manipulate_sdk = RBManipulateSDK()
 
     @staticmethod
     def _safe_call(fn):
