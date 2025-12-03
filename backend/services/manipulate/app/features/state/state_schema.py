@@ -10,17 +10,17 @@ from rb_schemas.base import (
 )
 
 
-class PowerControlRequestPD(BaseModel):
+class Request_PowerControlPD(BaseModel):
     power_option: int
     stoptime: float | None = 0.5
     sync_servo: bool | None = True
 
 
-class ServoControlRequestPD(BaseModel):
+class Request_ServoControlPD(BaseModel):
     servo_option: int
 
 
-class ReferenceControlRequestPD(BaseModel):
+class Request_ReferenceControlPD(BaseModel):
     reference_option: int
 
 
@@ -79,5 +79,5 @@ class StateRequestPD(BaseModel):
     statusDtMode: int
 
 
-class PowerControlResponsePD(Response_ReturnValuePD):
+class Response_PowerControlPD(Response_ReturnValuePD):
     target: str | None = None

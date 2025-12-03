@@ -1,4 +1,5 @@
 from app.features.program.program_module import ProgramService
+from app.features.program.program_schema import Request_Move_SmoothJogStopPD
 from rb_flat_buffers.IPC.Request_PowerControl import Request_PowerControlT
 from rb_flat_buffers.IPC.Request_ReferenceControl import Request_ReferenceControlT
 from rb_flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
@@ -7,8 +8,8 @@ from rb_modules.service import BaseService
 from rb_zenoh.client import ZenohClient
 
 from .state_schema import (
-    ReferenceControlRequestPD,
-    ServoControlRequestPD,
+    Request_ReferenceControlPD,
+    Request_ServoControlPD,
 )
 
 program_service = ProgramService()
@@ -25,7 +26,7 @@ class StateService(BaseService):
         # 1. Power OFF 시퀀스 (Reference OFF -> SmoothJog Stop -> Servo ON)
         if power_option == 0:
             dict_reference_res = await self.call_referencecontrol(
-                robot_model=robot_model, request=ReferenceControlRequestPD(reference_option=0)
+                robot_model=robot_model, request=Request_ReferenceControlPD(reference_option=0)
             )
             if dict_reference_res.get("returnValue") != 0:
                 dict_reference_res["target"] = "call_referencecontrol"
@@ -33,16 +34,15 @@ class StateService(BaseService):
 
             if stoptime is not None:
                 dict_smoothjog_stop_res = await program_service.call_smoothjog_stop(
-                    robot_model=robot_model, stoptime=stoptime
+                    robot_model=robot_model, request=Request_Move_SmoothJogStopPD(stoptime=stoptime)
                 )
                 if dict_smoothjog_stop_res.get("returnValue") != 0:
                     dict_smoothjog_stop_res["target"] = "call_smoothjog_stop"
                     return dict_smoothjog_stop_res
 
-            # 1-3. Servo Control ON (Sync Servo 옵션)
             if sync_servo:
                 dict_servo_res = await self.call_servocontrol(
-                    robot_model=robot_model, request=ServoControlRequestPD(servo_option=1)
+                    robot_model=robot_model, request=Request_ServoControlPD(servo_option=1)
                 )
                 if dict_servo_res.get("returnValue") != 0:
                     dict_servo_res["target"] = "call_servocontrol"
@@ -64,7 +64,7 @@ class StateService(BaseService):
         # 3. Power ON 시퀀스 (Servo Control ON)
         if power_option == 1 and sync_servo:
             dict_servo_res = await self.call_servocontrol(
-                robot_model=robot_model, request=ServoControlRequestPD(servo_option=1)
+                robot_model=robot_model, request=Request_ServoControlPD(servo_option=1)
                 )
             if dict_servo_res.get("returnValue") != 0:
                 dict_servo_res["target"] = "call_servocontrol"
@@ -74,7 +74,7 @@ class StateService(BaseService):
         return dict_power_res
 
 
-    async def call_servocontrol(self, *, robot_model: str, request : ServoControlRequestPD):
+    async def call_servocontrol(self, *, robot_model: str, request : Request_ServoControlPD):
         req = Request_ServoControlT()
         req.servoOption = request.servo_option
 
@@ -88,7 +88,7 @@ class StateService(BaseService):
         return servo_res["dict_payload"]
 
 
-    async def call_referencecontrol(self, *, robot_model: str, request: ReferenceControlRequestPD):
+    async def call_referencecontrol(self, *, robot_model: str, request: Request_ReferenceControlPD):
         req = Request_ReferenceControlT()
         req.refcontrolOption = request.reference_option
 

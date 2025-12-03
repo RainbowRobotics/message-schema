@@ -403,7 +403,7 @@ class ZenohClient:
                 att = f"sender={self.sender};sender_id={self.sender_id}"
                 q.reply(
                     key_expr=q.key_expr,
-                    payload=ZBytes(data),
+                    payload=ZBytes(data), # type: ignore
                     encoding=_auto_check_encoding(payload),
                     attachment=att,
                 )
