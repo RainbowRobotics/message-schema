@@ -253,20 +253,31 @@ void LAKI::grab_loop(int idx)
         // check
         if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
         {
-            // drop
             log_warn("lidar: {}, invalid mobile poses, pose_storage.size(): {}", idx, pose_storage.size());
-            if (!pose_storage.empty()) 
+            if (!pose_storage.empty())
             {
                 log_warn("  pose_storage time range: [{}, {}]", pose_storage.front().t, pose_storage.back().t);
-            } 
-            else 
+            }
+            else
             {
                 log_warn("  pose_storage is empty");
             }
             log_warn("  t0: {}, t1: {}, idx0: {}, idx1: {}", t0, t1, idx0, idx1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
+
+            if(idx0 == -1)
+            {
+                idx0 = 0;
+            }
+            if(idx1 == -1)
+            {
+                idx1 = (int)pose_storage.size() - 1;  // use last pose
+            }
+            if(idx0 == idx1 && idx0 < (int)pose_storage.size() - 1)
+            {
+                idx1 = idx0 + 1;  // use next pose
+            }
         }
+
 
         // get lidar raw data
         std::vector<double> times;
