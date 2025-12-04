@@ -23,6 +23,10 @@ class BaseController(ABC):
         """각 Step이 Pause 될때 실제 동작을 수행"""
 
     @abstractmethod
+    def on_wait(self, task_id: str, step_id: str) -> None:
+        """각 Step이 Wait 될때 실제 동작을 수행"""
+
+    @abstractmethod
     def on_resume(self, task_id: str, step_id: str) -> None:
         """각 Step이 Resume 될때 실제 동작을 수행"""
 

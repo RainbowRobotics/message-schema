@@ -20,6 +20,8 @@ from .step import Step
 # zenoh_client = ZenohClient()
 # ZenohManager.set_shared_client(zenoh_client)
 
+POLLING_INTERVAL = 0.1
+EVENT_BATCH_INTERVAL = 0.05
 
 def _execute_tree_in_process(
     process_id: str,
@@ -32,6 +34,7 @@ def _execute_tree_in_process(
     stop_event: EventType,
     repeat_count: int = 1,
     min_step_interval: float | None = None,
+    step_mode: bool = False
 ):
     """프로세스에서 실행될 트리 실행 함수"""
     os.environ["_PYINSTALLER_WORKER"] = "1"
@@ -54,22 +57,28 @@ def _execute_tree_in_process(
             resume_event=resume_event,
             stop_event=stop_event,
             min_step_interval=min_step_interval,
+            step_mode=step_mode,
         )
 
         if repeat_count > 0:
             for i in range(repeat_count):
                 state_dict["current_repeat"] = i + 1
 
-                ctx.check_stop()
-
-                step.execute(ctx)
+                if state_dict["current_repeat"] > 1:
+                    step.execute_children(ctx)
+                else:
+                    step.execute(ctx)
         else:
             i = 0
+
             while True:
                 state_dict["current_repeat"] = i + 1
 
-                ctx.check_stop()
-                step.execute(ctx)
+                if state_dict["current_repeat"] > 1:
+                    step.execute_children(ctx)
+                else:
+                    step.execute(ctx)
+
                 i += 1
 
         if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
@@ -107,6 +116,7 @@ class ScriptExecutor:
         on_init: Callable[[dict[str, MutableMapping[str, Any]]], None] | None = None,
         on_start: Callable[[str], None] | None = None,
         on_pause: Callable[[str, str], None] | None = None,
+        on_wait: Callable[[str, str], None] | None = None,
         on_resume: Callable[[str, str], None] | None = None,
         on_stop: Callable[[str, str], None] | None = None,
         on_next: Callable[[str, str], None] | None = None,
@@ -123,6 +133,7 @@ class ScriptExecutor:
         self._on_init = on_init
         self._on_start = on_start
         self._on_pause = on_pause
+        self._on_wait = on_wait
         self._on_resume = on_resume
         self._on_stop = on_stop
         self._on_next = on_next
@@ -162,10 +173,16 @@ class ScriptExecutor:
         *,
         robot_model: str | None = None,
         category: str | None = None,
+        step_mode: bool = False,
+        min_step_interval: float | None = None,
     ) -> bool:
         """스크립트 실행 시작"""
         if process_id in self.processes and self.processes[process_id].is_alive():
             print(f"Process {process_id} is already running")
+
+            if step_mode:
+                self.resume(process_id)
+
             return False
 
         if self._monitor_thread is None or not self._monitor_thread.is_alive():
@@ -191,6 +208,9 @@ class ScriptExecutor:
 
         self._run_generation += 1
         gen = self._run_generation
+
+        if min_step_interval is not None:
+            self.min_step_interval = min_step_interval
 
         # 이벤트와 상태 딕셔너리 생성
         self.state_dicts[process_id] = self.manager.dict()
@@ -223,6 +243,7 @@ class ScriptExecutor:
                 self.stop_events[process_id],
                 repeat_count,
                 self.min_step_interval,
+                step_mode,
             ),
         )
 
@@ -250,6 +271,7 @@ class ScriptExecutor:
             evt_type = evt.get("type")
             pid = evt.get("process_id")
             step_id = evt.get("step_id")
+            is_wait = evt.get("is_wait", False)
             evt_gen = evt.get("generation")
 
             cur_gen = self._pid_generation.get(pid)
@@ -292,13 +314,20 @@ class ScriptExecutor:
                     break
 
                 elif evt_type == "pause":
-                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.PAUSED
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.WAITING if is_wait else RB_Flow_Manager_ProgramState.PAUSED
 
-                    if self._on_pause is not None:
-                        self._on_pause(pid, step_id)
+                    if is_wait:
+                        if self._on_wait is not None:
+                            self._on_wait(pid, step_id)
 
-                    if self.controller is not None:
-                        self.controller.on_pause(pid, step_id)
+                        if self.controller is not None:
+                            self.controller.on_wait(pid, step_id)
+                    else:
+                        if self._on_pause is not None:
+                            self._on_pause(pid, step_id)
+
+                        if self.controller is not None:
+                            self.controller.on_pause(pid, step_id)
 
                 elif evt_type == "resume":
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
@@ -329,9 +358,6 @@ class ScriptExecutor:
 
     def _monitor_processes(self):
         """프로세스 완료 감시 → 자원 정리"""
-        POLLING_INTERVAL = 0.1
-        EVENT_BATCH_INTERVAL = 0.05
-
         last_event_process_time = time.time()
 
         while not self._stop_monitor.is_set():

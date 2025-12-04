@@ -42,7 +42,9 @@ def get_env_path() -> Path | None:
 
     for p in [cur, *cur.parents]:
         env_path = p / ".env"
-        print("env_path >>>", env_path, p, env_path.is_file(), env_path.exists())
+        if "packages" in env_path.as_posix():
+            continue
+
         if env_path.is_file():
             return env_path
 

@@ -10,7 +10,7 @@ from typing import Any
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
 
-from .exception import StopExecution
+from .exception import BreakFolder, StopExecution
 from .schema import RB_Flow_Manager_ProgramState
 
 
@@ -25,7 +25,9 @@ class ExecutionContext:
         pause_event: EventType,
         resume_event: EventType,
         stop_event: EventType,
+        *,
         min_step_interval: float | None = None,
+        step_mode: bool = False,
     ):
         self.process_id = process_id
         self.state_dict = state_dict
@@ -41,6 +43,11 @@ class ExecutionContext:
         self._arg_scope: list[dict[str, Any]] = []
         self._generation = state_dict.get("generation")
         self.min_step_interval = min_step_interval
+        self._folder_depth = 0
+        self.step_mode = step_mode
+        self.step_num = 1
+        self.current_depth = 0
+        self._step_ticket = 1 if not step_mode else 0
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
 
         self.initialize_sdk_functions()
@@ -85,8 +92,6 @@ class ExecutionContext:
                 if callable(getattr(sdk, name)) and not name.startswith("_")
             }
 
-            print("public_methods >>>", public_methods, flush=True)
-
             if self.sdk_functions is not None:
                 self.sdk_functions.update(public_methods)
 
@@ -98,6 +103,36 @@ class ExecutionContext:
 
         self._make_rb_sdk_method_key_value_map()
 
+    def step_barrier(self, step_id: str):
+        """step_mode면, 이 스텝 수행 후 일시정지하고
+        resume 신호 올 때까지 대기"""
+        if not self.step_mode or self.step_num <= 2:
+            return
+
+        if self.stop_event.is_set():
+            self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+            raise StopExecution("Execution stopped by user")
+
+        while self._step_ticket <= 0 and not self.stop_event.is_set():
+            if not self.pause_event.is_set():
+                self.pause_event.set()
+                self.state_dict["state"] = RB_Flow_Manager_ProgramState.WAITING
+                self.emit_pause(step_id, is_wait=True)
+
+            if self.resume_event.wait(timeout=0.1):
+                self.resume_event.clear()
+                self._step_ticket = 1
+                self.pause_event.clear()
+                self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+                self.emit_resume(step_id)
+                break
+
+        if self.stop_event.is_set():
+            self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+            raise StopExecution("Execution stopped by user")
+
+        self._step_ticket -= 1
+
     def push_args(self, mapping: dict[str, Any] | None):
         self._arg_scope.append(mapping or {})
 
@@ -107,6 +142,7 @@ class ExecutionContext:
 
     def lookup(self, key: str) -> Any:
         idx = len(self._arg_scope) - 2
+        print(f"[{self.process_id}] Lookup: {key}, arg_scope: {self._arg_scope}", flush=True)
         while idx >= 0:
             scope = self._arg_scope[idx]
             if key in scope:
@@ -114,11 +150,11 @@ class ExecutionContext:
             idx -= 1
         raise KeyError(f"parent pointer not found: {key}")
 
-    def pause(self):
+    def pause(self, is_wait: bool = False):
         """현재 스크립트를 일시정지"""
         self.pause_event.set()
 
-        self.emit_pause(self.state_dict["current_step_id"])
+        self.emit_pause(self.state_dict["current_step_id"], is_wait)
 
         self._wait_for_resume()
 
@@ -168,13 +204,14 @@ class ExecutionContext:
             }
         )
 
-    def emit_pause(self, step_id: str):
+    def emit_pause(self, step_id: str, is_wait: bool = False):
         """pause 이벤트 발생"""
         self.result_queue.put(
             {
                 "type": "pause",
                 "process_id": self.process_id,
                 "step_id": step_id,
+                "is_wait": is_wait,
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": None,
@@ -233,6 +270,19 @@ class ExecutionContext:
                 "error": None,
             }
         )
+
+    def enter_folder(self):
+        """Folder 진입"""
+        self._folder_depth += 1
+
+    def leave_folder(self):
+        """Folder 탈출"""
+        self._folder_depth -= 1
+
+    def break_folder(self):
+        """Folder 실행 중단"""
+        if self._folder_depth > 0:
+            raise BreakFolder()
 
     def _safe_close_sdk(self):
         """SDK 안전 종료"""

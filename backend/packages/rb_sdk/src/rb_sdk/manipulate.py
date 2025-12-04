@@ -9,13 +9,22 @@ from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
+from rb_flat_buffers.IPC.Request_SideDout_Bitcombination import Request_SideDout_BitcombinationT
 from rb_flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
+from rb_flat_buffers.IPC.Request_SideDout_Pulse import Request_SideDout_PulseT
+from rb_flat_buffers.IPC.Request_SideDout_Toggle import Request_SideDout_ToggleT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_DataT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
 
 from rb_sdk.base import RBBaseSDK
+from rb_sdk.schema.manipulate_schema import (
+    SideDoutArg,
+    SideDoutBitcombinationArg,
+    SideDoutPulseArg,
+    SideDoutToggleArg,
+)
 
 
 class RBManipulateSDK(RBBaseSDK):
@@ -154,7 +163,7 @@ class RBManipulateSDK(RBBaseSDK):
         *,
         robot_model: str,
         finish_at: bool | None = None,
-        stop_time: float | int | None = None,
+        stop_time: float | int | None = 0.3,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         parsed_finish_at = finish_at
@@ -172,11 +181,8 @@ class RBManipulateSDK(RBBaseSDK):
                 else stop_time
             )
 
-        if parsed_finish_at is not None and parsed_stop_time is None:
-            raise ValueError("stop_time is required if finish_at is provided")
-
-        if parsed_stop_time is not None and parsed_finish_at is None:
-            raise ValueError("finish_at is required if stop_time_raw is provided")
+        if parsed_finish_at is None:
+            raise ValueError("finish_at is required")
 
         if parsed_finish_at:
             if not isinstance(parsed_stop_time, float | int):
@@ -265,15 +271,16 @@ class RBManipulateSDK(RBBaseSDK):
                         )
 
 
-                        stop_move = await self.move_finish_at_stop(
-                            robot_model=robot_model,
-                            finish_at=finish_at,
-                            stop_time=stop_time,
-                            flow_manager_args=flow_manager_args,
-                        )
+                        if finish_at is not None:
+                            stop_move = await self.move_finish_at_stop(
+                                robot_model=robot_model,
+                                finish_at=finish_at,
+                                stop_time=stop_time,
+                                flow_manager_args=flow_manager_args,
+                            )
 
-                        if stop_move:
-                            is_break = True
+                            if stop_move:
+                                is_break = True
 
                         if obj is not None and obj.get("motionMode") == 0:
                             is_break = True
@@ -370,15 +377,16 @@ class RBManipulateSDK(RBBaseSDK):
                         f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
                     )
                     
-                    stop_move = await self.move_finish_at_stop(
-                        robot_model=robot_model,
-                        finish_at=finish_at,
-                        stop_time=stop_time,
-                        flow_manager_args=flow_manager_args,
-                    )
+                    if finish_at is not None:
+                        stop_move = await self.move_finish_at_stop(
+                            robot_model=robot_model,
+                            finish_at=finish_at,
+                            stop_time=stop_time,
+                            flow_manager_args=flow_manager_args,
+                        )
 
-                    if stop_move:
-                        is_break = True
+                        if stop_move:
+                            is_break = True
 
                     if obj is not None and obj.get("motionMode") == 0:
                         is_break = True
@@ -583,3 +591,224 @@ class RBManipulateSDK(RBBaseSDK):
             flow_manager_args.done()
 
         return res["dict_payload"]
+
+    def call_side_dout_toggle(
+        self,
+        *,
+        robot_model: str,
+        port_num: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Side Digital Out Toggle 호출"""
+
+        req = Request_SideDout_ToggleT()
+        req.portNum = port_num
+        
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_side_dout_toggle",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if flow_manager_args is not None and res.get("dict_payload"):
+            flow_manager_args.done()
+
+        return res["dict_payload"]
+
+    def call_side_dout_bitcombination(
+        self,
+        *,
+        robot_model: str,
+        port_start: int,
+        port_end: int,
+        desired_value: int,
+        direction_option: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Side Digital Out Bitcombination 호출"""
+
+        req = Request_SideDout_BitcombinationT()
+        req.portStart = port_start
+        req.portEnd = port_end
+        req.desiredValue = desired_value
+        req.directionOption = direction_option
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_side_dout_bitcombination",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=16,
+        )
+
+        if flow_manager_args is not None and res.get("dict_payload"):
+            flow_manager_args.done()
+
+        return res["dict_payload"]
+
+    def call_side_dout_pulse(
+        self,
+        *,
+        robot_model: str,
+        port_num: int,
+        block_mode: int,
+        direction: int,
+        time_1: int,
+        time_2: int,
+        time_3: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Side Digital Out Pulse 호출"""
+
+        req = Request_SideDout_PulseT()
+        req.portNum = port_num
+        req.blockMode = block_mode
+        req.direction = direction
+        req.time1 = time_1
+        req.time2 = time_2
+        req.time3 = time_3
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_side_dout_pulse",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=24,
+        )
+
+        if flow_manager_args is not None and res.get("dict_payload"):
+            flow_manager_args.done()
+
+        return res["dict_payload"]
+
+    def call_multiple_side_dout(
+        self,
+        *,
+        robot_model: str,
+        side_dout_args: list[SideDoutArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Multiple Side Digital Out 호출"""
+
+        result: list[dict] = []
+
+        for req in side_dout_args:
+            res = self.call_side_dout(
+                robot_model=robot_model,
+                port_num=req["port_num"],
+                desired_out=req["desired_out"],
+                flow_manager_args=flow_manager_args,
+            )
+
+            result.append(res)
+
+        if flow_manager_args is not None and len(result) == len(side_dout_args):
+            flow_manager_args.done()
+
+        if len(result) != len(side_dout_args):
+            raise RuntimeError(
+                "Multiple Side Digital Out failed: "
+                "result length is not equal to side_dout_args length"
+            )
+
+        return result
+
+    def call_multiple_side_dout_toggle(
+        self,
+        *,
+        robot_model: str,
+        side_dout_args: list[SideDoutToggleArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Multiple Side Digital Out Toggle 호출"""
+
+        result: list[dict] = []
+
+        for req in side_dout_args:
+            res = self.call_side_dout_toggle(
+                robot_model=robot_model,
+                port_num=req["port_num"],
+                flow_manager_args=flow_manager_args,
+            )
+
+            result.append(res)
+
+        if flow_manager_args is not None and len(result) == len(side_dout_args):
+            flow_manager_args.done()
+
+        if len(result) != len(side_dout_args):
+            raise RuntimeError(
+                "Multiple Side Digital Out Toggle failed: "
+                "result length is not equal to side_dout_args length"
+            )
+
+        return result
+
+    def call_multiple_side_dout_bitcombination(
+        self,
+        *,
+        robot_model: str,
+        side_dout_args: list[SideDoutBitcombinationArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Multiple Side Digital Out Bitcombination 호출"""
+
+        result: list[dict] = []
+
+        for req in side_dout_args:
+            res = self.call_side_dout_bitcombination(
+                robot_model=robot_model,
+                port_start=req["port_start"],
+                port_end=req["port_end"],
+                desired_value=req["desired_value"],
+                direction_option=req["direction_option"],
+                flow_manager_args=flow_manager_args,
+            )
+
+            result.append(res)
+
+        if flow_manager_args is not None and len(result) == len(side_dout_args):
+            flow_manager_args.done()
+
+        if len(result) != len(side_dout_args):
+            raise RuntimeError(
+                "Multiple Side Digital Out Bitcombination failed: "
+                "result length is not equal to side_dout_args length"
+            )
+
+        return result
+
+    def call_multiple_side_dout_pulse(
+        self,
+        *,
+        robot_model: str,
+        side_dout_args: list[SideDoutPulseArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """Multiple Side Digital Out Pulse 호출"""
+
+        result: list[dict] = []
+
+        for req in side_dout_args:
+            res = self.call_side_dout_pulse(
+                robot_model=robot_model,
+                port_num=req["port_num"],
+                block_mode=req["block_mode"],
+                direction=req["direction"],
+                time_1=req["time_1"],
+                time_2=req["time_2"],
+                time_3=req["time_3"],
+                flow_manager_args=flow_manager_args,
+            )
+
+            result.append(res)
+
+        if flow_manager_args is not None and len(result) == len(side_dout_args):
+            flow_manager_args.done()
+
+        if len(result) != len(side_dout_args):
+            raise RuntimeError(
+                "Multiple Side Digital Out Pulse failed: "
+                "result length is not equal to side_dout_args length"
+            )
+
+        return result

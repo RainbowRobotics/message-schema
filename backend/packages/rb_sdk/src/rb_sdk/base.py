@@ -176,7 +176,15 @@ class RBBaseSDK:
     #             flow_manager_args.done()
 
     @abstractmethod
-    async def set_begin(self, *, robot_model: str, position: Any, is_enable: bool = True, speed_ratio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+    async def set_begin(
+        self,
+        *,
+        robot_model: str,
+        position: Any,
+        is_enable: bool = True,
+        speed_ratio: float | None = None,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """메인 태스크 시작 위치 설정"""
 
 

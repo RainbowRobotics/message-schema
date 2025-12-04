@@ -40,6 +40,8 @@ class Step_Base(BaseModel):
     fixChildren: bool = Field(default=False)
     requireChildren: bool = Field(default=False)
     requireParent: bool = Field(default=False)
+    groupLastItem: bool = Field(default=False)
+    groupFirstItem: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
@@ -280,6 +282,7 @@ class Client_Script_InfoPD(BaseModel):
     taskId: str
     repeatCount: int
     steps: list[Client_StepPD]
+    stepMode: bool = Field(default=False)
 
 
 class Request_Preview_Start_ProgramPD(BaseModel):
@@ -307,3 +310,4 @@ class PlayState(str, Enum):
 class Response_Get_Current_Program_StatePD(BaseModel):
     playState: PlayState
     taskPlayState: dict[str, PlayState]
+    stepMode: bool

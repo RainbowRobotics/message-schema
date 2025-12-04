@@ -98,16 +98,24 @@ class ProgramService(BaseService):
 
         self._play_state: PlayState = PlayState.IDLE
         self._task_play_state: dict[str, PlayState] = {
-            robot_model: PlayState.IDLE for robot_model in self._robot_models
+            robot_model: PlayState.IDLE for robot_model in
+             self._robot_models
         }
+
+        self._step_mode = False
 
         self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
+        fire_and_log(
+            socket_client.emit(
+                "program/play_state", {"playState": self._play_state, "stepMode": self._step_mode, "error": None}
+            )
+        )
+
     async def call_resume_or_pause(
         self,
         *,
-        db: MongoDB,
         is_pause: bool,
         # program_id: str | None = None,
         # flow_id: str | None = None,
@@ -222,6 +230,7 @@ class ProgramService(BaseService):
         return {
             "playState": self._play_state,
             "taskPlayState": self._task_play_state,
+            "stepMode": self._step_mode,
         }
 
     def update_executor_state(self, state: int, error: str | None = None) -> None:
@@ -244,7 +253,7 @@ class ProgramService(BaseService):
 
         fire_and_log(
             socket_client.emit(
-                "program/play_state", {"playState": self._play_state, "error": error}
+                "program/play_state", {"playState": self._play_state, "stepMode": self._step_mode, "error": error}
             )
         )
 
@@ -731,7 +740,7 @@ class ProgramService(BaseService):
             body_context = ""
 
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, Step\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step\n"
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )
@@ -741,9 +750,6 @@ class ProgramService(BaseService):
 
         func_part = ""
         args_part = ""
-
-        print("begin >>>", begin, flush=True)
-
 
         begin_dict = t_to_dict(begin) if begin is not None else None
 
@@ -1568,6 +1574,7 @@ class ProgramService(BaseService):
             task_id = script["taskId"]
             repeat_count = script["repeatCount"]
             steps_tree = script["steps"]
+            step_mode = script.get("stepMode", False)
 
             task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
 
@@ -1597,7 +1604,11 @@ class ProgramService(BaseService):
                 tree["repeat_count"],
                 robot_model=tree["robot_model"],
                 category=tree["category"],
+                step_mode=step_mode,
+                min_step_interval=0.5 if step_mode else None,
             )
+
+        self._step_mode = step_mode
 
         return {
             "status": "success",
@@ -1609,6 +1620,8 @@ class ProgramService(BaseService):
 
         for task_id in task_ids:
             self.script_executor.stop(task_id)
+
+        self._step_mode = False
 
         return {
             "status": "success",

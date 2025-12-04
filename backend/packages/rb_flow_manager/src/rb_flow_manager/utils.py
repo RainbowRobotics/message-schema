@@ -1,6 +1,7 @@
 from typing import Any
 
 from .context import ExecutionContext
+from .exception import BreakFolder
 
 
 def _resolve_arg_scope_value(v: Any, ctx: ExecutionContext) -> Any:
@@ -35,3 +36,8 @@ def _resolve_arg_scope_value(v: Any, ctx: ExecutionContext) -> Any:
 
     # 나머지는 그대로
     return v
+
+def skip_folder():
+    """현재 Folder(컨테이너) 내부 실행을 중단하고
+    Folder 다음 스텝으로 넘어가고 싶을 때 사용."""
+    raise BreakFolder()

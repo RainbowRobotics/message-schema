@@ -1,4 +1,3 @@
-import asyncio
 import time
 from collections.abc import MutableMapping
 from multiprocessing.managers import DictProxy, ListProxy
@@ -20,7 +19,6 @@ class Zenoh_Controller(BaseController):
     def __init__(self):
         self._zenoh_client: ZenohClient | None = None
         self._state_dicts: dict[str, MutableMapping[str, Any]] = {}
-        self._bg_task: asyncio.Task | None = None
 
     def on_init(self, state_dicts):
         self._state_dicts = state_dicts
@@ -46,6 +44,12 @@ class Zenoh_Controller(BaseController):
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.STOPPED)
         # TODO: zenoh publish stop
 
+    def on_wait(self, task_id: str, step_id: str) -> None:
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
+
+        if self._zenoh_client is not None:
+            self._zenoh_client.publish("rrs/pause", payload={})
+
     def on_pause(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.PAUSED)
 
@@ -60,7 +64,6 @@ class Zenoh_Controller(BaseController):
             self._zenoh_client.publish("rrs/resume", payload={})
 
     def on_next(self, task_id: str, step_id: str) -> None:
-
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
@@ -83,10 +86,6 @@ class Zenoh_Controller(BaseController):
 
         if self._zenoh_client is not None:
             self._zenoh_client.publish("rrs/stop", payload={})
-
-        if self._bg_task is not None:
-            self._bg_task.cancel()
-            self._bg_task = None
 
     def on_all_complete(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.IDLE)
