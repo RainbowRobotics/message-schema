@@ -1,19 +1,19 @@
 from pydantic import BaseModel
 
 
-class SpeedBarRequestPD(BaseModel):
-    speedbar: float
+class Request_MotionSpeedBarPD(BaseModel):
+    alpha: float
 
 
-class ResumeRequestPD(BaseModel):
+class Request_ResumePD(BaseModel):
     pass
 
 
-class PauseRequestPD(BaseModel):
+class Request_PausePD(BaseModel):
     pass
 
 
-class HaltRequestPD(BaseModel):
+class Request_MotionHaltPD(BaseModel):
     pass
 
 
@@ -23,22 +23,6 @@ class Request_ProgramBeforePD(BaseModel):
 
 class Request_ProgramAfterPD(BaseModel):
     option: int
-
-
-class SmoothJogJRequestPD(BaseModel):
-    targetspeed: list[float]
-    frame: int
-    unit: int
-
-
-class SmoothJogLRequestPD(BaseModel):
-    targetspeed: list[float]
-    frame: int
-    unit: int
-
-
-class SmoothJogStopRequestPD(BaseModel):
-    stoptime: float
 
 
 class MoveInputTarget(BaseModel):
@@ -56,6 +40,18 @@ class MoveInputSpeed(BaseModel):
 class MoveInputType(BaseModel):
     pnt_type: int
     pnt_para: float
+
+
+class Request_Move_SmoothJogJPD(BaseModel):
+    target: MoveInputTarget
+
+
+class Request_Move_SmoothJogLPD(BaseModel):
+    target: MoveInputTarget
+
+
+class Request_Move_SmoothJogStopPD(BaseModel):
+    stoptime: float
 
 
 class Request_MoveJPD(BaseModel):
@@ -103,5 +99,3 @@ class Request_MoveXBAddPD(BaseModel):
 
 class Request_MoveXBRunPD(BaseModel):
     running_mode: int
-
-

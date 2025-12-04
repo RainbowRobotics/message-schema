@@ -1,4 +1,3 @@
-import asyncio
 
 from app.socket.socket_client import socket_client
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
@@ -65,16 +64,6 @@ class ConfigService(BaseService):
     def __init__(self):
         pass
 
-    @staticmethod
-    async def _execute_zenoh_query(topic, req_obj, res_class, buf_size):
-        return await asyncio.to_thread(
-            zenoh_client.query_one,
-            topic,
-            flatbuffer_req_obj=req_obj,
-            flatbuffer_res_T_class=res_class,
-            flatbuffer_buf_size=buf_size,
-        )
-
     # ==========================================================================
     # 1. General Configuration (Robot Arm, Control Box, Code)
     # ==========================================================================
@@ -82,8 +71,11 @@ class ConfigService(BaseService):
     async def call_config_robotarm(self, robot_model: str):
         req = Request_CallConfigRobotArmT()
         
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/call_config_robotarm", req, Response_CallConfigRobotArmT, 1024
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_config_robotarm",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_CallConfigRobotArmT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 
@@ -91,8 +83,11 @@ class ConfigService(BaseService):
     async def call_config_controlbox(self, robot_model: str):
         req = Request_CallConfigControlBoxT()
         
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/call_config_controlbox", req, Response_CallConfigControlBoxT, 2048
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_config_controlbox",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_CallConfigControlBoxT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 
@@ -102,8 +97,11 @@ class ConfigService(BaseService):
         req.code = request.code
         req.option = request.option
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_robot_code", req, Response_FunctionsT, 32
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_robot_code",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 
@@ -138,8 +136,11 @@ class ConfigService(BaseService):
     async def call_config_toollist(self, robot_model: str):
         req = Request_CallConfigToolListT()
         
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/call_config_toollist", req, Response_CallConfigToolListT, 8
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_config_toollist",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_CallConfigToolListT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 
@@ -148,8 +149,11 @@ class ConfigService(BaseService):
         req = Request_Set_Tool_ListT()
         req.targetToolNum = request.target_tool_num
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_toollist_num", req, Response_FunctionsT, 8
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_toollist_num",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 
@@ -181,8 +185,11 @@ class ConfigService(BaseService):
         req.boxPara7 = request.box_para_7
         req.boxPara8 = request.box_para_8
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_tool_parameter", req, Response_FunctionsT, 160
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_tool_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=160,
         )
         await self.socket_emit_config_toollist(robot_model)
         return res["dict_payload"]
@@ -219,8 +226,11 @@ class ConfigService(BaseService):
         req = Request_Set_User_FrameT()
         req.userFrameNum = request.user_frame_num
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_userframe_num", req, Response_FunctionsT, 32
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_num",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
         )
         await self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
         return res["dict_payload"]
@@ -237,8 +247,11 @@ class ConfigService(BaseService):
         req.userfRy = request.userf_ry
         req.userfRz = request.userf_rz
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_user_frame_parameter", req, Response_FunctionsT, 32
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_user_frame_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
         )
         await self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
         return res["dict_payload"]
@@ -255,8 +268,11 @@ class ConfigService(BaseService):
         req.targetRy = request.target_ry
         req.targetRz = request.target_rz
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_userframe_6dof", req, Response_FunctionsT, 32
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_6dof",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
         )
         return res["dict_payload"]
 
@@ -266,8 +282,11 @@ class ConfigService(BaseService):
         req.userFrameNum = request.user_frame_num
         req.settingOption = request.setting_option
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_userframe_tcp", req, Response_FunctionsT, 256
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_tcp",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
         )
         return res["dict_payload"]
 
@@ -287,8 +306,11 @@ class ConfigService(BaseService):
         req.point3Y = request.point_3_y
         req.point3Z = request.point_3_z
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_userframe_3points", req, Response_FunctionsT, 48
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_userframe_3points",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=48,
         )
         return res["dict_payload"]
 
@@ -308,8 +330,11 @@ class ConfigService(BaseService):
         req.areaPara1 = request.area_para_1
         req.areaPara2 = request.area_para_2
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_area_parameter", req, Response_FunctionsT, 100
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_area_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=100,
         )
         await self.socket_emit_config_control_box(robot_model)
         return res["dict_payload"]
@@ -328,8 +353,11 @@ class ConfigService(BaseService):
         nj.f = request.sensitivity
         req.sensitivity = nj
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_direct_teach_sensitivity", req, Response_FunctionsT, 32
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_direct_teach_sensitivity",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
         )
         return res["dict_payload"]
 
@@ -342,8 +370,11 @@ class ConfigService(BaseService):
         req.react = request.react
         req.threshold = request.threshold
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_collision_parameter", req, Response_FunctionsT, 12
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_collision_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=12,
         )
         return res["dict_payload"]
 
@@ -356,8 +387,11 @@ class ConfigService(BaseService):
         req.distInternal = request.dist_internal
         req.distExternal = request.dist_external
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_selfcoll_parameter", req, Response_FunctionsT, 12
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_selfcoll_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=12,
         )
         return res["dict_payload"]
 
@@ -368,8 +402,11 @@ class ConfigService(BaseService):
         req.reactMode = request.react_mode
         req.threshold = request.threshold
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_out_collision_para", req, Response_FunctionsT, 12
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_out_collision_para",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=12,
         )
         return res["dict_payload"]
 
@@ -380,8 +417,11 @@ class ConfigService(BaseService):
         req.distInt = request.dist_int
         req.distExt = request.dist_ext
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_self_collision_para", req, Response_FunctionsT, 12
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_self_collision_para",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=12,
         )
         return res["dict_payload"]
 
@@ -398,8 +438,11 @@ class ConfigService(BaseService):
         req.gy = request.gy
         req.gz = request.gz
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/save_gravity_parameter", req, Response_FunctionsT, 16
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_gravity_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=16,
         )
         return res["dict_payload"]
 
@@ -418,8 +461,11 @@ class ConfigService(BaseService):
         req.target.tarFrame = target_dict["tar_frame"]
         req.target.tarUnit = target_dict["tar_unit"]
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_shift", req, Response_FunctionsT, 256
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_shift",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
         )
         return res["dict_payload"]
 
@@ -434,8 +480,11 @@ class ConfigService(BaseService):
         req.torquelimit = N_JOINT_fT()
         req.torquelimit.f = request.torquelimit.f
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_joint_impedance", req, Response_FunctionsT, 64
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_joint_impedance",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=64,
         )
         return res["dict_payload"]
 
@@ -445,8 +494,11 @@ class ConfigService(BaseService):
         req.onoff = request.onoff
         req.sensitivity = request.sensitivity
 
-        res = await self._execute_zenoh_query(
-            f"{robot_model}/set_freedrive", req, Response_FunctionsT, 8
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_freedrive",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
         )
         return res["dict_payload"]
 

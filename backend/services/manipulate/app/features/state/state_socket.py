@@ -24,21 +24,11 @@ async def on_call_powercontrol(data, robot_model: str):
 async def on_call_servocontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = await state_service.call_servocontrol(
-        robot_model=robot_model,
-        servo_option=dict_data["servo_option"],
-    )
-
-    return to_json(res)
+    return to_json(await state_service.call_servocontrol(robot_model=robot_model, request=dict_data))
 
 
 @state_socket_router.on("{robot_model}/call_referencecontrol")
 async def on_call_referencecontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = await state_service.call_referencecontrol(
-        robot_model=robot_model,
-        reference_option=dict_data["reference_option"],
-    )
-
-    return to_json(res)
+    return to_json(await state_service.call_referencecontrol(robot_model=robot_model, request=dict_data))
