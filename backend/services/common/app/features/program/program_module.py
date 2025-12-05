@@ -740,7 +740,7 @@ class ProgramService(BaseService):
             body_context = ""
 
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep\n"
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )

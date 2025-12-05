@@ -13,7 +13,7 @@ from typing import Any
 
 from .context import ExecutionContext
 from .controller.base_controller import BaseController
-from .exception import StopExecution
+from .exception import BreakRepeat, JumpToStepException, StopExecution
 from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
 
@@ -44,6 +44,7 @@ def _execute_tree_in_process(
     try:
 
         state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+        state_dict["step"] = step.to_dict()
         state_dict["current_step_id"] = step.step_id
         state_dict["current_step_name"] = step.name
         state_dict["total_repeat"] = "infinity" if repeat_count == 0 else repeat_count
@@ -64,25 +65,56 @@ def _execute_tree_in_process(
             for i in range(repeat_count):
                 state_dict["current_repeat"] = i + 1
 
-                if state_dict["current_repeat"] > 1:
-                    step.execute_children(ctx)
-                else:
-                    step.execute(ctx)
+                try:
+                    if state_dict["current_repeat"] > 1:
+                        step.execute_children(ctx)
+                    else:
+                        step.execute(ctx)
+                except JumpToStepException as e:
+                    ctx.data["finding_jump_to_step"] = True
+
+                    target_step_id = e.target_step_id
+
+                    step.execute_children(ctx, target_step_id=target_step_id)
+
+                    if ctx.data.get("finding_jump_to_step", False):
+                        raise RuntimeError("JumpToStep: Target step not found.") from e
+                    else:
+                        continue
         else:
             i = 0
 
             while True:
                 state_dict["current_repeat"] = i + 1
 
-                if state_dict["current_repeat"] > 1:
-                    step.execute_children(ctx)
-                else:
-                    step.execute(ctx)
+                try:
+                    if state_dict["current_repeat"] > 1:
+                        step.execute_children(ctx)
+                    else:
+                        step.execute(ctx)
+                except JumpToStepException as e:
+                    ctx.data["finding_jump_to_step"] = True
+
+                    target_step_id = e.target_step_id
+
+                    step.execute_children(ctx, target_step_id=target_step_id)
+
+                    if ctx.data.get("finding_jump_to_step", False):
+                        raise RuntimeError("JumpToStep: Target step not found.") from e
+                    else:
+                        continue
 
                 i += 1
 
         if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
             state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
+
+    except BreakRepeat:
+        state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+        state_dict["error"] = "BreakStep must exist under RepeatStep."
+
+        if ctx is not None:
+            ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
 
     except StopExecution:
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED

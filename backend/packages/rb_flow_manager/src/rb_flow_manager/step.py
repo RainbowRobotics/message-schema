@@ -8,7 +8,7 @@ from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import call_with_matching_args, eval_value, safe_eval_expr
 
 from .context import ExecutionContext
-from .exception import BreakFolder, StopExecution
+from .exception import BreakFolder, BreakRepeat, JumpToStepException, StopExecution
 from .utils import _resolve_arg_scope_value
 
 
@@ -54,6 +54,12 @@ class Step:
 
         if d.get("method") in ["If", "ElseIf", "Else", "Condition"]:
             return ConditionStep.from_dict(d)
+
+        if d.get("method") == "Jump":
+            return JumpToStep.from_dict(d)
+
+        if d.get("method") == "Break":
+            return BreakStep.from_dict(d)
 
         return Step(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
@@ -144,40 +150,51 @@ class Step:
             + ")"
         )
 
-    def _pre_execute(self, ctx: ExecutionContext, *, reset_condition_result: bool = True):
+    def _pre_execute(self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False):
         if reset_condition_result:
-            condition_map: dict[str, bool] = ctx.data.get("condition_map", {})
+            condition_map: dict[str, bool] = ctx.data.get("condition_map") or {}
 
-            for key in condition_map:
+            for key in list(condition_map.keys()):
                 if key.endswith(f".{ctx.current_depth}"):
                     condition_map.pop(key)
             ctx.data["condition_map"] = condition_map
 
+
         ctx.push_args(self.args)
 
-        ctx.step_barrier(self.step_id)
+        if not is_skip:
+            ctx.step_barrier(self.step_id)
 
-        self._start_ts = time.monotonic()
+            self._start_ts = time.monotonic()
 
-    def _post_execute(self, ctx: ExecutionContext):
-        min_step_interval = getattr(ctx, "min_step_interval", 0)
-        elapsed = time.monotonic() - self._start_ts
-        remaining = min_step_interval - elapsed
+    def _post_execute(self, ctx: ExecutionContext, *, ignore_step_interval: bool = False):
+        if not ignore_step_interval:
+            min_step_interval = getattr(ctx, "min_step_interval", 0)
+            elapsed = time.monotonic() - self._start_ts
+            remaining = min_step_interval - elapsed
 
-        if remaining > 0 and ctx.step_num != 1:
-            time.sleep(remaining)
+            if remaining > 0 and ctx.step_num != 1:
+                time.sleep(remaining)
 
         ctx.step_num += 1
 
-    def execute_children(self, ctx: ExecutionContext):
+
+    def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
 
         if len(self.children) > 0:
             ctx.current_depth += 1
 
+        current_target_step_id = target_step_id
+
         for child in self.children:
             try:
-                child.execute(ctx)
+                child.execute(ctx, target_step_id=current_target_step_id)
+
+                if current_target_step_id is not None and child.step_id == current_target_step_id:
+                    current_target_step_id = None
+                    ctx.data["finding_jump_to_step"] = False
+
             except BreakFolder:
                 if getattr(self, "method", None) == "Folder":
                     break
@@ -188,27 +205,30 @@ class Step:
         if len(self.children) > 0:
             ctx.current_depth -= 1
 
-    def execute(self, ctx: ExecutionContext):
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """단계 실행"""
-        self._pre_execute(ctx)
+        is_skip = target_step_id is not None and target_step_id != self.step_id
 
-        ctx.emit_next(self.step_id)
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if not is_skip:
+            ctx.emit_next(self.step_id)
+
+            ctx.check_stop()
 
         done_called = False
-
-        ctx.check_stop()
 
 
         fn = self.func
         func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
         args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
 
-        if fn is None and func_name and not self.disabled:
+        if fn is None and func_name and not self.disabled and not is_skip:
             fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
             if fn is None:
                 raise StopExecution(f"unknown flow function: {func_name}")
 
-        if fn is not None and not self.disabled:
+        if fn is not None and not self.disabled and not is_skip:
             done_event = Event()
 
             def done():
@@ -233,9 +253,9 @@ class Step:
 
             flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args, done=done)
 
-            try:
-                eval_args = {}
+            eval_args = {}
 
+            try:
                 for k, v in args.items():
                     eval_args[k] = eval_value(
                         v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
@@ -263,7 +283,20 @@ class Step:
 
                     if "robot_model" not in eval_args:
                         eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
+            except RuntimeError as e:
+                ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                time.sleep(0.1)
+                ctx.stop()
+                raise StopExecution(str(e)) from e
+            except Exception as e:  # noqa: BLE001
+                ctx.emit_error(self.step_id, e)
+                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                time.sleep(0.1)
+                ctx.stop()
+                raise StopExecution(str(e)) from e
 
+            try:
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
             except RuntimeError as e:
                 ctx.emit_error(self.step_id, RuntimeError(str(e)))
@@ -281,11 +314,12 @@ class Step:
             while not done_event.wait(timeout=0.01):
                 ctx.check_stop()
 
-        self._post_execute(ctx)
+        self._post_execute(ctx, ignore_step_interval=self.disabled or is_skip)
 
-        ctx.emit_done(self.step_id)
+        if not is_skip:
+            ctx.emit_done(self.step_id)
 
-        self.execute_children(ctx)
+        self.execute_children(ctx, target_step_id=target_step_id)
 
 
 
@@ -302,6 +336,7 @@ class FolderStep(Step):
         func_name: str | None = None,
         func: Callable | None = None,
         children: list | None = None,
+        disabled: bool | None = None,
         args: dict[str, Any] | None = None,
     ):
         super().__init__(
@@ -322,6 +357,7 @@ class FolderStep(Step):
             name=d["name"],
             func_name=d.get("funcName"),
             func=d.get("func"),
+            disabled=d.get("disabled"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
             args=d.get("args") or {},
         )
@@ -332,16 +368,20 @@ class FolderStep(Step):
             "name": self.name,
             "funcName": self.func_name,
             "func": self.func,
+            "disabled": self.disabled,
             "method": self.method,
             "children": [child.to_dict() for child in self.children],
             "args": self.args,
         }
 
-    def execute(self, ctx: ExecutionContext):
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+        if self.disabled:
+            return
+
         ctx.enter_folder()
 
         try:
-            super().execute(ctx)
+            super().execute(ctx, target_step_id=target_step_id)
         finally:
             ctx.leave_folder()
 
@@ -355,11 +395,12 @@ class RepeatStep(Step):
         *,
         step_id: str,
         name: str,
-        count: int,
+        count: int | None = None,
         while_cond: str | Callable | None = None,
         do_while: str | Callable | None = None,
         args: dict[str, Any] | None = None,
         children: list | None = None,
+        disabled: bool | None = None,
     ):
         super().__init__(
             step_id=step_id,
@@ -370,6 +411,7 @@ class RepeatStep(Step):
             do_while=do_while,
             args=args,
             children=children,
+            disabled=disabled,
         )
         self.count = count
         self.while_cond = while_cond
@@ -382,6 +424,7 @@ class RepeatStep(Step):
         count = d.get("count") or d.get("args", {}).get("count", 1)
         while_cond = d.get("whileCond") or d.get("args", {}).get("while_cond")
         do_while = d.get("doWhile") or d.get("args", {}).get("do_while")
+        disabled = d.get("disabled")
 
         if count is None and while_cond is None and do_while is None:
             raise RuntimeError("count, while_cond, or do_while is required")
@@ -392,6 +435,7 @@ class RepeatStep(Step):
             count=count,
             while_cond=while_cond,
             do_while=do_while,
+            disabled=disabled,
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -410,19 +454,40 @@ class RepeatStep(Step):
             },
         }
 
-    def execute(self, ctx: ExecutionContext):
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """지정된 횟수만큼 자식 Step 반복 실행"""
-        self._pre_execute(ctx)
+        if self.disabled:
+            return
+
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        def find_target_step(step: Step) -> bool:
+            if step.step_id == target_step_id:
+                return True
+            return any(find_target_step(child) for child in step.children)
+
+        if target_step_id is not None:
+            is_skip = is_skip or find_target_step(self)
+        
+        if is_skip:
+            self.execute_children(ctx, target_step_id=target_step_id)
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
+        self._pre_execute(ctx, is_skip=is_skip)
 
         ctx.emit_next(self.step_id)
 
         ctx.check_stop()
 
         if self.count is not None:
-            for i in range(self.count):
+            for i in range(int(self.count)):
                 ctx.check_stop()
                 ctx.data["repeat_index"] = i
-                self.execute_children(ctx)
+                try:
+                    self.execute_children(ctx, target_step_id=target_step_id)
+                except BreakRepeat:
+                    break
 
         elif self.while_cond is not None:
             if isinstance(self.while_cond, str):
@@ -431,17 +496,26 @@ class RepeatStep(Step):
                     variables=ctx.variables,
                     get_global_variable=ctx.get_global_variable,
                 ):
-                    ctx.check_stop()
-                    self.execute_children(ctx)
+                    try:
+                        ctx.check_stop()
+                        self.execute_children(ctx, target_step_id=target_step_id)
+                    except BreakRepeat:
+                        break
             else:
                 while self.while_cond(ctx):
-                    ctx.check_stop()
-                    self.execute_children(ctx)
+                    try:
+                        ctx.check_stop()
+                        self.execute_children(ctx, target_step_id=target_step_id)
+                    except BreakRepeat:
+                        break
 
         elif self.do_while is not None:
             while True:
-                ctx.check_stop()
-                self.execute_children(ctx)
+                try:
+                    ctx.check_stop()
+                    self.execute_children(ctx, target_step_id=target_step_id)
+                except BreakRepeat:
+                    break
                 if isinstance(self.do_while, str):
                     if not safe_eval_expr(
                         self.do_while,
@@ -471,6 +545,7 @@ class ConditionStep(Step):
         group_id: str,
         condition_type: str,
         condition: str | Callable | bool | None = True,
+        disabled: bool | None = None,
         args: dict[str, Any] | None = None,
         children: list | None = None,
     ):
@@ -483,12 +558,14 @@ class ConditionStep(Step):
             condition=condition,
             children=children,
             group_id=group_id,
+            disabled=disabled,
         )
         self.condition = condition
         self.condition_type = condition_type
         self.group_id = group_id
         self.args = args or {}
         self.children = children or []
+        self.disabled = disabled
 
     @staticmethod
     def from_dict(d) -> "ConditionStep":
@@ -506,6 +583,7 @@ class ConditionStep(Step):
             group_id=d.get("groupId"),
             condition_type=condition_type,
             condition=condition,
+            disabled=d.get("disabled"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -519,12 +597,30 @@ class ConditionStep(Step):
             "children": [child.to_dict() for child in self.children],
         }
 
-    def execute(self, ctx: ExecutionContext):
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """조건이 참일 때만 자식 Step 실행"""
-        condition_map = ctx.data.get("condition_map", {})
+        if self.disabled:
+            return
+
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        def find_target_step(step: Step) -> bool:
+            if step.step_id == target_step_id:
+                return True
+            return any(find_target_step(child) for child in step.children)
+
+        if target_step_id is not None:
+            is_skip = is_skip or find_target_step(self)
+
+        condition_map = ctx.data.get("condition_map")
+
+        if condition_map is None:
+            condition_map = {}
+            ctx.data["condition_map"] = condition_map
+
         key = f"{self.group_id}.{ctx.current_depth}"
 
-        condition_result = condition_map.get(key, None)
+        condition_result = condition_map.get(key)
 
         if self.condition_type == "If":
             condition_map[key] = False
@@ -545,15 +641,18 @@ class ConditionStep(Step):
 
         ctx.check_stop()
 
-        if isinstance(self.condition, bool):
-            if self.condition:
-                ctx.data["condition_result"] = True
+        def post_execute_and_execute_children():
+            ctx.data["condition_map"][key] = True
 
+            if not is_skip:
                 self._post_execute(ctx)
-
                 ctx.emit_done(self.step_id)
 
-                self.execute_children(ctx)
+            self.execute_children(ctx, target_step_id=target_step_id)
+
+        if isinstance(self.condition, bool):
+            if self.condition:
+                post_execute_and_execute_children()
                 return
 
         elif isinstance(self.condition, str):
@@ -562,23 +661,67 @@ class ConditionStep(Step):
                 variables=ctx.variables,
                 get_global_variable=ctx.get_global_variable,
             ):
-                ctx.data["condition_result"] = True
-
-                self._post_execute(ctx)
-
-                ctx.emit_done(self.step_id)
-
-                self.execute_children(ctx)
+                post_execute_and_execute_children()
                 return
 
         elif self.condition is not None and not callable(self.condition) and self.condition():
-            ctx.data["condition_result"] = True
-
-            self._post_execute(ctx)
-
-            ctx.emit_done(self.step_id)
-
-            self.execute_children(ctx)
+            post_execute_and_execute_children()
             return
 
 
+
+class BreakStep(Step):
+    """가장 가까운 RepeatStep 실행을 중단"""
+    _class_name = "BreakStep"
+
+    def __init__(self, *, step_id: str, name: str, disabled: bool | None = None):
+        super().__init__(step_id=step_id, name=name, disabled=disabled)
+
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+        if self.disabled:
+            return
+
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if not is_skip:
+            ctx.emit_next(self.step_id)
+
+            ctx.check_stop()
+
+        self._post_execute(ctx, ignore_step_interval=True)
+
+        if not is_skip:
+            ctx.emit_done(self.step_id)
+
+            raise BreakRepeat()
+
+
+class JumpToStep(Step):
+    """특정 step_id로 점프"""
+    _class_name = "JumpToStep"
+
+    def __init__(self, *, step_id: str, name: str, args: dict[str, Any] | None = None, disabled: bool | None = None):
+        super().__init__(step_id=step_id, name=name, args=args, disabled=disabled)
+
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+        if self.disabled:
+            return
+            
+        self._pre_execute(ctx)
+
+        ctx.emit_next(self.step_id)
+
+        ctx.check_stop()
+
+        target_step_id = self.args.get("target_step_id", None)
+
+        if target_step_id is None:
+            raise RuntimeError("JumpToStep: target_step_id is required")
+
+        self._post_execute(ctx, ignore_step_interval=True)
+
+        ctx.emit_done(self.step_id)
+
+        raise JumpToStepException(target_step_id=target_step_id)

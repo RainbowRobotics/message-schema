@@ -38,6 +38,8 @@ os.environ.setdefault("ZENOH_LOG", "info")
 os.environ.setdefault("RUST_LOG", "zenoh=info,zenoh_transport=info,zenoh_shm=info")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)  # pyright: ignore[reportAttributeAccessIssue]
 
@@ -94,7 +96,7 @@ class ZenohClient:
     def connect(self):
         if self.session is None:
             conf = Config()
-            conf.insert_json5("mode", '"client"')
+            conf.insert_json5("mode", '"client"' if IS_DEV else '"peer"')
             conf.insert_json5("scouting/multicast/enabled", "true")
             conf.insert_json5("scouting/multicast/ttl", "1")
             # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
@@ -131,23 +133,6 @@ class ZenohClient:
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         self._loop = loop
-
-    # def publish(self, topic: str, data: Union[bytes, bytearray, memoryview, dict]):
-    #     if self.session is None:
-    #         self.connect()
-
-    #     message = {
-    #             "sender": self.sender,
-    #             "sender_id": self.sender_id,
-    #             "data": data  # 실질적인 데이터를 data 필드에 담음
-    #         }
-
-    #     message_bytes = json.dumps(message).encode("utf-8")
-
-    #     try:
-    #         self.session.put(topic, message_bytes)
-    #     except Exception as e:
-    #         print(f"🚫 zenoh publish failed: {e}")
 
     def _estimate_initial_size(self, topic: str, fb_class_name: str, fields: dict) -> int:
         key = (topic, fb_class_name)
@@ -403,7 +388,7 @@ class ZenohClient:
                 att = f"sender={self.sender};sender_id={self.sender_id}"
                 q.reply(
                     key_expr=q.key_expr,
-                    payload=ZBytes(data), # type: ignore
+                    payload=ZBytes(data),
                     encoding=_auto_check_encoding(payload),
                     attachment=att,
                 )

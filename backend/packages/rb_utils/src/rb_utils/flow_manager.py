@@ -109,6 +109,12 @@ def safe_eval_expr(
 
         if isinstance(node, ast.Name):
             name = node.id
+            if name == "true":
+                return True
+            if name == "false":
+                return False
+            if name == "null":
+                return None
             if name in ALLOWED_FUNCS:  # 함수 이름
                 return ALLOWED_FUNCS[name]
             if name in ALLOWED_CONSTS:  # 수학 상수
