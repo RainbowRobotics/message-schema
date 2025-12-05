@@ -61,13 +61,14 @@ SOURCES += \
     unimap.cpp \
     mobile.cpp \
     lidar_3d.cpp \
-    lidar/LIVOX/livox.cpp \
+#    lidar/LIVOX/livox.cpp \
     obsmap.cpp \
     sim.cpp \
     policy.cpp \
     safety.cpp \
     task.cpp \
-    error_manager.cpp
+    error_manager.cpp \
+    lidar/AIRY/airy.cpp
 
 
 
@@ -106,13 +107,14 @@ HEADERS += \
     unimap.h \
     mobile.h \
     lidar_3d.h \
-    lidar/LIVOX/livox.h \
+#    lidar/LIVOX/livox.h \
     obsmap.h \
     sim.h \
     policy.h \
     safety.h \
     task.h \
-    error_manager.h
+    error_manager.h \
+    lidar/AIRY/airy.h
 
 
 FORMS += \
@@ -251,3 +253,7 @@ LIBS += -llivox_lidar_sdk_static
 # spdlog
 INCLUDEPATH += $$HOME/spdlog/include/
 
+# airy
+INCLUDEPATH += $$HOME/rs_driver/src/
+LIBS += -L/usr/lib/x86_64-linux-gnu/
+LIBS += -lpcap

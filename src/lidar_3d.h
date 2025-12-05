@@ -9,7 +9,8 @@
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
-#include "lidar/LIVOX/livox.h"
+// #include "lidar/LIVOX/livox.h"
+#include "lidar/AIRY/airy.h"
 
 // imu filter
 #include "imu_filter.h"
@@ -74,7 +75,7 @@ private:
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
-    LIVOX* livox;
+    AIRY* livox;
 
     // deskewing loop
     std::atomic<bool> deskewing_flag[2] = {false, false};           // deskewing thread flag
