@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_Tool_ListT(object):
 
     # Request_Set_Tool_ListT
-    def __init__(
-        self,
-        targetToolNum = 0,
-    ):
-        self.targetToolNum = targetToolNum  # type: int
+    def __init__(self):
+        self.targetToolNum = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class State_MessageT(object):
 
     # State_MessageT
-    def __init__(
-        self,
-        type = 0,
-        code = 0,
-        subStr = None,
-    ):
-        self.type = type  # type: int
-        self.code = code  # type: int
-        self.subStr = subStr  # type: Optional[str]
+    def __init__(self):
+        self.type = 0  # type: int
+        self.code = 0  # type: int
+        self.subStr = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

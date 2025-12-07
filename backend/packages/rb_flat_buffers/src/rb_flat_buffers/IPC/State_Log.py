@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class State_LogT(object):
 
     # State_LogT
-    def __init__(
-        self,
-        level = 0,
-        timestamp = None,
-        contents = None,
-    ):
-        self.level = level  # type: int
-        self.timestamp = timestamp  # type: Optional[str]
-        self.contents = contents  # type: Optional[str]
+    def __init__(self):
+        self.level = 0  # type: int
+        self.timestamp = None  # type: str
+        self.contents = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

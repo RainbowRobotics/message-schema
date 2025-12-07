@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_PowerControlT(object):
 
     # Request_PowerControlT
-    def __init__(
-        self,
-        powerOption = 0,
-    ):
-        self.powerOption = powerOption  # type: int
+    def __init__(self):
+        self.powerOption = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

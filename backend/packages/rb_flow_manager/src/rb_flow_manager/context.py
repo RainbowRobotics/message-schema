@@ -48,6 +48,7 @@ class ExecutionContext:
         self.step_num = 1
         self.current_depth = 0
         self._step_ticket = 1 if not step_mode else 0
+        self.is_ui_execution = state_dict.get("is_ui_execution", False)
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
 
         self.initialize_sdk_functions()
@@ -142,7 +143,7 @@ class ExecutionContext:
 
     def lookup(self, key: str) -> Any:
         idx = len(self._arg_scope) - 2
-        print(f"[{self.process_id}] Lookup: {key}, arg_scope: {self._arg_scope}", flush=True)
+
         while idx >= 0:
             scope = self._arg_scope[idx]
             if key in scope:
@@ -173,6 +174,8 @@ class ExecutionContext:
             raise StopExecution("Execution stopped by user")
 
         if self.pause_event.is_set():
+            self.resume_event.clear()
+
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.PAUSED
 
             # resume 올 때까지 대기

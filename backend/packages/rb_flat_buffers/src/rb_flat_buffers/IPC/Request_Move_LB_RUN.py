@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_LB_RUNT(object):
 
     # Request_Move_LB_RUNT
-    def __init__(
-        self,
-        orientation = 0,
-    ):
-        self.orientation = orientation  # type: int
+    def __init__(self):
+        self.orientation = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

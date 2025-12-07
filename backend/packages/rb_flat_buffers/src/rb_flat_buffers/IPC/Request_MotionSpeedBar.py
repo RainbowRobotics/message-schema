@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_MotionSpeedBarT(object):
 
     # Request_MotionSpeedBarT
-    def __init__(
-        self,
-        alpha = 0.0,
-    ):
-        self.alpha = alpha  # type: float
+    def __init__(self):
+        self.alpha = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

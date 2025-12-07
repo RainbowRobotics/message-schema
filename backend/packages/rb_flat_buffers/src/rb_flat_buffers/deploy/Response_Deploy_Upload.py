@@ -94,17 +94,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Deploy_UploadT(object):
 
     # Response_Deploy_UploadT
-    def __init__(
-        self,
-        tag = None,
-        fileName = None,
-        sha256 = None,
-        path = None,
-    ):
-        self.tag = tag  # type: Optional[str]
-        self.fileName = fileName  # type: Optional[str]
-        self.sha256 = sha256  # type: Optional[str]
-        self.path = path  # type: Optional[str]
+    def __init__(self):
+        self.tag = None  # type: str
+        self.fileName = None  # type: str
+        self.sha256 = None  # type: str
+        self.path = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

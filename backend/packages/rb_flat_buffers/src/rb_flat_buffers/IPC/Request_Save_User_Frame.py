@@ -146,25 +146,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_User_FrameT(object):
 
     # Request_Save_User_FrameT
-    def __init__(
-        self,
-        userfNo = 0,
-        userfName = None,
-        userfX = 0.0,
-        userfY = 0.0,
-        userfZ = 0.0,
-        userfRx = 0.0,
-        userfRy = 0.0,
-        userfRz = 0.0,
-    ):
-        self.userfNo = userfNo  # type: int
-        self.userfName = userfName  # type: Optional[str]
-        self.userfX = userfX  # type: float
-        self.userfY = userfY  # type: float
-        self.userfZ = userfZ  # type: float
-        self.userfRx = userfRx  # type: float
-        self.userfRy = userfRy  # type: float
-        self.userfRz = userfRz  # type: float
+    def __init__(self):
+        self.userfNo = 0  # type: int
+        self.userfName = None  # type: str
+        self.userfX = 0.0  # type: float
+        self.userfY = 0.0  # type: float
+        self.userfZ = 0.0  # type: float
+        self.userfRx = 0.0  # type: float
+        self.userfRy = 0.0  # type: float
+        self.userfRz = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

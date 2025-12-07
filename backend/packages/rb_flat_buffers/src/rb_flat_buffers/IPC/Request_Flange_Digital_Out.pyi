@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Flange_Digital_Out import Request_Flange_Digital_Out
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,11 +20,6 @@ class Request_Flange_Digital_Out(object):
 class Request_Flange_Digital_OutT(object):
   portNum: int
   desiredOut: int
-  def __init__(
-    self,
-    portNum: int = ...,
-    desiredOut: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Flange_Digital_OutT: ...
   @classmethod

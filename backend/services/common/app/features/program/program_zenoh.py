@@ -1,3 +1,5 @@
+from typing import Literal
+
 from rb_database import get_db
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
 from rb_flat_buffers.flow_manager.Request_Update_All_Step_State import (
@@ -7,6 +9,9 @@ from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
     Request_Update_Executor_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
+from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
+from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
 
@@ -85,3 +90,39 @@ def convert_state_to_string(state: RB_Flow_Manager_ProgramState) -> RB_Flow_Mana
 async def on_executor_state(*, topic, mv, obj, attachment):
     error_value: str | None = obj.get("error")
     program_service.update_executor_state(state=obj["state"], error=error_value)
+
+@zenoh_program_router.subscribe(
+    "rrs/program/dialog",
+    flatbuffer_obj_t=RB_Program_DialogT,
+    opts=SubscribeOptions(allowed_same_sender=True),
+)
+async def on_program_dialog(*, topic, mv, obj, attachment):
+    program_service.program_dialog(obj)
+
+@zenoh_program_router.subscribe(
+    "rrs/program/log",
+    flatbuffer_obj_t=RB_Program_LogT,
+    opts=SubscribeOptions(allowed_same_sender=True),
+)
+async def on_program_log(*, topic, mv, obj, attachment):
+    log_type = obj.get("type", None)
+    log_level: Literal["INFO", "WARNING", "ERROR", "USER", "DEBUG", "GENERAL"] = "DEBUG"
+
+    if log_type == RB_Program_Log_Type.INFO:
+        log_level = "INFO"
+    elif log_type == RB_Program_Log_Type.WARNING:
+        log_level = "WARNING"
+    elif log_type == RB_Program_Log_Type.ERROR:
+        log_level = "ERROR"
+    elif log_type == RB_Program_Log_Type.USER:
+        log_level = "USER"
+    elif log_type == RB_Program_Log_Type.DEBUG:
+        log_level = "DEBUG"
+    elif log_type == RB_Program_Log_Type.GENERAL:
+        log_level = "GENERAL"
+        
+    program_service.program_log(request={
+        "content": obj["content"],
+        "robot_model": obj["robotModel"],
+        "level": log_level,
+    })

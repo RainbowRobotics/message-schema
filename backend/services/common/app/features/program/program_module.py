@@ -1,5 +1,4 @@
 import asyncio
-import codecs
 import contextlib
 import importlib.util
 import os
@@ -54,7 +53,9 @@ from .program_schema import (
     Request_Load_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
+    Request_Program_Dialog,
     Request_Program_ExecutionPD,
+    Request_Program_Log,
     Request_Tasks_ExecutionPD,
     Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
@@ -140,6 +141,8 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
+
+            self.script_executor.pause_all()
         else:
             res_manipulate_resume_or_pause = zenoh_client.query_one(
                 "*/call_resume",
@@ -147,6 +150,8 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
+
+            self.script_executor.resume_all()
 
         # if program_id:
         #     await self.update_program_state(program_id=program_id, state=state, db=db)
@@ -814,7 +819,7 @@ class ProgramService(BaseService):
         )
 
         return {
-            "context": codecs.decode(script_context, "unicode_escape"),
+            "context": script_context,
         }
 
     async def get_main_task_list(self, *, program_id: str, db: MongoDB):
@@ -1606,6 +1611,7 @@ class ProgramService(BaseService):
                 category=tree["category"],
                 step_mode=step_mode,
                 min_step_interval=0.5 if step_mode else None,
+                is_ui_execution=True,
             )
 
         self._step_mode = step_mode
@@ -1857,3 +1863,24 @@ class ProgramService(BaseService):
         return {
             "status": "success",
         }
+
+    def program_dialog(self, request: Request_Program_Dialog):
+        fire_and_log(socket_client.emit("rrs/program/dialog", request))
+
+    def program_log(self, request: Request_Program_Log):
+        content = f"[{request['robot_model']}] {request['content']}"
+
+        log_level = request.get("level", "DEBUG")
+
+        if log_level == "INFO":
+            rb_log.info(content, disable_db=False)
+        elif log_level == "WARNING":
+            rb_log.warning(content, disable_db=False)
+        elif log_level == "ERROR":
+            rb_log.error(content, disable_db=False)
+        elif log_level == "USER":
+            rb_log.user(content, disable_db=False)
+        elif log_level == "DEBUG":
+            rb_log.debug(content, disable_db=False)
+        elif log_level == "GENERAL":
+            rb_log.general(content, disable_db=False)

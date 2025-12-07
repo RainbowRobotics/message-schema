@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from rb_database import PyObjectId
@@ -311,3 +311,13 @@ class Response_Get_Current_Program_StatePD(BaseModel):
     playState: PlayState
     taskPlayState: dict[str, PlayState]
     stepMode: bool
+
+class Request_Program_Dialog(TypedDict):
+    task_id: str
+    title: str
+    content: str
+
+class Request_Program_Log(TypedDict):
+    content: str
+    robot_model: str
+    level: Literal["INFO", "WARNING", "ERROR", "USER", "DEBUG", "GENERAL"]

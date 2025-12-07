@@ -5,6 +5,7 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.Request_Get_Core_Data import Request_Get_Core_DataT
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
@@ -17,6 +18,7 @@ from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_DataT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
+from rb_utils.parser import to_json
 
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.schema.manipulate_schema import (
@@ -61,19 +63,27 @@ class RBManipulateSDK(RBBaseSDK):
 
         if not is_enable:
             if flow_manager_args is not None:
-                topic, mv, obj, attachment = await self.zenoh_client.receive_one(
-                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
-                    )
+                try:
+                    topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                            f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                        )
 
-                if obj is not None:
+                    if obj is not None:
+                        flow_manager_args.ctx.update_local_variables({
+                            "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [0,0,0,0,0,0,0])
+                        })
+                        flow_manager_args.ctx.update_global_variables({
+                            "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [0,0,0,0,0,0,0])
+                        })
+                except Exception:
                     flow_manager_args.ctx.update_local_variables({
-                        "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
+                        "MANIPULATE_BEGIN_JOINTS": [0,0,0,0,0,0,0]
                     })
                     flow_manager_args.ctx.update_global_variables({
-                        "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
+                        "MANIPULATE_BEGIN_CARTES": [0,0,0,0,0,0,0]
                     })
-
-                flow_manager_args.done()
+                finally:
+                    flow_manager_args.done()
             return
 
         req = Request_Move_JT()
@@ -812,3 +822,136 @@ class RBManipulateSDK(RBBaseSDK):
             )
 
         return result
+
+    def halt(self, *, robot_model: str, flow_manager_args: FlowManagerArgs | None = None):
+        """정지 호출"""
+        req = Request_MotionHaltT()
+
+        self.zenoh_client.publish(
+            f"{robot_model}/call_halt",
+            flatbuffer_req_obj=req,
+            flatbuffer_buf_size=2,
+        )
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    def alarm_or_halt(
+        self,
+        *,
+        robot_model: str,
+        option: Literal["ALARM", "HALT", "FOLDER_HALT", "SUB_PROGRAM_HALT"],
+        save_log: bool = False,
+        is_only_at_ui: bool = False,
+        title: str,
+        content: str,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """알림 또는 정지 호출"""
+        if (
+            is_only_at_ui
+            and flow_manager_args is not None
+            and not flow_manager_args.ctx.is_ui_execution
+        ):
+            flow_manager_args.done()
+            return
+
+        if option == "ALARM":
+            self.alarm(
+                title=title,
+                content=content,
+                robot_model=robot_model
+            )
+        elif option == "HALT":
+            self.halt(robot_model=robot_model)
+        elif option == "FOLDER_HALT" and flow_manager_args is not None:
+            flow_manager_args.ctx.break_folder()
+        elif option == "SUB_PROGRAM_HALT":
+            # TODO: 서브 프로그램 정지 처리
+            pass
+
+        if save_log:
+            self.log(
+                content=content or title,
+                robot_model=robot_model,
+                level="USER"
+            )
+
+        self.all_pause()
+
+        if flow_manager_args is not None:
+            flow_manager_args.ctx.check_stop()
+            flow_manager_args.done()
+
+    def debug_variables(
+        self,
+        *,
+        robot_model: str,
+        option: Literal["DIALOG", "LOG"],
+        is_only_at_ui: bool = False,
+        variables: list[str],
+        log_content: str | None = None,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """변수 디버깅 호출"""
+        if (
+            is_only_at_ui
+            and flow_manager_args is not None
+            and not flow_manager_args.ctx.is_ui_execution
+        ):
+            flow_manager_args.done()
+            return
+
+        if flow_manager_args is None:
+            return
+
+        real_variables = [
+            to_json(var)
+            for var in variables
+        ]
+
+        raw_variables: list[str] = [
+            var for var in flow_manager_args.args.get("variables", [])
+        ]
+
+        if len(raw_variables) == 0:
+            flow_manager_args.done()
+            return
+
+        if option == "DIALOG":
+            content = ""
+            for index, var in enumerate(raw_variables):
+                if var != real_variables[index]:
+                    content += f"{var}: {real_variables[index]}\n"
+                else:
+                    content += f"{var}: Undefined\n"
+
+            self.alarm(
+                title="Debug Variables",
+                content=content,
+                robot_model=robot_model
+            )
+
+            self.all_pause()
+        elif option == "LOG":
+            for index, var in enumerate(raw_variables):
+                content = ""
+                if var != real_variables[index]:
+                    content = f"{var}: {real_variables[index]}"
+                else:
+                    content = f"{var}: Undefined"
+
+                self.log(
+                        content=content,
+                        robot_model=robot_model,
+                        level="USER"
+                    )
+            if log_content is not None:
+                self.log(
+                    content=log_content,
+                    robot_model=robot_model,
+                    level="USER"
+                )
+    
+        flow_manager_args.ctx.check_stop()
+        flow_manager_args.done()

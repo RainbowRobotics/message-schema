@@ -281,8 +281,9 @@ class Step:
 
                     ctx.update_local_variables(self.variable)
 
-                    if "robot_model" not in eval_args:
-                        eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
+                if "robot_model" not in eval_args:
+                    eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
+
             except RuntimeError as e:
                 ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)

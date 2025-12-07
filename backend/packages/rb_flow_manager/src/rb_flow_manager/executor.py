@@ -207,6 +207,7 @@ class ScriptExecutor:
         category: str | None = None,
         step_mode: bool = False,
         min_step_interval: float | None = None,
+        is_ui_execution: bool = False,
     ) -> bool:
         """스크립트 실행 시작"""
         if process_id in self.processes and self.processes[process_id].is_alive():
@@ -252,7 +253,8 @@ class ScriptExecutor:
         self.state_dicts[process_id]["robot_model"] = robot_model
         self.state_dicts[process_id]["category"] = category
         self.state_dicts[process_id]["generation"] = gen
-
+        self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
+        
         self._pid_generation[process_id] = gen
 
         self.completion_events[process_id] = self._mp_ctx.Event()
@@ -517,6 +519,9 @@ class ScriptExecutor:
             print(f"Process {process_id} is not running")
             return False
 
+        if self.pause_events[process_id].is_set():
+            return False
+
         self.pause_events[process_id].set()
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.PAUSED
 
@@ -554,6 +559,9 @@ class ScriptExecutor:
             print(f"Process {process_id} is not running")
             return False
 
+        if self.resume_events[process_id].is_set():
+            return False
+
         self.resume_events[process_id].set()
 
         step_id = self.state_dicts[process_id]["current_step_id"]
@@ -577,6 +585,9 @@ class ScriptExecutor:
 
         if not self.processes[process_id].is_alive():
             print(f"Process {process_id} is not running")
+            return False
+        
+        if self.stop_events[process_id].is_set():
             return False
 
         step_id = self.state_dicts[process_id]["current_step_id"]
@@ -704,3 +715,8 @@ class ScriptExecutor:
 
         if self.controller is not None:
             self.controller.on_all_pause()
+
+    def resume_all(self):
+        """모든 스크립트 재개"""
+        for process_id in list(self.processes.keys()):
+            self.resume(process_id)

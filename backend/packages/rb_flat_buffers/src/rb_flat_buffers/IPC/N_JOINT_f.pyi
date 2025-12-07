@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,10 +20,6 @@ class N_JOINT_f(object):
   def FIsNone(self) -> bool: ...
 class N_JOINT_fT(object):
   f: typing.List[float]
-  def __init__(
-    self,
-    f: typing.List[float] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> N_JOINT_fT: ...
   @classmethod

@@ -18,3 +18,24 @@ table RB_Program_Task_Checkpoint {
   offset: int;
   status: string;
 }
+
+table RB_Program_Dialog {
+  robot_model: string;
+  title: string;
+  content: string;
+}
+
+enum RB_Program_Log_Type: byte {
+  INFO,
+  WARNING,
+  ERROR,
+  USER,
+  DEBUG,
+  GENERAL,
+}
+
+table RB_Program_Log {
+  content: string;
+  robot_model: string;
+  type: RB_Program_Log_Type;
+}

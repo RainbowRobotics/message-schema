@@ -7,8 +7,12 @@ import sys
 import threading
 import time as time_module
 from abc import abstractmethod
-from typing import Any, ClassVar, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar
 
+from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
+from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
+from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
+from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
@@ -168,6 +172,75 @@ class RBBaseSDK:
 
         if flow_manager_args is not None:
             flow_manager_args.done()
+
+    def all_pause(self, *, flow_manager_args: FlowManagerArgs | None = None):
+        """모든 프로세스 일시정지"""
+        self.zenoh_client.publish("rrs/pause", payload={})
+        
+        time_module.sleep(0.1)
+        
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    def all_stop(self, *, flow_manager_args: FlowManagerArgs | None = None):
+        """모든 프로세스 정지"""
+        self.zenoh_client.publish("rrs/stop", payload={})
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    def alarm(self, *, title: str, content: str, robot_model: str, flow_manager_args: FlowManagerArgs | None = None):
+        """프로그램 알림 발생"""
+        req = RB_Program_DialogT()
+        req.robotModel = robot_model
+        req.title = title
+        req.content = content
+
+        if title:
+            self.zenoh_client.publish(
+                "rrs/program/dialog",
+                flatbuffer_req_obj=req,
+                flatbuffer_buf_size=256,
+            )
+        else:
+            rb_log.warning("Program Dialog is not shown because title is empty")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    def log(
+        self,
+        *,
+        content: str,
+        robot_model: str,
+        level: Literal["INFO", "WARNING", "ERROR", "USER", "DEBUG", "GENERAL"],
+        flow_manager_args: FlowManagerArgs | None = None):
+        """프로그램 로그 발생"""
+        req = RB_Program_LogT()
+        req.content = content
+        req.robotModel = robot_model
+
+        if level == "INFO":
+            req.type = RB_Program_Log_Type.INFO
+        elif level == "WARNING":
+            req.type = RB_Program_Log_Type.WARNING
+        elif level == "ERROR":
+            req.type = RB_Program_Log_Type.ERROR
+        elif level == "USER":
+            req.type = RB_Program_Log_Type.USER
+        elif level == "DEBUG":
+            req.type = RB_Program_Log_Type.DEBUG
+        elif level == "GENERAL":
+            req.type = RB_Program_Log_Type.GENERAL
+
+        self.zenoh_client.publish(
+            "rrs/program/log",
+            flatbuffer_req_obj=req,
+            flatbuffer_buf_size=256,
+        )
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
 
     # async def repeat(self, *, count: int, flow_manager_args: FlowManagerArgs | None = None):
     #     """지정한 횟수만큼 반복하는 함수."""

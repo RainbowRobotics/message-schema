@@ -80,15 +80,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_Self_Collision_ParaT(object):
 
     # Request_Set_Self_Collision_ParaT
-    def __init__(
-        self,
-        mode = 0,
-        distInt = 0.0,
-        distExt = 0.0,
-    ):
-        self.mode = mode  # type: int
-        self.distInt = distInt  # type: float
-        self.distExt = distExt  # type: float
+    def __init__(self):
+        self.mode = 0  # type: int
+        self.distInt = 0.0  # type: float
+        self.distExt = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

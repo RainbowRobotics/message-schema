@@ -42,7 +42,9 @@ class Zenoh_Controller(BaseController):
 
     def on_stop(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.STOPPED)
-        # TODO: zenoh publish stop
+
+        if self._zenoh_client is not None:
+            self._zenoh_client.publish("rrs/stop", payload={})
 
     def on_wait(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
@@ -72,6 +74,9 @@ class Zenoh_Controller(BaseController):
             step_id, task_id, RB_Flow_Manager_ProgramState.ERROR, error=str_error
         )
         self.update_executor_state(RB_Flow_Manager_ProgramState.ERROR, error=str_error)
+
+        if self._zenoh_client is not None:
+            self._zenoh_client.publish("rrs/stop", payload={})
 
     def on_done(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.COMPLETED)
