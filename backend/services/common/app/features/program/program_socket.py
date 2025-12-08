@@ -34,7 +34,7 @@ async def on_get_program_list(data):
 
     db = await get_db()
 
-    res = await program_service.get_program_list(state=state, search_name=search_name, db=db)
+    res = await program_service.get_program_list(search_name=search_name, db=db)
     return to_json(res)
 
 
@@ -53,7 +53,7 @@ async def on_edit_program(data):
     data_dict = t_to_dict(data)
 
     db = await get_db()
-    res = await program_service.update_program_and_tasks(request=data_dict, db=db)
+    res = await program_service.update_program(request=data_dict, db=db)
     return to_json(res)
 
 
@@ -106,7 +106,6 @@ async def on_pause_program(data):
         is_pause=True,
         # program_id=data_dict.get("programId"),
         # flow_id=data_dict.get("flowId"),
-        db=db,
     )
 
 
@@ -118,7 +117,4 @@ async def on_resume_program(data):
 
     return await program_service.call_resume_or_pause(
         is_pause=False,
-        # program_id=data_dict.get("programId"),
-        # flow_id=data_dict.get("flowId"),
-        db=db,
     )

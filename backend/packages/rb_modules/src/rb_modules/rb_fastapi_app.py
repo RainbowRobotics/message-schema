@@ -197,12 +197,9 @@ def create_app(
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
         try:
-            b = ""
-            body_text = ""
+            b: str | bytes = ""
+            body_text: str = ""
 
-            rb_log.error(f"Internal Server Error: {exc}")
-            rb_log.error(f"Internal Server Error: {request.scope}")
-            rb_log.error(f"Internal Server Error: {await request.body()}")
             if request.scope.get("type") == "http":
                 try:
                     b = await request.body()
@@ -214,7 +211,7 @@ def create_app(
                 except Exception:
                     body_text = "<error reading body>"
 
-            rb_log.error(f"TEST: {b}")
+            rb_log.error(f"Internal Server Error body: {b.decode('utf-8', 'ignore') if isinstance(b, bytes) else b}")
             return JSONResponse(
                 status_code=exc.status_code if hasattr(exc, "status_code") else 500,
                 content={

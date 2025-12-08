@@ -4,7 +4,8 @@ import inspect
 import math
 import operator
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from concurrent.futures import Future
 from typing import Any
 
 # --- 간단 테이블 (함수/상수/연산자) -----------------------------------------
@@ -270,7 +271,8 @@ def call_with_matching_args(func, **provided):
         target_loop = _pick_target_loop(func, provided)
 
         if target_loop is not None:
-            future = asyncio.run_coroutine_threadsafe(result, target_loop)
+            coro: Coroutine[Any, Any, Any] = result if inspect.iscoroutine(result) else _await_awaitable(result)
+            future: Future[Any] = asyncio.run_coroutine_threadsafe(coro, target_loop)
             return future.result()
 
         try:

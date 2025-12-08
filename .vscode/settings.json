@@ -65,35 +65,21 @@
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "terminal.integrated.defaultProfile.windows": "Git Bash",
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/backend/services/common",
-    "${workspaceFolder}/backend/services/amr",
-    "${workspaceFolder}/backend/services/deploy",
-    "${workspaceFolder}/backend/services/manipulate",
-    "${workspaceFolder}/bazel-bin/schemas",
-    "${workspaceFolder}/backend/packages/rb_utils/src",
-    "${workspaceFolder}/backend/packages/rb_database/src",
-    "${workspaceFolder}/backend/packages/rb_zenoh/src",
-    "${workspaceFolder}/backend/packages/rb_modules/src",
-    "${workspaceFolder}/backend/packages/rb_socketio/src",
-    "${workspaceFolder}/backend/packages/rb_schemas/src",
-    "${workspaceFolder}/backend/packages/rb_resources/src",
-    "${workspaceFolder}/backend/packages/rb_flow_manager/src",
-    "${workspaceFolder}/backend/packages/rb_sdk/src",
-  ],
-  "python.analysis.exclude": [
-    "${workspaceFolder}/backend/packages/rb_flat_buffers/**"
-  ],
-  "ruff.lint.exclude": [
-    "${workspaceFolder}/backend/packages/rb_flat_buffers/**"
-  ],
-  // Pyright는 basic로 낮추거나 꺼도 됨
-  "python.analysis.typeCheckingMode": "basic",
-
-  // pylint 유지여부는 선택
-  "python.linting.pylintEnabled": true,
+  "mypy-type-checker.importStrategy": "fromEnvironment",
   "mypy-type-checker.cwd": "${workspaceFolder}/backend",
+  "mypy-type-checker.reportingScope": "workspace",
+  "mypy-type-checker.args": [
+    "--config-file",
+    "${workspaceFolder}/backend/pyproject.toml"
+  ],
 
+  // Pyright에 backend 코드 위치 알려주기
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend/services",
+    "${workspaceFolder}/backend/packages"
+  ],
+
+  // 포맷터 설정 etc
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.codeActionsOnSave": {

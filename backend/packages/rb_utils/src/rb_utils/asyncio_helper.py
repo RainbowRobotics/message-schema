@@ -1,7 +1,10 @@
 import asyncio
+import inspect
 from collections.abc import (
     Awaitable,
+    Coroutine,
 )
+from concurrent.futures import Future
 from typing import Any
 
 from rb_modules.log import (
@@ -54,6 +57,11 @@ def _ensure_private_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
+async def _await_to_coroutine(awaitable: Awaitable[Any]) -> Any:
+    """Awaitable을 await하여 결과를 반환하는 coroutine으로 변환"""
+    return await awaitable
+
+
 def fire_and_log(
     coro: Awaitable[Any],
     *,
@@ -64,7 +72,11 @@ def fire_and_log(
         running = asyncio.get_running_loop()
 
         if loop is not None and loop is not running:
-            fut = asyncio.run_coroutine_threadsafe(coro, loop)
+            # run_coroutine_threadsafe는 Coroutine만 받을 수 있으므로 변환
+            coroutine: Coroutine[Any, Any, Any] = (
+                coro if inspect.iscoroutine(coro) else _await_to_coroutine(coro)
+            )
+            fut: Future[Any] = asyncio.run_coroutine_threadsafe(coroutine, loop)
             _attach_done_logging(fut, name=name)
             return fut
 
@@ -76,7 +88,11 @@ def fire_and_log(
         if target_loop is None:
             target_loop = _ensure_private_loop()
 
-        fut = asyncio.run_coroutine_threadsafe(coro, target_loop)
+        # run_coroutine_threadsafe는 Coroutine만 받을 수 있으므로 변환
+        coroutine = (
+            coro if inspect.iscoroutine(coro) else _await_to_coroutine(coro)
+        )
+        fut = asyncio.run_coroutine_threadsafe(coroutine, target_loop)
         _attach_done_logging(fut, name=name)
         return fut
 

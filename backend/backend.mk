@@ -33,7 +33,7 @@ backend.local-dev: backend.lint backend.flatc ## docker를 쓰지 않고 개발 
 	@cd ${WORKDIR}/services/${SERVICE} && uv run uvicorn app.main:app --host 0.0.0.0 --port ${CONF_PORT} --reload --reload-dir ${WORKDIR} --reload-include '**/*.py'
 
 .PHONY: backend.dev
-backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
+backend.dev: backend.lint backend.mypy ## docker를 쓰고 개발 환경 실행
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh --dev
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
 	@bash -euo pipefail -c '\
@@ -52,7 +52,7 @@ backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend
 
 
 .PHONY: backend.preview
-backend.preview: ## Backend 운영 환경 실행 
+backend.preview: ## Backend 운영 환경 실행
 	# @docker build -t rrs-nginx:latest api-gateway/
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
@@ -78,30 +78,20 @@ backend.deploy:  ## 모든 Backend 서비스 또는 지정된 Backend 서비스 
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
 	@bash ${ROOT_DIR}scripts/backend/deploy.sh
 
-.PHONY: backend.mypy
 backend.mypy: ## mypy로 type check
 	@echo "🔍 Type checking backend services..."
+	@rm -rf ${WORKDIR}/.mypy_cache
 	@find ${WORKDIR}/services -maxdepth 1 -type d ! -path ${WORKDIR}/services -exec basename {} \; | while read service; do \
 		echo "📦 Checking $$service..."; \
-		cd ${WORKDIR} && uv run mypy services/$$service --explicit-package-bases --config-file ${WORKDIR}/pyproject.toml || true; \
+		cd ${WORKDIR} && uv run mypy services/$$service \
+			--explicit-package-bases \
+			--config-file ${WORKDIR}/pyproject.toml || true; \
 	done
 	@echo "🔍 Type checking backend packages..."
 	@find ${WORKDIR}/packages -maxdepth 1 -type d ! -path ${WORKDIR}/packages -exec basename {} \; | while read package; do \
 		echo "📦 Checking $$package..."; \
-		cd ${WORKDIR} && uv run mypy packages/$$package --config-file ${WORKDIR}/pyproject.toml || true; \
+		cd ${WORKDIR} && uv run mypy -p $$package \
+			--explicit-package-bases \
+			--config-file ${WORKDIR}/pyproject.toml || true; \
 	done
 	@echo "✅ Type check completed"
-
-.PHONY: backend.mypy2
-backend.mypy2: ## mypy로 type check
-	@find ${WORKDIR}/services -name pyproject.toml -exec dirname {} \; | while read dir; do \
-		echo "📦 mypy ${dir}"; \
-		# cd ${WORKDIR} && uv run mypy ${dir}; \
-	done
-	@find ${WORKDIR}/packages -name pyproject.toml -exec dirname {} \; | while read dir; do \
-		# cd ${WORKDIR} && uv run mypy ${dir}; \
-	done
-	# @cd ${WORKDIR} && uv run mypy services/deploy
-	# @cd ${WORKDIR} && uv run mypy services/common
-	# @cd ${WORKDIR} && uv run mypy services/manipulate
-	# @cd ${WORKDIR} && uv run mypy services/log

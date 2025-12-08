@@ -1,15 +1,7 @@
-from fastapi import APIRouter
-from fastapi.responses import (
-    JSONResponse,
-)
-from rb_schemas.base import (
-    Response_ReturnValuePD,
-)
-
-from .config_module import (
+from backend.services.manipulate.app.features.config.config_module import (
     ConfigService,
 )
-from .config_schema import (
+from backend.services.manipulate.app.features.config.config_schema import (
     Request_Save_Area_ParameterPD,
     Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
@@ -32,6 +24,13 @@ from .config_schema import (
     Response_CallConfigRobotArmPD,
     Response_CallConfigToolListPD,
     Response_UserFrameParameterPD,
+)
+from fastapi import APIRouter
+from fastapi.responses import (
+    JSONResponse,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
 )
 
 config_service = ConfigService()

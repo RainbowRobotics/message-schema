@@ -539,9 +539,8 @@ async def export_collection(
     if not file_name.endswith(".ndjson.gz"):
         file_name = f"{file_name}.ndjson.gz"
 
-    if out_dir is not None:
-        tmp_path = os.path.join(out_dir, f"{file_name}.tmp")
-        final_path = os.path.join(out_dir, file_name)
+    tmp_path = os.path.join(out_dir, f"{file_name}.tmp")
+    final_path = os.path.join(out_dir, file_name)
 
     # 5) 데이터 예상 조회
     # results: list[dict] = []
