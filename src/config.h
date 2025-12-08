@@ -616,7 +616,7 @@ private:
     double DOCKING_KD_d = 0.1;
     double DOCKING_KP_th = 0.35;
     double DOCKING_KD_th = 0.15;
-    double DOCKING_CLUST_D_THRESHOLD = 0.05;
+    double DOCKING_CLUST_D_THRESHOLD = 0.015;
     double DOCKING_FIND_VMARK_DIST_THRESHOLD_MIN = 1.0;
     double DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX = 2.5;
     double DOCKING_CLUST_DIST_THRESHOLD_MIN = 0.4;

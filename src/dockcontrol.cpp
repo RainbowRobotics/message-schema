@@ -694,7 +694,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
     {
         d = sqrt(pow(polar[i][0] - polar[i + 1][0], 2) + pow(polar[i][1] - polar[i + 1][1], 2));
 
-        if (d < 0.01)
+        if (d < config->get_docking_clust_dist_threshold())
         {
             clustered1[i] = true;
             clustered2[i + 1] = true;
@@ -800,7 +800,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             filtered_clusters.push_back(clust);
         }
     }
-
+    
     std::vector<Eigen::Vector3d> docking_clust; // finally docking cluster
 
     // Todo - Test check candidate->sizefilter
