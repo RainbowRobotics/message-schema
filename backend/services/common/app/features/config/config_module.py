@@ -96,19 +96,22 @@ class ConfigService(BaseService):
             return {"speedbar": min_speedbar}
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
+            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
         except Exception as e:
             rb_log.error(f"get_all_speedbar {e}")
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}") from e
 
     async def repeat_get_all_speedbar(self):
         """
         Repeat get all speedbar
         """
-        try:
-            db = await get_db()
-            next_ts = time.monotonic()
-            col = db["robot_info"]
 
-            while True:
+        db = await get_db()
+        next_ts = time.monotonic()
+        col = db["robot_info"]
+
+        while True:
+            try:
                 if col is None:
                     await asyncio.sleep(0.5)
                     next_ts = time.monotonic() + 1.0
@@ -126,11 +129,16 @@ class ConfigService(BaseService):
                 now = time.monotonic()
                 next_ts = max(next_ts + 1.0, now + 1.0)
                 await asyncio.sleep(max(0.0, next_ts - now))
-
-        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-            rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
-        except Exception as e:
-            rb_log.error(f"repeat_get_all_speedbar {e}")
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
+                rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
+                await asyncio.sleep(0.5)
+                next_ts = time.monotonic() + 1.0
+                continue
+            except Exception as e:
+                rb_log.error(f"repeat_get_all_speedbar {e}")
+                await asyncio.sleep(0.5)
+                next_ts = time.monotonic() + 1.0
+                continue
 
     async def control_speed_bar(self, *, components: list[str], speedbar: int):
         try:
@@ -168,7 +176,7 @@ class ConfigService(BaseService):
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
-            raise
+            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
         except Exception as e:
             rb_log.error(f"control_speed_bar error: {e}", disable_db=True)
             raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e

@@ -1,42 +1,27 @@
 import contextlib
+import multiprocessing as mp
 import os
 import queue
-import signal
-import sys
 import time
-from collections.abc import (
-    Callable,
-    MutableMapping,
-)
-from multiprocessing import (
-    Event,
-    Manager,
-    Process,
-    Queue,
-)
-from multiprocessing.managers import (
-    SyncManager,
-)
-from multiprocessing.synchronize import (
-    Event as EventType,
-)
+from collections.abc import Callable, MutableMapping
+from multiprocessing import Queue
+from multiprocessing.context import SpawnProcess
+from multiprocessing.managers import SyncManager
+from multiprocessing.synchronize import Event as EventType
 from threading import Thread
 from typing import Any
 
-from .context import (
-    ExecutionContext,
-)
-from .controller.base_controller import (
-    BaseController,
-)
-from .exception import (
-    StopExecution,
-)
-from .schema import (
-    RB_Flow_Manager_ProgramState,
-)
+from .context import ExecutionContext
+from .controller.base_controller import BaseController
+from .exception import BreakRepeat, JumpToStepException, StopExecution
+from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
 
+# zenoh_client = ZenohClient()
+# ZenohManager.set_shared_client(zenoh_client)
+
+POLLING_INTERVAL = 0.1
+EVENT_BATCH_INTERVAL = 0.05
 
 def _execute_tree_in_process(
     process_id: str,
@@ -48,12 +33,18 @@ def _execute_tree_in_process(
     resume_event: EventType,
     stop_event: EventType,
     repeat_count: int = 1,
+    min_step_interval: float | None = None,
+    step_mode: bool = False
 ):
     """프로세스에서 실행될 트리 실행 함수"""
+    os.environ["_PYINSTALLER_WORKER"] = "1"
+
     ctx: ExecutionContext | None = None
 
     try:
+
         state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+        state_dict["step"] = step.to_dict()
         state_dict["current_step_id"] = step.step_id
         state_dict["current_step_name"] = step.name
         state_dict["total_repeat"] = "infinity" if repeat_count == 0 else repeat_count
@@ -66,30 +57,64 @@ def _execute_tree_in_process(
             pause_event=pause_event,
             resume_event=resume_event,
             stop_event=stop_event,
+            min_step_interval=min_step_interval,
+            step_mode=step_mode,
         )
-
-        print(f"Executing tree in process: {process_id}")
-        print(f"Step: {step.name}")
-        print(f"Repeat count: {repeat_count}")
 
         if repeat_count > 0:
             for i in range(repeat_count):
                 state_dict["current_repeat"] = i + 1
 
-                ctx.check_stop()
+                try:
+                    if state_dict["current_repeat"] > 1:
+                        step.execute_children(ctx)
+                    else:
+                        step.execute(ctx)
+                except JumpToStepException as e:
+                    ctx.data["finding_jump_to_step"] = True
 
-                step.execute(ctx)
+                    target_step_id = e.target_step_id
+
+                    step.execute_children(ctx, target_step_id=target_step_id)
+
+                    if ctx.data.get("finding_jump_to_step", False):
+                        raise RuntimeError("JumpToStep: Target step not found.") from e
+                    else:
+                        continue
         else:
             i = 0
+
             while True:
                 state_dict["current_repeat"] = i + 1
 
-                ctx.check_stop()
-                step.execute(ctx)
+                try:
+                    if state_dict["current_repeat"] > 1:
+                        step.execute_children(ctx)
+                    else:
+                        step.execute(ctx)
+                except JumpToStepException as e:
+                    ctx.data["finding_jump_to_step"] = True
+
+                    target_step_id = e.target_step_id
+
+                    step.execute_children(ctx, target_step_id=target_step_id)
+
+                    if ctx.data.get("finding_jump_to_step", False):
+                        raise RuntimeError("JumpToStep: Target step not found.") from e
+                    else:
+                        continue
+
                 i += 1
 
         if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
             state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
+
+    except BreakRepeat:
+        state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+        state_dict["error"] = "BreakStep must exist under RepeatStep."
+
+        if ctx is not None:
+            ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
 
     except StopExecution:
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
@@ -123,54 +148,79 @@ class ScriptExecutor:
         on_init: Callable[[dict[str, MutableMapping[str, Any]]], None] | None = None,
         on_start: Callable[[str], None] | None = None,
         on_pause: Callable[[str, str], None] | None = None,
+        on_wait: Callable[[str, str], None] | None = None,
         on_resume: Callable[[str, str], None] | None = None,
         on_stop: Callable[[str, str], None] | None = None,
         on_next: Callable[[str, str], None] | None = None,
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
+        on_done: Callable[[str], None] | None = None,
         on_complete: Callable[[str], None] | None = None,
-        on_process_complete: Callable[[str], None] | None = None,
         on_all_complete: Callable[[], None] | None = None,
         on_all_stop: Callable[[], None] | None = None,
         on_all_pause: Callable[[], None] | None = None,
         controller: BaseController | None = None,
+        min_step_interval: float | None = 0.01,
     ):
         self._on_init = on_init
         self._on_start = on_start
         self._on_pause = on_pause
+        self._on_wait = on_wait
         self._on_resume = on_resume
         self._on_stop = on_stop
         self._on_next = on_next
         self._on_error = on_error
         self._on_close = on_close
+        self._on_done = on_done
         self._on_complete = on_complete
-        self._on_process_complete = on_process_complete
         self._on_all_complete = on_all_complete
         self._on_all_stop = on_all_stop
         self._on_all_pause = on_all_pause
 
+        self._mp_ctx = mp.get_context("spawn")
+
         self.controller = controller
 
+        self._run_generation = 0
+        self._pid_generation: dict[str, int] = {}
+        self.min_step_interval: float | None = min_step_interval
         self.manager: SyncManager | None = None
-        self.processes: dict[str, Process] = {}
+        self.processes: dict[str, SpawnProcess] = {}
         self.state_dicts: dict[str, MutableMapping[str, Any]] = {}
         self.completion_events: dict[str, EventType] = {}
-        self.result_queue: Queue = Queue()
+        self.result_queues: dict[str, Queue] = {}
         self._monitor_thread: Thread | None = None
-        self._stop_monitor: EventType = Event()
+        self._stop_monitor: EventType = self._mp_ctx.Event()
         self.pause_events: dict[str, EventType] = {}
         self.resume_events: dict[str, EventType] = {}
         self.stop_events: dict[str, EventType] = {}
 
         # self._zenoh_client = zenoh_client
 
-        self._start_monitor()
-
-    def start(self, process_id: str, step: Step, repeat_count: int = 1) -> bool:
+    def start(
+        self,
+        process_id: str,
+        step: Step,
+        repeat_count: int = 1,
+        *,
+        robot_model: str | None = None,
+        category: str | None = None,
+        step_mode: bool = False,
+        min_step_interval: float | None = None,
+        is_ui_execution: bool = False,
+    ) -> bool:
         """스크립트 실행 시작"""
         if process_id in self.processes and self.processes[process_id].is_alive():
             print(f"Process {process_id} is already running")
+
+            if step_mode:
+                self.resume(process_id)
+
             return False
+
+        if self._monitor_thread is None or not self._monitor_thread.is_alive():
+            self._stop_monitor.clear()  # 혹시라도 눌려 있을 수 있으니 초기화
+            self._start_monitor()
 
         if self._on_init is not None:
             self._on_init(self.state_dicts)
@@ -183,56 +233,92 @@ class ScriptExecutor:
         if self.manager is None:
             raise RuntimeError("Manager is not initialized")
 
-        # 이벤트와 상태 딕셔너리 생성
-        self.state_dicts[process_id] = self.manager.dict()
-        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.IDLE
-        self.state_dicts[process_id]["current_step_id"] = None
-        self.completion_events[process_id] = Event()
-
-        self.pause_events[process_id] = Event()
-        self.resume_events[process_id] = Event()
-        self.stop_events[process_id] = Event()
-
-        # 프로세스 생성 및 시작
-        process = Process(
-            target=_execute_tree_in_process,
-            args=(
-                process_id,
-                step,
-                self.state_dicts[process_id],
-                self.result_queue,
-                self.completion_events[process_id],
-                self.pause_events[process_id],
-                self.resume_events[process_id],
-                self.stop_events[process_id],
-                repeat_count,
-            ),
-        )
-
-        process.start()
-
         if self._on_start is not None:
             self._on_start(process_id)
 
         if self.controller is not None:
             self.controller.on_start(process_id)
 
+        self._run_generation += 1
+        gen = self._run_generation
+
+        if min_step_interval is not None:
+            self.min_step_interval = min_step_interval
+
+        # 이벤트와 상태 딕셔너리 생성
+        self.state_dicts[process_id] = self.manager.dict()
+        self.result_queues[process_id] = self._mp_ctx.Queue(maxsize=10)
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.IDLE
+        self.state_dicts[process_id]["current_step_id"] = None
+        self.state_dicts[process_id]["robot_model"] = robot_model
+        self.state_dicts[process_id]["category"] = category
+        self.state_dicts[process_id]["generation"] = gen
+        self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
+
+        self._pid_generation[process_id] = gen
+
+        self.completion_events[process_id] = self._mp_ctx.Event()
+
+        self.pause_events[process_id] = self._mp_ctx.Event()
+        self.resume_events[process_id] = self._mp_ctx.Event()
+        self.stop_events[process_id] = self._mp_ctx.Event()
+
+        # 프로세스 생성 및 시작
+        process = self._mp_ctx.Process(
+            target=_execute_tree_in_process,
+            args=(
+                process_id,
+                step,
+                self.state_dicts[process_id],
+                self.result_queues[process_id],
+                self.completion_events[process_id],
+                self.pause_events[process_id],
+                self.resume_events[process_id],
+                self.stop_events[process_id],
+                repeat_count,
+                self.min_step_interval,
+                step_mode,
+            ),
+        )
+
+        process.start()
+
         self.processes[process_id] = process
 
-        print(f"Started process: {process_id}")
         return True
 
-    def _drain_events(self):
+    def _drain_events(self, process_id: str):
         while True:
+            if self.manager is None:
+                break
+
+            if process_id not in self.result_queues:
+                break
+
+            result_queue = self.result_queues[process_id]
+
             try:
-                evt = self.result_queue.get_nowait()
+                evt = result_queue.get_nowait()
             except queue.Empty:
                 break
 
+            evt_type = evt.get("type")
+            pid = evt.get("process_id")
+            step_id = evt.get("step_id")
+            is_wait = evt.get("is_wait", False)
+            evt_gen = evt.get("generation")
+
+            cur_gen = self._pid_generation.get(pid)
+
+            if cur_gen is None or evt_gen != cur_gen:
+                print(f"ignore stale event: {evt}", flush=True)
+                continue
+
+            if self.state_dicts.get(pid) is None:
+                print(f"ignore process not found: {pid}", flush=True)
+                continue
+
             try:
-                evt_type = evt.get("type")
-                pid = evt.get("process_id")
-                step_id = evt.get("step_id")
 
                 if evt_type == "next":
                     if self._on_next is not None:
@@ -241,32 +327,41 @@ class ScriptExecutor:
                     if self.controller is not None:
                         self.controller.on_next(pid, step_id)
 
-                elif evt_type == "complete":
-                    if self._on_complete is not None:
-                        self._on_complete(pid)
+                elif evt_type == "done":
+                    if self._on_done is not None:
+                        self._on_done(pid)
 
                     if self.controller is not None:
-                        self.controller.on_complete(pid, step_id)
+                        self.controller.on_done(pid, step_id)
 
                 elif evt_type == "error":
                     err_repr = evt.get("error")
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.ERROR
 
                     if self._on_error is not None:
-                        self.stop_all()
                         self._on_error(pid, step_id, RuntimeError(err_repr))
 
                     if self.controller is not None:
-                        self.controller.on_error(pid, step_id, RuntimeError(err_repr))
+                        self.controller.on_error(pid, step_id, err_repr)
+
+                    self.stop_all()
+                    break
 
                 elif evt_type == "pause":
-                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.PAUSED
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.WAITING if is_wait else RB_Flow_Manager_ProgramState.PAUSED
 
-                    if self._on_pause is not None:
-                        self._on_pause(pid, step_id)
+                    if is_wait:
+                        if self._on_wait is not None:
+                            self._on_wait(pid, step_id)
 
-                    if self.controller is not None:
-                        self.controller.on_pause(pid, step_id)
+                        if self.controller is not None:
+                            self.controller.on_wait(pid, step_id)
+                    else:
+                        if self._on_pause is not None:
+                            self._on_pause(pid, step_id)
+
+                        if self.controller is not None:
+                            self.controller.on_pause(pid, step_id)
 
                 elif evt_type == "resume":
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
@@ -288,9 +383,6 @@ class ScriptExecutor:
 
             except Exception as e:
                 print(f"Error draining events: {e}")
-                self.result_queue.put(
-                    {"type": "error", "process_id": pid, "step_id": step_id, "error": str(e)}
-                )
                 raise e
 
     def _start_monitor(self):
@@ -300,49 +392,80 @@ class ScriptExecutor:
 
     def _monitor_processes(self):
         """프로세스 완료 감시 → 자원 정리"""
+        last_event_process_time = time.time()
+
         while not self._stop_monitor.is_set():
             if not self.processes:
                 # 아직 아무 것도 없으면 살짝 쉰다
-                time.sleep(0.2)
+                time.sleep(0.02)
                 continue
 
-            self._drain_events()
+            current_time = time.time()
 
-            finished = []
+            if current_time - last_event_process_time >= EVENT_BATCH_INTERVAL:
+                for pid in self.processes:
+                    self._drain_events(pid)
+                last_event_process_time = current_time
+
+            finished: list[str] = []
+
             for pid, ev in list(self.completion_events.items()):
-                if ev.wait(timeout=0.1):
+                p = self.processes.get(pid)
+
+                if ev.is_set() or (p is not None and not p.is_alive()):
                     finished.append(pid)
 
             for pid in finished:
-                if self._on_process_complete is not None:
-                    self._on_process_complete(pid)
+                self._drain_events(pid)
+
+            for pid in finished:
+                if self._on_complete is not None:
+                    self._on_complete(pid)
 
                 if self.controller is not None:
-                    self.controller.on_process_complete(pid)
+                    self.controller.on_complete(pid)
 
                 p = self.processes.pop(pid, None)
                 if p:
-                    p.join(timeout=0.5)
+                    p.join(timeout=0.1)
                 self.completion_events.pop(pid, None)
                 self.state_dicts.pop(pid, None)
                 self.pause_events.pop(pid, None)
                 self.resume_events.pop(pid, None)
                 self.stop_events.pop(pid, None)
+                self._pid_generation.pop(pid, None)
 
             if not self.processes:
                 if self._on_all_complete is not None:
                     self._on_all_complete()
 
+                if self.controller is not None:
+                    self.controller.on_all_complete()
+
                 self._auto_cleanup()
                 break
+
+            time.sleep(POLLING_INTERVAL)
 
     def _auto_cleanup(self):
         """모든 스크립트가 끝났을 때만 실행되는 정리"""
         print("\n=== All processes completed, auto cleanup ===", flush=True)
+
         if self.manager is not None:
             with contextlib.suppress(Exception):
                 self.manager.shutdown()
             self.manager = None
+
+        self._stop_monitor.set()
+
+        with contextlib.suppress(Exception):
+            for pid in list(self.result_queues.keys()):
+                self.result_queues[pid].close()
+
+        self.result_queues = {}
+
+        # (선택) 모니터 스레드 핸들 무효화
+        self._monitor_thread = None
 
         if self._on_close is not None:
             self._on_close()
@@ -352,7 +475,7 @@ class ScriptExecutor:
 
     def _ensure_manager(self):
         if self.manager is None:
-            self.manager = Manager()
+            self.manager = self._mp_ctx.Manager()
 
     def _safe_shutdown_manager(self):
         """Manager를 안전하게 종료"""
@@ -396,7 +519,11 @@ class ScriptExecutor:
             print(f"Process {process_id} is not running")
             return False
 
+        if self.pause_events[process_id].is_set():
+            return False
+
         self.pause_events[process_id].set()
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.PAUSED
 
         step_id = self.state_dicts[process_id]["current_step_id"]
 
@@ -406,7 +533,20 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_pause(process_id, step_id)
 
-        print(f"Paused process: {process_id}")
+        print(f"Paused process: {process_id}", flush=True)
+
+        if all(
+            self.state_dicts[pid]["state"] == RB_Flow_Manager_ProgramState.PAUSED
+            for pid in self.processes
+        ):
+            if self._on_all_pause is not None:
+                self._on_all_pause()
+
+            if self.controller is not None:
+                self.controller.on_all_pause()
+
+            print("All processes paused", flush=True)
+
         return True
 
     def resume(self, process_id: str) -> bool:
@@ -419,9 +559,13 @@ class ScriptExecutor:
             print(f"Process {process_id} is not running")
             return False
 
+        if self.resume_events[process_id].is_set():
+            return False
+
         self.resume_events[process_id].set()
 
         step_id = self.state_dicts[process_id]["current_step_id"]
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
 
         if self._on_resume is not None:
             self._on_resume(process_id, step_id)
@@ -429,7 +573,8 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_resume(process_id, step_id)
 
-        print(f"Resumed process: {process_id}")
+        print(f"Resumed process: {process_id}", flush=True)
+
         return True
 
     def stop(self, process_id: str) -> bool:
@@ -442,49 +587,62 @@ class ScriptExecutor:
             print(f"Process {process_id} is not running")
             return False
 
-        self.stop_events[process_id].set()
+        if self.stop_events[process_id].is_set():
+            return False
 
         step_id = self.state_dicts[process_id]["current_step_id"]
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
-        if self._on_stop is not None:
+        self.stop_events[process_id].set()
+
+        if self._on_stop is not None and step_id is not None:
             self._on_stop(process_id, step_id)
 
-        if self.controller is not None:
+        if self.controller is not None and step_id is not None:
             self.controller.on_stop(process_id, step_id)
 
-        completed = self._wait_completion(process_id, timeout=2.0)
+        # if all(
+        #     self.state_dicts[pid]["state"] == RB_Flow_Manager_ProgramState.STOPPED
+        #     for pid in self.processes
+        # ):
+        if self._on_all_stop is not None:
+            self._on_all_stop()
 
-        if completed:
-            print(f"Stopped softly process: {process_id}")
-            self._auto_cleanup()
-            return True
+        if self.controller is not None:
+            self.controller.on_all_stop()
 
-        with contextlib.suppress(Exception):
-            self.processes[process_id].terminate()
+        print("All processes stopped", flush=True)
 
-        completed = self._wait_completion(process_id, timeout=3.0)
+        # completed = self._wait_completion(process_id, timeout=0.3)
 
-        if completed or not self.processes[process_id].is_alive():
-            print(f"Stopped terminate process: {process_id}")
-            self._auto_cleanup()
-            return True
+        # if completed:
+        #     print(f"Stopped softly process: {process_id}")
+        #     return True
 
-        try:
-            if hasattr(self.processes[process_id], "kill"):
-                self.processes[process_id].kill()
-            elif sys.platform != "win32":
-                os.kill(self.processes[process_id].pid or 0, signal.SIGKILL)
+        # with contextlib.suppress(Exception):
+        #     self.processes[process_id].terminate()
 
-        except RuntimeError as e:
-            print(f"Stopped kill process: {process_id} error: {e}")
+        # completed = self._wait_completion(process_id, timeout=0.7)
 
-        self.processes[process_id].join(timeout=1)
+        # if completed or not self.processes[process_id].is_alive():
+        #     print(f"Stopped terminate process: {process_id}", flush=True)
+        #     return True
+
+        # try:
+        #     if hasattr(self.processes[process_id], "kill"):
+        #         self.processes[process_id].kill()
+        #     elif sys.platform != "win32":
+        #         os.kill(self.processes[process_id].pid or 0, signal.SIGKILL)
+
+        # except RuntimeError as e:
+        #     print(f"Stopped kill process: {process_id} error: {e}", flush=True)
+
+        # self.processes[process_id].join(timeout=1)
 
         if process_id in self.completion_events:
             self.completion_events[process_id].set()
 
-        print(f"Stopped kill process: {process_id}")
-        self._auto_cleanup()
+        # print(f"Stopped kill process: {process_id}", flush=True)
 
         return True
 
@@ -545,7 +703,7 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_all_stop()
 
-        self._auto_cleanup()
+        # self._auto_cleanup()
 
     def pause_all(self):
         """모든 스크립트 일시정지"""
@@ -557,3 +715,8 @@ class ScriptExecutor:
 
         if self.controller is not None:
             self.controller.on_all_pause()
+
+    def resume_all(self):
+        """모든 스크립트 재개"""
+        for process_id in list(self.processes.keys()):
+            self.resume(process_id)

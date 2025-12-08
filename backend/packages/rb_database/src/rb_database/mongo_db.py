@@ -242,22 +242,29 @@ async def ensure_index(
 
     raise RuntimeError(f"ensure_index failed on {col_name}.{name} after {max_retries} attempts")
 
-async def init_indexes(db_: AsyncIOMotorDatabase):
+async def init_indexes(db: AsyncIOMotorDatabase):
     """
     [인덱스 초기화]
     - 비동기 함수로 처리
     - 데이터베이스 인덱스 초기화
     """
-    await ensure_index(db_, "robots", "name", name="robots_name_idx", unique=True)
+    await ensure_index(db, "robots", "name", name="robots_name_idx", unique=True)
     await ensure_index(
-        db_,
+        db,
         "state_logs",
         [("swName", 1), ("level", 1), ("createdAt", -1)],
         name="state_logs_sw_level_created_idx",
     )
-    await ensure_index(db_, "state_logs", [("contents", "text")], name="state_logs_text_idx")
-    await ensure_index(db_, "tasks", [("scriptName", 1)], name="uniq_scriptName", unique=True)
-    await ensure_index(db_, "programs", [("name", 1)], name="uniq_program_name", unique=True)
+    await ensure_index(db, "state_logs", [("contents", "text")], name="state_logs_text_idx")
+    await ensure_index(
+        db,
+        "state_logs",
+        [("createdAtDt", 1)],
+        name="state_logs_createdAtDt_ttl",
+        expireAfterSeconds=60 * 60 * 24 * 90,  # 90일
+    )
+    await ensure_index(db, "programs", [("name", 1)], name="uniq_program_name", unique=True)
+
 
 async def init_db(app: FastAPI, uri: str, db_name: str):
     """

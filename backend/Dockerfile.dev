@@ -16,6 +16,7 @@ COPY backend/services ./services
 COPY backend/packages ./packages
 COPY backend/pyproject.toml ./pyproject.toml
 COPY backend/uv.lock ./uv.lock
+COPY backend/.env ./.env
 
 RUN uv sync --all-packages --frozen --group dev
 

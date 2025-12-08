@@ -1,4 +1,4 @@
-PY ?= python3
+PY ?= python
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
@@ -26,9 +26,7 @@ backend.add: ## uv add - SERVICE or PACKAGE 로 설치할 위치 지정 필수, 
 
 .PHONY: backend.lint
 backend.lint: ## python ruff로 lint check 후 fix
-	@cd ${WORKDIR} && \
-	find . -path './.venv' -prune -o -name '*.py' -print0 \
-	| xargs -0 uv run ruff check --fix --force-exclude
+	@cd ${WORKDIR} && uv run ruff check . --fix --force-exclude
 
 .PHONY: backend.local-dev
 backend.local-dev: backend.lint backend.flatc ## docker를 쓰지 않고 개발 환경 실행

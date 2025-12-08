@@ -13,16 +13,11 @@ from multiprocessing.synchronize import (
 )
 from typing import Any
 
-from rb_sdk.manipulate import (
-    RBManipulateSDK,
-)
+from rb_sdk.base import RBBaseSDK
+from rb_sdk.manipulate import RBManipulateSDK
 
-from .exception import (
-    StopExecution,
-)
-from .schema import (
-    RB_Flow_Manager_ProgramState,
-)
+from .exception import BreakFolder, StopExecution
+from .schema import RB_Flow_Manager_ProgramState
 
 
 class ExecutionContext:
@@ -36,6 +31,9 @@ class ExecutionContext:
         pause_event: EventType,
         resume_event: EventType,
         stop_event: EventType,
+        *,
+        min_step_interval: float | None = None,
+        step_mode: bool = False,
     ):
         self.process_id = process_id
         self.state_dict = state_dict
@@ -43,21 +41,54 @@ class ExecutionContext:
         self.resume_event = resume_event
         self.stop_event = stop_event
         self.result_queue = result_queue
-        self.variables: dict[str, Any] = {}
-        self.sdk_functions: dict[str, Callable] = {}
+        self.variables: dict[str, dict[str, Any]] = {
+            "local": {},
+            "global": {},
+        }
+        self.sdk_functions: dict[str, Callable] | None = None
+        self._arg_scope: list[dict[str, Any]] = []
+        self._generation = state_dict.get("generation")
+        self.min_step_interval = min_step_interval
+        self._folder_depth = 0
+        self.step_mode = step_mode
+        self.step_num = 1
+        self.current_depth = 0
+        self._step_ticket = 1 if not step_mode else 0
+        self.is_ui_execution = state_dict.get("is_ui_execution", False)
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
 
-        self._make_zenoh_sdk_method_key_value_map()
+        self.initialize_sdk_functions()
 
-    def update_variables(self, variables: dict[str, Any]):
-        self.variables.update(variables)
+    def update_local_variables(self, variables: dict[str, Any]):
+        self.variables["local"].update(variables)
 
-    def _store_variables(self):
-        # TODO: zenoh publish or queryable variables
-        pass
+    def update_global_variables(self, variables: dict[str, Any]):
+        self.variables["global"].update(variables)
 
-    def _make_zenoh_sdk_method_key_value_map(self):
-        sdk_list = [{"name": "rb_manipulate_sdk", "class": RBManipulateSDK}]
+    def get_global_variable(self, var_name: str) -> Any:
+        if self.sdk_functions is None:
+            return None
+
+        robot_model = self.state_dict.get("robot_model", None)
+        category = self.state_dict.get("category", None)
+
+        if category is None or robot_model is None:
+            return None
+
+        try:
+            if category == "manipulate":
+                fn = self.sdk_functions.get("rb_manipulate_sdk.get_variable")
+
+                return fn(robot_model, var_name) if fn is not None else None
+        except Exception as e:
+            print(f"[{self.process_id}] Error getting global variable: {e}", flush=True)
+            return None
+
+    def _make_rb_sdk_method_key_value_map(self):
+        sdk_list = [
+            {"name": "rb_base_sdk", "class": RBBaseSDK},
+            {"name": "rb_manipulate_sdk", "class": RBManipulateSDK},
+        ]
 
         for item in sdk_list:
             sdk = item["class"]()
@@ -68,13 +99,69 @@ class ExecutionContext:
                 if callable(getattr(sdk, name)) and not name.startswith("_")
             }
 
-            self.sdk_functions.update(public_methods)
+            if self.sdk_functions is not None:
+                self.sdk_functions.update(public_methods)
 
-    def pause(self):
+    def initialize_sdk_functions(self):
+        if self.sdk_functions is not None:
+            return
+
+        self.sdk_functions = {}
+
+        self._make_rb_sdk_method_key_value_map()
+
+    def step_barrier(self, step_id: str):
+        """step_mode면, 이 스텝 수행 후 일시정지하고
+        resume 신호 올 때까지 대기"""
+        if not self.step_mode or self.step_num <= 2:
+            return
+
+        if self.stop_event.is_set():
+            self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+            raise StopExecution("Execution stopped by user")
+
+        while self._step_ticket <= 0 and not self.stop_event.is_set():
+            if not self.pause_event.is_set():
+                self.pause_event.set()
+                self.state_dict["state"] = RB_Flow_Manager_ProgramState.WAITING
+                self.emit_pause(step_id, is_wait=True)
+
+            if self.resume_event.wait(timeout=0.1):
+                self.resume_event.clear()
+                self._step_ticket = 1
+                self.pause_event.clear()
+                self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+                self.emit_resume(step_id)
+                break
+
+        if self.stop_event.is_set():
+            self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+            raise StopExecution("Execution stopped by user")
+
+        self._step_ticket -= 1
+
+    def push_args(self, mapping: dict[str, Any] | None):
+        self._arg_scope.append(mapping or {})
+
+    def pop_args(self):
+        if self._arg_scope:
+            self._arg_scope.pop()
+
+    def lookup(self, key: str) -> Any:
+        idx = len(self._arg_scope) - 2
+
+        while idx >= 0:
+            scope = self._arg_scope[idx]
+            if key in scope:
+                return scope[key]
+            idx -= 1
+        raise KeyError(f"parent pointer not found: {key}")
+
+    def pause(self, is_wait: bool = False):
         """현재 스크립트를 일시정지"""
         self.pause_event.set()
 
-        self.emit_pause(self.state_dict["current_step_id"])
+        self.emit_pause(self.state_dict["current_step_id"], is_wait)
 
         self._wait_for_resume()
 
@@ -93,6 +180,8 @@ class ExecutionContext:
             raise StopExecution("Execution stopped by user")
 
         if self.pause_event.is_set():
+            self.resume_event.clear()
+
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.PAUSED
 
             # resume 올 때까지 대기
@@ -119,18 +208,21 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
 
-    def emit_pause(self, step_id: str):
+    def emit_pause(self, step_id: str, is_wait: bool = False):
         """pause 이벤트 발생"""
         self.result_queue.put(
             {
                 "type": "pause",
                 "process_id": self.process_id,
                 "step_id": step_id,
+                "is_wait": is_wait,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -143,6 +235,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -155,6 +248,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
@@ -168,21 +262,36 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": str(error),
             }
         )
 
-    def emit_complete(self, step_id: str):
-        """complete 이벤트 발생"""
+    def emit_done(self, step_id: str):
+        """done 이벤트 발생"""
         self.result_queue.put(
             {
-                "type": "complete",
+                "type": "done",
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
+                "generation": self._generation,
                 "error": None,
             }
         )
+
+    def enter_folder(self):
+        """Folder 진입"""
+        self._folder_depth += 1
+
+    def leave_folder(self):
+        """Folder 탈출"""
+        self._folder_depth -= 1
+
+    def break_folder(self):
+        """Folder 실행 중단"""
+        if self._folder_depth > 0:
+            raise BreakFolder()
 
     def _safe_close_sdk(self):
         """SDK 안전 종료"""
@@ -194,7 +303,6 @@ class ExecutionContext:
 
     def close(self):
         """안전하게 close"""
-        self._store_variables()
         self._safe_close_sdk()
 
     def __del__(self):

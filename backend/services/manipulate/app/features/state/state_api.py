@@ -16,10 +16,10 @@ from .state_module import (
     StateService,
 )
 from .state_schema import (
-    PowerControlRequestPD,
-    PowerControlResponsePD,
-    ReferenceControlRequestPD,
-    ServoControlRequestPD,
+    Request_PowerControlPD,
+    Request_ReferenceControlPD,
+    Request_ServoControlPD,
+    Response_PowerControlPD,
     StateRequestPD,
 )
 
@@ -29,22 +29,20 @@ state_router = APIRouter(tags=["State"])
 
 
 @state_router.get("/{robot_model}/state_core", response_model=StateRequestPD)
-async def state(robot_model: str):
+async def state_core(robot_model: str):
     topic, mv, obj, attachment = await zenoh_client.receive_one(
         f"{robot_model}/state_core",
         flatbuffer_obj_t=State_CoreT,
     )
-
     return JSONResponse(obj)
 
 
-@state_router.post("/{robot_model}/call_powercontrol", response_model=PowerControlResponsePD)
-async def power_control(robot_model: str, request: PowerControlRequestPD):
-    res_dict = {**request.model_dump()}
-    res = await state_service.power_control(
+@state_router.post("/{robot_model}/call_powercontrol", response_model=Response_PowerControlPD)
+async def call_powercontrol(robot_model: str, request: Request_PowerControlPD):
+    res = await state_service.call_powercontrol(
         robot_model=robot_model,
-        power_option=res_dict["power_option"],
-        sync_servo=res_dict["sync_servo"] or True,
+        power_option=request.power_option,
+        sync_servo=request.sync_servo if request.sync_servo is not None else True,
     )
 
     if res.get("error"):
@@ -54,10 +52,8 @@ async def power_control(robot_model: str, request: PowerControlRequestPD):
 
 
 @state_router.post("/{robot_model}/call_servocontrol", response_model=Response_ReturnValuePD)
-async def servo_control(robot_model: str, request: ServoControlRequestPD):
-    res = await state_service.servo_control(
-        robot_model=robot_model, servo_option=request.servo_option
-    )
+async def call_servocontrol(robot_model: str, request: Request_ServoControlPD):
+    res = await state_service.call_servocontrol(robot_model=robot_model, request=request)
 
     if res.get("error"):
         return JSONResponse(content=res, status_code=500)
@@ -66,10 +62,8 @@ async def servo_control(robot_model: str, request: ServoControlRequestPD):
 
 
 @state_router.post("/{robot_model}/call_referencecontrol", response_model=Response_ReturnValuePD)
-async def reference_control(robot_model: str, request: ReferenceControlRequestPD):
-    res = await state_service.reference_control(
-        robot_model=robot_model, reference_option=request.reference_option
-    )
+async def call_referencecontrol(robot_model: str, request: Request_ReferenceControlPD):
+    res = await state_service.call_referencecontrol(robot_model=robot_model, request=request)
 
     if res.get("error"):
         return JSONResponse(content=res, status_code=500)

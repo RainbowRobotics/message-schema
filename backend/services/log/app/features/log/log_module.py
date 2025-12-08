@@ -131,10 +131,10 @@ class LogService:
     async def error_log_count_for_24h(self, *, db: MongoDB):
         now_utc = datetime.now(UTC)
 
-        cutoff_iso = (now_utc - timedelta(hours=24)).isoformat()
+        cutoff_dt = now_utc - timedelta(hours=24)
 
         cnt = await db["state_logs"].count_documents(
-            {"level": {"$in": [2, self._level_to_name[2]]}, "createdAt": {"$gte": cutoff_iso}}
+            {"level": {"$in": [2, self._level_to_name[2]]}, "createdAtDt": {"$gte": cutoff_dt}}
         )
 
         res = {"count": cnt}
@@ -151,6 +151,7 @@ class LogService:
             obj["level"] if isinstance(obj["level"], int) else (obj["level"] or "unknown").lower()
         )
         obj["createdAt"] = now_utc.isoformat()
+
 
         await socket_client.emit("state_log", obj)
 
@@ -175,6 +176,8 @@ class LogService:
             int_level = int(d["level"])
             d["level"] = level
 
+            d.setdefault("createdAtDt", now_dt)
+
             last_log = await db["state_logs"].find_one(sort=[("createdAt", -1)])
 
             if (
@@ -184,14 +187,12 @@ class LogService:
             ):
                 return
 
-            rb_log.debug(f"debug >> {d}")
-
             await db["state_logs"].insert_one(d)
 
-            cutoff_iso = (now_dt - timedelta(hours=24)).isoformat()
+            cutoff_dt = now_dt - timedelta(hours=24)
 
             cnt = await db["state_logs"].count_documents(
-                {"level": {"$in": [int_level, level]}, "createdAt": {"$gte": cutoff_iso}}
+                {"level": {"$in": [int_level, level]}, "createdAtDt": {"$gte": cutoff_dt}}
             )
 
             if int_level == 2 or level == "Error":

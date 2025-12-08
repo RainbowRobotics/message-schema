@@ -12,23 +12,15 @@ from dataclasses import (
 )
 from typing import Any
 
-from flatbuffers.table import (
-    Table,
-)
-
-from .client import (
-    ZenohClient,
-)
-from .schema import (
-    SubscribeOptions,
-)
+from .client import FBRootReadable, ZenohClient
+from .schema import SubscribeOptions
 
 
 @dataclass(slots=True)
 class _Reg:
     topic: str
     cb: Callable
-    flatbuffer_obj_t: Table
+    flatbuffer_obj_t: FBRootReadable | None
     opts: SubscribeOptions
     handle: Any | None = None
 
@@ -76,7 +68,7 @@ class ZenohRouter:
         self,
         topic: str,
         *,
-        flatbuffer_obj_t: Table | None = None,
+        flatbuffer_obj_t: FBRootReadable | None = None,
         opts: SubscribeOptions | None = None,
     ):
         full_topic = self._join_topic(self.prefix, topic)

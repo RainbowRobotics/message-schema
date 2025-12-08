@@ -15,6 +15,7 @@ __pycache__
 build
 
 backend/**/*.bin
+backend/**/*.bin.zip
 
 backend/.buildx-cache
 backend/.buildx-cache-info

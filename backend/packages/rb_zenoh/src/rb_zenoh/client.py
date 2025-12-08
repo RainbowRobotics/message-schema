@@ -14,27 +14,21 @@ from collections.abc import (
 from functools import partial
 
 # import flatbuffers
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 import flatbuffers
 import psutil
-from flatbuffers.table import (
-    Table,
-)
-from rb_utils.parser import (
-    t_to_dict,
-)
-from zenoh import (  # pylint: disable=no-name-in-module
+from rb_utils.parser import t_to_dict
+from zenoh import (
     Config,
     Encoding,
-    Queryable,
     QueryTarget,
     Session,
     ZBytes,
     ZError,
 )
 from zenoh import (
-    open as zenoh_open,  # pylint: disable=no-name-in-module
+    open as zenoh_open,
 )
 
 from .exeption import (
@@ -56,24 +50,34 @@ os.environ.setdefault("ZENOH_LOG", "info")
 os.environ.setdefault("RUST_LOG", "zenoh=info,zenoh_transport=info,zenoh_shm=info")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+
 if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)  # pyright: ignore[reportAttributeAccessIssue]
+
+
+class FBPackable(Protocol):
+    def Pack(self, builder: Any) -> Any: ...
+
+
+class FBRootReadable(Protocol):
+    @staticmethod
+    def InitFromPackedBuf(buf: bytes, pos: int = 0) -> Any: ...
 
 
 class ZenohClient:
-    _instance: Any | None = None
+    _instances: dict[int, "ZenohClient"] = {}
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
         pid = os.getpid()
         with cls._lock:
-            inst = getattr(cls, "_instance", None)
-            # 부모 프로세스가 만든 인스턴스를 자식이 재활용하려고 하면 새로 만든다
-            if inst is None or getattr(inst, "_owner_pid", None) != pid:
+            if pid not in cls._instances:
                 inst = super().__new__(cls)
+                inst._init_done = False
                 inst._owner_pid = pid
-                cls._instance = inst
-            return inst
+                cls._instances[pid] = inst
+            return cls._instances[pid]
 
     def __init__(self):
         if getattr(self, "_init_done", False):
@@ -104,7 +108,7 @@ class ZenohClient:
     def connect(self):
         if self.session is None:
             conf = Config()
-            conf.insert_json5("mode", '"peer"')
+            conf.insert_json5("mode", '"client"' if IS_DEV else '"peer"')
             conf.insert_json5("scouting/multicast/enabled", "true")
             conf.insert_json5("scouting/multicast/ttl", "1")
             # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
@@ -114,7 +118,7 @@ class ZenohClient:
             # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
             conf.insert_json5(
                 "listen/endpoints",
-                '{ "peer": ["tcp/0.0.0.0:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
+                '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
             )
             conf.insert_json5("listen/exit_on_failure", "false")
             conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
@@ -126,11 +130,6 @@ class ZenohClient:
             for _ in range(8):
                 try:
                     self.session = zenoh_open(conf)
-                    print("✅ zenoh peer session opened")
-                    try:
-                        self.is_shm_active()
-                    except Exception as e:
-                        print(f"[shm-check] skipped: {e}")
                     break
                 except ZError as e:
                     print(f"[zenoh] open failed: {e}; retry...")
@@ -147,26 +146,6 @@ class ZenohClient:
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         self._loop = loop
-
-    # def publish(self, topic: str, data: Union[bytes, bytearray, memoryview, dict]):
-    #     if self.session is None:
-    #         self.connect()
-
-    #     message = {
-    #             "sender": self.sender,
-    #             "sender_id": self.sender_id,
-    #             "data": data  # 실질적인 데이터를 data 필드에 담음
-    #         }
-
-    #     message_bytes = json.dumps(message).encode("utf-8")
-
-    #     try:
-    #         self.session.put(topic, message_bytes)
-    #     except Exception as e:
-    #         print(f"🚫 zenoh publish failed: {e}")
-
-    def is_current_process_client(self) -> bool:
-        return self._owner_pid == os.getpid()
 
     def _estimate_initial_size(self, topic: str, fb_class_name: str, fields: dict) -> int:
         key = (topic, fb_class_name)
@@ -191,7 +170,7 @@ class ZenohClient:
         topic: str,
         *,
         payload: bytes | bytearray | memoryview | dict | None = None,
-        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_buf_size: int | None = None,
     ):
         if self.session is None:
@@ -214,7 +193,7 @@ class ZenohClient:
             elif isinstance(payload, dict):
                 payload = json.dumps(payload).encode("utf-8")
             else:
-                raise ValueError(f"Invalid payload type: {type(payload)}")
+                raise ValueError("invalid payload type")
 
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
         if self.session is not None:
@@ -225,7 +204,7 @@ class ZenohClient:
         topic: str,
         callback: Callable[..., Any],
         *,
-        flatbuffer_obj_t: Table | None = None,
+        flatbuffer_obj_t: FBRootReadable | None = None,
         options: SubscribeOptions | None = None,
     ):
         """
@@ -263,9 +242,10 @@ class ZenohClient:
         self,
         topic: str,
         *,
-        flatbuffer_obj_t: Table | None = None,
+        flatbuffer_obj_t: FBRootReadable | None = None,
         timeout: float = 3.0,
         allow_self: bool = False,
+        parse_obj: bool = True,
     ) -> tuple[str, memoryview, dict[str, Any] | None, dict]:
         if self.session is None:
             self.connect()
@@ -298,8 +278,8 @@ class ZenohClient:
                 att_b = str(att).encode("utf-8", "ignore")
 
             sid = None
-            s = att_b.decode("utf-8", "ignore")
             try:
+                s = att_b.decode("utf-8", "ignore")
                 for seg in s.split(";"):
                     if seg.startswith("sender_id="):
                         sid = seg.split("=", 1)[1]
@@ -311,16 +291,18 @@ class ZenohClient:
                 return
 
             async def _handle():
-                parts = dict(seg.split("=", 1) for seg in s.split(";") if "=" in seg)
+                parts = dict(
+                    seg.split("=", 1)
+                    for seg in (s if "s" in locals() else att_b.decode("utf-8", "ignore")).split(
+                        ";"
+                    )
+                    if "=" in seg
+                )
                 obj = None
                 try:
                     if flatbuffer_obj_t is not None:
                         obj = await asyncio.to_thread(
-                            lambda: t_to_dict(
-                                flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0)
-                                if flatbuffer_obj_t is not None
-                                else None
-                            )
+                            lambda: t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
                         )
                 except Exception:
                     obj = None
@@ -416,10 +398,6 @@ class ZenohClient:
                     q.reply_del(q.key_expr)
                     return
                 data = _to_bytes(payload)
-
-                if data is None:
-                    data = b""
-
                 att = f"sender={self.sender};sender_id={self.sender_id}"
                 q.reply(
                     key_expr=q.key_expr,
@@ -430,11 +408,7 @@ class ZenohClient:
             except Exception as e:
                 q.reply_err(key_expr=q.key_expr, payload=ZBytes(str(e).encode("utf-8")))
 
-        qbl: Queryable | None = None
-
-        if self.session is not None:
-            qbl = self.session.declare_queryable(keyexpr, _handler)
-
+        qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl
         print(f"🛠️  queryable declared: {keyexpr}")
 
@@ -451,9 +425,9 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        timeout: int = 2,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -484,14 +458,14 @@ class ZenohClient:
 
         # dict_params = dict(params or {})
         # sel = Selector(keyexpr, dict_params)
-        if self.session is not None:
-            get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout)
-        else:
-            get_result = []
-
-        seen_any = False
 
         try:
+            get_result = cast(Session, self.session).get(
+                keyexpr, payload=payload, target=target, timeout=timeout
+            )
+
+            seen_any = False
+
             for rep in get_result:
                 seen_any = True
 
@@ -502,13 +476,14 @@ class ZenohClient:
                         if isinstance(samp.payload, ZBytes)
                         else bytes(samp.payload)
                     )
-                    att = samp.attachment
+                    att_raw = samp.attachment
                     # enc = str(samp.encoding or "flatbuffer").lower()
 
-                    if isinstance(att, bytes | bytearray):
-                        att = att.decode("utf-8", "ignore")
-                    elif hasattr(att, "to_bytes") and att is not None:
-                        att = att.to_bytes().decode("utf-8", "ignore")
+                    att: str | None = None
+                    if isinstance(att_raw, bytes | bytearray):
+                        att = att_raw.decode("utf-8", "ignore")
+                    elif hasattr(att_raw, "to_bytes") and att_raw is not None:
+                        att = att_raw.to_bytes().decode("utf-8", "ignore")
 
                     att_dict = dict(
                         (k.strip(), v.strip())
@@ -564,14 +539,16 @@ class ZenohClient:
 
         except ZError as ze:
             raise ZenohTransportError(str(ze)) from ze
+        except Exception as e:
+            raise e
 
     def query_one(
         self,
         keyexpr: str,
         *,
         timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -599,8 +576,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -673,66 +650,244 @@ class ZenohClient:
             finally:
                 self._closing = False
 
-    def _make_on_sample(self, topic: str, flatbuffer_obj_t: Table | None = None):
+    def _make_on_sample(self, topic: str, flatbuffer_obj_t: FBRootReadable | None = None):
         def _on_sample(sample):
             if getattr(self, "_closing", False):
                 return
 
-            att = sample.attachment
-            origin_topic = str(sample.key_expr)
+            try:
+                att = sample.attachment
+                origin_topic = str(sample.key_expr)
 
-            mv = (
-                memoryview(bytes(sample.payload))
-                if isinstance(sample.payload, ZBytes)
-                else memoryview(sample.payload)
-            )
-
-            if hasattr(att, "to_bytes"):
-                att = att.to_bytes().decode("utf-8", "ignore")
-            elif isinstance(att, bytes | bytearray):
-                att = att.decode("utf-8", "ignore")
-
-            parts = dict(
-                (k.strip(), v.strip())
-                for seg in (att or "").split(";")
-                if "=" in seg
-                for k, v in [seg.split("=", 1)]
-            )
-
-            attachment = {
-                "sender": parts.get("sender"),
-                "sender_id": parts.get("sender_id"),
-            }
-
-            parser = self._schema.get(topic)
-
-            if flatbuffer_obj_t is not None:
-                obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
-            else:
-                obj = None
-
-            if parser:
-                try:
-                    obj = parser(topic, mv)
-                except Exception as e:
-                    print(f"[parser error:{topic}] {e}", flush=True)
-
-            entries = list(self._cb_entries.get(topic) or [])
-            if not entries:
-                return
-
-            imms = [e for e in entries if e.opts.dispatch == "immediate"]
-            queued = [e for e in entries if e.opts.dispatch == "queue"]
-
-            if imms:
-                self._fanout_immediate(
-                    entries=imms, topic=origin_topic, mv=mv, obj=obj, attachment=attachment
+                payload_bytes = (
+                    bytes(sample.payload)
+                    if isinstance(sample.payload, ZBytes)
+                    else bytes(sample.payload)
                 )
 
-            for q in queued:
-                self._push_to_entry(e=q, topic=origin_topic, mv=mv, obj=obj, attachment=attachment)
+                if hasattr(att, "to_bytes"):
+                    att_bytes = att.to_bytes()
+                elif isinstance(att, bytes | bytearray):
+                    att_bytes = bytes(att)
+                else:
+                    att_bytes = str(att).encode("utf-8", "ignore")
+
+                entries = list(self._cb_entries.get(topic) or [])
+                if not entries:
+                    return
+
+                imms = [e for e in entries if e.opts.dispatch == "immediate"]
+                queued = [e for e in entries if e.opts.dispatch == "queue"]
+
+                if imms:
+                    self._handle_immediate(
+                        entries=imms,
+                        topic=origin_topic,
+                        payload_bytes=payload_bytes,
+                        att_bytes=att_bytes,
+                        flatbuffer_obj_t=flatbuffer_obj_t,
+                    )
+
+                for e in queued:
+                    raw_data = {
+                        "topic": origin_topic,
+                        "payload_bytes": payload_bytes,
+                        "att_bytes": att_bytes,
+                        "flatbuffer_obj_t": flatbuffer_obj_t,
+                    }
+                    self._push_to_entry_raw(e, raw_data)
+
+            except Exception as ex:
+                print(f"[_on_sample error] {ex}", flush=True)
 
         return _on_sample
+
+    def _handle_immediate(
+        self,
+        *,
+        entries: list[CallbackEntry],
+        topic: str,
+        payload_bytes: bytes,
+        att_bytes: bytes,
+        flatbuffer_obj_t: FBRootReadable | None,
+    ):
+        """Immediate 모드: 별도 스레드에서 즉시 처리"""
+
+        def _process():
+            try:
+                att_str = att_bytes.decode("utf-8", "ignore")
+                parts = dict(
+                    (k.strip(), v.strip())
+                    for seg in att_str.split(";")
+                    if "=" in seg
+                    for k, v in [seg.split("=", 1)]
+                )
+
+                attachment = {
+                    "sender": parts.get("sender"),
+                    "sender_id": parts.get("sender_id"),
+                }
+
+                obj = None
+                if flatbuffer_obj_t is not None:
+                    try:
+                        obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(payload_bytes, 0))
+                    except Exception as ex:
+                        print(f"[flatbuffer parse error] {ex}", flush=True)
+
+                mv = memoryview(payload_bytes)
+
+                try:
+                    loop = self._loop
+                    if not loop or loop.is_closed():
+                        # 루프가 없으면 동기 실행
+                        self._execute_callbacks_sync(entries, topic, mv, obj, attachment)
+                        return
+
+                    async def _execute_callbacks():
+                        now = time.time()
+
+                        for e in entries:
+                            opts = e.opts
+                            m = e.metrics
+
+                            if (
+                                not opts.allowed_same_sender
+                                and attachment["sender_id"] == self.sender_id
+                            ):
+                                continue
+
+                            if opts.sample_every and opts.sample_every > 1:
+                                m["_sample_i"] = m.get("_sample_i", 0) + 1
+                                if (m["_sample_i"] % opts.sample_every) != 0:
+                                    continue
+
+                            # 레이트리밋
+                            if opts.rate_limit_per_sec:
+                                rs = m.setdefault("_rl_start", now)
+                                rc = m.setdefault("_rl_count", 0)
+                                if now - rs >= 1.0:
+                                    m["_rl_start"] = now
+                                    m["_rl_count"] = 0
+                                    rc = 0
+                                if rc >= opts.rate_limit_per_sec:
+                                    continue
+                                m["_rl_count"] = rc + 1
+
+                            kwargs = self._select_callback_kwargs(
+                                e.callback, topic=topic, mv=mv, obj=obj, attachment=attachment
+                            )
+
+                            try:
+                                if inspect.iscoroutinefunction(e.callback):
+                                    await e.callback(**kwargs)
+                                else:
+                                    await loop.run_in_executor(None, partial(e.callback, **kwargs))
+
+                                e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
+                                e.metrics["last_ts"] = now
+                            except Exception as ex:
+                                print(f"[callback error:{topic}] {ex}", flush=True)
+
+                    # 이벤트 루프에 스케줄링
+                    if not self._closing and loop and not loop.is_closed():
+                        loop.call_soon_threadsafe(lambda: asyncio.create_task(_execute_callbacks()))
+                except Exception as ex:
+                    print(f"[_handle_immediate scheduling error] {ex}", flush=True)
+                    # 실패하면 동기 실행
+                    self._execute_callbacks_sync(entries, topic, mv, obj, attachment)
+
+            except Exception as ex:
+                print(f"[_handle_immediate error] {ex}", flush=True)
+
+        # 별도 스레드에서 실행 (Zenoh I/O 스레드 블로킹 방지)
+        threading.Thread(target=_process, daemon=True).start()
+
+    def _execute_callbacks_sync(self, entries, topic, mv, obj, attachment):
+        """루프 없이 동기 실행"""
+        now = time.time()
+
+        for e in entries:
+            opts = e.opts
+            m = e.metrics
+
+            if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
+                continue
+
+            if opts.sample_every and opts.sample_every > 1:
+                m["_sample_i"] = m.get("_sample_i", 0) + 1
+                if (m["_sample_i"] % opts.sample_every) != 0:
+                    continue
+
+            if opts.rate_limit_per_sec:
+                rs = m.setdefault("_rl_start", now)
+                rc = m.setdefault("_rl_count", 0)
+                if now - rs >= 1.0:
+                    m["_rl_start"] = now
+                    m["_rl_count"] = 0
+                    rc = 0
+                if rc >= opts.rate_limit_per_sec:
+                    continue
+                m["_rl_count"] = rc + 1
+
+            kwargs = self._select_callback_kwargs(
+                e.callback, topic=topic, mv=mv, obj=obj, attachment=attachment
+            )
+
+            try:
+                # async 콜백은 스킵하거나 경고
+                if inspect.iscoroutinefunction(e.callback):
+                    print(f"⚠️  Cannot execute async callback in sync context: {topic}", flush=True)
+                    continue
+
+                # 동기 콜백만 실행
+                e.callback(**kwargs)
+
+                e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
+                e.metrics["last_ts"] = now
+            except Exception as ex:
+                print(f"[callback error:{topic}] {ex}", flush=True)
+
+    def _push_to_entry_raw(self, e: CallbackEntry, raw_data: dict):
+        """Raw 데이터를 큐에 푸시 (파싱하지 않음)"""
+        if getattr(self, "_closing", False):
+            return
+
+        q: asyncio.Queue = e.q
+
+        def _push():
+            if getattr(self, "_closing", False):
+                return
+
+            try:
+                q.put_nowait(raw_data)
+            except asyncio.QueueFull:
+                # overflow 정책 적용
+                if e.opts.overflow == OverflowPolicy.DROP_NEW:
+                    e.metrics["dropped_new"] = e.metrics.get("dropped_new", 0) + 1
+                elif e.opts.overflow == OverflowPolicy.DROP_OLDEST:
+                    try:
+                        q.get_nowait()
+                        q.put_nowait(raw_data)
+                    except Exception:
+                        pass
+                elif e.opts.overflow == OverflowPolicy.LATEST_ONLY:
+                    try:
+                        while True:
+                            q.get_nowait()
+                    except Exception:
+                        pass
+                    with contextlib.suppress(Exception):
+                        q.put_nowait(raw_data)
+
+        loop = self._loop
+        if loop and not loop.is_closed():
+            try:
+                loop.call_soon_threadsafe(_push)
+            except RuntimeError:
+                _push()
+        else:
+            _push()
 
     def _select_callback_kwargs(
         self, cb: Callable, topic: str, mv: memoryview, obj: dict | None, attachment: dict
@@ -762,7 +917,7 @@ class ZenohClient:
 
         async def _spawn_all():
             now = time.time()
-            tasks: list[asyncio.Future] = []
+            tasks: list[asyncio.Future[Any]] = []
 
             for e in entries:
                 opts = e.opts
@@ -771,7 +926,6 @@ class ZenohClient:
                 if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
                     continue
 
-                # 샘플링
                 if opts.sample_every and opts.sample_every > 1:
                     m["_sample_i"] += 1
                     if (m["_sample_i"] % opts.sample_every) != 0:
@@ -799,22 +953,14 @@ class ZenohClient:
                     )
                     tasks.append(asyncio.create_task(e.callback(**kwargs)))
                 else:
-                    # run_in_executor은 인자 전개가 어려워 래퍼 사용
+
                     def _sync_call(cb=e.callback, t=topic, r=mv, o=obj, a=attachment):
                         kwargs = self._select_callback_kwargs(
                             cb, topic=t, mv=r, obj=o, attachment=a
                         )
                         cb(**kwargs)
 
-                    if loop.is_closed():
-                        # 프로세스 내려가는 중이면 이 콜백은 그냥 버림
-                        return
-                    try:
-                        fut = loop.run_in_executor(None, _sync_call)
-                    except RuntimeError:
-                        return
-
-                    tasks.append(fut)
+                    tasks.append(loop.run_in_executor(None, _sync_call))
 
                 e.metrics["delivered"] += 1
                 e.metrics["last_ts"] = now
@@ -825,7 +971,6 @@ class ZenohClient:
                     exc = t.exception()
                     if exc:
                         print(f"[callback error:{topic}] {exc}", flush=True)
-                        raise RuntimeError(f"[callback error:{topic}] {exc}") from exc
 
                 for t in tasks:
                     if isinstance(t, asyncio.Task):
@@ -836,7 +981,7 @@ class ZenohClient:
 
         loop.call_soon_threadsafe(lambda: asyncio.create_task(_spawn_all()))
 
-    # queue 모드: 엔트리 보호 큐에 푸시
+    # queue 모드
     def _push_to_entry(
         self, *, e: "CallbackEntry", topic: str, mv: memoryview, obj: dict | None, attachment: dict
     ):
@@ -849,14 +994,12 @@ class ZenohClient:
         if not e.opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
             return
 
-        # EMA
         if m.get("ema_bytes") is None:
             m["ema_bytes"] = float(e.opts.expected_avg_bytes or raw_len)
         else:
             alpha = e.opts.ema_alpha
             m["ema_bytes"] = (1.0 - alpha) * float(m["ema_bytes"]) + alpha * float(raw_len)
 
-        # capacity 결정
         if e.opts.maxsize and e.opts.maxsize > 0:
             cap = int(e.opts.maxsize)
         else:
@@ -920,21 +1063,61 @@ class ZenohClient:
         next_ts = 0.0
         period = (1.0 / float(opts.rate_limit_per_sec)) if opts.rate_limit_per_sec else 0.0
 
-        batch_buf: list[tuple[str, memoryview, dict | None, dict]] = []
+        batch_buf: list[dict] = []
 
         try:
             while True:
-                item = await q.get()
+                raw_item = await q.get()
 
-                # 배치 X
+                topic = raw_item["topic"]
+                payload_bytes = raw_item["payload_bytes"]
+                att_bytes = raw_item["att_bytes"]
+                flatbuffer_obj_t = raw_item.get("flatbuffer_obj_t")
+
+                # attachment 파싱
+                att_str = att_bytes.decode("utf-8", "ignore")
+                parts = dict(
+                    (k.strip(), v.strip())
+                    for seg in att_str.split(";")
+                    if "=" in seg
+                    for k, v in [seg.split("=", 1)]
+                )
+
+                attachment = {
+                    "sender": parts.get("sender"),
+                    "sender_id": parts.get("sender_id"),
+                }
+
+                # sender_id 체크
+                if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
+                    continue
+
+                # FlatBuffer 파싱
+                obj = None
+                if flatbuffer_obj_t is not None:
+                    try:
+
+                        def _parse_flatbuffer(obj_t: Any, payload: bytes) -> Any:
+                            return t_to_dict(obj_t.InitFromPackedBuf(payload, 0))
+
+                        loop = asyncio.get_running_loop()
+                        obj = await loop.run_in_executor(
+                            None,
+                            partial(_parse_flatbuffer, flatbuffer_obj_t, payload_bytes),
+                        )
+                    except Exception as ex:
+                        print(f"[flatbuffer parse error] {ex}", flush=True)
+
+                mv = memoryview(payload_bytes)
+
                 if not opts.batch_opts.ms:
-                    # 샘플링
+                    # 샘플링/레이트리밋
                     if opts.sample_every > 1:
                         m = e.metrics
                         m["_sample_i"] = m.get("_sample_i", 0) + 1
                         if (m["_sample_i"] % opts.sample_every) != 0:
                             continue
-                    # 레이트리밋
+
                     if period > 0.0:
                         now = time.monotonic()
                         if now < next_ts:
@@ -943,55 +1126,79 @@ class ZenohClient:
 
                     kwargs = self._select_callback_kwargs(
                         e.callback,
-                        topic=item.get("topic"),
-                        mv=item.get("mv"),
-                        obj=item.get("obj"),
-                        attachment=item.get("attachment"),
+                        topic=topic,
+                        mv=mv,
+                        obj=obj,
+                        attachment=attachment,
                     )
 
                     if inspect.iscoroutinefunction(e.callback):
                         await e.callback(**kwargs)
                     else:
                         loop = asyncio.get_running_loop()
-                        # 동기 콜백은 run_in_executor로 실행
                         callback_with_args = partial(e.callback, **kwargs)
                         await loop.run_in_executor(None, callback_with_args)
 
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
                     continue
 
-                # 배치 O
-                batch_buf.append(item)
+                # 배치 처리
+                batch_buf.append({"topic": topic, "mv": mv, "obj": obj, "attachment": attachment})
+
                 started = time.time()
                 while len(batch_buf) < opts.batch_opts.max:
                     try:
                         left = (opts.batch_opts.ms / 1000.0) - (time.time() - started)
                         if left <= 0:
                             break
-                        nxt = await asyncio.wait_for(q.get(), timeout=left)
-                        batch_buf.append(nxt)
+                        nxt_raw = await asyncio.wait_for(q.get(), timeout=left)
+
+                        nxt_obj = None
+                        if nxt_raw.get("flatbuffer_obj_t"):
+                            try:
+
+                                def _parse_flatbuffer_from_raw(raw: dict[str, Any]) -> Any:
+                                    return t_to_dict(
+                                        raw["flatbuffer_obj_t"].InitFromPackedBuf(
+                                            raw["payload_bytes"], 0
+                                        )
+                                    )
+
+                                loop = asyncio.get_running_loop()
+                                nxt_obj = await loop.run_in_executor(
+                                    None,
+                                    _parse_flatbuffer_from_raw,
+                                    nxt_raw,
+                                )
+                            except Exception:
+                                pass
+
+                        batch_buf.append(
+                            {
+                                "topic": nxt_raw["topic"],
+                                "mv": memoryview(nxt_raw["payload_bytes"]),
+                                "obj": nxt_obj,
+                                "attachment": dict(
+                                    (k.strip(), v.strip())
+                                    for seg in nxt_raw["att_bytes"]
+                                    .decode("utf-8", "ignore")
+                                    .split(";")
+                                    if "=" in seg
+                                    for k, v in [seg.split("=", 1)]
+                                ),
+                            }
+                        )
                     except TimeoutError:
                         break
 
-                # 샘플링/레이트리밋(배치 수준)
-                if opts.sample_every > 1:
-                    batch_buf = batch_buf[:: opts.sample_every]
-                if period > 0.0:
-                    now = time.monotonic()
-                    if now < next_ts:
-                        continue
-                    next_ts = time.monotonic() + period
-
+                # 배치 콜백 실행
                 for it in batch_buf:
-                    if not isinstance(it, dict):
-                        continue
-
                     kwargs = self._select_callback_kwargs(
                         e.callback,
-                        topic=it.get("topic") or "",
-                        mv=it.get("mv") or memoryview(b""),
-                        obj=it.get("obj") or {},
-                        attachment=it.get("attachment") or {},
+                        topic=it["topic"],
+                        mv=it["mv"],
+                        obj=it["obj"],
+                        attachment=it["attachment"],
                     )
 
                     if inspect.iscoroutinefunction(e.callback):
@@ -1002,7 +1209,9 @@ class ZenohClient:
                         await loop.run_in_executor(None, callback_with_args)
 
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
+
                 batch_buf.clear()
+
         except asyncio.CancelledError:
             pass
 

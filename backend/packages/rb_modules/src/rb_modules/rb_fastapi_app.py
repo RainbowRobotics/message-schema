@@ -1,58 +1,30 @@
 import asyncio
 import contextlib
 import os
-from collections.abc import (
-    Callable,
-    Sequence,
-)
-from contextlib import (
-    asynccontextmanager,
-)
-from importlib.resources import (
-    as_file,
-    files,
-)
+from collections.abc import Callable, Sequence
+from contextlib import asynccontextmanager
+from importlib.resources import as_file, files
 from typing import Any
 
-from fastapi import (
-    APIRouter,
-    FastAPI,
-    Request,
-)
-from fastapi.middleware.cors import (
-    CORSMiddleware,
-)
-from fastapi.openapi.docs import (
-    get_swagger_ui_html,
-)
-from fastapi.responses import (
-    FileResponse,
-    JSONResponse,
-)
-from pydantic import (
-    Field,
-    model_validator,
-)
-from pydantic_settings import (
-    BaseSettings,
-)
-from rb_database.mongo_db import (
-    close_db,
-    init_db,
-)
-from rb_socketio import (
-    RBSocketIONsClient,
-    RbSocketIORouter,
-)
-from rb_zenoh.exeption import (
-    register_zenoh_exception_handlers,
-)
-from rb_zenoh.router import (
-    ZenohRouter,
-)
+from dotenv import load_dotenv
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings
+from rb_database.mongo_db import close_db, init_db
+from rb_socketio import RBSocketIONsClient, RbSocketIORouter
+from rb_utils.file import get_env_path
+from rb_zenoh.exeption import register_zenoh_exception_handlers
+from rb_zenoh.router import ZenohRouter
 
 from .log import rb_log
 
+load_dotenv(get_env_path())
+
+# 이렇게 쓰시면 됩니당~~~
+print("MONGO_USERNAME >>>", os.getenv("MONGO_USERNAME"))
 
 class AppSettings(BaseSettings):
     IS_DEV: bool = Field(default=False)
@@ -187,15 +159,15 @@ def create_app(
     register_zenoh_exception_handlers(app)
 
     if zenoh_routers:
-        for zenoh_r in zenoh_routers:  # type: ZenohRouter
+        for zenoh_r in zenoh_routers:
             zenoh_router.include_router(zenoh_r)
 
     if api_routers:
-        for api_r in api_routers:  # type: APIRouter
+        for api_r in api_routers:
             app.include_router(api_r)
 
     if socket_routers:
-        for socket_r in socket_routers:  # type: RbSocketIORouter
+        for socket_r in socket_routers:
             if socket_client is not None:
                 socket_client.socket_include_router(socket_r)
 

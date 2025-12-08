@@ -34,6 +34,7 @@ for dir in "$BE/services"/*; do
   [ -n "$PORT" ] || continue
 
   CONF_PATH="./services/${NAME}/config.env"
+  COMMON_ENV_PATH="./.env"
   # 개발용
   cat >&3 <<EOF
   ${NAME}:
@@ -53,6 +54,7 @@ for dir in "$BE/services"/*; do
       - zenoh-router
     env_file:
       - ${CONF_PATH}
+      - ${COMMON_ENV_PATH}
     networks: [rb_net]
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
@@ -107,6 +109,7 @@ EOF
     ipc: host
     env_file:
       - ${CONF_PATH}
+      - ${COMMON_ENV_PATH}
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
@@ -144,7 +147,7 @@ for FD in 3 4 5; do
     image: zenoh-router:latest
     container_name: ${ZENOH_ROUTER_CONTAINER_NAME}
     volumes:
-      - ../zenoh-router/zenoh.json5:/etc/zenoh/zenoh.json5:ro
+      - ../zenoh-router/zenoh.json5:/etc/zenoh/config.json5:ro
     ports:
       - "7447:7447/tcp"
       - "7446:7446/udp"
@@ -179,7 +182,6 @@ EOF
       - BUILDKIT_PROVENANCE=0
       - BUILDKIT_SBOM_SCAN=0
     container_name: api-gateway-preview
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     restart: unless-stopped
     volumes:
       - ../api-gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
@@ -190,6 +192,7 @@ EOF
     container_name: rrs-mongo-preview
     ports: ["27017:27017"]
     network_mode: host
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - rrs-mongo-data:/data/db
       - ../scripts/backend/mongo-preview-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro

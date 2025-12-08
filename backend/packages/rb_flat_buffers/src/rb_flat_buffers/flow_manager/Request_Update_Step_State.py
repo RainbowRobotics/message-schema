@@ -34,14 +34,28 @@ class Request_Update_Step_State(object):
         return None
 
     # Request_Update_Step_State
-    def State(self):
+    def TaskId(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # Request_Update_Step_State
+    def State(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
+    # Request_Update_Step_State
+    def Error(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def Request_Update_Step_StateStart(builder: flatbuffers.Builder):
-    builder.StartObject(2)
+    builder.StartObject(4)
 
 def Start(builder: flatbuffers.Builder):
     Request_Update_Step_StateStart(builder)
@@ -52,11 +66,23 @@ def Request_Update_Step_StateAddStepId(builder: flatbuffers.Builder, stepId: int
 def AddStepId(builder: flatbuffers.Builder, stepId: int):
     Request_Update_Step_StateAddStepId(builder, stepId)
 
+def Request_Update_Step_StateAddTaskId(builder: flatbuffers.Builder, taskId: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(taskId), 0)
+
+def AddTaskId(builder: flatbuffers.Builder, taskId: int):
+    Request_Update_Step_StateAddTaskId(builder, taskId)
+
 def Request_Update_Step_StateAddState(builder: flatbuffers.Builder, state: int):
-    builder.PrependInt8Slot(1, state, 0)
+    builder.PrependInt8Slot(2, state, 0)
 
 def AddState(builder: flatbuffers.Builder, state: int):
     Request_Update_Step_StateAddState(builder, state)
+
+def Request_Update_Step_StateAddError(builder: flatbuffers.Builder, error: int):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(error), 0)
+
+def AddError(builder: flatbuffers.Builder, error: int):
+    Request_Update_Step_StateAddError(builder, error)
 
 def Request_Update_Step_StateEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -68,13 +94,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Update_Step_StateT(object):
 
     # Request_Update_Step_StateT
-    def __init__(
-        self,
-        stepId = None,
-        state = 0,
-    ):
-        self.stepId = stepId  # type: Optional[str]
-        self.state = state  # type: int
+    def __init__(self):
+        self.stepId = None  # type: str
+        self.taskId = None  # type: str
+        self.state = 0  # type: int
+        self.error = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -98,15 +122,25 @@ class Request_Update_Step_StateT(object):
         if requestUpdateStepState is None:
             return
         self.stepId = requestUpdateStepState.StepId()
+        self.taskId = requestUpdateStepState.TaskId()
         self.state = requestUpdateStepState.State()
+        self.error = requestUpdateStepState.Error()
 
     # Request_Update_Step_StateT
     def Pack(self, builder):
         if self.stepId is not None:
             stepId = builder.CreateString(self.stepId)
+        if self.taskId is not None:
+            taskId = builder.CreateString(self.taskId)
+        if self.error is not None:
+            error = builder.CreateString(self.error)
         Request_Update_Step_StateStart(builder)
         if self.stepId is not None:
             Request_Update_Step_StateAddStepId(builder, stepId)
+        if self.taskId is not None:
+            Request_Update_Step_StateAddTaskId(builder, taskId)
         Request_Update_Step_StateAddState(builder, self.state)
+        if self.error is not None:
+            Request_Update_Step_StateAddError(builder, error)
         requestUpdateStepState = Request_Update_Step_StateEnd(builder)
         return requestUpdateStepState

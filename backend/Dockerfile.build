@@ -12,6 +12,7 @@ COPY scripts/ ../scripts/
 COPY schemas ../schemas
 COPY backend/Makefile ./
 COPY backend/backend.mk ./
+COPY backend/.env ./
 
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
@@ -55,6 +56,7 @@ RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
     --collect-all zenoh \
     --add-data "packages/rb_resources/src/rb_resources/data:rb_resources/data" \
     --add-data "packages/rb_resources/src/rb_resources/swagger-ui:rb_resources/swagger-ui" \
+    --add-data ".env:rb_resources/.env" \
     ./services/${SERVICE}/run.py
 
 FROM scratch AS artifacts

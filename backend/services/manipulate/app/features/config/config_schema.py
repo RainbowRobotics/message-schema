@@ -1,7 +1,14 @@
 from pydantic import BaseModel
 from rb_schemas.base import (
+    NJointfPD,
     Vec3fPD,
 )
+
+
+class MoveInputTarget(BaseModel):
+    tar_values: list[float]
+    tar_frame: int
+    tar_unit: int
 
 
 class ST_Box_ParaPD(BaseModel):
@@ -79,6 +86,11 @@ class Response_CallConfigControlBoxPD(BaseModel):
     userFrame7: ST_Config_UserFramePD
 
 
+class Request_Save_Robot_CodePD(BaseModel):
+    code: int
+    option: int
+
+
 class Request_Save_Area_ParameterPD(BaseModel):
     area_no: int
     area_name: str
@@ -123,21 +135,6 @@ class Request_Save_Direct_Teach_SensitivityPD(BaseModel):
     sensitivity: list[float]
 
 
-class Request_Save_SideDin_FilterPD(BaseModel):
-    port_num: int
-    desired_count: int
-
-
-class Request_Save_SideDin_FunctionPD(BaseModel):
-    port_num: int
-    desired_function: int
-
-
-class Request_Save_SideDout_FunctionPD(BaseModel):
-    port_num: int
-    desired_function: int
-
-
 class Request_Save_Collision_ParameterPD(BaseModel):
     onoff: int
     react: int
@@ -178,3 +175,63 @@ class Request_Save_Gravity_ParameterPD(BaseModel):
     gx: float
     gy: float
     gz: float
+
+
+class Request_Set_ShiftPD(BaseModel):
+    shift_no: int
+    shift_mode: int
+    target: MoveInputTarget
+
+
+class Request_Set_Out_Collision_ParaPD(BaseModel):
+    onoff: int
+    react_mode: int
+    threshold: float
+
+
+class Request_Set_Self_Collision_ParaPD(BaseModel):
+    mode: int
+    dist_int: float
+    dist_ext: float
+
+
+class Request_Set_Joint_ImpedancePD(BaseModel):
+    onoff: int
+    stiffness: NJointfPD
+    torquelimit: NJointfPD
+
+
+class Request_Set_Free_DrivePD(BaseModel):
+    onoff: int
+    sensitivity: float
+
+
+class Request_Set_User_Frame_6DofPD(BaseModel):
+    user_frame_num: int
+    setting_option: int
+    target_x: float
+    target_y: float
+    target_z: float
+    target_rx: float
+    target_ry: float
+    target_rz: float
+
+
+class Request_Set_User_Frame_TCPPD(BaseModel):
+    user_frame_num: int
+    setting_option: int
+
+
+class Request_Set_User_Frame_3PointsPD(BaseModel):
+    user_frame_num: int
+    setting_option: int
+    order_option: int
+    point_1_x: float
+    point_1_y: float
+    point_1_z: float
+    point_2_x: float
+    point_2_y: float
+    point_2_z: float
+    point_3_x: float
+    point_3_y: float
+    point_3_z: float

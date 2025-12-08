@@ -1,5 +1,4 @@
 # 사용 예제
-import time
 
 from .controller.zenoh_controller import (
     Zenoh_Controller,
@@ -20,18 +19,52 @@ if __name__ == "__main__":
             Step(
                 step_id="3",
                 name="MoveJ",
-                func_name="rb_manipulate_sdk.move_j",
+                func_name="rb_manipulate_sdk.point",
+                args={
+                    "robot_model": "$parent.robot_model",
+                    "move_type": "J",
+                    "pnt_para": 0,
+                    "pnt_type": 0,
+                    "tar_frame": -1,
+                    "tar_unit": 0,
+                    "tar_values": [0, 0, 0, 90, 0, 0, 0],
+                    "spd_mode": 0,
+                    "spd_vel_para": 40,
+                    "spd_acc_para": 10,
+                    "tcp_num": -1,
+                    "input_method": 0,
+                },
                 children=[],
-                args={"robot_model": "C500920", "joints": "[0, 0, 0, 90, 0, 0, 0]"},
             ),
             Step(
                 step_id="4",
-                name="MoveJ2",
-                func_name="rb_manipulate_sdk.move_j",
+                name="MoveJ",
+                func_name="rb_manipulate_sdk.point",
+                args={
+                    "robot_model": "$parent.robot_model",
+                    "move_type": "J",
+                    "pnt_para": 0,
+                    "pnt_type": 0,
+                    "tar_frame": -1,
+                    "tar_unit": 0,
+                    "tar_values": [0, 0, 0, 0, 0, 0, 0],
+                    "spd_mode": 0,
+                    "spd_vel_para": 40,
+                    "spd_acc_para": 10,
+                    "tcp_num": -1,
+                    "input_method": 0,
+                },
                 children=[],
-                args={"robot_model": "C500920", "joints": "[0, 0, 0, 0, 0, 0, 0]"},
             ),
+            # Step(
+            #     step_id="4",
+            #     name="MoveJ2",
+            #     func_name="rb_manipulate_sdk.move_j",
+            #     children=[],
+            #     args={"robot_model": "C500920", "joints": "[0, 0, 0, 0, 0, 0, 0]"},
+            # ),
         ],
+        args={"robot_model": "C500920"},
     )
 
     # 실행기 생성
@@ -41,15 +74,15 @@ if __name__ == "__main__":
     executor.start("script_1", root, repeat_count=2)
 
     # 상태 확인
-    print("\n=== All States ===")
-    print(executor.get_all_states())
+    # print("\n=== All States ===")
+    # print(executor.get_all_states())
 
-    time.sleep(3)
-    executor.pause("script_1")
+    # time.sleep(3)
+    # executor.pause("script_1")
 
-    time.sleep(4)
+    # time.sleep(4)
 
-    executor.resume("script_1")
+    # executor.resume("script_1")
 
     executor.wait_all()
 
