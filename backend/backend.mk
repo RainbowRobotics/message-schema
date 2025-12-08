@@ -33,7 +33,7 @@ backend.local-dev: backend.lint backend.flatc ## docker를 쓰지 않고 개발 
 	@cd ${WORKDIR}/services/${SERVICE} && uv run uvicorn app.main:app --host 0.0.0.0 --port ${CONF_PORT} --reload --reload-dir ${WORKDIR} --reload-include '**/*.py'
 
 .PHONY: backend.dev
-backend.dev: backend.lint backend.mypy ## docker를 쓰고 개발 환경 실행
+backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh --dev
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
 	@bash -euo pipefail -c '\
