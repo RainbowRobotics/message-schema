@@ -16,6 +16,7 @@ services:
     ipc: host
     env_file:
       - ./services/amr/config.env
+      - ./.env
     volumes:
       - ./services/amr/amr.arm64.bin:/amr.arm64.bin
       - ./services/amr/amr.amd64.bin:/amr.amd64.bin

@@ -29,7 +29,6 @@ async def on_change_speedbar(data, program_id: str):
 @program_socket_router.on("programs")
 async def on_get_program_list(data):
     data_dict = t_to_dict(data)
-    state = data_dict.get("state")
     search_name = data_dict.get("search_name")
 
     db = await get_db()
@@ -100,8 +99,6 @@ async def on_delete_tasks(data):
 async def on_pause_program(data):
     # data_dict = t_to_dict(data)
 
-    db = await get_db()
-
     return await program_service.call_resume_or_pause(
         is_pause=True,
         # program_id=data_dict.get("programId"),
@@ -112,8 +109,6 @@ async def on_pause_program(data):
 @program_socket_router.on("program/resume")
 async def on_resume_program(data):
     # data_dict = t_to_dict(data)
-
-    db = await get_db()
 
     return await program_service.call_resume_or_pause(
         is_pause=False,

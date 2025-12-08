@@ -62,8 +62,6 @@ for dir in "$BE/services"/*; do
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
       - ./temp-data:/app/data
-      - /data:/data
-
 EOF
 
   # preview 용
