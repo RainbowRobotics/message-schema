@@ -41,9 +41,7 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Map_TilesT(object):
 
     # Response_Map_TilesT
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         pass
 
     @classmethod

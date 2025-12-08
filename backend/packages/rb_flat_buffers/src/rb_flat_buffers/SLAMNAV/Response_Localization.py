@@ -146,25 +146,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_LocalizationT(object):
 
     # Response_LocalizationT
-    def __init__(
-        self,
-        id = None,
-        command = None,
-        x = 0.0,
-        y = 0.0,
-        z = 0.0,
-        rz = 0.0,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.command = command  # type: Optional[str]
-        self.x = x  # type: float
-        self.y = y  # type: float
-        self.z = z  # type: float
-        self.rz = rz  # type: float
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.command = None  # type: str
+        self.x = 0.0  # type: float
+        self.y = 0.0  # type: float
+        self.z = 0.0  # type: float
+        self.rz = 0.0  # type: float
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

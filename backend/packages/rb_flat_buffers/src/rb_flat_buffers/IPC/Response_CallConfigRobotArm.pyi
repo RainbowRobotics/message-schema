@@ -3,8 +3,10 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from rb_flat_buffers.IPC.Response_CallConfigRobotArm import Response_CallConfigRobotArm
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -37,20 +39,6 @@ class Response_CallConfigRobotArmT(object):
   gravityGy: float
   gravityGz: float
   directTeachingSensitivity: N_JOINT_fT | None
-  def __init__(
-    self,
-    outCollOnoff: int = ...,
-    outCollReact: int = ...,
-    outCollLimit: float = ...,
-    selfCollMode: int = ...,
-    selfCollDistanceInter: float = ...,
-    selfCollDistanceExter: float = ...,
-    gravityMode: int = ...,
-    gravityGx: float = ...,
-    gravityGy: float = ...,
-    gravityGz: float = ...,
-    directTeachingSensitivity: 'N_JOINT_fT' | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_CallConfigRobotArmT: ...
   @classmethod

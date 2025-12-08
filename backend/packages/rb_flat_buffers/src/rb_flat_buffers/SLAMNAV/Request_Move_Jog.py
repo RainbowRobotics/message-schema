@@ -80,15 +80,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_JogT(object):
 
     # Request_Move_JogT
-    def __init__(
-        self,
-        vx = 0.0,
-        vy = 0.0,
-        wz = 0.0,
-    ):
-        self.vx = vx  # type: float
-        self.vy = vy  # type: float
-        self.wz = wz  # type: float
+    def __init__(self):
+        self.vx = 0.0  # type: float
+        self.vy = 0.0  # type: float
+        self.wz = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Move_Goal import Response_Move_Goal
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -26,15 +28,6 @@ class Response_Move_GoalT(object):
   preset: int
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    goalId: str | None = ...,
-    method: str | None = ...,
-    preset: int = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Move_GoalT: ...
   @classmethod

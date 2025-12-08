@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Status_Map import Status_Map
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,11 +20,6 @@ class Status_Map(object):
 class Status_MapT(object):
   mapName: str | None
   mapStatus: str | None
-  def __init__(
-    self,
-    mapName: str | None = ...,
-    mapStatus: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_MapT: ...
   @classmethod

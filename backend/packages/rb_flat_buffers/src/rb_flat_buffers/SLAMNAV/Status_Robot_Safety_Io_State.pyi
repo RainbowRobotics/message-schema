@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Status_Robot_Safety_Io_State import Status_Robot_Safety_Io_State
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -34,13 +36,6 @@ class Status_Robot_Safety_Io_StateT(object):
   mcu1Dio: typing.List[bool]
   mcu0Din: typing.List[bool]
   mcu1Din: typing.List[bool]
-  def __init__(
-    self,
-    mcu0Dio: typing.List[bool] | None = ...,
-    mcu1Dio: typing.List[bool] | None = ...,
-    mcu0Din: typing.List[bool] | None = ...,
-    mcu1Din: typing.List[bool] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_Robot_Safety_Io_StateT: ...
   @classmethod

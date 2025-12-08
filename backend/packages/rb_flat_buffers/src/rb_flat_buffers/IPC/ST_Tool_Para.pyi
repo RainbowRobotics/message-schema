@@ -3,8 +3,10 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.IPC.ST_Box_Para import ST_Box_Para, ST_Box_ParaT
+from rb_flat_buffers.IPC.ST_Tool_Para import ST_Tool_Para
 from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -30,16 +32,6 @@ class ST_Tool_ParaT(object):
   tcpEuler: Vec3fT | None
   boxType: int
   boxParameter: ST_Box_ParaT | None
-  def __init__(
-    self,
-    toolName: str | None = ...,
-    comMass: float = ...,
-    comOffset: 'Vec3fT' | None = ...,
-    tcpOffset: 'Vec3fT' | None = ...,
-    tcpEuler: 'Vec3fT' | None = ...,
-    boxType: int = ...,
-    boxParameter: 'ST_Box_ParaT' | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> ST_Tool_ParaT: ...
   @classmethod

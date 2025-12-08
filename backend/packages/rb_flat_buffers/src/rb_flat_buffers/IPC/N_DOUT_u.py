@@ -54,11 +54,8 @@ except:
 class N_DOUT_uT(object):
 
     # N_DOUT_uT
-    def __init__(
-        self,
-        u = None,
-    ):
-        self.u = u  # type: Optional[List[int]]
+    def __init__(self):
+        self.u = None  # type: List[int]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -120,21 +120,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Move_CircularT(object):
 
     # Response_Move_CircularT
-    def __init__(
-        self,
-        id = None,
-        target = 0.0,
-        speed = 0.0,
-        direction = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.target = target  # type: float
-        self.speed = speed  # type: float
-        self.direction = direction  # type: Optional[str]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.target = 0.0  # type: float
+        self.speed = 0.0  # type: float
+        self.direction = None  # type: str
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

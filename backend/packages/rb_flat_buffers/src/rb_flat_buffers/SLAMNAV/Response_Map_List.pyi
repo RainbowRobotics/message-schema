@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Map_List import Response_Map_List
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -24,13 +26,6 @@ class Response_Map_ListT(object):
   list: typing.List[str]
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    list: typing.List[str] | None = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Map_ListT: ...
   @classmethod

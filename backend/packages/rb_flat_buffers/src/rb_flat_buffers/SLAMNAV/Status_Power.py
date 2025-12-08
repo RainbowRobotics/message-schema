@@ -275,45 +275,25 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_PowerT(object):
 
     # Status_PowerT
-    def __init__(
-        self,
-        batIn = 0.0,
-        batOut = 0.0,
-        batCurrent = 0.0,
-        totalPower = 0.0,
-        power = 0.0,
-        batPercent = 0.0,
-        tabosVoltage = 0.0,
-        tabosCurrent = 0.0,
-        tabosStatus = 0.0,
-        tabosTtf = 0.0,
-        tabosTte = 0.0,
-        tabosSoc = 0.0,
-        tabosSoh = 0.0,
-        tabosTemp = 0.0,
-        tabosRc = 0.0,
-        tabosAe = 0.0,
-        chargeCurrent = 0.0,
-        contactVoltage = 0.0,
-    ):
-        self.batIn = batIn  # type: float
-        self.batOut = batOut  # type: float
-        self.batCurrent = batCurrent  # type: float
-        self.totalPower = totalPower  # type: float
-        self.power = power  # type: float
-        self.batPercent = batPercent  # type: float
-        self.tabosVoltage = tabosVoltage  # type: float
-        self.tabosCurrent = tabosCurrent  # type: float
-        self.tabosStatus = tabosStatus  # type: float
-        self.tabosTtf = tabosTtf  # type: float
-        self.tabosTte = tabosTte  # type: float
-        self.tabosSoc = tabosSoc  # type: float
-        self.tabosSoh = tabosSoh  # type: float
-        self.tabosTemp = tabosTemp  # type: float
-        self.tabosRc = tabosRc  # type: float
-        self.tabosAe = tabosAe  # type: float
-        self.chargeCurrent = chargeCurrent  # type: float
-        self.contactVoltage = contactVoltage  # type: float
+    def __init__(self):
+        self.batIn = 0.0  # type: float
+        self.batOut = 0.0  # type: float
+        self.batCurrent = 0.0  # type: float
+        self.totalPower = 0.0  # type: float
+        self.power = 0.0  # type: float
+        self.batPercent = 0.0  # type: float
+        self.tabosVoltage = 0.0  # type: float
+        self.tabosCurrent = 0.0  # type: float
+        self.tabosStatus = 0.0  # type: float
+        self.tabosTtf = 0.0  # type: float
+        self.tabosTte = 0.0  # type: float
+        self.tabosSoc = 0.0  # type: float
+        self.tabosSoh = 0.0  # type: float
+        self.tabosTemp = 0.0  # type: float
+        self.tabosRc = 0.0  # type: float
+        self.tabosAe = 0.0  # type: float
+        self.chargeCurrent = 0.0  # type: float
+        self.contactVoltage = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

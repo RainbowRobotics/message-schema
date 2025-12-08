@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.program.RB_Program_Task_Status import RB_Program_Task_Status
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -30,15 +32,6 @@ class RB_Program_Task_StatusT(object):
   nodePath: typing.List[str]
   status: str | None
   offset: int
-  def __init__(
-    self,
-    taskId: str | None = ...,
-    programId: str | None = ...,
-    syncTaskIds: typing.List[str] | None = ...,
-    nodePath: typing.List[str] | None = ...,
-    status: str | None = ...,
-    offset: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> RB_Program_Task_StatusT: ...
   @classmethod

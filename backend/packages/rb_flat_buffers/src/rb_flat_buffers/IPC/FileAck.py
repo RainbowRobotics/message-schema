@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class FileAckT(object):
 
     # FileAckT
-    def __init__(
-        self,
-        session = None,
-        index = 0,
-        ok = False,
-    ):
-        self.session = session  # type: Optional[str]
-        self.index = index  # type: int
-        self.ok = ok  # type: bool
+    def __init__(self):
+        self.session = None  # type: str
+        self.index = 0  # type: int
+        self.ok = False  # type: bool
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

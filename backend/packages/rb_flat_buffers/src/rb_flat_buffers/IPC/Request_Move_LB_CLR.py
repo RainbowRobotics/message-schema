@@ -41,9 +41,7 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_LB_CLRT(object):
 
     # Request_Move_LB_CLRT
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         pass
 
     @classmethod

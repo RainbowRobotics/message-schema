@@ -158,27 +158,16 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_ImuT(object):
 
     # Status_ImuT
-    def __init__(
-        self,
-        accX = 0.0,
-        accY = 0.0,
-        accZ = 0.0,
-        gyrX = 0.0,
-        gyrY = 0.0,
-        gyrZ = 0.0,
-        imuRx = 0.0,
-        imuRy = 0.0,
-        imuRz = 0.0,
-    ):
-        self.accX = accX  # type: float
-        self.accY = accY  # type: float
-        self.accZ = accZ  # type: float
-        self.gyrX = gyrX  # type: float
-        self.gyrY = gyrY  # type: float
-        self.gyrZ = gyrZ  # type: float
-        self.imuRx = imuRx  # type: float
-        self.imuRy = imuRy  # type: float
-        self.imuRz = imuRz  # type: float
+    def __init__(self):
+        self.accX = 0.0  # type: float
+        self.accY = 0.0  # type: float
+        self.accZ = 0.0  # type: float
+        self.gyrX = 0.0  # type: float
+        self.gyrY = 0.0  # type: float
+        self.gyrZ = 0.0  # type: float
+        self.imuRx = 0.0  # type: float
+        self.imuRy = 0.0  # type: float
+        self.imuRz = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

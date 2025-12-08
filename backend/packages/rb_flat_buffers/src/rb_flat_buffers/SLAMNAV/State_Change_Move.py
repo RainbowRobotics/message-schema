@@ -345,43 +345,24 @@ except:
 class State_Change_MoveT(object):
 
     # State_Change_MoveT
-    def __init__(
-        self,
-        id = None,
-        command = None,
-        curPose = None,
-        goalPose = None,
-        mapName = None,
-        vel = None,
-        goalId = None,
-        goalName = None,
-        method = None,
-        direction = None,
-        preset = 0,
-        result = None,
-        message = None,
-        remainingDist = 0.0,
-        target = 0.0,
-        speed = 0.0,
-        batPercent = 0,
-    ):
-        self.id = id  # type: Optional[str]
-        self.command = command  # type: Optional[str]
-        self.curPose = curPose  # type: Optional[List[float]]
-        self.goalPose = goalPose  # type: Optional[List[float]]
-        self.mapName = mapName  # type: Optional[str]
-        self.vel = vel  # type: Optional[List[float]]
-        self.goalId = goalId  # type: Optional[str]
-        self.goalName = goalName  # type: Optional[str]
-        self.method = method  # type: Optional[str]
-        self.direction = direction  # type: Optional[str]
-        self.preset = preset  # type: int
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
-        self.remainingDist = remainingDist  # type: float
-        self.target = target  # type: float
-        self.speed = speed  # type: float
-        self.batPercent = batPercent  # type: int
+    def __init__(self):
+        self.id = None  # type: str
+        self.command = None  # type: str
+        self.curPose = None  # type: List[float]
+        self.goalPose = None  # type: List[float]
+        self.mapName = None  # type: str
+        self.vel = None  # type: List[float]
+        self.goalId = None  # type: str
+        self.goalName = None  # type: str
+        self.method = None  # type: str
+        self.direction = None  # type: str
+        self.preset = 0  # type: int
+        self.result = None  # type: str
+        self.message = None  # type: str
+        self.remainingDist = 0.0  # type: float
+        self.target = 0.0  # type: float
+        self.speed = 0.0  # type: float
+        self.batPercent = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

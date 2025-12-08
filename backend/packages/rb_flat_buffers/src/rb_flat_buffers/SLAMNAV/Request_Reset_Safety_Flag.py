@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Reset_Safety_FlagT(object):
 
     # Request_Reset_Safety_FlagT
-    def __init__(
-        self,
-        id = None,
-        resetFlag = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.resetFlag = resetFlag  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.resetFlag = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

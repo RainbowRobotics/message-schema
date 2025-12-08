@@ -201,17 +201,11 @@ except:
 class Status_Robot_Safety_Io_StateT(object):
 
     # Status_Robot_Safety_Io_StateT
-    def __init__(
-        self,
-        mcu0Dio = None,
-        mcu1Dio = None,
-        mcu0Din = None,
-        mcu1Din = None,
-    ):
-        self.mcu0Dio = mcu0Dio  # type: Optional[List[bool]]
-        self.mcu1Dio = mcu1Dio  # type: Optional[List[bool]]
-        self.mcu0Din = mcu0Din  # type: Optional[List[bool]]
-        self.mcu1Din = mcu1Din  # type: Optional[List[bool]]
+    def __init__(self):
+        self.mcu0Dio = None  # type: List[bool]
+        self.mcu1Dio = None  # type: List[bool]
+        self.mcu0Din = None  # type: List[bool]
+        self.mcu1Din = None  # type: List[bool]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

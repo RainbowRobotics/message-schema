@@ -107,19 +107,12 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Move_XLinearT(object):
 
     # Response_Move_XLinearT
-    def __init__(
-        self,
-        id = None,
-        target = 0.0,
-        speed = 0.0,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.target = target  # type: float
-        self.speed = speed  # type: float
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.target = 0.0  # type: float
+        self.speed = 0.0  # type: float
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
