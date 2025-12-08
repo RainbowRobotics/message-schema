@@ -92,6 +92,7 @@ name = "amr"
 version = "0.1.0"
 source = { virtual = "services/amr" }
 dependencies = [
+    { name = "email-validator" },
     { name = "fastapi" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
@@ -108,6 +109,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
@@ -337,6 +339,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/df/ef/f9d45f686364d96240569faca212f0d55c96f2d0e20524dbb12f415314f0/eclipse_zenoh-1.5.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5304c4a990b3a92de231eb88ffd335b46b7237b4c95ec94834808cb15c4fcef3", size = 9163500, upload-time = "2025-07-25T14:38:05.6Z" },
     { url = "https://files.pythonhosted.org/packages/35/dc/c4f16faef830e221a1fd3eb81205abdb75324389c914408029706ba60fe2/eclipse_zenoh-1.5.0-cp38-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:b672a5fd266e9fe04d9afdb3f869006ea331aa4d0f5f9fd1f53955eb889f5fad", size = 9029215, upload-time = "2025-07-25T14:38:07.155Z" },
     { url = "https://files.pythonhosted.org/packages/53/f4/a1c3cf7860089bdd880cedfc65eb41fa73e91428a4968d30e79cebcdbc84/eclipse_zenoh-1.5.0-cp38-abi3-win_amd64.whl", hash = "sha256:2d37a33652d7e363da20dd15aba5133532e9ead3e368fc60df3b98a645aae88b", size = 7493570, upload-time = "2025-07-25T14:38:09.722Z" },
+]
+
+[[package]]
+name = "email-validator"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dnspython" },
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
 ]
 
 [[package]]

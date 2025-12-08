@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import os
 from collections.abc import (
     Callable,
     Sequence,
@@ -110,7 +111,7 @@ def create_app(
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
         await zenoh_router.startup()
-        print("📡 zenoh subscribe 등록 완료", flush=True)
+        print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)
 
         if socket_client and not getattr(socket_client, "connected", False):
             app.state._sio_connect_task = asyncio.create_task(
@@ -224,23 +225,28 @@ def create_app(
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
         try:
+            b = ""
             body_text = ""
 
             rb_log.error(f"Internal Server Error: {exc}")
-
+            rb_log.error(f"Internal Server Error: {request.scope}")
+            rb_log.error(f"Internal Server Error: {await request.body()}")
             if request.scope.get("type") == "http":
                 try:
                     b = await request.body()
                     body_text = b.decode("utf-8", "ignore") if b else ""
-                except RuntimeError:
+                    rb_log.error(f"bodytext: {body_text}")
+                except RuntimeError as e:
+                    rb_log.error(f"RuntimeError: {e}")
                     body_text = "<unavailable>"
                 except Exception:
                     body_text = "<error reading body>"
 
+            rb_log.error(f"TEST: {b}")
             return JSONResponse(
-                status_code=500,
+                status_code=exc.status_code if hasattr(exc, "status_code") else 500,
                 content={
-                    "error": "Internal Server Error",
+                    "error": exc.message if hasattr(exc, "message") else "Internal Server Error",
                     "method": request.method,
                     "url": str(request.url),
                     "query_params": dict(request.query_params),

@@ -11,12 +11,9 @@ from rb_zenoh.router import (
     ZenohRouter,
 )
 
-from app.features.move.src.application.amr_move_service import (
-    AmrMoveService,
-)
+from .amr_move_api import amr_move_service
 
 move_zenoh_router = ZenohRouter()
-amr_move_service = AmrMoveService()
 
 @move_zenoh_router.subscribe(
     "*/v1/move",

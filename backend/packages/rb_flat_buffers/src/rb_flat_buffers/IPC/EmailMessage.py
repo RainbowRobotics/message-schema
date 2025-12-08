@@ -180,7 +180,7 @@ class EmailMessageT(object):
                 if emailMessage.Attachment(i) is None:
                     self.attachment.append(None)
                 else:
-                    fileMessage_ = FileMessageT.InitFromObj(emailMessage .Attachment(i))
+                    fileMessage_ = FileMessageT.InitFromObj(emailMessage.Attachment(i))
                     self.attachment.append(fileMessage_)
 
     # EmailMessageT

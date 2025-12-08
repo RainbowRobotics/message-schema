@@ -108,6 +108,7 @@ class ZenohClient:
             conf.insert_json5("scouting/multicast/enabled", "true")
             conf.insert_json5("scouting/multicast/ttl", "1")
             # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
+            conf.insert_json5("scouting/gossip/enabled", "false")
             conf.insert_json5("transport/shared_memory/enabled", "true")
 
             # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.

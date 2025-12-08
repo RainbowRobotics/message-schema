@@ -52,3 +52,5 @@ watchfiles==1.1.0
     # via uvicorn
 websockets==15.0.1
     # via uvicorn
+email-validator==2.2.0
+    # via -r backend/requirements.in

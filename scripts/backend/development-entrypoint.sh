@@ -16,3 +16,5 @@ APP_PATH="./services/${SERVICE}"
 cd "$APP_PATH"
 
 exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload --reload-dir "../../" --reload-include '**/*.py'
+
+# exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT  --reload-dir "../../" --reload-include '**/*.py'

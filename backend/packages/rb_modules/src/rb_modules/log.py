@@ -2,6 +2,7 @@ from datetime import (
     UTC,
     datetime,
 )
+from zoneinfo import ZoneInfo
 
 from rb_flat_buffers.IPC.State_Log import (
     State_LogT,
@@ -60,7 +61,7 @@ class RBLog:
 
     def _print(self, message: str, level: str):
         print(
-            f"{self._log_colors[level]}[{level}] {message}{self._log_colors['RESET']}", flush=True
+            f"{self._log_colors[level]}[{level}][{datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}] {message}{self._log_colors['RESET']}", flush=True
         )
 
     def _publish_zenoh(self, message: str, level: str, *, disable_db: bool = False):

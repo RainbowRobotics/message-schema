@@ -4,9 +4,9 @@ import os
 import platform
 import tempfile
 
-from app.socket.socket_client import (
-    socket_client,
-)
+from app.socket.socket_client import socket_client
+
+# from app.socket.socket_client import socket_client
 from fastapi import (
     HTTPException,
     UploadFile,

@@ -66,8 +66,20 @@
   "files.trimFinalNewlines": true,
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend/services/common",
+    "${workspaceFolder}/backend/services/amr",
+    "${workspaceFolder}/backend/services/deploy",
     "${workspaceFolder}/backend/services/manipulate",
-    "${workspaceFolder}/bazel-bin/schemas"
+    "${workspaceFolder}/bazel-bin/schemas",
+    "${workspaceFolder}/backend/packages/rb_utils/src",
+    "${workspaceFolder}/backend/packages/rb_database/src",
+    "${workspaceFolder}/backend/packages/rb_zenoh/src",
+    "${workspaceFolder}/backend/packages/rb_modules/src",
+    "${workspaceFolder}/backend/packages/rb_socketio/src",
+    "${workspaceFolder}/backend/packages/rb_schemas/src",
+    "${workspaceFolder}/backend/packages/rb_resources/src",
+    "${workspaceFolder}/backend/packages/rb_flow_manager/src",
+    "${workspaceFolder}/backend/packages/rb_sdk/src",
   ],
   "python.analysis.exclude": [
     "${workspaceFolder}/backend/packages/rb_flat_buffers/**"

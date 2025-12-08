@@ -536,18 +536,18 @@ async def export_collection(
     final_path = os.path.join(out_dir, file_name)
 
     # 5) 데이터 예상 조회
-    results: list[dict] = []
+    # results: list[dict] = []
     archived_count = 0
     gz_bytes = 0
     count_est = await col.count_documents(filters)
     print(f"[export_collection] count_est: {count_est}")
     if count_est == 0:
-        return [{
+        return {
             "estimatedDocs": 0,
             "archivedDocs": 0,
             "file": None,
             "size": None,
-        }]
+        }
 
     # 6) 데이터 조회 및 반환
     try:
@@ -577,14 +577,13 @@ async def export_collection(
             pass
         print("ERRORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
         print(f"[export_collection] error: {e}")
-        results.append({
+        return {
             "estimatedDocs": count_est,
             "archivedDocs": archived_count,
             "file": None,
             "size": None,
             "error": repr(e),
-        })
-        return results
+        }
 
 
 

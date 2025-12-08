@@ -31,7 +31,6 @@ pth.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print("==> Created", pth, "with:", lines)
 PY
 
-
 COPY scripts ../scripts
 COPY schemas ../schemas
 COPY backend/Makefile ./

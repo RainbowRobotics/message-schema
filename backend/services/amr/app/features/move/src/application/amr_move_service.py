@@ -18,17 +18,13 @@ from functools import wraps
 from pathlib import Path
 from typing import Any
 
-import rb_database.mongo_db as mongo_db
-from fastapi import BackgroundTasks, HTTPException
+import rb_database.mongo_db as mongo_db  # pylint: disable=import-error,no-name-in-module
+from fastapi import BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
-from rb_modules.log import (
-    rb_log,
-)
-from rb_utils.date import (
-    convert_dt,
-)
+from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
+from rb_utils.date import convert_dt  # pylint: disable=import-error,no-name-in-module
 from rb_utils.service_exception import (
-    ServiceException,
+    ServiceException,  # pylint: disable=import-error,no-name-in-module
 )
 
 from app.features.move.schema.move_api import (
@@ -90,6 +86,8 @@ class AmrMoveService:
     [AMR 이동 서비스 초기화]
     """
     def __init__(self):
+        print("안녕 나는 AMR 서비스야")
+        rb_log.info("안녕 나는 AMR 서비스야")
         self.database_port = MoveMongoDatabaseAdapter()
         self.slamnav_port = SlamnavZenohAdapter()
         self.email_port = MoveSmtpLibEmailAdapter()
@@ -366,48 +364,54 @@ class AmrMoveService:
 
 
 
-    async def export_logs(self, request: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
+    async def export_logs(self, body: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
         """
         [AMR 이동 로그 내보내기]
         """
-        rb_log.info(f"[amr_move_service] exportLogs : {request.model_dump()}")
+        rb_log.info(f"[amr_move_service] exportLogs : {body.model_dump()}")
         try:
             # 1) 요청 검사
-            if request.start_dt is None:
-                request.start_dt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
-            if request.end_dt is None:
-                request.end_dt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
-            request.start_dt = convert_dt(request.start_dt, "UTC", "UTC")
-            request.end_dt = convert_dt(request.end_dt, "UTC", "UTC")
+            if body.start_dt is None:
+                body.start_dt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
+            if body.end_dt is None:
+                body.end_dt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
+            body.start_dt = convert_dt(body.start_dt, "UTC", "UTC")
+            body.end_dt = convert_dt(body.end_dt, "UTC", "UTC")
 
-            if request.start_dt > request.end_dt:
-                raise ServiceException("시작 날짜가 종료 날짜보다 큽니다", status_code=400)
-            if request.start_dt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
+            if body.start_dt > body.end_dt:
+                raise ServiceException("시작 날짜가 종료 날짜보다 이후입니다", status_code=400)
+            if body.start_dt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
                 raise ServiceException("시작 날짜가 2025년 1월 1일 이전입니다", status_code=400)
-            if request.end_dt > datetime.now(UTC):
-                raise ServiceException("종료 날짜가 오늘 이후입니다", status_code=400)
+            if body.end_dt > datetime.now(UTC):
+                body.end_dt = datetime.now(UTC)
 
-            # 2) 파일 검사 및 임시파일 저장
-            result = await self.database_port.export_logs(options=request.model_dump(exclude_none=True))
-            print(f"[exportLogs] result: {result}")
+            # 2) 데이터 조회 및 파일 생성
+            result = await self.database_port.export_logs(options=body.model_dump(exclude_none=True))
+            rb_log.debug(f"[exportLogs] result: {result}")
             # return result
 
-            file_path = result["file"]
-            p = Path(file_path)
-            if not p.exists():
-                raise HTTPException(status_code=500, detail="내보내기 파일 생성 실패")
+            if(result.get("estimatedDocs") == 0):
+                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
 
-            download_name = request.filename or p.name
+            file_path = result.get("file") if result.get("file") else None
+            if file_path is not None and file_path != "":
+                p = Path(file_path)
+                if not p.exists():
+                    raise ServiceException("내보내기 파일 생성 실패", status_code=500)
+            else:
+                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
+
+            download_name = body.filename or p.name
             if not download_name.endswith(".ndjson.gz"):
                 download_name += ".ndjson.gz"
             download_name = os.path.basename(download_name)  # 디렉터리 traversal 방지
 
             # 2) 파일 내보내는 방법 분기
-            if request.method == "email":
-                if not request.email:
-                    raise HTTPException(status_code=400, detail="email 필드가 필요합니다 (method=email)")
+            if body.method == "email":
+                if not body.email:
+                    raise ServiceException("email 필드가 필요합니다 (method=email)", status_code=400)
                 # 백그라운드 메일 발송 트리거
-                background_tasks.add_task(self.email_port.send_export_email, request.email, str(p), download_name)
+                background_tasks.add_task(self.email_port.send_export_email, body.email, str(p), download_name)
                 # await self.email_port.send_export_email(request.email, str(p), download_name)
                 return {
                     "ok": True,
@@ -417,7 +421,7 @@ class AmrMoveService:
                     # "filename": download_name,
                     "size": result.get("size"),
                 }
-            elif request.method == "file":
+            elif body.method == "file":
                 # NDJSON + gzip
                 headers = {
                     # 내용은 NDJSON, 전송은 gzip
@@ -431,10 +435,11 @@ class AmrMoveService:
                     headers=headers,
                 )
             else:
-                raise HTTPException(status_code=400, detail="내보내기 방식 오류: 지원하지 않는 방식")
+                raise ServiceException("내보내기 방식 오류: 지원하지 않는 방식",status_code=400)
         except ServiceException as e:
-            print(f"[exportLogs] ServiceException : {e.message}, {e.status_code}")
+            rb_log.error(f"[exportLogs] ServiceException : {e.message}, {e.status_code}")
+            # raise HTTPException(status_code=e.status_code, detail=e.message)
             raise e
-        except Exception as e:
-            print(f"[exportLogs] Exception : {e}")
-            raise ServiceException("내보내기 실패", status_code=500) from e
+        # except Exception as e:
+        #     rb_log.error(f"[exportLogs] Exception : {e}")
+        #     raise HTTPException(status_code=500, detail=str(e) if str(e) else "내보내기 실패") # pylint: disable=raise-missing-from

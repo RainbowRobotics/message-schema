@@ -29,8 +29,8 @@ class EmailService:
         to_emails: list[str],
         subject: str,
         body: str,
-        attachments: list[tuple[str, bytes, str]],
-    ) -> None:
+        attachments: list[tuple[str, bytes, str]] | None = None,
+    ) -> ResponseSendEmailDto | None:
         """실제 SMTP로 메일 보내는 동기 함수"""
         msg = EmailMessage()
         msg["From"] = from_email
@@ -40,7 +40,7 @@ class EmailService:
         # 단순 text라면 set_content, HTML이면 subtype 지정
         msg.set_content(body, subtype="html")  # text만 쓸 거면 subtype 빼도 됨
 
-        for filename, content, mime_type in attachments:
+        for filename, content, mime_type in attachments or []:
             maintype, subtype = mime_type.split("/", 1)
             msg.add_attachment(
                 content,
@@ -62,11 +62,12 @@ class EmailService:
 
     async def send_email(
         self,
-        from_email: str,
         to_email: list[str],
         subject: str,
         body: str,
-        attachments: list[tuple[str, bytes, str]],
+        from_email: str | None = None,
+        password: str | None = None,
+        attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> ResponseSendEmailDto:
         """
         - from_email: 메일 발신자(기본은 rainbow.mobilerobot@gmail.com)
@@ -77,9 +78,12 @@ class EmailService:
         - return: ResponseSendEmailDto
         """
 
+        # 0) 발신자 이메일 주소 유효성 체크
+
         # 1) 모델 생성
         model = EmailModel(
             from_email=from_email,
+            password=password,
             to_email=to_email,
             subject=subject,
             body=body,
@@ -96,15 +100,11 @@ class EmailService:
                 model
             )
         )
-        # asyncio.create_task(
-        #     asyncio.to_thread(
-        #         self.send_mail_sync,
-        #         from_email,
-        #         [str(addr) for addr in to_email],
-        #         subject,
-        #         body,
-        #         attachments,
-        #     )
-        # )
 
-        return ResponseSendEmailDto(success=True, message="Email 전송 요청 성공", from_email=from_email, to_email=to_email, subject=subject, body=body, attachments_size=len(attachments) if attachments else 0)
+        return ResponseSendEmailDto(
+            from_email=from_email,
+            to_email=to_email,
+            subject=subject,
+            body=body,
+            attachments=[attachment[0] for attachment in attachments],
+        )

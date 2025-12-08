@@ -1,4 +1,15 @@
 {
-  "extraPaths": ["stubs"],
+  "extraPaths": [
+    "stubs",
+    "packages/rb_utils/src",
+    "packages/rb_database/src",
+    "packages/rb_zenoh/src",
+    "packages/rb_modules/src",
+    "packages/rb_socketio/src",
+    "packages/rb_schemas/src",
+    "packages/rb_resources/src",
+    "packages/rb_flow_manager/src",
+    "packages/rb_sdk/src"
+  ],
   "exclude": ["**/zenoh/**"]
 }

@@ -47,9 +47,9 @@ for service_path in "$SERVICES_DIR"/*; do
   LOCATION_PREFIX="$SERVICE_NAME"
 
   SERVICE_BLOCKS+="
-  
+
         set \$${LOCATION_PREFIX}_upstream ${PROXY_PASS};
-    
+
         location ^~ /${LOCATION_PREFIX}/ {
             rewrite ^/${LOCATION_PREFIX}/(.*)$ /\$1 break;
             proxy_pass \$${LOCATION_PREFIX}_upstream;
@@ -67,7 +67,7 @@ for service_path in "$SERVICES_DIR"/*; do
 
             proxy_buffering off;
         }"
-  
+
 done
 
 {

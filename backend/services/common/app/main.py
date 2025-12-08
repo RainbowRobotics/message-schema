@@ -93,6 +93,7 @@ app.add_websocket_route(SOCKET_IO_ROUTE_PATH, app_with_sio)
 sio.register_namespace(RelayNS("/"))
 
 
+
 # while True:
 #     time.sleep(1)
 #     zenoh_client.publish("*/pause", payload=b"1")

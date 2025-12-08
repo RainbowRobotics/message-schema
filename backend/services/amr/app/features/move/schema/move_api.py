@@ -128,9 +128,9 @@ class RequestAmrMoveArchiveLogFilterPD(BaseModel):
 
 
 class RequestAmrMoveExportLogPD(BaseModel):
-    start_dt: datetime | date = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
-    end_dt: datetime | date = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
-    filters: str | dict[str, Any] | None = Field(..., description="", example="{'result': 'success'}")
+    start_dt: datetime | date | None = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
+    end_dt: datetime | date | None = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
+    filters: dict[str, Any] | None = Field(..., description="", example={"result": "success"})
     filename: str = Field(..., description="내보내기 파일명(확장자는 gz로 고정됩니다)", example="move_logs")
     search_text: str | None = Field(None, description="검색어")
     sort: str = Field("createdAt", description="정렬 필드")

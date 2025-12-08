@@ -25,6 +25,7 @@ from rb_utils.date import (
 from rb_utils.pagination import (
     LogsResponse,
 )
+from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import (
     ServiceException,
 )
@@ -278,22 +279,22 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
             tz_name = "Asia/Seoul"
             out_dir = "/data/amr/export/move"
 
-            rb_log.info(f"[AmrMove] getLogs : {options}")
+            rb_log.info(f"[exportLogs] exportLogs : {options}")
 
             # 2) 옵션 파싱
-            filters = dict(options.get("filters") or {})
+            filters = t_to_dict(options.get("filters")) if options.get("filters") else {}
             search_text = options.get("search_text")
-            fields = dict(options.get("fields") or {})
+            fields = t_to_dict(options.get("fields")) if options.get("fields") else {}
             sort   = options.get("sort", "createdAt")
             order  = DESCENDING if str(options.get("order", "desc")).lower() == "desc" else ASCENDING
             start_utc = convert_dt(local=options.get("start_dt"), in_tz=tz_name, out_tz="UTC") if options.get("start_dt") else None
             end_utc = convert_dt(local=options.get("end_dt"), in_tz=tz_name, out_tz="UTC") if options.get("end_dt") else None
             filename = options.get("filename")
 
-            print(f"[exportLogs] start_utc: {start_utc}, end_utc: {end_utc}, filename: {filename}, filters: {filters}, search_text: {search_text}, fields: {fields}, sort: {sort}, order: {order}")
+            rb_log.info(f"[exportLogs] start_utc: {start_utc}, end_utc: {end_utc}, filename: {filename}, filters: {filters}, search_text: {search_text}, fields: {fields}, sort: {sort}, order: {order}")
 
             # 3) 내보내기 실행
-            results = await mongo_db.export_collection(
+            res:dict = await mongo_db.export_collection(
                 col=col,
                 start_utc=start_utc,
                 end_utc=end_utc,
@@ -306,13 +307,15 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
                 order=order
             )
 
-            print(f"[exportLogs] results: {results}")
+            rb_log.info("---------------------------------")
+            rb_log.info(f"[exportLogs] results: {res}")
+
             return {
-                "estimatedDocs": results.get("estimatedDocs"),
-                "archivedDocs": results.get("archivedDocs"),
-                "file": results.get("file"),
-                "size": results.get("size"),
-                "error": results.get("error"),
+                "estimatedDocs": res.get("estimatedDocs"),
+                "archivedDocs": res.get("archivedDocs"),
+                "file": res.get("file") if res.get("file") else None,
+                "size": res.get("size") if res.get("size") else None,
+                "error": res.get("error") if res.get("error") else None,
                 "meta": {
                     "start_utc": start_utc,
                     "end_utc": end_utc,
@@ -325,7 +328,7 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
                 }
             }
         except ServiceException as e:
-            print(f"[exportLogs] ServiceException: {e}")
+            rb_log.error(f"[exportLogs] ServiceException: {e}")
             raise e
         except Exception as e:
             rb_log.error(f"[MoveMongo] Export Logs Error : {e}")

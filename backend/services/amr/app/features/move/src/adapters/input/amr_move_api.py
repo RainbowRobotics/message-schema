@@ -3,6 +3,7 @@
 """
 
 from fastapi import APIRouter, BackgroundTasks
+from rb_modules.log import rb_log
 
 from app.features.move.schema.move_api import (
     Request_Move_GoalPD,
@@ -18,16 +19,19 @@ from app.features.move.schema.move_api import (
     Response_Move_StopPD,
     Response_Move_TargetPD,
 )
-from app.features.move.src.application.amr_move_service import (
-    AmrMoveService,
+from app.features.move.src.application.amr_move_service import AmrMoveService
+from app.socket.socket_client import (
+    socket_client,
 )
 
+# from app.main import amr_move_service
 amr_move_router = APIRouter(
     tags=["AMR 이동"],
     prefix="/slamnav/move",
 )
 
 amr_move_service = AmrMoveService()
+
 
 @amr_move_router.post(
     "/goal",
@@ -100,6 +104,7 @@ async def slamnav_move_stop() -> Response_Move_StopPD:
     - amr_move_service.move_stop: amr_move_service.move_stop 메서드 호출
     - 이동 명령 처리 결과 반환
     """
+    print("===============!!!!!!!!!!!!!11===================")
     return await amr_move_service.move_stop()
 
 
@@ -190,10 +195,18 @@ async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
     """,
     response_description="이동 로그 내보내기 결과 반환"
 )
-async def export_move_logs(request: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
+async def export_move_logs(dto: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
     """
     - request: RequestAmrMoveExportLogPD
     - amr_move_service.export_logs: amr_move_service.export_logs 메서드 호출
     - 이동 로그 내보내기 결과 반환
     """
-    return await amr_move_service.export_logs(request, background_tasks)
+    return await amr_move_service.export_logs(dto, background_tasks)
+
+
+
+
+@amr_move_router.get("/test")
+async def test_move():
+    rb_log.info("============== 테스트 =================")
+    await socket_client.emit("test/v1/move/test", "test")

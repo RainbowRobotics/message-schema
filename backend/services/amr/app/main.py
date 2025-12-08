@@ -6,24 +6,6 @@ from rb_modules.rb_fastapi_app import (
     create_app,
 )
 
-from .features.gateway.amr_api_control import (
-    amr_control_router,
-)
-from .features.gateway.amr_api_localization import (
-    amr_localization_router,
-)
-from .features.gateway.amr_api_map import (
-    amr_map_router,
-)
-from .features.gateway.amr_api_network import (
-    amr_network_router,
-)
-from .features.gateway.amr_api_setting import (
-    amr_setting_router,
-)
-from .features.gateway.amr_api_update import (
-    amr_update_router,
-)
 from .features.gateway.amr_zenoh import (
     amr_zenoh_router,
 )
@@ -33,17 +15,14 @@ from .features.move.src.adapters.input.amr_move_api import (
 from .features.move.src.adapters.input.amr_move_zenoh import (
     move_zenoh_router,
 )
-from .features.move.src.application.amr_move_service import (
-    AmrMoveService,
-)
 from .socket.socket_client import (
     socket_client,
 )
 
 setting = AppSettings()
 
-move_service = AmrMoveService()
 # move_mongo_service = MoveMongoService()
+
 
 app = create_app(
     settings=setting,
@@ -51,12 +30,12 @@ app = create_app(
     zenoh_routers=[amr_zenoh_router, move_zenoh_router],
     api_routers=[
         amr_move_router,
-        amr_control_router,
-        amr_localization_router,
-        amr_map_router,
-        amr_network_router,
-        amr_setting_router,
-        amr_update_router
+        # amr_control_router,
+        # amr_localization_router,
+        # amr_map_router,
+        # amr_network_router,
+        # amr_setting_router,
+        # amr_update_router
     ],
     socket_routers=[],
     # bg_tasks=[]
@@ -64,4 +43,13 @@ app = create_app(
 )
 
 
+# async def exception_handler(request: Request, exc: Exception):
+#     if isinstance(exc, ServiceException):
+#         rb_log.error(f"ServiceException: {exc.message}, {exc.status_code}")
+#         return JSONResponse(status_code=exc.status_code, content={"error": exc.message})
+#     else:
+#         rb_log.error(f"Exception: {exc}")
+#         return JSONResponse(status_code=500, content={"error": "Internal Server Error", "message": str(exc)})
 
+
+# app.add_exception_handler(ServiceException, exception_handler)
