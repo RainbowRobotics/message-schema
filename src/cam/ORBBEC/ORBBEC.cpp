@@ -194,20 +194,31 @@ void ORBBEC::grab_loop(int idx)
             return;
         }
 
-        int cam_config_idx = 0;
-
-        QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
-        for(size_t p = 0; p < config->get_cam_num(); p++)
+        QString target_sn = config->get_cam_serial_number(idx);
+        if(target_sn.isEmpty())
         {
-            QString config_sn = config->get_cam_serial_number(p);
-            if(config_sn == sn)
+            grab_flag[idx] = false;
+            log_error("camera {} has empty serial number in config", idx);
+            return;
+        }
+
+        int dev_idx = -1;
+        for(int d = 0; d < dev_count; d++)
+        {
+            QString sn = dev_list->getDevice(d)->getDeviceInfo()->serialNumber();
+            if(sn == target_sn)
             {
-                cam_config_idx = (int)p;
+                dev_idx = d;
                 break;
             }
         }
 
-        log_info("detected serial number, sn:{}, tf:{}", sn.toStdString(), config->get_cam_tf(cam_config_idx).toStdString());
+        if(dev_idx < 0)
+        {
+            grab_flag[idx] = false;
+            log_error("camera not found, idx:{}, sn:{}", idx, target_sn.toStdString());
+            return;
+        }
 
         double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
         double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
@@ -215,12 +226,13 @@ void ORBBEC::grab_loop(int idx)
         double voxel_size = config->get_mapping_voxel_size();
 
         // set cam
-        auto dev = dev_list->getDevice(idx);
+        auto dev = dev_list->getDevice(dev_idx);
         dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
         dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
+        log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
 
         std::shared_ptr<ob::Pipeline> pipe = std::make_shared<ob::Pipeline>(dev);
-        Eigen::Matrix4d TF = string_to_TF(config->get_cam_tf(cam_config_idx));
+        Eigen::Matrix4d TF = string_to_TF(config->get_cam_tf(idx));
         Eigen::Matrix3d TF_R = TF.block(0,0,3,3);
         Eigen::Vector3d TF_t = TF.block(0,3,3,1);
 
@@ -267,13 +279,15 @@ void ORBBEC::grab_loop(int idx)
 
         pipe->start(cam_config);
 
-        log_info("grab loop started");
+        log_info("grab loop started, idx:{}", idx);
         std::this_thread::sleep_for(std::chrono::milliseconds(idx * 500));
 
         int cnt = 0;
         bool filter_param_set = false;
         while(grab_flag[idx])
         {
+            // double pre_loop_time = get_time();
+
             auto fs = pipe->waitForFrames(100);
             if(!fs)
             {
@@ -431,7 +445,7 @@ void ORBBEC::grab_loop(int idx)
                     intrinsic[idx].coef_num = 8;
                     log_info("intrinsic{}, fx:{}, fy:{}, cx:{}, cy:{}", idx, intrinsic[idx].fx, intrinsic[idx].fy, intrinsic[idx].cx, intrinsic[idx].cy);
 
-                    extrinsic[idx] = string_to_TF(config->get_cam_tf(cam_config_idx));
+                    extrinsic[idx] = TF;
                 }
             }
             catch(ob::Error &e)
@@ -442,6 +456,14 @@ void ORBBEC::grab_loop(int idx)
             {
                 log_error("ORBBEC error: std::exception {}", e.what());
             }
+
+            // =======================
+            // loop time check
+            // =======================
+
+            // double cur_loop_time = get_time();
+            // double delta_loop_time = cur_loop_time - pre_loop_time;
+            // log_warn("cam_{} loop time, dt:{}", idx, delta_loop_time);
         }
 
         try
@@ -454,7 +476,7 @@ void ORBBEC::grab_loop(int idx)
         }
 
         pipe.reset();
-        log_info("grab loop stopped");
+        log_info("grab loop stopped, idx:{}", idx);
     }
     catch(ob::Error &e)
     {
