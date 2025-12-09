@@ -2118,6 +2118,8 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         return res;
     }
 
+    std::vector<LINK> links = unimap->get_links();
+
     // astar search
     std::vector<ASTAR_NODE*> open_set;
     std::vector<ASTAR_NODE*> close_set;
@@ -2171,12 +2173,21 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
 
         // append child node
         std::vector<QString> around;
-        for(size_t p = 0; p < cur->node->linked.size(); p++)
+        QString cur_id = cur->node->id;
+        for(size_t p = 0; p < links.size(); p++)
         {
+            const LINK &link = links[p];
+            if(link.st_id != cur_id)
+            {
+                continue;
+            }
+
+            QString neighbor_id = link.ed_id;
+
             bool is_close = false;
             for(size_t q = 0; q < close_set.size(); q++)
             {
-                if(close_set[q]->node->id == cur->node->linked[p])
+                if(close_set[q]->node->id == neighbor_id)
                 {
                     is_close = true;
                     break;
@@ -2185,7 +2196,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
 
             if(is_close == false)
             {
-                around.push_back(cur->node->linked[p]);
+                around.push_back(neighbor_id);
             }
         }
 
