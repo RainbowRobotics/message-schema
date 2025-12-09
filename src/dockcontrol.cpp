@@ -33,7 +33,6 @@ DOCKCONTROL::DOCKCONTROL(QObject *parent) : QObject{parent},
 
 DOCKCONTROL::~DOCKCONTROL()
 {
-
     if(a_thread && a_thread->joinable())
     {
         a_flag = false;
@@ -453,6 +452,9 @@ void DOCKCONTROL::a_loop()
 
                 Q_EMIT signal_dock_response(ddock);
             }
+
+            log_info("DOCKING_FSM_FAILED");
+            break;
         }
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
@@ -465,6 +467,8 @@ void DOCKCONTROL::a_loop()
             }
             fsm_state = DOCKING_FSM_OFF;
 
+            log_info("DOCKING_FSM_COMPLETE->DOCKING_FSM_OFF");
+            break;
         }
 
         // for real time loop
@@ -482,14 +486,14 @@ void DOCKCONTROL::a_loop()
         }
         pre_loop_time = get_time();
     }
-
-    
+    log_info("docking_loop stop");
 }
 
 void DOCKCONTROL::b_loop()
 {
     const double dt = 0.02; // 50hz
 
+    log_info("undocking_loop start");
     while(b_flag)
     {
         double pre_loop_time = get_time();
@@ -516,6 +520,9 @@ void DOCKCONTROL::b_loop()
 
                  Q_EMIT signal_dock_response(ddock);
                 fsm_state = DOCKING_FSM_OFF;
+
+                log_info("DOCKING_FSM_UNDOCK->DOCKING_FSM_OFF");
+                break;
             }
         }
 
@@ -554,6 +561,7 @@ void DOCKCONTROL::b_loop()
             spdlog::warn("[AUTO] loop time drift, dt: {}", delta_loop_time);
         }
     }
+    log_info("undocking_loop stop");
 }
 
 void DOCKCONTROL::stop()

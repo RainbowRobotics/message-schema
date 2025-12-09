@@ -45,8 +45,7 @@ void CAM::close()
 
     if(config->get_cam_type() == "ORBBEC" && orbbec)
     {
-        int cam_num = config->get_cam_num();
-        for(int p = 0; p < cam_num; p++)
+        for(int p = 0; p < config->get_cam_num(); p++)
         {
             post_process_flag[p] = false;
             if(post_process_thread[p] && post_process_thread[p]->joinable())
@@ -216,6 +215,8 @@ TIME_PTS CAM::get_scan(int idx)
 
 TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER)
 {
+    double t0 = get_time();
+
     TIME_PTS res;
     res.t = tp.t;
 
@@ -224,52 +225,85 @@ TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_n
         return res;
     }
 
+    // get filter range
+    double min_z = config->get_obs_map_min_z();
+    double max_z = config->get_obs_map_max_z();
+    double max_range = config->get_obs_map_range();
+
+    // keep
+    std::vector<Eigen::Vector3d> keep_pts;
+    keep_pts.reserve(tp.pts.size());
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     cloud->reserve(tp.pts.size());
+
+    // split
     for(size_t i = 0; i < tp.pts.size(); i++)
     {
         const Eigen::Vector3d &p = tp.pts[i];
-        if(std::isfinite(p.x()) && std::isfinite(p.y()) && std::isfinite(p.z()))
+
+        // check nan
+        if(!std::isfinite(p[0]) || !std::isfinite(p[1]) || !std::isfinite(p[2]))
+        {
+            continue;
+        }
+
+        bool in_z_range = (p[2] >= min_z && p[2] <= max_z);
+        bool in_xy_range = (p[0]*p[0] + p[1]*p[1] <= max_range*max_range);
+
+        if(in_z_range && in_xy_range)
         {
             cloud->push_back(pcl::PointXYZ((float)p.x(), (float)p.y(), (float)p.z()));
+        }
+        else
+        {
+            keep_pts.push_back(p);
         }
     }
     if(cloud->size() == 0)
     {
+        res.pts = keep_pts;
         return res;
     }
 
-    // downsample
+    // voxel downsample
     pcl::PointCloud<pcl::PointXYZ>::Ptr ds(new pcl::PointCloud<pcl::PointXYZ>);
     {
         pcl::VoxelGrid<pcl::PointXYZ> voxel_grid;
-        float leaf = (float)0.01;
+        float leaf = (float)0.03;
         voxel_grid.setInputCloud(cloud);
         voxel_grid.setLeafSize(leaf, leaf, leaf);
         voxel_grid.filter(*ds);
     }
     if(ds->size() == 0)
     {
+        res.pts = keep_pts;
         return res;
     }
 
-    // ror
+    // radius outlier removal
     pcl::PointCloud<pcl::PointXYZ> cloud_ror;
     if(USE_ROR)
     {
         pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
-        ror.setInputCloud(cloud);
+        ror.setInputCloud(ds);
         ror.setRadiusSearch(radius);
         ror.setMinNeighborsInRadius(min_neighbors);
         ror.filter(cloud_ror);
     }
     else
     {
-        cloud_ror = *cloud;
+        cloud_ror = *ds;
     }
 
-    // cluster
-    pcl::PointCloud<pcl::PointXYZ> cloud_final;
+    if(cloud_ror.size() == 0)
+    {
+        res.pts = keep_pts;
+        return res;
+    }
+
+    // euclidean clustering
+    pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
     if(USE_CLUSTER)
     {
         pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
@@ -290,30 +324,44 @@ TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_n
             for(size_t k = 0; k < inds.indices.size(); k++)
             {
                 int idx = inds.indices[k];
-                cloud_final.push_back(cloud_ror[idx]);
+                cloud_filtered.push_back(cloud_ror[idx]);
             }
         }
     }
     else
     {
-        cloud_final = cloud_ror;
+        cloud_filtered = cloud_ror;
     }
 
-    // result
-    res.pts.clear();
-    res.pts.reserve(cloud_final.size());
-    for(size_t i = 0; i < cloud_final.size(); i++)
+    if(cloud_filtered.size() == 0)
     {
-        const pcl::PointXYZ &p = cloud_final[i];
+        res.pts = keep_pts;
+        return res;
+    }
+
+    // merge
+    res.pts.clear();
+    res.pts.reserve(keep_pts.size() + cloud_filtered.size());
+    for(size_t i = 0; i < keep_pts.size(); i++)
+    {
+        res.pts.push_back(keep_pts[i]);
+    }
+
+    for(size_t i = 0; i < cloud_filtered.size(); i++)
+    {
+        const pcl::PointXYZ &p = cloud_filtered[i];
         res.pts.emplace_back((double)p.x, (double)p.y, (double)p.z);
     }
 
     // debug
-    // log_info("[CAM] DS/ROR/CL raw:{} → ds:{} → ror:{} → final:{}  (USE_ROR:{} USE_CLUSTER:{}) (r:{:.2f} nmin:{})",
+    // log_info("(filtering) dt:{}, DS/ROR/CL raw:{}, keep:{}, cloud:{} → ds:{} → ror:{} → filtered:{}, (USE_ROR:{} USE_CLUSTER:{}) (r:{:.2f} nmin:{})",
+    //          get_time()-t0,
     //          (int)tp.pts.size(),
+    //          (int)keep_pts.size(),
+    //          (int)cloud->size(),
     //          (int)ds->size(),
     //          (int)cloud_ror.size(),
-    //          (int)cloud_final.size(),
+    //          (int)cloud_filtered.size(),
     //          (int)USE_ROR, (int)USE_CLUSTER,
     //          radius, min_neighbors);
 
@@ -324,7 +372,7 @@ void CAM::post_process_loop(int idx)
 {
     const double dt = 0.1; // 10hz
 
-    while(post_process_flag)
+    while(post_process_flag[idx])
     {
         // =======================
         // ORBBEC queue processing
@@ -416,12 +464,11 @@ void CAM::post_process_loop(int idx)
         }
         else
         {
-            logger->write_log(QString("[CAM] loop time drift, dt:%1").arg(delta_loop_time));
-            log_warn("loop time drift, dt:{}", delta_loop_time);
+            // logger->write_log(QString("[CAM] loop time drift, dt:%1").arg(delta_loop_time));
+            log_warn("cam_{} loop time drift, dt:{}", idx, delta_loop_time);
         }
 
         process_time_post[idx] = delta_loop_time;
-//        pre_loop_time = get_time();
     }
 }
 

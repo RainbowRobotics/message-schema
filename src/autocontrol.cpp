@@ -631,6 +631,7 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
     {
         cmd_method = CommandMethod::METHOD_PP;
     }
+
     move(path, preset);
 }
 
@@ -2117,8 +2118,6 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         return res;
     }
 
-    std::vector<LINK> links = unimap->get_links();
-
     // astar search
     std::vector<ASTAR_NODE*> open_set;
     std::vector<ASTAR_NODE*> close_set;
@@ -2172,21 +2171,12 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
 
         // append child node
         std::vector<QString> around;
-        QString cur_id = cur->node->id;
-        for(size_t p = 0; p < links.size(); p++)
+        for(size_t p = 0; p < cur->node->linked.size(); p++)
         {
-            const LINK &link = links[p];
-            if(link.st_id != cur_id)
-            {
-                continue;
-            }
-
-            QString neighbor_id = link.ed_id;
-
             bool is_close = false;
             for(size_t q = 0; q < close_set.size(); q++)
             {
-                if(close_set[q]->node->id == neighbor_id)
+                if(close_set[q]->node->id == cur->node->linked[p])
                 {
                     is_close = true;
                     break;
@@ -2195,7 +2185,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
 
             if(is_close == false)
             {
-                around.push_back(neighbor_id);
+                around.push_back(cur->node->linked[p]);
             }
         }
 
@@ -4000,7 +3990,7 @@ void AUTOCONTROL::control_loop()
             // obstacle stop
             {
                 double cur_velocity      = mobile->get_control_input()[0];
-                double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
+                double stopping_distance = 0; //(cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
                 double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
                 dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
                 cur_deadzone = dynamic_deadzone;
@@ -4087,7 +4077,6 @@ void AUTOCONTROL::control_loop()
 
             double err_d  = std::numeric_limits<double>::max();
             double err_th = std::numeric_limits<double>::max();
-            //                    if(robot_model == RobotModel::MECANUM)
             if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
             {
                 Eigen::Vector3d local_tgt_pos = cur_tf_inv.block(0,0,3,3)*tgt_pos + cur_tf_inv.block(0,3,3,1);
@@ -4140,18 +4129,19 @@ void AUTOCONTROL::control_loop()
 
             if(back_mode)
             {
-                v = saturation(v, -obs_decel_v, 0.0);
+                v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_DCC*dt);
 
                 if(v0 < 0)
                 {
-                    v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_DCC*dt);
+                    // v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_DCC*dt);
+                    v = saturation(v, -obs_decel_v, 0.0);
                     v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
                 }
             }
             else
             {
-                v = saturation(v, 0.0, obs_decel_v);
                 v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+                v = saturation(v, 0.0, obs_decel_v);
                 v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
             }
 
@@ -4213,7 +4203,7 @@ void AUTOCONTROL::control_loop()
             }
             else
             {
-                w = sgn(w)*(std::abs(w)-d_w);
+                // w = sgn(w)*(std::abs(w)-d_w);
             }
 
             if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
@@ -4249,39 +4239,17 @@ void AUTOCONTROL::control_loop()
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
+            Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+            Eigen::Vector3d local_goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+
             // calc heading error
+            double err_x = local_goal_pos[0];
+            double err_y = local_goal_pos[1];
+            double err_d = calc_dist_2d(goal_pos - cur_pos);
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
-            // skip (hpp)
-            if(cmd_method == CommandMethod::METHOD_HPP)
-            {
-                clear_control_params();
-
-                fsm_state = AUTO_FSM_COMPLETE;
-                set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
-
-                // update move info
-                {
-                    std::lock_guard<std::recursive_mutex> lock(mtx);
-                    cur_move_info.time    = get_time();
-                    cur_move_info.result  = "success";
-                    cur_move_info.message = "very good";
-                    cur_move_info.cur_pos = cur_pos;
-                    Q_EMIT signal_move_response(cur_move_info);
-                }
-                log_info("FINAL ALIGN COMPLETE(HPP, SKIP), err_d: {}, err_th: {}", calc_dist_2d(goal_pos - cur_pos), err_th*R2D);
-                return;
-            }
-
-            //spdlog::debug("err_th: {}", err_th);
-            log_debug("FINAL ALIGN err_th: {}", err_th);
-            if(pre_err_th == 0)
-            {
-                pre_err_th = err_th;
-            }
-
             // goal check
-            if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
+            if(std::abs(err_th) < config->get_drive_goal_th()*D2R && err_d < config->get_drive_goal_dist())
             {
                 extend_dt += dt;
                 if(extend_dt > config->get_drive_extended_control_time())
@@ -4302,21 +4270,20 @@ void AUTOCONTROL::control_loop()
                     }
 
                     logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
-                    log_info("FINAL ALIGN COMPLETE(good), err_th: {}", err_th*R2D);
+                    log_info("FINAL ALIGN COMPLETE(good), err_d: {}({},{}), err_th: {}", err_d, err_x, err_y, err_th*R2D);
                     return;
                 }
             }
 
             // obs check
-//            double temp_w = w;
-//            if(std::abs(temp_w) < 0.001)
-//            {
-//                temp_w = 0.001;
-//            }
+            // double temp_w = w;
+            // if(std::abs(temp_w) < 0.001)
+            // {
+            //     temp_w = 0.001;
+            // }
 
-//            double temp_predict_time = std::min(abs(err_th/temp_w),config->get_obs_predict_time());
-//            std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 5.0*D2R);
-
+            // double temp_predict_time = std::min(abs(err_th/temp_w),config->get_obs_predict_time());
+            // std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 5.0*D2R);
 
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
             obs_value = obsmap->is_path_collision(traj, true);
@@ -4336,6 +4303,11 @@ void AUTOCONTROL::control_loop()
                 continue;
             }
 
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
             // pivot control
             double kp = params.DRIVE_A;
             double kd = params.DRIVE_B;
@@ -4346,10 +4318,24 @@ void AUTOCONTROL::control_loop()
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
+            double vx = 0.0;
+            double vy = 0.0;
+            if(cmd_method == CommandMethod::METHOD_HPP)
+            {
+                vx = config->get_drive_goal_approach_gain()*err_x;
+                vy = config->get_drive_goal_approach_gain()*err_y;
+
+                vx = saturation(vx, -params.LIMIT_V, params.LIMIT_V);
+                vy = saturation(vy, -params.LIMIT_V, params.LIMIT_V);
+
+                // printf("err: (%f, %f), vel: (%f, %f, %f), [std::abs(err_th):%f < %f, err_d:%f < %f]\n",err_x, err_y , vx, vy, w*R2D,
+                //        std::abs(err_th)*R2D, config->get_drive_goal_th(), err_d, config->get_drive_goal_dist());
+            }
+
             // send control
             if(!is_debug)
             {
-                mobile->move(0, 0, w);
+                mobile->move(vx, vy, w);
             }
         }
         else if(fsm_state == AUTO_FSM_OBS)
@@ -4626,8 +4612,6 @@ void AUTOCONTROL::control_loop()
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         continue;
                     }
-
-
                 }
             }
             else if(obs_state == AUTO_OBS_WAIT2)

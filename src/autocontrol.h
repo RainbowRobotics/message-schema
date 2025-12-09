@@ -69,7 +69,7 @@ struct AUTOCONTROL_INFO
     static constexpr double local_path_calc_dt = 0.1;
     static constexpr double avoid_path_check_idx = 0.9;
     static constexpr double path_overlap_check_deg = 30.0;
-    static constexpr double dynamic_deadzone_safety_margin = 0.5;
+    static constexpr double dynamic_deadzone_safety_margin = 0.0;
     static constexpr double obstacle_near_check_dist = 2.5;
     static constexpr double dynamic_deadzone_release_rate = 0.05;
     static constexpr double obs_decel_recover_rate = 0.1;
