@@ -359,6 +359,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_KD_d", DOCKING_KD_d, "docking");
     check_and_set_double(obj_dock, "DOCKING_KP_th", DOCKING_KP_th, "docking");
     check_and_set_double(obj_dock, "DOCKING_KD_th", DOCKING_KD_th, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CLUST_D_THRESHOLD", DOCKING_CLUST_D_THRESHOLD, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MAX", DOCKING_CLUST_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_ANGLE_THRESHOLD", DOCKING_CLUST_ANGLE_THRESHOLD, "docking");
     check_and_set_double(obj_dock, "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX", DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX, "docking");
@@ -372,6 +373,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
     check_and_set_bool(obj_dock, "DOCKING_REVERSE_FLAG", DOCKING_REVERSE_FLAG, "docking");
     check_and_set_string(obj_dock, "CHARGE_TYPE", CHARGE_TYPE, "docking");
+    check_and_set_string(obj_dock, "LIDAR_TYPE", LIDAR_TYPE, "docking");
     check_and_set_int(obj_dock, "DOCKING_FIELD", DOCKING_FIELD, "docking");
     check_and_set_double(obj_dock, "XNERGY_SET_CURRENT", XNERGY_SET_CURRENT, "docking");
 }
@@ -2981,4 +2983,10 @@ double CONFIG::get_qa_stop_min_distance()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return QA_STOP_MIN_DISTANCE;
+}
+
+QString CONFIG::get_lidar_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_TYPE;
 }

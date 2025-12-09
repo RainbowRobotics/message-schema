@@ -176,6 +176,7 @@ void DOCKCONTROL::a_loop()
                 fsm_state = DOCKING_FSM_POINTDOCK;
                 oneque_dock = true;
             }
+
             if(notfind_dock_cnt * 0.2 > config->get_docking_waiting_time())
             {
                 failed_flag = true;
@@ -207,6 +208,7 @@ void DOCKCONTROL::a_loop()
 
                     double dist_x = rel_tf(0, 3);  // 로봇 기준 x 방향 거리
                     double dist_y = rel_tf(1, 3);  // 로봇 기준 y 방향 거리
+
                     Eigen::Matrix4d station_rel_tf = docking_station_o.inverse() * cur_pos_odom;
 
                     double s_d_x = station_rel_tf(0, 3);  // 도킹스테이션 기준 x 위치
@@ -677,6 +679,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
     const int c_points = filtered_lidar.size();
     std::vector< std::vector<float> > polar(c_points +1 ,std::vector<float>(2));
 
+    
+
     for(unsigned int i=0; i < c_points; ++i)
     {
         float x = static_cast<float>(filtered_lidar[i].x());
@@ -689,12 +693,14 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
     std::vector<bool> clustered1(c_points+1 ,false);
     std::vector<bool> clustered2(c_points+1 ,false);
 
+    float min_dist = config->get_docking_clust_dist_threshold();
+    
     float d =0.0;
     for (unsigned int i = 0; i < c_points; ++i)
     {
         d = sqrt(pow(polar[i][0] - polar[i + 1][0], 2) + pow(polar[i][1] - polar[i + 1][1], 2));
 
-        if (d < config->get_docking_clust_dist_threshold())
+        if (d < min_dist)
         {
             clustered1[i] = true;
             clustered2[i + 1] = true;
@@ -800,22 +806,41 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             filtered_clusters.push_back(clust);
         }
     }
-    
+
+   for (const auto& clust : filtered_clusters)
+   {
+       for(auto& point : clust)
+       {
+           debug_frame.push_back(point);
+       }
+
+   }
+
     std::vector<Eigen::Vector3d> docking_clust; // finally docking cluster
 
     // Todo - Test check candidate->sizefilter
 
-    if(!sizefilter(filtered_clusters,docking_clust))
+    if(config->get_lidar_type() == "LAKI")
     {
-        dock_check = 3;
-        return out_;
+        if(!get_largest_cluster(filtered_clusters, docking_clust))
+        {
+            dock_check = 3;
+            return out_;
+        }
+    }
+    else
+    {
+        if(!sizefilter(filtered_clusters,docking_clust))
+        {
+            dock_check = 3;
+            return out_;
+        }
     }
 
     clusters_queue.push(docking_clust);
 
     if(clusters_queue.size() > 10)
     {
-
         KFRAME cur_frm;
 
         while (!clusters_queue.empty())
@@ -1614,7 +1639,7 @@ XYZR_CLOUD DOCKCONTROL::generate_sample_points(const Eigen::Vector3d& p1, const 
 
 bool DOCKCONTROL::sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out)
 {
-    const float len_error_tolerance = 0.2; // 15cm
+    const float len_error_tolerance = 0.02; // 2cm
     std::vector<std::vector<Eigen::Vector3d>> candidates;
 
     if(in.size() ==0) return false;
@@ -1814,3 +1839,29 @@ double DOCKCONTROL::wrapToPi(double angle)
     return angle;
 }
 
+
+bool DOCKCONTROL::get_largest_cluster(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out)
+{
+    if(in.size() == 0) return false;
+
+    size_t max_size = 0;
+    int best_idx = -1;
+
+    // 가장 포인트 개수가 많은 클러스터 찾기
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        if (in[i].size() > max_size)
+        {
+            max_size = in[i].size();
+            best_idx = i;
+        }
+    }
+
+    if (best_idx >= 0)
+    {
+        out = in[best_idx];
+        return true;
+    }
+
+    return false;
+}
