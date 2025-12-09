@@ -352,20 +352,17 @@ void LOCALIZATION::start_semiauto_init()
                         min_ieir = ieir;
                         min_tf = _tf;
                         auto pose = TF_to_se2(min_tf);
-                        //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", pose[0], pose[1], pose[2]*R2D, cost);
                         spdlog::info("[AUTOINIT] x:{}, y:{}, th:{}, cost:{}", pose[0], pose[1], pose[2]*R2D, cost);
                     }
                 }
             }
         }
 
-        auto ieir = calc_ieir(frm.pts, min_tf);
-        if(ieir[0] < config->get_loc_2d_check_inlier_error() && ieir[1] > config->get_loc_2d_check_inlier_ratio())
+        if(min_ieir[0] < config->get_loc_2d_check_inlier_error() && min_ieir[1] > config->get_loc_2d_check_inlier_ratio())
         {
             set_cur_tf(min_tf);
             start();
-            //printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
-            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", ieir[0], ieir[1]);
+            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", min_ieir[0], min_ieir[1]);
         }
     }
     else // "3D"
