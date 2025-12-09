@@ -85,7 +85,7 @@ class RBBaseSDK:
             return functools.wraps(fn)(_async_wrapper)
         return functools.wraps(fn)(_sync_wrapper)
 
-    def __new__(cls) -> "RBBaseSDK":
+    def __new__(cls: type[T]) -> T:
         pid = os.getpid()
         key = (pid, cls)
 
@@ -176,9 +176,9 @@ class RBBaseSDK:
     def all_pause(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 일시정지"""
         self.zenoh_client.publish("rrs/pause", payload={})
-        
+
         time_module.sleep(0.1)
-        
+
         if flow_manager_args is not None:
             flow_manager_args.done()
 

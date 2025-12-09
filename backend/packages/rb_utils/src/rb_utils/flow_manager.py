@@ -66,6 +66,7 @@ def safe_eval_expr(
         return expr
 
     vars_ = variables or {"local": {}}
+    print("vars_ >>>", vars_, flush=True)
     s = expr.strip()
     if not s:
         return ""

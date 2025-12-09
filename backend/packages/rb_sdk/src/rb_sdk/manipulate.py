@@ -20,8 +20,9 @@ from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.parser import to_json
 
-from rb_sdk.base import RBBaseSDK
-from rb_sdk.schema.manipulate_schema import (
+from .base import RBBaseSDK
+from .schema.manipulate_schema import (
+    ResponseCamelReturnValue,
     SideDoutArg,
     SideDoutBitcombinationArg,
     SideDoutPulseArg,
@@ -72,7 +73,7 @@ class RBManipulateSDK(RBBaseSDK):
                         flow_manager_args.ctx.update_local_variables({
                             "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [0,0,0,0,0,0,0])
                         })
-                        flow_manager_args.ctx.update_global_variables({
+                        flow_manager_args.ctx.update_local_variables({
                             "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [0,0,0,0,0,0,0])
                         })
                 except Exception:
@@ -132,10 +133,10 @@ class RBManipulateSDK(RBBaseSDK):
 
                     if obj is not None and obj.get("motionMode") == 0:
                         flow_manager_args.ctx.update_local_variables({
-                            "BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
+                            "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [])
                         })
-                        flow_manager_args.ctx.update_global_variables({
-                            "BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
+                        flow_manager_args.ctx.update_local_variables({
+                            "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [])
                         })
                         flow_manager_args.done()
                         break
@@ -152,7 +153,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         stop_time: float | int,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         req = Request_Move_SmoothJogStopT()
         req.stoptime = float(stop_time)
 
@@ -175,7 +176,7 @@ class RBManipulateSDK(RBBaseSDK):
         finish_at: bool | None = None,
         stop_time: float | int | None = 0.3,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         parsed_finish_at = finish_at
         parsed_stop_time = stop_time
 
@@ -219,7 +220,7 @@ class RBManipulateSDK(RBBaseSDK):
         stop_time: float | int | None = None,
         variable_name: str | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         """관절 공간 이동 명령
 
         Args:
@@ -334,7 +335,7 @@ class RBManipulateSDK(RBBaseSDK):
         stop_time: float | int | None = None,
         variable_name: str | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         """직선 공간 이동 명령
 
         Args:
@@ -551,7 +552,7 @@ class RBManipulateSDK(RBBaseSDK):
 
     def set_toolist_num(
         self, *, robot_model: str, tool_num: int, flow_manager_args: FlowManagerArgs | None = None
-    ):
+    ) -> ResponseCamelReturnValue:
         """TCP 번호 설정
 
         Args:
@@ -580,7 +581,7 @@ class RBManipulateSDK(RBBaseSDK):
         port_num: int,
         desired_out: bool,
         flow_manager_args: FlowManagerArgs | None = None,
-        ):
+    ) -> ResponseCamelReturnValue:
         """Side Digital Out 호출"""
 
         req = Request_SideDout_GeneralT()
@@ -608,7 +609,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         port_num: int,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         """Side Digital Out Toggle 호출"""
 
         req = Request_SideDout_ToggleT()
@@ -635,7 +636,7 @@ class RBManipulateSDK(RBBaseSDK):
         desired_value: int,
         direction_option: int,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         """Side Digital Out Bitcombination 호출"""
 
         req = Request_SideDout_BitcombinationT()
@@ -667,7 +668,7 @@ class RBManipulateSDK(RBBaseSDK):
         time_2: int,
         time_3: int,
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> ResponseCamelReturnValue:
         """Side Digital Out Pulse 호출"""
 
         req = Request_SideDout_PulseT()
@@ -696,7 +697,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         side_dout_args: list[SideDoutArg],
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> list[ResponseCamelReturnValue]:
         """Multiple Side Digital Out 호출"""
 
         result: list[dict] = []
@@ -728,7 +729,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         side_dout_args: list[SideDoutToggleArg],
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> list[ResponseCamelReturnValue]:
         """Multiple Side Digital Out Toggle 호출"""
 
         result: list[dict] = []
@@ -759,7 +760,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         side_dout_args: list[SideDoutBitcombinationArg],
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> list[ResponseCamelReturnValue]:
         """Multiple Side Digital Out Bitcombination 호출"""
 
         result: list[dict] = []
@@ -793,7 +794,7 @@ class RBManipulateSDK(RBBaseSDK):
         robot_model: str,
         side_dout_args: list[SideDoutPulseArg],
         flow_manager_args: FlowManagerArgs | None = None,
-    ):
+    ) -> list[ResponseCamelReturnValue]:
         """Multiple Side Digital Out Pulse 호출"""
 
         result: list[dict] = []
@@ -823,7 +824,7 @@ class RBManipulateSDK(RBBaseSDK):
 
         return result
 
-    def halt(self, *, robot_model: str, flow_manager_args: FlowManagerArgs | None = None):
+    def halt(self, *, robot_model: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseCamelReturnValue:
         """정지 호출"""
         req = Request_MotionHaltT()
 

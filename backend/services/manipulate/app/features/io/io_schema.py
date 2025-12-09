@@ -5,6 +5,8 @@ class Request_SideDout_GeneralPD(BaseModel):
     port_num: int
     desired_out: int
 
+class Request_Multiple_SideDoutPD(BaseModel):
+    side_dout_args: list[Request_SideDout_GeneralPD]
 
 class Request_SideAout_GeneralPD(BaseModel):
     port_num: int
@@ -37,8 +39,9 @@ class Request_Flange_Digital_OutPD(BaseModel):
 
 class Request_SideDout_TogglePD(BaseModel):
     port_num: int
-    desired_out: int
 
+class Request_Multiple_SideDoutTogglePD(BaseModel):
+    side_dout_args: list[Request_SideDout_TogglePD]
 
 class Request_SideDout_BitcombinationPD(BaseModel):
     port_start: int
@@ -46,6 +49,8 @@ class Request_SideDout_BitcombinationPD(BaseModel):
     desired_value: int
     direction_option: int
 
+class Request_Multiple_SideDoutBitcombinationPD(BaseModel):
+    side_dout_args: list[Request_SideDout_BitcombinationPD]
 
 class Request_SideDout_PulsePD(BaseModel):
     port_num: int
@@ -54,3 +59,6 @@ class Request_SideDout_PulsePD(BaseModel):
     time_1: float
     time_2: float
     time_3: float
+
+class Request_Multiple_SideDoutPulsePD(BaseModel):
+    side_dout_args: list[Request_SideDout_PulsePD]

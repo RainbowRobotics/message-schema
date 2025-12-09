@@ -298,6 +298,7 @@ class Step:
                 raise StopExecution(str(e)) from e
 
             try:
+                print("args >>>", eval_args, flush=True)
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
             except RuntimeError as e:
                 ctx.emit_error(self.step_id, RuntimeError(str(e)))

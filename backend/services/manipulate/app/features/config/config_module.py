@@ -1,25 +1,4 @@
 from app.socket.socket_client import socket_client
-from backend.services.manipulate.app.features.config.config_schema import (
-    Request_Save_Area_ParameterPD,
-    Request_Save_Collision_ParameterPD,
-    Request_Save_Direct_Teach_SensitivityPD,
-    Request_Save_Gravity_ParameterPD,
-    Request_Save_Robot_CodePD,
-    Request_Save_SelfColl_ParameterPD,
-    Request_Save_Tool_List_ParameterPD,
-    Request_Save_User_FramePD,
-    Request_Set_Free_DrivePD,
-    Request_Set_Joint_ImpedancePD,
-    Request_Set_Out_Collision_ParaPD,
-    Request_Set_Self_Collision_ParaPD,
-    Request_Set_ShiftPD,
-    Request_Set_Tool_ListPD,
-    Request_Set_User_Frame_3PointsPD,
-    Request_Set_User_Frame_6DofPD,
-    Request_Set_User_Frame_TCPPD,
-    Request_Set_User_FramePD,
-    Response_CallConfigControlBoxPD,
-)
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
@@ -54,6 +33,28 @@ from rb_modules.service import BaseService
 from rb_utils.asyncio_helper import fire_and_log
 from rb_utils.parser import t_to_dict, to_json
 from rb_zenoh.client import ZenohClient
+
+from .config_schema import (
+    Request_Save_Area_ParameterPD,
+    Request_Save_Collision_ParameterPD,
+    Request_Save_Direct_Teach_SensitivityPD,
+    Request_Save_Gravity_ParameterPD,
+    Request_Save_Robot_CodePD,
+    Request_Save_SelfColl_ParameterPD,
+    Request_Save_Tool_List_ParameterPD,
+    Request_Save_User_FramePD,
+    Request_Set_Free_DrivePD,
+    Request_Set_Joint_ImpedancePD,
+    Request_Set_Out_Collision_ParaPD,
+    Request_Set_Self_Collision_ParaPD,
+    Request_Set_ShiftPD,
+    Request_Set_Tool_ListPD,
+    Request_Set_User_Frame_3PointsPD,
+    Request_Set_User_Frame_6DofPD,
+    Request_Set_User_Frame_TCPPD,
+    Request_Set_User_FramePD,
+    Response_CallConfigControlBoxPD,
+)
 
 zenoh_client = ZenohClient()
 

@@ -26,3 +26,7 @@ class SideDoutPulseArg(TypedDict):
     time_1: int
     time_2: int
     time_3: int
+
+class ResponseCamelReturnValue(TypedDict):
+    """Response Return Value"""
+    returnValue: int
