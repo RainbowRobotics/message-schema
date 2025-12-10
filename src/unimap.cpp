@@ -919,6 +919,91 @@ void UNIMAP::save_node()
     }
 }
 
+void UNIMAP::save_map()
+{
+    if(map_path.isEmpty())
+    {
+        spdlog::error("[UNIMAP] Cannot save map: map_path is empty");
+        return;
+    }
+
+    spdlog::info("[UNIMAP] Saving map to {}", map_path.toStdString());
+
+    // Merge additional_cloud into kdtree_cloud_2d before saving
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        
+        if(!additional_cloud.empty() && kdtree_cloud_2d)
+        {
+            spdlog::info("[UNIMAP] Merging {} additional points into map", additional_cloud.size());
+            
+            for(const auto& pt : additional_cloud)
+            {
+                PT_XYZR map_pt;
+                map_pt.x = pt.x();
+                map_pt.y = pt.y();
+                map_pt.z = pt.z();
+                map_pt.r = 128.0;  // default reflectance
+                kdtree_cloud_2d->pts.push_back(map_pt);
+            }
+            
+            // Clear additional_cloud after merging
+            additional_cloud.clear();
+            
+            // Rebuild KD-tree with merged points
+            if(kdtree_cloud_2d_index)
+            {
+                kdtree_cloud_2d_index.reset();
+            }
+            kdtree_cloud_2d_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud_2d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+            kdtree_cloud_2d_index->buildIndex();
+            
+            spdlog::info("[UNIMAP] Additional points merged. Total map points: {}", kdtree_cloud_2d->pts.size());
+        }
+        
+        // Clear removed_cloud (these points are already removed from map)
+        if(!removed_cloud.empty())
+        {
+            spdlog::info("[UNIMAP] Clearing {} removed points", removed_cloud.size());
+            removed_cloud.clear();
+        }
+    }
+
+    // Save 2D map
+    {
+        std::shared_lock<std::shared_mutex> lock(mtx);
+        
+        if(kdtree_cloud_2d && !kdtree_cloud_2d->pts.empty())
+        {
+            QString cloud_csv_path = map_path + "/cloud.csv";
+            QFile cloud_csv_file(cloud_csv_path);
+            
+            if(cloud_csv_file.open(QIODevice::WriteOnly | QFile::Truncate))
+            {
+                QTextStream out(&cloud_csv_file);
+                
+                for(const auto& pt : kdtree_cloud_2d->pts)
+                {
+                    out << QString::number(pt.x, 'f', 6) << ","
+                        << QString::number(pt.y, 'f', 6) << ","
+                        << QString::number(pt.z, 'f', 6) << ","
+                        << QString::number(pt.r, 'f', 6) << "\n";
+                }
+                
+                cloud_csv_file.close();
+                spdlog::info("[UNIMAP(2D)] Saved {} points to {}", 
+                           kdtree_cloud_2d->pts.size(), 
+                           cloud_csv_path.toStdString());
+            }
+            else
+            {
+                spdlog::error("[UNIMAP(2D)] Failed to open {} for writing", cloud_csv_path.toStdString());
+            }
+        }
+    }
+
+    spdlog::info("[UNIMAP] Map save completed");
+}
 void UNIMAP::clear_nodes()
 {
     std::unique_lock<std::shared_mutex> lock(mtx);
