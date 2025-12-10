@@ -27,6 +27,7 @@ class Step_Base(BaseModel):
     programId: str
     groupId: str | None = Field(default=None)
     syncStepIds: list[str] | None = Field(default=None)
+    targetStepId: str | None = Field(default=None)
     name: str
     variable: dict[str, Any] | None = Field(default=None)
     method: str
@@ -45,6 +46,7 @@ class Step_Base(BaseModel):
     fixChildren: bool = Field(default=False)
     requireChildren: bool = Field(default=False)
     requireParent: bool = Field(default=False)
+    disableDelete: bool = Field(default=False)
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)

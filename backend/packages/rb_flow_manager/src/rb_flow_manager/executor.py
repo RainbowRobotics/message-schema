@@ -13,7 +13,7 @@ from typing import Any
 
 from .context import ExecutionContext
 from .controller.base_controller import BaseController
-from .exception import BreakRepeat, JumpToStepException, StopExecution
+from .exception import BreakRepeat, ContinueRepeat, JumpToStepException, StopExecution
 from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
 
@@ -63,6 +63,7 @@ def _execute_tree_in_process(
 
         if repeat_count > 0:
             for i in range(repeat_count):
+                state_dict["condition_map"] = {}
                 state_dict["current_repeat"] = i + 1
 
                 try:
@@ -85,6 +86,7 @@ def _execute_tree_in_process(
             i = 0
 
             while True:
+                state_dict["condition_map"] = {}
                 state_dict["current_repeat"] = i + 1
 
                 try:
@@ -110,11 +112,10 @@ def _execute_tree_in_process(
             state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
 
     except BreakRepeat:
-        state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-        state_dict["error"] = "BreakStep must exist under RepeatStep."
+        pass
 
-        if ctx is not None:
-            ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
+    except ContinueRepeat:
+        pass
 
     except StopExecution:
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
@@ -128,6 +129,8 @@ def _execute_tree_in_process(
 
         if ctx is not None:
             ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
+    except JumpToStepException:
+        pass
     finally:
         # 완료 이벤트 설정
         completion_event.set()

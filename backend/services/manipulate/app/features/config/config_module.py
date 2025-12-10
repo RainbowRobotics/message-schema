@@ -1,4 +1,4 @@
-from app.socket.socket_client import socket_client
+from app.socket.socket_client import socket_client  # pyright: ignore
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_fT

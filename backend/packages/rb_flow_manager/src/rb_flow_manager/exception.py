@@ -10,6 +10,9 @@ class BreakFolder(Exception):
 class BreakRepeat(Exception):
     """가장 가까운 RepeatStep만 탈출"""
 
+class ContinueRepeat(Exception):
+    """다음 내용 무시하고 RepeatStep 다음 부분부터 계속"""
+
 class JumpToStepException(Exception):
     """특정 step_id로 점프"""
 

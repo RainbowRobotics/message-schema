@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###################
-# 유�리티 함수들 #
+# 유틸리티 함수들 #
 ###################
 
 # 컬러 출력 함수
@@ -23,7 +23,7 @@ function print_string(){
 function get_service_name() {
     local app_names=()
     local app_dirs=()
-    
+
     # print_string 출력을 /dev/tty로 강제 지정
     print_string "info" "배포할 서비스 이름을 입력해주세요 (여러 서비스는 쉼표로 구분, 전체는 all):" > /dev/tty
 
@@ -34,7 +34,7 @@ function get_service_name() {
         print_string "error" "서비스 이름을 입력해주세요." > /dev/tty
         get_service_name
     fi
-    
+
     # 입력값이 'all'인 경우
     if [ "${input}" = "all" ]; then
         # apps/web 디렉토리의 모든 하위 디렉토리를 찾아서 처리
@@ -52,7 +52,7 @@ function get_service_name() {
     else
         # 기존 로직: 쉼표로 구분된 입력을 배열로 변환
         IFS=',' read -ra input_array <<< "${input}"
-        
+
         for app_name in "${input_array[@]}"; do
             # 앱 이름에서 공백 제거
             app_name=$(echo "${app_name}" | xargs)
@@ -65,11 +65,11 @@ function get_service_name() {
             fi
         done
     fi
-    
+
     # 배열을 구분자로 구분하여 문자열로 변환하여 반환
     local names_str=$(IFS=','; echo "${app_names[*]}")
     local dirs_str=$(IFS=','; echo "${app_dirs[*]}")
-    
+
     echo "${names_str} ${dirs_str}"
 }
 
@@ -181,8 +181,8 @@ function build_project() {
     echo "app_names: ${app_names}"
 
     print_string "info" "프로젝트 빌드 중..."
-    
-    make backend.build SERVICE="${app_names}" || { 
+
+    make backend.build SERVICE="${app_names}" || {
         print_string "error" "빌드 실패"
         return 1
     }
@@ -191,6 +191,7 @@ function build_project() {
 }
 
 # 버전 타입 선택 함수
+
 function ask_version_type() {
     local version_type="patch"
 
@@ -221,7 +222,7 @@ function create_github_release() {
             print_string "error" "GitHub Release 생성 실패"
             return 1
         }
-    
+
     print_string "success" "[${app_name}] ✅ GitHub Release가 생성되었습니다: $tag_version"
 
     return 0
@@ -230,21 +231,21 @@ function create_github_release() {
 # 작업 내역 입력 받는 함수
 function get_release_message() {
     local release_message=""
-    
+
     # print_string 출력을 /dev/tty로 강제 지정
     print_string "info" "작업 내역을 입력해주세요 (필수, 여러 줄 입력. 입력 완료 시 Enter를 치고 Control+D를 입력하세요):" > /dev/tty
-    
+
     # read -e를 사용하여 편집 가능한 입력 받기
     while IFS= read -e line; do
         release_message+="$line"$'\n'
     done < /dev/tty
-    
+
     release_message_trimmed=$(echo "$release_message" | tr -d '[:space:]')
     if [ -z "$release_message_trimmed" ]; then
         print_string "error" "작업 내역이 비어있습니다. 다시 입력해주세요." > /dev/tty
         release_message=$(get_release_message)
     fi
-    
+
     echo "$release_message"
 }
 
@@ -293,7 +294,7 @@ function get_app_version() {
 # 완료 메시지 출력
 function print_completion_message() {
     local -n new_versions=$1
-    
+
     print_string "success" "=================================="
 
     for version in "${new_versions[@]}"; do
@@ -313,7 +314,7 @@ if [[ "$current_branch" = "main" ]]; then
         print_string "error" "GitHub CLI가 설치되어 있지 않습니다."
         exit 1
     fi
-    
+
     # GitHub CLI 로그인 상태 확인
     if ! gh auth status &> /dev/null; then
         print_string "error" "GitHub CLI에 로그인되어 있지 않습니다. 'gh auth login'으로 로그인해주세요."
@@ -368,7 +369,7 @@ for i in "${!app_names[@]}"; do
     if [[ "$last_git_work_status" = "bad" ]]; then
         break
     fi
-    
+
     # 현재 버전 생성
     new_version="${app_name}-${timestamp}"
 
@@ -382,7 +383,7 @@ for i in "${!app_names[@]}"; do
     else
         tag_version="deploy/${app_name}/${current_branch}/${new_version}"
     fi
-    
+
     # 배포 메시지 생성
     deploy_message="deploy: [App: ${app_name}, Version: ${new_version}] release 배포"
 

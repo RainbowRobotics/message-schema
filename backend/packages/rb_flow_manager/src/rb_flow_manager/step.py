@@ -8,7 +8,7 @@ from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import call_with_matching_args, eval_value, safe_eval_expr
 
 from .context import ExecutionContext
-from .exception import BreakFolder, BreakRepeat, JumpToStepException, StopExecution
+from .exception import BreakFolder, BreakRepeat, ContinueRepeat, JumpToStepException, StopExecution
 from .utils import _resolve_arg_scope_value
 
 
@@ -52,7 +52,7 @@ class Step:
         if d.get("method") == "Repeat":
             return RepeatStep.from_dict(d)
 
-        if d.get("method") in ["If", "ElseIf", "Else", "Condition"]:
+        if d.get("method") in ["If", "ElseIf", "Else", "Condition", "Case"]:
             return ConditionStep.from_dict(d)
 
         if d.get("method") == "Jump":
@@ -123,6 +123,8 @@ class Step:
                     _indent(f"{k}={repr(v)},\n\n", depth + 4) if v is not None else ""
                 )
 
+        print("other_kwargs_block >>>", other_kwargs_block, flush=True)
+
         return (
             (" " * depth)
             + f"{self._class_name}(\n"
@@ -182,6 +184,8 @@ class Step:
     def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
 
+        print("execute_children target_step_id >>>", target_step_id, flush=True)
+
         if len(self.children) > 0:
             ctx.current_depth += 1
 
@@ -189,11 +193,15 @@ class Step:
 
         for child in self.children:
             try:
-                child.execute(ctx, target_step_id=current_target_step_id)
+                child_target_step_id = getattr(child, "target_step_id", None)
+                if child_target_step_id is not None and child_target_step_id == current_target_step_id:
+                    continue
 
                 if current_target_step_id is not None and child.step_id == current_target_step_id:
                     current_target_step_id = None
                     ctx.data["finding_jump_to_step"] = False
+
+                child.execute(ctx, target_step_id=current_target_step_id)
 
             except BreakFolder:
                 if getattr(self, "method", None) == "Folder":
@@ -298,7 +306,6 @@ class Step:
                 raise StopExecution(str(e)) from e
 
             try:
-                print("args >>>", eval_args, flush=True)
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
             except RuntimeError as e:
                 ctx.emit_error(self.step_id, RuntimeError(str(e)))
@@ -490,6 +497,8 @@ class RepeatStep(Step):
                     self.execute_children(ctx, target_step_id=target_step_id)
                 except BreakRepeat:
                     break
+                except ContinueRepeat:
+                    continue
 
         elif self.while_cond is not None:
             if isinstance(self.while_cond, str):
@@ -503,6 +512,8 @@ class RepeatStep(Step):
                         self.execute_children(ctx, target_step_id=target_step_id)
                     except BreakRepeat:
                         break
+                    except ContinueRepeat:
+                        continue
             else:
                 while self.while_cond(ctx):
                     try:
@@ -510,6 +521,8 @@ class RepeatStep(Step):
                         self.execute_children(ctx, target_step_id=target_step_id)
                     except BreakRepeat:
                         break
+                    except ContinueRepeat:
+                        continue
 
         elif self.do_while is not None:
             while True:
@@ -518,6 +531,8 @@ class RepeatStep(Step):
                     self.execute_children(ctx, target_step_id=target_step_id)
                 except BreakRepeat:
                     break
+                except ContinueRepeat:
+                    continue
                 if isinstance(self.do_while, str):
                     if not safe_eval_expr(
                         self.do_while,
@@ -532,8 +547,6 @@ class RepeatStep(Step):
         self._post_execute(ctx)
 
         ctx.emit_done(self.step_id)
-
-
 
 class ConditionStep(Step):
     """조건 Step"""
@@ -671,13 +684,30 @@ class ConditionStep(Step):
             return
 
 
-
 class BreakStep(Step):
     """가장 가까운 RepeatStep 실행을 중단"""
     _class_name = "BreakStep"
 
-    def __init__(self, *, step_id: str, name: str, disabled: bool | None = None):
-        super().__init__(step_id=step_id, name=name, disabled=disabled)
+    def __init__(self, *, step_id: str, name: str, break_type: str, disabled: bool | None = None):
+        super().__init__(step_id=step_id, name=name, break_type=break_type, disabled=disabled)
+        self.break_type = break_type
+
+    @staticmethod
+    def from_dict(d) -> "BreakStep":
+        return BreakStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            break_type=d.get("breakType") or d.get("args", {}).get("break_type"),
+            disabled=d.get("disabled"),
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "breakType": self.break_type,
+            "disabled": self.disabled,
+        }
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         if self.disabled:
@@ -697,15 +727,36 @@ class BreakStep(Step):
         if not is_skip:
             ctx.emit_done(self.step_id)
 
-            raise BreakRepeat()
+            if self.break_type == "BREAK":
+                raise BreakRepeat()
+            elif self.break_type == "CONTINUE":
+                raise ContinueRepeat()
 
 
 class JumpToStep(Step):
     """특정 step_id로 점프"""
     _class_name = "JumpToStep"
 
-    def __init__(self, *, step_id: str, name: str, args: dict[str, Any] | None = None, disabled: bool | None = None):
-        super().__init__(step_id=step_id, name=name, args=args, disabled=disabled)
+    def __init__(self, *, step_id: str, name: str, target_step_id: str | None = None, disabled: bool | None = None):
+        super().__init__(step_id=step_id, name=name, target_step_id=target_step_id, disabled=disabled)
+        self.target_step_id = target_step_id
+
+    @staticmethod
+    def from_dict(d) -> "JumpToStep":
+        return JumpToStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            target_step_id=d.get("targetStepId"),
+            disabled=d.get("disabled"),
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "targetStepId": self.target_step_id,
+            "disabled": self.disabled,
+        }
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         if self.disabled:
@@ -717,13 +768,9 @@ class JumpToStep(Step):
 
         ctx.check_stop()
 
-        target_step_id = self.args.get("target_step_id", None)
-
-        if target_step_id is None:
-            raise RuntimeError("JumpToStep: target_step_id is required")
-
         self._post_execute(ctx, ignore_step_interval=True)
 
         ctx.emit_done(self.step_id)
 
-        raise JumpToStepException(target_step_id=target_step_id)
+        if self.target_step_id is not None:
+            raise JumpToStepException(target_step_id=self.target_step_id)
