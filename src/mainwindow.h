@@ -225,6 +225,7 @@ public Q_SLOTS:
     // mapping
     void bt_MapBuild();
     void bt_MapSave();
+    void bt_MapSave2();
     void bt_MapLoad();
     void bt_MapLastLc();
     void bt_MapPause();

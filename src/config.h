@@ -414,9 +414,9 @@ private:
     QJsonObject set_default_livox_config();
     QJsonObject set_default_orbbec_config();
     
-    QJsonArray set_default_lidar_2d_config_array();
-    QJsonArray set_default_lidar_3d_config_array();
-    QJsonArray set_default_cam_config_array();
+    QJsonArray set_default_lidar_2d_array_config();
+    QJsonArray set_default_lidar_3d_array_config();
+    QJsonArray set_default_cam_array_config();
 
 private:
     explicit CONFIG(QObject *parent = nullptr);

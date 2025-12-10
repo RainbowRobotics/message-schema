@@ -112,6 +112,7 @@ private:
     QTimer* reconnect_timer;
     QWebSocket* client;
     std::atomic<bool> is_connected = {false};
+    std::atomic<bool> is_connecting = {false};
     std::atomic<double> last_send_time = {0};
 
     QString robot_id = "";
@@ -300,6 +301,7 @@ private Q_SLOTS:
 
     void connected();
     void disconnected();
+    void connection_failed();
     //    void recv_message(const QString &buf);
     void recv_message(sio::event& e);
     void recv_message_array(sio::event& ev);
@@ -313,6 +315,7 @@ private Q_SLOTS:
     void send_lidar_2d();
     void send_lidar_3d();
     void send_mapping_cloud();
+    void send_system_status(double cpu_use, double cpu_temp);
 
     void slot_localization(DATA_LOCALIZATION msg);
     //    void slot_safety_io(DATA_SAFTYIO msg);

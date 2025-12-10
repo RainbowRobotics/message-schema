@@ -38,6 +38,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     sio::socket::ptr sock = io->socket("slamnav");
     io->set_open_listener(std::bind(&COMM_MSA::connected, this));
     io->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
+    io->set_fail_listener(std::bind(&COMM_MSA::connection_failed, this));
     //    io->set_close_listener(std::bind(&COMM_MSA::sio_disconnected, this, _1));
     //    io->set_fail_listener(std::bind(&COMM_MSA::sio_error, this));
 
@@ -380,26 +381,31 @@ void COMM_MSA::init()
 
 void COMM_MSA::reconnect_loop()
 {
-    if(!is_connected)
+    if(is_connected|| is_connecting)
     {
-        if(!config || !client)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        QString server_ip = config->get_server_ip();
-        if(server_ip.isEmpty())
-        {
-            logger->write_log("[COMM_MSA] Invalid server ip");
-            log_error("Invalid server ip");
-            return;
-        }
-        io->connect("ws://localhost:15001");
-//         io->connect("ws://10.108.1.31:15001");
-        io->socket("slamnav");
+        return;
     }
+
+    if(!config || !client)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+
+    QString server_ip = config->get_server_ip();
+    if(server_ip.isEmpty())
+    {
+        log_error("Invalid server ip");
+        return;
+    }
+    is_connecting = true;
+    
+    log_info(" try to connect to MSA server...");
+    io->connect("ws://localhost:15001");
+    io->set_fail_listener(std::bind(&COMM_MSA::connection_failed, this));
+    //        io->connect("ws://10.108.1.31:15001");
+    //io->socket("slamnav");
+    
 }
 
 void COMM_MSA::connected()
@@ -407,12 +413,11 @@ void COMM_MSA::connected()
     if(!is_connected)
     {
         is_connected = true;
-        logger->write_log("[COMM_MSA] connected");
+        is_connecting = false;
         log_info("connected to MSA server");
 
         if(!ctrl)
         {
-            logger->write_log("[COMM_MSA] not ready to modules");
             log_error("not ready to modules");
             return;
         }
@@ -420,24 +425,35 @@ void COMM_MSA::connected()
         ctrl->set_is_rrs(true);
     }
 }
-
 void COMM_MSA::disconnected()
 {
-    if(is_connected)
+    is_connected = false;
+    is_connecting = false;
+
+    log_error("disconnected from MSA server");
+    if(!ctrl)
     {
-        is_connected = false;
-        logger->write_log("[COMM_MSA] disconnected");
-        log_error("disconnected from MSA server");
-
-        if(!ctrl)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        ctrl->set_is_rrs(false);
+        log_error("not ready to modules");
+        return;
     }
+    ctrl->set_is_rrs(false);
+    
+}
+
+void COMM_MSA::connection_failed()
+{
+    
+    
+    //is_connected = false;
+    is_connecting = false;
+    log_error("connection to MSA server failed");
+    if(!ctrl)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+    ctrl->set_is_rrs(false);
+    
 }
 
 // send status
@@ -571,6 +587,34 @@ void COMM_MSA::send_move_status()
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "moveStatus";
     socket_msg.data = rootObj;  // 타입 그대로 전달
+
+    send_queue.push(socket_msg);
+}
+
+void COMM_MSA::send_system_status(double cpu_use, double cpu_temp)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    // Creating the sio object message
+    sio::object_message::ptr rootObj = sio::object_message::create();
+
+    // Adding the CPU object
+    sio::object_message::ptr cpuObj = sio::object_message::create();
+    cpuObj->get_map()["use"] = sio::double_message::create(cpu_use);
+    cpuObj->get_map()["temp"] = sio::double_message::create(cpu_temp);
+    rootObj->get_map()["cpu"] = cpuObj;
+
+    // Adding the time object
+    const double time = get_time0();
+    rootObj->get_map()["time"] = sio::string_message::create(QString::number((long long)(time*1000), 10).toStdString());
+
+    // Send via queue
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "systemStatus";
+    socket_msg.data = rootObj;
 
     send_queue.push(socket_msg);
 }
@@ -3055,8 +3099,11 @@ void COMM_MSA::send_status_loop()
         // 500[ms]
         if(send_cnt % COMM_MSA_INFO::send_status_cnt == 0)
         {
+            double cpu_use = get_cpu_usage();
+            double cpu_temp = get_cpu_temperature();
+            
             send_status();
-            //            send_system_status(cpu_use, cpu_temp);
+            send_system_status(cpu_use, cpu_temp);
             send_mapping_cloud();
         }
 

@@ -83,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // mapping
     connect(ui->bt_MapBuild,          SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));                    // mapping start
     connect(ui->bt_MapSave,           SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
+    connect(ui->bt_MapSave2,           SIGNAL(clicked()),  this, SLOT(bt_MapSave2()));                    
     connect(ui->bt_MapLoad,           SIGNAL(clicked()),  this, SLOT(bt_MapLoad()));                     // map load
     connect(ui->bt_MapLastLc,         SIGNAL(clicked()),  this, SLOT(bt_MapLastLc()));                   // manual loop closing
     connect(ui->bt_MapPause,          SIGNAL(clicked()),  this, SLOT(bt_MapPause()));
@@ -1611,6 +1612,16 @@ void MainWindow::bt_MapSave()
     }
 }
 
+void MainWindow::bt_MapSave2()
+{
+    log_info("bt_MapSave2");
+    UNIMAP::instance()->save_map();
+    
+    // Update plot to reflect merged changes
+    map_update();
+    log_info("bt_MapSave2 completed and plot updated");
+}
+
 void MainWindow::bt_MapLoad()
 {
     //spdlog::info("[MAIN] bt_MapLoad");
@@ -2553,17 +2564,8 @@ void MainWindow::bt_QuickAddCloud()
     // Get scan based on localization mode
     if(CONFIG::instance()->get_loc_mode() == "3D" && CONFIG::instance()->get_use_lidar_3d())
     {
-        // Get 3D lidar scan
-        for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); idx++)
-        {
-            LVX_FRM cur_frm = LIDAR_3D::instance()->get_cur_raw(idx);
-            for(size_t p = 0; p < cur_frm.pts.size(); p++)
-            {
-                Eigen::Vector3d pt(cur_frm.pts[p].x, cur_frm.pts[p].y, cur_frm.pts[p].z);
-                pts.push_back(pt);
-            }
-        }
-        log_info("[QA_CLOUD] Captured 3D lidar scan with {} points", pts.size());
+        log_error("[QA_CLOUD] 3D lidar not supported for quick add cloud");
+        return;
     }
     else if(CONFIG::instance()->get_use_lidar_2d())
     {
@@ -2638,17 +2640,8 @@ void MainWindow::bt_QuickAddCloud2()
     // Get scan based on localization mode
     if(CONFIG::instance()->get_loc_mode() == "3D" && CONFIG::instance()->get_use_lidar_3d())
     {
-        // Get 3D lidar scan
-        for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); idx++)
-        {
-            LVX_FRM cur_frm = LIDAR_3D::instance()->get_cur_raw(idx);
-            for(size_t p = 0; p < cur_frm.pts.size(); p++)
-            {
-                Eigen::Vector3d pt(cur_frm.pts[p].x, cur_frm.pts[p].y, cur_frm.pts[p].z);
-                pts.push_back(pt);
-            }
-        }
-        log_info("[QA_CLOUD2] Captured 3D lidar scan with {} points", pts.size());
+        log_error("[QA_CLOUD2] 3D lidar not supported for quick add cloud");
+        return;
     }
     else if(CONFIG::instance()->get_use_lidar_2d())
     {
@@ -3334,6 +3327,78 @@ void MainWindow::plot_map()
             if(pcl_viewer->contains("map_3d_pts"))
             {
                 pcl_viewer->removePointCloud("map_3d_pts");
+            }
+        }
+
+        // Render additional cloud (green)
+        auto additional_cloud = UNIMAP::instance()->get_additional_cloud();
+        if(!additional_cloud.empty())
+        {
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            cloud->reserve(additional_cloud.size());
+            
+            for(const auto& pt : additional_cloud)
+            {
+                pcl::PointXYZRGB p;
+                p.x = pt.x();
+                p.y = pt.y();
+                p.z = pt.z();
+                p.r = 0;
+                p.g = 255;  // Green
+                p.b = 0;
+                cloud->push_back(p);
+            }
+            
+            if(!pcl_viewer->updatePointCloud(cloud, "additional_cloud"))
+            {
+                pcl_viewer->addPointCloud(cloud, "additional_cloud");
+            }
+            pcl_viewer->setPointCloudRenderingProperties(
+                pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 
+                ui->spb_PointSize->value(), 
+                "additional_cloud");
+        }
+        else
+        {
+            if(pcl_viewer->contains("additional_cloud"))
+            {
+                pcl_viewer->removePointCloud("additional_cloud");
+            }
+        }
+
+        // Render removed cloud (purple/magenta)
+        auto removed_cloud = UNIMAP::instance()->get_removed_cloud();
+        if(!removed_cloud.empty())
+        {
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            cloud->reserve(removed_cloud.size());
+            
+            for(const auto& pt : removed_cloud)
+            {
+                pcl::PointXYZRGB p;
+                p.x = pt.x();
+                p.y = pt.y();
+                p.z = pt.z();
+                p.r = 255;  // Purple/Magenta
+                p.g = 0;
+                p.b = 255;
+                cloud->push_back(p);
+            }
+            
+            if(!pcl_viewer->updatePointCloud(cloud, "removed_cloud"))
+            {
+                pcl_viewer->addPointCloud(cloud, "removed_cloud");
+            }
+            pcl_viewer->setPointCloudRenderingProperties(
+                pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 
+                ui->spb_PointSize->value(), 
+                "removed_cloud");
+        }
+        else
+        {
+            if(pcl_viewer->contains("removed_cloud"))
+            {
+                pcl_viewer->removePointCloud("removed_cloud");
             }
         }
     }

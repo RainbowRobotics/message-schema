@@ -2095,6 +2095,9 @@ QJsonObject CONFIG::set_default_config_object()
     config["loc_3d"] =          set_default_localization_3d_config();
     config["network"] =         set_default_network_config();
     config["debug"] =           set_default_debug_config();
+    config["lidar_2d_config"] = set_default_lidar_2d_array_config();
+    config["lidar_3d_config"] = set_default_lidar_3d_array_config();
+    config["camera_config"] =   set_default_cam_array_config();
     config["logging"] =         set_default_logging_config();
     config["motor"] =           set_default_motor_config();
     config["mapping"] =         set_default_mapping_config();
@@ -2430,6 +2433,49 @@ QJsonObject CONFIG::set_default_update_config()
     //update["CONFIG"] = QString(USE_CONFIG_UPDATE ? "true" : "false");
 
     return update;
+}
+
+QJsonArray CONFIG::set_default_lidar_2d_array_config()
+{
+    QJsonArray lidar_2d_arr;
+    for(int i = 0; i < LIDAR_2D_NUM; i++)
+    {
+        QJsonObject obj;
+        obj["IP"] = LIDAR_2D_IP[i];
+        obj["TF"] = LIDAR_2D_TF[i];
+        if(!LIDAR_2D_DEV[i].isEmpty())
+        {
+            obj["DEV"] = LIDAR_2D_DEV[i];
+        }
+        lidar_2d_arr.append(obj);
+    }
+    return lidar_2d_arr;
+}
+
+QJsonArray CONFIG::set_default_lidar_3d_array_config()
+{
+    QJsonArray lidar_3d_arr;
+    for(int i = 0; i < LIDAR_3D_NUM; i++)
+    {
+        QJsonObject obj;
+        obj["IP"] = LIDAR_3D_IP[i];
+        obj["TF"] = LIDAR_3D_TF[i];
+        lidar_3d_arr.append(obj);
+    }
+    return lidar_3d_arr;
+}
+
+QJsonArray CONFIG::set_default_cam_array_config()
+{
+    QJsonArray cam_arr;
+    for(int i = 0; i < CAM_NUM; i++)
+    {
+        QJsonObject obj;
+        obj["SERIAL_NUMBER"] = CAM_SERIAL_NUMBER[i];
+        obj["TF"] = CAM_TF[i];
+        cam_arr.append(obj);
+    }
+    return cam_arr;
 }
 
 double CONFIG::get_lidar_2d_min_range()
