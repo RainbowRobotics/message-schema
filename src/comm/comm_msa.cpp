@@ -38,6 +38,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     sio::socket::ptr sock = io->socket("slamnav");
     io->set_open_listener(std::bind(&COMM_MSA::connected, this));
     io->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
+    io->set_fail_listener(std::bind(&COMM_MSA::connection_failed, this));
     //    io->set_close_listener(std::bind(&COMM_MSA::sio_disconnected, this, _1));
     //    io->set_fail_listener(std::bind(&COMM_MSA::sio_error, this));
 
@@ -380,26 +381,31 @@ void COMM_MSA::init()
 
 void COMM_MSA::reconnect_loop()
 {
-    if(!is_connected)
+    if(is_connected|| is_connecting)
     {
-        if(!config || !client)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        QString server_ip = config->get_server_ip();
-        if(server_ip.isEmpty())
-        {
-            logger->write_log("[COMM_MSA] Invalid server ip");
-            log_error("Invalid server ip");
-            return;
-        }
-        io->connect("ws://localhost:15001");
-//         io->connect("ws://10.108.1.31:15001");
-        io->socket("slamnav");
+        return;
     }
+
+    if(!config || !client)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+
+    QString server_ip = config->get_server_ip();
+    if(server_ip.isEmpty())
+    {
+        log_error("Invalid server ip");
+        return;
+    }
+    is_connecting = true;
+    
+    log_info(" try to connect to MSA server...");
+    io->connect("ws://localhost:15001");
+    io->set_fail_listener(std::bind(&COMM_MSA::connection_failed, this));
+    //        io->connect("ws://10.108.1.31:15001");
+    //io->socket("slamnav");
+    
 }
 
 void COMM_MSA::connected()
@@ -407,12 +413,11 @@ void COMM_MSA::connected()
     if(!is_connected)
     {
         is_connected = true;
-        logger->write_log("[COMM_MSA] connected");
+        is_connecting = false;
         log_info("connected to MSA server");
 
         if(!ctrl)
         {
-            logger->write_log("[COMM_MSA] not ready to modules");
             log_error("not ready to modules");
             return;
         }
@@ -420,24 +425,35 @@ void COMM_MSA::connected()
         ctrl->set_is_rrs(true);
     }
 }
-
 void COMM_MSA::disconnected()
 {
-    if(is_connected)
+    is_connected = false;
+    is_connecting = false;
+
+    log_error("disconnected from MSA server");
+    if(!ctrl)
     {
-        is_connected = false;
-        logger->write_log("[COMM_MSA] disconnected");
-        log_error("disconnected from MSA server");
-
-        if(!ctrl)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        ctrl->set_is_rrs(false);
+        log_error("not ready to modules");
+        return;
     }
+    ctrl->set_is_rrs(false);
+    
+}
+
+void COMM_MSA::connection_failed()
+{
+    
+    
+    //is_connected = false;
+    is_connecting = false;
+    log_error("connection to MSA server failed");
+    if(!ctrl)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+    ctrl->set_is_rrs(false);
+    
 }
 
 // send status

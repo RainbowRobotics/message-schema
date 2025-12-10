@@ -112,6 +112,7 @@ private:
     QTimer* reconnect_timer;
     QWebSocket* client;
     std::atomic<bool> is_connected = {false};
+    std::atomic<bool> is_connecting = {false};
     std::atomic<double> last_send_time = {0};
 
     QString robot_id = "";
@@ -300,6 +301,7 @@ private Q_SLOTS:
 
     void connected();
     void disconnected();
+    void connection_failed();
     //    void recv_message(const QString &buf);
     void recv_message(sio::event& e);
     void recv_message_array(sio::event& ev);
