@@ -50,21 +50,7 @@ public:
     // interface func
     void init();
 
-    QString get_json(const QJsonObject& json, QString key);
-    int get_json_int(const QJsonObject& json, QString key);
-    double get_json_double(const QJsonObject& json, QString key);
-    QString get_msa_text();
-
-    QString get_multi_state();
-
-    double get_process_time_path();
-    double get_process_time_vobs();
-
-    double get_max_process_time_path();
-    double get_max_process_time_vobs();
-
-    bool get_msa_connect_check();
-
+    // setter
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
@@ -77,10 +63,24 @@ public:
     void set_dockcontrol_module(DOCKCONTROL* _dctrl);
     void set_localization_module(LOCALIZATION* _loc);
     void set_mapping_module(MAPPING* _mapping);
+
     void set_global_path_update();
     void set_local_path_update();
+    void set_last_receive_msg(QString val);
 
-    void send_safetyio_response(const DATA_SAFTYIO& msg);
+
+    // getter
+    bool get_is_connected();
+    QString get_json(const QJsonObject& json, QString key);
+    int get_json_int(const QJsonObject& json, QString key);
+    double get_json_double(const QJsonObject& json, QString key);
+    QString get_last_receive_msg();
+    QString get_multi_state();
+
+    double get_process_time_path();
+    double get_process_time_vobs();
+    double get_max_process_time_path();
+    double get_max_process_time_vobs();
 
 private:
     explicit COMM_MSA(QObject *parent = nullptr);
@@ -88,6 +88,8 @@ private:
 
     std::shared_mutex mtx;
     std::mutex send_mtx;
+
+    std::atomic<bool> is_valid = {false};
 
     // other modules
     CAM* cam;
@@ -105,7 +107,7 @@ private:
     LOCALIZATION* loc;
 
     // vars
-    std::unique_ptr<sio::client> io;
+    std::unique_ptr<sio::client> rrs_socket;
     std::atomic<int> last_send_kfrm_idx = {0};
 
     QTimer* send_timer;
@@ -127,11 +129,9 @@ private:
     QMainWindow* get_main_window();
     bool is_main_window_valid();
 
-    //    tbb::concurrent_queue<QString> send_queue;
     tbb::concurrent_queue<SOCKET_MESSAGE> send_queue;
 
     std::atomic<bool> is_recv_running = {false};
-    tbb::concurrent_queue<QString> recv_queue;
     std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
 
@@ -145,20 +145,22 @@ private:
     std::mutex common_mtx;
     std::mutex response_mtx;
     std::mutex status_mtx;
+    std::mutex recv_mtx;
+
 
     //MSA queue
+    std::queue<QString> recv_queue;
     std::queue<DATA_MOVE> move_queue;
     std::queue<DATA_LOAD> load_queue;
     std::queue<DATA_CONTROL> control_queue;
     std::queue<DATA_MAPPING> mapping_queue;
     std::queue<DATA_LOCALIZATION> localization_queue;
-
-
     std::queue<DATA_PATH> path_queue;
     std::queue<DATA_VOBS> vobs_queue;
     std::queue<DATA_COMMON> common_queue;
     std::queue<std::function<void()>> response_queue;
 
+    std::condition_variable recv_cv;
     std::condition_variable move_cv;
     std::condition_variable load_cv;
     std::condition_variable localization_cv;
@@ -196,9 +198,9 @@ private:
     std::unique_ptr<std::thread> response_thread;
     std::unique_ptr<std::thread> status_thread;
 
-    QString receive_msg;
+    QString last_receive_msg;
 
-    mutable std::shared_mutex msg_mtx;
+    std::shared_mutex msg_mtx;
 
     void move_loop();
     void control_loop();
@@ -223,7 +225,7 @@ private:
     void handle_move_stop(DATA_MOVE& msg);
     void handle_move_pause(DATA_MOVE& msg);
     void handle_move_resume(DATA_MOVE& msg);
-//    void handle_move_linear(DATA_MOVE &msg);
+
     void handle_move_target(DATA_MOVE& msg);
     void handle_mapping(DATA_MAPPING msg);
     void handle_safetyio_cmd(const QJsonObject& data);
@@ -266,7 +268,7 @@ private:
     void handle_send_safetyIO(const QJsonObject& data);
 
     void slot_safety_io(DATA_SAFTYIO msg);
-    QJsonValue convertItem(sio::message::ptr item);
+    QJsonValue convert_item(sio::message::ptr item);
 
     void send_profile_move_response(const DATA_MOVE& msg);
 
@@ -300,8 +302,7 @@ private Q_SLOTS:
 
     void connected();
     void disconnected();
-    //    void recv_message(const QString &buf);
-    void recv_message(sio::event& e);
+    void recv_message(sio::event& ev);
     void recv_message_array(sio::event& ev);
 
     void reconnect_loop();
@@ -315,7 +316,6 @@ private Q_SLOTS:
     void send_mapping_cloud();
 
     void slot_localization(DATA_LOCALIZATION msg);
-    //    void slot_safety_io(DATA_SAFTYIO msg);
 
     //MSA
     void send_move_response(DATA_MOVE msg);
@@ -326,19 +326,13 @@ private Q_SLOTS:
     void send_load_response(DATA_LOAD msg);
 
     void send_path_response(DATA_PATH msg);
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
 
-    // for linear move -> direct cmd mobile class
-//    void handle_move_linear(DATA_MOVE msg);
-//    void handle_move_circular(DATA_MOVE msg);
-//    void handle_move_rotate(DATA_MOVE msg);
     void slot_profile_move(DATA_MOVE msg);
 
 Q_SIGNALS:
     void signal_send_move_status();
- void signal_profile_move(DATA_MOVE msg);
-//    void signal_handle_move_linear(DATA_MOVE msg);
-//    void signal_handle_move_circular(DATA_MOVE msg);
-//    void signal_handle_move_rotate(DATA_MOVE msg);
+    void signal_profile_move(DATA_MOVE msg);
 };
 
 #endif // COMM_MSA_H

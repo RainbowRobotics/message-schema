@@ -94,6 +94,9 @@ public:
     // stop control loop
     void stop();
 
+    void stop_control_thread();
+    void stop_obs_thread();
+
     /***********************
      * interface funcs
      ***********************/
@@ -133,6 +136,9 @@ public:
     void set_cur_goal_state(QString str);
     void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
     void set_multi_inter_lock(bool val);
+    void set_cur_global_path(const PATH& val);
+    void set_cur_local_path(const PATH& val);
+    void set_cur_move_info(const DATA_MOVE& val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
@@ -157,9 +163,8 @@ public Q_SLOTS:
     void slot_backward_move(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
-    void slot_path(DATA_PATH msg);
+    void slot_path(const DATA_PATH& msg);
     void slot_path();
-    void slot_path(QString direction);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);

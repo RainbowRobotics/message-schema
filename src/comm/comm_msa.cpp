@@ -29,45 +29,34 @@ COMM_MSA::COMM_MSA(QObject *parent)
     using std::placeholders::_3;
     using std::placeholders::_4;
 
-    io = std::make_unique<sio::client>();
+    rrs_socket = std::make_unique<sio::client>();
 
     client = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     send_timer = new QTimer(this);
     reconnect_timer = new QTimer(this);
 
-    sio::socket::ptr sock = io->socket("slamnav");
-    io->set_open_listener(std::bind(&COMM_MSA::connected, this));
-    io->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
-    //    io->set_close_listener(std::bind(&COMM_MSA::sio_disconnected, this, _1));
-    //    io->set_fail_listener(std::bind(&COMM_MSA::sio_error, this));
+    sio::socket::ptr sock = rrs_socket->socket("slamnav");
+    rrs_socket->set_open_listener(std::bind(&COMM_MSA::connected, this));
+    rrs_socket->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
 
-    //    io->set_fail_listener(std::bind(&COMM_MSA::sio_error, this));
-    //    io->set_client_disconnect_listener(std::bind(&COMM_MSA::sio_client_disconnected, this));
-
-    //    //    new Socket Event!!
     BIND_EVENT(sock, "moveRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    //    BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
-    //    BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
 
-    connect(send_timer,      SIGNAL(timeout()),                 this, SLOT(send_loop()));
-    connect(reconnect_timer, SIGNAL(timeout()),                 this, SLOT(reconnect_loop()));
+    connect(send_timer,      SIGNAL(timeout()), this, SLOT(send_loop()));
+    connect(reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
-    connect(this, &COMM_MSA::signal_profile_move,this, &COMM_MSA::slot_profile_move,Qt::QueuedConnection);
-
-
+    connect(this, &COMM_MSA::signal_profile_move, this, &COMM_MSA::slot_profile_move, Qt::QueuedConnection);
 }
 
 COMM_MSA::~COMM_MSA()
 {
-    io->socket("slamnav")->off_all();
-    io->socket("slamnav")->off_error();
-    io->sync_close();
+    rrs_socket->socket("slamnav")->off_all();
+    rrs_socket->socket("slamnav")->off_error();
+    rrs_socket->sync_close();
 
     reconnect_timer->stop();
 
@@ -88,6 +77,7 @@ COMM_MSA::~COMM_MSA()
     {
         move_thread->join();
     }
+
     is_load_running = false;
     load_cv.notify_all();
     if(load_thread->joinable())
@@ -116,7 +106,6 @@ COMM_MSA::~COMM_MSA()
         localization_thread->join();
     }
 
-
     is_path_running = false;
     path_cv.notify_all();
     if(path_thread->joinable())
@@ -134,7 +123,6 @@ COMM_MSA::~COMM_MSA()
     is_common_running = false;
     common_cv.notify_all();
     if(common_thread->joinable())
-
     {
         common_thread->join();
     }
@@ -146,7 +134,6 @@ COMM_MSA::~COMM_MSA()
         response_thread->join();
     }
 
-    // for move status -> 100ms
     is_send_status_running = false;
     status_cv.notify_all();
     if(status_thread->joinable())
@@ -306,271 +293,228 @@ void COMM_MSA::init()
 {
     if(!config)
     {
-        logger->write_log("[COMM_RRS] config module not set", "Orange");
-        spdlog::warn("[COMM_RRS] config module not set");
+        log_warn("[COMM_RRS] config module not set");
         return;
     }
 
-    if(config->get_use_msa())
+    if(!config->get_use_msa())
     {
-        // update robot id
-        robot_id = QString("R_%1").arg(static_cast<long long>(get_time0()*1000));
-        //    logger->write_log(QString("[COMM_MSA] ID: %1").arg(robot_id));
-
-        // start reconnect loop
-        reconnect_timer->start(3000);
-        logger->write_log("[COMM_MSA] start reconnect timer");
-        log_info("start reconnect timer");
-
-        if(recv_thread == nullptr)
-        {
-            is_recv_running = true;
-            recv_thread = std::make_unique<std::thread>(&COMM_MSA::recv_loop, this);
-        }
-
-        if(move_thread == nullptr)
-        {
-            move_thread = std::make_unique<std::thread>(&COMM_MSA::move_loop, this);
-        }
-
-        if(load_thread == nullptr)
-        {
-            load_thread = std::make_unique<std::thread>(&COMM_MSA::load_loop, this);
-        }
-        if(mapping_thread == nullptr)
-        {
-            mapping_thread = std::make_unique<std::thread>(&COMM_MSA::mapping_loop, this);
-        }
-        if(localization_thread == nullptr)
-        {
-            localization_thread = std::make_unique<std::thread>(&COMM_MSA::localization_loop, this);
-        }
-        if(control_thread == nullptr)
-        {
-            control_thread = std::make_unique<std::thread>(&COMM_MSA::control_loop, this);
-        }
-        if(path_thread == nullptr)
-        {
-            path_thread = std::make_unique<std::thread>(&COMM_MSA::path_loop, this);
-        }
-
-        if(vobs_thread == nullptr)
-        {
-            vobs_thread = std::make_unique<std::thread>(&COMM_MSA::vobs_loop, this);
-        }
-
-        if(common_thread == nullptr)
-        {
-            common_thread = std::make_unique<std::thread>(&COMM_MSA::common_loop, this);
-        }
-
-        if(response_thread == nullptr)
-        {
-            response_thread = std::make_unique<std::thread>(&COMM_MSA::response_loop, this);
-        }
-
-        if(status_thread == nullptr)
-        {
-            status_thread = std::make_unique<std::thread>(&COMM_MSA::send_status_loop, this);
-        }
-
-        send_timer->start(3);
+        log_warn("[COMM_RRS] not use msa");
+        return;
     }
+
+    // update robot id
+    robot_id = QString("R_%1").arg(static_cast<long long>(get_time0()*1000));
+
+    // start reconnect loop
+    reconnect_timer->start(3000);
+    log_info("start reconnect timer");
+
+    if(recv_thread == nullptr)
+    {
+        is_recv_running = true;
+        recv_thread = std::make_unique<std::thread>(&COMM_MSA::recv_loop, this);
+    }
+
+    if(move_thread == nullptr)
+    {
+        move_thread = std::make_unique<std::thread>(&COMM_MSA::move_loop, this);
+    }
+
+    if(load_thread == nullptr)
+    {
+        load_thread = std::make_unique<std::thread>(&COMM_MSA::load_loop, this);
+    }
+
+    if(mapping_thread == nullptr)
+    {
+        mapping_thread = std::make_unique<std::thread>(&COMM_MSA::mapping_loop, this);
+    }
+
+    if(localization_thread == nullptr)
+    {
+        localization_thread = std::make_unique<std::thread>(&COMM_MSA::localization_loop, this);
+    }
+
+    if(control_thread == nullptr)
+    {
+        control_thread = std::make_unique<std::thread>(&COMM_MSA::control_loop, this);
+    }
+
+    if(path_thread == nullptr)
+    {
+        path_thread = std::make_unique<std::thread>(&COMM_MSA::path_loop, this);
+    }
+
+    if(vobs_thread == nullptr)
+    {
+        vobs_thread = std::make_unique<std::thread>(&COMM_MSA::vobs_loop, this);
+    }
+
+    if(common_thread == nullptr)
+    {
+        common_thread = std::make_unique<std::thread>(&COMM_MSA::common_loop, this);
+    }
+
+    if(response_thread == nullptr)
+    {
+        response_thread = std::make_unique<std::thread>(&COMM_MSA::response_loop, this);
+    }
+
+    if(status_thread == nullptr)
+    {
+        status_thread = std::make_unique<std::thread>(&COMM_MSA::send_status_loop, this);
+    }
+
+    send_timer->start(3);
 }
 
 void COMM_MSA::reconnect_loop()
 {
     if(!is_connected)
     {
-        if(!config || !client)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        QString server_ip = config->get_server_ip();
-        if(server_ip.isEmpty())
-        {
-            logger->write_log("[COMM_MSA] Invalid server ip");
-            log_error("Invalid server ip");
-            return;
-        }
-        io->connect("ws://localhost:15001");
-//         io->connect("ws://10.108.1.31:15001");
-        io->socket("slamnav");
+        return;
     }
+
+    if(!config || !client)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+
+    if(config->get_server_ip().isEmpty())
+    {
+        log_error("Invalid server ip");
+        return;
+    }
+
+    rrs_socket->connect("ws://localhost:15001");
+    rrs_socket->socket("slamnav");
 }
 
 void COMM_MSA::connected()
 {
-    if(!is_connected)
+    if(is_connected)
     {
-        is_connected = true;
-        logger->write_log("[COMM_MSA] connected");
-        log_info("connected to MSA server");
-
-        if(!ctrl)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        ctrl->set_is_rrs(true);
+        log_info("already connected");
+        return;
     }
+
+    if(!ctrl)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+
+    is_connected = true;
+    log_info("connected to MSA server");
+
+    ctrl->set_is_rrs(true);
 }
 
 void COMM_MSA::disconnected()
 {
-    if(is_connected)
+    if(!is_connected)
     {
-        is_connected = false;
-        logger->write_log("[COMM_MSA] disconnected");
-        log_error("disconnected from MSA server");
-
-        if(!ctrl)
-        {
-            logger->write_log("[COMM_MSA] not ready to modules");
-            log_error("not ready to modules");
-            return;
-        }
-
-        ctrl->set_is_rrs(false);
+        log_info("already disconnected");
+        return;
     }
+
+    if(!ctrl)
+    {
+        log_error("not ready to modules");
+        return;
+    }
+
+    is_connected = false;
+    log_info("disconnected from MSA server");
+
+    ctrl->set_is_rrs(false);
 }
 
 // send status
 void COMM_MSA::send_move_status()
 {
-
     if(!is_connected || !ctrl || !mobile || !unimap || !dctrl)
     {
-        //        printf("is_connected : %d\n", (int)is_connected.load());
         return;
     }
 
-    // Creating the JSON object
-    sio::object_message::ptr rootObj = sio::object_message::create();
-
     QString cur_node_id = ctrl->get_cur_node_id();
-
-    // Adding the move state object
-    QString auto_state = "stop";
-    if(ctrl->get_is_pause())
-    {
-        auto_state = "pause";
-    }
-    else if(ctrl->get_is_moving())
-    {
-        auto_state = "move";
-    }
-
-    if(mobile->get_cur_pdu_state() != "good" || ctrl->get_multi_inter_lock())
-    {
-        auto_state = "not ready";
-    }
-
-    if(loc->get_cur_loc_state() != "good")
-    {
-        auto_state = "error";
-    }
-
-    if(ctrl->get_obs_condition() == "vir")
-    {
-        auto_state = "vir";
-    }
-
-    if(cur_node_id.isEmpty())
-    {
-        auto_state = "error";
-    }
-    QString dock_state = "stop";
-
-    QString jog_state = "none";
-
-    sio::object_message::ptr moveStateObj = sio::object_message::create();
-    moveStateObj->get_map()["auto_move"] = sio::string_message::create(auto_state.toStdString()); // "stop", "move", "pause", "error", "not ready", "vir"
-    moveStateObj->get_map()["dock_move"] = sio::string_message::create(dock_state.toStdString());
-    moveStateObj->get_map()["jog_move"] = sio::string_message::create(jog_state.toStdString());
-    moveStateObj->get_map()["obs"] = sio::string_message::create(ctrl->get_obs_condition().toStdString());
-    moveStateObj->get_map()["path"] = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
-    rootObj->get_map()["move_state"] = moveStateObj;
-
-    // Adding the pose object
+    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
+    const MOBILE_POSE mo = mobile->get_pose();
     const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     const Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-    sio::object_message::ptr poseObj = sio::object_message::create();
-    poseObj->get_map()["x"]  = sio::double_message::create(cur_xi[0]);
-    poseObj->get_map()["y"]  = sio::double_message::create(cur_xi[1]);
-    poseObj->get_map()["rz"] = sio::double_message::create(cur_xi[2] * R2D);
-    rootObj->get_map()["pose"] = poseObj;
-
-    // Adding the velocity object
-    MOBILE_POSE mo = mobile->get_pose();
-    sio::object_message::ptr velObj = sio::object_message::create();
-
-    velObj->get_map()["vx"] = sio::double_message::create(mo.vel[0]);
-    velObj->get_map()["vy"] = sio::double_message::create(mo.vel[1]);
-    velObj->get_map()["wz"] = sio::double_message::create(mo.vel[2] * R2D);
-    rootObj->get_map()["vel"] = velObj;
 
     QString cur_node_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
     {
-        cur_node_id = AUTOCONTROL::instance()->get_cur_node_id();
-        NODE *cur_node = UNIMAP::instance()->get_node_by_id(cur_node_id);
-
-        if(cur_node != nullptr)
+        cur_node_id = ctrl->get_cur_node_id();
+        if(NODE* node = unimap->get_node_by_id(cur_node_id))
         {
-            cur_node_name = cur_node -> name;
+            cur_node_name = node->name;
         }
     }
 
-    sio::object_message::ptr curNodeObj = sio::object_message::create();
-
-    curNodeObj->get_map()["id"] = sio::string_message::create(cur_node_id.toStdString());
-    curNodeObj->get_map()["name"] = sio::string_message::create(cur_node_name.toStdString());
-    curNodeObj->get_map()["state"] = sio::string_message::create(auto_state.toStdString());
-    curNodeObj->get_map()["x"] = sio::double_message::create(cur_xi[0]);
-    curNodeObj->get_map()["y"] = sio::double_message::create(cur_xi[1]);
-    curNodeObj->get_map()["rz"] =sio::double_message::create(cur_xi[2] * R2D);
-    rootObj->get_map()["cur_node"] = curNodeObj;
-
-    // Adding the goal_node object
-    QString goal_state = ctrl->get_cur_move_state();
-    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
     QString goal_node_name = "";
-    Eigen::Vector3d goal_xi(0, 0, 0);
+    Eigen::Vector3d goal_xi(0,0,0);
     if(unimap->get_is_loaded() == MAP_LOADED && !goal_node_id.isEmpty())
     {
-        NODE* node = unimap->get_node_by_id(goal_node_id);
-        if(node != nullptr)
+        if(NODE* node = unimap->get_node_by_id(goal_node_id))
         {
             goal_node_name = node->name;
             goal_xi = TF_to_se2(node->tf);
         }
     }
 
-    sio::object_message::ptr goalNodeObj = sio::object_message::create();
+    // Creating the JSON object
+    sio::object_message::ptr moveStateObj = sio::object_message::create();
+    moveStateObj->get_map()["auto_move"] = sio::string_message::create(ctrl->get_auto_state().toStdString()); // "stop", "move", "pause", "error", "not ready", "vir"
+    moveStateObj->get_map()["dock_move"] = sio::string_message::create("stop");
+    moveStateObj->get_map()["jog_move"] = sio::string_message::create("none");
+    moveStateObj->get_map()["obs"] = sio::string_message::create(ctrl->get_obs_condition().toStdString());
+    moveStateObj->get_map()["path"] = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
 
+    // Adding the pose object
+    sio::object_message::ptr poseObj = sio::object_message::create();
+    poseObj->get_map()["x"]  = sio::double_message::create(cur_xi[0]);
+    poseObj->get_map()["y"]  = sio::double_message::create(cur_xi[1]);
+    poseObj->get_map()["rz"] = sio::double_message::create(cur_xi[2] * R2D);
+
+    // Adding the velocity object
+    sio::object_message::ptr velObj = sio::object_message::create();
+    velObj->get_map()["vx"] = sio::double_message::create(mo.vel[0]);
+    velObj->get_map()["vy"] = sio::double_message::create(mo.vel[1]);
+    velObj->get_map()["wz"] = sio::double_message::create(mo.vel[2] * R2D);
+
+    sio::object_message::ptr curNodeObj = sio::object_message::create();
+    curNodeObj->get_map()["x"]     = sio::double_message::create(cur_xi[0]);
+    curNodeObj->get_map()["y"]     = sio::double_message::create(cur_xi[1]);
+    curNodeObj->get_map()["rz"]    = sio::double_message::create(cur_xi[2] * R2D);
+    curNodeObj->get_map()["id"]    = sio::string_message::create(cur_node_id.toStdString());
+    curNodeObj->get_map()["name"]  = sio::string_message::create(cur_node_name.toStdString());
+    curNodeObj->get_map()["state"] = sio::string_message::create("");
+
+    // Adding the goal_node object
+    sio::object_message::ptr goalNodeObj = sio::object_message::create();
+    goalNodeObj->get_map()["x"]     = sio::double_message::create(goal_xi[0]);
+    goalNodeObj->get_map()["y"]     = sio::double_message::create(goal_xi[1]);
+    goalNodeObj->get_map()["rz"]    = sio::double_message::create(goal_xi[2] * R2D);
     goalNodeObj->get_map()["id"]    = sio::string_message::create(goal_node_id.toStdString());
     goalNodeObj->get_map()["name"]  = sio::string_message::create(goal_node_name.toStdString());
-    goalNodeObj->get_map()["state"] = sio::string_message::create(goal_state.toStdString());
+    goalNodeObj->get_map()["state"] = sio::string_message::create(ctrl->get_cur_move_state().toStdString());
 
-    goalNodeObj->get_map()["x"]  = sio::double_message::create(goal_xi[0]);
-    goalNodeObj->get_map()["y"]  = sio::double_message::create(goal_xi[1]);
-    goalNodeObj->get_map()["rz"] = sio::double_message::create(goal_xi[2] * R2D);
-
-    rootObj->get_map()["goal_node"] = goalNodeObj;
-
-    // Adding the time object
-    const double time = get_time0();
-    rootObj->get_map()["time"]   = sio::string_message::create(QString::number((long long)(time*1000)).toStdString());
+    sio::object_message::ptr rootObj = sio::object_message::create();
+    rootObj->get_map()["vel"]        = velObj;
+    rootObj->get_map()["pose"]       = poseObj;
+    rootObj->get_map()["cur_node"]   = curNodeObj;
+    rootObj->get_map()["goal_node"]  = goalNodeObj;
+    rootObj->get_map()["move_state"] = moveStateObj;
+    rootObj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<long long>(get_time0()*1000)).toStdString());
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "moveStatus";
-    socket_msg.data = rootObj;  // 타입 그대로 전달
+    socket_msg.data = rootObj;
 
     send_queue.push(socket_msg);
 }
@@ -579,53 +523,49 @@ void COMM_MSA::recv_message(sio::event& ev)
 {
     sio::message::ptr msg = ev.get_message();
 
-    if (msg)
+    if(msg)
     {
         // string
-        if (msg->get_flag() == sio::message::flag_string)
+        if(msg->get_flag() == sio::message::flag_string)
         {
             std::string data = msg->get_string();
-            std::cout << "받은 문자열 메시지: " << data << std::endl;
-            log_info("받은 문자열 메시지: %s", data.c_str());
         }
         // number
-        else if (msg->get_flag() == sio::message::flag_integer)
+        else if(msg->get_flag() == sio::message::flag_integer)
         {
             int val = msg->get_int();
-            std::cout << "받은 정수 메시지: " << val << std::endl;
-            log_info("받은 정수 메시지: %d", val);
         }
         // JSON
-        else if (msg->get_flag() == sio::message::flag_object)
+        else if(msg->get_flag() == sio::message::flag_object)
         {
             auto obj = msg->get_map();
             QJsonObject json_obj;
-            for (auto& kv : obj)
+            for(auto& kv : obj)
             {
-                if (kv.second->get_flag() == sio::message::flag_string)
+                if(kv.second->get_flag() == sio::message::flag_string)
                 {
                     json_obj.insert(QString::fromStdString(kv.first),
                                     QString::fromStdString(kv.second->get_string()));
                 }
-                else if (kv.second->get_flag() == sio::message::flag_integer)
+                else if(kv.second->get_flag() == sio::message::flag_integer)
                 {
                     json_obj.insert(QString::fromStdString(kv.first),
                                     QJsonValue::fromVariant(QVariant::fromValue<qint64>(kv.second->get_int())));
                 }
-                else if (kv.second->get_flag() == sio::message::flag_double)
+                else if(kv.second->get_flag() == sio::message::flag_double)
                 {
                     json_obj.insert(QString::fromStdString(kv.first),
                                     QJsonValue(kv.second->get_double()));
                 }
-                else if (kv.second->get_flag() == sio::message::flag_boolean)
+                else if(kv.second->get_flag() == sio::message::flag_boolean)
                 {
                     json_obj.insert(QString::fromStdString(kv.first),
                                     QJsonValue(kv.second->get_bool()));
                 }
-                else if (kv.second->get_flag() == sio::message::flag_array || kv.second->get_flag() == sio::message::flag_object)
+                else if(kv.second->get_flag() == sio::message::flag_array || kv.second->get_flag() == sio::message::flag_object)
                 {
                     QString key = QString::fromStdString(kv.first);
-                    json_obj.insert(key, convertItem(kv.second)); // 재귀 호출
+                    json_obj.insert(key, convert_item(kv.second));
                 }
             }
 
@@ -634,12 +574,9 @@ void COMM_MSA::recv_message(sio::event& ev)
             root.insert("data", json_obj);
 
             QString wrapped = QString(QJsonDocument(root).toJson(QJsonDocument::Compact));
-//            qDebug()<<wrapped;
-
-            std::shared_lock<std::shared_mutex> lock(msg_mtx);
-            receive_msg = wrapped;
-
             recv_queue.push(wrapped);
+
+            set_last_receive_msg(wrapped);
         }
     }
 }
@@ -647,58 +584,55 @@ void COMM_MSA::recv_message(sio::event& ev)
 void COMM_MSA::recv_message_array(sio::event& ev)
 {
     sio::message::ptr msg = ev.get_message();
-    if (!msg || msg->get_flag() != sio::message::flag_object)
+    if(!msg || msg->get_flag() != sio::message::flag_object)
     {
         return;
     }
-    //       qDebug()<<"im hear!!!!!1";
 
     auto obj = msg->get_map();
     QJsonObject json_obj;
 
-    // 최상위 단순 key/value 변환
-    for (auto& kv : obj)
+    for(auto& kv : obj)
     {
         QString key = QString::fromStdString(kv.first);
-        auto flag = kv.second->get_flag();
 
-        if (flag == sio::message::flag_string)
+        auto flag = kv.second->get_flag();
+        if(flag == sio::message::flag_string)
         {
             json_obj.insert(key, QString::fromStdString(kv.second->get_string()));
         }
-        else if (flag == sio::message::flag_integer)
+        else if(flag == sio::message::flag_integer)
         {
             json_obj.insert(key, QJsonValue::fromVariant(QVariant::fromValue<qint64>(kv.second->get_int())));
         }
-        else if (flag == sio::message::flag_double)
+        else if(flag == sio::message::flag_double)
         {
             json_obj.insert(key, kv.second->get_double());
         }
-        else if (flag == sio::message::flag_boolean)
+        else if(flag == sio::message::flag_boolean)
         {
             json_obj.insert(key, kv.second->get_bool());
         }
-        else if (flag == sio::message::flag_array || flag == sio::message::flag_object)
+        else if(flag == sio::message::flag_array || flag == sio::message::flag_object)
         {
-            json_obj.insert(key, convertItem(kv.second)); // 재귀 호출
+            json_obj.insert(key, convert_item(kv.second)); // 재귀 호출
         }
     }
 
     QString cmd = get_json(json_obj, "command"); // command 확인
-
-    if (cmd == "setDigitalIO")
+    if(cmd == "setDigitalIO")
     {
-        if (json_obj.contains("mcuDio"))
+        if(json_obj.contains("mcuDio"))
         {
-            auto arrMsg = obj["mcuDio"];
-            QJsonValue parsed = convertItem(arrMsg);
+            auto msg_array = obj["mcuDio"];
+            QJsonValue parsed = convert_item(msg_array);
             json_obj.insert("mcuDio", parsed);
         }
 
-        if (json_obj.contains("mcuDin"))
+        if(json_obj.contains("mcuDin"))
         {
-            auto arrMsg = obj["mcuDin"];
-            QJsonValue parsed = convertItem(arrMsg);
+            auto msg_array = obj["mcuDin"];
+            QJsonValue parsed = convert_item(msg_array);
             json_obj.insert("mcuDin", parsed);
         }
     }
@@ -708,59 +642,74 @@ void COMM_MSA::recv_message_array(sio::event& ev)
     root.insert("data", json_obj);
 
     QString wrapped = QString(QJsonDocument(root).toJson(QJsonDocument::Compact));
-//    qDebug() << "recive msg :" << wrapped;
-    std::shared_lock<std::shared_mutex> lock(msg_mtx);
-    receive_msg = wrapped;
-
     recv_queue.push(wrapped);
+
+    set_last_receive_msg(wrapped);
 }
 
 void COMM_MSA::recv_loop()
 {
     while(is_recv_running)
     {
-        QString recv_msg;
-        if(recv_queue.try_pop(recv_msg))
+        std::unique_lock<std::mutex> lock(recv_mtx);
+        recv_cv.wait(lock, [this]
         {
-            QJsonObject root_obj = QJsonDocument::fromJson(recv_msg.toUtf8()).object();
-            QString cmd = get_json(root_obj, "topic");
-            QJsonObject data = root_obj.value("data").toObject();
+            return !recv_queue.empty() || !is_recv_running;
+        });
 
-            if(cmd == "moveRequest")
-            {
-                handle_move_cmd(data);
-            }
-            if(cmd == "pathResponse")
-            {
-                handle_path_cmd(data);
-            }
-            else if(cmd == "loadRequest")
-            {
-                handle_load_cmd(data);
-            }
-            else if(cmd == "localizationRequest")
-            {
-                handle_localization_cmd(data);
-            }
-            else if(cmd == "controlRequest")
-            {
-                handle_control_cmd(data);
-            }
-            else if(cmd == "mappingRequest")
-            {
-                handle_mapping_cmd(data);
-            }
-
-            logger->write_log(QString("[COMM_MSA] recv, command: %1, time: %2").arg(cmd).arg(get_time0()), "Green");
+        if(!is_recv_running)
+        {
+            break;
         }
+
+        if(recv_queue.size() == 0)
+        {
+            continue;
+        }
+
+        QString recv_msg = recv_queue.front();
+
+        recv_queue.pop();
+        lock.unlock();
+
+        QJsonObject root_obj = QJsonDocument::fromJson(recv_msg.toUtf8()).object();
+        QString cmd = get_json(root_obj, "topic");
+        QJsonObject data = root_obj.value("data").toObject();
+
+        if(cmd == "moveRequest")
+        {
+            handle_move_cmd(data);
+        }
+        if(cmd == "pathResponse")
+        {
+            handle_path_cmd(data);
+        }
+        else if(cmd == "loadRequest")
+        {
+            handle_load_cmd(data);
+        }
+        else if(cmd == "localizationRequest")
+        {
+            handle_localization_cmd(data);
+        }
+        else if(cmd == "controlRequest")
+        {
+            handle_control_cmd(data);
+        }
+        else if(cmd == "mappingRequest")
+        {
+            handle_mapping_cmd(data);
+        }
+
+        log_info("recv, command: {}, time: {}", cmd.toStdString(), get_time0());
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
-QJsonValue COMM_MSA::convertItem(sio::message::ptr item)
+QJsonValue COMM_MSA::convert_item(sio::message::ptr item)
 {
-    if (!item)
+    if(!item)
     {
         return QJsonValue();
     }
@@ -788,7 +737,7 @@ QJsonValue COMM_MSA::convertItem(sio::message::ptr item)
         QJsonArray arr;
         for (auto& sub_item : item->get_vector())
         {
-            arr.append(convertItem(sub_item)); // 재귀 호출
+            arr.append(convert_item(sub_item)); // 재귀 호출
         }
         return arr;
     }
@@ -796,7 +745,7 @@ QJsonValue COMM_MSA::convertItem(sio::message::ptr item)
     {
         QJsonObject obj;
         for (auto& kv : item->get_map())
-            obj.insert(QString::fromStdString(kv.first), convertItem(kv.second));
+            obj.insert(QString::fromStdString(kv.first), convert_item(kv.second));
         return obj;
     }
     default:
@@ -809,11 +758,10 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
     if(is_before_given_path)
     {
         DATA_PATH msg;
-        msg.path          = get_json(data, "path");
+        msg.path = get_json(data, "path");
 
         QJsonArray path_array = data.value("path").toArray();
-
-        if (path_array.isEmpty())
+        if(path_array.isEmpty())
         {
             return;
         }
@@ -822,11 +770,11 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
         for (const QJsonValue &val : path_array)
         {
             QString name = val.toString();
-             NODE* node = unimap->get_node_by_name(name);
-             if(node)
-             {
-                 path_list << node->id;
-             }
+            NODE* node = unimap->get_node_by_name(name);
+            if(node)
+            {
+                path_list << node->id;
+            }
         }
 
         msg.path = path_list.join(",");
@@ -835,7 +783,6 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
         msg.action        = get_json(data, "action");
         msg.command       = get_json(data, "command");
         msg.vobs_closures = get_json(data, "vobs_c");
-        //        qDebug()<<" msg.path : "<< msg.path;
 
         {
             std::lock_guard<std::mutex> lock(path_mtx);
@@ -855,6 +802,7 @@ void COMM_MSA::handle_vobs_cmd(const QJsonObject& data)
     msg.vobs_robots             = get_json(data, "vobs_r");
     msg.vobs_clousers           = get_json(data, "vobs_c");
     msg.is_vobs_closures_change = get_json(data, "is_vobs_c");
+
     {
         std::lock_guard<std::mutex> lock(vobs_mtx);
         vobs_queue.push(msg);
@@ -866,20 +814,7 @@ void COMM_MSA::handle_vobs_cmd(const QJsonObject& data)
 void COMM_MSA::handle_move_cmd(const QJsonObject& data)
 {
     DATA_MOVE msg;
-//    msg.id              = get_json(data, "id");
-//    msg.time            = get_json_double(data, "time")/1000;
-//    msg.method          = get_json(data, "method");
-//    msg.preset          = get_json_int(data, "preset");
-//    msg.command         = get_json(data, "command");
-//    msg.direction       = get_json(data, "direction");
-//    msg.jog_val[0]      = get_json_double(data, "vx");
-//    msg.jog_val[1]      = get_json_double(data, "vy");
-//    msg.jog_val[2]      = get_json_double(data, "wz");
-//    msg.goal_node_id    = get_json(data, "goalId");
-//    msg.tgt_pose_vec[0] = get_json_double(data, "x");
-//    msg.tgt_pose_vec[1] = get_json_double(data, "y");
-//    msg.tgt_pose_vec[2] = get_json_double(data, "z");
-//    msg.tgt_pose_vec[3] = get_json_double(data, "rz")*D2R;
+
     msg.id              = get_json(data, "id");
     msg.time            = get_json_double(data, "time") / 1000.0;
     msg.preset          = get_json_int(data, "preset");
@@ -887,12 +822,10 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     msg.command         = get_json(data, "command");
     msg.method          = get_json(data, "method");
     msg.direction       = get_json(data, "direction");
-    // msg.dir           = get_json(data, "dir"); // 필요 시 사용
 
     msg.goal_node_id    = get_json(data, "goalId");
     msg.goal_node_name  = get_json(data, "goalName");
 
-    msg.cur_pos.setZero();
     msg.tgt_pose_vec[0] = get_json_double(data, "x");
     msg.tgt_pose_vec[1] = get_json_double(data, "y");
     msg.tgt_pose_vec[2] = get_json_double(data, "z");
@@ -917,8 +850,6 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
         std::lock_guard<std::mutex> lock(move_mtx);
         move_queue.push(msg);
     }
-
-    Q_EMIT signal_send_move_status();
 
     move_cv.notify_one();
 }
@@ -1243,7 +1174,7 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
     socket_msg.event = "controlResponse";
     socket_msg.data = rootObj;
 
-    io->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
+    rrs_socket->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
 
     //    {
     //        std::lock_guard<std::mutex> lock(mapping_mtx);
@@ -1325,7 +1256,7 @@ void COMM_MSA::send_safetyio_response(const QJsonObject& data)
     // result
     response->get_map()["result"] = sio::string_message::create("success");
 
-    io->socket("slamnav")->emit("controlResponse",response);
+    rrs_socket->socket("slamnav")->emit("controlResponse",response);
 
 }
 
@@ -2132,7 +2063,7 @@ void COMM_MSA::send_dock_response(const DATA_DOCK& msg)
 //    send_object->get_map()["message_detail"]    = sio::string_message::create(errorCode.toStdString());
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    io->socket("slamnav")->emit("controlResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("controlResponse", send_object);
 }
 
 void COMM_MSA::common_loop()
@@ -2873,7 +2804,7 @@ void COMM_MSA::send_lidar_2d()
         const double time = get_time0();
         rootObject->get_map()["time"] = sio::double_message::create(static_cast<long long>(time * 1000));
         rootObject->get_map()["data"] = jsonArray;
-        io->socket("slamnav")->emit("lidarCloud", rootObject);
+        rrs_socket->socket("slamnav")->emit("lidarCloud", rootObject);
     }
 }
 
@@ -3190,21 +3121,21 @@ void COMM_MSA::send_status()
     
     if(config -> get_robot_wheel_type() == "MECANUM")
     {
-    sio::object_message::ptr motorObj3 = sio::object_message::create();
-    motorObj3->get_map()["connection"] = sio::bool_message::create((ms.connection_m2 == 1) ? "true" : "false");
-    motorObj3->get_map()["status"]     = sio::double_message::create(ms.status_m2);
-    motorObj3->get_map()["temp"]       = sio::double_message::create(ms.temp_m2);
-    motorObj3->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m2) / 10.0);
+        sio::object_message::ptr motorObj3 = sio::object_message::create();
+        motorObj3->get_map()["connection"] = sio::bool_message::create((ms.connection_m2 == 1) ? "true" : "false");
+        motorObj3->get_map()["status"]     = sio::double_message::create(ms.status_m2);
+        motorObj3->get_map()["temp"]       = sio::double_message::create(ms.temp_m2);
+        motorObj3->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m2) / 10.0);
 
-    motorArray->get_vector().push_back(motorObj1);
+        motorArray->get_vector().push_back(motorObj1);
 
-    sio::object_message::ptr motorObj4 = sio::object_message::create();
-    motorObj4->get_map()["connection"] = sio::bool_message::create((ms.connection_m3 == 1) ? "true" : "false");
-    motorObj4->get_map()["status"]     = sio::double_message::create(ms.status_m3);
-    motorObj4->get_map()["temp"]       = sio::double_message::create(ms.temp_m3);
-    motorObj4->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m3) / 10.0);
-                
-    motorArray->get_vector().push_back(motorObj4);
+        sio::object_message::ptr motorObj4 = sio::object_message::create();
+        motorObj4->get_map()["connection"] = sio::bool_message::create((ms.connection_m3 == 1) ? "true" : "false");
+        motorObj4->get_map()["status"]     = sio::double_message::create(ms.status_m3);
+        motorObj4->get_map()["temp"]       = sio::double_message::create(ms.temp_m3);
+        motorObj4->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m3) / 10.0);
+
+        motorArray->get_vector().push_back(motorObj4);
     }
     
     rootObj->get_map()["motor"] = motorArray;
@@ -3443,7 +3374,7 @@ void COMM_MSA::send_move_response(DATA_MOVE msg)
     //    send_queue.push(socket_msg);
 
     //    qDebug() << "Move Response : " << msg.result;
-    io->socket("slamnav")->emit("moveResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("moveResponse", send_object);
 }
 
 void COMM_MSA::send_control_response(DATA_CONTROL msg)
@@ -3499,7 +3430,7 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     }
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    io->socket("slamnav")->emit("controlResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("controlResponse", send_object);
 }
 
 void COMM_MSA::send_localization_response(DATA_LOCALIZATION msg)
@@ -3525,15 +3456,13 @@ void COMM_MSA::send_localization_response(DATA_LOCALIZATION msg)
     }
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    //    qDebug() << "localizationResponse " << msg.result;
-    io->socket("slamnav")->emit("localizationResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("localizationResponse", send_object);
 }
 
 void COMM_MSA::send_load_response(DATA_LOAD msg)
 {
     if(!is_connected)
     {
-        //        qDebug()<<"is not connected!!!!!!1";
         return;
     }
 
@@ -3548,14 +3477,13 @@ void COMM_MSA::send_load_response(DATA_LOAD msg)
 
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    io->socket("slamnav")->emit("loadResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("loadResponse", send_object);
 }
 
 void COMM_MSA::send_mapping_response(DATA_MAPPING msg)
 {
     if(!is_connected)
     {
-        //        qDebug()<<"is not connected!!!!!!1";
         return;
     }
 
@@ -3568,63 +3496,21 @@ void COMM_MSA::send_mapping_response(DATA_MAPPING msg)
 
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    io->socket("slamnav")->emit("mappingResponse", send_object);
+    rrs_socket->socket("slamnav")->emit("mappingResponse", send_object);
 }
-
-
-
-//void COMM_MSA::send_ping_response(DATA_MOVE msg)
-//{
-//    if(!is_connected)
-//    {
-//        return;
-//    }
-
-//    QProcess process;
-//    QString program = "ping";
-//    QStringList arguments = { "-c", "1", host };   // Linux/macOS: ping -c 1 host
-
-//    process.start(program, arguments);
-//    process.waitForFinished();
-
-//    QString output = process.readAllStandardOutput();
-//    qDebug() << output;
-
-//    if (process.exitCode() == 0)
-//    {
-//        qDebug() << "Ping success!";
-//    }
-//    else
-//    {
-//        qDebug() << "Ping failed!";
-//    }
-
-//    QJsonObject robotObj;
-//    robotObj["robotSerial"] = robot_id;
-
-//    QJsonObject rootObj;
-//    rootObj["robot"] = robotObj;
-//    rootObj["data"] = dataObj;
-
-//    QJsonDocument doc(rootObj);
-//    QString buf = doc.toJson(QJsonDocument::Compact);
-//    send_queue.push(buf);
-//}
 
 void COMM_MSA::send_loop()
 {
-    if(!is_connected){
+    if(!is_connected)
+    {
         return;
     }
 
     SOCKET_MESSAGE msg;
-    if (send_queue.try_pop(msg))
+    if(send_queue.try_pop(msg))
     {
         std::lock_guard<std::mutex> lock(send_mtx);
-        if(msg.event.toStdString() == "localizationResponse"){
-            qDebug() << "SEND LOOP";
-        }
-        io->socket("slamnav")->emit(msg.event.toStdString(), msg.data);
+        rrs_socket->socket("slamnav")->emit(msg.event.toStdString(), msg.data);
     }
 }
 
@@ -4804,15 +4690,6 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
                 return;
             }
         }
-        //else if(map_exist_msg == "no 3d map!")
-        //{
-        //    msg.result = "reject";
-        //    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
-        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
-//
-        //    send_load_response(msg);
-        //    return;
-        //}
 
         loc->stop();
         obsmap->clear();
@@ -4945,12 +4822,7 @@ void COMM_MSA::send_profile_move_response(const DATA_MOVE& msg)
     send_object->get_map()["meassured_dist"] = sio::double_message::create(msg.meassured_dist);
     send_object->get_map()["time"]           = sio::double_message::create((long long)(msg.time*1000));
 
-    io->socket("slamnav")->emit("moveResponse", send_object);
-
-//    // for plot
-//    mtx.lock();
-////    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
-//    mtx.unlock();
+    rrs_socket->socket("slamnav")->emit("moveResponse", send_object);
 }
 
 void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
@@ -4986,7 +4858,7 @@ void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
     send_obj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<qint64>(msg.time * 1000)).toStdString());
 
     //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("controlResponse", send_obj);
+    rrs_socket->socket()->emit("controlResponse", send_obj);
 }
 QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
 {
@@ -5312,22 +5184,26 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     return errorCode;
 }
 
-
 QMainWindow* COMM_MSA::get_main_window()
 {
     return qobject_cast<QMainWindow*>(main);
 }
 
-bool COMM_MSA::get_msa_connect_check()
+bool COMM_MSA::get_is_connected()
 {
-    std::shared_lock<std::shared_mutex> lock(msg_mtx);
-    return is_connected;
+    return is_connected.load();
 }
 
-QString COMM_MSA::get_msa_text()
+QString COMM_MSA::get_last_receive_msg()
 {
     std::shared_lock<std::shared_mutex> lock(msg_mtx);
-    return receive_msg;
+    return last_receive_msg;
+}
+
+void COMM_MSA::set_last_receive_msg(QString val)
+{
+    std::shared_lock<std::shared_mutex> lock(msg_mtx);
+    last_receive_msg = val;
 }
 
 bool COMM_MSA::is_main_window_valid()
