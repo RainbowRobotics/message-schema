@@ -313,6 +313,7 @@ private Q_SLOTS:
     void send_lidar_2d();
     void send_lidar_3d();
     void send_mapping_cloud();
+    void send_system_status(double cpu_use, double cpu_temp);
 
     void slot_localization(DATA_LOCALIZATION msg);
     //    void slot_safety_io(DATA_SAFTYIO msg);

@@ -575,6 +575,34 @@ void COMM_MSA::send_move_status()
     send_queue.push(socket_msg);
 }
 
+void COMM_MSA::send_system_status(double cpu_use, double cpu_temp)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    // Creating the sio object message
+    sio::object_message::ptr rootObj = sio::object_message::create();
+
+    // Adding the CPU object
+    sio::object_message::ptr cpuObj = sio::object_message::create();
+    cpuObj->get_map()["use"] = sio::double_message::create(cpu_use);
+    cpuObj->get_map()["temp"] = sio::double_message::create(cpu_temp);
+    rootObj->get_map()["cpu"] = cpuObj;
+
+    // Adding the time object
+    const double time = get_time0();
+    rootObj->get_map()["time"] = sio::string_message::create(QString::number((long long)(time*1000), 10).toStdString());
+
+    // Send via queue
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "systemStatus";
+    socket_msg.data = rootObj;
+
+    send_queue.push(socket_msg);
+}
+
 void COMM_MSA::recv_message(sio::event& ev)
 {
     sio::message::ptr msg = ev.get_message();
@@ -3055,8 +3083,11 @@ void COMM_MSA::send_status_loop()
         // 500[ms]
         if(send_cnt % COMM_MSA_INFO::send_status_cnt == 0)
         {
+            double cpu_use = get_cpu_usage();
+            double cpu_temp = get_cpu_temperature();
+            
             send_status();
-            //            send_system_status(cpu_use, cpu_temp);
+            send_system_status(cpu_use, cpu_temp);
             send_mapping_cloud();
         }
 
