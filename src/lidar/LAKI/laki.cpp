@@ -338,6 +338,11 @@ void LAKI::grab_loop(int idx)
                 deg -= 360.0;
             }
 
+            if(deg > -47.5 - angle_offset && deg < 47.5 + angle_offset)
+            {
+                continue;
+            }
+
             const double rad = deg * D2R;
             const double x = dist * std::cos(rad);
             const double y = dist * std::sin(rad);

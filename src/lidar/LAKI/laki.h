@@ -91,7 +91,7 @@ private:
     tbb::concurrent_queue<RAW_FRAME> raw_que[2];
 
     // vars
-    const double angle_offset = 8.0; // LAKI:8.0, SICK:10.0
+    const double angle_offset = 10.0; // LAKI:8.0, SICK:10.0
     RAW_FRAME cur_raw[2];
 };
 
