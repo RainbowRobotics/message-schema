@@ -83,8 +83,13 @@ void LAKI::close()
 QString LAKI::get_info_text(int idx)
 {
     QString res;
+    double current_time = get_time();
+    double time_since_last_data = current_time - last_data_time[idx].load();
+    
     res += QString().sprintf("[LAKI %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
+    res += QString().sprintf("fq: %d, ", (int)raw_que[idx].unsafe_size());
+    res += QString().sprintf("last_data: %.1fs ago\n", time_since_last_data);
+    res += QString().sprintf("reconnects: %d", (int)reconnect_count[idx].load());
 
     return res;
 }
@@ -176,6 +181,14 @@ void LAKI::grab_loop(int idx)
     is_synced[idx] = false;
     offset_t[idx] = 0.0;
     log_info("LAKI[{}] grab_loop started, waiting for initial sync", idx);
+    
+    // Watchdog variables
+    double last_packet_time = get_time();
+    int consecutive_timeouts = 0;
+    const int MAX_CONSECUTIVE_TIMEOUTS = 100;  // 1 second timeout
+    const double PACKET_TIMEOUT = 1.0;  // 1 second
+    const double MOBILE_POSE_TIMEOUT = 2.0;  // 2 seconds
+    const double SYNC_WAIT_TIMEOUT = 5.0;  // 5 seconds
 
     while(grab_flag[idx])
     {
@@ -183,13 +196,83 @@ void LAKI::grab_loop(int idx)
         if(!laki_udp[idx]->get_repackedpack(pack))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            consecutive_timeouts++;
+            
+            // Check for packet timeout
+            double current_time = get_time();
+            if(current_time - last_packet_time > PACKET_TIMEOUT)
+            {
+                static int timeout_log_count = 0;
+                if(timeout_log_count++ % 100 == 0)  // Log every 100 timeouts
+                {
+                    log_warn("LAKI[{}] No packet received for {:.2f}s (consecutive_timeouts: {})", 
+                             idx, current_time - last_packet_time, consecutive_timeouts);
+                }
+                
+                // Force reconnection after too many consecutive timeouts
+                if(consecutive_timeouts > MAX_CONSECUTIVE_TIMEOUTS)
+                {
+                    log_error("LAKI[{}] Too many consecutive timeouts ({}), reconnecting...", idx, consecutive_timeouts);
+                    is_connected[idx] = false;
+                    is_synced[idx] = false;
+                    reconnect_count[idx]++;
+                    
+                    // Attempt to reconnect
+                    try
+                    {
+                        laki_udp[idx].reset();
+                        laki_http[idx].reset();
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        
+                        laki_http[idx] = std::make_unique<LakiBeamHTTP>(local_ip, local_port, sensor_ip_str, http_port);
+                        laki_udp[idx] = std::make_unique<LakiBeamUDP>(local_ip, local_port, sensor_ip_str, sensor_port);
+                        
+                        std::string target_port = std::to_string(2368 + idx);
+                        laki_http[idx]->put_host_port(target_port);
+                        
+                        log_info("LAKI[{}] Reconnected successfully (attempt: {})", idx, (int)reconnect_count[idx]);
+                        is_connected[idx] = true;
+                        need_resync = true;
+                        consecutive_timeouts = 0;
+                        last_packet_time = get_time();
+                    }
+                    catch(...)
+                    {
+                        log_error("LAKI[{}] Reconnection failed", idx);
+                        std::this_thread::sleep_for(std::chrono::seconds(2));
+                    }
+                }
+            }
             continue;
         }
+        
+        // Reset timeout counters on successful packet
+        consecutive_timeouts = 0;
+        last_packet_time = get_time();
+        last_data_time[idx] = last_packet_time;
 
         // check mobile pose
-        if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
+        double mobile_pose_wait_start = get_time();
+        while(mobile->get_pose_storage_size() != MO_STORAGE_NUM && grab_flag[idx].load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            
+            // Timeout check for mobile pose
+            if(get_time() - mobile_pose_wait_start > MOBILE_POSE_TIMEOUT)
+            {
+                static int mobile_timeout_count = 0;
+                if(mobile_timeout_count++ % 50 == 0)
+                {
+                    log_warn("LAKI[{}] Mobile pose not ready for {:.2f}s, skipping frame", 
+                             idx, get_time() - mobile_pose_wait_start);
+                }
+                break;  // Skip this frame instead of waiting forever
+            }
+        }
+        
+        // Skip this frame if mobile pose is still not ready
+        if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
+        {
             continue;
         }
 
@@ -218,9 +301,23 @@ void LAKI::grab_loop(int idx)
         }
 
         // check lidar, mobile sync
-        if(!is_synced[idx].load() || !mobile->get_is_synced())
+        double sync_wait_start = get_time();
+        while((!is_synced[idx].load() || !mobile->get_is_synced()) && grab_flag[idx].load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            
+            // Timeout check for sync
+            if(get_time() - sync_wait_start > SYNC_WAIT_TIMEOUT)
+            {
+                log_warn("LAKI[{}] Sync wait timeout ({:.2f}s), forcing resync", idx, get_time() - sync_wait_start);
+                need_resync = true;
+                break;
+            }
+        }
+        
+        // Skip frame if still not synced after timeout
+        if(!is_synced[idx].load() || !mobile->get_is_synced())
+        {
             continue;
         }
 
@@ -255,9 +352,30 @@ void LAKI::grab_loop(int idx)
         }
 
         // wait until t1 <= mobile->last_pose_t
+        double pose_wait_start = get_time();
+        const double POSE_WAIT_TIMEOUT = 2.0;  // 2 seconds max wait
         while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            
+            // Timeout check to prevent infinite wait
+            if(get_time() - pose_wait_start > POSE_WAIT_TIMEOUT)
+            {
+                static int pose_wait_timeout_count = 0;
+                if(pose_wait_timeout_count++ % 50 == 0)
+                {
+                    log_warn("LAKI[{}] Pose wait timeout, t1: {:.3f}, mobile->last_pose_t: {:.3f}, diff: {:.3f}s", 
+                             idx, t1, mobile->get_last_pose_t(), t1 - mobile->get_last_pose_t());
+                }
+                break;  // Skip this frame to avoid infinite wait
+            }
+        }
+        
+        // Skip frame if timeout occurred
+        if(t1 > mobile->get_last_pose_t())
+        {
+            log_debug("LAKI[{}] Skipping frame due to pose wait timeout", idx);
+            continue;
         }
 
         // get mobile poses
