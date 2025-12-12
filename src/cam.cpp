@@ -31,6 +31,7 @@ CAM::CAM(QObject *parent) : QObject{parent},
         is_connected[p] = false;
         post_process_flag[p] = false;
         process_time_post[p] = 0.0;
+        cam_t[p] = 0.0;
     }
 }
 
@@ -57,11 +58,11 @@ void CAM::close()
     }
 }
 
-void CAM::restart()
+void CAM::restart(int idx)
 {
     if(config->get_cam_type() == "ORBBEC" && orbbec)
     {
-        orbbec->restart();
+        orbbec->restart(idx);
     }
 }
 
@@ -97,7 +98,6 @@ void CAM::init()
     {
         if(!orbbec)
         {
-            
             orbbec = ORBBEC::instance(this);
             orbbec->set_config_module(this->config);
             orbbec->set_logger_module(this->logger);
@@ -381,6 +381,9 @@ void CAM::post_process_loop(int idx)
 
         if(config->get_cam_type() == "ORBBEC" && orbbec)
         {
+            is_connected[idx].store(orbbec->is_connected[idx].load());
+            cam_t[idx].store(orbbec->cam_t[idx].load());
+
             try
             {
                 // use depth only
@@ -392,11 +395,6 @@ void CAM::post_process_loop(int idx)
                     TIME_PTS tp;
                     if(orbbec->try_pop_depth_que(idx, tp))
                     {
-                        if(is_connected[idx] == false)
-                        {
-                            is_connected[idx] = true;
-                        }
-
                         if(config->get_use_cam_filter())
                         {
                             TIME_PTS filtered_tp = filter_radius_outlier(tp, config->get_cam_filter_ror_radius(), config->get_cam_filter_ror_min_neighbors(), true, true);
@@ -418,11 +416,6 @@ void CAM::post_process_loop(int idx)
                     TIME_IMG ti;
                     if(orbbec->try_pop_img_que(idx, ti))
                     {
-                        if(is_connected[idx] == false)
-                        {
-                            is_connected[idx] = true;
-                        }
-
                         RobotModel robot_model = config->get_robot_model();
                         if(robot_model == RobotModel::S100)
                         {
@@ -437,10 +430,7 @@ void CAM::post_process_loop(int idx)
                         std::lock_guard<std::mutex> lock(mtx);
                         cur_time_img[idx] = ti;
                     }
-
                 }
-
-                
             }
             catch(const ob::Error &e)
             {

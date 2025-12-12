@@ -24,19 +24,19 @@
     },
     "cam_config": [
         {
-            "SERIAL_NUMBER": "AY8V74300ZY",
+            "SERIAL_NUMBER": "CPAB953002X",
             "TF": "0,0,0,0,0,0"
         },
         {
-            "SERIAL_NUMBER": "",
+            "SERIAL_NUMBER": "CPAB9530071",
             "TF": "0,0,0,0,0,0"
         },
         {
-            "SERIAL_NUMBER": "",
+            "SERIAL_NUMBER": "CPAB953008F",
             "TF": "0,0,0,0,0,0"
         },
         {
-            "SERIAL_NUMBER": "",
+            "SERIAL_NUMBER": "CPAB953004Y",
             "TF": "0,0,0,0,0,0"
         }
     ],
@@ -51,7 +51,7 @@
     "debug": {
         "USE_BEEP": true,
         "USE_QTUI": false,
-        "USE_SIM": true
+        "USE_SIM": false
     },
     "docking": {
         "DOCKING_CHG_LENGTH": "0.472",
@@ -185,7 +185,7 @@
         "ROBOT_WHEEL_TYPE": "MECANUM"
     },
     "sensors": {
-        "CAM_NUM": "1",
+        "CAM_NUM": "4",
         "CAM_TYPE": "ORBBEC",
         "LIDAR_2D_NUM": "2",
         "LIDAR_2D_TYPE": "SICK",

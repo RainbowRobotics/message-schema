@@ -23,12 +23,13 @@ ORBBEC::ORBBEC(QObject *parent) : QObject(parent)
     for(int p = 0; p < max_cam_cnt; p++)
     {
         is_connected[p] = false;
+        cam_t[p] = 0.0;
         is_param_loaded[p] = false;
         cur_pts_size[p] = 0.0;
         extrinsic[p].setIdentity();
     }
 
-    connect(this, SIGNAL(signal_restart()), this, SLOT(slot_restart()));
+    connect(this, SIGNAL(signal_restart(int)), this, SLOT(slot_restart(int)));
 }
 
 ORBBEC::~ORBBEC()
@@ -74,19 +75,12 @@ void ORBBEC::open()
     }
 }
 
-void ORBBEC::restart()
-{
-    close();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000*5));
-
-    open();
-}
-
 void ORBBEC::close()
 {
     for(int p = 0; p < config->get_cam_num(); p++)
     {
+        is_connected[p] = false;
+
         grab_flag[p] = false;
         if(grab_thread[p] && grab_thread[p]->joinable())
         {
@@ -96,12 +90,31 @@ void ORBBEC::close()
     }
 }
 
+void ORBBEC::restart(int idx)
+{
+    is_connected[idx] = false;
+
+    // close
+    grab_flag[idx] = false;
+    if(grab_thread[idx] && grab_thread[idx]->joinable())
+    {
+        grab_thread[idx]->join();
+    }
+    grab_thread[idx].reset();
+
+    // open
+    grab_flag[idx] = true;
+    grab_thread[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, idx);
+}
+
+
+
 QString ORBBEC::get_cam_info_str()
 {
     QString connection_str = "connection:";
     for(int p = 0; p < config->get_cam_num(); p++)
     {
-        QString connection = QString("%1,").arg(is_connected[p] ? "1" : "0");
+        QString connection = QString("%1,").arg(is_connected[p].load() ? "1" : "0");
         connection_str += connection;
     }
 
@@ -283,6 +296,8 @@ void ORBBEC::grab_loop(int idx)
         std::this_thread::sleep_for(std::chrono::milliseconds(idx * 500));
 
         int cnt = 0;
+
+        ob::PointCloudFilter point_cloud;
         bool filter_param_set = false;
         while(grab_flag[idx])
         {
@@ -296,11 +311,12 @@ void ORBBEC::grab_loop(int idx)
 
             try
             {
-                ob::PointCloudFilter point_cloud;
                 if(auto df = fs->depthFrame())
                 {
                     uint64_t ts = df->systemTimeStamp();
                     double t = static_cast<double>(ts) / 1000.0;
+
+                    cam_t[idx].store(get_time());
 
                     if(!filter_param_set)
                     {
@@ -374,12 +390,12 @@ void ORBBEC::grab_loop(int idx)
                 else
                 {
                     cnt ++;
-                    // std::cout << "cnt: " << cnt << std::endl;
                     if(cnt > 100)
                     {
-                        std::cout << "signal_restart, " << cnt << std::endl;
+                        log_info("signal_restart requested, idx:{}, cnt:{}", idx, cnt);
                         cnt = 0;
-                        Q_EMIT signal_restart();
+                        Q_EMIT signal_restart(idx);
+                        break;
                     }
                 }
 
@@ -450,11 +466,15 @@ void ORBBEC::grab_loop(int idx)
             }
             catch(ob::Error &e)
             {
-                std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+                log_info("inner ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
+                Q_EMIT signal_restart(idx);
+                break;
             }
             catch(const std::exception& e)
             {
-                log_error("ORBBEC error: std::exception {}", e.what());
+                log_info("inner std::exception idx:{}, what:{}", idx, e.what());
+                Q_EMIT signal_restart(idx);
+                break;
             }
 
             // =======================
@@ -466,13 +486,15 @@ void ORBBEC::grab_loop(int idx)
             // log_warn("cam_{} loop time, dt:{}", idx, delta_loop_time);
         }
 
+        is_connected[idx] = false;
+
         try
         {
             pipe->stop();
         }
         catch (const ob::Error& e)
         {
-            std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+            log_info("stop() ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
         }
 
         pipe.reset();
@@ -480,13 +502,14 @@ void ORBBEC::grab_loop(int idx)
     }
     catch(ob::Error &e)
     {
-        std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+        log_info("ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
     }
 }
 
-void ORBBEC::slot_restart()
+void ORBBEC::slot_restart(int idx)
 {
-    restart();
+    log_info("slot_restart, idx:{}", idx);
+    restart(idx);
 }
 
 void ORBBEC::set_config_module(CONFIG* _config)
