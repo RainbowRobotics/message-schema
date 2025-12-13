@@ -468,6 +468,7 @@ void COMM_RRS::recv_profile_move(std::string const& name, sio::message::ptr cons
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+
         Q_EMIT signal_profile_move(msg);
     }
 }
