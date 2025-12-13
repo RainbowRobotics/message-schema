@@ -178,8 +178,8 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
 void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time)
 {
     std::lock_guard<std::mutex> lock(path_mtx);
-    global_node_path = std::move(_global_node_path);
-    global_step      = std::move(_global_step);
+    global_node_path = _global_node_path;
+    global_step      = _global_step;
     global_preset    = _global_preset;
 
     if(_global_path_time != global_path_time)
@@ -4461,7 +4461,7 @@ void AUTOCONTROL::node_loop()
         process_time_node = delta_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    //logger->write_log("[NODE] node loop stop");
+
     log_info("node loop stop");
 }
 
