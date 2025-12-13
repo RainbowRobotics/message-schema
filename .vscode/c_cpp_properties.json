@@ -1,0 +1,38 @@
+{
+    "configurations": [
+        {
+            "name": "WSL-GCC-C++17",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/**",
+                "/usr/include/x86_64-linux-gnu/qt5/**",
+                "/usr/include/vtk-9.1/**",
+                "/usr/include/pcl-1.12/pcl/**",
+                "/usr/include/eigen3",
+                "/usr/include/eigen3/**",
+                "/usr/include/eigen3/Eigen/**",
+                "/usr/include/pcl-1.12",
+                "/usr/include/opencv4/opencv2/**",
+                "/usr/include/opencv4",
+                "/usr/include/spdlog/**",
+                "/home/rainbow/spdlog/include/**",
+                "/usr/local/include/**",
+                "/usr/local/include/sophus/**",
+                "/usr/local/include/gtsam/**",
+                "/usr/local/include/octomap/**",
+                "/usr/include/rapidjson/**",
+                "/usr/include/boost/**",
+                "/usr/local/include/sick_safetyscanners_base/**",
+                "/home/rainbow/OrbbecSDK/SDK/include/**",
+                "/home/rainbow/rplidar_sdk/sdk/include/**",
+                "/usr/include/pdal/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

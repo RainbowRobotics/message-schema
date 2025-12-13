@@ -90,12 +90,13 @@ void LOGGER::init()
             log_dir.mkpath(".");
         }
 
-        const QString date_time = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz");
-        const QString log_name = "snlog/" + date_time + "_SpdSystemlog.log";
+        // daily log file: snlog/YYYY-MM-DD_SpdSystemlog.log
+        const QString date_prefix = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+        const QString log_name = "snlog/" + date_prefix + "_SpdSystemlog.log";
 
-
+        // clean up old log files (keep last 30 files)
         QFileInfoList sysLogs = log_dir.entryInfoList(QStringList() << "*_SpdSystemlog.log",QDir::Files,QDir::Time);
-        const int KeepFiles = 10;
+        const int KeepFiles = 30;
 
         for (int i = KeepFiles; i < sysLogs.size(); ++i)
         {
@@ -122,22 +123,14 @@ void LOGGER::init()
                 spdlog::drop("logger");
             }
 
-            // header
-            if(!QFile::exists(log_name))
-            {
-                QFile file(log_name);
-                if(file.open(QIODevice::WriteOnly | QIODevice::Text))
-                {
-                    QTextStream out(&file);
-                    out << "LOG_VERSION=1.0\n";
-                    file.close();
-                }
-            }
-            //spd_logger = spdlog::basic_logger_mt("logger", log_name.toStdString());
-            //spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
-            
-            // create file sink and console sink, then make one logger containing both
-            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_name.toStdString(), true);
+            // create daily file sink and console sink
+            // log file will be automatically created with pattern: SpdSystemlog_YYYY-MM-DD.log
+            // at 00:00:00 each day, a new file will be created automatically
+            auto file_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(
+                log_name.toStdString(), 
+                0,  // rotation hour (00:00)
+                0   // rotation minute
+            );
             auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         
             // ensure sinks will emit all levels you want displayed on terminal
