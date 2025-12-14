@@ -62,6 +62,14 @@ struct CONTROL_COMMAND
     QString method;
 };
 
+struct RAW_PATH_INFO
+{
+    int _global_preset;
+    long long _global_path_time;
+    std::vector<int> _global_step;
+    std::vector<QString> _global_node_path;
+};
+
 struct AUTOCONTROL_INFO
 {
     static constexpr int control_loop_cnt = 20;
@@ -163,8 +171,7 @@ public Q_SLOTS:
     void slot_backward_move(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
-    void slot_path(const DATA_PATH& msg);
-    void slot_path();
+    void slot_move_multi(const DATA_PATH& msg);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -279,11 +286,6 @@ private:
     std::unique_ptr<std::thread> node_thread;           // node thread
     void node_loop();                                   // node loop
 
-    // calc current node
-    std::atomic<bool> a_flag = {false};
-    std::thread *current_node_thread = NULL;
-    void current_node_loop();
-
     // for plot
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
@@ -344,7 +346,7 @@ Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
     void signal_backward_move(DATA_MOVE msg);
     void signal_path();
-    void signal_path(DATA_PATH msg);
+    void signal_move_multi(DATA_PATH msg);
     void signal_move_response(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();

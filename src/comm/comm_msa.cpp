@@ -30,22 +30,26 @@ COMM_MSA::COMM_MSA(QObject *parent)
     using std::placeholders::_3;
     using std::placeholders::_4;
 
+    // set socket
     rrs_socket = std::make_unique<sio::client>();
-
-    client = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
-    reconnect_timer = new QTimer(this);
-
-    sio::socket::ptr sock = rrs_socket->socket("slamnav");
     rrs_socket->set_open_listener(std::bind(&COMM_MSA::connected, this));
     rrs_socket->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
 
+    sio::socket::ptr sock = rrs_socket->socket("slamnav");
+
+    // command
     BIND_EVENT(sock, "moveRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
+    // status
+    BIND_EVENT(sock, "vobs", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
+    BIND_EVENT(sock, "path", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
+
+    // reconncetion
+    reconnect_timer = new QTimer(this);
     connect(reconnect_timer, &QTimer::timeout, this, &COMM_MSA::reconnect_loop);
 }
 
@@ -56,11 +60,6 @@ COMM_MSA::~COMM_MSA()
     rrs_socket->sync_close();
 
     reconnect_timer->stop();
-
-    if(is_connected)
-    {
-        client->deleteLater();
-    }
 
     stop_recv_thread();
     stop_move_thread();
@@ -88,7 +87,7 @@ void COMM_MSA::init()
     }
 
     // start reconnect loop
-    reconnect_timer->start(3000);
+    reconnect_timer->start(COMM_MSA_INFO::reconnect_time * 1000);
     log_info("start reconnect timer");
 
     start_recv_thread();
@@ -107,12 +106,6 @@ void COMM_MSA::reconnect_loop()
     if(is_connected)
     {
         log_debug("already connected");
-        return;
-    }
-
-    if(!config || !client)
-    {
-        log_error("not ready to modules");
         return;
     }
 
@@ -155,7 +148,7 @@ void COMM_MSA::disconnected()
     ctrl->set_is_rrs(false);
 
     is_connected = false;
-    log_info("connected to MSA server");
+    log_info("disconnected to MSA server");
 }
 
 void COMM_MSA::recv_message(sio::event& ev)
@@ -263,10 +256,6 @@ void COMM_MSA::recv_loop()
         {
             handle_move_cmd(data);
         }
-        else if(cmd == "pathResponse")
-        {
-            handle_path_cmd(data);
-        }
         else if(cmd == "loadRequest")
         {
             handle_load_cmd(data);
@@ -282,6 +271,14 @@ void COMM_MSA::recv_loop()
         else if(cmd == "mappingRequest")
         {
             handle_mapping_cmd(data);
+        }
+        else if(cmd == "path")
+        {
+            handle_path_cmd(data);
+        }
+        else if(cmd == "vobs")
+        {
+            handle_vobs_cmd(data);
         }
 
         log_info("recv, command: {}, time: {}", cmd.toStdString(), get_time0());
@@ -328,7 +325,6 @@ QJsonValue COMM_MSA::convert_item(sio::message::ptr item)
     }
 
     int flag = item->get_flag();
-
     if(flag == sio::message::flag_string)
     {
         return QString::fromStdString(item->get_string());
@@ -460,11 +456,11 @@ void COMM_MSA::send_move_status()
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
     DATA_PATH msg;
-    msg.time          = get_json_double(data, "time")/1000;
-    msg.path          = get_json(data, "path");
-    msg.preset        = get_json_int(data, "preset");
-    msg.command       = get_json(data, "command");
-    msg.vobs_closures = get_json(data, "vobs_c");
+    msg.time              = get_json_double(data, "time")/1000;
+    msg.path_str          = get_json(data, "path");
+    msg.preset            = get_json_int(data, "preset");
+    msg.command           = get_json(data, "command");
+    msg.vobs_closures_str = get_json(data, "vobs_c");
     {
         std::lock_guard<std::mutex> lock(path_mtx);
         path_queue.push(std::move(msg));
@@ -648,8 +644,6 @@ void COMM_MSA::path_loop()
 
         double st_time = get_time0();
 
-        msg.preset = 0;
-
         handle_path(msg);
 
         double ed_time = get_time0();
@@ -728,8 +722,7 @@ void COMM_MSA::load_loop()
         else
         {
             msg.result = "reject";
-            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_UNKNOWN_ERROR, ERROR_MANAGER::LOAD_UNKNOWN_ERROR);
-            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_UNKNOWN_ERROR, ERROR_MANAGER::LOAD_UNKNOWN_ERROR);
+
             send_load_response(msg);
             log_error("Unknown error load loop");
         }
@@ -823,8 +816,6 @@ void COMM_MSA::localization_loop()
         else
         {
             msg.result = "reject";
-            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
-            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
             send_localization_response(msg);
         }
     }
@@ -2399,13 +2390,10 @@ void COMM_MSA::calc_remaining_time_distance(DATA_MOVE &msg)
 
 void COMM_MSA::handle_path(DATA_PATH& msg)
 {
-    // stop first
-    mobile->move(0,0,0);
-
     // update vobs first
     std::vector<Eigen::Vector3d> vobs_c_list;
     {
-        QString vobs_str = msg.vobs_closures;
+        QString vobs_str = msg.vobs_closures_str;
         QStringList vobs_str_list = vobs_str.split(",");
 
         // set vobs
@@ -2414,7 +2402,7 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
+                NODE* node = unimap->get_node_by_id(node_id);
                 if(node != nullptr)
                 {
                     vobs_c_list.push_back(node->tf.block(0,3,3,1));
@@ -2422,29 +2410,29 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
             }
         }
 
+        // update vobs
         obsmap->set_vobs_list_closures(vobs_c_list);
         obsmap->update_vobs_map();
+
+        msg.vobs_closures = std::move(vobs_c_list);
     }
 
     // and move path
     std::vector<QString> path;
     std::vector<int> step;
     {
-        QString path_str = msg.path;
+        QString path_str = msg.path_str;
         QStringList path_str_list = path_str.split(",");
-        QString path;
         for(int p = 0; p < path_str_list.size(); p++)
         {
-            path += path_str_list[p]+",";
+            path.push_back(path_str_list[p]);
+            step.push_back(p);
         }
 
-        DATA_PATH path_msg;
-        path_msg.command = "goal";
-        path_msg.path = path;
-        path_msg.preset = 0;
-        path_msg.method = msg.method;
+        msg.path = std::move(path);
+        msg.step = std::move(step);
 
-         Q_EMIT (AUTOCONTROL::instance()->signal_path(path_msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move_multi(msg));
     }
 
     send_path_response(msg);
@@ -2484,8 +2472,7 @@ void COMM_MSA::handle_vobs(DATA_VOBS& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
+                if(NODE* node = unimap->get_node_by_id(node_id))
                 {
                     vobs_c_list.push_back(node->tf.block(0,3,3,1));
                 }

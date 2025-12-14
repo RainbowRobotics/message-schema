@@ -28,9 +28,8 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     loc(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
+    connect(this, SIGNAL(signal_move_multi(DATA_PATH)), this, SLOT(slot_move_multi(DATA_PATH)));
     connect(this, SIGNAL(signal_backward_move(DATA_MOVE)), this, SLOT(slot_backward_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_path()), this, SLOT(slot_path()));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -577,44 +576,14 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
     }
 }
 
-void AUTOCONTROL::slot_path(const DATA_PATH& msg)
+void AUTOCONTROL::slot_move_multi(const DATA_PATH& msg)
 {
-    const QString path_str = msg.path;
-    const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
+    cmd_method = (msg.method == "pp" ? CommandMethod::METHOD_PP : CommandMethod::METHOD_HPP);
 
-    std::vector<QString> path;
-    path.reserve(path_str_list.size());
-    for(const QString& path_item : path_str_list)
-    {
-        path.push_back(path_item);
-    }
-
-    QString cur_node_id = unimap->get_node_id_edge(loc->get_cur_tf().block(0,3,3,1));
-    if(!cur_node_id.isEmpty())
-    {
-        if(path.size() == 0 || path[0] != cur_node_id)
-        {
-            path.insert(path.begin(), cur_node_id);
-        }
-    }
-
+    std::vector<QString> path = std::move(msg.path);
     const int preset = msg.preset;
 
-    if(msg.method == "hpp")
-    {
-        cmd_method = CommandMethod::METHOD_HPP;
-    }
-    else if(msg.method == "pp")
-    {
-        cmd_method = CommandMethod::METHOD_PP;
-    }
-
     move(path, preset);
-}
-
-void AUTOCONTROL::slot_path()
-{
-    move();
 }
 
 void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
@@ -703,8 +672,6 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
 {
-    stop();
-
     if(node_path.size() == 0 || preset == -1)
     {
         return;

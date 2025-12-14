@@ -36,9 +36,10 @@
 
 struct COMM_MSA_INFO
 {
+    static constexpr int reconnect_time = 3; // second
     static constexpr double move_status_send_time = 0.1; // second
-    static constexpr double status_send_time = 0.5;
-    static constexpr double rtsp_cam_rgb_send_time = 1.0;
+    static constexpr double status_send_time = 0.5; // second
+    static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
 };
 
 class COMM_MSA : public QObject
@@ -124,7 +125,6 @@ private:
     LOCALIZATION* loc;
 
     QTimer* reconnect_timer;
-    QWebSocket* client;
 
     // vars
     std::unique_ptr<sio::client> rrs_socket;

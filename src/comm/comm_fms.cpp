@@ -322,11 +322,11 @@ void COMM_FMS::recv_loop()
 void COMM_FMS::handle_path_cmd(const QJsonObject& data)
 {
     DATA_PATH msg;
-    msg.path          = get_json(data, "path");
-    msg.time          = get_json(data, "time").toLongLong();
-    msg.preset        = get_json(data, "preset").toInt();
-    msg.command       = get_json(data, "command");
-    msg.vobs_closures = get_json(data, "vobs_c");
+    msg.path_str          = get_json(data, "path");
+    msg.time              = get_json(data, "time").toLongLong();
+    msg.preset            = get_json(data, "preset").toInt();
+    msg.command           = get_json(data, "command");
+    msg.vobs_closures_str = get_json(data, "vobs_c");
     {
         std::lock_guard<std::mutex> lock(path_mtx);
         path_queue.push(msg);
@@ -1474,7 +1474,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
     // update vobs first
     std::vector<Eigen::Vector3d> vobs_c_list;
     {
-        QString vobs_str = msg.vobs_closures;
+        QString vobs_str = msg.vobs_closures_str;
         QStringList vobs_str_list = vobs_str.split(",");
 
         // set vobs
@@ -1499,7 +1499,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
     std::vector<QString> path;
     std::vector<int> step;
     {
-        QString path_str = msg.path;
+        QString path_str = msg.path_str;
         QStringList path_str_list = path_str.split(",");
         for(int p = 0; p < path_str_list.size(); p++)
         {
