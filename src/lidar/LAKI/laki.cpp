@@ -187,8 +187,9 @@ void LAKI::grab_loop(int idx)
     int consecutive_timeouts = 0;
     const int MAX_CONSECUTIVE_TIMEOUTS = 100;  // 1 second timeout
     const double PACKET_TIMEOUT = 1.0;  // 1 second
-    const double MOBILE_POSE_TIMEOUT = 2.0;  // 2 seconds
-    const double SYNC_WAIT_TIMEOUT = 5.0;  // 5 seconds
+    const double MOBILE_POSE_TIMEOUT = 0.1;  // 100ms - fast fail for real-time
+    const double SYNC_WAIT_TIMEOUT = 0.5;  // 500ms - faster sync check
+    const double POSE_WAIT_TIMEOUT = 0.2;  // 200ms - quick pose wait
 
     while(grab_flag[idx])
     {
@@ -251,28 +252,14 @@ void LAKI::grab_loop(int idx)
         last_packet_time = get_time();
         last_data_time[idx] = last_packet_time;
 
-        // check mobile pose
-        double mobile_pose_wait_start = get_time();
-        while(mobile->get_pose_storage_size() != MO_STORAGE_NUM && grab_flag[idx].load())
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            
-            // Timeout check for mobile pose
-            if(get_time() - mobile_pose_wait_start > MOBILE_POSE_TIMEOUT)
-            {
-                static int mobile_timeout_count = 0;
-                if(mobile_timeout_count++ % 50 == 0)
-                {
-                    log_warn("LAKI[{}] Mobile pose not ready for {:.2f}s, skipping frame", 
-                             idx, get_time() - mobile_pose_wait_start);
-                }
-                break;  // Skip this frame instead of waiting forever
-            }
-        }
-        
-        // Skip this frame if mobile pose is still not ready
+        // check mobile pose - quick check without long wait
         if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
         {
+            static int mobile_pose_skip_count = 0;
+            if(mobile_pose_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Mobile pose not ready, skipping frame (count: {})", idx, mobile_pose_skip_count);
+            }
             continue;
         }
 
@@ -300,24 +287,15 @@ void LAKI::grab_loop(int idx)
             log_info("LAKI[{}] synced. pc_t: {:.6f}, lidar_t: {:.6f}, offset_t: {:.6f}", idx, pc_t, lidar_t, (double)offset_t[idx]);
         }
 
-        // check lidar, mobile sync
-        double sync_wait_start = get_time();
-        while((!is_synced[idx].load() || !mobile->get_is_synced()) && grab_flag[idx].load())
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            
-            // Timeout check for sync
-            if(get_time() - sync_wait_start > SYNC_WAIT_TIMEOUT)
-            {
-                log_warn("LAKI[{}] Sync wait timeout ({:.2f}s), forcing resync", idx, get_time() - sync_wait_start);
-                need_resync = true;
-                break;
-            }
-        }
-        
-        // Skip frame if still not synced after timeout
+        // check lidar, mobile sync - quick check
         if(!is_synced[idx].load() || !mobile->get_is_synced())
         {
+            static int sync_skip_count = 0;
+            if(sync_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Not synced (lidar_synced: {}, mobile_synced: {}), skipping frame", 
+                         idx, is_synced[idx].load(), mobile->get_is_synced());
+            }
             continue;
         }
 
@@ -351,30 +329,24 @@ void LAKI::grab_loop(int idx)
             continue;
         }
 
-        // wait until t1 <= mobile->last_pose_t
-        double pose_wait_start = get_time();
-        const double POSE_WAIT_TIMEOUT = 2.0;  // 2 seconds max wait
-        while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load())
+        // wait until t1 <= mobile->last_pose_t (with short timeout for real-time performance)
+        int pose_wait_count = 0;
+        const int MAX_POSE_WAIT_COUNT = 20;  // 20 * 10ms = 200ms max
+        while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load() && pose_wait_count < MAX_POSE_WAIT_COUNT)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            
-            // Timeout check to prevent infinite wait
-            if(get_time() - pose_wait_start > POSE_WAIT_TIMEOUT)
-            {
-                static int pose_wait_timeout_count = 0;
-                if(pose_wait_timeout_count++ % 50 == 0)
-                {
-                    log_warn("LAKI[{}] Pose wait timeout, t1: {:.3f}, mobile->last_pose_t: {:.3f}, diff: {:.3f}s", 
-                             idx, t1, mobile->get_last_pose_t(), t1 - mobile->get_last_pose_t());
-                }
-                break;  // Skip this frame to avoid infinite wait
-            }
+            pose_wait_count++;
         }
         
-        // Skip frame if timeout occurred
+        // Skip frame if timeout occurred (for real-time performance)
         if(t1 > mobile->get_last_pose_t())
         {
-            log_debug("LAKI[{}] Skipping frame due to pose wait timeout", idx);
+            static int pose_wait_skip_count = 0;
+            if(pose_wait_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Pose wait timeout, t1: {:.3f}, mobile->last_pose_t: {:.3f}, diff: {:.3f}s", 
+                         idx, t1, mobile->get_last_pose_t(), t1 - mobile->get_last_pose_t());
+            }
             continue;
         }
 
@@ -402,31 +374,34 @@ void LAKI::grab_loop(int idx)
             }
         }
 
-        // check
+        // check and handle edge cases
         if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
         {
-            log_debug("lidar: {}, invalid mobile poses, pose_storage.size(): {}", idx, pose_storage.size());
-            if (!pose_storage.empty())
+            static int invalid_pose_count = 0;
+            if(invalid_pose_count++ % 500 == 0)  // Log every 500 times to reduce spam
             {
-                log_debug("pose_storage time range: [{}, {}]", pose_storage.front().t, pose_storage.back().t);
+                log_debug("LAKI[{}] invalid poses (count: {}), t0: {:.3f}, t1: {:.3f}, idx0: {}, idx1: {}, storage_size: {}", 
+                         idx, invalid_pose_count, t0, t1, idx0, idx1, pose_storage.size());
             }
-            else
-            {
-                log_debug("pose_storage is empty");
-            }
-            log_debug("t0: {}, t1: {}, idx0: {}, idx1: {}", t0, t1, idx0, idx1);
 
+            // Fast fallback to boundary poses
             if(idx0 == -1)
             {
                 idx0 = 0;
             }
-            if(idx1 == -1)
+            if(idx1 == -1 || idx1 >= (int)pose_storage.size())
             {
-                idx1 = (int)pose_storage.size() - 1;  // use last pose
+                idx1 = (int)pose_storage.size() - 1;
             }
             if(idx0 == idx1 && idx0 < (int)pose_storage.size() - 1)
             {
-                idx1 = idx0 + 1;  // use next pose
+                idx1 = idx0 + 1;
+            }
+            
+            // If still invalid, skip frame
+            if(idx0 == idx1)
+            {
+                continue;
             }
         }
         
