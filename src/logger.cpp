@@ -90,12 +90,11 @@ void LOGGER::init()
             log_dir.mkpath(".");
         }
 
-        // daily log file: snlog/YYYY-MM-DD_SpdSystemlog.log
-        const QString date_prefix = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-        const QString log_name = "snlog/" + date_prefix + "_SpdSystemlog.log";
+        // daily log file: snlog/snlog_YYYY-MM-DD.log (date will be auto-added by daily_file_sink_mt)
+        const QString log_name = "snlog/snlog.log";
 
         // clean up old log files (keep last 30 files)
-        QFileInfoList sysLogs = log_dir.entryInfoList(QStringList() << "*_SpdSystemlog.log",QDir::Files,QDir::Time);
+        QFileInfoList sysLogs = log_dir.entryInfoList(QStringList() << "snlog_*.log",QDir::Files,QDir::Time);
         const int KeepFiles = 30;
 
         for (int i = KeepFiles; i < sysLogs.size(); ++i)
