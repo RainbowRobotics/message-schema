@@ -2665,7 +2665,7 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
-            _main->bt_MapSave();
+            //_main->bt_MapSave();
         }
     }
     else if(command == "mappingSave")
@@ -4634,6 +4634,265 @@ void COMM_MSA::slot_localization(DATA_LOCALIZATION msg)
     //        }
     //    }
 }
+
+void COMM_MSA::slot_safety_request(DATA_SAFETY msg)
+{
+    const QString command = msg.command;
+    const QString resetflag_ = msg.reset_flag;
+
+    if(command == "setField")
+    {
+        msg.result = "success";
+        //qDebug() << "slot msg.sef_field:" << msg.set_field;
+        spdlog::info("[RRS] set, slot msg.sef_filed: {}", msg.set_field);
+
+        unsigned int set_field_ = msg.set_field;
+        msg.message = "";
+
+        //qDebug() << "parsing filed set:" << set_field_;
+        spdlog::info("[RRS] set, parsing filed set: {}", msg.set_field);
+
+
+        if(mobile)
+        {
+            MOBILE::instance()->setlidarfield(set_field_);
+        }
+
+        send_field_set_response(msg);
+    }
+
+    else if (command == "getField")
+    {
+        msg.result = "success";
+        msg.message = "";
+
+        if(mobile)
+        {
+            MOBILE_STATUS ms = MOBILE::instance()->get_status();
+            //qDebug() << ms.lidar_field;
+            spdlog::info("[RRS] get, slot ms.lidar_field: {}", ms.lidar_field);
+
+            msg.get_field = ms.lidar_field;
+        }
+        send_field_get_response(msg);
+    }
+
+    else if (command == "resetFlag")
+    {
+        if(resetflag_ == "bumper")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearbumperstop();
+            }
+
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "interlock")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearinterlockstop();
+            }
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "obstacle")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearobs();
+            }
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "operationStop")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->recover();
+            }
+            send_safety_reset_response(msg);
+
+        }
+    }
+}
+
+void COMM_MSA::send_field_set_response(const DATA_SAFETY& msg)
+{
+    spdlog::debug("[MSA] send_field_set_response connected");
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("fieldSetResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_MSA::send_field_get_response(const DATA_SAFETY& msg)
+{
+    spdlog::debug("[MSA] send_field_get_response connected");
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    if(msg.result == "reject" || msg.result == "fail")
+    {
+        QJsonObject errorCode = ERROR_MANAGER::instance()->getErrorCodeMapping(msg.message);
+        obj["message_detail"] = errorCode;
+    }
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("fieldGetResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_MSA::slot_config_request(DATA_PDU_UPDATE msg)
+{
+    const QString command = msg.command;
+
+    if(command == "getDriveParam")
+    {
+        //qDebug() << "slot in : param_get";
+        spdlog::info("[MSA] slot in : param_get");
+        if(mobile)
+        {
+            MOBILE::instance()->robot_request();
+
+            QTimer::singleShot(1000, [this, msg]() {
+                MOBILE_SETTING ms = MOBILE::instance()->get_setting();
+
+                DATA_PDU_UPDATE response_msg = msg;
+                response_msg.result = "success";
+                response_msg.message = "";
+                response_msg.setting = ms;
+
+                send_config_request_response(response_msg);
+            });
+        }
+    }
+
+    else if(command == "setParam")
+    {
+        //qDebug() << "set_param";
+        spdlog::info("[MSA] set_param");
+
+        if(msg.param_list.size() > 1 || msg.param_list.size() == 0)
+        {
+            spdlog::error("[MSA] slot_config_request setParam reject");
+            msg.result = "reject";
+            msg.message = "param_list size is greater than 1";
+            send_config_request_response(msg);
+            return;
+        }
+
+        if(mobile)
+        {
+            if(msg.param_list[0].key == "use_sf_obstacle_detect")
+            {
+                // type exception
+                if(msg.param_list[0].type != "boolean")
+                {
+                    
+                    msg.result = "reject";
+                    msg.message = "invalid type";
+                    send_config_request_response(msg);
+                    return;
+                }
+
+                bool is_true ;
+
+                // value check
+                if(msg.param_list[0].value == "true")
+                {
+                    is_true = true;
+                }
+                else if(msg.param_list[0].value == "false")
+                {
+                    is_true = false;
+                }
+
+                // value exception
+                else
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid value";
+                    send_config_request_response(msg);
+                    return;
+                }
+
+                MOBILE::instance()->set_detect_mode(is_true);
+
+                msg.result = "success";
+                msg.message = "";
+
+                send_config_request_response(msg);
+                return;
+            }
+            else
+            {
+                //qDebug() << "invalid parameter name";
+                spdlog::error("[MSA] slot_config_request, invalid parameter name ");
+                msg.result = "reject";
+                msg.message = "invalid parameter name";
+
+                send_config_request_response(msg);
+                return;
+            }
+        }
+    }
+    else
+    {
+        //qDebug() << "slot in : invalid command";
+        spdlog::info("[MSA] slot in : invalid command");
+
+        msg.result = "reject";
+        msg.message = "invalid command";
+
+        send_config_request_response(msg);
+        return;
+    }
+}
+
+
 void COMM_MSA::calc_remaining_time_distance(DATA_MOVE &msg)
 {
     // time align (first align + final align)
@@ -4996,6 +5255,41 @@ void COMM_MSA::send_profile_move_response(const DATA_MOVE& msg)
 //    mtx.unlock();
 }
 
+void COMM_MSA::send_safety_reset_response(const DATA_SAFETY& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+    sio::object_message::ptr send_obj = sio::object_message::create();
+
+    send_obj->get_map()["command"] = sio::string_message::create(msg.command.toStdString());
+    send_obj->get_map()["result"] = sio::string_message::create(msg.result.toStdString());
+    send_obj->get_map()["message"] = sio::string_message::create(msg.message.toStdString());
+    send_obj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<qint64>(msg.time * 1000)).toStdString());
+
+    //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("controlResponse", send_obj);
+}
+
+void COMM_MSA::send_config_request_response(const DATA_PDU_UPDATE& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+    sio::object_message::ptr send_obj = sio::object_message::create();
+
+    send_obj->get_map()["command"] = sio::string_message::create(msg.command.toStdString());
+    send_obj->get_map()["result"] = sio::string_message::create(msg.result.toStdString());
+    send_obj->get_map()["message"] = sio::string_message::create(msg.message.toStdString());
+    send_obj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<qint64>(msg.time * 1000)).toStdString());
+
+    //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("controlResponse", send_obj);
+}
+
+
 void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
 {
     if(!is_connected)
@@ -5031,7 +5325,7 @@ void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
     //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("controlResponse", send_obj);
 }
-QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
+QJsonObject COMM_MSA::get_error_code_mapping(const QString& message)
 {
     QJsonObject errorCode;
     QString error_code = "Unknown";

@@ -270,6 +270,10 @@ private:
     QJsonValue convertItem(sio::message::ptr item);
 
     void send_profile_move_response(const DATA_MOVE& msg);
+    //void send_safety_reset_response(const DATA_SAFETY& msg);
+    //void send_config_request_response(const DATA_PDU_UPDATE& msg);
+    //void send_field_set_response(const DATA_SAFETY& msg);
+    //void send_field_get_response(const DATA_SAFETY& msg);
 
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};
@@ -318,6 +322,9 @@ private Q_SLOTS:
     void send_system_status(double cpu_use, double cpu_temp);
 
     void slot_localization(DATA_LOCALIZATION msg);
+    void slot_safety_request(DATA_SAFETY msg);
+    void slot_config_request(DATA_PDU_UPDATE msg);
+
     //    void slot_safety_io(DATA_SAFTYIO msg);
 
     //MSA
@@ -327,6 +334,10 @@ private Q_SLOTS:
     void send_control_response(DATA_CONTROL msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_load_response(DATA_LOAD msg);
+    void send_field_set_response(const DATA_SAFETY& msg);
+    void send_field_get_response(const DATA_SAFETY& msg);
+    void send_safety_reset_response(const DATA_SAFETY& msg);
+    void send_config_request_response(const DATA_PDU_UPDATE& msg);
 
     void send_path_response(DATA_PATH msg);
 
@@ -336,9 +347,14 @@ private Q_SLOTS:
 //    void handle_move_rotate(DATA_MOVE msg);
     void slot_profile_move(DATA_MOVE msg);
 
+    QJsonObject get_error_code_mapping(const QString& message);
+    
 Q_SIGNALS:
     void signal_send_move_status();
- void signal_profile_move(DATA_MOVE msg);
+    void signal_profile_move(DATA_MOVE msg);
+
+    void signal_safety_requst(DATA_SAFETY msg);
+    void signal_config_request(DATA_PDU_UPDATE msg);
 //    void signal_handle_move_linear(DATA_MOVE msg);
 //    void signal_handle_move_circular(DATA_MOVE msg);
 //    void signal_handle_move_rotate(DATA_MOVE msg);

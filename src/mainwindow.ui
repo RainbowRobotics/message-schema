@@ -1461,7 +1461,7 @@ color: rgb(0, 0, 0);</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
