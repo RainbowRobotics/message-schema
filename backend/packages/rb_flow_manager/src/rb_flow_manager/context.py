@@ -110,35 +110,20 @@ class ExecutionContext:
 
         self._make_rb_sdk_method_key_value_map()
 
-    def step_barrier(self, step_id: str):
+    def step_barrier(self):
         """step_mode면, 이 스텝 수행 후 일시정지하고
         resume 신호 올 때까지 대기"""
-        if not self.step_mode or self.step_num <= 2:
+        if not self.step_mode or self.step_num < 2:
             return
 
         if self.stop_event.is_set():
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
             raise StopExecution("Execution stopped by user")
 
-        while self._step_ticket <= 0 and not self.stop_event.is_set():
-            if not self.pause_event.is_set():
-                self.pause_event.set()
-                self.state_dict["state"] = RB_Flow_Manager_ProgramState.WAITING
-                self.emit_pause(step_id, is_wait=True)
+        if not self.pause_event.is_set():
+            self.pause(is_wait=True)
 
-            if self.resume_event.wait(timeout=0.1):
-                self.resume_event.clear()
-                self._step_ticket = 1
-                self.pause_event.clear()
-                self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
-                self.emit_resume(step_id)
-                break
-
-        if self.stop_event.is_set():
-            self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-            raise StopExecution("Execution stopped by user")
-
-        self._step_ticket -= 1
+        self._wait_for_resume()
 
     def push_args(self, mapping: dict[str, Any] | None):
         self._arg_scope.append(mapping or {})
@@ -159,14 +144,29 @@ class ExecutionContext:
 
     def pause(self, is_wait: bool = False):
         """현재 스크립트를 일시정지"""
+        if self.pause_event.is_set():
+            return
+
         self.pause_event.set()
 
         self.emit_pause(self.state_dict["current_step_id"], is_wait)
 
         self._wait_for_resume()
 
+    def resume(self):
+        """현재 스크립트를 재개"""
+        if not self.resume_event.is_set():
+            return
+
+        self.resume_event.set()
+        self.pause_event.clear()
+        self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+
     def stop(self):
         """현재 스크립트를 중지"""
+        if self.stop_event.is_set():
+            return
+
         self.stop_event.set()
 
         self.emit_stop(self.state_dict["current_step_id"])

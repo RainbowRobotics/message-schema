@@ -27,6 +27,7 @@ class Step:
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
         func_name: str | None = None,
+        not_ast_eval: bool | None = None,
         args: dict[str, Any] | None = None,
         **kwargs,
     ):
@@ -38,6 +39,7 @@ class Step:
         self.disabled = disabled
         self.method = method
         self.func_name = func_name
+        self.not_ast_eval = not_ast_eval
         self.done_script = done_script
         self.children = children or []
         self.args = args or {}
@@ -67,6 +69,7 @@ class Step:
             memo=d.get("memo"),
             variable=d.get("variable"),
             func_name=d.get("funcName"),
+            not_ast_eval=d.get("notAstEval"),
             disabled=d.get("disabled"),
             args=d.get("args") or {},
             done_script=d.get("doneScript"),
@@ -123,8 +126,6 @@ class Step:
                     _indent(f"{k}={repr(v)},\n\n", depth + 4) if v is not None else ""
                 )
 
-        print("other_kwargs_block >>>", other_kwargs_block, flush=True)
-
         return (
             (" " * depth)
             + f"{self._class_name}(\n"
@@ -161,11 +162,11 @@ class Step:
                     condition_map.pop(key)
             ctx.data["condition_map"] = condition_map
 
-
+        ctx.state_dict["current_step_id"] = self.step_id
         ctx.push_args(self.args)
 
         if not is_skip:
-            ctx.step_barrier(self.step_id)
+            ctx.step_barrier()
 
             self._start_ts = time.monotonic()
 
@@ -183,9 +184,6 @@ class Step:
 
     def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
-
-        print("execute_children target_step_id >>>", target_step_id, flush=True)
-
         if len(self.children) > 0:
             ctx.current_depth += 1
 
@@ -265,25 +263,31 @@ class Step:
 
             try:
                 for k, v in args.items():
-                    eval_args[k] = eval_value(
-                        v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
-                    )
+                    if self.not_ast_eval:
+                        eval_args[k] = v
+                    else:
+                        eval_args[k] = eval_value(
+                            v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
+                        )
 
                 if self.variable:
                     for k, v in self.variable.items():
-                        if isinstance(v, str):
-                            if v.startswith("$parent."):
-                                attr = v[len("$parent.") :]
-                                v = ctx.lookup(attr)
-                            elif v.startswith("$args."):
-                                attr = v[len("$args.") :]
-                                v = eval_args.get(attr)
-                            else:
-                                v = eval_value(
-                                    v,
-                                    variables=ctx.variables,
-                                    get_global_variable=ctx.get_global_variable,
-                                )
+                        if self.not_ast_eval:
+                            self.variable[k] = v
+                        else:
+                            if isinstance(v, str):
+                                if v.startswith("$parent."):
+                                    attr = v[len("$parent.") :]
+                                    v = ctx.lookup(attr)
+                                elif v.startswith("$args."):
+                                    attr = v[len("$args.") :]
+                                    v = eval_args.get(attr)
+                                else:
+                                    v = eval_value(
+                                        v,
+                                        variables=ctx.variables,
+                                        get_global_variable=ctx.get_global_variable,
+                                    )
 
                         self.variable[k] = v
 
@@ -293,7 +297,8 @@ class Step:
                     eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
 
             except RuntimeError as e:
-                ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                if "Execution stopped by user" not in str(e):
+                    ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
                 time.sleep(0.1)
                 ctx.stop()
@@ -308,7 +313,8 @@ class Step:
             try:
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
             except RuntimeError as e:
-                ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                if "Execution stopped by user" not in str(e):
+                    ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
                 time.sleep(0.1)
                 ctx.stop()
@@ -483,18 +489,18 @@ class RepeatStep(Step):
             self._post_execute(ctx, ignore_step_interval=True)
             return
 
-        self._pre_execute(ctx, is_skip=is_skip)
-
-        ctx.emit_next(self.step_id)
-
-        ctx.check_stop()
-
         if self.count is not None:
             for i in range(int(self.count)):
+                self._pre_execute(ctx, is_skip=is_skip)
+                ctx.emit_next(self.step_id)
                 ctx.check_stop()
+
                 ctx.data["repeat_index"] = i
+
                 try:
                     self.execute_children(ctx, target_step_id=target_step_id)
+                    self._post_execute(ctx, ignore_step_interval=True)
+                    ctx.emit_done(self.step_id)
                 except BreakRepeat:
                     break
                 except ContinueRepeat:
@@ -508,8 +514,12 @@ class RepeatStep(Step):
                     get_global_variable=ctx.get_global_variable,
                 ):
                     try:
+                        self._pre_execute(ctx, is_skip=is_skip)
+                        ctx.emit_next(self.step_id)
                         ctx.check_stop()
                         self.execute_children(ctx, target_step_id=target_step_id)
+                        self._post_execute(ctx, ignore_step_interval=True)
+                        ctx.emit_done(self.step_id)
                     except BreakRepeat:
                         break
                     except ContinueRepeat:
@@ -517,8 +527,12 @@ class RepeatStep(Step):
             else:
                 while self.while_cond(ctx):
                     try:
+                        self._pre_execute(ctx, is_skip=is_skip)
+                        ctx.emit_next(self.step_id)
                         ctx.check_stop()
                         self.execute_children(ctx, target_step_id=target_step_id)
+                        self._post_execute(ctx, ignore_step_interval=True)
+                        ctx.emit_done(self.step_id)
                     except BreakRepeat:
                         break
                     except ContinueRepeat:
@@ -527,8 +541,12 @@ class RepeatStep(Step):
         elif self.do_while is not None:
             while True:
                 try:
+                    self._pre_execute(ctx, is_skip=is_skip)
+                    ctx.emit_next(self.step_id)
                     ctx.check_stop()
                     self.execute_children(ctx, target_step_id=target_step_id)
+                    self._post_execute(ctx, ignore_step_interval=True)
+                    ctx.emit_done(self.step_id)
                 except BreakRepeat:
                     break
                 except ContinueRepeat:
@@ -544,9 +562,7 @@ class RepeatStep(Step):
                     if not self.do_while(ctx):
                         break
 
-        self._post_execute(ctx)
 
-        ctx.emit_done(self.step_id)
 
 class ConditionStep(Step):
     """조건 Step"""

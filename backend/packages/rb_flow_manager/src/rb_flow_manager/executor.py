@@ -127,8 +127,13 @@ def _execute_tree_in_process(
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
         state_dict["error"] = str(e)
 
+        print(f"Execution error: {state_dict['error']}", flush=True)
+
         if ctx is not None:
-            ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
+            if "Execution stopped by user" in state_dict["error"]:
+                ctx.emit_stop(step.step_id)
+            else:
+                ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
     except JumpToStepException:
         pass
     finally:
@@ -137,8 +142,6 @@ def _execute_tree_in_process(
 
         if ctx is not None:
             ctx.close()
-
-        print(f"Execution completed: {process_id}")
 
 
 class ScriptExecutor:
@@ -217,7 +220,10 @@ class ScriptExecutor:
             print(f"Process {process_id} is already running")
 
             if step_mode:
-                self.resume(process_id)
+                if self.pause_events[process_id].is_set():
+                    self.resume(process_id)
+                else:
+                    self.pause(process_id)
 
             return False
 
@@ -256,6 +262,7 @@ class ScriptExecutor:
         self.state_dicts[process_id]["robot_model"] = robot_model
         self.state_dicts[process_id]["category"] = category
         self.state_dicts[process_id]["generation"] = gen
+        self.state_dicts[process_id]["step_mode"] = step_mode
         self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
 
         self._pid_generation[process_id] = gen
@@ -554,6 +561,7 @@ class ScriptExecutor:
 
     def resume(self, process_id: str) -> bool:
         """스크립트 재개"""
+
         if process_id not in self.processes:
             print(f"Process {process_id} not found")
             return False

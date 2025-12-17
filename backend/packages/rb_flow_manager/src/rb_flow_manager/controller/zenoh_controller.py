@@ -13,6 +13,8 @@ from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
     Request_Update_Executor_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
+from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
 from rb_flow_manager.controller.base_controller import BaseController
 from rb_zenoh.client import ZenohClient
 
@@ -40,6 +42,11 @@ class Zenoh_Controller(BaseController):
             self._zenoh_client.publish("rrs/stop", payload={})
 
     def on_start(self, task_id: str) -> None:
+        if self._zenoh_client is not None:
+            req = Request_Program_At_StartT()
+            req.taskId = task_id
+            self._zenoh_client.publish("rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
+
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_stop(self, task_id: str, step_id: str) -> None:
@@ -56,6 +63,7 @@ class Zenoh_Controller(BaseController):
 
     def on_pause(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.PAUSED)
+        self.update_executor_state(RB_Flow_Manager_ProgramState.PAUSED)
 
         if self._zenoh_client is not None:
             self._zenoh_client.publish("rrs/pause", payload={})
@@ -77,22 +85,19 @@ class Zenoh_Controller(BaseController):
         )
         self.update_executor_state(RB_Flow_Manager_ProgramState.ERROR, error=str_error)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/stop", payload={})
-
     def on_done(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.COMPLETED)
 
     def on_complete(self, task_id: str) -> None:
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 
-    def on_close(self) -> None:
-        # if self._zenoh_client is not None and not self._zenoh_client.is_current_process_client():
-        #     self._zenoh_client.close()
-        #     self._zenoh_client = None
-
         if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/stop", payload={})
+            req = Request_Program_At_EndT()
+            req.taskId = task_id
+            self._zenoh_client.publish("rrs/program/at_end", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
+
+    def on_close(self) -> None:
+        pass
 
     def on_all_complete(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.IDLE)
