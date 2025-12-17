@@ -498,27 +498,15 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
             QJsonObject obj_cam = cam_arr[i].toObject();
             CAM_TF[i] = obj_cam["TF"].toString();
             CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
-            CAM_COLOR_PROFILE[i] = obj_cam["COLOR_PROFILE"].toInt();
-            CAM_DEPTH_PROFILE[i] = obj_cam["DEPTH_PROFILE"].toInt();
-            //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
-            //printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
-            spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}, COLOR_PROFILE: {}. DEPTH_PROFILE: {}", i,
-                         qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]), CAM_COLOR_PROFILE[i], CAM_DEPTH_PROFILE[i]);
+
+            CAM_COLOR_PROFILE[i] = obj_cam["COLOR_PROFILE"].toString().toInt();
+            CAM_DEPTH_PROFILE[i] = obj_cam["DEPTH_PROFILE"].toString().toInt();
+
+            spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}, COLOR_PROFILE: {}, DEPTH_PROFILE: {}", i,
+                            qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]),
+                            CAM_COLOR_PROFILE[i], CAM_DEPTH_PROFILE[i]);
         }
     }
-    //if(USE_CAM_RGB || USE_CAM_DEPTH)
-    //{
-    //    QJsonArray cam_arr = obj["cam_config"].toArray();
-    //    for(int i = 0; i < cam_arr.size(); i++)
-    //    {
-    //        QJsonObject obj_cam = cam_arr[i].toObject();
-    //        CAM_TF[i] = obj_cam["TF"].toString();
-    //        CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
-    //        //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
-    //        spdlog::info("[CONFIG] CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
-    //        //log_info("CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
-    //    }
-    //}
 }
 
 void CONFIG::load_sensor_specific_configs(const QJsonObject &obj)
@@ -2497,18 +2485,6 @@ QString CONFIG::get_lidar_3d_tf(int idx)
         return LIDAR_3D_TF[idx];
     }
     return "";
-}
-
-uint32_t CONFIG::get_cam_color_profile(int idx)
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return CAM_COLOR_PROFILE[idx];
-}
-
-uint32_t CONFIG::get_cam_depth_profile(int idx)
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return CAM_DEPTH_PROFILE[idx];
 }
 
 double CONFIG::get_cam_height_min()

@@ -1275,7 +1275,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        Q_EMIT (ctrl->signal_move_single(msg));
     }
     else
     {
@@ -1368,7 +1368,7 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
 
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        Q_EMIT (ctrl->signal_move_single(msg));
     }
     else if(method == "hpp")
     {

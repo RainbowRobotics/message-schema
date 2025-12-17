@@ -166,12 +166,12 @@ public:
     /***********************
      * cam sensor
      ***********************/
-    uint32_t get_cam_color_profile(int idx);
-    uint32_t get_cam_depth_profile(int idx);
     double get_cam_height_min();              // depth camera min height
     double get_cam_height_max();              // depth camera max height
     QString get_cam_serial_number(int idx);   // cam serial number list (maximum cam number is 2)
     QString get_cam_tf(int idx);              // cam tf list (maximum cam number is 2)
+    int     get_cam_color_profile(int idx);   // cam color profile list (maximum cam number is 4)
+    int     get_cam_depth_profile(int idx);   // cam depth profile list (maximum cam number is 4)
 
     /***********************
      * motor
@@ -531,8 +531,8 @@ private:
     double CAM_HEIGHT_MAX = 1.0;
     QString CAM_SERIAL_NUMBER[max_cam_cnt];
     QString CAM_TF[max_cam_cnt];
-    int CAM_COLOR_PROFILE[max_cam_cnt];
-    int CAM_DEPTH_PROFILE[max_cam_cnt];
+    int CAM_COLOR_PROFILE[max_cam_cnt] = {0};
+    int CAM_DEPTH_PROFILE[max_cam_cnt] = {0};
 
     // motor
     int MOTOR_ID_L = 1;

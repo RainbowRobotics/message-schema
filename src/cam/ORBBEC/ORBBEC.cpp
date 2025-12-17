@@ -251,6 +251,15 @@ void ORBBEC::grab_loop(int idx)
         Eigen::Matrix3d TF_R = TF.block(0,0,3,3);
         Eigen::Vector3d TF_t = TF.block(0,3,3,1);
 
+        depth_profile_idx = config->get_cam_depth_profile(idx);
+        color_profile_idx = config->get_cam_color_profile(idx);
+        if(depth_profile_idx == -1 || color_profile_idx == -1)
+        {
+            grab_flag[idx] = false;
+            log_error("invalid camera {} profile idx", idx);
+            return;
+        }
+
         auto depth_profile_list = pipe->getStreamProfileList(OB_SENSOR_DEPTH);
         if(depth_profile_idx[idx] >= depth_profile_list->count())
         {
@@ -422,7 +431,6 @@ void ORBBEC::grab_loop(int idx)
 
                     uint64_t ts = fs->colorFrame()->systemTimeStamp();
                     double t = static_cast<double>(ts) / 1000.0;
-
 
                     std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
                     cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());

@@ -14,9 +14,6 @@
 // qt
 #include <QObject>
 
-//constexpr int depth_profile_idx = 28;  // w:640, h:400, fps:30, format:8
-//constexpr int depth_profile_idx = 55;  // w:640, h:400, fps:30, format:8
-//constexpr int color_profile_idx = 112; // w:640, h:360, fps:5, format:22
 
 class ORBBEC : public QObject
 {
@@ -96,14 +93,14 @@ private:
 
     std::atomic<double> cur_pts_size[max_cam_cnt];
 
-    uint32_t color_profile_idx[max_cam_cnt];
-    uint32_t depth_profile_idx[max_cam_cnt];
     CAM_INTRINSIC intrinsic[max_cam_cnt];
     Eigen::Matrix4d extrinsic[max_cam_cnt];
 
     tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
     tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
 
+    int depth_profile_idx = 55;
+    int color_profile_idx = 112;
 
 Q_SIGNALS:
     void signal_restart(int idx);

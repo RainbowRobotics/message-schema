@@ -39,6 +39,7 @@ struct COMM_MSA_INFO
     static constexpr int reconnect_time = 3; // second
     static constexpr double move_status_send_time = 0.1; // second
     static constexpr double status_send_time = 0.5; // second
+    static constexpr double mapping_cloud_send_time = 0.5; // second
     static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
 };
 

@@ -35,13 +35,12 @@ COMM_MSA::COMM_MSA(QObject *parent)
     rrs_socket->set_open_listener(std::bind(&COMM_MSA::connected, this));
     rrs_socket->set_close_listener(std::bind(&COMM_MSA::disconnected, this));
 
-    sio::socket::ptr sock = rrs_socket->socket("slamnav");
-
     // command
-    BIND_EVENT(sock, "moveRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
+    sio::socket::ptr sock = rrs_socket->socket("slamnav");
+    BIND_EVENT(sock, "moveRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
     // status
@@ -447,10 +446,15 @@ void COMM_MSA::send_move_status()
     obj_root->get_map()["move_state"] = obj_move_state;
     obj_root->get_map()["time"] = sio::string_message::create(QString::number(static_cast<long long>(get_time0()*1000)).toStdString());
 
-    SOCKET_MESSAGE socket_msg;
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("moveStatus", obj_root);
+    }
+
+    /*SOCKET_MESSAGE socket_msg;
     socket_msg.event = "moveStatus";
     socket_msg.data  = obj_root;
-    send_status_queue.push(std::move(socket_msg));
+    send_status_queue.push(std::move(socket_msg));*/
 }
 
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
@@ -1391,6 +1395,7 @@ void COMM_MSA::send_status_loop()
 {
     double duration_time_move_status = get_time();
     double duration_time_status = get_time();
+    double duration_time_mapping_cloud = get_time();
     double duration_time_rtsp_cam_rgb = get_time();
 
     while(is_send_status_running)
@@ -1401,51 +1406,43 @@ void COMM_MSA::send_status_loop()
             send_move_status();
         }
 
-        // 500[ms]
         if(get_time() - duration_time_status >= COMM_MSA_INFO::status_send_time)
         {
             duration_time_status = get_time();
-
             send_status();
+        }
+
+        if(get_time() - duration_time_mapping_cloud >= COMM_MSA_INFO::mapping_cloud_send_time)
+        {
+            duration_time_mapping_cloud = get_time();
             send_mapping_cloud();
         }
 
         // for variable loop
-        double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06) * 10.0;
+        double time_lidar_view = 1.0/(static_cast<double>(lidar_view_frequency.load()) + 1e-06) * 10.0;
         if(time_lidar_view > 0)
         {
             if(lidar_view_cnt > time_lidar_view)
             {
                 lidar_view_cnt = 0;
-
-                if(CONFIG::instance()->get_use_lidar_2d())
-                {
-                    send_lidar_2d();
-                }
-
-                if(CONFIG::instance()->get_use_lidar_3d())
-                {
-                    send_lidar_3d();
-                }
+                CONFIG::instance()->get_use_lidar_2d() == true ? send_lidar_2d() : send_lidar_3d();
             }
             lidar_view_cnt++;
         }
 
-        double time_path_view = 1.0/((double)path_view_frequency + 1e-06) * 10.0;
+        double time_path_view = 1.0/(static_cast<double>(path_view_frequency.load()) + 1e-06) * 10.0;
         time_path_view *= 10.0;
         if(time_path_view > 0)
         {
             if(path_view_cnt > time_path_view)
             {
                 path_view_cnt = 0;
-                if(is_local_path_update2)
+                if(is_local_path_update2.exchange(false))
                 {
-                    is_local_path_update2 = false;
                     send_local_path();
                 }
-                if(is_global_path_update2)
+                if(is_global_path_update2.exchange(false))
                 {
-                    is_global_path_update2 = false;
                     send_global_path();
                 }
             }
@@ -1499,7 +1496,7 @@ void COMM_MSA::send_status()
     imuObj->get_map()["imu_ry"] = sio::double_message::create(imu[1] * R2D);
     imuObj->get_map()["imu_rz"] = sio::double_message::create(imu[2] * R2D);
 
-    rootObj->get_map()["imu"] = imuObj;
+    //rootObj->get_map()["imu"] = imuObj;
 
     // Adding the motor array
     sio::array_message::ptr motorArray = sio::array_message::create();
@@ -1702,10 +1699,15 @@ void COMM_MSA::send_status()
     const double time = get_time0();
     rootObj->get_map()["time"] = sio::double_message::create(static_cast<long long>(time * 1000));
 
-    SOCKET_MESSAGE socket_msg;
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("status", rootObj);
+    }
+
+    /*SOCKET_MESSAGE socket_msg;
     socket_msg.event = "status";
     socket_msg.data  = rootObj;
-    send_status_queue.push(socket_msg);
+    send_status_queue.push(socket_msg);*/
 }
 
 void COMM_MSA::send_move_response(const DATA_MOVE& msg)
@@ -1936,7 +1938,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        Q_EMIT (ctrl->signal_move_single(msg));
     }
     else if(method == "hpp")
     {
@@ -2001,7 +2003,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
             msg.result = "accept";
             send_move_response(msg);
 
-            Q_EMIT (ctrl->signal_move(msg));
+            Q_EMIT (ctrl->signal_move_single(msg));
         }
         else
         {
@@ -2092,7 +2094,7 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         }
 
         send_move_response(msg);
-        Q_EMIT (ctrl->signal_move(msg));
+        Q_EMIT (ctrl->signal_move_single(msg));
     }
     else if(method == "tng")
     {
@@ -2817,7 +2819,7 @@ void COMM_MSA::set_dockcontrol_module(DOCKCONTROL* _dctrl)
 
 void COMM_MSA::start_recv_thread()
 {
-    if(recv_thread == nullptr && !is_recv_running.load())
+    if(recv_thread == nullptr)
     {
         is_recv_running = true;
         recv_thread = std::make_unique<std::thread>(&COMM_MSA::recv_loop, this);
@@ -2874,7 +2876,7 @@ void COMM_MSA::start_vobs_thread()
 
 void COMM_MSA::start_send_status_thread()
 {
-    if(send_status_thread == nullptr && !is_send_status_running.load())
+    if(send_status_thread == nullptr)
     {
         is_send_status_running = true;
         send_status_thread = std::make_unique<std::thread>(&COMM_MSA::send_status_loop, this);

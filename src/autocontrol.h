@@ -31,35 +31,11 @@ enum class CommandType
     UPDATE_PATH,
 };
 
-enum class CommandMethod
+enum class DriveMethod
 {
     METHOD_PP,
     METHOD_HPP,
     METHOD_SIDE
-};
-
-struct GOAL_INFO
-{
-    Eigen::Matrix4d goal_tf;
-    Eigen::Vector3d goal_xi;  // x,y,th
-    Eigen::Vector3d goal_pos; // x,y,z
-};
-
-struct CONTROL_COMMAND
-{
-    int preset;
-    CommandType type;
-
-    // for move
-    Eigen::Matrix4d goal_tf;
-
-    // for path
-    std::vector<QString> node_path;
-
-    CTRL_PARAM params;
-
-    // method
-    QString method;
 };
 
 struct RAW_PATH_INFO
@@ -85,7 +61,6 @@ struct AUTOCONTROL_INFO
     static constexpr double local_path_step = 0.01;
     static constexpr double global_path_step = 0.1;
 };
-
 
 class AUTOCONTROL : public QObject
 {
@@ -113,7 +88,6 @@ public:
     bool get_is_debug();                            // check if debug
     bool get_is_pause();                            // check if paused
     bool get_is_moving();                           // check if moving
-    bool get_multi_inter_lock();                    // (if emo push->released:[true] new move cmd come:[false]) to keep it in "not ready" state until a new move command comes.
     PATH get_cur_global_path();                     // get current global path
     PATH get_cur_local_path();                      // get current local path
     double get_obs_dist();                          // get current obstacle far dist (1m, 2m)
@@ -143,7 +117,6 @@ public:
     void set_obs_condition(QString str);
     void set_cur_goal_state(QString str);
     void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
-    void set_multi_inter_lock(bool val);
     void set_cur_global_path(const PATH& val);
     void set_cur_local_path(const PATH& val);
     void set_cur_move_info(const DATA_MOVE& val);
@@ -168,7 +141,7 @@ public:
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
     void slot_move(DATA_MOVE msg);
-    void slot_backward_move(DATA_MOVE msg);
+    void slot_move_backward(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
     void slot_move_multi(const DATA_PATH& msg);
@@ -179,8 +152,8 @@ private:
 
     // mutex
     std::recursive_mutex mtx;
-    CommandMethod cmd_method;
-    CommandMethod initial_method;
+    DriveMethod drive_method;
+    DriveMethod initial_drive_method;
 
     // other modules
     CONFIG* config;
@@ -188,8 +161,8 @@ private:
     MOBILE* mobile;
     UNIMAP* unimap;
     OBSMAP* obsmap;
-    LOCALIZATION* loc;
     POLICY* policy;
+    LOCALIZATION* loc;
 
     // control params
     CTRL_PARAM params;
@@ -205,11 +178,11 @@ private:
     void move();
 
     // [single robot] backwardmove (input param: goal transform matrix)
-    void backwardmove(Eigen::Matrix4d goal_tf, int preset);
+    void move_backward(Eigen::Matrix4d goal_tf, int preset);
 
     // [multi robot] backwardmove (input param: node path)
-    void backwardmove(std::vector<QString> node_path, int preset);
-    void backwardmove();
+    void move_backward(std::vector<QString> node_path, int preset);
+    void move_backward();
 
     // flag, path, state
     void clear_control_params();
@@ -282,20 +255,17 @@ private:
     std::unique_ptr<std::thread> obs_thread;
     void obs_loop();
 
-    std::atomic<bool> node_flag = {false};              // node thread flag (calc nearest node)
-    std::unique_ptr<std::thread> node_thread;           // node thread
-    void node_loop();                                   // node loop
+    // node loop
+    std::atomic<bool> node_flag = {false};    // node thread flag (calc nearest node)
+    std::unique_ptr<std::thread> node_thread; // node thread
+    void node_loop();                         // node loop
 
-    // for plot
+    QString last_node_id = "";
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
 
     tbb::concurrent_queue<PATH> global_path_que;
-
-    // for where is robot
-    std::shared_mutex node_mtx;
-    QString last_node_id = "";
 
     // for multi-robot control
     int global_preset = 0;
@@ -303,7 +273,7 @@ private:
     std::vector<int> global_step;
     std::atomic<int> last_step = {0};
     std::vector<QString> global_node_path;
-    std::atomic<long long> global_path_time = {(long long)0};
+    std::atomic<long long> global_path_time = {static_cast<long long>(0)};
 
     // flags
     std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
@@ -312,10 +282,11 @@ private:
     std::atomic<bool> is_pause               = {false};
     std::atomic<bool> is_moving              = {false};
     std::atomic<bool> is_path_overlap        = {false};
-    std::atomic<bool> multi_inter_lock       = {false};
+    std::atomic<bool> is_move_backward       = {false};
+
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
-    std::atomic<bool> back_mode              = {false};
+    std::atomic<double> process_time_node = {0.0};
 
     // params for rrs & plot
     PATH cur_local_path;
@@ -336,21 +307,18 @@ private:
     bool ref_v_oscilation_end_flag = false;
     Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
 
-    std::atomic<double> process_time_node = {0.0};
-
     // debug
     double cur_obs_dist = std::numeric_limits<double>::max();
     std::vector<Eigen::Matrix4d> obs_traj;
 
 Q_SIGNALS:
-    void signal_move(DATA_MOVE msg);
-    void signal_backward_move(DATA_MOVE msg);
+    void signal_move_single(DATA_MOVE msg);
+    void signal_move_backward(DATA_MOVE msg);
     void signal_path();
     void signal_move_multi(DATA_PATH msg);
     void signal_move_response(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();
-
 };
 
 #endif // AUTOCONTROL_H

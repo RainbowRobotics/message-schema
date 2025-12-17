@@ -461,8 +461,6 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
         AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
         AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
-        // ctrl->lidar = lidar;
-        // ctrl->cam = cam;
         AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
@@ -1686,7 +1684,7 @@ void MainWindow::bt_AutoMove()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         }
         return;
     }
@@ -1702,7 +1700,7 @@ void MainWindow::bt_AutoMove()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         return;
     }
 }
@@ -1742,7 +1740,7 @@ void MainWindow::bt_AutoBackMove()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_backward_move(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move_backward(msg));
         }
         return;
     }
@@ -1758,7 +1756,7 @@ void MainWindow::bt_AutoBackMove()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_backward_move(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move_backward(msg));
         return;
     }
 }
@@ -1797,7 +1795,7 @@ void MainWindow::bt_AutoMove2()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         }
         return;
     }
@@ -1813,7 +1811,7 @@ void MainWindow::bt_AutoMove2()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         return;
     }
 }
@@ -1851,7 +1849,7 @@ void MainWindow::bt_AutoMove3()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         }
         return;
     }
@@ -1867,7 +1865,7 @@ void MainWindow::bt_AutoMove3()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
         return;
     }
 }
@@ -2254,7 +2252,7 @@ void MainWindow::bt_ReturnToCharging()
     msg.tgt_pose_vec[2] = node->tf(2,3);
     msg.tgt_pose_vec[3] = xi[2];
 
-    Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+    Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
 }
 
 // annotation
@@ -3008,11 +3006,6 @@ void MainWindow::watch_loop()
                             move_info.result = "emo";
                             move_info.message = "pushed";
                             move_info.time = get_time();
-
-                            if(AUTOCONTROL::instance())
-                            {
-                                AUTOCONTROL::instance()->set_multi_inter_lock(true);
-                            }
 
                             Q_EMIT signal_move_response(move_info);
                         }
@@ -5335,7 +5328,6 @@ void MainWindow::plot_tractile()
             {
                 QString name = QString("traj_%1").arg(p);
                 std::string name_str = name.toStdString();
-
 
                 if(p == traj.size()-1 || p % 50 == 0)
                 {
