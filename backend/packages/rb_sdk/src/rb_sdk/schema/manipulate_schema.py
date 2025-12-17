@@ -27,6 +27,15 @@ class SideDoutPulseArg(TypedDict):
     time_2: int
     time_3: int
 
+class SideAoutArg(TypedDict):
+    """Side Analog Out 호출 인자"""
+    port_num: int
+    desired_voltage: float
+
+class MultipleSideAoutArg(TypedDict):
+    """Multiple Side Analog Out 호출 인자"""
+    side_aout_args: list[SideAoutArg]
+
 class ResponseCamelReturnValue(TypedDict):
     """Response Return Value"""
     returnValue: int

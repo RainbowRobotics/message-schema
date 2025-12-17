@@ -14,8 +14,11 @@ from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
+from rb_utils.flow_manager import make_builtins_allow_most
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
+
+from .schema.base_schema import SetVariableDTO
 
 T = TypeVar("T", bound="RBBaseSDK")
 
@@ -173,6 +176,46 @@ class RBBaseSDK:
         if flow_manager_args is not None:
             flow_manager_args.done()
 
+    def set_variables(self, *, variables: list[SetVariableDTO], flow_manager_args: FlowManagerArgs | None = None):
+        """변수 설정"""
+        if flow_manager_args is not None:
+            for variable in variables:
+                flow_manager_args.ctx.update_local_variables({
+                    variable["name"]: variable["init_value"]
+                })
+            flow_manager_args.done()
+
+    def make_script(self, *, contents: str, flow_manager_args: FlowManagerArgs | None = None):
+        """스크립트 생성"""
+        code = compile(contents, "<custom_script>", "exec")
+
+
+        merged_variables = {
+            **(flow_manager_args.ctx.variables.get("global") or {}),
+            **(flow_manager_args.ctx.variables.get("local") or {}),
+        }
+
+        env = {
+            "variables": merged_variables,
+            "update_variable": flow_manager_args.ctx.update_local_variables,
+            "done": flow_manager_args.done,
+            "pause": flow_manager_args.ctx.pause,
+            "stop": flow_manager_args.ctx.stop,
+            "resume": flow_manager_args.ctx.resume,
+            "check_stop": flow_manager_args.ctx.check_stop,
+            "rb_log": rb_log,
+        }
+
+        try:
+            exec(  # pylint: disable=exec-used
+                code,
+                {"__builtins__": make_builtins_allow_most()},
+                env,
+            )
+        finally:
+            flow_manager_args.done()
+
+
     def all_pause(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 일시정지"""
         self.zenoh_client.publish("rrs/pause", payload={})
@@ -180,7 +223,7 @@ class RBBaseSDK:
         time_module.sleep(0.1)
 
         if flow_manager_args is not None:
-            flow_manager_args.done()
+            flow_manager_args.ctx.pause()
 
     def all_stop(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 정지"""
@@ -192,17 +235,16 @@ class RBBaseSDK:
         """프로그램 알림 발생"""
         req = RB_Program_DialogT()
         req.robotModel = robot_model
-        req.title = title
+        req.title = title or "No Title"
         req.content = content
 
-        if title:
-            self.zenoh_client.publish(
-                "rrs/program/dialog",
-                flatbuffer_req_obj=req,
-                flatbuffer_buf_size=256,
-            )
-        else:
-            rb_log.warning("Program Dialog is not shown because title is empty")
+        self.zenoh_client.publish(
+            "rrs/program/dialog",
+            flatbuffer_req_obj=req,
+            flatbuffer_buf_size=256,
+        )
+
+
 
         if flow_manager_args is not None:
             flow_manager_args.done()

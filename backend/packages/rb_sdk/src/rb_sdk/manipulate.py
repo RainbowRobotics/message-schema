@@ -9,7 +9,10 @@ from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
+from rb_flat_buffers.IPC.Request_ProgramAfter import Request_ProgramAfterT
+from rb_flat_buffers.IPC.Request_ProgramBefore import Request_ProgramBeforeT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
+from rb_flat_buffers.IPC.Request_SideAout_General import Request_SideAout_GeneralT
 from rb_flat_buffers.IPC.Request_SideDout_Bitcombination import Request_SideDout_BitcombinationT
 from rb_flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
 from rb_flat_buffers.IPC.Request_SideDout_Pulse import Request_SideDout_PulseT
@@ -23,6 +26,7 @@ from rb_utils.parser import to_json
 from .base import RBBaseSDK
 from .schema.manipulate_schema import (
     ResponseCamelReturnValue,
+    SideAoutArg,
     SideDoutArg,
     SideDoutBitcombinationArg,
     SideDoutPulseArg,
@@ -58,6 +62,32 @@ class RBManipulateSDK(RBBaseSDK):
             return dict_res["payloadStr"]
 
         return None
+
+    def call_program_before(self, *, robot_model: str, option: int):
+        req = Request_ProgramBeforeT()
+        req.option = option
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_program_before",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+
+        return res["dict_payload"]
+
+    def call_program_after(self, *, robot_model: str, option: int):
+        req = Request_ProgramAfterT()
+        req.option = option
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_program_after",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+
+        return res["dict_payload"]
 
     async def set_begin(self, *, robot_model: str, position: Any, is_enable: bool = True, speed_ratio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
         """메인 태스크 시작 위치 설정"""
@@ -824,6 +854,63 @@ class RBManipulateSDK(RBBaseSDK):
 
         return result
 
+    def call_side_aout(
+        self,
+        *,
+        robot_model: str,
+        port_num: int,
+        desired_voltage: float,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ) -> ResponseCamelReturnValue:
+        """Side Analog Out 호출"""
+
+        req = Request_SideAout_GeneralT()
+        req.portNum = port_num
+        req.desiredVoltage = desired_voltage
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_side_aout",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if flow_manager_args is not None and res.get("dict_payload"):
+            flow_manager_args.done()
+
+        return res["dict_payload"]
+
+    def call_multiple_side_aout(
+        self,
+        *,
+        robot_model: str,
+        side_aout_args: list[SideAoutArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ) -> list[ResponseCamelReturnValue]:
+        """Multiple Side Analog Out 호출"""
+        result: list[dict] = []
+
+        for req in side_aout_args:
+            res = self.call_side_aout(
+                robot_model=robot_model,
+                port_num=req["port_num"],
+                desired_voltage=req["desired_voltage"],
+                flow_manager_args=flow_manager_args,
+            )
+
+            result.append(res)
+
+        if flow_manager_args is not None and len(result) == len(side_aout_args):
+            flow_manager_args.done()
+
+        if len(result) != len(side_aout_args):
+            raise RuntimeError(
+                "Multiple Side Analog Out failed: "
+                "result length is not equal to side_aout_args length"
+            )
+
+        return result
+
     def halt(self, *, robot_model: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseCamelReturnValue:
         """정지 호출"""
         req = Request_MotionHaltT()
@@ -878,9 +965,8 @@ class RBManipulateSDK(RBBaseSDK):
                 level="USER"
             )
 
-        self.all_pause()
-
         if flow_manager_args is not None:
+            flow_manager_args.ctx.pause()
             flow_manager_args.ctx.check_stop()
             flow_manager_args.done()
 
@@ -933,7 +1019,6 @@ class RBManipulateSDK(RBBaseSDK):
                 robot_model=robot_model
             )
 
-            self.all_pause()
         elif option == "LOG":
             for index, var in enumerate(raw_variables):
                 content = ""
@@ -954,5 +1039,7 @@ class RBManipulateSDK(RBBaseSDK):
                     level="USER"
                 )
 
-        flow_manager_args.ctx.check_stop()
-        flow_manager_args.done()
+        if flow_manager_args is not None:
+            flow_manager_args.ctx.pause()
+            flow_manager_args.ctx.check_stop()
+            flow_manager_args.done()
