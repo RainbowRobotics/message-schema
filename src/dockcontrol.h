@@ -14,6 +14,7 @@
 #include "obsmap.h"
 #include "qr_sensor.h"
 #include "comm_data.h"
+#include "autocontrol.h"
 
 struct DWA_Trajectory
 {

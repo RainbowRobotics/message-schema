@@ -1,6 +1,6 @@
 #include "dockcontrol.h"
 
-namespace 
+namespace
 {
     const char* MODULE_NAME = "DOCK";
 }
@@ -68,11 +68,12 @@ void DOCKCONTROL::move()
         {
             DWA_TABLE = generate_dwa_traj_table(0.05 ,0.1, 0.01, -10.0, 10.0, 1.0, 0.02, 500); // 0.02 - 500
         }
-        
+
         //stop first
         stop();
+
         //obs clear -- delete renew
-        
+
         //set flags
         a_flag = true;
         undock_flag = false;
@@ -122,6 +123,7 @@ void DOCKCONTROL::a_loop()
     err_th_old = 0.0;
     err_v_old = 0.0;
 
+    log_info("docking_loop start");
     while(a_flag)
     {
         double pre_loop_time = get_time();
@@ -134,7 +136,7 @@ void DOCKCONTROL::a_loop()
 
         if(is_good_everything == DRIVING_FAILED)
         {
-            failed_flag =true;
+            failed_flag = true;
             failed_reason = "IS_GOOD_ERROR";
             fsm_state = DOCKING_FSM_FAILED;
         }
@@ -185,9 +187,9 @@ void DOCKCONTROL::a_loop()
 
         else if(fsm_state == DOCKING_FSM_POINTDOCK)
         {
-            double cmd_v =0.0;
-            double cmd_w =0.0;
-            double cmd_v_y =0.0;
+            double cmd_v = 0.0;
+            double cmd_w = 0.0;
+            double cmd_v_y = 0.0;
 
             if(oneque_dock)
             {
@@ -288,7 +290,7 @@ void DOCKCONTROL::a_loop()
                 Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
                 if(std::abs(dtdr(1)) < config->get_docking_goal_th())
-                {                    
+                {
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_DOCK;
                     path_flag = false;
@@ -331,12 +333,12 @@ void DOCKCONTROL::a_loop()
                         {
                             wait_start_time = get_time();
                             fsm_state = DOCKING_FSM_WAIT;
-                            
+
                             if(config->get_charge_type() == "XNERGY")
                             {
                                 int non_used_int = 0;
                                 mobile->xnergy_command(0, non_used_int);
-                                
+
                                 spdlog::info("[DOCKING] xnergy command charge start");
                             }
                         }
@@ -359,7 +361,6 @@ void DOCKCONTROL::a_loop()
                     }
                 }
             }
-
         }
 
         else if (fsm_state == DOCKING_FSM_WAIT)
@@ -388,6 +389,7 @@ void DOCKCONTROL::a_loop()
                 {
                     undock_flag = true;
                     undock_waiting_time = get_time();
+                    dock = false;
 
                     if(reverse_mode)
                     {
@@ -420,7 +422,6 @@ void DOCKCONTROL::a_loop()
                         //retry logic
                         dock_retry_flag = true;
                         fsm_state = DOCKING_FSM_FAILED;
-
                     }
                 }
             }
@@ -443,14 +444,18 @@ void DOCKCONTROL::a_loop()
             if(failed_flag)
             {
                 failed_flag = false;
+
                 DATA_DOCK ddock;
-                 ddock.id = cmd_id;
+                ddock.id = cmd_id;
                 ddock.command = "dock";
                 ddock.result = "fail";
                 ddock.message = failed_reason;
                 ddock.time = get_time();
 
                 Q_EMIT signal_dock_response(ddock);
+
+                log_info("DOCKING_FSM_FAILED->DOCKING_FSM_OFF");
+                fsm_state = DOCKING_FSM_OFF;
             }
 
             log_info("DOCKING_FSM_FAILED");
@@ -459,12 +464,15 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
         {
+
+            
             if(config->get_charge_type() == "XNERGY")
             {
                 double xnergy_set_current = config->get_xnergy_set_current();
-
-                mobile->xnergy_command(3, xnergy_set_current); 
+                mobile->xnergy_command(3, xnergy_set_current);
             }
+
+
             fsm_state = DOCKING_FSM_OFF;
 
             log_info("DOCKING_FSM_COMPLETE->DOCKING_FSM_OFF");
@@ -493,12 +501,12 @@ void DOCKCONTROL::b_loop()
 {
     const double dt = 0.02; // 50hz
 
-    log_info("undocking_loop start");
+    spdlog::info("[DOCKING] undocking loop start");
+
     while(b_flag)
     {
         double pre_loop_time = get_time();
         pre_loop_time = get_time();
-
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
@@ -506,11 +514,11 @@ void DOCKCONTROL::b_loop()
 
             if(get_time() - undock_time > t)
             {
-                dock = true; // undock done
+                dock = false; // undock done
 
-                //printf("[DOCKING] UNDOCK SUCCESS\n");
+                // todo -- have to add undock success request&response check logic
+
                 spdlog::info("[DOCKING] UNDOCK SUCCESS");
-
                 DATA_DOCK ddock;
                 ddock.id = cmd_id;
                 ddock.command = "undock";
@@ -518,9 +526,9 @@ void DOCKCONTROL::b_loop()
                 ddock.message = "";
                 ddock.time = get_time();
 
-                 Q_EMIT signal_dock_response(ddock);
-                fsm_state = DOCKING_FSM_OFF;
+                Q_EMIT signal_dock_response(ddock);
 
+                fsm_state = DOCKING_FSM_OFF;
                 log_info("DOCKING_FSM_UNDOCK->DOCKING_FSM_OFF");
                 break;
             }
@@ -529,21 +537,20 @@ void DOCKCONTROL::b_loop()
         else if (fsm_state == DOCKING_FSM_OFF)
         {
 
-        }
-        else
-        {
-            // never inter
-            //printf("[DOCKING] UNDOCK FAILED\n");
-            spdlog::info("[DOCKING] UNDOCK FAILED");
 
+        }
+        else if (fsm_state == DOCKING_FSM_UNDOCK_FAILED)
+        {
+            spdlog::info("[DOCKING] UNDOCK FAILED");
             DATA_DOCK ddock;
             ddock.id = cmd_id;
             ddock.command = "undock";
             ddock.result = "fail";
-            ddock.message = failed_reason;
+            ddock.message = "IS_GOOD_EVERYTHING CHECK FAILED";
             ddock.time = get_time();
 
             Q_EMIT signal_dock_response(ddock);
+            fsm_state = DOCKING_FSM_OFF;
         }
 
         // for real time loop
@@ -588,7 +595,8 @@ void DOCKCONTROL::stop()
     }
 
     mobile->move(0, 0, 0);
-    dock = false;
+
+    fsm_state = DOCKING_FSM_OFF;
     is_moving = false;
     is_pause = false;
     dock_retry_flag = false;
@@ -888,13 +896,13 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
             double head_th = std::atan2(y,x);
             double theta = std::atan2(dock_tf(1, 0), dock_tf(0, 0));
-            
+
             double head_err_th = fabs(head_th*180 / M_PI);
             double orein_err_th = fabs(theta*180.0 /M_PI);
-            
+
             bool condition;
 
-            
+
             if(reverse_mode)
             {
                 condition = orein_err_th <= 20.0 && head_err_th >= 160.0;
@@ -946,7 +954,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
         return out_;
     }
-    
+
     return out_;
 }
 
@@ -972,7 +980,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
             {
                 p1 = Eigen::Vector3d((config->get_robot_size_x_min() - x_offset), -0.225 - y_offset, 0.0);
                 p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.125, 0.0);
-                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0); 
+                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0);
                 p4 = Eigen::Vector3d(p3.x(), p3.y() + 0.22, 0.0);
             }
             else
@@ -1032,7 +1040,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
     {
 
         Eigen::Vector3d p1, p2, p3, p4;
-    
+
         if(config->get_charge_type() == "RAINBOW")
         {
             if(reverse_flag)
@@ -1040,7 +1048,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
                 // 후면 라이다 기준으로 좌표 변환 (x축 반대, y축 유지)
                 p1 = Eigen::Vector3d((config->get_robot_size_x_min() - config->get_docking_pointdock_margin() - x_offset), -0.225 - y_offset, 0.0);
                 p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.125, 0.0);
-                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0);  
+                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0);
                 p4 = Eigen::Vector3d(p3.x(), p3.y() + 0.22, 0.0);
             }
             else
@@ -1377,34 +1385,68 @@ bool DOCKCONTROL::is_everything_fine()
     // ToDo : safety function check
     MOBILE_STATUS mobile_status = mobile->get_status();
 
-    if(mobile_status.charge_state == 1)
+    QString wheel_type = config->get_robot_wheel_type();
+
+//    if(mobile_status.charge_state == 1)
+//    {
+//        logger->write_log("[DOCK] dock failed (charging)", "Red", true, false);
+//        spdlog::info("[DOCK] dock failed (charging)");
+//        return false;
+//    }
+
+    if(wheel_type == "DD")
     {
-        logger->write_log("[DOCK] dock failed (charging)", "Red", true, false);
-        spdlog::info("[DOCK] dock failed (charging)");
-        return false;
+        if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
+        {
+            logger->write_log("[DOCK] dock&undock failed (motor status is not 1)", "Red", true, false);
+            spdlog::info("[DOCK] dock&undock failed (motor status is not 1)");
+            return false;
+        }
+
+        if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
+        {
+            logger->write_log("[DOCK] dock&undock failed (motor not connection)", "Red", true, false);
+            spdlog::info("[DOCK] dock&undock failed (motor not connection)");
+            return false;
+        }
+
+        if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0)
+        {
+            logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
+            spdlog::info("[DOCK] dock failed (motor error)");
+            return false;
+        }
+    }
+    else if(wheel_type == "MECANUM")
+    {
+        if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1 || mobile_status.status_m2 > 1 || mobile_status.status_m3 > 1 )
+        {
+            logger->write_log("[DOCK] dock&undock failed (motor status is not 1)", "Red", true, false);
+            spdlog::info("[DOCK] dock&undock failed (motor status is not 1)");
+            return false;
+        }
+
+        if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1 || mobile_status.connection_m2 != 1 || mobile_status.connection_m3 != 1)
+        {
+            logger->write_log("[DOCK] dock&undock failed (motor not connection)", "Red", true, false);
+            spdlog::info("[DOCK] dock&undock failed (motor not connection)");
+            return false;
+        }
+
+        if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0 || mobile_status.status_m2 == 0 || mobile_status.status_m3 == 0)
+        {
+            logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
+            spdlog::info("[DOCK] dock failed (motor error)");
+            return false;
+        }
+    }
+    else
+    {
+
+        spdlog::info("[DOCK] dock&undock failed (don`t know wheel type)");
     }
 
-    if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
-    {
-        logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
-        spdlog::info("[DOCK] dock failed (motor not connected)");
-        return false;
-    }
 
-    if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
-    {
-        logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
-        spdlog::info("[DOCK] dock failed (emo pushed)");
-        return false;
-    }
-
-    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0)
-    {
-        logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
-        spdlog::info("[DOCK] dock failed (motor error)");
-        return false;
-    }
- 
     return true;
 }
 
@@ -1452,7 +1494,7 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     {
         d_err_th = (err_th - err_th_old) * dt;
         d_err_v = (err_d - err_v_old) * dt;
-        
+
         d_dist_x = (dist_x - dist_x_old) * dt;
         d_dist_y = (dist_y - dist_y_old) * dt;
     }
@@ -1462,7 +1504,7 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     {
 
         if (final_dock)
-        {       
+        {
             //final PID Controller
             double direction = 1.0;
 
@@ -1542,7 +1584,7 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
     {
         spdlog::info("[DOCKING] ycompensate");
-        
+
         //use odom frame
         Eigen::Matrix4d target_tf_ycompen = cur_pose.inverse()*first_aline;
 
@@ -1700,27 +1742,36 @@ bool DOCKCONTROL::undock()
     if(is_good_everything == DRIVING_FAILED)
     {
         mobile->move(0, 0, 0);
-        //printf("[DOCKING] something wrong (failed)\n");
         spdlog::error("[DOCKING] something wrong (failed)");
+
+        //undock something wrong
+        DATA_DOCK ddock;
+        ddock.id = cmd_id;
+        ddock.command = "undock";
+        ddock.result = "fail";
+        ddock.message = "IS_GOOD_EVERYTHING CHECK FAILED";
+        ddock.time = get_time();
+
+        Q_EMIT signal_dock_response(ddock);
         return false;
     }
-
     else
     {
+        //first stop
+        stop();
         // obs clear
         obsmap->clear();
         // start control loop
         b_flag = true;
         // start docking control loop
         fsm_state = DOCKING_FSM_UNDOCK;
+        
         b_thread = std::make_unique<std::thread>(&DOCKCONTROL::b_loop, this);
 
-        mobile->stop_charge();
+        dock = false;
         reverse_mode = config->get_docking_reverse_mode();
-
         if(reverse_mode)
         {
-
             mobile->move_linear_x((config->get_robot_size_x_max() + 0.08), 0.05);
         }
         else
@@ -1821,4 +1872,3 @@ double DOCKCONTROL::wrapToPi(double angle)
     while (angle < -M_PI) angle += 2.0 * M_PI;
     return angle;
 }
-

@@ -25,7 +25,8 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     mobile(nullptr),
     unimap(nullptr),
     obsmap(nullptr),
-    loc(nullptr)
+    loc(nullptr),
+    dockcontrol(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
     connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
@@ -496,6 +497,16 @@ void AUTOCONTROL::clear_path()
 
 void AUTOCONTROL::slot_move(DATA_MOVE msg)
 {
+
+    // interlock docking
+    bool is_docking = dockcontrol->get_dock_state();
+    if(is_moving || is_docking)
+    {
+        //already move flag is true so return
+        spdlog::info("[AUTO] Slot Move Failed {IS_MOVING is already true or docking state is true}");
+        return;
+    }
+
     back_mode = false;
 
     // fill goal node name
@@ -4498,4 +4509,9 @@ void AUTOCONTROL::set_localization_module(LOCALIZATION *_loc)
 void AUTOCONTROL::set_policy_module(POLICY* _policy)
 {
     policy = _policy;
+}
+
+void AUTOCONTROL::set_dockcontrol_module(DOCKCONTROL* _dockcontrol)
+{
+    dockcontrol = _dockcontrol;
 }

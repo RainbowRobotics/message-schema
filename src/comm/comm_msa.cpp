@@ -1188,13 +1188,13 @@ void COMM_MSA::send_lidar_2d()
 
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-    
+
     // Validate pose data
     if(std::isnan(cur_xi[0]) || std::isnan(cur_xi[1]) || std::isnan(cur_xi[2]))
     {
         return;
     }
-    
+
     if(pts.size() > 0)
     {
         sio::object_message::ptr rootObject = sio::object_message::create();
@@ -1238,7 +1238,7 @@ void COMM_MSA::send_lidar_2d()
         // Fill missing points and create json array
         Eigen::Vector3d last_valid_pt(0, 0, 0);
         bool has_valid_pt = false;
-        
+
         for(int i=0; i<360; i++)
         {
             // Update last valid point if current point is valid
@@ -1489,12 +1489,10 @@ void COMM_MSA::send_status()
     {
         return;
     }
-
     // Creating the JSON object
+    //    QJsonObject rootObj;
     sio::object_message::ptr rootObj = sio::object_message::create();
-
     MOBILE_STATUS ms = mobile->get_status();
-
     // Adding the imu object
     Eigen::Vector3d imu = mobile->get_imu();
     sio::object_message::ptr imuObj = sio::object_message::create();
@@ -1507,44 +1505,38 @@ void COMM_MSA::send_status()
     imuObj->get_map()["imu_rx"] = sio::double_message::create(imu[0] * R2D);
     imuObj->get_map()["imu_ry"] = sio::double_message::create(imu[1] * R2D);
     imuObj->get_map()["imu_rz"] = sio::double_message::create(imu[2] * R2D);
-
     rootObj->get_map()["imu"] = imuObj;
-
     // Adding the motor array
     sio::array_message::ptr motorArray = sio::array_message::create();
-
     sio::object_message::ptr motorObj1 = sio::object_message::create();
-    motorObj1->get_map()["connection"] = sio::bool_message::create((ms.connection_m0 == 1) ? "true" : "false");
+    motorObj1->get_map()["connection"] = sio::bool_message::create((ms.connection_m0 == 1) ? true : false);
     motorObj1->get_map()["status"]     = sio::double_message::create(ms.status_m0);
     motorObj1->get_map()["temp"]       = sio::double_message::create(ms.temp_m0);
     motorObj1->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m0) / 10.0);
     motorArray->get_vector().push_back(motorObj1);
-
     sio::object_message::ptr motorObj2 = sio::object_message::create();
-    motorObj2->get_map()["connection"] = sio::bool_message::create((ms.connection_m1 == 1) ? "true" : "false");
+    motorObj2->get_map()["connection"] = sio::bool_message::create((ms.connection_m1 == 1) ? true : false);
     motorObj2->get_map()["status"]     = sio::double_message::create(ms.status_m1);
     motorObj2->get_map()["temp"]       = sio::double_message::create(ms.temp_m1);
     motorObj2->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m1) / 10.0);
     motorArray->get_vector().push_back(motorObj2);
-    
-    if(config->get_robot_wheel_type() == "MECANUM")
+    RobotModel robot_model = config->get_robot_model();
+    if(robot_model == RobotModel::MECANUM)
     {
         sio::object_message::ptr motorObj3 = sio::object_message::create();
-        motorObj3->get_map()["connection"] = sio::bool_message::create((ms.connection_m2 == 1) ? "true" : "false");
+        motorObj3->get_map()["connection"] = sio::bool_message::create((ms.connection_m2 == 1) ? true : false);
         motorObj3->get_map()["status"]     = sio::double_message::create(ms.status_m2);
         motorObj3->get_map()["temp"]       = sio::double_message::create(ms.temp_m2);
         motorObj3->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m2) / 10.0);
-        motorArray->get_vector().push_back(motorObj1);
-
+        motorArray->get_vector().push_back(motorObj3);
         sio::object_message::ptr motorObj4 = sio::object_message::create();
-        motorObj4->get_map()["connection"] = sio::bool_message::create((ms.connection_m3 == 1) ? "true" : "false");
+        motorObj4->get_map()["connection"] = sio::bool_message::create((ms.connection_m3 == 1) ? true : false);
         motorObj4->get_map()["status"]     = sio::double_message::create(ms.status_m3);
         motorObj4->get_map()["temp"]       = sio::double_message::create(ms.temp_m3);
         motorObj4->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m3) / 10.0);
         motorArray->get_vector().push_back(motorObj4);
     }
     rootObj->get_map()["motor"] = motorArray;
-
     // Adding the condition object
     Eigen::Vector2d ieir = loc->get_cur_ieir();
     sio::object_message::ptr conditionObj = sio::object_message::create();
@@ -1553,12 +1545,10 @@ void COMM_MSA::send_status()
     conditionObj->get_map()["mapping_error"] = sio::double_message::create(ieir[0]);
     conditionObj->get_map()["mapping_ratio"] = sio::double_message::create(ieir[1]);
     rootObj->get_map()["condition"] = conditionObj;
-
     // Adding the state object
     QString cur_loc_state = loc->get_cur_loc_state();
     QString charge_st_string = "none";
-
-    RobotModel robot_model = config->get_robot_model();
+    //    RobotModel robot_model = config->get_robot_model();
     if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
@@ -1598,18 +1588,16 @@ void COMM_MSA::send_status()
         }
     }
     bool is_dock = dctrl->get_dock_state();
-
-    sio::object_message::ptr robotStateObj   = sio::object_message::create();
+    sio::object_message::ptr robotStateObj  = sio::object_message::create();
     robotStateObj->get_map()["charge"]       = sio::string_message::create(charge_st_string.toStdString());
-    robotStateObj->get_map()["dock"]         = sio::bool_message::create((is_dock == true) ? "true" : "false");
-    robotStateObj->get_map()["emo"]          = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
-    robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString());
-    robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
+    robotStateObj->get_map()["dock"]         = sio::bool_message::create((is_dock == true) ? true : false);
+    robotStateObj->get_map()["emo"]          = sio::bool_message::create(ms.safety_state_emo_pressed_1 || ms.safety_state_emo_pressed_2);
+    robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
+    robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? true : false);
     robotStateObj->get_map()["sss_recovery"] = sio::bool_message::create(ms.sss_recovery_state == 1);
     robotStateObj->get_map()["sw_reset"]     = sio::bool_message::create(ms.sw_reset == 1);
     robotStateObj->get_map()["sw_stop"]      = sio::bool_message::create(ms.sw_stop == 1);
     robotStateObj->get_map()["sw_start"]     = sio::bool_message::create(ms.sw_start == 1);
-
     robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
                 ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
     robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
@@ -1617,17 +1605,15 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["sf_operational_stop"] = sio::bool_message::create(
                 ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
-
-    auto toSioArray = [](unsigned char arr[8]) 
+    auto toSioArray = [](unsigned char arr[8])
     {
         sio::array_message::ptr jsonArr = sio::array_message::create();
-        for(int i = 0; i < 8; ++i)
+        for (int i = 0; i < 8; ++i)
         {
             jsonArr->get_vector().push_back(sio::int_message::create(arr[i]));
         }
         return jsonArr;
     };
-
     //    QJsonObject robotIOObj;
     sio::object_message::ptr robotIOObj = sio::object_message::create();
     robotIOObj->get_map()["mcu0_dio"] = toSioArray(ms.mcu0_dio);
@@ -1635,7 +1621,6 @@ void COMM_MSA::send_status()
     robotIOObj->get_map()["mcu0_din"] = toSioArray(ms.mcu0_din);
     robotIOObj->get_map()["mcu1_din"] = toSioArray(ms.mcu1_din);
     rootObj->get_map()["robot_safety_io_state"]  = robotIOObj;
-
     // Adding the power object
     sio::object_message::ptr powerObj = sio::object_message::create();
     powerObj->get_map()["bat_in"]         = sio::double_message::create(ms.bat_in);
@@ -1665,12 +1650,11 @@ void COMM_MSA::send_status()
         powerObj->get_map()["contact_voltage"] = sio::double_message::create(0.0);
     }
     rootObj->get_map()["power"] = powerObj;
-
     sio::object_message::ptr settingObj = sio::object_message::create();
     settingObj->get_map()["platform_type"] = sio::string_message::create(config->get_robot_type_str().toStdString());
     settingObj->get_map()["platform_name"] = sio::string_message::create("");
     rootObj->get_map()["setting"] = settingObj;
-
+    sio::object_message::ptr mapObj = sio::object_message::create();
     QString map_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED)
     {
@@ -1681,7 +1665,6 @@ void COMM_MSA::send_status()
             map_name = unimap->get_map_path().split("/").last();
         }
     }
-
     QString map_status = "";
     int is_loaded = static_cast<int>(unimap->get_is_loaded());
     if(is_loaded == MAP_NOT_LOADED)
@@ -1696,26 +1679,23 @@ void COMM_MSA::send_status()
     {
         map_status = "loaded";
     }
-
-    sio::object_message::ptr mapObj = sio::object_message::create();
-    mapObj->get_map()["map_name"]   = sio::string_message::create(map_name.toStdString());
-    mapObj->get_map()["map_status"] = sio::string_message::create(map_status.toStdString());
+    mapObj->get_map()["map_name"]   =  sio::string_message::create(map_name.toStdString());
+    mapObj->get_map()["map_status"] =  sio::string_message::create(map_status.toStdString());
     rootObj->get_map()["map"] = mapObj;
-
     // usb temp sensor
-    sio::object_message::ptr tempObj  = sio::object_message::create();
-    tempObj->get_map()["connection"]  = sio::double_message::create(ms.bat_in);
+    sio::object_message::ptr tempObj = sio::object_message::create();
+    tempObj->get_map()["connection"] = sio::double_message::create(ms.bat_in);
     tempObj->get_map()["temp_sensor"] = sio::double_message::create(ms.bat_out);
-
     // Adding the time object
     const double time = get_time0();
     rootObj->get_map()["time"] = sio::double_message::create(static_cast<long long>(time * 1000));
-
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "status";
-    socket_msg.data  = rootObj;
+    socket_msg.data = rootObj;  // 타입 그대로 전달
     send_status_queue.push(socket_msg);
 }
+
+
 
 void COMM_MSA::send_move_response(const DATA_MOVE& msg)
 {
@@ -2608,7 +2588,7 @@ void COMM_MSA::handle_load_topo(DATA_LOAD& msg)
     // Load topo
     log_info("Loading topo from: {}", topo_path.toStdString());
     bool success = unimap->load_topo();
-    
+
     if(success)
     {
         msg.result = "accept";
@@ -2620,7 +2600,7 @@ void COMM_MSA::handle_load_topo(DATA_LOAD& msg)
         msg.result = "reject";
         log_error("Failed to load topo.json");
     }
-    
+
     send_load_response(msg);
 }
 

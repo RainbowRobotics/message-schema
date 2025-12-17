@@ -374,6 +374,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_string(obj_dock, "CHARGE_TYPE", CHARGE_TYPE, "docking");
     check_and_set_int(obj_dock, "DOCKING_FIELD", DOCKING_FIELD, "docking");
     check_and_set_double(obj_dock, "XNERGY_SET_CURRENT", XNERGY_SET_CURRENT, "docking");
+    check_and_set_int(obj_dock, "DOCKING_RETRY_COUNT", DOCKING_RETRY_COUNT, "docking");
 }
 
 void CONFIG::load_safety_config(const QJsonObject &obj)
@@ -2981,4 +2982,10 @@ double CONFIG::get_qa_stop_min_distance()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return QA_STOP_MIN_DISTANCE;
+}
+
+int CONFIG::get_docking_retry_count()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_RETRY_COUNT;
 }
