@@ -14,6 +14,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "policy.h"
+#include "dockcontrol.h"
 
 // forward declaration
 class DOCKCONTROL;

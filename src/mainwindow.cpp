@@ -3108,13 +3108,6 @@ void MainWindow::watch_loop()
             int led_state = led_handler();
             MOBILE::instance()->led(0, led_state);
 
-            // CEHCK Charge_state
-            bool is_dock = DOCKCONTROL::instance()->get_dock_state();
-            qDebug() << "is_dock :" << is_dock;
-
-            bool moving_flag = AUTOCONTROL::instance()->get_is_moving();
-            qDebug() << "moving flag:" << moving_flag;
-
             // speaker logic
             if(CONFIG::instance()->get_robot_use_speaker() == true)
             {
