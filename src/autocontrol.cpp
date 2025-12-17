@@ -1,4 +1,5 @@
 #include "autocontrol.h"
+#include "dockcontrol.h"
 
 namespace
 {
