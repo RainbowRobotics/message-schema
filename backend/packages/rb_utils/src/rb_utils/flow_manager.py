@@ -1,5 +1,6 @@
 import ast
 import asyncio
+import builtins
 import inspect
 import math
 import operator
@@ -323,3 +324,23 @@ def eval_value(
 
     # 5) 나머지(int/float/bool/None 등)는 그대로
     return value
+
+DENY_BUILTINS = {
+    "__import__",  # import 막기 (이거 열리면 끝)
+    "open",        # 파일 접근
+    "input",       # 서버에서 대기 위험
+    "eval", "exec", "compile",  # 자기 실행 계열
+    "globals", "locals", "vars",  # 탐색/우회 보조
+    "breakpoint",  # 디버거
+}
+
+
+def make_builtins_allow_most():
+    """위험하지 않은 모든 내장 함수를 허용하는 딕셔너리를 생성"""
+    safe = dict(builtins.__dict__)
+
+    for k in list(safe.keys()):
+        if k in DENY_BUILTINS:
+            safe.pop(k, None)
+
+    return safe
