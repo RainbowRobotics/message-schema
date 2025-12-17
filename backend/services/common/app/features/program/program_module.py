@@ -35,6 +35,7 @@ from rb_flow_manager.step import Step
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
 from rb_resources.file import read_json_file
+from rb_sdk.manipulate import RBManipulateSDK
 from rb_utils.asyncio_helper import fire_and_log
 from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
@@ -56,6 +57,7 @@ from .program_schema import (
     Request_Delete_TasksPD,
     Request_Get_Script_ContextPD,
     Request_Load_ProgramPD,
+    Request_Preview_Reset_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
     Request_Program_Dialog,
@@ -71,6 +73,8 @@ from .program_schema import (
 _executor: ScriptExecutor | None = None
 _zenoh_controller: Zenoh_Controller | None = None
 
+
+rb_manipulate_sdk = RBManipulateSDK()
 
 def _get_zenoh_controller() -> Zenoh_Controller:
     global _zenoh_controller
@@ -113,12 +117,6 @@ class ProgramService(BaseService):
         self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
-        fire_and_log(
-            socket_client.emit(
-                "program/play_state", {"playState": self._play_state, "stepMode": self._step_mode, "error": None}
-            )
-        )
-
     async def call_resume_or_pause(
         self,
         *,
@@ -146,8 +144,6 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
-
-            self.script_executor.pause_all()
         else:
             res_manipulate_resume_or_pause = zenoh_client.query_one(
                 "*/call_resume",
@@ -155,8 +151,6 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
-
-            self.script_executor.resume_all()
 
         # if program_id:
         #     await self.update_program_state(program_id=program_id, state=state, db=db)
@@ -237,10 +231,10 @@ class ProgramService(BaseService):
         }[state]
 
     def get_play_state(self):
+        all_states = self.script_executor.get_all_states()
+
         return {
-            "playState": self._play_state,
-            "taskPlayState": self._task_play_state,
-            "stepMode": self._step_mode,
+            "states": all_states,
         }
 
     def update_executor_state(self, state: int, error: str | None = None) -> None:
@@ -457,6 +451,7 @@ class ProgramService(BaseService):
 
         for s in prepped_steps:
             s["parentStepId"] = resolve_ref(s.get("parentStepId"))
+            s["targetStepId"] = resolve_ref(s.get("targetStepId"))
             if "syncStepIds" in s and s["syncStepIds"]:
                 s["syncStepIds"] = [resolve_ref(x) for x in s["syncStepIds"]]
 
@@ -679,8 +674,8 @@ class ProgramService(BaseService):
             task_id,
             task_doc["scriptName"],
             program_doc["repeatCnt"],
-            task_doc["robotModel"],
-            task_doc.get("begin", None),
+            robot_model=task_doc["robotModel"],
+            begin=task_doc.get("begin", None),
         )
 
         os.makedirs(task_doc["scriptPath"], exist_ok=True)
@@ -734,6 +729,7 @@ class ProgramService(BaseService):
         task_id: str,
         script_name: str,
         repeat_count: int,
+        *,
         robot_model: str | None = None,
         begin: MainTaskBegin | None = None,
     ):
@@ -754,6 +750,7 @@ class ProgramService(BaseService):
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )
+
 
         header_context += "zenoh_controller = Zenoh_Controller()\n\n"
         header_context += "executor = ScriptExecutor(controller=zenoh_controller)\n\n"
@@ -798,6 +795,7 @@ class ProgramService(BaseService):
         request_dict = t_to_dict(request)
         task_id = request_dict["taskId"]
         steps_tree = request_dict["steps"]
+        begin = request_dict.get("begin", None)
 
         task_col = db["tasks"]
         program_col = db["programs"]
@@ -819,8 +817,8 @@ class ProgramService(BaseService):
             task_id,
             task_doc["scriptName"],
             program_doc["repeatCnt"],
-            task_doc["robotModel"],
-            task_doc.get("begin", None),
+            robot_model=task_doc["robotModel"],
+            begin=begin,
         )
 
         return {
@@ -901,8 +899,8 @@ class ProgramService(BaseService):
                 if task.get("type") == TaskType.SUB and parent_task_id is None:
                     raise HTTPException(status_code=400, detail="Sub task must have parentTaskId")
 
-                if task.get("type") == TaskType.MAIN and task.get("begin") is None:
-                    raise HTTPException(status_code=400, detail="Main task must have begin")
+                # if task.get("type") == TaskType.MAIN and task.get("begin") is None:
+                #     raise HTTPException(status_code=400, detail="Main task must have begin")
 
                 if not task["scriptPath"]:
                     task["scriptPath"] = str((self._script_base_path).resolve())
@@ -1593,7 +1591,7 @@ class ProgramService(BaseService):
 
             robot_model = task_doc["robotModel"]
             category = self._robot_models[robot_model].get("be_service", None)
-            begin = task_doc.get("begin", None)
+            begin = script.get("begin", None)
 
             tree = self.build_tree_from_client(steps_tree, task_id, robot_model, category, begin)
 
@@ -1620,6 +1618,58 @@ class ProgramService(BaseService):
             )
 
         self._step_mode = step_mode
+
+        return {
+            "status": "success",
+        }
+
+    async def preview_reset_program(self, request: Request_Preview_Reset_ProgramPD, db: MongoDB):
+        request_dict = t_to_dict(request)
+        scripts = request_dict["scripts"]
+
+        tasks_col = db["tasks"]
+
+        tree_list = []
+
+        for script in scripts:
+            task_id = script["taskId"]
+            repeat_count = 1
+            steps_tree = []
+
+            task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+
+            if not task_doc:
+                raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+            robot_model = task_doc["robotModel"]
+            category = self._robot_models[robot_model].get("be_service", None)
+            begin = script.get("begin", {
+                "is_enable": True,
+                "position": [0,0,0,0,0,0,0],
+            })
+
+            tree = self.build_tree_from_client(steps_tree, task_id, robot_model, category, begin)
+
+            tree_list.append(
+                {
+                    "taskId": task_id,
+                    "tree": tree,
+                    "repeat_count": repeat_count,
+                    "robot_model": robot_model,
+                    "category": category,
+                }
+            )
+
+        for tree in tree_list:
+            self.script_executor.start(
+                tree["taskId"],
+                tree["tree"],
+                tree["repeat_count"],
+                robot_model=tree["robot_model"],
+                category=tree["category"],
+                step_mode=False,
+                is_ui_execution=True,
+            )
 
         return {
             "status": "success",
@@ -1889,3 +1939,37 @@ class ProgramService(BaseService):
             rb_log.debug(content, disable_db=False)
         elif log_level == "GENERAL":
             rb_log.general(content, disable_db=False)
+
+    async def at_program_start(self, task_id: str, db: MongoDB):
+        """
+        Program 시작 시 실행하는 함수.
+        """
+
+        tasks_col = db["tasks"]
+        task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+
+        if not task_doc:
+            raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+        robot_model = task_doc["robotModel"]
+        be_service = self._robot_models[robot_model].get("be_service", None)
+
+        if be_service == "manipulate":
+            rb_manipulate_sdk.call_program_before(robot_model=robot_model, option=0)
+
+    async def at_program_end(self, task_id: str, db: MongoDB):
+        """
+        Program 종료 시 실행하는 함수.
+        """
+
+        tasks_col = db["tasks"]
+        task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+
+        if not task_doc:
+            raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+        robot_model = task_doc["robotModel"]
+        be_service = self._robot_models[robot_model].get("be_service", None)
+
+        if be_service == "manipulate":
+            rb_manipulate_sdk.call_program_after(robot_model=robot_model, option=0)

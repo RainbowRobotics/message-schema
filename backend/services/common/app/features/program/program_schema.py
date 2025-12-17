@@ -36,6 +36,7 @@ class Step_Base(BaseModel):
     funcName: str | None = Field(default=None)
     summary: str | None = Field(default=None)
     doneScript: str | None = Field(default=None)
+    notAstEval: bool = Field(default=False)
     order: int
     color: str | None = Field(default=None)
     highlight: bool = Field(default=False)
@@ -288,8 +289,12 @@ class Client_StepPD(Omit(Step_Tree_Base, "order", "createdAt", "updatedAt")):
 class Client_Script_InfoPD(BaseModel):
     taskId: str
     repeatCount: int
+    begin: MainTaskBegin | None = Field(default=None)
     steps: list[Client_StepPD]
     stepMode: bool = Field(default=False)
+
+class Client_Script_Reset_InfoPD(Pick(Client_Script_InfoPD, "taskId", "begin")):
+    begin: MainTaskBegin
 
 
 class Request_Preview_Start_ProgramPD(BaseModel):
@@ -297,6 +302,10 @@ class Request_Preview_Start_ProgramPD(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
+class Request_Preview_Reset_ProgramPD(BaseModel):
+    scripts: list[Client_Script_Reset_InfoPD]
+
+    model_config = ConfigDict(extra="ignore")
 
 class Request_Preview_Stop_ProgramPD(BaseModel):
     taskIds: list[str]
@@ -304,6 +313,7 @@ class Request_Preview_Stop_ProgramPD(BaseModel):
 
 class Request_Get_Script_ContextPD(BaseModel):
     taskId: str
+    begin: MainTaskBegin | None = Field(default=None)
     steps: list[Client_StepPD]
 
 
@@ -313,11 +323,23 @@ class PlayState(str, Enum):
     STOP = "stop"
     IDLE = "idle"
 
+class TaskState(TypedDict):
+    state: RB_Flow_Manager_ProgramState
+    current_step_id: str
+    robot_model: str
+    category: str
+    generation: int
+    step_mode: bool
+    is_ui_execution: bool
+    current_step_name: str
+    total_repeat: int
+    current_repeat: int
+    condition_map: dict[str, Any]
+    is_alive: bool
+    step: Step_Tree_Base
 
 class Response_Get_Current_Program_StatePD(BaseModel):
-    playState: PlayState
-    taskPlayState: dict[str, PlayState]
-    stepMode: bool
+    states: dict[str, TaskState]
 
 class Request_Program_Dialog(TypedDict):
     task_id: str

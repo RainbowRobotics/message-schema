@@ -14,6 +14,8 @@ from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Updat
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
+from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
+from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
 
@@ -25,6 +27,15 @@ zenoh_program_router = ZenohRouter()
 
 program_service = ProgramService()
 
+@zenoh_program_router.subscribe("rrs/program/at_start", flatbuffer_obj_t=Request_Program_At_StartT, opts=SubscribeOptions(allowed_same_sender=True))
+async def on_program_at_start(*, topic, mv, obj, attachment):
+    db = await get_db()
+    return await program_service.at_program_start(task_id=obj["taskId"], db=db)
+
+@zenoh_program_router.subscribe("rrs/program/at_end", flatbuffer_obj_t=Request_Program_At_EndT, opts=SubscribeOptions(allowed_same_sender=True))
+async def on_program_at_end(*, topic, mv, obj, attachment):
+    db = await get_db()
+    return await program_service.at_program_end(task_id=obj["taskId"], db=db)
 
 @zenoh_program_router.subscribe("rrs/pause", opts=SubscribeOptions(allowed_same_sender=True))
 async def on_pause(*, topic, mv, obj, attachment):
