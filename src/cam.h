@@ -33,7 +33,7 @@ public:
     void close();
 
     // restart cam module
-    void restart();
+    void restart(int idx);
 
     /***********************
      * interface funcs
@@ -59,6 +59,10 @@ public:
     void set_mobile_module(MOBILE* _mobile);
 
     std::vector<bool> get_rtsp_flag();
+
+    // params
+    std::atomic<bool> is_connected[max_cam_cnt];
+    std::atomic<double> cam_t[max_cam_cnt];
 
 private:
     explicit CAM(QObject *parent = nullptr);
@@ -87,7 +91,6 @@ private:
     TIME_PTS filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER);
 
     // params
-    std::atomic<bool> is_connected[max_cam_cnt];
     std::atomic<double> process_time_post[max_cam_cnt];
 
     TIME_IMG cur_time_img[max_cam_cnt];

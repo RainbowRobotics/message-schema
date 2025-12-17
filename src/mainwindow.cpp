@@ -501,6 +501,7 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
         AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
+        AUTOCONTROL::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -2026,8 +2027,20 @@ void MainWindow::bt_AutoResume()
 //docking
 void MainWindow::bt_DockStart()
 {
+
+    bool moving_flag = AUTOCONTROL::instance()->get_is_moving();
+
+    if(moving_flag)
+    {
+        spdlog::info("[DOCK] Dock Start Failed {IS_MOVING is true}");
+        return;
+    }
+
     //spdlog::info("[DOCK] bt_DockStart");
     log_info("[DOCK] bt_DockStart");
+
+    //retry var set
+    dock_retry_count = 0;
 
     int d_field = CONFIG::instance()->get_docking_field();
     if(d_field == -1)
@@ -2038,6 +2051,7 @@ void MainWindow::bt_DockStart()
     {
         MOBILE::instance()->setlidarfield(d_field);
     }
+
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->move();
 }
@@ -2059,31 +2073,43 @@ void MainWindow::bt_DockStop()
 
 void MainWindow::bt_UnDockStart()
 {
-    //spdlog::info("[DOCK] bt_UnDockStart");
-    log_info("[DOCK] bt_UnDockStart");
+    bool dock_fsm_state = DOCKCONTROL::instance()->get_dock_fsm_state();
 
-    int d_field = CONFIG::instance()->get_docking_field();
-    if(d_field == -1)
+    spdlog::info("[DOCK] bt_UnDockStart");
+
+    if(dock_fsm_state == DOCKING_FSM_OFF)
     {
-        MOBILE::instance()->set_detect_mode(0.0);
+        spdlog::info("[DOCK] UnDock Start");
+
+        int d_field = CONFIG::instance()->get_docking_field();
+
+        if(d_field == -1)
+        {
+            MOBILE::instance()->set_detect_mode(0.0);
+        }
+        else
+        {
+            MOBILE::instance()->setlidarfield(d_field);
+        }
+
+        DOCKCONTROL::instance()->undock();
+
+        double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            AUTOCONTROL::instance()->set_is_moving(false);
+        });
     }
     else
     {
-        MOBILE::instance()->setlidarfield(d_field);
+        spdlog::info("[DOCK] UnDock Failed {DOCK_FSM_STATE is not OFF}");
     }
-
-    DOCKCONTROL::instance()->undock();
-
-    double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
-    QTimer::singleShot(t*1000, [&]()
-    {
-        AUTOCONTROL::instance()->set_is_moving(false);
-        DOCKCONTROL::instance()->stop();
-    });
 }
 
 void MainWindow::bt_ChgTrig()
 {
+
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
 
@@ -2196,7 +2222,10 @@ void MainWindow::bt_SetLidarField()
 
 void MainWindow::bt_Test()
 {
-    CAM::instance()->restart();
+    for(int i = 0; i < CONFIG::instance()->get_cam_num(); i++)
+    {
+        CAM::instance()->restart(i);
+    }
 }
 
 void MainWindow::bt_TestLed()
@@ -2993,6 +3022,8 @@ void MainWindow::watch_loop()
     int cnt = 0;
     int speaker_cnt = 0;
     int loc_fail_cnt = 0;
+    int cam_fail_cnt[CONFIG::instance()->get_cam_num()];
+    double pre_cam_t[CONFIG::instance()->get_cam_num()];
     double last_sync_time = 0;
 
     bool is_first_emo_check = true;
@@ -3063,9 +3094,11 @@ void MainWindow::watch_loop()
             plot_safety();
             //For sem docking retry logic
             bool retry_flag = DOCKCONTROL::instance()->get_dock_retry_flag();
+            int retry_max_count = CONFIG::instance()->get_docking_retry_count();
 
-            if(retry_flag)
+            if(retry_flag && dock_retry_count < retry_max_count)
             {
+                dock_retry_count++;
                 DOCKCONTROL::instance()->stop();
                 DOCKCONTROL::instance()->move();
                 DOCKCONTROL::instance()->set_dock_retry_flag(false);
@@ -3201,6 +3234,31 @@ void MainWindow::watch_loop()
                         loc_fail_cnt = 0;
                         LOCALIZATION::instance()->set_cur_loc_state("good");
                     }
+                }
+            }
+
+            // check cam
+            if(CONFIG::instance()->get_use_cam())
+            {
+                for(int idx = 0; idx < CONFIG::instance()->get_cam_num(); idx++)
+                {
+                    double cur_cam_t = CAM::instance()->cam_t[idx].load();
+                    if(cur_cam_t == pre_cam_t[idx] && cur_cam_t != 0)
+                    {
+                        cam_fail_cnt[idx]++;
+                        if(cam_fail_cnt[idx] > 3)
+                        {
+                            log_info("CAM timeout detected, idx:{}, t:{}", idx, cur_cam_t);
+                            cam_fail_cnt[idx] = 0;
+                            CAM::instance()->restart(idx);
+                        }
+                    }
+                    else
+                    {
+                        cam_fail_cnt[idx] = 0;
+                    }
+
+                    pre_cam_t[idx] = cur_cam_t;
                 }
             }
         }
@@ -4263,8 +4321,21 @@ void MainWindow::plot_process_time()
     {
         if(CAM::instance())
         {
-            double cam_post_time = CAM::instance()->get_process_time_post(0) * 1000;
-            cam_time_str = QString::asprintf("[CAM] post:%.3f\n", cam_post_time);
+            int cam_num = CONFIG::instance()->get_cam_num();
+
+            QString post_str;
+            for(int i = 0; i < cam_num; i++)
+            {
+                double cam_post_time = CAM::instance()->get_process_time_post(i) * 1000.0;
+
+                post_str += QString::asprintf("%.3f", cam_post_time);
+
+                if(i < cam_num - 1)
+                {
+                    post_str += ",";
+                }
+            }
+             cam_time_str = QString("[CAM] %1)\n").arg(post_str);
         }
     }
 

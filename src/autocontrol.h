@@ -14,6 +14,10 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "policy.h"
+#include "dockcontrol.h"
+
+// forward declaration
+class DOCKCONTROL;
 
 // qt
 #include <QObject>
@@ -156,7 +160,7 @@ public:
     void set_obsmap_module(OBSMAP* _obsmap);
     void set_localization_module(LOCALIZATION* _localization);
     void set_policy_module(POLICY* _policy);
-
+    void set_dockcontrol_module(DOCKCONTROL* _dockcontrol);
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
     void slot_move(DATA_MOVE msg);
@@ -183,7 +187,7 @@ private:
     OBSMAP* obsmap;
     LOCALIZATION* loc;
     POLICY* policy;
-
+    DOCKCONTROL* dockcontrol;
     // control params
     CTRL_PARAM params;
 

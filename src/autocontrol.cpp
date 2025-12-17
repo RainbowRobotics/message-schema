@@ -25,7 +25,8 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     mobile(nullptr),
     unimap(nullptr),
     obsmap(nullptr),
-    loc(nullptr)
+    loc(nullptr),
+    dockcontrol(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
     connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
@@ -178,8 +179,8 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
 void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time)
 {
     std::lock_guard<std::mutex> lock(path_mtx);
-    global_node_path = std::move(_global_node_path);
-    global_step      = std::move(_global_step);
+    global_node_path = _global_node_path;
+    global_step      = _global_step;
     global_preset    = _global_preset;
 
     if(_global_path_time != global_path_time)
@@ -496,6 +497,16 @@ void AUTOCONTROL::clear_path()
 
 void AUTOCONTROL::slot_move(DATA_MOVE msg)
 {
+
+    // interlock docking
+    bool is_docking = dockcontrol->get_dock_state();
+    if(is_moving || is_docking)
+    {
+        //already move flag is true so return
+        spdlog::info("[AUTO] Slot Move Failed {IS_MOVING is already true or docking state is true}");
+        return;
+    }
+
     back_mode = false;
 
     // fill goal node name
@@ -4461,7 +4472,7 @@ void AUTOCONTROL::node_loop()
         process_time_node = delta_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    //logger->write_log("[NODE] node loop stop");
+
     log_info("node loop stop");
 }
 
@@ -4498,4 +4509,9 @@ void AUTOCONTROL::set_localization_module(LOCALIZATION *_loc)
 void AUTOCONTROL::set_policy_module(POLICY* _policy)
 {
     policy = _policy;
+}
+
+void AUTOCONTROL::set_dockcontrol_module(DOCKCONTROL* _dockcontrol)
+{
+    dockcontrol = _dockcontrol;
 }

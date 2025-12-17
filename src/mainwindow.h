@@ -150,7 +150,8 @@ public:
    QString map_dir = "";
 
    QString path_append_id = "";
-
+   int dock_retry_count = 0;
+   
     // plot funcs
     void plot_map();
     void plot_node();

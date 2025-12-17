@@ -9,6 +9,7 @@ struct SOCKET_MESSAGE
     QString event;
     sio::message::ptr data;
 };
+
 struct DATA_MOVE
 {
     double time;               // timestamp

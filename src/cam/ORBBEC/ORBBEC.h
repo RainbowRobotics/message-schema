@@ -39,7 +39,7 @@ public:
     void close();
 
     // restart ORBBEC module
-    void restart();
+    void restart(int idx);
 
     /***********************
      * interface funcs
@@ -61,6 +61,9 @@ public:
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
 
+    std::atomic<bool> is_connected[max_cam_cnt];
+    std::atomic<double> cam_t[max_cam_cnt];
+
 private:
     explicit ORBBEC(QObject *parent = nullptr);
     ~ORBBEC();
@@ -77,7 +80,7 @@ private:
     void grab_loop(int idx);
 
     // value
-    std::atomic<bool> is_connected[max_cam_cnt];
+    // std::atomic<bool> is_connected[max_cam_cnt];
     std::atomic<bool> is_param_loaded[max_cam_cnt];
 
     cv::Mat cur_img[max_cam_cnt];
@@ -101,10 +104,10 @@ private:
 
 
 Q_SIGNALS:
-    void signal_restart();
+    void signal_restart(int idx);
 
 private Q_SLOTS:
-    void slot_restart();
+    void slot_restart(int idx);
 };
 
 #endif // ORBBEC_H
