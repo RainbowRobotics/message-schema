@@ -400,9 +400,9 @@ void COMM_MSA::reconnect_loop()
     }
 
     is_connecting = true;
-    
+
     log_info("attempting to connect to MSA server");
-    
+
     io->connect("ws://localhost:15001");
 //  io->connect("ws://10.108.1.31:15001");
     // socket("slamnav")
@@ -413,7 +413,7 @@ void COMM_MSA::connected()
     if(!is_connected)
     {
         is_connected = true;
-        is_connecting = false; 
+        is_connecting = false;
         log_info("connected to MSA server");
 
         if(!ctrl)
@@ -964,9 +964,23 @@ void COMM_MSA::handle_control_cmd(const QJsonObject &data)
     {
         msg.safetyField     = data["safetyField"].toString();
     }
-    else if(msg.command == DATA_CONTROL::ResetSafetyField)
+    else if(msg.command == DATA_CONTROL::ResetSafetyField || msg.command == DATA_CONTROL::SetSafetyFlag)
     {
-        msg.resetField      = data["resetField"].toString();
+        // safetyFlags 배열 파싱: [{"name": "obstacle", "value": false}, {"name": "bumper", "value": false}]
+        QJsonArray safetyFlagsArr = data["safetyFlags"].toArray();
+        for(const QJsonValue& val : safetyFlagsArr)
+        {
+            QJsonObject flagObj = val.toObject();
+            QString name = flagObj["name"].toString();
+            bool value = flagObj["value"].toBool();
+            msg.resetFlags.append(qMakePair(name, value));
+        }
+
+        // 하위 호환성을 위해 기존 resetField도 지원
+        if(msg.resetFlags.isEmpty() && data.contains("resetField"))
+        {
+            msg.resetField = data["resetField"].toString();
+        }
     }
     else if(msg.command == DATA_CONTROL::LedControl)
     {
@@ -1510,7 +1524,7 @@ void COMM_MSA::load_loop()
 
         QString command = msg.command;
         qDebug() << "Load Loop : " << msg.command;
-        
+
         if(command == "loadMap")
         {
             handle_common_load_map(msg);
@@ -1836,6 +1850,7 @@ void COMM_MSA::control_loop()
         lock.unlock();
 
         QString command = msg.command;
+        spdlog::info("[MSA] control_loop received command: {}", command.toStdString());
         dctrl->set_cmd_id(msg.id);
         if(command == DATA_CONTROL::Dock)
         {
@@ -2053,62 +2068,145 @@ void COMM_MSA::control_loop()
                 msg.safetyField = ms.lidar_field;
             }
         }
-        else if(command == DATA_CONTROL::ResetSafetyField)
+        else if(command == DATA_CONTROL::ResetSafetyField || command == DATA_CONTROL::SetSafetyFlag)
         {
-            if(msg.resetField == "bumper")
-            {
-                msg.result = "success";
-                msg.message = "";
+            bool allSuccess = true;
+            QStringList failedFields;
+            QStringList processedFields;
 
-                if(mobile)
+            log_info("Received ResetSafetyField/setSafetyFlag command");
+
+            // 새로운 safetyFlags 배열 방식 처리
+            if(!msg.resetFlags.isEmpty())
+            {
+                for(const auto& flagPair : msg.resetFlags)
                 {
-                    mobile->clearbumperstop();
+                    QString name = flagPair.first;
+                    bool value = flagPair.second;
+
+                    // value가 false인 경우에만 리셋 수행 (flag를 클리어)
+                    if(!value)
+                    {
+                        if(name == "bumper")
+                        {
+                            if(mobile) mobile->clearbumperstop();
+                            processedFields.append(name);
+                        }
+                        else if(name == "interlock")
+                        {
+                            if(mobile) mobile->clearinterlockstop();
+                            processedFields.append(name);
+                        }
+                        else if(name == "obstacle")
+                        {
+                            if(mobile) mobile->clearobs();
+                            processedFields.append(name);
+                        }
+                        else if(name == "operationStop")
+                        {
+                            if(mobile) mobile->recover();
+                            processedFields.append(name);
+                        }
+                        else
+                        {
+                            allSuccess = false;
+                            failedFields.append(name);
+                        }
+                    }
+                }
+            }
+            // 기존 resetField 문자열 방식 (하위 호환성)
+            else if(!msg.resetField.isEmpty())
+            {
+                QStringList resetFieldList = msg.resetField.split(",", Qt::SkipEmptyParts);
+
+                for(const QString& field : resetFieldList)
+                {
+                    QString trimmedField = field.trimmed();
+
+                    if(trimmedField == "bumper")
+                    {
+                        if(mobile) mobile->clearbumperstop();
+                        processedFields.append(trimmedField);
+                    }
+                    else if(trimmedField == "interlock")
+                    {
+                        if(mobile) mobile->clearinterlockstop();
+                        processedFields.append(trimmedField);
+                    }
+                    else if(trimmedField == "obstacle")
+                    {
+                        if(mobile) mobile->clearobs();
+                        processedFields.append(trimmedField);
+                    }
+                    else if(trimmedField == "operationStop")
+                    {
+                        if(mobile) mobile->recover();
+                        processedFields.append(trimmedField);
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                        failedFields.append(trimmedField);
+                    }
                 }
             }
 
-            else if (msg.resetField == "interlock")
+            // 결과 설정
+            if(allSuccess && !processedFields.isEmpty())
             {
                 msg.result = "success";
                 msg.message = "";
-
-                if(mobile)
-                {
-                    mobile->clearinterlockstop();
-                }
+                log_info("ResetSafetyField success: {}", processedFields.join(",").toStdString().c_str());
             }
-
-            else if (msg.resetField == "obstacle")
+            else if(processedFields.isEmpty() && failedFields.isEmpty())
             {
-                msg.result = "success";
-                msg.message = "";
-
-                if(mobile)
-                {
-                    mobile->clearobs();
-                }
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
+                log_error("Empty safetyFlags/resetField value");
             }
-
-            else if (msg.resetField == "operationStop")
+            else if(!failedFields.isEmpty())
             {
-                msg.result = "success";
-                msg.message = "";
+                // 일부 성공, 일부 실패한 경우
+                msg.result = processedFields.isEmpty() ? "reject" : "partial";
+                msg.message = QString("Invalid fields: %1").arg(failedFields.join(","));
+                log_error("Invalid resetField values: %s", failedFields.join(",").toStdString().c_str());
+            }
+        }
+        else if(command == DATA_CONTROL::GetSafetyFlag)
+        {
+            msg.result = "success";
+            msg.message = "";
 
-                if(mobile)
-                {
-                    mobile->recover();
-                }
+            if(mobile)
+            {
+                MOBILE_STATUS ms = mobile->get_status();
 
+                // Get safety flag states (true = triggered/active, false = normal)
+                bool obstacleFlag = (ms.safety_state_obstacle_detected_1 != 0) || (ms.safety_state_obstacle_detected_2 != 0);
+                bool bumperFlag = (ms.safety_state_bumper_stop_1 != 0) || (ms.safety_state_bumper_stop_2 != 0);
+                bool interlockFlag = (ms.safety_state_interlock_stop_1 != 0) || (ms.safety_state_interlock_stop_2 != 0);
+                bool operationStopFlag = (ms.operational_stop_state_flag_1 != 0) || (ms.operational_stop_state_flag_2 != 0);
+
+                // Store in resetFlags for response (reusing the field for response)
+                msg.resetFlags.clear();
+                msg.resetFlags.append(qMakePair(QString("obstacle"), obstacleFlag));
+                msg.resetFlags.append(qMakePair(QString("bumper"), bumperFlag));
+                msg.resetFlags.append(qMakePair(QString("interlock"), interlockFlag));
+                msg.resetFlags.append(qMakePair(QString("operationStop"), operationStopFlag));
+
+                spdlog::info("[MSA] GetSafetyFlag - obstacle: {}, bumper: {}, interlock: {}, operationStop: {}",
+                             obstacleFlag, bumperFlag, interlockFlag, operationStopFlag);
             }
             else
             {
                 msg.result = "reject";
-                //msg.message = "resetField 값이 잘못되었습니다.";
-                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
-                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
-                log_error("Invalid resetField value");
-                send_control_response(msg);
+                msg.message = "mobile module not available";
+                log_error("Mobile module not available for GetSafetyFlag");
             }
         }
+
         else
         {
             msg.result = "reject";
@@ -2117,7 +2215,7 @@ void COMM_MSA::control_loop()
             ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::CONTROL_UNKNOWN_CMD);
             send_control_response(msg);
             log_error("Invalid command value");
-        
+
         }
 
         send_control_response(msg);
@@ -2233,7 +2331,7 @@ void COMM_MSA::common_loop()
                     //msg.message = "mainwindow module not available";
                     msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_START);
                     ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_START);
-                    log_error("MainWindow not available for docking");  
+                    log_error("MainWindow not available for docking");
 
                     logger->write_log("[COMM_MSA] MainWindow not available", "Red");
                 }
@@ -2801,13 +2899,13 @@ void COMM_MSA::send_lidar_2d()
 
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-    
+
     // Validate pose data
     if(std::isnan(cur_xi[0]) || std::isnan(cur_xi[1]) || std::isnan(cur_xi[2]))
     {
         return;
     }
-    
+
     if(pts.size() > 0)
     {
         sio::object_message::ptr rootObject = sio::object_message::create();
@@ -2851,7 +2949,7 @@ void COMM_MSA::send_lidar_2d()
         // Fill missing points and create json array
         Eigen::Vector3d last_valid_pt(0, 0, 0);
         bool has_valid_pt = false;
-        
+
         for(int i=0; i<360; i++)
         {
             // Update last valid point if current point is valid
@@ -3199,9 +3297,9 @@ void COMM_MSA::send_status()
     motorObj2->get_map()["status"]     = sio::double_message::create(ms.status_m1);
     motorObj2->get_map()["temp"]       = sio::double_message::create(ms.temp_m1);
     motorObj2->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m1) / 10.0);
-    
+
     motorArray->get_vector().push_back(motorObj2);
-    
+
     if(config -> get_robot_wheel_type() == "MECANUM")
     {
     sio::object_message::ptr motorObj3 = sio::object_message::create();
@@ -3217,10 +3315,10 @@ void COMM_MSA::send_status()
     motorObj4->get_map()["status"]     = sio::double_message::create(ms.status_m3);
     motorObj4->get_map()["temp"]       = sio::double_message::create(ms.temp_m3);
     motorObj4->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m3) / 10.0);
-                
+
     motorArray->get_vector().push_back(motorObj4);
     }
-    
+
     rootObj->get_map()["motor"] = motorArray;
     // Adding the condition object
     Eigen::Vector2d ieir = loc->get_cur_ieir();
@@ -3297,7 +3395,7 @@ void COMM_MSA::send_status()
                 ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
 
-    auto toSioArray = [](unsigned char arr[8]) 
+    auto toSioArray = [](unsigned char arr[8])
     {
         sio::array_message::ptr jsonArr = sio::array_message::create();
         for (int i = 0; i < 8; ++i)
@@ -3534,6 +3632,19 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     else if(msg.command == DATA_CONTROL::GetSafetyField)
     {
         send_object->get_map()["safetyField"]    = sio::string_message::create(msg.safetyField.toStdString());
+    }
+    else if(msg.command == DATA_CONTROL::GetSafetyFlag)
+    {
+        // Return safetyFlags array: [{"name": "obstacle", "value": true/false}, ...]
+        sio::array_message::ptr safetyFlagsArr = sio::array_message::create();
+        for(const auto& flag : msg.resetFlags)
+        {
+            sio::object_message::ptr flagObj = sio::object_message::create();
+            flagObj->get_map()["name"] = sio::string_message::create(flag.first.toStdString());
+            flagObj->get_map()["value"] = sio::bool_message::create(flag.second);
+            safetyFlagsArr->get_vector().push_back(flagObj);
+        }
+        send_object->get_map()["safetyFlags"] = safetyFlagsArr;
     }
     else if(msg.command == DATA_CONTROL::ResetSafetyField)
     {
@@ -4644,13 +4755,13 @@ void COMM_MSA::slot_safety_request(DATA_SAFETY msg)
     {
         msg.result = "success";
         //qDebug() << "slot msg.sef_field:" << msg.set_field;
-        spdlog::info("[RRS] set, slot msg.sef_filed: {}", msg.set_field);
+        spdlog::info("[MSA] set, slot msg.sef_filed: {}", msg.set_field);
 
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
 
         //qDebug() << "parsing filed set:" << set_field_;
-        spdlog::info("[RRS] set, parsing filed set: {}", msg.set_field);
+        spdlog::info("[MSA] set, parsing filed set: {}", msg.set_field);
 
 
         if(mobile)
@@ -4670,7 +4781,7 @@ void COMM_MSA::slot_safety_request(DATA_SAFETY msg)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
             //qDebug() << ms.lidar_field;
-            spdlog::info("[RRS] get, slot ms.lidar_field: {}", ms.lidar_field);
+            spdlog::info("[MSA] get, slot ms.lidar_field: {}", ms.lidar_field);
 
             msg.get_field = ms.lidar_field;
         }
@@ -4679,6 +4790,7 @@ void COMM_MSA::slot_safety_request(DATA_SAFETY msg)
 
     else if (command == "resetFlag")
     {
+        spdlog::info("[MSA] resetFlag command received: {}", resetflag_.toStdString());
         if(resetflag_ == "bumper")
         {
             msg.result = "success";
@@ -4733,7 +4845,7 @@ void COMM_MSA::slot_safety_request(DATA_SAFETY msg)
 
 void COMM_MSA::send_field_set_response(const DATA_SAFETY& msg)
 {
-    spdlog::debug("[MSA] send_field_set_response connected");
+    spdlog::info("[MSA] send_field_set_response connected");
     if(!is_connected)
     {
         return;
@@ -4757,7 +4869,7 @@ void COMM_MSA::send_field_set_response(const DATA_SAFETY& msg)
 
 void COMM_MSA::send_field_get_response(const DATA_SAFETY& msg)
 {
-    spdlog::debug("[MSA] send_field_get_response connected");
+    spdlog::info("[MSA] send_field_get_response connected");
     if(!is_connected)
     {
         return;
@@ -4789,6 +4901,7 @@ void COMM_MSA::slot_config_request(DATA_PDU_UPDATE msg)
 {
     const QString command = msg.command;
 
+    spdlog::info("[MSA] slot in : command {}", command.toStdString());
     if(command == "getDriveParam")
     {
         //qDebug() << "slot in : param_get";
@@ -4831,7 +4944,7 @@ void COMM_MSA::slot_config_request(DATA_PDU_UPDATE msg)
                 // type exception
                 if(msg.param_list[0].type != "boolean")
                 {
-                    
+
                     msg.result = "reject";
                     msg.message = "invalid type";
                     send_config_request_response(msg);
@@ -5179,7 +5292,7 @@ void COMM_MSA::handle_common_load_topo(DATA_LOAD& msg)
     // Load topo
     spdlog::info("[LOAD_TOPO] Loading topo from: {}", topo_path.toStdString());
     bool success = unimap->load_topo();
-    
+
     if(success)
     {
         msg.result = "accept";
@@ -5191,7 +5304,7 @@ void COMM_MSA::handle_common_load_topo(DATA_LOAD& msg)
         msg.result = "reject";
         spdlog::error("[LOAD_TOPO] Failed to load topo.json");
     }
-    
+
     send_load_response(msg);
 }
 
@@ -5346,7 +5459,7 @@ QJsonObject COMM_MSA::get_error_code_mapping(const QString& message)
         solution =      error_detail.solution;
         remark =        error_detail.remark;
     };
-    
+
     // Error code mapping
 
     // Map Management Error Codes
@@ -5550,7 +5663,7 @@ QJsonObject COMM_MSA::get_error_code_mapping(const QString& message)
     {
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_NOT_READY, ERROR_MANAGER::MOVE_GOAL));
 
-    } 
+    }
     else if(message.contains("[R0Sx5007]") || message.contains("5007"))
     {
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::FIELD_GET));
@@ -5645,7 +5758,7 @@ QJsonObject COMM_MSA::get_error_code_mapping(const QString& message)
     errorCode["level"] = level;
     errorCode["solution"] = solution;
     errorCode["timestamp"] = QDateTime::currentDateTime().toUTC().toString(Qt::ISODate);
-    
+
     return errorCode;
 }
 
