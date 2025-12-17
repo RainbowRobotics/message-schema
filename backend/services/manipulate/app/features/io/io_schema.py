@@ -12,6 +12,8 @@ class Request_SideAout_GeneralPD(BaseModel):
     port_num: int
     desired_voltage: float
 
+class Request_Multiple_SideAoutPD(BaseModel):
+    side_aout_args: list[Request_SideAout_GeneralPD]
 
 class Request_Save_SideDin_SpecialFuncPD(BaseModel):
     port_num: int

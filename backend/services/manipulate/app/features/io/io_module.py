@@ -4,7 +4,6 @@ from rb_flat_buffers.IPC.Request_Flange_Power import Request_Flange_PowerT
 from rb_flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCountT
 from rb_flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
 from rb_flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFuncT
-from rb_flat_buffers.IPC.Request_SideAout_General import Request_SideAout_GeneralT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_sdk.manipulate import RBManipulateSDK
@@ -14,6 +13,7 @@ from rb_zenoh.client import ZenohClient
 from .io_schema import (
     Request_Flange_Digital_OutPD,
     Request_Flange_PowerPD,
+    Request_Multiple_SideAoutPD,
     Request_Multiple_SideDoutBitcombinationPD,
     Request_Multiple_SideDoutPD,
     Request_Multiple_SideDoutPulsePD,
@@ -51,18 +51,21 @@ class IoService(BaseService):
 
 
     def call_side_aout(self, robot_model: str, request: Request_SideAout_GeneralPD):
-        req = Request_SideAout_GeneralT()
-        req.portNum = request.port_num
-        req.desiredVoltage = request.desired_voltage
+        req_dict = Request_SideAout_GeneralPD.model_validate(t_to_dict(request)).model_dump()
 
-        res = zenoh_client.query_one(
-            f"{robot_model}/call_side_aout",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        return rb_manipulate_sdk.call_side_aout(
+            robot_model=robot_model,
+            port_num=req_dict["port_num"],
+            desired_voltage=req_dict["desired_voltage"],
         )
 
-        return res["dict_payload"]
+    def call_multiple_side_aout(self, robot_model: str, request: Request_Multiple_SideAoutPD):
+        req_dict = Request_Multiple_SideAoutPD.model_validate(t_to_dict(request)).model_dump()
+
+        return rb_manipulate_sdk.call_multiple_side_aout(
+            robot_model=robot_model,
+            side_aout_args=req_dict["side_aout_args"],
+        )
 
 
     def call_side_dout_toggle(self, robot_model: str, request: Request_SideDout_TogglePD):

@@ -10,6 +10,7 @@ from .io_module import IoService
 from .io_schema import (
     Request_Flange_Digital_OutPD,
     Request_Flange_PowerPD,
+    Request_Multiple_SideAoutPD,
     Request_Multiple_SideDoutBitcombinationPD,
     Request_Multiple_SideDoutPD,
     Request_Multiple_SideDoutPulsePD,
@@ -46,6 +47,9 @@ async def call_side_aout(robot_model: str, request: Request_SideAout_GeneralPD):
 async def call_side_dout_toggle(robot_model: str, request: Request_SideDout_TogglePD):
     return JSONResponse(io_service.call_side_dout_toggle(robot_model=robot_model, request=request))
 
+@io_router.post("/{robot_model}/call_multiple_side_aout", response_model=Response_ReturnValuePD)
+async def call_multiple_side_aout(robot_model: str, request: Request_Multiple_SideAoutPD):
+    return JSONResponse(io_service.call_multiple_side_aout(robot_model=robot_model, request=request))
 
 @io_router.post(
     "/{robot_model}/call_side_dout_bitcombination", response_model=Response_ReturnValuePD
