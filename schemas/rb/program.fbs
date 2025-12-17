@@ -39,3 +39,11 @@ table RB_Program_Log {
   robot_model: string;
   type: RB_Program_Log_Type;
 }
+
+table Request_Program_At_Start {
+  task_id: string;
+}
+
+table Request_Program_At_End {
+  task_id: string;
+}
