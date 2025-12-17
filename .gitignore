@@ -75,6 +75,13 @@ SLAMNAV2
 Log
 CMakeLists.txt
 
+# VSCode - exclude personal settings, keep project settings
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
 
 
 

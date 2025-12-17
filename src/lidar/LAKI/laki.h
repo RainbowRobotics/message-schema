@@ -87,6 +87,10 @@ private:
     std::atomic<double> cur_raw_t[2] = {0, 0};
     std::atomic<int> cur_pts_num[2] = {0, 0};
 
+    // watchdog
+    std::atomic<double> last_data_time[2] = {0, 0};
+    std::atomic<int> reconnect_count[2] = {0, 0};
+
     // storage
     tbb::concurrent_queue<RAW_FRAME> raw_que[2];
 

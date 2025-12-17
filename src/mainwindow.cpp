@@ -3876,9 +3876,9 @@ void MainWindow::plot_info()
     }
     if(CONFIG::instance()->get_use_msa())
     {
-        if(COMM_MSA::instance()->get_is_connected())
+        if(COMM_MSA::instance()->get_msa_connect_check())
         {
-            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_last_receive_msg());
+            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
     }
 

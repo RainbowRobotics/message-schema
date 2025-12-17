@@ -1869,7 +1869,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
-            _main->bt_MapSave();
+            //_main->bt_MapSave();
         }
     }
     else if(command == "save")

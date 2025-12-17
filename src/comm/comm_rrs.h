@@ -199,6 +199,9 @@ public Q_SLOTS:
     void send_config_request_response(const DATA_PDU_UPDATE& msg);
     void send_obs_box_setting_response(const DATA_OBS_BOX& msg);
 
+
+    //QJsonObject get_error_code_mapping(const QString& message);
+
     void send_loop();
 
 Q_SIGNALS:
