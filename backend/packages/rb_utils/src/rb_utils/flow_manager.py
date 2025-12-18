@@ -231,6 +231,8 @@ def safe_eval_expr(
     try:
         tree = ast.parse(s, mode="eval")
         return _eval(tree.body)
+    except SyntaxError:
+        return s
     except Exception:
         raise ValueError(f"failed to evaluate expression: {expr}") from None
 
