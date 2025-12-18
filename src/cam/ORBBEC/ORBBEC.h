@@ -75,15 +75,9 @@ private:
     MOBILE* mobile;
 
     // loop
-    // std::atomic<bool> grab_flag[max_cam_cnt];
-    // std::array<std::unique_ptr<std::thread>, max_cam_cnt> grab_thread;
-    // void grab_loop(int idx);
-
     std::atomic<bool> grab_flag[max_cam_cnt];
-    std::array<std::unique_ptr<std::thread>, max_cam_cnt> grab_thread_color;
-    std::array<std::unique_ptr<std::thread>, max_cam_cnt> grab_thread_depth;
-    void grab_loop_color(int idx);
-    void grab_loop_depth(int idx);
+    std::array<std::unique_ptr<std::thread>, max_cam_cnt> grab_thread;
+    void grab_loop(int idx);
 
     // value
     std::atomic<bool> is_param_loaded[max_cam_cnt];

@@ -38,17 +38,11 @@ ORBBEC::~ORBBEC()
     {
         grab_flag[p] = false;
 
-        if(grab_thread_color[p] && grab_thread_color[p]->joinable())
+        if(grab_thread[p] && grab_thread[p]->joinable())
         {
-            grab_thread_color[p]->join();
+            grab_thread[p]->join();
         }
-        grab_thread_color[p].reset();
-
-        if(grab_thread_depth[p] && grab_thread_depth[p]->joinable())
-        {
-            grab_thread_depth[p]->join();
-        }
-        grab_thread_depth[p].reset();
+        grab_thread[p].reset();
     }
 }
 
@@ -66,19 +60,18 @@ void ORBBEC::init()
 void ORBBEC::open()
 {
     // check simulation mode
-    // if(config->get_use_sim())
-    // {
-    //     //printf("[ORBBEC] simulation mode\n");
-    //     log_info("simulation mode");
-    //     return;
-    // }
+    if(config->get_use_sim())
+    {
+        //printf("[ORBBEC] simulation mode\n");
+        log_info("simulation mode");
+        return;
+    }
 
     // start grab loop
     for(int p = 0; p < config->get_cam_num(); p++)
     {
         grab_flag[p] = true;
-        grab_thread_color[p] = std::make_unique<std::thread>(&ORBBEC::grab_loop_color, this, p);
-        grab_thread_depth[p] = std::make_unique<std::thread>(&ORBBEC::grab_loop_depth, this, p);
+        grab_thread[p] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, p);
     }
 }
 
@@ -89,18 +82,11 @@ void ORBBEC::close()
         is_connected[p] = false;
 
         grab_flag[p] = false;
-
-        if(grab_thread_color[p] && grab_thread_color[p]->joinable())
+        if(grab_thread[p] && grab_thread[p]->joinable())
         {
-            grab_thread_color[p]->join();
+            grab_thread[p]->join();
         }
-        grab_thread_color[p].reset();
-
-        if(grab_thread_depth[p] && grab_thread_depth[p]->joinable())
-        {
-            grab_thread_depth[p]->join();
-        }
-        grab_thread_depth[p].reset();
+        grab_thread[p].reset();
     }
 }
 
@@ -108,22 +94,15 @@ void ORBBEC::restart(int idx)
 {
     // close
     grab_flag[idx] = false;
-    if(grab_thread_color[idx] && grab_thread_color[idx]->joinable())
+    if(grab_thread[idx] && grab_thread[idx]->joinable())
     {
-        grab_thread_color[idx]->join();
+        grab_thread[idx]->join();
     }
-    grab_thread_color[idx].reset();
-
-    if(grab_thread_depth[idx] && grab_thread_depth[idx]->joinable())
-    {
-        grab_thread_depth[idx]->join();
-    }
-    grab_thread_depth[idx].reset();
+    grab_thread[idx].reset();
 
     // open
     grab_flag[idx] = true;
-    grab_thread_color[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop_color, this, idx);
-    grab_thread_depth[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop_depth, this, idx);
+    grab_thread[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, idx);
 }
 
 
@@ -206,407 +185,6 @@ bool ORBBEC::try_pop_img_que(int idx, TIME_IMG &ti)
     return false;
 }
 
-void ORBBEC::grab_loop_color(int idx)
-{
-    try
-    {
-        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_DEBUG);
-
-        // check device
-        ob::Context ctx;
-        ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
-        ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
-
-        auto dev_list = ctx.queryDeviceList();
-        int dev_count = dev_list->deviceCount();
-        if(dev_count == 0)
-        {
-            grab_flag[idx] = false;
-            log_error("no camera (color), idx:{}", idx);
-            return;
-        }
-
-        QString target_sn = config->get_cam_serial_number(idx);
-        if(target_sn.isEmpty())
-        {
-            grab_flag[idx] = false;
-            log_error("camera {} has empty serial number in config (color)", idx);
-            return;
-        }
-
-        int dev_idx = -1;
-        for(int d = 0; d < dev_count; d++)
-        {
-            QString sn = dev_list->getDevice(d)->getDeviceInfo()->serialNumber();
-            if(sn == target_sn)
-            {
-                dev_idx = d;
-                break;
-            }
-        }
-
-        if(dev_idx < 0)
-        {
-            grab_flag[idx] = false;
-            log_error("camera not found (color), idx:{}, sn:{}", idx, target_sn.toStdString());
-            return;
-        }
-
-        // set cam
-        auto dev = dev_list->getDevice(dev_idx);
-        dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
-        log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
-
-        // color-only pipeline
-        std::shared_ptr<ob::Pipeline> pipe = std::make_shared<ob::Pipeline>(dev);
-
-        auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
-        auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
-        log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
-        cur_w_color[idx] = color_profile->width();
-        cur_h_color[idx] = color_profile->height();
-
-        std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
-        cam_config->disableAllStream();
-        cam_config->enableStream(color_profile);
-        cam_config->setAlignMode(ALIGN_DISABLE);
-
-        is_connected[idx] = false;
-        is_param_loaded[idx] = false;
-
-        int no_color_cnt = 0;
-
-        pipe->start(cam_config, [this, idx, &no_color_cnt, pipe](std::shared_ptr<ob::FrameSet> fs)
-        {
-            if(!grab_flag[idx])
-            {
-                return;
-            }
-
-            if(!fs)
-            {
-                no_color_cnt++;
-                return;
-            }
-
-            std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-            if(!colorFrame)
-            {
-                no_color_cnt++;
-                return;
-            }
-
-            no_color_cnt = 0;
-
-            if(!is_connected[idx])
-            {
-                is_connected[idx] = true;
-            }
-
-            uint64_t ts = colorFrame->systemTimeStamp();
-            double t = static_cast<double>(ts) / 1000.0;
-
-            cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-
-            cv::Mat img;
-            cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-
-            if(!img.empty())
-            {
-                TIME_IMG time_img;
-                time_img.t = t;
-                time_img.img = img.clone();
-
-                img_que[idx].push(time_img);
-                if(img_que[idx].unsafe_size() > 10)
-                {
-                    TIME_IMG dummy;
-                    img_que[idx].try_pop(dummy);
-                }
-
-                cv::Mat plot_img;
-                cv::resize(img, plot_img, cv::Size(160, 90));
-
-                {
-                    std::lock_guard<std::mutex> lock(mtx);
-                    cur_img[idx]      = plot_img.clone();
-                    cur_time_img[idx] = time_img;
-                }
-            }
-
-            if(!is_param_loaded[idx])
-            {
-                auto camera_param = pipe->getCameraParam();
-
-                std::lock_guard<std::mutex> lock(mtx);
-                intrinsic[idx].fx = camera_param.rgbIntrinsic.fx;
-                intrinsic[idx].fy = camera_param.rgbIntrinsic.fy;
-                intrinsic[idx].cx = camera_param.rgbIntrinsic.cx;
-                intrinsic[idx].cy = camera_param.rgbIntrinsic.cy;
-                intrinsic[idx].k1 = camera_param.rgbDistortion.k1;
-                intrinsic[idx].k2 = camera_param.rgbDistortion.k2;
-                intrinsic[idx].k3 = camera_param.rgbDistortion.k3;
-                intrinsic[idx].k4 = camera_param.rgbDistortion.k4;
-                intrinsic[idx].k5 = camera_param.rgbDistortion.k5;
-                intrinsic[idx].k6 = camera_param.rgbDistortion.k6;
-                intrinsic[idx].p1 = camera_param.rgbDistortion.p1;
-                intrinsic[idx].p2 = camera_param.rgbDistortion.p2;
-                intrinsic[idx].coef_num = 8;
-
-                extrinsic[idx] = string_to_TF(config->get_cam_tf(idx));
-
-                log_info("intrinsic_{}, fx:{}, fy:{}, cx:{}, cy:{}", idx, intrinsic[idx].fx, intrinsic[idx].fy, intrinsic[idx].cx, intrinsic[idx].cy);
-
-                is_param_loaded[idx] = true;
-            }
-        });
-
-        log_info("grab_loop_color started, idx:{}", idx);
-
-        while(grab_flag[idx])
-        {
-            if(no_color_cnt > 300)
-            {
-                log_info("signal_restart requested (no color), idx:{}, cnt:{}", idx, no_color_cnt);
-                Q_EMIT signal_restart(idx);
-                grab_flag[idx] = false;
-                break;
-            }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
-        is_connected[idx] = false;
-
-        try
-        {
-            pipe->stop();
-        }
-        catch(const ob::Error& e)
-        {
-            log_info("stop(color) ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
-        }
-
-        pipe.reset();
-        log_info("grab_loop_color stopped, idx:{}", idx);
-    }
-    catch(ob::Error &e)
-    {
-        log_info("grab_loop_color ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
-    }
-}
-
-void ORBBEC::grab_loop_depth(int idx)
-{
-    try
-    {
-        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_DEBUG);
-
-        // check device
-        ob::Context ctx;
-        ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
-        ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
-
-        auto dev_list = ctx.queryDeviceList();
-        int dev_count = dev_list->deviceCount();
-        if(dev_count == 0)
-        {
-            grab_flag[idx] = false;
-            log_error("no camera (depth), idx:{}", idx);
-            return;
-        }
-
-        QString target_sn = config->get_cam_serial_number(idx);
-        if(target_sn.isEmpty())
-        {
-            grab_flag[idx] = false;
-            log_error("camera {} has empty serial number in config (depth)", idx);
-            return;
-        }
-
-        int dev_idx = -1;
-        for(int d = 0; d < dev_count; d++)
-        {
-            QString sn = dev_list->getDevice(d)->getDeviceInfo()->serialNumber();
-            if(sn == target_sn)
-            {
-                dev_idx = d;
-                break;
-            }
-        }
-
-        if(dev_idx < 0)
-        {
-            grab_flag[idx] = false;
-            log_error("camera not found (depth), idx:{}, sn:{}", idx, target_sn.toStdString());
-            return;
-        }
-
-        double x_min = config->get_robot_size_x_min();
-        double x_max = config->get_robot_size_x_max();
-        double y_min = config->get_robot_size_y_min();
-        double y_max = config->get_robot_size_y_max();
-        double z_min = config->get_cam_height_min();
-        double z_max = config->get_cam_height_max();
-        double voxel_size = config->get_mapping_voxel_size();
-
-        // set cam
-        auto dev = dev_list->getDevice(dev_idx);
-        dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
-        log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
-
-        // depth-only pipeline
-        std::shared_ptr<ob::Pipeline> pipe = std::make_shared<ob::Pipeline>(dev);
-
-        Eigen::Matrix4d TF   = string_to_TF(config->get_cam_tf(idx));
-        Eigen::Matrix3d TF_R = TF.block(0,0,3,3);
-        Eigen::Vector3d TF_t = TF.block(0,3,3,1);
-
-        auto depth_profile_list = pipe->getStreamProfileList(OB_SENSOR_DEPTH);
-        auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        log_info("Current depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
-        cur_w_depth[idx] = depth_profile->width();
-        cur_h_depth[idx] = depth_profile->height();
-
-        std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
-        cam_config->disableAllStream();
-        cam_config->enableStream(depth_profile);
-        cam_config->setAlignMode(ALIGN_DISABLE);
-
-        // PointCloudFilter (depth only)
-        ob::PointCloudFilter point_cloud;
-
-        int no_depth_cnt = 0;
-
-        pipe->start(cam_config, [this, idx, &no_depth_cnt, &point_cloud, pipe, TF, TF_R, TF_t, x_min, x_max, y_min, y_max, z_min, z_max, voxel_size](std::shared_ptr<ob::FrameSet> fs)
-        {
-            if(!grab_flag[idx])
-            {
-                return;
-            }
-
-            if(!fs)
-            {
-                no_depth_cnt++;
-                return;
-            }
-
-            auto df = fs->depthFrame();
-            if(!df)
-            {
-                no_depth_cnt++;
-                return;
-            }
-
-            no_depth_cnt = 0;
-
-            uint64_t ts = df->systemTimeStamp();
-            double t = static_cast<double>(ts) / 1000.0;
-
-            cam_t[idx].store(get_time());
-
-            float scale = df->getValueScale();
-            point_cloud.setPositionDataScaled(scale);
-
-            std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
-            if(!frame)
-            {
-                return;
-            }
-
-            int pointsSize = frame->dataSize() / sizeof(OBPoint);
-            if(pointsSize <= 0)
-            {
-                log_warn("pointcloud empty, idx:{}, dataSize:{}", idx, (int)frame->dataSize());
-                return;
-            }
-
-            OBPoint *point = (OBPoint *)frame->data();
-
-            std::vector<Eigen::Vector3d> pts;
-            pts.reserve((size_t)pointsSize / 4);
-
-            for(int p = 0; p < pointsSize; p++)
-            {
-                double x = point[p].x / 1000.0;
-                double y = point[p].y / 1000.0;
-                double z = point[p].z / 1000.0;
-
-                if(x == 0 && y == 0 && z == 0)
-                {
-                    continue;
-                }
-
-                Eigen::Vector3d P(x, y, z);
-                Eigen::Vector3d _P = TF_R * P + TF_t;
-
-                if(_P[0] > x_min && _P[0] < x_max && _P[1] > y_min && _P[1] < y_max)
-                {
-                    continue;
-                }
-                if(_P[2] < z_min || _P[2] > z_max)
-                {
-                    continue;
-                }
-
-                pts.push_back(_P);
-            }
-
-            pts = voxel_filtering(pts, voxel_size);
-            cur_pts_size[idx] = pts.size();
-
-            TIME_PTS scan;
-            scan.t   = t;
-            scan.pts = std::move(pts);
-
-            depth_que[idx].push(scan);
-            if(depth_que[idx].unsafe_size() > 10)
-            {
-                TIME_PTS dummy;
-                depth_que[idx].try_pop(dummy);
-            }
-
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_scan[idx] = std::move(scan);
-            }
-        });
-
-        log_info("grab_loop_depth started, idx:{}", idx);
-
-        while(grab_flag[idx])
-        {
-            if(no_depth_cnt > 300)
-            {
-                log_info("signal_restart requested (no depth), idx:{}, cnt:{}", idx, no_depth_cnt);
-                Q_EMIT signal_restart(idx);
-                grab_flag[idx] = false;
-                break;
-            }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
-        try
-        {
-            pipe->stop();
-        }
-        catch(const ob::Error& e)
-        {
-            log_info("stop(depth) ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
-        }
-
-        pipe.reset();
-        log_info("grab_loop_depth stopped, idx:{}", idx);
-    }
-    catch(ob::Error &e)
-    {
-        log_info("grab_loop_depth ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
-    }
-}
-
-/*
 void ORBBEC::grab_loop(int idx)
 {
     try
@@ -663,7 +241,6 @@ void ORBBEC::grab_loop(int idx)
         dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
         dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
         log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
-
 
         std::shared_ptr<ob::Pipeline> pipe = std::make_shared<ob::Pipeline>(dev);
         Eigen::Matrix4d TF = string_to_TF(config->get_cam_tf(idx));
@@ -926,7 +503,6 @@ void ORBBEC::grab_loop(int idx)
         log_info("ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
     }
 }
-*/
 
 void ORBBEC::slot_restart(int idx)
 {
