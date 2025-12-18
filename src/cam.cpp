@@ -85,15 +85,6 @@ CAM::~CAM()
 
 void CAM::init()
 {
-    // check simulation mode
-    if(config->get_use_sim())
-    {
-        //printf("[CAM] simulation mode\n");
-        spdlog::info("[CAM] simulation mode\n");
-        log_info("simulation mode");
-        return;
-    }
-
     if(config->get_cam_type() == "ORBBEC")
     {
         if(!orbbec)

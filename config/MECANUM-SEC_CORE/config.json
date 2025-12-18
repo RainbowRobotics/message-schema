@@ -51,7 +51,7 @@
     "debug": {
         "USE_BEEP": true,
         "USE_QTUI": false,
-        "USE_SIM": false
+        "USE_SIM": true
     },
     "docking": {
         "DOCKING_CHG_LENGTH": "0.472",
@@ -115,7 +115,7 @@
         "USE_EKF": true
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/251119_SEC_test"
+        "MAP_PATH": "/home/juyeon/maps/251216_starpack"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",

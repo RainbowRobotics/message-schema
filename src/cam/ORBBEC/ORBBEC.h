@@ -80,17 +80,16 @@ private:
     void grab_loop(int idx);
 
     // value
-    // std::atomic<bool> is_connected[max_cam_cnt];
     std::atomic<bool> is_param_loaded[max_cam_cnt];
 
     cv::Mat cur_img[max_cam_cnt];
     TIME_IMG cur_time_img[max_cam_cnt];
     TIME_PTS cur_scan[max_cam_cnt];
 
-    std::atomic<int> cur_w_color = {0};
-    std::atomic<int> cur_h_color = {0};
-    std::atomic<int> cur_w_depth = {0};
-    std::atomic<int> cur_h_depth = {0};
+    std::atomic<int> cur_w_color[max_cam_cnt] = {0};
+    std::atomic<int> cur_h_color[max_cam_cnt] = {0};
+    std::atomic<int> cur_w_depth[max_cam_cnt] = {0};
+    std::atomic<int> cur_h_depth[max_cam_cnt] = {0};
 
     std::atomic<int> already_updated = {0};
 

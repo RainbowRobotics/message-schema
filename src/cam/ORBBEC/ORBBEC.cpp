@@ -92,8 +92,6 @@ void ORBBEC::close()
 
 void ORBBEC::restart(int idx)
 {
-    is_connected[idx] = false;
-
     // close
     grab_flag[idx] = false;
     if(grab_thread[idx] && grab_thread[idx]->joinable())
@@ -126,8 +124,8 @@ QString ORBBEC::get_cam_info_str()
     }
 
     QString str = QString("[ORBBEC]\n%1, color(w,h):%2,%3\ndepth(w,h):%4,%5, %6").arg(connection_str)
-                                                                                 .arg((int)cur_w_color).arg((int)cur_h_color)
-                                                                                 .arg((int)cur_w_depth).arg((int)cur_h_depth)
+                                                                                 .arg((int)cur_w_color[0]).arg((int)cur_h_color[0])
+                                                                                 .arg((int)cur_w_depth[0]).arg((int)cur_h_depth[0])
                                                                                  .arg(pts_str);
     return str;
 }
@@ -253,8 +251,8 @@ void ORBBEC::grab_loop(int idx)
         auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         //printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
         log_info("Current depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
-        cur_w_depth = depth_profile->width();
-        cur_h_depth = depth_profile->height();
+        cur_w_depth[idx] = depth_profile->width();
+        cur_h_depth[idx] = depth_profile->height();
 
         //log_info("Available Depth profiles:");
         //for(size_t p = 0; p < depth_profile_list->count(); p++)
@@ -268,8 +266,8 @@ void ORBBEC::grab_loop(int idx)
         auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
         log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
-        cur_w_color = color_profile->width();
-        cur_h_color = color_profile->height();
+        cur_w_color[idx] = color_profile->width();
+        cur_h_color[idx] = color_profile->height();
 
         //log_info("Available Color profiles:");
         //for(size_t p = 0; p < color_profile_list->count(); p++)
@@ -281,11 +279,11 @@ void ORBBEC::grab_loop(int idx)
 
         std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
 
-        if(idx == 0)
-        {
-            cam_config->disableAllStream();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
+        // if(idx == 0)
+        // {
+        //     cam_config->disableAllStream();
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // }
         cam_config->enableStream(depth_profile);
         cam_config->enableStream(color_profile);
         cam_config->setAlignMode(ALIGN_DISABLE);
