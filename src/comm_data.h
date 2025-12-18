@@ -276,6 +276,7 @@ struct DATA_CONTROL
     static constexpr const char* ResetSafetyFlag    = "resetSafetyFlag";
     static constexpr const char* Dock               = "dock";
     static constexpr const char* Undock             = "undock";
+    static constexpr const char* DockStop           = "dockStop";
     static constexpr const char* RandomSeq          = "randomSeq";
     static constexpr const char* LedControl         = "ledControl";
     static constexpr const char* LidarOnOff         = "lidarOnOff";
@@ -448,7 +449,7 @@ struct DATA_MAPPING
 struct DATA_DOCK
 {
     double time;
-    QString command; // dock, undock
+    QString command; // dock, undock, dockstop
 
     QString result;
     QString message;

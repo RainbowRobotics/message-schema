@@ -1145,7 +1145,7 @@ void COMM_MSA::handle_common_cmd(QString cmd, const QJsonObject& data)
     {
         DATA_DOCK msg;
         msg.time    = get_json_double(data, "time") / 1000.;
-        msg.command = get_json(data, "command"); // "dock", "undock"
+        msg.command = get_json(data, "command"); // "dock", "undock", "dockstop"
 
         DATA_COMMON cmsg;
         cmsg.type = DATA_COMMON::TYPE::DOCKING;
@@ -1898,6 +1898,28 @@ void COMM_MSA::control_loop()
 
                 logger->write_log("[COMM_MSA] MainWindow not available", "Red");
                 log_error("MainWindow not available for undocking");
+            }
+        }
+
+        else if(command == DATA_CONTROL::DockStop)
+        {
+            if(is_main_window_valid())
+            {
+                msg.result = "accept";
+                msg.message = "";
+
+                MainWindow* _main = (MainWindow*)main;
+                QMetaObject::invokeMethod(_main, "bt_DockStop", Qt::QueuedConnection);
+                log_info("recv_loc, stop docking");
+            }
+            else
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_STOP);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_STOP);
+
+                logger->write_log("[COMM_MSA] MainWindow not available", "Red");
+                log_error("MainWindow not available for docking stop");
             }
         }
         else if(command == DATA_CONTROL::RandomSeq)
