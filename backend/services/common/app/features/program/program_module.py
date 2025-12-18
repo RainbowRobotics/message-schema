@@ -97,13 +97,6 @@ info_service = InfoService()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
-        # print(
-        #     f"[ProgramService.__init__] pid={os.getpid()} "
-        #     f"id={id(self)} thread={threading.current_thread().name}",
-        #     flush=True,
-        # )
-        # traceback.print_stack(limit=5)
-
         self._robot_models: dict[str, Any] = read_json_file("data", "robot_models.json")
 
         self._play_state: PlayState = PlayState.IDLE
@@ -1808,7 +1801,7 @@ class ProgramService(BaseService):
         tasks_docs = await tasks_col.find(
             {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
         ).to_list(length=None)
-        print("tasks_docs >>>", tasks_docs, task_ids, flush=True)
+
         for task_doc in tasks_docs:
             script_name = task_doc["scriptName"]
             script_path = task_doc["scriptPath"]
