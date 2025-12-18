@@ -4,6 +4,7 @@ import contextlib
 import inspect
 import json
 import os
+import socket
 import sys
 import threading
 import time
@@ -64,6 +65,16 @@ class FBRootReadable(Protocol):
     @staticmethod
     def InitFromPackedBuf(buf: bytes, pos: int = 0) -> Any: ...
 
+def can_bind_7447() -> bool:
+    s = socket.socket()
+    try:
+        s.bind(("0.0.0.0", 7447))
+        return True
+    except OSError:
+        return False
+    finally:
+        with contextlib.suppress(Exception):
+            s.close()
 
 class ZenohClient:
     _instances: dict[int, "ZenohClient"] = {}
@@ -108,23 +119,30 @@ class ZenohClient:
     def connect(self):
         if self.session is None:
             conf = Config()
-            conf.insert_json5("mode", '"client"' if IS_DEV else '"peer"')
+
             conf.insert_json5("scouting/multicast/enabled", "true")
             conf.insert_json5("scouting/multicast/ttl", "1")
-            # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
-            conf.insert_json5("scouting/gossip/enabled", "false")
-            conf.insert_json5("transport/shared_memory/enabled", "true")
 
-            # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
-            conf.insert_json5(
-                "listen/endpoints",
-                '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
-            )
-            conf.insert_json5("listen/exit_on_failure", "false")
-            conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
-            conf.insert_json5(
-                "connect/endpoints", '["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447"]'
-            )
+            if IS_DEV:
+                conf.insert_json5("mode", '"client"')
+                conf.insert_json5("connect/endpoints", '["tcp/zenoh-router:7447"]')
+            else:
+                role = "anchor" if can_bind_7447() else "spoke"
+
+                conf.insert_json5("mode", '"peer"')
+
+                if role == "anchor":
+                    conf.insert_json5("listen/endpoints", '{ "peer": ["tcp/127.0.0.1:7447", "tcp/[::]:7447#iface=rb_internal"] }')
+                    conf.insert_json5("connect/endpoints", "[]")
+                else:
+                    # spoke: 굳이 listen 고정할 필요 없음 (자동/기본)
+                    conf.insert_json5("connect/endpoints", '["tcp/127.0.0.1:7447"]')
+
+                conf.insert_json5("listen/exit_on_failure", "false")
+                conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
+                # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
+                conf.insert_json5("scouting/gossip/enabled", "false")
+                conf.insert_json5("transport/shared_memory/enabled", "true")
 
             delay = 0.5
             for _ in range(8):
@@ -199,6 +217,19 @@ class ZenohClient:
         if self.session is not None:
             self.session.put(topic, payload, attachment=attachment)
 
+    def _cb_key(self, cb):
+        mod = getattr(cb, "__module__", "")
+        qn = getattr(cb, "__qualname__", "")
+        code = getattr(cb, "__code__", None)
+        loc = ""
+        if code:
+            loc = f"{code.co_filename}:{code.co_firstlineno}"
+        # bound method면 self까지 포함
+        if hasattr(cb, "__self__") and hasattr(cb, "__func__"):
+            return ("bound", id(cb.__self__), mod, qn, loc)
+
+        return ("func", mod, qn, loc)
+
     def subscribe(
         self,
         topic: str,
@@ -217,6 +248,13 @@ class ZenohClient:
             self.connect()
         # if "/" not in topic:
         #     raise ValueError("토픽이 명확하지 않습니다. ex) 'telemetry/imu'")
+
+        key = self._cb_key(callback)
+        lst = self._cb_entries.get(topic, [])
+
+        if any(self._cb_key(e.callback) == key for e in lst):
+            print(f"⚠️ duplicate callback ignored: {topic} {getattr(callback,'__qualname__',callback)}", flush=True)
+            return SubscriptionHandleImpl(self, topic, next(e for e in lst if self._cb_key(e.callback) == key))
 
         opts = options or SubscribeOptions()
 
@@ -1261,9 +1299,7 @@ class ZenohClient:
         net_delta = after - before
         ratio = net_delta / max(1, sent)
         shm_yes = ratio < 0.2
-        print(
-            f"[SHM-CHECK] sent={sent/1024/1024:.1f}MiB, netΔ={net_delta/1024/1024:.2f}MiB, ratio={ratio:.2f} → SHM={'YES' if shm_yes else 'NO'}"
-        )
+
         return shm_yes
 
 
