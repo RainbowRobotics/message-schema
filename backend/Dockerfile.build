@@ -37,14 +37,6 @@ RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
     uv run pyinstaller --onefile --clean \
     --distpath=/app/dist \
     --name=run.bin \
-    --paths ./packages/rb_flat_buffers/src \
-    --paths ./packages/rb_modules/src \
-    --paths ./packages/rb_database/src \
-    --paths ./packages/rb_socketio/src \
-    --paths ./packages/rb_schemas/src \
-    --paths ./packages/rb_resources/src \
-    --paths ./packages/rb_flow_manager/src \
-    --paths ./packages/rb_utils/src \
     --collect-submodules rb_flat_buffers \
     --collect-submodules rb_modules \
     --collect-submodules rb_database \
