@@ -1850,7 +1850,7 @@ void COMM_MSA::control_loop()
         lock.unlock();
 
         QString command = msg.command;
-        spdlog::info("[MSA] control_loop received command: {}", command.toStdString());
+        //spdlog::info("[MSA] control_loop received command: {}", command.toStdString());
         dctrl->set_cmd_id(msg.id);
         if(command == DATA_CONTROL::Dock)
         {
@@ -2218,8 +2218,8 @@ void COMM_MSA::control_loop()
                 msg.resetFlags.append(qMakePair(QString("interlock"), interlockFlag));
                 msg.resetFlags.append(qMakePair(QString("operationStop"), operationStopFlag));
 
-                spdlog::info("[MSA] GetSafetyFlag - obstacle: {}, bumper: {}, interlock: {}, operationStop: {}",
-                             obstacleFlag, bumperFlag, interlockFlag, operationStopFlag);
+                //spdlog::info("[MSA] GetSafetyFlag - obstacle: {}, bumper: {}, interlock: {}, operationStop: {}",
+                //             obstacleFlag, bumperFlag, interlockFlag, operationStopFlag);
             }
             else
             {
