@@ -469,6 +469,7 @@ void MOBILE::receive_data_loop()
                         else if(data_size == MOBILE_INFO::packet_size_safety)
                         {
                             robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY;
+                            //spdlog::info("[MOBILE] Safety Data Packet Received");
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety_v2_high)
                         {
@@ -987,6 +988,9 @@ void MOBILE::receive_data_loop()
                             cur_status.charge_current = charge_current;
                             cur_status.power = main_power;
 
+                            spdlog::info("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}",
+                                         bat_in, bat_out, bat_cur, main_power);
+
                             // Setting Motor info
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
@@ -1030,6 +1034,10 @@ void MOBILE::receive_data_loop()
                             if (bms_header == 0x0A)
                             {
                                 // not used
+                                cur_status.bat_voltage = bat_in;
+                                cur_status.bat_current = bat_cur;
+                                cur_status.tabos_soc = (uint8_t)((bat_in - 36.0f) / (42.0f - 36.0f) * 100.0f);
+                                spdlog::info("[MOBILE] voltage_in: {:.2f}, bat_percent: {}", bat_in, cur_status.bat_percent);
                             }
                             else if (bms_header == 0x0B)
                             {
@@ -1044,6 +1052,16 @@ void MOBILE::receive_data_loop()
                                 cur_status.tabos_rc = tabos_rc;
                                 cur_status.tabos_ae = tabos_ae;
                             }
+                            else
+                            {
+                                // Unknown BMS type
+                                cur_status.bat_voltage = bat_in;
+                                cur_status.bat_current = bat_cur;
+                                cur_status.tabos_soc = (uint8_t)((bat_in - 36.0f) / (42.0f - 36.0f) * 100.0f);
+                                spdlog::info("[MOBILE] voltage_in: {:.2f}, bat_percent: {}", bat_in, cur_status.bat_percent);
+                        
+                            }
+                            spdlog::info("[MOBILE] BMS type: {}", bms_header);
 
                             cur_status.bms_type = bms_header;
                             mtx.unlock();
@@ -1623,6 +1641,61 @@ void MOBILE::receive_data_loop()
                         else if(_buf[5] == 0xA3)
                         {
                             // Safety Data
+                            spdlog::info("[MOBILE] Received Safety Data");
+
+                            // Power data (all uint16_t, convert to float by *0.01)
+                            uint16_t voltage_inlet_raw, voltage_outlet_raw, current_line_raw;
+                            memcpy(&voltage_inlet_raw, &_buf[index], dlc_s);    index += dlc_s;
+                            memcpy(&voltage_outlet_raw, &_buf[index], dlc_s);   index += dlc_s;
+                            memcpy(&current_line_raw, &_buf[index], dlc_s);     index += dlc_s;
+
+                            uint16_t voltage_inlet_lift_raw, voltage_outlet_lift_raw, current_line_lift_raw;
+                            memcpy(&voltage_inlet_lift_raw, &_buf[index], dlc_s);  index += dlc_s;
+                            memcpy(&voltage_outlet_lift_raw, &_buf[index], dlc_s); index += dlc_s;
+                            memcpy(&current_line_lift_raw, &_buf[index], dlc_s);   index += dlc_s;
+
+                            uint16_t voltage_battery_raw;
+                            memcpy(&voltage_battery_raw, &_buf[index], dlc_s);  index += dlc_s;
+
+                            uint16_t voltage_contact_raw;
+                            memcpy(&voltage_contact_raw, &_buf[index], dlc_s);  index += dlc_s;
+
+                            uint16_t voltage_battery_raw_2;  // duplicate
+                            memcpy(&voltage_battery_raw_2, &_buf[index], dlc_s);  index += dlc_s;
+
+                            uint16_t current_charge_raw;
+                            memcpy(&current_charge_raw, &_buf[index], dlc_s);   index += dlc_s;
+
+                            // Main power (float, 4 bytes)
+                            float main_power;
+                            memcpy(&main_power, &_buf[index], dlc_f);  index += dlc_f;
+
+                            // Convert to actual values
+                            float bat_in = voltage_inlet_raw * 0.1f;
+                            float bat_out = voltage_outlet_raw * 0.1f;
+                            float bat_cur = current_line_raw * 0.1f;
+                            float lift_voltage_in = voltage_inlet_lift_raw * 0.1f;
+                            float lift_voltage_out = voltage_outlet_lift_raw * 0.1f;
+                            float lift_current = current_line_lift_raw * 0.01f;
+                            float battery_voltage = voltage_battery_raw * 0.1f;
+                            float contact_voltage = voltage_contact_raw * 0.1f;
+                            float charge_current = current_charge_raw * 0.01f;
+
+                            // Power info
+                            cur_status.bat_in = bat_in;
+                            cur_status.bat_out = bat_out;
+                            cur_status.bat_current = bat_cur;
+                            cur_status.lift_voltage_in = lift_voltage_in;
+                            cur_status.lift_voltage_out = lift_voltage_out;
+                            cur_status.lift_current = lift_current;
+                            cur_status.bat_voltage = battery_voltage;
+                            cur_status.contact_voltage = contact_voltage;
+                            cur_status.charge_current = charge_current;
+                            cur_status.power = main_power;
+                            cur_status.bat_percent = calc_battery_percentage(bat_out);
+
+                            spdlog::info("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}, bat_percent: {} %",
+                                         bat_in, bat_out, bat_cur, main_power, cur_status.bat_percent);
 
                             unsigned int _version;
                             memcpy(&_version, &_buf[index], dlc_f);     index=index+dlc_f;
@@ -3254,6 +3327,7 @@ void MOBILE::send_loop()
 int MOBILE::calc_battery_percentage(float voltage)
 {
     RobotModel robot_model = config->get_robot_model();
+    spdlog::debug("[MOBILE] Calculating battery percentage for robot model: {}", static_cast<int>(robot_model));
     if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         if(voltage <= voltage_lookup_table.front().voltage)

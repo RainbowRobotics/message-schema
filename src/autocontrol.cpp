@@ -25,7 +25,8 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     mobile(nullptr),
     unimap(nullptr),
     obsmap(nullptr),
-    loc(nullptr)
+    loc(nullptr),
+    dockcontrol(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
     connect(this, SIGNAL(signal_move_backward(DATA_MOVE)), this, SLOT(slot_move_backward(DATA_MOVE)));
@@ -3984,4 +3985,9 @@ void AUTOCONTROL::set_localization_module(LOCALIZATION *_loc)
 void AUTOCONTROL::set_policy_module(POLICY* _policy)
 {
     policy = _policy;
+}
+
+void AUTOCONTROL::set_dockcontrol_module(DOCKCONTROL* _dockcontrol)
+{
+    dockcontrol = _dockcontrol;
 }

@@ -271,8 +271,12 @@ struct DATA_CONTROL
     static constexpr const char* SetSafetyField     = "setSafetyField";
     static constexpr const char* GetSafetyField     = "getSafetyField";
     static constexpr const char* ResetSafetyField   = "resetSafetyField";
+    static constexpr const char* SetSafetyFlag      = "setSafetyFlag";
+    static constexpr const char* GetSafetyFlag      = "getSafetyFlag";
+    static constexpr const char* ResetSafetyFlag    = "resetSafetyFlag";
     static constexpr const char* Dock               = "dock";
     static constexpr const char* Undock             = "undock";
+    static constexpr const char* DockStop           = "dockStop";
     static constexpr const char* RandomSeq          = "randomSeq";
     static constexpr const char* LedControl         = "ledControl";
     static constexpr const char* LidarOnOff         = "lidarOnOff";
@@ -299,6 +303,7 @@ struct DATA_CONTROL
 
     QString safetyField;
     QString resetField;
+    QList<QPair<QString, bool>> resetFlags;
 
     // for obs box
     double obs_box_min_x;
@@ -353,6 +358,7 @@ struct DATA_CONTROL
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
         safetyField = p.safetyField;
         resetField = p.resetField;
+        resetFlags = p.resetFlags;
 
         obs_box_min_x = p.obs_box_min_x;
         obs_box_max_x = p.obs_box_max_x;
@@ -378,6 +384,7 @@ struct DATA_CONTROL
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
         safetyField = p.safetyField;
         resetField = p.resetField;
+        resetFlags = p.resetFlags;
 
         obs_box_min_x = p.obs_box_min_x;
         obs_box_max_x = p.obs_box_max_x;
@@ -442,7 +449,7 @@ struct DATA_MAPPING
 struct DATA_DOCK
 {
     double time;
-    QString command; // dock, undock
+    QString command; // dock, undock, dockstop
 
     QString result;
     QString message;

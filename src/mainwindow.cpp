@@ -466,6 +466,7 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
         AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
+        AUTOCONTROL::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -2004,8 +2005,20 @@ void MainWindow::bt_AutoResume()
 //docking
 void MainWindow::bt_DockStart()
 {
+
+    bool moving_flag = AUTOCONTROL::instance()->get_is_moving();
+
+    if(moving_flag)
+    {
+        spdlog::info("[DOCK] Dock Start Failed {IS_MOVING is true}");
+        return;
+    }
+
     //spdlog::info("[DOCK] bt_DockStart");
     log_info("[DOCK] bt_DockStart");
+
+    //retry var set
+    dock_retry_count = 0;
 
     int d_field = CONFIG::instance()->get_docking_field();
     if(d_field == -1)
@@ -2016,6 +2029,7 @@ void MainWindow::bt_DockStart()
     {
         MOBILE::instance()->setlidarfield(d_field);
     }
+
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->move();
 }
@@ -2037,31 +2051,43 @@ void MainWindow::bt_DockStop()
 
 void MainWindow::bt_UnDockStart()
 {
-    //spdlog::info("[DOCK] bt_UnDockStart");
-    log_info("[DOCK] bt_UnDockStart");
+    bool dock_fsm_state = DOCKCONTROL::instance()->get_dock_fsm_state();
 
-    int d_field = CONFIG::instance()->get_docking_field();
-    if(d_field == -1)
+    spdlog::info("[DOCK] bt_UnDockStart");
+
+    if(dock_fsm_state == DOCKING_FSM_OFF)
     {
-        MOBILE::instance()->set_detect_mode(0.0);
+        spdlog::info("[DOCK] UnDock Start");
+
+        int d_field = CONFIG::instance()->get_docking_field();
+
+        if(d_field == -1)
+        {
+            MOBILE::instance()->set_detect_mode(0.0);
+        }
+        else
+        {
+            MOBILE::instance()->setlidarfield(d_field);
+        }
+
+        DOCKCONTROL::instance()->undock();
+
+        double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            AUTOCONTROL::instance()->set_is_moving(false);
+        });
     }
     else
     {
-        MOBILE::instance()->setlidarfield(d_field);
+        spdlog::info("[DOCK] UnDock Failed {DOCK_FSM_STATE is not OFF}");
     }
-
-    DOCKCONTROL::instance()->undock();
-
-    double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
-    QTimer::singleShot(t*1000, [&]()
-    {
-        AUTOCONTROL::instance()->set_is_moving(false);
-        DOCKCONTROL::instance()->stop();
-    });
 }
 
 void MainWindow::bt_ChgTrig()
 {
+
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
 
@@ -3037,9 +3063,11 @@ void MainWindow::watch_loop()
             plot_safety();
             //For sem docking retry logic
             bool retry_flag = DOCKCONTROL::instance()->get_dock_retry_flag();
+            int retry_max_count = CONFIG::instance()->get_docking_retry_count();
 
-            if(retry_flag)
+            if(retry_flag && dock_retry_count < retry_max_count)
             {
+                dock_retry_count++;
                 DOCKCONTROL::instance()->stop();
                 DOCKCONTROL::instance()->move();
                 DOCKCONTROL::instance()->set_dock_retry_flag(false);
@@ -3815,9 +3843,9 @@ void MainWindow::plot_info()
     }
     if(CONFIG::instance()->get_use_msa())
     {
-        if(COMM_MSA::instance()->get_is_connected())
+        if(COMM_MSA::instance()->get_msa_connect_check())
         {
-            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_last_receive_msg());
+            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
     }
 

@@ -83,8 +83,13 @@ void LAKI::close()
 QString LAKI::get_info_text(int idx)
 {
     QString res;
+    double current_time = get_time();
+    double time_since_last_data = current_time - last_data_time[idx].load();
+    
     res += QString().sprintf("[LAKI %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
+    res += QString().sprintf("fq: %d, ", (int)raw_que[idx].unsafe_size());
+    res += QString().sprintf("last_data: %.1fs ago\n", time_since_last_data);
+    res += QString().sprintf("reconnects: %d", (int)reconnect_count[idx].load());
 
     return res;
 }
@@ -166,15 +171,25 @@ void LAKI::grab_loop(int idx)
     Eigen::Vector3d t_ = pts_tf[idx].block(0,3,3,1);
 
     is_connected[idx] = true;
-    printf("[LAKI] start grab loop, %d\n", idx);
+    log_info("start grab loop, {}", idx);
     
     // Reset timestamp tracking for this lidar index
-    static bool first_run[2] = {true, true};
-    if(first_run[idx])
-    {
-        log_info("LAKI[{}] grab_loop started, resetting timestamp tracking", idx);
-        first_run[idx] = false;
-    }
+    double last_lidar_t = -1.0;
+    bool need_resync = true;
+    
+    // Force initial sync
+    is_synced[idx] = false;
+    offset_t[idx] = 0.0;
+    log_info("LAKI[{}] grab_loop started, waiting for initial sync", idx);
+    
+    // Watchdog variables
+    double last_packet_time = get_time();
+    int consecutive_timeouts = 0;
+    const int MAX_CONSECUTIVE_TIMEOUTS = 100;  // 1 second timeout
+    const double PACKET_TIMEOUT = 1.0;  // 1 second
+    const double MOBILE_POSE_TIMEOUT = 0.1;  // 100ms - fast fail for real-time
+    const double SYNC_WAIT_TIMEOUT = 0.5;  // 500ms - faster sync check
+    const double POSE_WAIT_TIMEOUT = 0.2;  // 200ms - quick pose wait
 
     while(grab_flag[idx])
     {
@@ -182,13 +197,69 @@ void LAKI::grab_loop(int idx)
         if(!laki_udp[idx]->get_repackedpack(pack))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            consecutive_timeouts++;
+            
+            // Check for packet timeout
+            double current_time = get_time();
+            if(current_time - last_packet_time > PACKET_TIMEOUT)
+            {
+                static int timeout_log_count = 0;
+                if(timeout_log_count++ % 100 == 0)  // Log every 100 timeouts
+                {
+                    log_warn("LAKI[{}] No packet received for {:.2f}s (consecutive_timeouts: {})", 
+                             idx, current_time - last_packet_time, consecutive_timeouts);
+                }
+                
+                // Force reconnection after too many consecutive timeouts
+                if(consecutive_timeouts > MAX_CONSECUTIVE_TIMEOUTS)
+                {
+                    log_error("LAKI[{}] Too many consecutive timeouts ({}), reconnecting...", idx, consecutive_timeouts);
+                    is_connected[idx] = false;
+                    is_synced[idx] = false;
+                    reconnect_count[idx]++;
+                    
+                    // Attempt to reconnect
+                    try
+                    {
+                        laki_udp[idx].reset();
+                        laki_http[idx].reset();
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        
+                        laki_http[idx] = std::make_unique<LakiBeamHTTP>(local_ip, local_port, sensor_ip_str, http_port);
+                        laki_udp[idx] = std::make_unique<LakiBeamUDP>(local_ip, local_port, sensor_ip_str, sensor_port);
+                        
+                        std::string target_port = std::to_string(2368 + idx);
+                        laki_http[idx]->put_host_port(target_port);
+                        
+                        log_info("LAKI[{}] Reconnected successfully (attempt: {})", idx, (int)reconnect_count[idx]);
+                        is_connected[idx] = true;
+                        need_resync = true;
+                        consecutive_timeouts = 0;
+                        last_packet_time = get_time();
+                    }
+                    catch(...)
+                    {
+                        log_error("LAKI[{}] Reconnection failed", idx);
+                        std::this_thread::sleep_for(std::chrono::seconds(2));
+                    }
+                }
+            }
             continue;
         }
+        
+        // Reset timeout counters on successful packet
+        consecutive_timeouts = 0;
+        last_packet_time = get_time();
+        last_data_time[idx] = last_packet_time;
 
-        // check mobile pose
+        // check mobile pose - quick check without long wait
         if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            static int mobile_pose_skip_count = 0;
+            if(mobile_pose_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Mobile pose not ready, skipping frame (count: {})", idx, mobile_pose_skip_count);
+            }
             continue;
         }
 
@@ -197,19 +268,34 @@ void LAKI::grab_loop(int idx)
         // LAKI timestamp is in microseconds (NOT milliseconds like SICK)
         double lidar_t = pack.dotcloud[0].timestamp * 1e-6; // microseconds to seconds
 
-        if(is_sync[idx])
+        // Detect timestamp reset or jump (lidar reboot)
+        if(last_lidar_t > 0 && lidar_t < last_lidar_t)
+        {
+            log_warn("LAKI[{}] timestamp reset detected! last_lidar_t: {:.6f}, lidar_t: {:.6f}", idx, last_lidar_t, lidar_t);
+            need_resync = true;
+            is_synced[idx] = false;
+        }
+        last_lidar_t = lidar_t;
+
+        // Auto resync if needed or triggered
+        if(need_resync || is_sync[idx])
         {
             is_sync[idx] = false;
             offset_t[idx] = pc_t - lidar_t;
-
             is_synced[idx] = true;
-            log_info("sync. lidar :{}, lidar_t_f: {}, offset_t_f: {}", idx, lidar_t, (double)offset_t[idx]);
+            need_resync = false;
+            log_info("LAKI[{}] synced. pc_t: {:.6f}, lidar_t: {:.6f}, offset_t: {:.6f}", idx, pc_t, lidar_t, (double)offset_t[idx]);
         }
 
-        // check lidar, mobile sync
+        // check lidar, mobile sync - quick check
         if(!is_synced[idx].load() || !mobile->get_is_synced())
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            static int sync_skip_count = 0;
+            if(sync_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Not synced (lidar_synced: {}, mobile_synced: {}), skipping frame", 
+                         idx, is_synced[idx].load(), mobile->get_is_synced());
+            }
             continue;
         }
 
@@ -227,11 +313,41 @@ void LAKI::grab_loop(int idx)
 
         double t0 = lidar_t + offset_t[idx];
         double t1 = t0 + scan_time;
+        
+        // Sanity check: t0 should be close to current pc_t
+        double time_diff = std::abs(t0 - pc_t);
+        if(time_diff > 5.0)  // More than 5 seconds difference
+        {
+            static int resync_warn_count = 0;
+            if(resync_warn_count++ % 50 == 0)  // Log every 50 times
+            {
+                log_warn("LAKI[{}] Large time difference detected: {:.3f}s, forcing resync", idx, time_diff);
+            }
+            need_resync = true;
+            is_synced[idx] = false;
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
 
-        // wait until t1 <= mobile->last_pose_t
-        while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load())
+        // wait until t1 <= mobile->last_pose_t (with short timeout for real-time performance)
+        int pose_wait_count = 0;
+        const int MAX_POSE_WAIT_COUNT = 20;  // 20 * 10ms = 200ms max
+        while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load() && pose_wait_count < MAX_POSE_WAIT_COUNT)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            pose_wait_count++;
+        }
+        
+        // Skip frame if timeout occurred (for real-time performance)
+        if(t1 > mobile->get_last_pose_t())
+        {
+            static int pose_wait_skip_count = 0;
+            if(pose_wait_skip_count++ % 100 == 0)  // Log every 100 skips
+            {
+                log_debug("LAKI[{}] Pose wait timeout, t1: {:.3f}, mobile->last_pose_t: {:.3f}, diff: {:.3f}s", 
+                         idx, t1, mobile->get_last_pose_t(), t1 - mobile->get_last_pose_t());
+            }
+            continue;
         }
 
         // get mobile poses
@@ -258,42 +374,37 @@ void LAKI::grab_loop(int idx)
             }
         }
 
-        // check
+        // check and handle edge cases
         if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
         {
-            static int warn_count = 0;
-            static int last_logged_count = 0;
-            warn_count++;
-            
-            // Only log every 100 times or first 5 times to reduce spam
-            if(warn_count <= 5 || warn_count - last_logged_count >= 100)
+            static int invalid_pose_count = 0;
+            if(invalid_pose_count++ % 500 == 0)  // Log every 500 times to reduce spam
             {
-                last_logged_count = warn_count;
-                
-                log_warn("lidar: {}, invalid mobile poses [count: {}], pose_storage.size(): {}", idx, warn_count, pose_storage.size());
-                if (!pose_storage.empty()) 
-                {
-                    log_warn("  pose_storage time range: [{:.6f}, {:.6f}], span: {:.6f}s", 
-                             pose_storage.front().t, pose_storage.back().t, 
-                             pose_storage.back().t - pose_storage.front().t);
-                    
-                    double diff_t0_front = t0 - pose_storage.front().t;
-                    double diff_t0_back = t0 - pose_storage.back().t;
-                    
-                    log_warn("  t0 diff: front={:.6f}s, back={:.6f}s", diff_t0_front, diff_t0_back);
-                } 
-                log_warn("  t0: {:.6f}, t1: {:.6f}, time_span: {:.6f}s", t0, t1, t1 - t0);
-                log_warn("  idx0: {}, idx1: {}", idx0, idx1);
-                
-                if(idx0 == -1) log_warn("  -> idx0 not found (no pose before t0)");
-                if(idx1 == -1) log_warn("  -> idx1 not found (no pose after t1)");
-                if(idx0 == idx1 && idx0 != -1) log_warn("  -> idx0 == idx1 (poses too close)");
+                log_debug("LAKI[{}] invalid poses (count: {}), t0: {:.3f}, t1: {:.3f}, idx0: {}, idx1: {}, storage_size: {}", 
+                         idx, invalid_pose_count, t0, t1, idx0, idx1, pose_storage.size());
+            }
+
+            // Fast fallback to boundary poses
+            if(idx0 == -1)
+            {
+                idx0 = 0;
+            }
+            if(idx1 == -1 || idx1 >= (int)pose_storage.size())
+            {
+                idx1 = (int)pose_storage.size() - 1;
+            }
+            if(idx0 == idx1 && idx0 < (int)pose_storage.size() - 1)
+            {
+                idx1 = idx0 + 1;
             }
             
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
+            // If still invalid, skip frame
+            if(idx0 == idx1)
+            {
+                continue;
+            }
         }
-
+        
         // get lidar raw data
         std::vector<double> times;
         std::vector<double> reflects;

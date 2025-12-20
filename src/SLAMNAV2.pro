@@ -141,8 +141,8 @@ LIBS += -L/usr/local/lib/
 LIBS += -lvtkCommonColor-$${VTK_VERSION} \
         -lvtkCommonExecutionModel-$${VTK_VERSION} \
         -lvtkCommonCore-$${VTK_VERSION} \
-        -lvtkCommonDataModel-$${VTK_VERSION} \  # Para PCL
-        -lvtkCommonMath-$${VTK_VERSION} \       # Para PCL
+        -lvtkCommonDataModel-$${VTK_VERSION} \
+        -lvtkCommonMath-$${VTK_VERSION} \
         -lvtkFiltersCore-$${VTK_VERSION} \
         -lvtkFiltersSources-$${VTK_VERSION} \
         -lvtkFiltersGeometry-$${VTK_VERSION} \

@@ -304,6 +304,7 @@ public:
     QString get_charge_type();
     int get_docking_field();
     double get_xnergy_set_current();
+    int get_docking_retry_count();
     /***********************
      * map
      ***********************/
@@ -624,6 +625,7 @@ private:
     double DRIVE_W_DEADZONE = 0.1;
 
     // docking
+    int DOCKING_RETRY_COUNT = 3;
     double DOCKING_CHG_LENGTH = 0.472;
     double DOCKING_GOAL_D = 0.03; //3cm
     double DOCKING_GOAL_TH = 0.01745; //0.1*D2R;

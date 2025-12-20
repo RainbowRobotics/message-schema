@@ -92,8 +92,6 @@ void ORBBEC::close()
 
 void ORBBEC::restart(int idx)
 {
-    is_connected[idx] = false;
-
     // close
     grab_flag[idx] = false;
     if(grab_thread[idx] && grab_thread[idx]->joinable())
@@ -126,8 +124,8 @@ QString ORBBEC::get_cam_info_str()
     }
 
     QString str = QString("[ORBBEC]\n%1, color(w,h):%2,%3\ndepth(w,h):%4,%5, %6").arg(connection_str)
-                                                                                 .arg((int)cur_w_color).arg((int)cur_h_color)
-                                                                                 .arg((int)cur_w_depth).arg((int)cur_h_depth)
+                                                                                 .arg((int)cur_w_color[0]).arg((int)cur_h_color[0])
+                                                                                 .arg((int)cur_w_depth[0]).arg((int)cur_h_depth[0])
                                                                                  .arg(pts_str);
     return str;
 }
@@ -302,11 +300,12 @@ void ORBBEC::grab_loop(int idx)
 
 
         std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
-        if(idx == 0)
-        {
-            cam_config->disableAllStream();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
+
+        // if(idx == 0)
+        // {
+        //     cam_config->disableAllStream();
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // }
         cam_config->enableStream(depth_profile);
         cam_config->enableStream(color_profile);
         cam_config->setAlignMode(ALIGN_DISABLE);
