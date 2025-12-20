@@ -14,9 +14,6 @@
 // qt
 #include <QObject>
 
-//constexpr int depth_profile_idx = 28;  // w:640, h:400, fps:30, format:8
-constexpr int depth_profile_idx = 4;  // w:640, h:400, fps:30, format:8
-constexpr int color_profile_idx = 51; // w:640, h:360, fps:5, format:22
 
 class ORBBEC : public QObject
 {
@@ -100,7 +97,6 @@ private:
 
     tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
     tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
-
 
 Q_SIGNALS:
     void signal_restart(int idx);

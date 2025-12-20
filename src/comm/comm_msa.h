@@ -47,8 +47,11 @@
 
 struct COMM_MSA_INFO
 {
-    static constexpr unsigned int send_move_status_cnt = 10;
-    static constexpr unsigned int send_status_cnt = 50;
+    static constexpr int reconnect_time = 3; // second
+    static constexpr double move_status_send_time = 0.1; // second
+    static constexpr double status_send_time = 0.5; // second
+    static constexpr double mapping_cloud_send_time = 0.5; // second
+    static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
 };
 
 class COMM_MSA : public QObject
@@ -101,19 +104,21 @@ private:
     std::mutex send_mtx;
 
     // other modules
-    CAM* cam = nullptr;
-    UNIMAP* unimap = nullptr;
-    CONFIG* config = nullptr;
-    LOGGER* logger = nullptr;
-    MOBILE* mobile = nullptr;
-    OBSMAP* obsmap = nullptr;
-    QObject* main = nullptr;
-    MAPPING* mapping = nullptr;
-    LIDAR_2D* lidar_2d = nullptr;
-    LIDAR_3D* lidar_3d = nullptr;
-    AUTOCONTROL* ctrl = nullptr;
-    DOCKCONTROL* dctrl = nullptr;
-    LOCALIZATION* loc = nullptr;
+    CAM* cam;
+    UNIMAP* unimap;
+    CONFIG* config;
+    LOGGER* logger;
+    MOBILE* mobile;
+    OBSMAP* obsmap;
+    QObject* main;
+    MAPPING* mapping;
+    LIDAR_2D* lidar_2d;
+    LIDAR_3D* lidar_3d;
+    AUTOCONTROL* ctrl;
+    DOCKCONTROL* dctrl;
+    LOCALIZATION* loc;
+
+    QTimer* reconnect_timer;
 
     // vars
     std::unique_ptr<sio::client> io;

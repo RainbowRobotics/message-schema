@@ -24,8 +24,8 @@
 #include "error_manager.h"
 
 #include "comm/comm_coop.h"
-#include "comm/comm_rrs.h"
 #include "comm/comm_msa.h"
+#include "comm/comm_fms.h"
 
 // qt
 #include <QMainWindow>
@@ -38,6 +38,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QGamepad>
 #include <QGamepadManager>
+#include <QNetworkInterface>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -47,6 +48,7 @@ struct MAINWINDOW_INFO
 {
     static constexpr int plot_point_size = 3;
     static constexpr double opacity_val = 0.75;
+    static constexpr double duration_sync_time = 1200.0; // second
 };
 
 class MainWindow : public QMainWindow
@@ -88,7 +90,7 @@ public:
     void speaker_handler(int cnt);
     int led_handler();
 
-    void getIPv4();
+    void get_cur_ip_adddress();
 
     // vars
     std::atomic<double> plot_dt = {0.};
@@ -127,15 +129,9 @@ public:
 
     atomic<double> last_sync_time = {0.};
 
-    // plot cur loc pts
-    std::vector<Eigen::Vector3d> plot_cur_pts;
-
     // for user led
     std::atomic<bool> is_user_led = {false};
     std::atomic<int> user_led_color = {LED_OFF};
-
-    // usb temp sensor
-    std::atomic<float> temperature_value = {0.0};
 
     //for change map name
     std::atomic<bool> change_map_name = {false};
@@ -310,7 +306,6 @@ public Q_SLOTS:
     void plot_loop();
     void qa_loop();
 
-
 private:
     Ui::MainWindow *ui;
     std::shared_mutex mtx;
@@ -327,7 +322,5 @@ private:
 
     // gamepad init
     void init_gamepad();
-
-
 };
 #endif // MAINWINDOW_H

@@ -27,6 +27,15 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
+struct COMM_FMS_INFO
+{
+    static constexpr int reconnect_time = 3; // second
+    static constexpr double move_status_send_time = 0.1; // second
+    static constexpr double status_send_time = 0.5; // second
+    static constexpr double mapping_cloud_send_time = 0.5; // second
+    static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
+};
+
 class COMM_FMS : public QObject
 {
     Q_OBJECT
@@ -46,6 +55,20 @@ public:
     double get_max_process_time_path();
     double get_max_process_time_vobs();
 
+    // setter (othre modules)
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_mobile_module(MOBILE* _mobile);
+    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+    void set_cam_module(CAM* _cam);
+    void set_unimap_module(UNIMAP* _unimap);
+    void set_obsmap_module(OBSMAP* _obsmap);
+    void set_autocontrol_module(AUTOCONTROL* _ctrl);
+    void set_dockcontrol_module(DOCKCONTROL* _dctrl);
+    void set_localization_module(LOCALIZATION* _loc);
+    void set_mapping_module(MAPPING* _mapping);
+
 private:
     explicit COMM_FMS(QObject *parent = nullptr);
     ~COMM_FMS();
@@ -63,7 +86,7 @@ private:
     QObject* main;
     MAPPING* mapping;
     LIDAR_2D* lidar_2d;
-    LIDAR_2D* lidar_3d;
+    LIDAR_3D* lidar_3d;
     AUTOCONTROL* ctrl;
     DOCKCONTROL* dctrl;
     LOCALIZATION* loc;
@@ -92,6 +115,8 @@ private:
     std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
 
+    void send_status_loop();
+
     std::mutex move_mtx;
     std::mutex path_mtx;
     std::mutex vobs_mtx;
@@ -115,12 +140,15 @@ private:
     std::atomic<bool> is_vobs_running = {true};
     std::atomic<bool> is_common_running = {true};
     std::atomic<bool> is_response_running = {true};
+    std::atomic<bool> is_send_status_running = {true};
 
     std::unique_ptr<std::thread> move_thread;
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
     std::unique_ptr<std::thread> common_thread;
     std::unique_ptr<std::thread> response_thread;
+
+    std::unique_ptr<std::thread> send_status_thread;
 
     void move_loop();
     void path_loop();
@@ -173,8 +201,8 @@ private:
     std::atomic<double> process_time_path = {0.0};
     std::atomic<double> process_time_vobs = {0.0};
 
-    std::atomic<double> max_process_time_path = {-std::numeric_limits<double>::max()};
-    std::atomic<double> max_process_time_vobs = {-std::numeric_limits<double>::max()};
+    std::atomic<double> max_process_time_path = {-9999.}; // {-std::numeric_limits<double>::max()};
+    std::atomic<double> max_process_time_vobs = {-9999.}; // {-std::numeric_limits<double>::max()};
 
 private Q_SLOTS:
     void send_loop();

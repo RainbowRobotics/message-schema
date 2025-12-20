@@ -88,11 +88,15 @@ void SICK::close()
 
 QString SICK::get_info_text(int idx)
 {
-    QString res;
-    res += QString().sprintf("[SICK %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
-
-    return res;
+    return QString(
+        "[SICK %1]\n"
+        "pts_t: %2 (%3)\n"
+        "fq: %4,"
+    )
+    .arg(idx)
+    .arg(cur_raw_t[idx].load(), 0, 'f', 3)
+    .arg(cur_pts_num[idx].load())
+    .arg(static_cast<int>(raw_que[idx].unsafe_size()));
 }
 
 RAW_FRAME SICK::get_cur_raw(int idx)

@@ -28,16 +28,16 @@ struct DATA_MOVE
     Eigen::Vector4d tgt_pose_vec;   // target pose (x, y, z, th)
     Eigen::Vector3d jog_val;        // jog velocity (vx, vy, wz)
 
-    double target;             // target distance or angle (m, deg)
-    double speed;              // target speed (m/s, deg/s)
-    double meassured_dist;     // measured distance moved (m, deg)
+    double target;                  // target distance or angle (m, deg)
+    double speed;                   // target speed (m/s, deg/s)
+    double meassured_dist;          // measured distance moved (m, deg)
 
-    double remaining_dist;     // remaining distance (m, deg)
-    double remaining_time;     // estimated time of arrival (sec)
-    int bat_percent;           // battery percentage
+    double remaining_dist;          // remaining distance (m, deg)
+    double remaining_time;          // estimated time of arrival (sec)
+    int bat_percent;                // battery percentage
 
-    QString result;            // result status
-    QString message;           // message text
+    QString result;                 // result status
+    QString message;                // message text
 
     DATA_MOVE()
     {
@@ -964,64 +964,64 @@ struct DATA_VIEW_PATH
 struct DATA_PATH
 {
     long long time;
-    QString command; // path
-    QString path;
-    QString vobs_closures;
     int preset;
 
-    QString response;
+    QString command;
+    QString goal;
     QString result;
     QString message;
-    QString action;
-    QString direction;
     QString method;
+    QString vobs_closures_str;
+    QString path_str;
+
+    std::vector<QString> path;
+    std::vector<int> step;
+    std::vector<Eigen::Vector3d> vobs_closures;
 
     DATA_PATH()
     {
         time = 0;
-        command = "";
-        path = "";
-        vobs_closures = "";
         preset = 0;
-
-        response = "";
+        command = "";
         result = "";
         message = "";
-        action = "";
-        direction = "";
         method = "";
+        path_str = "";
+        vobs_closures_str = "";
     }
 
     DATA_PATH(const DATA_PATH& p)
     {
         time = p.time;
         command = p.command;
-        path = p.path;
         vobs_closures = p.vobs_closures;
+        vobs_closures_str = p.vobs_closures_str;
         preset = p.preset;
 
-        response = p.response;
         result = p.result;
         message = p.message;
-        action = p.action;
-        direction = p.direction;
         method = p.method;
+        path_str = p.path_str;
+
+        path = p.path;
+        step = p.step;
     }
 
     DATA_PATH& operator=(const DATA_PATH& p)
     {
         time = p.time;
         command = p.command;
-        path = p.path;
         vobs_closures = p.vobs_closures;
+        vobs_closures_str = p.vobs_closures_str;
         preset = p.preset;
 
-        response = p.response;
         result = p.result;
         message = p.message;
-        action = p.action;
-        direction = p.direction;
         method = p.method;
+        path_str = p.path_str;
+
+        path = p.path;
+        step = p.step;
         return *this;
     }
 };

@@ -33,7 +33,6 @@ SOURCES += \
     comm/comm_coop.cpp \
     comm/comm_fms.cpp \
     comm/comm_msa.cpp \
-    comm/comm_rrs.cpp \
     autocontrol.cpp \
     cam.cpp \
     cam/ORBBEC/ORBBEC.cpp \
@@ -75,7 +74,6 @@ HEADERS += \
     comm/comm_coop.h \
     comm/comm_fms.h \
     comm/comm_msa.h \
-    comm/comm_rrs.h \
     autocontrol.h \
     cam.h \
     cam/ORBBEC/ORBBEC.h \

@@ -149,6 +149,7 @@ void SAFETY::safety_loop()
         cv::Mat static_map = obsmap->get_static_map();
         if(static_map.empty())
         {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(dt*1000)));
             continue;
         }
 

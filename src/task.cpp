@@ -306,6 +306,7 @@ void TASK::a_loop()
             msg.tgt_pose_vec[1] = xi[1];
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
+
             Q_EMIT ctrl->signal_move(msg);
 
             state = TASK_CHECK_MOVE;

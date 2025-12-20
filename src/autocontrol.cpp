@@ -29,9 +29,9 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     dockcontrol(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
-    connect(this, SIGNAL(signal_backward_move(DATA_MOVE)), this, SLOT(slot_backward_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_path()), this, SLOT(slot_path()));
+    connect(this, SIGNAL(signal_move_backward(DATA_MOVE)), this, SLOT(slot_move_backward(DATA_MOVE)));
+
+    connect(this, SIGNAL(signal_move_multi()), this, SLOT(slot_move_multi()));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -408,11 +408,6 @@ double AUTOCONTROL::get_cur_deadzone()
     return static_cast<double>(cur_deadzone.load());
 }
 
-bool AUTOCONTROL::get_multi_inter_lock()
-{
-    return static_cast<bool>(multi_inter_lock.load());
-}
-
 QString AUTOCONTROL::get_cur_node_id()
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -423,11 +418,6 @@ int AUTOCONTROL::get_last_step()
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     return last_step;
-}
-
-void AUTOCONTROL::set_multi_inter_lock(bool val)
-{
-    multi_inter_lock.store(val);
 }
 
 void AUTOCONTROL::set_multi_request(QString str)
@@ -497,17 +487,7 @@ void AUTOCONTROL::clear_path()
 
 void AUTOCONTROL::slot_move(DATA_MOVE msg)
 {
-
-    // interlock docking
-    bool is_docking = dockcontrol->get_dock_state();
-    if(is_moving || is_docking)
-    {
-        //already move flag is true so return
-        spdlog::info("[AUTO] Slot Move Failed {IS_MOVING is already true or docking state is true}");
-        return;
-    }
-
-    back_mode = false;
+    is_move_backward = false;
 
     // fill goal node name
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
@@ -531,22 +511,22 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
         {
             if(msg.method == "hpp")
             {
-                cmd_method = CommandMethod::METHOD_HPP;
+                drive_method = DriveMethod::METHOD_HPP;
                 log_info("cmd_method: HPP");
             }
             else if(msg.method == "side")
             {
-                cmd_method = CommandMethod::METHOD_SIDE;
+                drive_method = DriveMethod::METHOD_SIDE;
                 log_info("cmd_method: SIDE");
             }
             else
             {
-                cmd_method = CommandMethod::METHOD_PP;
+                drive_method = DriveMethod::METHOD_PP;
                 log_info("cmd_method: PP");
             }
 
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            move(tf, msg.preset);
+            move_single(tf, msg.preset);
         }
     }
     else if(msg.command == "change_goal")
@@ -555,9 +535,9 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     }
 }
 
-void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
+void AUTOCONTROL::slot_move_backward(DATA_MOVE msg)
 {
-    back_mode = true;
+    is_move_backward = true;
 
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
     {
@@ -579,7 +559,7 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
         }
 
         Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-        backwardmove(tf, msg.preset);
+        move_single_backward(tf, msg.preset);
 
     }
     else if(msg.command == "change_goal")
@@ -588,52 +568,17 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
     }
 }
 
-void AUTOCONTROL::slot_path(const DATA_PATH& msg)
+void AUTOCONTROL::slot_move_multi()
 {
-    const QString path_str = msg.path;
-    const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
-
-    std::vector<QString> path;
-    path.reserve(path_str_list.size());
-    for(const QString& path_item : path_str_list)
-    {
-        path.push_back(path_item);
-    }
-
-    QString cur_node_id = unimap->get_node_id_edge(loc->get_cur_tf().block(0,3,3,1));
-    if(!cur_node_id.isEmpty())
-    {
-        if(path.size() == 0 || path[0] != cur_node_id)
-        {
-            path.insert(path.begin(), cur_node_id);
-        }
-    }
-
-    const int preset = msg.preset;
-
-    if(msg.method == "hpp")
-    {
-        cmd_method = CommandMethod::METHOD_HPP;
-    }
-    else if(msg.method == "pp")
-    {
-        cmd_method = CommandMethod::METHOD_PP;
-    }
-
-    move(path, preset);
+    move_multi();
 }
 
-void AUTOCONTROL::slot_path()
-{
-    move();
-}
-
-void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
+void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 {
     // stop first
     stop();
 
-    initial_method = cmd_method;
+    initial_drive_method = drive_method;
 
     // load preset
     params = load_preset(preset);
@@ -653,15 +598,15 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
             QString method = seg.drive_method.toUpper();
             if(method == "HPP")
             {
-                cmd_method = CommandMethod::METHOD_HPP;
+                drive_method = DriveMethod::METHOD_HPP;
             }
             else if(method == "SIDE")
             {
-                cmd_method = CommandMethod::METHOD_SIDE;
+                drive_method = DriveMethod::METHOD_SIDE;
             }
             else
             {
-                cmd_method = initial_method;
+                drive_method = initial_drive_method;
             }
 
             PATH _seg = calc_global_path(seg.node, i == 0);
@@ -712,230 +657,8 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     }
 }
 
-void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
+void AUTOCONTROL::move_multi()
 {
-    stop();
-
-    if(node_path.size() == 0 || preset == -1)
-    {
-        return;
-    }
-    back_mode = false;
-
-    initial_method = cmd_method;
-
-    // symmetric cut
-    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
-
-    // loop cut
-    std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
-    {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
-        {
-            path_list2.push_back(res[q]);
-        }
-    }
-
-    if(path_list2.size() == 0)
-    {
-        log_info("move_pp, path_list2 empty");
-        stop();
-        return;
-    }
-
-    // set flag
-    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
-
-    log_info("move_pp, recv path check");
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        log_info("path_{}", p);
-        for(size_t q = 0; q < path_list2[p].size(); q++)
-        {
-            log_info("{}", qUtf8Printable(path_list2[p][q]));
-        }
-    }
-
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
-    // set path
-    std::vector<PATH> tmp_storage;
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        // enque path
-        PATH path = calc_global_path(path_list2[p], p == 0);
-
-        // check final path
-        if(p == path_list2.size()-1)
-        {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == nullptr)
-            {
-                log_info("move_pp, path invalid");
-                stop();
-                return;
-            }
-
-            log_info("final_goal_node_id: {}, node->id: {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(node->id));
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
-            }
-        }
-
-        // policy path
-        std::vector<PATH> policy_path = policy->drive_policy(path);
-        bool first_seg = true;
-        if(!policy_path.empty())
-        {
-            for(size_t i = 0; i < policy_path.size(); i++)
-            {
-                const PATH& seg = policy_path[i];
-
-                QString method = seg.drive_method.toUpper();
-                if(method == "HPP")
-                {
-                    cmd_method = CommandMethod::METHOD_HPP;
-                }
-                else if(method == "SIDE")
-                {
-                    cmd_method = CommandMethod::METHOD_SIDE;
-                }
-                else
-                {
-                    cmd_method = initial_method;
-                }
-
-                PATH _seg = calc_global_path(seg.node, first_seg);
-                first_seg = false;
-
-                _seg.drive_dir = seg.drive_dir;
-                _seg.drive_method  = seg.drive_method;
-                _seg.is_final = seg.is_final;
-                if(_seg.pose.empty())
-                {
-                    _seg.ed_tf = _seg.is_final ? path.ed_tf : seg.ed_tf;
-                }
-                else
-                {
-                    _seg.ed_tf = _seg.is_final ? path.ed_tf : _seg.pose.back();
-                }
-
-                tmp_storage.push_back(std::move(_seg));
-            }
-        }
-        else
-        {
-            tmp_storage.push_back(path);
-            first_seg = false;
-        }
-    }
-
-    // control loop shutdown but robot still moving
-    if(control_flag)
-    {
-        // check path overlap or reset
-        bool is_curve = false;
-        std::vector<Eigen::Matrix4d> merged_tf_list;
-        for(size_t p = 0; p < tmp_storage.size(); p++)
-        {
-            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
-            {
-                merged_tf_list.push_back(tmp_storage[p].pose[q]);
-            }
-        }
-
-        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        for(int p = 0; p < std::min<int>(static_cast<int>(merged_tf_list.size()), 20); p++) // 2m
-        {
-            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
-            double th = deltaRad(xi[2], cur_xi[2]);
-            if(std::abs(th) > 30.0*D2R)
-            {
-                is_curve = true;
-                break;
-            }
-        }
-
-        is_path_overlap = true;
-
-        stop_control_thread();
-
-        if(is_curve)
-        {
-            mobile->move(0,0,0);
-            log_info("move_pp, curve detected, stop");
-        }
-        else
-        {
-            log_info("move_pp, no curve, just change path");
-        }
-    }
-
-    stop_obs_thread();
-
-    // set global path
-    global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        global_path_que.push(tmp_storage[p]);
-    }
-
-    // load preset
-    params = load_preset(preset);
-
-    // start control loop
-    if(control_flag == false)
-    {
-        control_flag = true;
-        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
-    }
-
-    // start obs loop
-    if(obs_flag == false)
-    {
-        obs_flag = true;
-        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
-    }
-}
-
-void AUTOCONTROL::move()
-{
-    stop();
-
     std::lock_guard<std::mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
     {
@@ -943,7 +666,7 @@ void AUTOCONTROL::move()
         return;
     }
 
-    back_mode = false;
+    is_move_backward = false;
 
     // control params clear
     is_pause = false;
@@ -983,16 +706,6 @@ void AUTOCONTROL::move()
         }
     }
 
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
     // set path
     std::vector<PATH> tmp_storage;
     for(size_t p = 0; p < path_list2.size(); p++)
@@ -1009,32 +722,6 @@ void AUTOCONTROL::move()
                 log_info("move_pp, path invalid");
                 stop();
                 return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
             }
         }
 
@@ -1187,7 +874,7 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
     }
 }
 
-void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
+void AUTOCONTROL::move_single_backward(Eigen::Matrix4d goal_tf, int preset)
 {
     // stop first
     stop();
@@ -1223,180 +910,7 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
     }
 }
 
-void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
-{
-    if(node_path.size() == 0 || preset == -1)
-    {
-        return;
-    }
-
-    back_mode = true;
-    // control params clear
-    is_pause = false;
-    is_moving = false;
-
-    // symmetric cut
-    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
-
-    // loop cut
-    std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
-    {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
-        {
-            path_list2.push_back(res[q]);
-        }
-    }
-
-    if(path_list2.size() == 0)
-    {
-        log_info("move_pp, path_list2 empty");
-        stop();
-        return;
-    }
-
-    // set flag
-    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
-
-    log_info("move_pp, recv path check");
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        log_info("path_{}", p);
-        for(size_t q = 0; q < path_list2[p].size(); q++)
-        {
-            log_info("{}", qUtf8Printable(path_list2[p][q]));
-        }
-    }
-
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
-    // set path
-    std::vector<PATH> tmp_storage;
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        // enque path
-        PATH path = calc_global_path(path_list2[p], p == 0);
-
-        // check final path
-        if(p == path_list2.size()-1)
-        {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == nullptr)
-            {
-                log_info("move_pp, path invalid");
-                stop();
-                return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
-            }
-        }
-
-        tmp_storage.push_back(path);
-    }
-
-    // control loop shutdown but robot still moving
-    if(control_flag)
-    {
-        // check path overlap or reset
-        bool is_curve = false;
-        std::vector<Eigen::Matrix4d> merged_tf_list;
-        for(size_t p = 0; p < tmp_storage.size(); p++)
-        {
-            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
-            {
-                merged_tf_list.push_back(tmp_storage[p].pose[q]);
-            }
-        }
-
-        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        for(int p = 0; p < std::min<int>(static_cast<int>(merged_tf_list.size()), AUTOCONTROL_INFO::path_overlap_check_dist); p++)
-        {
-            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
-            double th = deltaRad(xi[2], cur_xi[2]);
-            if(std::abs(th) > AUTOCONTROL_INFO::path_overlap_check_deg * D2R)
-            {
-                is_curve = true;
-                break;
-            }
-        }
-
-        is_path_overlap = true;
-
-        stop_control_thread();
-
-        if(is_curve)
-        {
-            mobile->move(0,0,0);
-            log_info("move_pp, curve detected, stop");
-        }
-        else
-        {
-            log_info("move_pp, no curve, just change path");
-        }
-    }
-
-    stop_obs_thread();
-
-    // set global path
-    global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        global_path_que.push(tmp_storage[p]);
-    }
-
-    // load preset
-    params = load_preset(preset);
-
-    // start obs loop
-    if(obs_flag == false)
-    {
-        obs_flag = true;
-        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
-    }
-
-    // start control loop
-    if(control_flag == false)
-    {
-        control_flag = true;
-        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
-    }
-}
-
-void AUTOCONTROL::backwardmove()
+void AUTOCONTROL::move_multi_backward()
 {
     std::lock_guard<std::mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
@@ -1405,7 +919,7 @@ void AUTOCONTROL::backwardmove()
         return;
     }
 
-    back_mode = true;
+    is_move_backward = true;
 
     // control params clear
     is_pause = false;
@@ -1445,16 +959,6 @@ void AUTOCONTROL::backwardmove()
         }
     }
 
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
     // set path
     std::vector<PATH> tmp_storage;
     for(size_t p = 0; p < path_list2.size(); p++)
@@ -1471,33 +975,6 @@ void AUTOCONTROL::backwardmove()
                 log_info("move_pp, path invalid");
                 stop();
                 return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
             }
         }
 
@@ -1760,7 +1237,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     std::vector<Eigen::Matrix4d> path_pose;
     std::vector<Eigen::Vector3d> path_pos;
 
-    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+    if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
     {
         for(size_t p = 0; p < node_pose.size(); p++)
         {
@@ -1851,7 +1328,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     std::vector<Eigen::Matrix4d> path_pose;
     std::vector<Eigen::Vector3d> path_pos;
 
-    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+    if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
     {
         for(size_t p = 0; p < node_pose.size(); p++)
         {
@@ -2389,7 +1866,7 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
 
     const int ld = params.DRIVE_L/step;
 
-    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+    if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
     {
         std::vector<double> _ref_v(src.size(), params.LIMIT_V);
         for(size_t p = 0; p < src.size()-1; p++)
@@ -2661,7 +2138,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         std::vector<Eigen::Matrix4d> path_pose;
         std::vector<Eigen::Vector3d> path_pos;
 
-        if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+        if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
         {
             // resampling
             path_pose = path_resampling(_path_pose, AUTOCONTROL_INFO::local_path_step);
@@ -2717,7 +2194,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         // smoothing ref_v
         ref_v = smoothing_v(ref_v, AUTOCONTROL_INFO::local_path_step);
         //////////////ms 추가////////////////////
-        if(back_mode == true)
+        if(is_move_backward == true)
         {
             for(auto& v : ref_v)
                 v = -v;
@@ -2740,7 +2217,7 @@ PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_vel = mobile->get_control_input();
 
-    if (back_mode)
+    if (is_move_backward)
     {
         // flip robot frame for back mode
         Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
@@ -2769,7 +2246,7 @@ PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
     }
 
     double st_v = global_path.ref_v[st_idx];
-    if (back_mode)
+    if (is_move_backward)
     {
         st_v = - std::abs(st_v);
 
@@ -2808,7 +2285,7 @@ PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
     calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
 
     // back mode: force all velocities negative
-    if(back_mode)
+    if(is_move_backward)
     {
         for(size_t i=0; i<ref_v.size(); i++)
         {
@@ -3050,7 +2527,6 @@ void AUTOCONTROL::control_loop()
 {
     // set flag
     is_moving = true;
-    multi_inter_lock = false;
 
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
@@ -3077,20 +2553,20 @@ void AUTOCONTROL::control_loop()
         QString method = global_path.drive_method.toUpper();
         if(method == "HPP")
         {
-            cmd_method = CommandMethod::METHOD_HPP;
+            drive_method = DriveMethod::METHOD_HPP;
         }
         else if(method == "SIDE")
         {
-            cmd_method = CommandMethod::METHOD_SIDE;
+            drive_method = DriveMethod::METHOD_SIDE;
         }
         else
         {
-            cmd_method = initial_method;
+            drive_method = initial_drive_method;
         }
 
-        back_mode = ((global_path.drive_dir == (DriveDir::REVERSE)) && cmd_method == (CommandMethod::METHOD_PP));
+        is_move_backward = ((global_path.drive_dir == (DriveDir::REVERSE)) && drive_method == (DriveMethod::METHOD_PP));
 
-        log_info("set back_mode from PATH: {}", (back_mode ? "true" : "false"));
+        log_info("set back_mode from PATH: {}", (is_move_backward ? "true" : "false"));
     }
 
     if(global_path.pose.size() == 0)
@@ -3107,13 +2583,13 @@ void AUTOCONTROL::control_loop()
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
 
     // set initial state
-    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ?
+    fsm_state = ((drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE) ?
         AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
-    if(cmd_method == CommandMethod::METHOD_HPP)
+    if(drive_method == DriveMethod::METHOD_HPP)
     {
         log_info("CommandMethod:HPP ----- FSM_STATE : {}", fsm_state.load());
     }
-    else if(cmd_method == CommandMethod::METHOD_PP)
+    else if(drive_method == DriveMethod::METHOD_PP)
     {
         log_info("CommandMethod:PP ----- FSM_STATE : {}", fsm_state.load());
     }
@@ -3122,7 +2598,7 @@ void AUTOCONTROL::control_loop()
     if(global_path_que.unsafe_size() == 0)
     {
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        if(fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN && is_move_backward == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
             Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);
@@ -3201,7 +2677,7 @@ void AUTOCONTROL::control_loop()
     {
         // get current status
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        if(fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN && is_move_backward == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
             Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);
@@ -3408,7 +2884,7 @@ void AUTOCONTROL::control_loop()
                 double v0 = cur_vel[0];
                 double v;
                 double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
-                if(back_mode)
+                if(is_move_backward)
                 {
                     double v_ref = -std::abs(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt);
                     double v_min = std::max(v0 - params.LIMIT_V_DCC*dt, -params.ED_V);
@@ -3421,7 +2897,7 @@ void AUTOCONTROL::control_loop()
                     v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
                 }
 
-                if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+                if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
                 {
                     double vx = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, cur_vel[0] - params.LIMIT_V_DCC*dt, cur_vel[0] + params.LIMIT_V_ACC*dt);
                     double vy = saturation(config->get_drive_goal_approach_gain()*_goal_pos[1]/remain_dt, cur_vel[1] - params.LIMIT_V_DCC*dt, cur_vel[1] + params.LIMIT_V_ACC*dt);
@@ -3433,11 +2909,11 @@ void AUTOCONTROL::control_loop()
                     // send control
                     if(robot_model == RobotModel::QD)
                     {
-                        if(cmd_method == CommandMethod::METHOD_HPP)
+                        if(drive_method == DriveMethod::METHOD_HPP)
                         {
                             mobile->moveQD(vx, vy, wz, 1);
                         }
-                        else if(cmd_method == CommandMethod::METHOD_SIDE)
+                        else if(drive_method == DriveMethod::METHOD_SIDE)
                         {
                             mobile->moveQD(vx, vy, wz, 2);
                         }
@@ -3449,7 +2925,7 @@ void AUTOCONTROL::control_loop()
                 }
                 else
                 {
-                    if(!back_mode)
+                    if(!is_move_backward)
                     {
                         double temp_v = v0;
                         if(v0 > 0)
@@ -3493,18 +2969,18 @@ void AUTOCONTROL::control_loop()
                             QString method = _global_path.drive_method.toUpper();
                             if(method == "HPP")
                             {
-                                cmd_method = CommandMethod::METHOD_HPP;
+                                drive_method = DriveMethod::METHOD_HPP;
                             }
                             else if(method == "SIDE")
                             {
-                                cmd_method = CommandMethod::METHOD_SIDE;
+                                drive_method = DriveMethod::METHOD_SIDE;
                             }
                             else
                             {
-                                cmd_method = initial_method;
+                                drive_method = initial_drive_method;
                             }
 
-                            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+                            if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
                             {
                                 fsm_state = AUTO_FSM_DRIVING;
                             }
@@ -3518,8 +2994,8 @@ void AUTOCONTROL::control_loop()
                             global_path = _global_path;
                             log_info("next global path, deque global path, size: {}", global_path.pos.size());
 
-                            back_mode = ((global_path.drive_dir == (DriveDir::REVERSE)) && cmd_method == (CommandMethod::METHOD_PP));
-                            log_info("next segment back_mode: {}", back_mode.load() ? "true" : "false");
+                            is_move_backward = ((global_path.drive_dir == (DriveDir::REVERSE)) && drive_method == (DriveMethod::METHOD_PP));
+                            log_info("next segment back_mode: {}", is_move_backward.load() ? "true" : "false");
 
                             // update global goal
                             goal_tf = global_path.ed_tf;
@@ -3636,7 +3112,7 @@ void AUTOCONTROL::control_loop()
 
             double err_d  = std::numeric_limits<double>::max();
             double err_th = std::numeric_limits<double>::max();
-            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
             {
                 Eigen::Vector3d local_tgt_pos = cur_tf_inv.block(0,0,3,3)*tgt_pos + cur_tf_inv.block(0,3,3,1);
 
@@ -3681,12 +3157,12 @@ void AUTOCONTROL::control_loop()
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
 
-            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
             {
                 v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
             }
 
-            if(back_mode)
+            if(is_move_backward)
             {
                 v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_DCC*dt);
 
@@ -3709,14 +3185,14 @@ void AUTOCONTROL::control_loop()
             }
 
             double w;
-            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
             {
                 // PD control
                 w = params.DRIVE_A * err_th + params.DRIVE_B * (err_th - pre_err_th)/dt;
             }
             else
             {
-                if(back_mode == true)
+                if(is_move_backward == true)
                 {
                     v = -v;
                 }
@@ -3728,7 +3204,7 @@ void AUTOCONTROL::control_loop()
                 th = saturation(th, -45.0 * D2R, 45.0 * D2R);
                 w = std::tan(th) / params.DRIVE_L;
 
-                if(back_mode == true)
+                if(is_move_backward == true)
                 {
                     v = -v;
                 }
@@ -3760,7 +3236,7 @@ void AUTOCONTROL::control_loop()
                 w = 0;
             }
 
-            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            if(drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE)
             {
                 double vx = dir_x * v;
                 double vy = dir_y * v;
@@ -3768,11 +3244,11 @@ void AUTOCONTROL::control_loop()
                 // send control
                 if(robot_model == RobotModel::QD)
                 {
-                    if(cmd_method == CommandMethod::METHOD_HPP)
+                    if(drive_method == DriveMethod::METHOD_HPP)
                     {
                         mobile->moveQD(vx, vy, w, 1);
                     }
-                    else if(cmd_method == CommandMethod::METHOD_SIDE)
+                    else if(drive_method == DriveMethod::METHOD_SIDE)
                     {
                         mobile->moveQD(vx, vy, w, 2);
                     }
@@ -3857,7 +3333,7 @@ void AUTOCONTROL::control_loop()
 
             double vx = 0.0;
             double vy = 0.0;
-            if(cmd_method == CommandMethod::METHOD_HPP)
+            if(drive_method == DriveMethod::METHOD_HPP)
             {
                 vx = config->get_drive_goal_approach_gain()*err_x;
                 vy = config->get_drive_goal_approach_gain()*err_y;
@@ -3935,7 +3411,7 @@ void AUTOCONTROL::control_loop()
                     extend_dt = 0;
                     pre_err_th = 0;
 
-                    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+                    fsm_state = ((drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
 
                     set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
 
@@ -4032,7 +3508,7 @@ void AUTOCONTROL::control_loop()
                 w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
                 w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
-                if(back_mode)
+                if(is_move_backward)
                 {
                     // need test!
                     if(v0 < 0)
@@ -4099,7 +3575,7 @@ void AUTOCONTROL::control_loop()
                             global_path.ref_v[ref_v_index] = params.ST_V;
                         }
 
-                        fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+                        fsm_state = ((drive_method == DriveMethod::METHOD_HPP || drive_method == DriveMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
 
                         set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
                         obs_value = OBS_NONE;
@@ -4276,7 +3752,7 @@ void AUTOCONTROL::obs_loop()
         }
         //        qDebug()<<"obs";
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        if (fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
+        if (fsm_state != AUTO_FSM_FINAL_ALIGN && is_move_backward == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
             Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);

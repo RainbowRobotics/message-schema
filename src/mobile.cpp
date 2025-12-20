@@ -393,7 +393,6 @@ void MOBILE::receive_data_loop()
 
     while(recv_flag && is_connected)
     {
-
         // storing buffer
         std::vector<uchar> recv_buf(MOBILE_INFO::recv_buf_size, 0);
         int num = read(fd, (char*)recv_buf.data(), recv_buf.size());
@@ -435,19 +434,17 @@ void MOBILE::receive_data_loop()
          * Safety  total 186  -> data 199
          * Mecanum total 136  -> data 129
          */
-
         while((int)buf.size() > MOBILE_INFO::min_packet_size && recv_flag)
         {
             if(buf[0] == 0x24)
             {
                 // Header
-                int data_size = (unsigned short)(buf[1]|(buf[2]<<8));
+                int data_size = static_cast<unsigned short>(buf[1]|(buf[2]<<8));
 
                 if(data_size + 7 <= buf.size())
                 {
                     if(buf[data_size + 6] == 0x25)
                     {
-                        // **********************************************Footer*********************************************** */
                         int index = 6;
                         const int dlc   = 1;
                         const int dlc_s = 2;
@@ -488,10 +485,8 @@ void MOBILE::receive_data_loop()
                         }
                         else
                         {
-                            //std::cout << "wrong robot_type: " << static_cast<int>(robot_type) << ", data_size: " << data_size << std::endl;
-                            spdlog::warn("[MOBILE]wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
+                            spdlog::warn("wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
                         }
-                        //*************************************************************************************************************** */
 
                         if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_high)
                         {
@@ -557,7 +552,6 @@ void MOBILE::receive_data_loop()
                                 index += dlc_f*10;
                             }
 
-
                             // calc time offset
                             if(is_sync && pc_t > sync_st_time + 0.1)
                             {
@@ -568,16 +562,37 @@ void MOBILE::receive_data_loop()
                                 offset_t = _offset_t;
 
                                 is_synced = true;
-                                //printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                                 spdlog::info("[MOBILE] sync, offset_t: {: .6f}", (double)offset_t);
                             }
 
                             // mobile pose processing
                             MOBILE_POSE mobile_pose;
-                            mobile_pose.t = mobile_t + offset_t;
+                            mobile_pose.t    = mobile_t + offset_t;
+                            mobile_pose.vel  = Eigen::Vector3d(local_vx, local_vy, local_wz);
                             mobile_pose.pose = Eigen::Vector3d(x, y, toWrap(th));
-//                            mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
-                            mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
+
+                            Eigen::Vector3d cmd = get_control_input();
+                            {
+                                std::lock_guard<std::mutex> lock(mtx);
+
+                                cur_pose = mobile_pose;
+                                pose_storage.push_back(mobile_pose);
+                                if(pose_storage.size() > MO_STORAGE_NUM)
+                                {
+                                    pose_storage.erase(pose_storage.begin());
+                                }
+
+                                QString mobile_pose_str;
+                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f,%.2f,%.2f\ncmd:%.2f,%.2f,%.2f",
+                                                      mobile_pose.t,
+                                                      mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
+                                                      mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                                                      cmd[0], cmd[1], cmd[2]*R2D);
+                                pose_text = mobile_pose_str;
+
+                                // update last t
+                                last_pose_t = mobile_pose.t;
+                            }
 
                             // imu processing
                             Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
@@ -585,63 +600,37 @@ void MOBILE::receive_data_loop()
 
                             MOBILE_IMU imu;
                             imu.t = mobile_t + offset_t;
+                            imu.rx = r[0];
+                            imu.ry = r[1];
+                            imu.rz = r[2];
                             imu.acc_x = imu_acc_x;
                             imu.acc_y = imu_acc_y;
                             imu.acc_z = imu_acc_z;
                             imu.gyr_x = imu_gyr_x;
                             imu.gyr_y = imu_gyr_y;
                             imu.gyr_z = imu_gyr_z;
-                            imu.rx = r[0];
-                            imu.ry = r[1];
-                            imu.rz = r[2];
-
-                            cur_status.t = mobile_t + offset_t;
-                            
-                            cur_status.imu_acc_x = imu_acc_x;
-                            cur_status.imu_acc_y = imu_acc_y;
-                            cur_status.imu_acc_z = imu_acc_z;
-                            cur_status.imu_gyr_x = imu_gyr_x;
-                            cur_status.imu_gyr_y = imu_gyr_y;
-                            cur_status.imu_gyr_z = imu_gyr_z;
-
-                            // control input processing
-                            Eigen::Vector3d cmd = get_control_input();
-
-                            // storing
-                            mtx.lock();
-
-                            QString mobile_pose_str;
-                            mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f,%.2f,%.2f\ncmd:%.2f,%.2f,%.2f",
-                                                  mobile_pose.t,
-                                                  mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                                  mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                                  cmd[0], cmd[1], cmd[2]*R2D);
-                            pose_text = mobile_pose_str;
-
-                            cur_pose = mobile_pose;
-                            cur_imu = r;
-
-                            pose_storage.push_back(mobile_pose);
-                            if(pose_storage.size() > MO_STORAGE_NUM)
                             {
-                                pose_storage.erase(pose_storage.begin());
-                            }
+                                std::lock_guard<std::mutex> lock(mtx);
 
-                            if(is_imu_used)
-                            {
-                                imu_storage.push_back(imu);
+                                cur_status.t = mobile_t + offset_t;
+                                cur_status.imu_acc_x = imu_acc_x;
+                                cur_status.imu_acc_y = imu_acc_y;
+                                cur_status.imu_acc_z = imu_acc_z;
+                                cur_status.imu_gyr_x = imu_gyr_x;
+                                cur_status.imu_gyr_y = imu_gyr_y;
+                                cur_status.imu_gyr_z = imu_gyr_z;
+                                cur_imu = r;
 
-                                if(imu_storage.size() > MO_STORAGE_NUM)
+                                if(is_imu_used)
                                 {
-                                    imu_storage.erase(imu_storage.begin());
+                                    imu_storage.push_back(imu);
+                                    if(imu_storage.size() > MO_STORAGE_NUM)
+                                    {
+                                        imu_storage.erase(imu_storage.begin());
+                                    }
                                 }
+                                last_imu_t = imu.t;
                             }
-
-                            mtx.unlock();
-
-                            // update last t
-                            last_pose_t = mobile_pose.t;
-                            last_imu_t = imu.t;
                         }
 
                         else if(_buf[5] == 0xA1 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_mid)
@@ -692,8 +681,6 @@ void MOBILE::receive_data_loop()
                             uint32_t xnergy_error_code_high;
                             memcpy(&xnergy_error_code_high, &_buf[index], dlc_f); index += dlc_f;
 
-
-                            
                             // Update status
                             mtx.lock();
                             cur_status.om_state = om_state;
@@ -821,8 +808,8 @@ void MOBILE::receive_data_loop()
                                 "tabos_rc:" + QString::number(cur_status.tabos_rc, 'f', 2) + ", " +
                                 "tabos_ae:" + QString::number(cur_status.tabos_ae, 'f', 2) + ", " +
                                 "tabos_sat:" + QString::number(cur_status.tabos_status) + " \n";
-
                             }
+
                             // SFTY 정보
                             mobile_status_str += "SFTY(emo,refm,spd,obs,sfld,intlk,op):{" +
                             QString::number(cur_status.safety_state_emo_pressed_1) + "," +
@@ -902,7 +889,6 @@ void MOBILE::receive_data_loop()
                                 wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_UNKNOWN;
                                 spdlog::error("[MOBILE] Unknown motor robot type: {}", motor_robot_type);
                             }
-
 
                             // Motor data - assume MAX_MC_BOARD = 2 for safety robot
                             const int MAX_MC_BOARD = 8;
@@ -1080,7 +1066,6 @@ void MOBILE::receive_data_loop()
                             cur_status.bms_type = bms_header;
                             mtx.unlock();
                         }
-
 
                         else if(_buf[5] == 0xA2 && robot_type != RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
                         {
