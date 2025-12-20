@@ -2560,6 +2560,26 @@ QString CONFIG::get_cam_tf(int idx)
     return "";
 }
 
+int CONFIG::get_cam_color_profile(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < get_cam_num())
+    {
+        return CAM_COLOR_PROFILE[idx];
+    }
+    return 0;
+}
+
+int CONFIG::get_cam_depth_profile(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < get_cam_num())
+    {
+        return CAM_DEPTH_PROFILE[idx];
+    }
+    return 0;
+}
+
 int CONFIG::get_motor_id_left()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);

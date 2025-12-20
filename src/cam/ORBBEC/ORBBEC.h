@@ -99,9 +99,6 @@ private:
     tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
     tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
 
-    int depth_profile_idx = 55;
-    int color_profile_idx = 112;
-
 Q_SIGNALS:
     void signal_restart(int idx);
 
