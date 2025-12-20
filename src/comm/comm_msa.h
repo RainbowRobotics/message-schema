@@ -83,6 +83,7 @@ public:
     void set_mapping_module(MAPPING* _mapping);
 
     // start thread module
+    void start_all_thread();
     void start_recv_thread();
     void start_move_thread();
     void start_load_thread();
@@ -93,6 +94,7 @@ public:
     void start_send_status_thread();
     void start_send_response_thread();
 
+    void stop_all_thread();
     void stop_recv_thread();
     void stop_move_thread();
     void stop_load_thread();
@@ -154,13 +156,28 @@ private:
     std::atomic<double> max_process_time_path = {-std::numeric_limits<double>::max()};
     std::atomic<double> max_process_time_vobs = {-std::numeric_limits<double>::max()};
 
-    int lidar_view_cnt = 0;
-    int path_view_cnt  = 0;
+    double last_lidar_view_time = 0.0;
+    double last_path_view_time  = 0.0;
 
     unsigned char dio_arr_old[16] = {0};
 
+    template<typename T>
+    void add_to_obj(sio::object_message::ptr obj, const std::string& key, T value);
+
+    sio::object_message::ptr create_localization_score_obj(const Eigen::Vector2d& loc_ieir,
+                                                           const Eigen::Vector2d& mapping_ieir);
+    sio::object_message::ptr create_pose_obj(const Eigen::Vector3d& cur_xi);
+    sio::object_message::ptr create_velocity_obj(const MOBILE_POSE& mo);
+    sio::object_message::ptr create_move_state_obj();
+    sio::object_message::ptr create_motor_obj(const MOBILE_STATUS& ms, int motor_idx);
+    sio::object_message::ptr create_robot_state_obj(const MOBILE_STATUS& ms);
+    sio::object_message::ptr create_robot_io_obj(const MOBILE_STATUS& ms);
+    sio::object_message::ptr create_power_obj(const MOBILE_STATUS& ms);
+    sio::object_message::ptr create_map_info_obj();
+    sio::object_message::ptr create_robot_info_obj();
+
     void recv_message(sio::event& ev);
-    void recv_message_array(sio::event& ev);\
+    void recv_message_array(sio::event& ev);
 
     /* utils function */
     bool is_main_window_valid();

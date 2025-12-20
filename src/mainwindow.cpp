@@ -3858,25 +3858,25 @@ void MainWindow::plot_safety()
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
-    ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
-    ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
+    ui->le_Setting_Version->setText(QString("%1").arg(cur_setting.version));
+    ui->le_Setting_Type->setText(QString("%1").arg(cur_setting.robot_type));
 
-    ui->le_Setting_Limit_V->setText(QString().sprintf("%.2f",cur_setting.v_limit/1000.0));
-    ui->le_Setting_Limit_V_Jog->setText(QString().sprintf("%.2f",cur_setting.v_limit_jog/1000.0));
-    ui->le_Setting_Limit_W->setText(QString().sprintf("%.2f", cur_setting.w_limit));
-    ui->le_Setting_Limit_W_Jog->setText(QString().sprintf("%.2f",cur_setting.w_limit_jog));
-    ui->le_Setting_Limit_A->setText(QString().sprintf("%.2f", cur_setting.a_limit/1000.0));
-    ui->le_Setting_Limit_A_Jog->setText(QString().sprintf("%.2f", cur_setting.a_limit_jog/1000.0));
-    ui->le_Setting_Limit_B->setText(QString().sprintf("%.2f", cur_setting.b_limit));
-    ui->le_Setting_Limit_B_Jog->setText(QString().sprintf("%.2f", cur_setting.b_limit_jog));
+    ui->le_Setting_Limit_V->setText(QString("%1").arg(cur_setting.v_limit/1000.0, 0, 'f', 2));
+    ui->le_Setting_Limit_V_Jog->setText(QString("%1").arg(cur_setting.v_limit_jog/1000.0, 0, 'f', 2));
+    ui->le_Setting_Limit_W->setText(QString("%1").arg(cur_setting.w_limit, 0, 'f', 2));
+    ui->le_Setting_Limit_W_Jog->setText(QString("%1").arg(cur_setting.w_limit_jog, 0, 'f', 2));
+    ui->le_Setting_Limit_A->setText(QString("%1").arg(cur_setting.a_limit/1000.0, 0, 'f', 2));
+    ui->le_Setting_Limit_A_Jog->setText(QString("%1").arg(cur_setting.a_limit_jog/1000.0, 0, 'f', 2));
+    ui->le_Setting_Limit_B->setText(QString("%1").arg(cur_setting.b_limit, 0, 'f', 2));
+    ui->le_Setting_Limit_B_Jog->setText(QString("%1").arg(cur_setting.b_limit_jog, 0, 'f', 2));
 
-    ui->le_Setting_W_R->setText(QString().sprintf("%.2f", cur_setting.w_r));
-    ui->le_Setting_W_S->setText(QString().sprintf("%.2f", cur_setting.w_s));
-    ui->le_Setting_Gear->setText(QString().sprintf("%.2f", cur_setting.gear));
-    ui->le_Setting_Dir->setText(QString().sprintf("%.2f", cur_setting.dir));
+    ui->le_Setting_W_R->setText(QString("%1").arg(cur_setting.w_r, 0, 'f', 2));
+    ui->le_Setting_W_S->setText(QString("%1").arg(cur_setting.w_s, 0, 'f', 2));
+    ui->le_Setting_Gear->setText(QString("%1").arg(cur_setting.gear, 0, 'f', 2));
+    ui->le_Setting_Dir->setText(QString("%1").arg(cur_setting.dir, 0, 'f', 2));
 
-    ui->le_Setting_Limit_V_Monitor->setText(QString().sprintf("%.2f",cur_setting.v_limit_monitor/1000.0));
-    ui->le_Setting_Limit_W_Monitor->setText(QString().sprintf("%.2f",cur_setting.w_limit_monitor));
+    ui->le_Setting_Limit_V_Monitor->setText(QString("%1").arg(cur_setting.v_limit_monitor/1000.0, 0, 'f', 2));
+    ui->le_Setting_Limit_W_Monitor->setText(QString("%1").arg(cur_setting.w_limit_monitor, 0, 'f', 2));
 
     if(cur_setting.robot_wheel_type == 0)
     {
