@@ -466,7 +466,6 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
         AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
-        AUTOCONTROL::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -3843,10 +3842,10 @@ void MainWindow::plot_info()
     }
     if(CONFIG::instance()->get_use_msa())
     {
-        if(COMM_MSA::instance()->get_msa_connect_check())
-        {
-            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
-        }
+        //if(COMM_MSA::instance()->get_msa_connect_check())
+        //{
+        //    ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
+        //}
     }
 
 }

@@ -4,14 +4,12 @@
 // global defines
 #include "global_defines.h"
 #include "my_utils.h"
-#include "comm_data.h"
 
 // other modules
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
-#include "lidar_3d.h"
 #include "cam.h"
 #include "localization.h"
 #include "mapping.h"
@@ -19,7 +17,6 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "dockcontrol.h"
-#include "error_manager.h"
 
 #include <sio_client.h>
 #define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
@@ -34,16 +31,8 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 #include <QProcess>
-#include <QDateTime>
 
 #include <filesystem>
-#include <queue>
-#include <thread>
-#include <mutex>
-#include <shared_mutex>
-#include <condition_variable>
-#include <atomic>
-#include <functional>
 
 struct COMM_MSA_INFO
 {
@@ -64,21 +53,22 @@ public:
     // interface func
     void init();
 
-    QString get_json(const QJsonObject& json, QString key);
-    int get_json_int(const QJsonObject& json, QString key);
-    double get_json_double(const QJsonObject& json, QString key);
-    QString get_msa_text();
+    // setter
+    void set_global_path_update();
+    void set_local_path_update();
+    void set_last_receive_msg(QString val);
+    void set_last_tgt_pose_vec(const Eigen::Vector4d& val);
 
-    QString get_multi_state();
+    // getter
+    bool    get_is_connected();
+    QString get_last_receive_msg();
+    double  get_process_time_path();
+    double  get_process_time_vobs();
+    double  get_max_process_time_path();
+    double  get_max_process_time_vobs();
+    Eigen::Vector4d get_last_tgt_pose_vec();
 
-    double get_process_time_path();
-    double get_process_time_vobs();
-
-    double get_max_process_time_path();
-    double get_max_process_time_vobs();
-
-    bool get_msa_connect_check();
-
+    // setter (othre modules)
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
@@ -91,10 +81,27 @@ public:
     void set_dockcontrol_module(DOCKCONTROL* _dctrl);
     void set_localization_module(LOCALIZATION* _loc);
     void set_mapping_module(MAPPING* _mapping);
-    void set_global_path_update();
-    void set_local_path_update();
 
-    void send_safetyio_response(const DATA_SAFTYIO& msg);
+    // start thread module
+    void start_recv_thread();
+    void start_move_thread();
+    void start_load_thread();
+    void start_mapping_thread();
+    void start_localization_thread();
+    void start_path_thread();
+    void start_vobs_thread();
+    void start_send_status_thread();
+    void start_send_response_thread();
+
+    void stop_recv_thread();
+    void stop_move_thread();
+    void stop_load_thread();
+    void stop_mapping_thread();
+    void stop_localization_thread();
+    void stop_path_thread();
+    void stop_vobs_thread();
+    void stop_send_status_thread();
+    void stop_send_response_thread();
 
 private:
     explicit COMM_MSA(QObject *parent = nullptr);
@@ -121,203 +128,58 @@ private:
     QTimer* reconnect_timer;
 
     // vars
-    std::unique_ptr<sio::client> io;
-    std::atomic<int> last_send_kfrm_idx = {0};
+    std::unique_ptr<sio::client> rrs_socket;
 
-    QTimer* send_timer = nullptr;
-    QTimer* reconnect_timer = nullptr;
-    QWebSocket* client = nullptr;
+    std::atomic<int> lidar_view_frequency = {1};
+    std::atomic<int> path_view_frequency  = {2};
+
     std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_connecting = {false};
-    std::atomic<double> last_send_time = {0};
-
-    QString robot_id = "";
-    QString multi_state = "none"; // "none", "req_path", "recv_path"
-    QString old_path = "";
+    std::atomic<bool> is_local_path_update2 = {false};
+    std::atomic<bool> is_global_path_update2 = {false};
 
     // for semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
     std::unique_ptr<std::thread> semi_auto_init_thread;
 
-    std::atomic<bool> is_local_path_update2 = {false};
-    std::atomic<bool> is_global_path_update2 = {false};
-    QMainWindow* get_main_window();
-    bool is_main_window_valid();
-
-    tbb::concurrent_queue<SOCKET_MESSAGE> send_queue;
-
-    std::atomic<bool> is_recv_running = {false};
-    tbb::concurrent_queue<QString> recv_queue;
-    std::unique_ptr<std::thread> recv_thread;
-    void recv_loop();
-
-    std::mutex move_mtx;
-    std::mutex load_mtx;
-    std::mutex mapping_mtx;
-    std::mutex localization_mtx;
-    std::mutex control_mtx;
-    std::mutex path_mtx;
-    std::mutex vobs_mtx;
-    std::mutex common_mtx;
-    std::mutex response_mtx;
-    std::mutex status_mtx;
-
-    // MSA queue
-    std::queue<DATA_MOVE> move_queue;
-    std::queue<DATA_LOAD> load_queue;
-    std::queue<DATA_CONTROL> control_queue;
-    std::queue<DATA_MAPPING> mapping_queue;
-    std::queue<DATA_LOCALIZATION> localization_queue;
-
-    std::queue<DATA_PATH> path_queue;
-    std::queue<DATA_VOBS> vobs_queue;
-    std::queue<DATA_COMMON> common_queue;
-    std::queue<std::function<void()>> response_queue;
-
-    std::condition_variable move_cv;
-    std::condition_variable load_cv;
-    std::condition_variable localization_cv;
-    std::condition_variable control_cv;
-    std::condition_variable mapping_cv;
-    std::condition_variable path_cv;
-    std::condition_variable vobs_cv;
-    std::condition_variable common_cv;
-    std::condition_variable response_cv;
-    std::condition_variable status_cv;
-
-    std::atomic<int> lidar_view_frequency = {1};
-    std::atomic<int> path_view_frequency  = {2};
-
-    std::atomic<bool> is_move_running = {true};
-    std::atomic<bool> is_load_running = {true};
-    std::atomic<bool> is_mapping_running = {true};
-    std::atomic<bool> is_control_running = {true};
-    std::atomic<bool> is_localization_running = {true};
-    std::atomic<bool> is_path_running = {true};
-    std::atomic<bool> is_vobs_running = {true};
-    std::atomic<bool> is_common_running = {true};
-    std::atomic<bool> is_response_running = {true};
-    std::atomic<bool> is_send_status_running = {true};
-    std::atomic<bool> is_before_given_path = {false};
-
-    std::unique_ptr<std::thread> move_thread;
-    std::unique_ptr<std::thread> load_thread;
-    std::unique_ptr<std::thread> control_thread;
-    std::unique_ptr<std::thread> localization_thread;
-    std::unique_ptr<std::thread> mapping_thread;
-    std::unique_ptr<std::thread> path_thread;
-    std::unique_ptr<std::thread> vobs_thread;
-    std::unique_ptr<std::thread> common_thread;
-    std::unique_ptr<std::thread> response_thread;
-    std::unique_ptr<std::thread> status_thread;
-
-    QString receive_msg;
-
-    mutable std::shared_mutex msg_mtx;
-
-    void move_loop();
-    void control_loop();
-    void localization_loop();
-    void mapping_loop();
-    void load_loop();
-    void path_loop();
-    void vobs_loop();
-    void common_loop();
-    void response_loop();
-    void send_status_loop();
-
-    // MSA handle
-    void handle_move_cmd(const QJsonObject& data);
-    void handle_load_cmd(const QJsonObject& data);
-    void handle_mapping_cmd(const QJsonObject& data);
-    void handle_localization_cmd(const QJsonObject& data);
-    void handle_control_cmd(const QJsonObject& data);
-
-    void handle_move_jog(const DATA_MOVE& msg);
-    void handle_move_goal(DATA_MOVE& msg);
-    void handle_move_stop(DATA_MOVE& msg);
-    void handle_move_pause(DATA_MOVE& msg);
-    void handle_move_resume(DATA_MOVE& msg);
-    void handle_move_target(DATA_MOVE& msg);
-    void handle_mapping(DATA_MAPPING msg);
-    void handle_safetyio_cmd(const QJsonObject& data);
-
-    void calc_remaining_time_distance(DATA_MOVE& msg);
-
-    void handle_path_cmd(const QJsonObject& data);
-    void handle_path(DATA_PATH& msg);
-    void handle_path_move(DATA_PATH& msg);
-
-    void handle_vobs_cmd(const QJsonObject& data);
-    void handle_vobs(DATA_VOBS& msg);
-
-    void handle_common_cmd(QString cmd, const QJsonObject& data);
-    void handle_common_load_map(DATA_LOAD& msg);
-    void handle_common_load_topo(DATA_LOAD& msg);
-    void handle_common_load_config(DATA_LOAD& msg);
-
-    void handle_common_random_seq(DATA_RANDOMSEQ& msg);
-
-    void handle_common_docking_dock(DATA_DOCK& msg);
-    void handle_common_docking_undock(DATA_DOCK& msg);
-
-    void handle_common_loc_semiautoinit(DATA_LOCALIZATION& msg);
-    void handle_common_loc_init(DATA_LOCALIZATION& msg);
-    void handle_common_loc_start(DATA_LOCALIZATION& msg);
-    void handle_common_loc_stop(DATA_LOCALIZATION& msg);
-    void handle_common_loc_randominit(DATA_LOCALIZATION& msg);
-
-    void handle_common_view_lidar(DATA_VIEW_LIDAR& msg);
-    void handle_common_view_path(DATA_VIEW_PATH& msg);
-
-    void handle_common_led(DATA_LED& msg);
-
-    void handle_common_motor(DATA_MOTOR& msg);
-    void send_safetyio_response(const QJsonObject& data);
-
-    void handle_send_safetyIO(const QJsonObject& data);
-
-    void slot_safety_io(DATA_SAFTYIO msg);
-    QJsonValue convertItem(sio::message::ptr item);
-
-    void send_profile_move_response(const DATA_MOVE& msg);
+    // save value
+    PATH last_sent_path;
+    QString last_receive_msg = "";
+    std::atomic<int> last_send_kfrm_idx = {0};
+    Eigen::Vector4d last_tgt_pose_vec = Eigen::Vector4d::Zero();
 
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};
-
     std::atomic<double> process_time_path = {0.0};
     std::atomic<double> process_time_vobs = {0.0};
-
     std::atomic<double> max_process_time_path = {-std::numeric_limits<double>::max()};
     std::atomic<double> max_process_time_vobs = {-std::numeric_limits<double>::max()};
 
-    PATH last_sent_path;
-
-    int send_cnt = 0;
     int lidar_view_cnt = 0;
     int path_view_cnt  = 0;
 
-    QByteArray lastest_msg_str;
-
     unsigned char dio_arr_old[16] = {0};
 
-    QString fms_cmd_direction = "";
+    void recv_message(sio::event& ev);
+    void recv_message_array(sio::event& ev);\
 
-    Eigen::Vector4d last_tgt_pose_vec = Eigen::Vector4d::Zero();
+    /* utils function */
+    bool is_main_window_valid();
+    QMainWindow* get_main_window();
+    void calc_remaining_time_distance(DATA_MOVE& msg); // todo ---> move to autoctorl !
+    QJsonObject sio_object_to_qt_json_object(const std::map<std::string, sio::message::ptr>& obj);
+    QJsonValue convert_item(sio::message::ptr item);
 
-    QString given_method = "";
+    // get json utils
+    int     get_json_int(const QJsonObject& json, QString key);
+    double  get_json_double(const QJsonObject& json, QString key);
+    QString get_json(const QJsonObject& json, QString key);
 
 private Q_SLOTS:
-    void send_loop();
-
     void connected();
     void disconnected();
-    void connection_failed();
-    void recv_message(sio::event& e);
-    void recv_message_array(sio::event& ev);
-
     void reconnect_loop();
 
+    // send status (pooling)
     void send_move_status();
     void send_status();
     void send_local_path();
@@ -325,37 +187,122 @@ private Q_SLOTS:
     void send_lidar_2d();
     void send_lidar_3d();
     void send_mapping_cloud();
-    void send_system_status(double cpu_use, double cpu_temp);
 
-    void slot_localization(DATA_LOCALIZATION msg);
-    void slot_safety_request(DATA_SAFETY msg);
-    void slot_config_request(DATA_PDU_UPDATE msg);
-
-    // MSA
-    void send_move_response(DATA_MOVE msg);
+    //  command response (callback)
+    void send_move_response(const DATA_MOVE& msg);
     void send_dock_response(const DATA_DOCK& msg);
-    void send_localization_response(DATA_LOCALIZATION msg);
-    void send_control_response(DATA_CONTROL msg);
-    void send_mapping_response(DATA_MAPPING msg);
-    void send_load_response(DATA_LOAD msg);
-    void send_field_set_response(const DATA_SAFETY& msg);
-    void send_field_get_response(const DATA_SAFETY& msg);
-    void send_safety_reset_response(const DATA_SAFETY& msg);
-    void send_config_request_response(const DATA_PDU_UPDATE& msg);
+    void send_localization_response(const DATA_LOCALIZATION& msg);
+    void send_mapping_response(const DATA_MAPPING& msg);
+    void send_load_response(const DATA_LOAD& msg);
+    void send_path_response(const DATA_PATH& msg);
 
-    void send_path_response(DATA_PATH msg);
+private:
+    std::mutex move_mtx;
+    std::mutex load_mtx;
+    std::mutex mapping_mtx;
+    std::mutex localization_mtx;
+    std::mutex path_mtx;
+    std::mutex vobs_mtx;
+    std::mutex response_mtx;
+    std::mutex recv_mtx;
 
-    // for linear move -> direct cmd mobile class
-    void slot_profile_move(DATA_MOVE msg);
+    std::mutex send_status_mtx;
+    std::mutex send_response_mtx;
 
-    QJsonObject get_error_code_mapping(const QString& message);
+    // MSA queue
+    std::queue<QString> recv_queue;
+    std::queue<DATA_MOVE> move_queue;
+    std::queue<DATA_LOAD> load_queue;
+    std::queue<DATA_PATH> path_queue;
+    std::queue<DATA_VOBS> vobs_queue;
+    std::queue<DATA_MAPPING> mapping_queue;
+    std::queue<DATA_LOCALIZATION> localization_queue;
 
-Q_SIGNALS:
-    void signal_send_move_status();
-    void signal_profile_move(DATA_MOVE msg);
+    tbb::concurrent_queue<SOCKET_MESSAGE> send_status_queue;
+    std::queue<SOCKET_MESSAGE> send_response_queue;
 
-    void signal_safety_requst(DATA_SAFETY msg);
-    void signal_config_request(DATA_PDU_UPDATE msg);
+    std::condition_variable recv_cv;
+    std::condition_variable move_cv;
+    std::condition_variable load_cv;
+    std::condition_variable path_cv;
+    std::condition_variable vobs_cv;
+    std::condition_variable mapping_cv;
+    std::condition_variable localization_cv;
+    std::condition_variable send_response_cv;
+
+    std::atomic<bool> is_recv_running = {false};
+    std::atomic<bool> is_move_running = {true};
+    std::atomic<bool> is_load_running = {true};
+    std::atomic<bool> is_mapping_running = {true};
+    std::atomic<bool> is_localization_running = {true};
+    std::atomic<bool> is_path_running = {true};
+    std::atomic<bool> is_vobs_running = {true};
+    std::atomic<bool> is_send_status_running = {true};
+    std::atomic<bool> is_send_response_running = {true};
+    std::atomic<bool> is_before_given_path = {false};
+
+    // receive
+    std::unique_ptr<std::thread> move_thread;
+    std::unique_ptr<std::thread> load_thread;
+    std::unique_ptr<std::thread> localization_thread;
+    std::unique_ptr<std::thread> mapping_thread;
+    std::unique_ptr<std::thread> path_thread;
+    std::unique_ptr<std::thread> vobs_thread;
+    std::unique_ptr<std::thread> recv_thread;
+
+    // send
+    std::unique_ptr<std::thread> send_response_thread;
+    std::unique_ptr<std::thread> send_status_thread;
+
+    void move_loop();
+    void load_loop();
+    void path_loop();
+    void vobs_loop();
+    void recv_loop();
+    void mapping_loop();
+    void localization_loop();
+    void send_status_loop();
+    void send_response_loop();
+
+    /* main handler */
+    void handle_move_cmd(const QJsonObject& data);
+    void handle_load_cmd(const QJsonObject& data);
+    void handle_path_cmd(const QJsonObject& data);
+    void handle_vobs_cmd(const QJsonObject& data);
+    void handle_mapping_cmd(const QJsonObject& data);
+    void handle_localization_cmd(const QJsonObject& data);
+
+    /* move handler */
+    void handle_move_jog(const DATA_MOVE& msg);
+    void handle_move_goal(DATA_MOVE& msg);
+    void handle_move_stop(DATA_MOVE& msg);
+    void handle_move_pause(DATA_MOVE& msg);
+    void handle_move_resume(DATA_MOVE& msg);
+    void handle_move_profile(DATA_MOVE& msg);
+    void handle_move_target(DATA_MOVE& msg);
+
+    /* load handler */
+    void handle_load_map(DATA_LOAD& msg);
+    void handle_load_topo(DATA_LOAD& msg);
+
+    /* localization handler */
+    void handle_localization_semiautoinit(DATA_LOCALIZATION& msg);
+    void handle_localization_init(DATA_LOCALIZATION& msg);
+    void handle_localization_start(DATA_LOCALIZATION& msg);
+    void handle_localization_stop(DATA_LOCALIZATION& msg);
+    void handle_localization_randominit(DATA_LOCALIZATION& msg);
+
+    /* mapping handler */
+    void handle_mapping_start(DATA_MAPPING& msg);
+    void handle_mapping_stop(DATA_MAPPING& msg);
+    void handle_mapping_save(DATA_MAPPING& msg);
+    void handle_mapping_reload(DATA_MAPPING& msg);
+
+    /* path handler */
+    void handle_path(DATA_PATH& msg);
+
+    /* vobs handler */
+    void handle_vobs(DATA_VOBS& msg);
 };
 
 #endif // COMM_MSA_H

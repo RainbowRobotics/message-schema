@@ -272,8 +272,8 @@ void ORBBEC::grab_loop(int idx)
             return;
         }
         auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        cur_w_depth = depth_profile->width();
-        cur_h_depth = depth_profile->height();
+        cur_w_depth[idx] = depth_profile->width();
+        cur_h_depth[idx] = depth_profile->height();
         //printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx[idx], depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
         log_info("Current depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
 
@@ -295,8 +295,8 @@ void ORBBEC::grab_loop(int idx)
         auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx[idx], color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
         log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
-        cur_w_color = color_profile->width();
-        cur_h_color = color_profile->height();
+        cur_w_color[idx] = color_profile->width();
+        cur_h_color[idx] = color_profile->height();
 
 
         std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
