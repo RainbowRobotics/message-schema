@@ -148,6 +148,15 @@ public:
     void set_spdlog_file_output();      // setup spdlog file output from config
 
     /***********************
+    * 3d lidar sensor
+    ***********************/
+    double get_lidar_bottom_min_range();    // bottom lidar tf list (maximum lidar number is 2)
+    double get_lidar_bottom_max_range();    // bottom lidar ip list (maximum lidar number is 2)
+    QString get_lidar_bottom_ip(int idx);   // bottom lidar max range (defalut: depends on the lidar)
+    QString get_lidar_bottom_tf(int idx);   // bottom lidar min range (defalut: 0.05~0.1m)
+    QString get_lidar_bottom_dev(int idx);  // bottom lidar tty dev
+
+    /***********************
      * 2d lidar sensor
      ***********************/
     double get_lidar_2d_min_range();    // 2d lidar min range (defalut: 0.05~0.1m)
@@ -345,13 +354,10 @@ public:
     void set_default_config_template();
     void cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups);
 
-
-
     // update 
     bool get_update_use_config();
 
 private:
-
     /***********************
      * loading by category
      ***********************/
@@ -458,25 +464,6 @@ private:
     double ROBOT_ALARM_BAT_CRITICAL = 40.0;   // battery critical alarm threshold (%)
     bool USE_ROBOT_ALARM = true;
 
-    // sensors
-    bool USE_LIDAR_2D = false;
-    QString LIDAR_2D_TYPE = "";
-    int LIDAR_2D_NUM = 1;
-
-    bool USE_LIDAR_3D = false;
-    QString LIDAR_3D_TYPE = "";
-    int LIDAR_3D_NUM = 1;
-
-    bool USE_CAM = false;
-    bool USE_CAM_RGB = false;
-    bool USE_CAM_DEPTH = false;
-    bool USE_CAM_FILTER = false;
-    double CAM_FILTER_ROR_RADIUS = 0.1;
-    int CAM_FILTER_ROR_MIN_NEIGHBORS = 5;
-    int CAM_FILTER_CLUSTER_MIN_SIZE = 20;
-    QString CAM_TYPE = "";
-    int CAM_NUM = 2;
-
     bool USE_BQR = false;
     bool USE_IMU = false;
 
@@ -513,7 +500,20 @@ private:
     bool LOG_ENABLE_FILE_OUTPUT = false;        // enable/disable file output
     QString LOG_FILE_PATH = "logs/app.log";     // log file path
 
+    // lidar bottom
+    int     LIDAR_BOTTOM_NUM = 1;
+    bool    USE_LIDAR_BOTTOM = false;
+    double  LIDAR_BOTTOM_MIN_RANGE = 1.0;
+    double  LIDAR_BOTTOM_MAX_RANGE = 40.0;
+    QString LIDAR_BOTTOM_TYPE = "";
+    QString LIDAR_BOTTOM_IP[2]  = { "", "" };
+    QString LIDAR_BOTTOM_TF[2]  = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
+    QString LIDAR_BOTTOM_DEV[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
+
     // lidar 2d
+    int LIDAR_2D_NUM = 1;
+    bool USE_LIDAR_2D = false;
+    QString LIDAR_2D_TYPE = "";
     double LIDAR_2D_MIN_RANGE = 1.0;
     double LIDAR_2D_MAX_RANGE = 40.0;
     QString LIDAR_2D_IP[2] = { "", "" };
@@ -521,18 +521,30 @@ private:
     QString LIDAR_2D_DEV[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
 
     // lidar 3d
+    bool USE_LIDAR_3D = false;
+    QString LIDAR_3D_TYPE = "";
+    int LIDAR_3D_NUM = 1;
     double LIDAR_3D_MIN_RANGE = 1.0;
     double LIDAR_3D_MAX_RANGE = 70.0;
     QString LIDAR_3D_IP[2] = { "", "" };
     QString LIDAR_3D_TF[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
 
     // cam
-    double CAM_HEIGHT_MIN = 0.1; // for rgbd-cam cloud cropping
-    double CAM_HEIGHT_MAX = 1.0;
+    int     CAM_NUM = 2;
+    int     CAM_COLOR_PROFILE[max_cam_cnt] = {0};
+    int     CAM_DEPTH_PROFILE[max_cam_cnt] = {0};
+    double  CAM_HEIGHT_MIN = 0.1; // for rgbd-cam cloud cropping
+    double  CAM_HEIGHT_MAX = 1.0;
+    bool    USE_CAM = false;
+    bool    USE_CAM_RGB = false;
+    bool    USE_CAM_DEPTH = false;
+    bool    USE_CAM_FILTER = false;
+    double  CAM_FILTER_ROR_RADIUS = 0.1;
+    int     CAM_FILTER_ROR_MIN_NEIGHBORS = 5;
+    int     CAM_FILTER_CLUSTER_MIN_SIZE = 20;
+    QString CAM_TYPE = "";
     QString CAM_SERIAL_NUMBER[max_cam_cnt];
     QString CAM_TF[max_cam_cnt];
-    int CAM_COLOR_PROFILE[max_cam_cnt] = {0};
-    int CAM_DEPTH_PROFILE[max_cam_cnt] = {0};
 
     // motor
     int MOTOR_ID_L = 1;
@@ -582,7 +594,6 @@ private:
     // localization 3d
     int LOC_MAX_FEATURE_NUM = 500;
     int LOC_SURFEL_NN_NUM = 1;
-    // double LOC_SURFEL_RANGE = 1.0;
     double LOC_SURFEL_BALANCE = 0.4; // 0.35 ~ 1.0(off)
     double LOC_COST_THRESHOLD = 1.0;
     double LOC_INLIER_CHECK_DIST = 0.3;

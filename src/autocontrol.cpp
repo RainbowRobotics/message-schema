@@ -29,7 +29,8 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
     connect(this, SIGNAL(signal_move_backward(DATA_MOVE)), this, SLOT(slot_move_backward(DATA_MOVE)));
-    connect(this, SIGNAL(signal_move_multi(DATA_PATH)), this, SLOT(slot_move_multi(DATA_PATH)));
+
+    connect(this, SIGNAL(signal_move_multi()), this, SLOT(slot_move_multi()));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -524,7 +525,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
             }
 
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            move(tf, msg.preset);
+            move_single(tf, msg.preset);
         }
     }
     else if(msg.command == "change_goal")
@@ -557,7 +558,7 @@ void AUTOCONTROL::slot_move_backward(DATA_MOVE msg)
         }
 
         Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-        move_backward(tf, msg.preset);
+        move_single_backward(tf, msg.preset);
 
     }
     else if(msg.command == "change_goal")
@@ -566,17 +567,12 @@ void AUTOCONTROL::slot_move_backward(DATA_MOVE msg)
     }
 }
 
-void AUTOCONTROL::slot_move_multi(const DATA_PATH& msg)
+void AUTOCONTROL::slot_move_multi()
 {
-    drive_method = (msg.method == "pp" ? DriveMethod::METHOD_PP : DriveMethod::METHOD_HPP);
-
-    std::vector<QString> path = std::move(msg.path);
-    const int preset = msg.preset;
-
-    move(path, preset);
+    move_multi();
 }
 
-void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
+void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 {
     // stop first
     stop();
@@ -660,228 +656,8 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     }
 }
 
-void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
+void AUTOCONTROL::move_multi()
 {
-    if(node_path.size() == 0 || preset == -1)
-    {
-        return;
-    }
-    is_move_backward = false;
-
-    initial_drive_method = drive_method;
-
-    // symmetric cut
-    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
-
-    // loop cut
-    std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
-    {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
-        {
-            path_list2.push_back(res[q]);
-        }
-    }
-
-    if(path_list2.size() == 0)
-    {
-        log_info("move_pp, path_list2 empty");
-        stop();
-        return;
-    }
-
-    // set flag
-    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
-
-    log_info("move_pp, recv path check");
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        log_info("path_{}", p);
-        for(size_t q = 0; q < path_list2[p].size(); q++)
-        {
-            log_info("{}", qUtf8Printable(path_list2[p][q]));
-        }
-    }
-
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
-    // set path
-    std::vector<PATH> tmp_storage;
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        // enque path
-        PATH path = calc_global_path(path_list2[p], p == 0);
-
-        // check final path
-        if(p == path_list2.size()-1)
-        {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == nullptr)
-            {
-                log_info("move_pp, path invalid");
-                stop();
-                return;
-            }
-
-            log_info("final_goal_node_id: {}, node->id: {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(node->id));
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
-            }
-        }
-
-        // policy path
-        std::vector<PATH> policy_path = policy->drive_policy(path);
-        bool first_seg = true;
-        if(!policy_path.empty())
-        {
-            for(size_t i = 0; i < policy_path.size(); i++)
-            {
-                const PATH& seg = policy_path[i];
-
-                QString method = seg.drive_method.toUpper();
-                if(method == "HPP")
-                {
-                    drive_method = DriveMethod::METHOD_HPP;
-                }
-                else if(method == "SIDE")
-                {
-                    drive_method = DriveMethod::METHOD_SIDE;
-                }
-                else
-                {
-                    drive_method = initial_drive_method;
-                }
-
-                PATH _seg = calc_global_path(seg.node, first_seg);
-                first_seg = false;
-
-                _seg.drive_dir = seg.drive_dir;
-                _seg.drive_method  = seg.drive_method;
-                _seg.is_final = seg.is_final;
-                if(_seg.pose.empty())
-                {
-                    _seg.ed_tf = _seg.is_final ? path.ed_tf : seg.ed_tf;
-                }
-                else
-                {
-                    _seg.ed_tf = _seg.is_final ? path.ed_tf : _seg.pose.back();
-                }
-
-                tmp_storage.push_back(std::move(_seg));
-            }
-        }
-        else
-        {
-            tmp_storage.push_back(path);
-            first_seg = false;
-        }
-    }
-
-    // control loop shutdown but robot still moving
-    if(control_flag)
-    {
-        // check path overlap or reset
-        bool is_curve = false;
-        std::vector<Eigen::Matrix4d> merged_tf_list;
-        for(size_t p = 0; p < tmp_storage.size(); p++)
-        {
-            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
-            {
-                merged_tf_list.push_back(tmp_storage[p].pose[q]);
-            }
-        }
-
-        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        for(int p = 0; p < std::min<int>(static_cast<int>(merged_tf_list.size()), 20); p++) // 2m
-        {
-            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
-            double th = deltaRad(xi[2], cur_xi[2]);
-            if(std::abs(th) > 30.0*D2R)
-            {
-                is_curve = true;
-                break;
-            }
-        }
-
-        is_path_overlap = true;
-
-        stop_control_thread();
-
-        if(is_curve)
-        {
-            mobile->move(0,0,0);
-            log_info("move_pp, curve detected, stop");
-        }
-        else
-        {
-            log_info("move_pp, no curve, just change path");
-        }
-    }
-
-    stop_obs_thread();
-
-    // set global path
-    global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        global_path_que.push(tmp_storage[p]);
-    }
-
-    // load preset
-    params = load_preset(preset);
-
-    // start control loop
-    if(control_flag == false)
-    {
-        control_flag = true;
-        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
-    }
-
-    // start obs loop
-    if(obs_flag == false)
-    {
-        obs_flag = true;
-        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
-    }
-}
-
-void AUTOCONTROL::move()
-{
-    stop();
-
     std::lock_guard<std::mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
     {
@@ -929,16 +705,6 @@ void AUTOCONTROL::move()
         }
     }
 
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
     // set path
     std::vector<PATH> tmp_storage;
     for(size_t p = 0; p < path_list2.size(); p++)
@@ -955,32 +721,6 @@ void AUTOCONTROL::move()
                 log_info("move_pp, path invalid");
                 stop();
                 return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
             }
         }
 
@@ -1133,7 +873,7 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
     }
 }
 
-void AUTOCONTROL::move_backward(Eigen::Matrix4d goal_tf, int preset)
+void AUTOCONTROL::move_single_backward(Eigen::Matrix4d goal_tf, int preset)
 {
     // stop first
     stop();
@@ -1169,180 +909,7 @@ void AUTOCONTROL::move_backward(Eigen::Matrix4d goal_tf, int preset)
     }
 }
 
-void AUTOCONTROL::move_backward(std::vector<QString> node_path, int preset)
-{
-    if(node_path.size() == 0 || preset == -1)
-    {
-        return;
-    }
-
-    is_move_backward = true;
-    // control params clear
-    is_pause = false;
-    is_moving = false;
-
-    // symmetric cut
-    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
-
-    // loop cut
-    std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
-    {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
-        {
-            path_list2.push_back(res[q]);
-        }
-    }
-
-    if(path_list2.size() == 0)
-    {
-        log_info("move_pp, path_list2 empty");
-        stop();
-        return;
-    }
-
-    // set flag
-    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
-
-    log_info("move_pp, recv path check");
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        log_info("path_{}", p);
-        for(size_t q = 0; q < path_list2[p].size(); q++)
-        {
-            log_info("{}", qUtf8Printable(path_list2[p][q]));
-        }
-    }
-
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
-    // set path
-    std::vector<PATH> tmp_storage;
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        // enque path
-        PATH path = calc_global_path(path_list2[p], p == 0);
-
-        // check final path
-        if(p == path_list2.size()-1)
-        {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == nullptr)
-            {
-                log_info("move_pp, path invalid");
-                stop();
-                return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
-            }
-        }
-
-        tmp_storage.push_back(path);
-    }
-
-    // control loop shutdown but robot still moving
-    if(control_flag)
-    {
-        // check path overlap or reset
-        bool is_curve = false;
-        std::vector<Eigen::Matrix4d> merged_tf_list;
-        for(size_t p = 0; p < tmp_storage.size(); p++)
-        {
-            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
-            {
-                merged_tf_list.push_back(tmp_storage[p].pose[q]);
-            }
-        }
-
-        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        for(int p = 0; p < std::min<int>(static_cast<int>(merged_tf_list.size()), AUTOCONTROL_INFO::path_overlap_check_dist); p++)
-        {
-            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
-            double th = deltaRad(xi[2], cur_xi[2]);
-            if(std::abs(th) > AUTOCONTROL_INFO::path_overlap_check_deg * D2R)
-            {
-                is_curve = true;
-                break;
-            }
-        }
-
-        is_path_overlap = true;
-
-        stop_control_thread();
-
-        if(is_curve)
-        {
-            mobile->move(0,0,0);
-            log_info("move_pp, curve detected, stop");
-        }
-        else
-        {
-            log_info("move_pp, no curve, just change path");
-        }
-    }
-
-    stop_obs_thread();
-
-    // set global path
-    global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        global_path_que.push(tmp_storage[p]);
-    }
-
-    // load preset
-    params = load_preset(preset);
-
-    // start obs loop
-    if(obs_flag == false)
-    {
-        obs_flag = true;
-        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
-    }
-
-    // start control loop
-    if(control_flag == false)
-    {
-        control_flag = true;
-        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
-    }
-}
-
-void AUTOCONTROL::move_backward()
+void AUTOCONTROL::move_multi_backward()
 {
     std::lock_guard<std::mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
@@ -1391,16 +958,6 @@ void AUTOCONTROL::move_backward()
         }
     }
 
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_move_info.goal_node_id = path_list2.back().back();
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-    }
-    log_info("final_goal: {}, {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(final_goal_node_name));
-
     // set path
     std::vector<PATH> tmp_storage;
     for(size_t p = 0; p < path_list2.size(); p++)
@@ -1417,33 +974,6 @@ void AUTOCONTROL::move_backward()
                 log_info("move_pp, path invalid");
                 stop();
                 return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                log_info("move_pp, container, path set final");
-
-            }
-            else if(final_goal_node_id == node->id)
-            {
-                path.is_final = true;
-                log_info("move_pp, path set final");
             }
         }
 

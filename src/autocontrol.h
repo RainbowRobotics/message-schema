@@ -144,7 +144,7 @@ public Q_SLOTS:
     void slot_move_backward(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
-    void slot_move_multi(const DATA_PATH& msg);
+    void slot_move_multi();
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -171,18 +171,16 @@ private:
     CTRL_PARAM load_preset(int preset);
 
     // [single robot] move (input param: goal transform matrix)
-    void move(Eigen::Matrix4d goal_tf, int preset);
+    void move_single(Eigen::Matrix4d goal_tf, int preset);
 
     // [multi robot] move (input param: node path)
-    void move(std::vector<QString> node_path, int preset);
-    void move();
+    void move_multi();
 
     // [single robot] backwardmove (input param: goal transform matrix)
-    void move_backward(Eigen::Matrix4d goal_tf, int preset);
+    void move_single_backward(Eigen::Matrix4d goal_tf, int preset);
 
     // [multi robot] backwardmove (input param: node path)
-    void move_backward(std::vector<QString> node_path, int preset);
-    void move_backward();
+    void move_multi_backward();
 
     // flag, path, state
     void clear_control_params();
@@ -312,10 +310,10 @@ private:
     std::vector<Eigen::Matrix4d> obs_traj;
 
 Q_SIGNALS:
-    void signal_move_single(DATA_MOVE msg);
+    void signal_move(DATA_MOVE msg);
     void signal_move_backward(DATA_MOVE msg);
-    void signal_path();
-    void signal_move_multi(DATA_PATH msg);
+
+    void signal_move_multi();
     void signal_move_response(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();

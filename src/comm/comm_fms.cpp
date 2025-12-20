@@ -1,6 +1,21 @@
 #include "comm_fms.h"
 #include "mainwindow.h"
 
+COMM_FMS* COMM_FMS::instance(QObject *parent)
+{
+    static COMM_FMS* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new COMM_FMS(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+
+    return inst;
+}
+
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
     , main(parent)
@@ -31,6 +46,12 @@ COMM_FMS::~COMM_FMS()
     if(recv_thread->joinable())
     {
         recv_thread->join();
+    }
+
+    is_send_status_running = false;
+    if(send_status_thread->joinable())
+    {
+        send_status_thread->join();
     }
 
     is_move_running = false;
@@ -104,6 +125,7 @@ void COMM_FMS::init()
 {
     // update robot id
     robot_id = QString("R_%1").arg(static_cast<long long>(get_time()*1000));
+    //robot_id = "R_0001";
     logger->write_log(QString("[COMM_FMS] ID: %1").arg(robot_id));
 
     // start reconnect loop
@@ -114,6 +136,12 @@ void COMM_FMS::init()
     {
         is_recv_running = true;
         recv_thread = std::make_unique<std::thread>(&COMM_FMS::recv_loop, this);
+    }
+
+    if(send_status_thread == nullptr)
+    {
+        is_send_status_running = true;
+        send_status_thread = std::make_unique<std::thread>(&COMM_FMS::send_status_loop, this);
     }
 
     if(move_thread == nullptr)
@@ -161,6 +189,8 @@ void COMM_FMS::reconnect_loop()
             return;
         }
 
+        std::cout << "reconnecting ..." << std::endl;
+
         QString server_addr = QString("ws://%1:12334").arg(server_ip);
         client->open(QUrl(server_addr));
     }
@@ -168,20 +198,21 @@ void COMM_FMS::reconnect_loop()
 
 void COMM_FMS::connected()
 {
-    if(!is_connected)
+    if(is_connected)
     {
-        is_connected = true;
-        logger->write_log("[COMM_FMS] connected");
-        //qDebug()<<"ssssssssssssssssssssssssss!!!!!!!!!!!!!!!!!!!!1";
-
-        if(!ctrl)
-        {
-            logger->write_log("[COMM_FMS] not ready to modules");
-            return;
-        }
-
-        ctrl->set_is_rrs(true);
+        return;
     }
+
+    is_connected = true;
+    logger->write_log("[COMM_FMS] connected");
+
+    if(!ctrl)
+    {
+        logger->write_log("[COMM_FMS] not ready to modules");
+        return;
+    }
+
+    ctrl->set_is_rrs(true);
 }
 
 void COMM_FMS::disconnected()
@@ -210,7 +241,7 @@ void COMM_FMS::send_move_status()
     }
 
     // get time
-    double time = get_time();
+    double time = get_time0();
 
     QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
@@ -267,6 +298,7 @@ void COMM_FMS::send_move_status()
 
     QJsonDocument doc(rootObj);
     QString buf = doc.toJson(QJsonDocument::Compact);
+
     send_queue.push(buf);
 }
 
@@ -366,12 +398,16 @@ void COMM_FMS::handle_move_cmd(const QJsonObject& data)
     msg.tgt_pose_vec[1] = get_json(data, "y").toDouble();
     msg.tgt_pose_vec[2] = get_json(data, "z").toDouble();
     msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble()*D2R;
+
+    QJsonDocument doc(data);
+    QString json_str = doc.toJson(QJsonDocument::Compact);
+    std::cout << "json_str: " << json_str.toStdString() << std::endl;
+
     {
         std::lock_guard<std::mutex> lock(move_mtx);
         move_queue.push(msg);
+        move_cv.notify_one();
     }
-
-    move_cv.notify_one();
 }
 
 void COMM_FMS::handle_common_cmd(QString cmd, const QJsonObject& data)
@@ -557,6 +593,9 @@ void COMM_FMS::move_loop()
         lock.unlock();
 
         QString command = msg.command;
+
+        std::cout << "command: " << command.toStdString() << std::endl;
+
         if(command == "jog")
         {
             handle_move_jog(msg);
@@ -611,6 +650,8 @@ void COMM_FMS::path_loop()
         double st_time = get_time();
 
         QString command = msg.command;
+        logger->write_log(QString("[COMM_FMS] recv path, command: %1, time: %2").arg(command).arg(get_time()), "Green");
+
         if(command == "path")
         {
             handle_path(msg);
@@ -1275,7 +1316,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move_single(msg));
+        Q_EMIT (ctrl->signal_move(msg));
     }
     else
     {
@@ -1349,26 +1390,9 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         msg.tgt_pose_vec[2] = node->tf(2,3);
         msg.tgt_pose_vec[3] = xi[2];
 
-        // calc eta (estimation time arrival)
-        Eigen::Matrix4d goal_tf = node->tf;
-        PATH global_path = ctrl->calc_global_path(goal_tf);
-        if(global_path.pos.size() < 2)
-        {
-            msg.result = "accept";
-            msg.message = "just change goal";
-            msg.remaining_time = 0.0;
-            msg.remaining_dist = 0.0;
-        }
-        else
-        {
-            msg.result = "accept";
-            msg.message = "";
-            calc_remaining_time_distance(msg);
-        }
-
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move_single(msg));
+        Q_EMIT (ctrl->signal_move(msg));
     }
     else if(method == "hpp")
     {
@@ -1515,14 +1539,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
 
 void COMM_FMS::handle_path_move(DATA_PATH& msg)
 {
-    double cur_time = get_time();
-    if((cur_time - msg.time) > 5.0)
-    {
-        logger->write_log(QString("[COMM_FMS] path cmd:move -> too long time after receieved ... %1").arg(cur_time - msg.time));
-        return;
-    }
-
-    ctrl->signal_path();
+    ctrl->signal_move_multi();
 }
 
 void COMM_FMS::handle_vobs(DATA_VOBS& msg)
@@ -1625,4 +1642,141 @@ QMainWindow* COMM_FMS::get_main_window()
 bool COMM_FMS::is_main_window_valid()
 {
     return (qobject_cast<QMainWindow*>(main) != nullptr);
+}
+
+void COMM_FMS::set_config_module(CONFIG* _config)
+{
+    if(!_config)
+    {
+        return;
+    }
+
+    config = _config;
+}
+
+void COMM_FMS::set_logger_module(LOGGER* _logger)
+{
+    if(!_logger)
+    {
+        return;
+    }
+
+    logger = _logger;
+}
+
+void COMM_FMS::set_mobile_module(MOBILE* _mobile)
+{
+    if(!_mobile)
+    {
+        return;
+    }
+
+    mobile = _mobile;
+}
+
+void COMM_FMS::set_lidar_2d_module(LIDAR_2D* _lidar)
+{
+    if(!_lidar)
+    {
+        return;
+    }
+
+    lidar_2d = _lidar;
+}
+
+void COMM_FMS::set_lidar_3d_module(LIDAR_3D* _lidar)
+{
+    if(!_lidar)
+    {
+        return;
+    }
+
+    lidar_3d = _lidar;
+}
+
+void COMM_FMS::set_cam_module(CAM* _cam)
+{
+    if(!_cam)
+    {
+        return;
+    }
+
+    cam = _cam;
+}
+
+void COMM_FMS::set_localization_module(LOCALIZATION* _loc)
+{
+    if(!_loc)
+    {
+        return;
+    }
+
+    loc = _loc;
+}
+
+void COMM_FMS::set_mapping_module(MAPPING* _mapping)
+{
+    if(!_mapping)
+    {
+        return;
+    }
+
+    mapping = _mapping;
+}
+
+void COMM_FMS::set_unimap_module(UNIMAP* _unimap)
+{
+    if(!_unimap)
+    {
+        return;
+    }
+
+    unimap = _unimap;
+}
+
+void COMM_FMS::set_obsmap_module(OBSMAP* _obsmap)
+{
+    if(!_obsmap)
+    {
+        return;
+    }
+
+    obsmap = _obsmap;
+}
+
+void COMM_FMS::set_autocontrol_module(AUTOCONTROL* _ctrl)
+{
+    if(!_ctrl)
+    {
+        return;
+    }
+
+    ctrl = _ctrl;
+}
+
+void COMM_FMS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
+{
+    if(!_dctrl)
+    {
+        return;
+    }
+
+    dctrl = _dctrl;
+}
+
+void COMM_FMS::send_status_loop()
+{
+    double duration_time_move_status = get_time();
+
+    while(is_send_status_running)
+    {
+        if(get_time() - duration_time_move_status >= COMM_FMS_INFO::move_status_send_time)
+        {
+            duration_time_move_status = get_time();
+            send_move_status();
+        }
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }

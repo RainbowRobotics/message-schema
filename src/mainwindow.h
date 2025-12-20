@@ -25,6 +25,7 @@
 
 #include "comm/comm_coop.h"
 #include "comm/comm_msa.h"
+#include "comm/comm_fms.h"
 
 // qt
 #include <QMainWindow>

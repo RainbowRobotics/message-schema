@@ -25,7 +25,6 @@ CONFIG::~CONFIG()
 
 }
 
-
 void CONFIG::load_version()
 {
     QFileInfo version_info(path_version);
@@ -83,7 +82,6 @@ void CONFIG::load()
     QFile config_file(path_config);
     if(!config_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        //qWarning() << "[CONFIG] Failed to open config file:" << path_config;
         spdlog::warn("[CONFIG] Failed to open config file: {}", qUtf8Printable(path_config));
         return;
     }
@@ -95,7 +93,6 @@ void CONFIG::load()
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        //qWarning() << "[CONFIG] JSON parse error:" << parseError.errorString();
         spdlog::warn("[CONFIG] JSON parse error: {}", qUtf8Printable(parseError.errorString()));
         return;
     }
@@ -460,6 +457,20 @@ void CONFIG::load_map_config(const QJsonObject &obj)
 
 void CONFIG::load_lidar_configs(const QJsonObject &obj)
 {
+    if(USE_LIDAR_BOTTOM)
+    {
+        QJsonArray lidar_arr = obj["lidar_bottom_config"].toArray();
+        for(int i = 0; i < LIDAR_BOTTOM_NUM; i++)
+        {
+            QJsonObject obj_lidar_bottom = lidar_arr[i].toObject();
+            LIDAR_BOTTOM_IP[i] = obj_lidar_bottom["IP"].toString();
+            LIDAR_BOTTOM_TF[i] = obj_lidar_bottom["TF"].toString();
+            LIDAR_BOTTOM_DEV[i] = obj_lidar_bottom["DEV"].toString();
+
+            spdlog::info("[CONFIG] LIDAR_BOTTOM[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
+        }
+    }
+
     if(USE_LIDAR_2D)
     {
         QJsonArray lidar_arr = obj["lidar_2d_config"].toArray();
@@ -469,7 +480,7 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             LIDAR_2D_IP[i] = obj_lidar_2d["IP"].toString();
             LIDAR_2D_TF[i] = obj_lidar_2d["TF"].toString();
             LIDAR_2D_DEV[i] = obj_lidar_2d["DEV"].toString();
-            //printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
+
             spdlog::info("[CONFIG] LIDAR_2D[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
         }
     }
@@ -2421,6 +2432,36 @@ QJsonObject CONFIG::set_default_update_config()
     //update["CONFIG"] = QString(USE_CONFIG_UPDATE ? "true" : "false");
 
     return update;
+}
+
+double CONFIG::get_lidar_bottom_min_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_BOTTOM_MIN_RANGE;
+}
+
+double CONFIG::get_lidar_bottom_max_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_BOTTOM_MAX_RANGE;
+}
+
+QString CONFIG::get_lidar_bottom_ip(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_BOTTOM_IP[idx];
+}
+
+QString CONFIG::get_lidar_bottom_tf(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_BOTTOM_TF[idx];
+}
+
+QString CONFIG::get_lidar_bottom_dev(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_BOTTOM_DEV[idx];
 }
 
 double CONFIG::get_lidar_2d_min_range()

@@ -41,11 +41,11 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
     // status
     BIND_EVENT(sock, "vobs", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
-    BIND_EVENT(sock, "path", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
 
     // reconncetion
     reconnect_timer = new QTimer(this);
@@ -271,7 +271,7 @@ void COMM_MSA::recv_loop()
         {
             handle_mapping_cmd(data);
         }
-        else if(cmd == "path")
+        else if(cmd == "pathResponse")
         {
             handle_path_cmd(data);
         }
@@ -1938,7 +1938,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move_single(msg));
+        Q_EMIT (ctrl->signal_move(msg));
     }
     else if(method == "hpp")
     {
@@ -2003,7 +2003,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
             msg.result = "accept";
             send_move_response(msg);
 
-            Q_EMIT (ctrl->signal_move_single(msg));
+            Q_EMIT (ctrl->signal_move(msg));
         }
         else
         {
@@ -2094,7 +2094,7 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         }
 
         send_move_response(msg);
-        Q_EMIT (ctrl->signal_move_single(msg));
+        Q_EMIT (ctrl->signal_move(msg));
     }
     else if(method == "tng")
     {
@@ -2392,49 +2392,28 @@ void COMM_MSA::calc_remaining_time_distance(DATA_MOVE &msg)
 
 void COMM_MSA::handle_path(DATA_PATH& msg)
 {
-    // update vobs first
-    std::vector<Eigen::Vector3d> vobs_c_list;
+    if(msg.command == "path")
     {
-        QString vobs_str = msg.vobs_closures_str;
-        QStringList vobs_str_list = vobs_str.split(",");
-
-        // set vobs
-        for(int p = 0; p < vobs_str_list.size(); p++)
+        // and move path
+        std::vector<QString> path;
+        std::vector<int> step;
         {
-            QString node_id = vobs_str_list[p];
-            if(node_id != "")
+            QString path_str = msg.path_str;
+            QStringList path_str_list = path_str.split(",");
+            for(int p = 0; p < path_str_list.size(); p++)
             {
-                NODE* node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
-                {
-                    vobs_c_list.push_back(node->tf.block(0,3,3,1));
-                }
+                path.push_back(path_str_list[p]);
+                step.push_back(p);
             }
+
+
+            ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
         }
 
-        // update vobs
-        obsmap->set_vobs_list_closures(vobs_c_list);
-        obsmap->update_vobs_map();
-
-        msg.vobs_closures = std::move(vobs_c_list);
     }
-
-    // and move path
-    std::vector<QString> path;
-    std::vector<int> step;
+    else if(msg.command == "move")
     {
-        QString path_str = msg.path_str;
-        QStringList path_str_list = path_str.split(",");
-        for(int p = 0; p < path_str_list.size(); p++)
-        {
-            path.push_back(path_str_list[p]);
-            step.push_back(p);
-        }
-
-        msg.path = std::move(path);
-        msg.step = std::move(step);
-
-        Q_EMIT (AUTOCONTROL::instance()->signal_move_multi(msg));
+        ctrl->signal_move_multi();
     }
 
     send_path_response(msg);

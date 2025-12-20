@@ -120,7 +120,6 @@ private:
     RAW_FRAME last_dsk_frm[2];
     std::atomic<double> last_served_dsk_t[2] = {-1.0, -1.0};
 
-
     // https://www.researchgate.net/figure/Schematic-of-shadows-created-by-a-moving-LIDAR-Vehicle-graphic-credit-ShapeNet-23_fig1_364897453
     std::vector<std::pair<Eigen::Vector3d, bool>> scan_shadow_filter(const std::vector<Eigen::Vector3d>& dsk, int shadow_window);
     bool is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan);

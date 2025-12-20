@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ERROR_MANAGER::instance(this);
     COMM_COOP::instance(this);
     COMM_MSA::instance(this);
+    COMM_FMS::instance(this);
 
     // for 3d viewer
     connect(ui->cb_ViewType,    SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -497,6 +498,22 @@ void MainWindow::init_modules()
     }
 
     //comm cooperative module init(msa)
+    {
+        COMM_FMS::instance()->set_config_module(CONFIG::instance());
+        COMM_FMS::instance()->set_logger_module(LOGGER::instance());
+        COMM_FMS::instance()->set_mobile_module(MOBILE::instance());
+        COMM_FMS::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_FMS::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_FMS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_FMS::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+        COMM_FMS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
+        COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+        COMM_FMS::instance()->init();
+    }
+
+    // comm fms module init
     {
         COMM_MSA::instance()->set_config_module(CONFIG::instance());
         COMM_MSA::instance()->set_logger_module(LOGGER::instance());
@@ -1684,7 +1701,7 @@ void MainWindow::bt_AutoMove()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         }
         return;
     }
@@ -1700,7 +1717,7 @@ void MainWindow::bt_AutoMove()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         return;
     }
 }
@@ -1795,7 +1812,7 @@ void MainWindow::bt_AutoMove2()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         }
         return;
     }
@@ -1811,7 +1828,7 @@ void MainWindow::bt_AutoMove2()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         return;
     }
 }
@@ -1849,7 +1866,7 @@ void MainWindow::bt_AutoMove3()
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         }
         return;
     }
@@ -1865,7 +1882,7 @@ void MainWindow::bt_AutoMove3()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         return;
     }
 }
@@ -2252,7 +2269,7 @@ void MainWindow::bt_ReturnToCharging()
     msg.tgt_pose_vec[2] = node->tf(2,3);
     msg.tgt_pose_vec[3] = xi[2];
 
-    Q_EMIT (AUTOCONTROL::instance()->signal_move_single(msg));
+    Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
 }
 
 // annotation
@@ -2740,8 +2757,6 @@ void MainWindow::bt_TaskAdd()
     }
     else
     {
-        //printf("[TASK] Unselectable node\n");
-        //spdlog::error("[TASK] Unselectable node");
         log_error("Unselectable node");
         return;
     }
