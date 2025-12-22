@@ -416,8 +416,8 @@ void CAM::post_process_loop(int idx)
         }
         else
         {
-            logger->write_log(QString("[CAM] loop time drift, dt:%1").arg(delta_loop_time));
-            log_warn("loop time drift, dt:{}", delta_loop_time);
+            //logger->write_log(QString("[CAM] loop time drift, dt:%1").arg(delta_loop_time));
+            log_debug("loop time drift, dt:{}", delta_loop_time);
         }
 
         process_time_post[idx] = delta_loop_time;

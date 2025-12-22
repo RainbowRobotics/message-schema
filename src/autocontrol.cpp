@@ -3949,8 +3949,8 @@ void AUTOCONTROL::control_loop()
                 }
                 else
                 {
-                    logger->write_log(QString("[AUTO] driving loop time drift, dt:%1").arg(delta_loop_time));
-                    log_warn("driving loop time drift, dt: {}", delta_loop_time);
+                    //logger->write_log(QString("[AUTO] driving loop time drift, dt:%1").arg(delta_loop_time));
+                    log_debug("driving loop time drift, dt: {}", delta_loop_time);
                 }
                 pre_loop_time = get_time();
                 continue;
@@ -4713,7 +4713,7 @@ void AUTOCONTROL::control_loop()
             //logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
             //log_info("loop time drift in driving loop time: {}", delta_loop_time);
             //spdlog::warn("drift in driving loop time: {}", delta_loop_time);
-            log_warn("drift in driving loop time: {}", delta_loop_time);
+            log_debug("drift in driving loop time: {}", delta_loop_time);
         }
         process_time_control = delta_loop_time;
         pre_loop_time = get_time();

@@ -2793,7 +2793,7 @@ void MainWindow::jog_loop()
         {
             //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
             //spdlog::warn("[JOG] loop time drift, dt:{}", delta_loop_time);
-            log_warn("loop time drift, dt:{}", delta_loop_time);
+            log_debug("loop time drift, dt:{}", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -5196,7 +5196,7 @@ void MainWindow::plot_loop()
     {
         //printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
         //spdlog::warn("[MAIN] plot_loop, loop time drift");
-        log_warn("plot_loop, loop time drift: {}", (double)plot_dt);
+        log_debug("plot_loop, loop time drift: {}", (double)plot_dt);
 
     }
 
