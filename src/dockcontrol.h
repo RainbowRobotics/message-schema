@@ -48,7 +48,7 @@ public:
     Eigen::Matrix4d calculate_translation_matrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to); 
     bool sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
     bool cluster_candidate(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
-
+    bool get_largest_cluster(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
     //DWA
     std::map<std::pair<double, double>, std::vector<Eigen::Matrix4d>> DWA_TABLE;
     std::map<std::pair<double,double>, std::vector<Eigen::Matrix4d>> generate_dwa_traj_table(double min_v, double max_v, double v_step, double min_w_deg, double max_w_deg ,double w_step_deg,double dt ,int steps);

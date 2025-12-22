@@ -302,6 +302,7 @@ public:
     double get_docking_linear_x_offset();
     bool get_docking_reverse_mode();
     QString get_charge_type();
+    QString get_lidar_type();
     int get_docking_field();
     double get_xnergy_set_current();
     int get_docking_retry_count();
@@ -633,7 +634,7 @@ private:
     double DOCKING_KD_d = 0.1;
     double DOCKING_KP_th = 0.35;
     double DOCKING_KD_th = 0.15;
-    double DOCKING_CLUST_D_THRESHOLD = 0.05;
+    double DOCKING_CLUST_D_THRESHOLD = 0.015;
     double DOCKING_FIND_VMARK_DIST_THRESHOLD_MIN = 1.0;
     double DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX = 2.5;
     double DOCKING_CLUST_DIST_THRESHOLD_MIN = 0.4;
@@ -655,6 +656,7 @@ private:
     int DOCKING_FIELD = 0;
     double XNERGY_SET_CURRENT = 8.0;
     QString CHARGE_TYPE = "RAINBOW";
+    QString LIDAR_TYPE = "SICK";
 
     // safety
     bool USE_MONITORING_FIELD = false;
