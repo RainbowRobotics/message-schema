@@ -2023,14 +2023,16 @@ void COMM_MSA::control_loop()
             {
                 if(msg.frequency > 0)
                 {
-                    MainWindow* _main = (MainWindow*)main;
+                    //MainWindow* _main = (MainWindow*)main;
                     //_main->lidar_view_frequency = msg.frequency;
+                    log_info("LidarOnOff command received with frequency: {}", msg.frequency);
                 }
             }
             else
             {
-                MainWindow* _main = (MainWindow*)main;
+                //MainWindow* _main = (MainWindow*)main;
                 //_main->lidar_view_frequency = -1;
+                log_info("LidarOnOff command received to turn off lidar view");
             }
         }
         else if(command == DATA_CONTROL::PathOnOff)
@@ -2042,12 +2044,14 @@ void COMM_MSA::control_loop()
                 if(msg.frequency > 0)
                 {
                     MainWindow* _main = (MainWindow*)main;
+                    // unused
                     //_main->path_view_frequency = msg.frequency;
                 }
             }
             else if(command == "off")
             {
                 MainWindow* _main = (MainWindow*)main;
+                // unused
                 //_main->path_view_frequency = -1;
             }
         }
@@ -5409,6 +5413,7 @@ void COMM_MSA::send_safety_reset_response(const DATA_SAFETY& msg)
 
 void COMM_MSA::send_config_request_response(const DATA_PDU_UPDATE& msg)
 {
+    log_info("send_config_request_response called");
     if(!is_connected)
     {
         return;
@@ -5420,8 +5425,139 @@ void COMM_MSA::send_config_request_response(const DATA_PDU_UPDATE& msg)
     send_obj->get_map()["message"] = sio::string_message::create(msg.message.toStdString());
     send_obj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<qint64>(msg.time * 1000)).toStdString());
 
-    //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("controlResponse", send_obj);
+    sio::array_message::ptr parameters = sio::array_message::create();
+
+    if(msg.command == "getDriveParam")
+    {
+        // about parameter
+        sio::object_message::ptr param1 = sio::object_message::create();
+        param1->get_map()["name"] = sio::string_message::create("version");
+        param1->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.version).toStdString());
+        param1->get_map()["type"] = sio::string_message::create("int");
+        parameters->get_vector().push_back(param1);
+
+        sio::object_message::ptr param2 = sio::object_message::create();
+        param2->get_map()["name"] = sio::string_message::create("robot_type");
+        param2->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.robot_type).toStdString());
+        param2->get_map()["type"] = sio::string_message::create("int");
+        parameters->get_vector().push_back(param2);
+
+        sio::object_message::ptr param3 = sio::object_message::create();
+        param3->get_map()["name"] = sio::string_message::create("v_limit");
+        param3->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.v_limit, 'f', 3).toStdString());
+        param3->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param3);
+
+        sio::object_message::ptr param4 = sio::object_message::create();
+        param4->get_map()["name"] = sio::string_message::create("w_limit");
+        param4->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.w_limit * R2D, 'f', 3).toStdString());
+        param4->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param4);
+
+        sio::object_message::ptr param5 = sio::object_message::create();
+        param5->get_map()["name"] = sio::string_message::create("a_limit");
+        param5->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.a_limit, 'f', 3).toStdString());
+        param5->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param5);
+
+        sio::object_message::ptr param6 = sio::object_message::create();
+        param6->get_map()["name"] = sio::string_message::create("b_limit");
+        param6->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.b_limit * R2D, 'f', 3).toStdString());
+        param6->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param6);
+
+        sio::object_message::ptr param7 = sio::object_message::create();
+        param7->get_map()["name"] = sio::string_message::create("v_limit_jog");
+        param7->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.v_limit_jog, 'f', 3).toStdString());
+        param7->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param7);
+
+        sio::object_message::ptr param8 = sio::object_message::create();
+        param8->get_map()["name"] = sio::string_message::create("w_limit_jog");
+        param8->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.w_limit_jog * R2D, 'f', 3).toStdString());
+        param8->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param8);
+
+        sio::object_message::ptr param9 = sio::object_message::create();
+        param9->get_map()["name"] = sio::string_message::create("a_limit_jog");
+        param9->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.a_limit_jog, 'f', 3).toStdString());
+        param9->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param9);
+
+        sio::object_message::ptr param10 = sio::object_message::create();
+        param10->get_map()["name"] = sio::string_message::create("b_limit_jog");
+        param10->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.b_limit_jog * R2D, 'f', 3).toStdString());
+        param10->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param10);
+
+        sio::object_message::ptr param11 = sio::object_message::create();
+        param11->get_map()["name"] = sio::string_message::create("v_limit_monitor");
+        param11->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.v_limit_monitor, 'f', 3).toStdString());
+        param11->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param11);
+
+        sio::object_message::ptr param12 = sio::object_message::create();
+        param12->get_map()["name"] = sio::string_message::create("w_limit_monitor");
+        param12->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.w_limit_monitor * R2D, 'f', 3).toStdString());
+        param12->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param12);
+
+        sio::object_message::ptr param13 = sio::object_message::create();
+        param13->get_map()["name"] = sio::string_message::create("safety_v_limit");
+        param13->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.safety_v_limit, 'f', 3).toStdString());
+        param13->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param13);
+
+        sio::object_message::ptr param14 = sio::object_message::create();
+        param14->get_map()["name"] = sio::string_message::create("safety_w_limit");
+        param14->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.safety_w_limit * R2D, 'f', 3).toStdString());
+        param14->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param14);
+
+        sio::object_message::ptr param15 = sio::object_message::create();
+        param15->get_map()["name"] = sio::string_message::create("w_s");
+        param15->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.w_s, 'f', 3).toStdString());
+        param15->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param15);
+
+        sio::object_message::ptr param16 = sio::object_message::create();
+        param16->get_map()["name"] = sio::string_message::create("w_r");
+        param16->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.w_r, 'f', 3).toStdString());
+        param16->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param16);
+
+        sio::object_message::ptr param17 = sio::object_message::create();
+        param17->get_map()["name"] = sio::string_message::create("gear");
+        param17->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.gear, 'f', 3).toStdString());
+        param17->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param17);
+
+        sio::object_message::ptr param18 = sio::object_message::create();
+        param18->get_map()["name"] = sio::string_message::create("dir");
+        param18->get_map()["value"] = sio::string_message::create(QString::number(msg.setting.dir, 'f', 3).toStdString());
+        param18->get_map()["type"] = sio::string_message::create("float");
+        parameters->get_vector().push_back(param18);
+    }
+    else if(msg.command == "getParam" || msg.command == "setParam")
+    {
+        for(const auto& param : msg.param_list)
+        {
+            sio::object_message::ptr paramObj = sio::object_message::create();
+            paramObj->get_map()["name"] = sio::string_message::create(param.key.toStdString());
+            paramObj->get_map()["value"] = sio::string_message::create(param.value.toStdString());
+            paramObj->get_map()["type"] = sio::string_message::create(param.type.toStdString());
+            parameters->get_vector().push_back(paramObj);
+        }
+        log_info("set_param");
+    }
+
+    send_obj->get_map()["param"] = parameters;
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "settingResponse";
+    socket_msg.data = send_obj;
+
+    send_queue.push(socket_msg);
 }
 
 
