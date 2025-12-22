@@ -50,12 +50,12 @@ void LIDAR_3D::init()
         return;
     }
 
-    if(config->get_lidar_3d_type() == "LIVOX")
+    if(config->get_lidar_3d_type() == "LIVOX" || true)
     {
         if(livox == nullptr)
         {
-            LIVOX::instance(this);
-            livox = LIVOX::instance();
+            AIRY::instance(this);
+            livox = AIRY::instance();
             livox->set_config_module(this->config);
             livox->set_logger_module(this->logger);
             livox->open();
@@ -175,7 +175,8 @@ IMU LIDAR_3D::get_best_imu(double ref_t)
 {
     int lidar_num = config->get_lidar_3d_num();
     std::vector<std::vector<IMU>> imu_storage(lidar_num);
-    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
+//    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
+    if(true)
     {
         for(int p = 0; p < lidar_num; p++)
         {
@@ -211,7 +212,8 @@ IMU LIDAR_3D::get_best_imu(double ref_t)
 IMU LIDAR_3D::get_best_imu(double ref_t, int idx)
 {
     std::vector<IMU> imu_storage;
-    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
+//    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
+    if(true)
     {
         imu_storage = livox->get_imu_storage(idx);
     }
