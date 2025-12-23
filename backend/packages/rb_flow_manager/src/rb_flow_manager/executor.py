@@ -26,6 +26,7 @@ EVENT_BATCH_INTERVAL = 0.05
 def _execute_tree_in_process(
     process_id: str,
     step: Step,
+    post_tree: Step | None,
     state_dict: dict,
     result_queue: Queue,
     completion_event: EventType,
@@ -70,6 +71,7 @@ def _execute_tree_in_process(
                     if state_dict["current_repeat"] > 1:
                         step.execute_children(ctx)
                     else:
+                        print("here??????????", flush=True)
                         step.execute(ctx)
                 except JumpToStepException as e:
                     ctx.data["finding_jump_to_step"] = True
@@ -82,6 +84,12 @@ def _execute_tree_in_process(
                         raise RuntimeError("JumpToStep: Target step not found.") from e
                     else:
                         continue
+                except RuntimeError as e:
+                    print("RuntimeError", flush=True)
+                    raise e
+                except Exception as e:
+                    print("Exception", flush=True)
+                    raise e
         else:
             i = 0
 
@@ -106,6 +114,10 @@ def _execute_tree_in_process(
                     else:
                         continue
 
+                except Exception as e:
+                    print("Exception", flush=True)
+                    raise e
+
                 i += 1
 
         if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
@@ -118,12 +130,14 @@ def _execute_tree_in_process(
         pass
 
     except StopExecution:
+        print("StopExecution", flush=True)
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
         if ctx is not None:
             ctx.emit_stop(step.step_id)
 
     except RuntimeError as e:  # noqa: BLE001
+        print("RuntimeError", flush=True)
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
         state_dict["error"] = str(e)
 
@@ -137,6 +151,35 @@ def _execute_tree_in_process(
     except JumpToStepException:
         pass
     finally:
+        try:
+            if post_tree is not None:
+                post_tree.execute(ctx)
+        except BreakRepeat:
+            pass
+
+        except ContinueRepeat:
+            pass
+
+        except StopExecution:
+            state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+
+            if ctx is not None:
+                ctx.emit_stop(step.step_id)
+
+        except RuntimeError as e:  # noqa: BLE001
+            state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
+            state_dict["error"] = str(e)
+
+            print(f"Execution error: {state_dict['error']}", flush=True)
+
+            if ctx is not None:
+                if "Execution stopped by user" in state_dict["error"]:
+                    ctx.emit_stop(step.step_id)
+                else:
+                    ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
+        except JumpToStepException as jump_to_step_exception:
+            raise RuntimeError("JumpToStep: Post program tree is not allowed.") from jump_to_step_exception
+
         # 완료 이벤트 설정
         completion_event.set()
 
@@ -214,6 +257,7 @@ class ScriptExecutor:
         step_mode: bool = False,
         min_step_interval: float | None = None,
         is_ui_execution: bool = False,
+        post_tree: Step | None = None,
     ) -> bool:
         """스크립트 실행 시작"""
         if process_id in self.processes and self.processes[process_id].is_alive():
@@ -279,6 +323,7 @@ class ScriptExecutor:
             args=(
                 process_id,
                 step,
+                post_tree,
                 self.state_dicts[process_id],
                 self.result_queues[process_id],
                 self.completion_events[process_id],
@@ -353,6 +398,8 @@ class ScriptExecutor:
 
                     if self.controller is not None:
                         self.controller.on_error(pid, step_id, err_repr)
+
+                    time.sleep(0.5)
 
                     self.stop_all()
                     break

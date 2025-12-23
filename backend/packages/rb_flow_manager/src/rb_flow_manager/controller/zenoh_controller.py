@@ -57,6 +57,7 @@ class Zenoh_Controller(BaseController):
 
     def on_wait(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
+        self.update_executor_state(RB_Flow_Manager_ProgramState.WAITING)
 
         if self._zenoh_client is not None:
             self._zenoh_client.publish("rrs/pause", payload={})

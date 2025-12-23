@@ -300,15 +300,11 @@ class Step:
                 if "Execution stopped by user" not in str(e):
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                time.sleep(0.1)
-                ctx.stop()
-                raise StopExecution(str(e)) from e
+                raise e
             except Exception as e:  # noqa: BLE001
                 ctx.emit_error(self.step_id, e)
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                time.sleep(0.1)
-                ctx.stop()
-                raise StopExecution(str(e)) from e
+                raise e
 
             try:
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
@@ -316,15 +312,11 @@ class Step:
                 if "Execution stopped by user" not in str(e):
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                time.sleep(0.1)
-                ctx.stop()
                 raise StopExecution(str(e)) from e
             except Exception as e:  # noqa: BLE001
                 ctx.emit_error(self.step_id, e)
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                time.sleep(0.1)
-                ctx.stop()
-                raise StopExecution(str(e)) from e
+                raise e
 
             while not done_event.wait(timeout=0.01):
                 ctx.check_stop()
@@ -660,7 +652,7 @@ class ConditionStep(Step):
             if self.condition_type == "ElseIf" and condition_result is None:
                 raise RuntimeError("ElseIf must be preceded by an If or ElseIf")
 
-            if self.condition_type == "Else" and self.condition is not None:
+            if self.condition_type == "Else" and condition_result is None:
                 raise RuntimeError("Else must not have a condition")
 
         if condition_result:
@@ -680,6 +672,10 @@ class ConditionStep(Step):
                 ctx.emit_done(self.step_id)
 
             self.execute_children(ctx, target_step_id=target_step_id)
+
+        if self.condition_type == "Else" and not condition_result:
+            post_execute_and_execute_children()
+            return
 
         if isinstance(self.condition, bool):
             if self.condition:
