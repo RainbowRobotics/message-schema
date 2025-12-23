@@ -5410,7 +5410,7 @@ void MainWindow::plot_loop()
     plot_info();
     //    plot_safety();
     plot_raw_2d();
-    //plot_raw_3d();
+    plot_raw_3d();
     plot_mapping();
     plot_loc();
     plot_obs();

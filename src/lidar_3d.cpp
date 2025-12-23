@@ -50,18 +50,29 @@ void LIDAR_3D::init()
         return;
     }
 
-    if(config->get_lidar_3d_type() == "LIVOX" || true)
+    if(config->get_lidar_3d_type() == "LIVOX")
     {
         if(livox == nullptr)
         {
-            AIRY::instance(this);
-            livox = AIRY::instance();
+            LIVOX::instance(this);
+            livox = LIVOX::instance();
             livox->set_config_module(this->config);
             livox->set_logger_module(this->logger);
             livox->open();
         }
     }
-    //printf("[LIDAR_3D] init\n");
+    else if(config->get_lidar_3d_type() == "AIRY")
+    {
+        if(airy == nullptr)
+        {
+            AIRY::instance(this);
+            airy = AIRY::instance();
+            airy->set_config_module(this->config);
+            airy->set_logger_module(this->logger);
+            airy->open();
+        }
+    }
+
     spdlog::info("[LIDAR_3D] init");
 }
 
@@ -130,6 +141,10 @@ LVX_FRM LIDAR_3D::get_cur_raw(int idx)
     {
         res = livox->get_cur_raw(idx);
     }
+    else if(config->get_lidar_3d_type() == "AIRY" && airy != nullptr)
+    {
+        res = airy->get_cur_raw(idx);
+    }
 
     return res;
 }
@@ -166,6 +181,10 @@ IMU LIDAR_3D::get_cur_imu(int idx)
     if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
     {
         res = livox->get_cur_imu(idx);
+    }
+    else if(config->get_lidar_3d_type() == "AIRY" && airy != nullptr)
+    {
+        res = airy->get_cur_imu(idx);
     }
 
     return res;
@@ -261,6 +280,14 @@ QString LIDAR_3D::get_info_text()
         for(int idx = 0; idx < lidar_num; idx++)
         {
             res += livox->get_info_text(idx);
+            res += QString("dq: %1\n\n").arg((int)deskewing_que[idx].unsafe_size());
+        }
+    }
+    else if(config->get_lidar_3d_type() == "AIRY" && airy != nullptr)
+    {
+        for(int idx = 0; idx < lidar_num; idx++)
+        {
+            res += airy->get_info_text(idx);
             res += QString("dq: %1\n\n").arg((int)deskewing_que[idx].unsafe_size());
         }
     }
