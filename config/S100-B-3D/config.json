@@ -26,14 +26,14 @@
         {
             "SERIAL_NUMBER": "AY4W633000L",
             "TF": "0.2292,-0.0875,0.2,-62.0,0.0,-115.0",
-            "COLOR_PROFILE": 112,
-            "DEPTH_PROFILE": 55
+            "COLOR_PROFILE": "112",
+            "DEPTH_PROFILE": "55"
         },
         {
             "SERIAL_NUMBER": "AY4W633001A",
             "TF": "0.2292,0.0875,0.2,62.0,0.0,115.0",
-            "COLOR_PROFILE": 112,
-            "DEPTH_PROFILE": 55
+            "COLOR_PROFILE": "112",
+            "DEPTH_PROFILE": "55"
         }
     ],
     "control": {
@@ -47,7 +47,7 @@
     },
     "debug": {
         "SERVER_ID": "rainbow",
-        "SERVER_IP": "127.0.0.1",
+        "SERVER_IP": "10.108.1.180",
         "SERVER_PW": "rainbow",
         "USE_BEEP": true,
         "USE_QTUI": false,
@@ -78,13 +78,6 @@
         "DOCKING_Y_OFFSET": "0.03",
         "XNERGY_SET_CURRENT": "20.0"
     },
-    "lidar_bottom_config": [
-        {
-            "IP": "",
-            "TF": "0.22, 0, 0, 0, 0, 180",
-            "DEV": "/dev/ttyBL0"
-        }
-    ],
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
@@ -142,7 +135,7 @@
         "LOG_LEVEL": "info"
     },
     "map": {
-        "MAP_PATH": "/data/maps/250804_unicos_update6_test"
+        "MAP_PATH": "/data/maps/250429_unicos_update2"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
@@ -174,9 +167,9 @@
     },
     "network": {
         "USE_COOP": false,
-        "USE_FMS": false,
-        "USE_MSA": true,
-        "USE_MULTI": false,
+        "USE_FMS": true,
+        "USE_MSA": false,
+        "USE_MULTI": true,
         "USE_RRS": false,
         "USE_RTSP": false
     },

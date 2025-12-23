@@ -536,8 +536,7 @@ void DOCKCONTROL::b_loop()
 
         else if (fsm_state == DOCKING_FSM_OFF)
         {
-
-
+            spdlog::info("[DOCKING] UNDOCK COMPLETE");
         }
         else if (fsm_state == DOCKING_FSM_UNDOCK_FAILED)
         {
@@ -607,6 +606,18 @@ void DOCKCONTROL::stop()
         mobile->xnergy_command(1, non_used_int); //xnergy stop
         spdlog::info("[DOCKING] xnergy command charge stop");
     }
+
+    // dockstop response
+    DATA_DOCK ddock;
+    ddock.id = cmd_id;
+    ddock.command = "dockstop";
+    ddock.result = "done";
+    ddock.message = "";
+    ddock.time = get_time();
+    Q_EMIT signal_dock_response(ddock);
+
+    log_info("Docking state: {}", fsm_state);
+    log_info("dockcontrol stop complete");
 }
 
 void DOCKCONTROL::set_config_module(CONFIG* _config)
