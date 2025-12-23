@@ -4652,6 +4652,11 @@ void MainWindow::plot_obs()
         cv::Mat dyn_map = OBSMAP::instance()->get_dyn_map();
         cv::Mat vir_map = OBSMAP::instance()->get_vir_map();
 
+        if(obs_map.empty() || dyn_map.empty() || vir_map.empty())
+        {
+            return;
+        }
+
         if((obs_map.rows == 0 || obs_map.cols == 0) ||
                 (dyn_map.rows == 0 || dyn_map.cols == 0) ||
                 (vir_map.rows == 0 || vir_map.cols == 0))
@@ -5405,7 +5410,7 @@ void MainWindow::plot_loop()
     plot_info();
     //    plot_safety();
     plot_raw_2d();
-    plot_raw_3d();
+    //plot_raw_3d();
     plot_mapping();
     plot_loc();
     plot_obs();
