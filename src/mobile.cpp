@@ -988,7 +988,7 @@ void MOBILE::receive_data_loop()
                             cur_status.charge_current = charge_current;
                             cur_status.power = main_power;
 
-                            spdlog::info("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}",
+                            log_debug("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}",
                                          bat_in, bat_out, bat_cur, main_power);
 
                             // Setting Motor info
@@ -1061,7 +1061,7 @@ void MOBILE::receive_data_loop()
                                 spdlog::info("[MOBILE] voltage_in: {:.2f}, bat_percent: {}", bat_in, cur_status.bat_percent);
                         
                             }
-                            spdlog::info("[MOBILE] BMS type: {}", bms_header);
+                            log_debug("[MOBILE] BMS type: {}", bms_header);
 
                             cur_status.bms_type = bms_header;
                             mtx.unlock();
@@ -1694,7 +1694,7 @@ void MOBILE::receive_data_loop()
                             cur_status.power = main_power;
                             cur_status.bat_percent = calc_battery_percentage(bat_out);
 
-                            spdlog::info("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}, bat_percent: {} %",
+                            log_debug("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}, bat_percent: {} %",
                                          bat_in, bat_out, bat_cur, main_power, cur_status.bat_percent);
 
                             unsigned int _version;
