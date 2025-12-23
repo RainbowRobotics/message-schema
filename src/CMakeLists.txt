@@ -28,6 +28,8 @@ add_compile_definitions(QT_NO_SIGNALS_SLOTS_KEYWORDS QT_NO_KEYWORDS)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
+set(HOME_DIR $ENV{HOME})
+
 # ---- Qt ----
 set(QT_REQUIRED_COMPONENTS Core Gui Widgets WebSockets Gamepad)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS ${QT_REQUIRED_COMPONENTS})
@@ -61,7 +63,10 @@ find_package(Boost QUIET COMPONENTS system thread)
 # ---- GTSAM ----
 find_package(GTSAM QUIET)
 
-set(HOME_DIR $ENV{HOME})
+# ---- RoboSense rs_driver (Airy) ----
+find_package(rs_driver QUIET)
+list(APPEND CMAKE_PREFIX_PATH "/usr/local")
+set(RS_DRIVER_INCLUDE_DIR "/usr/local/rs_driver/include")
 
 # Orbbec SDK
 set(ORBBEC_SDK_DIR      "${HOME_DIR}/OrbbecSDK/SDK")
@@ -75,17 +80,16 @@ set(RPLIDAR_LIB_DIR     "${RPLIDAR_DIR}/output/Linux/Release")
 
 # spdlog
 set(SPDLOG_INCLUDE_DIR  "${HOME_DIR}/spdlog/include")
+find_package(fmt REQUIRED)
 
-# CSPC bottom lidar SDK (옵션)
+# CSPC bottom lidar SDK
 set(CSPC_LIDAR_SDK_DIR   "${HOME_DIR}/CSPC_LIDAR_SDK_V7.3")
 set(CSPC_LIDAR_BUILD_DIR "${CSPC_LIDAR_SDK_DIR}/build")
-
 
 set(PROJECT_SOURCES
     comm/comm_coop.cpp
     comm/comm_fms.cpp
     comm/comm_msa.cpp
-    comm/comm_rrs.cpp
     autocontrol.cpp
     cam.cpp
     cam/ORBBEC/ORBBEC.cpp
@@ -114,6 +118,7 @@ set(PROJECT_SOURCES
     mobile.cpp
     lidar_3d.cpp
     lidar/LIVOX/livox.cpp
+    lidar/AIRY/airy.cpp
     obsmap.cpp
     sim.cpp
     policy.cpp
@@ -126,7 +131,6 @@ set(PROJECT_HEADERS
     comm/comm_coop.h
     comm/comm_fms.h
     comm/comm_msa.h
-    comm/comm_rrs.h
     autocontrol.h
     cam.h
     cam/ORBBEC/ORBBEC.h
@@ -158,6 +162,7 @@ set(PROJECT_HEADERS
     mobile.h
     lidar_3d.h
     lidar/LIVOX/livox.h
+    lidar/AIRY/airy.h
     obsmap.h
     sim.h
     policy.h
@@ -226,6 +231,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
     TBB::tbb
     Threads::Threads
+    fmt::fmt
 )
 
 # OpenMP
@@ -249,6 +255,28 @@ if(TARGET GTSAM::gtsam)
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE gtsam metis-gtsam)
 endif()
+
+# Airy
+if(EXISTS "${RS_DRIVER_INCLUDE_DIR}/rs_driver/api/lidar_driver.hpp")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${RS_DRIVER_INCLUDE_DIR})
+else()
+    message(FATAL_ERROR "rs_driver header not found: ${RS_DRIVER_INCLUDE_DIR}/rs_driver/api/lidar_driver.hpp")
+endif()
+if(TARGET rs_driver::rs_driver)
+    target_link_libraries(${PROJECT_NAME} PRIVATE rs_driver::rs_driver)
+elseif(TARGET rs_driver)
+    target_link_libraries(${PROJECT_NAME} PRIVATE rs_driver)
+else()
+    message(STATUS "rs_driver CMake target not found (maybe header-only). Continue with headers only.")
+endif()
+
+find_library(PCAP_LIB NAMES pcap HINTS /usr/lib /usr/local/lib)
+if(PCAP_LIB)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${PCAP_LIB})
+else()
+    message(FATAL_ERROR "libpcap not found. Install with: sudo apt-get install libpcap-dev")
+endif()
+
 
 # Octomap / PDAL
 find_library(OCTOMAP_LIB   NAMES octomap  PATHS /usr/lib /usr/local/lib)
@@ -319,6 +347,7 @@ set(_RPATH_DIRS
     ${RPLIDAR_LIB_DIR}
     ${HOME_DIR}/.local/lib
     ${CSPC_LIDAR_BUILD_DIR}
+    /usr/local/rs_driver/lib
 )
 
 list(JOIN _RPATH_DIRS ":" _RPATH_JOINED)
