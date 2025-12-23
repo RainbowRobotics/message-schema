@@ -44,6 +44,7 @@ class Step_Base(BaseModel):
     memo: str | None = Field(default=None)
     allowChildren: list[str] | None = Field(default=None)
     allowParents: list[str] | None = Field(default=None)
+    notAllowChildren: list[str] | None = Field(default=None)
     fixChildren: bool = Field(default=False)
     requireChildren: bool = Field(default=False)
     requireParent: bool = Field(default=False)
@@ -322,6 +323,7 @@ class PlayState(str, Enum):
     PAUSE = "pause"
     STOP = "stop"
     IDLE = "idle"
+    WAITING = "waiting"
 
 class TaskState(TypedDict):
     state: RB_Flow_Manager_ProgramState

@@ -233,11 +233,10 @@ class ProgramService(BaseService):
     def update_executor_state(self, state: int, error: str | None = None) -> None:
         str_state = self.convert_state_to_string(state)
 
-        if (
-            str_state == RB_Flow_Manager_ProgramState.RUNNING
-            or str_state == RB_Flow_Manager_ProgramState.WAITING
-        ):
+        if str_state == RB_Flow_Manager_ProgramState.RUNNING:
             self._play_state = PlayState.PLAY
+        elif str_state == RB_Flow_Manager_ProgramState.WAITING:
+            self._play_state = PlayState.WAITING
         elif str_state == RB_Flow_Manager_ProgramState.PAUSED:
             self._play_state = PlayState.PAUSE
         elif (
@@ -248,9 +247,18 @@ class ProgramService(BaseService):
         elif str_state == RB_Flow_Manager_ProgramState.IDLE:
             self._play_state = PlayState.IDLE
 
+        all_states = self.script_executor.get_all_states()
+
+        step_mode = False
+
+        for state in all_states.values():
+            if state.get("step_mode", False):
+                step_mode = True
+                break
+
         fire_and_log(
             socket_client.emit(
-                "program/play_state", {"playState": self._play_state, "stepMode": self._step_mode, "error": error}
+                "program/play_state", {"playState": self._play_state, "stepMode": step_mode, "error": error}
             )
         )
 
@@ -662,13 +670,26 @@ class ProgramService(BaseService):
 
         steps_tree = self.build_step_tree(steps_docs)
 
+        normal_steps_tree = []
+        post_steps_tree = []
+
+        for step in steps_tree:
+            if step.get("method", None) == "ActionPost":
+                post_steps_tree.append(step)
+            else:
+                normal_steps_tree.append(step)
+
+        if len(post_steps_tree) > 1:
+            raise HTTPException(status_code=400, detail=f"ActionPost step must be only one: {task_id}")
+
         script_context = self.build_script_context(
-            steps_tree,
+            normal_steps_tree,
             task_id,
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             robot_model=task_doc["robotModel"],
             begin=task_doc.get("begin", None),
+            post_tree=post_steps_tree,
         )
 
         os.makedirs(task_doc["scriptPath"], exist_ok=True)
@@ -725,6 +746,7 @@ class ProgramService(BaseService):
         *,
         robot_model: str | None = None,
         begin: MainTaskBegin | None = None,
+        post_tree: list[dict[str, Any]] | None = None,
     ):
         """
         Steps tree를 컨텍스트로 변환하는 함수.
@@ -734,6 +756,13 @@ class ProgramService(BaseService):
         body_context = "\n".join(
             self.parse_step_context(step, depth=8, to_string=True) for step in steps_tree
         )
+
+        post_body_context = "\n".join(
+            self.parse_step_context(step, depth=0, to_string=True) for step in post_tree
+        )
+
+        if not post_body_context:
+            post_body_context = ""
 
         if not body_context:
             body_context = ""
@@ -776,10 +805,14 @@ class ProgramService(BaseService):
             ")\n"
         )
 
-        footer_context = 'if __name__ == "__main__":\n'
-        footer_context += f"    executor.start('{script_name}', tree, repeat_count={repeat_count}, robot_model='{robot_model}', category='{category}')\n\n"
+        post_root_block = (
+            f"post_tree = {post_body_context}\n"
+        ) if post_body_context else ""
 
-        return header_context + "\n" + root_block + "\n" + footer_context
+        footer_context = 'if __name__ == "__main__":\n'
+        footer_context += f"    executor.start('{script_name}', tree, repeat_count={repeat_count}, robot_model='{robot_model}', category='{category}'{', post_tree=post_tree' if post_root_block else ''})\n\n"
+
+        return header_context + "\n" + root_block + "\n" + post_root_block + "\n" + footer_context
 
     async def get_script_context(self, *, request: Request_Get_Script_ContextPD, db: MongoDB):
         """
@@ -805,13 +838,23 @@ class ProgramService(BaseService):
                 status_code=400, detail=f"Invalid programId: {task_doc['programId']}"
             )
 
+        normal_steps_tree = []
+        post_steps_tree = []
+
+        for step in steps_tree:
+            if step.get("method", None) == "ActionPost":
+                post_steps_tree.append(step)
+            else:
+                normal_steps_tree.append(step)
+
         script_context = self.build_script_context(
-            steps_tree,
+            normal_steps_tree,
             task_id,
             task_doc["scriptName"],
             program_doc["repeatCnt"],
             robot_model=task_doc["robotModel"],
             begin=begin,
+            post_tree=post_steps_tree,
         )
 
         return {
@@ -1577,6 +1620,18 @@ class ProgramService(BaseService):
             steps_tree = script["steps"]
             step_mode = script.get("stepMode", False)
 
+            normal_steps_tree = []
+            post_steps_tree = []
+
+            for step in steps_tree:
+                if step.get("method", None) == "ActionPost":
+                    post_steps_tree.append(step)
+                else:
+                    normal_steps_tree.append(step)
+
+            if len(post_steps_tree) > 1:
+                raise HTTPException(status_code=400, detail=f"ActionPost step must be only one: {task_id}")
+
             task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
 
             if not task_doc:
@@ -1586,12 +1641,16 @@ class ProgramService(BaseService):
             category = self._robot_models[robot_model].get("be_service", None)
             begin = script.get("begin", None)
 
-            tree = self.build_tree_from_client(steps_tree, task_id, robot_model, category, begin)
+
+
+            tree = self.build_tree_from_client(normal_steps_tree, task_id, robot_model, category, begin)
+            post_tree = self.parse_step_context(post_steps_tree[0], depth=8) if len(post_steps_tree) > 0 else None
 
             tree_list.append(
                 {
                     "taskId": task_id,
                     "tree": tree,
+                    "post_tree": post_tree,
                     "repeat_count": repeat_count,
                     "robot_model": robot_model,
                     "category": category,
@@ -1608,6 +1667,7 @@ class ProgramService(BaseService):
                 step_mode=step_mode,
                 min_step_interval=0.5 if step_mode else None,
                 is_ui_execution=True,
+                post_tree=tree["post_tree"],
             )
 
         self._step_mode = step_mode
