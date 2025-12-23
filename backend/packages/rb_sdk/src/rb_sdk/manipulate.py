@@ -944,6 +944,11 @@ class RBManipulateSDK(RBBaseSDK):
             flow_manager_args.done()
             return
 
+        if isinstance(title, int | float):
+            title = str(title)
+        if isinstance(content, int | float):
+            content = str(content)
+
         if option == "ALARM":
             self.alarm(
                 title=title,

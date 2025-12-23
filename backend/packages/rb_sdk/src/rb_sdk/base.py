@@ -197,6 +197,7 @@ class RBBaseSDK:
 
         env = {
             "variables": merged_variables,
+            "var": merged_variables,
             "update_variable": flow_manager_args.ctx.update_local_variables,
             "done": flow_manager_args.done,
             "pause": flow_manager_args.ctx.pause,
