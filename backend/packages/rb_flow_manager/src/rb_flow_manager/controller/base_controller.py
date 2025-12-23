@@ -48,6 +48,10 @@ class BaseController(ABC):
         """각 Step에서 Error 발생 시 동작을 수행"""
 
     @abstractmethod
+    def on_post_start(self, task_id: str) -> None:
+        """스크립트/플로우 Post Tree의 시작 시점에 동작을 수행"""
+
+    @abstractmethod
     def on_complete(self, task_id: str) -> None:
         """스크립트/플로우 완료 시점에 동작을 수행"""
 

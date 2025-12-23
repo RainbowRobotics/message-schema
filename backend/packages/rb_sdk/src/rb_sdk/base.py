@@ -246,7 +246,6 @@ class RBBaseSDK:
         )
 
 
-
         if flow_manager_args is not None:
             flow_manager_args.done()
 

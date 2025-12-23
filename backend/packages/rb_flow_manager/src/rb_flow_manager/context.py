@@ -175,7 +175,7 @@ class ExecutionContext:
 
     def _wait_for_resume(self):
         """외부 pause 신호를 즉시 반영하는 세이프포인트"""
-        if self.stop_event.is_set():
+        if self.stop_event.is_set() and not self.state_dict.get("ignore_stop", False):
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
             raise StopExecution("Execution stopped by user")
 
@@ -264,6 +264,18 @@ class ExecutionContext:
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": str(error),
+            }
+        )
+
+    def emit_post_start(self):
+        """post_start 이벤트 발생"""
+        self.result_queue.put(
+            {
+                "type": "post_start",
+                "process_id": self.process_id,
+                "ts": time.time(),
+                "generation": self._generation,
+                "error": None,
             }
         )
 

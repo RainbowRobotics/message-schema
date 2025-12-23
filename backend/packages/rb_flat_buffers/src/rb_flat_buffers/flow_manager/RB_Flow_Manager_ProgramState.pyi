@@ -16,4 +16,5 @@ class RB_Flow_Manager_ProgramState(object):
   WAITING: int
   ERROR: int
   COMPLETED: int
+  AFTER_COMPLETED: int
 

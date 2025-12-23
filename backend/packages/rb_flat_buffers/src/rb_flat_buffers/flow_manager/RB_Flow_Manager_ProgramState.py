@@ -10,3 +10,4 @@ class RB_Flow_Manager_ProgramState(object):
     WAITING = 4
     ERROR = 5
     COMPLETED = 6
+    AFTER_COMPLETED = 7

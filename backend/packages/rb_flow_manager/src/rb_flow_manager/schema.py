@@ -7,5 +7,6 @@ class RB_Flow_Manager_ProgramState(str, Enum):
     PAUSED = "paused"
     WAITING = "waiting"
     STOPPED = "stopped"
+    POST_START = "post_start"
     COMPLETED = "completed"
     ERROR = "error"

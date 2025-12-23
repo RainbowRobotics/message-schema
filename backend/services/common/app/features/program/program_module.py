@@ -221,6 +221,7 @@ class ProgramService(BaseService):
             RB_Flow_Manager_ProgramState_FB.WAITING: RB_Flow_Manager_ProgramState.WAITING,
             RB_Flow_Manager_ProgramState_FB.ERROR: RB_Flow_Manager_ProgramState.ERROR,
             RB_Flow_Manager_ProgramState_FB.COMPLETED: RB_Flow_Manager_ProgramState.COMPLETED,
+            RB_Flow_Manager_ProgramState_FB.AFTER_COMPLETED: RB_Flow_Manager_ProgramState.POST_START,
         }[state]
 
     def get_play_state(self):
@@ -237,6 +238,8 @@ class ProgramService(BaseService):
             self._play_state = PlayState.PLAY
         elif str_state == RB_Flow_Manager_ProgramState.WAITING:
             self._play_state = PlayState.WAITING
+        elif str_state == RB_Flow_Manager_ProgramState.POST_START:
+            self._play_state = PlayState.POST_START
         elif str_state == RB_Flow_Manager_ProgramState.PAUSED:
             self._play_state = PlayState.PAUSE
         elif (

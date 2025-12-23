@@ -130,29 +130,32 @@ def _execute_tree_in_process(
         pass
 
     except StopExecution:
-        print("StopExecution", flush=True)
-        state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+        if post_tree is None:
+            state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
-        if ctx is not None:
-            ctx.emit_stop(step.step_id)
+            if ctx is not None:
+                ctx.emit_stop(step.step_id)
 
     except RuntimeError as e:  # noqa: BLE001
-        print("RuntimeError", flush=True)
-        state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
-        state_dict["error"] = str(e)
+        if post_tree is None:
+            state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
+            state_dict["error"] = str(e)
 
-        print(f"Execution error: {state_dict['error']}", flush=True)
+            print(f"Execution error: {state_dict['error']}", flush=True)
 
-        if ctx is not None:
-            if "Execution stopped by user" in state_dict["error"]:
-                ctx.emit_stop(step.step_id)
-            else:
-                ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
+            if ctx is not None:
+                if "Execution stopped by user" in state_dict["error"]:
+                    ctx.emit_stop(step.step_id)
+                else:
+                    ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
     except JumpToStepException:
         pass
     finally:
         try:
             if post_tree is not None:
+                state_dict["ignore_stop"] = True
+
+                ctx.emit_post_start()
                 post_tree.execute(ctx)
         except BreakRepeat:
             pass
@@ -179,12 +182,13 @@ def _execute_tree_in_process(
                     ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
         except JumpToStepException as jump_to_step_exception:
             raise RuntimeError("JumpToStep: Post program tree is not allowed.") from jump_to_step_exception
+        finally:
+            print("finally >>>>>>>", flush=True)
+            # 완료 이벤트 설정
+            completion_event.set()
 
-        # 완료 이벤트 설정
-        completion_event.set()
-
-        if ctx is not None:
-            ctx.close()
+            if ctx is not None:
+                ctx.close()
 
 
 class ScriptExecutor:
@@ -204,6 +208,7 @@ class ScriptExecutor:
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
         on_done: Callable[[str], None] | None = None,
+        on_post_start: Callable[[str], None] | None = None,
         on_complete: Callable[[str], None] | None = None,
         on_all_complete: Callable[[], None] | None = None,
         on_all_stop: Callable[[], None] | None = None,
@@ -221,6 +226,7 @@ class ScriptExecutor:
         self._on_error = on_error
         self._on_close = on_close
         self._on_done = on_done
+        self._on_post_start = on_post_start
         self._on_complete = on_complete
         self._on_all_complete = on_all_complete
         self._on_all_stop = on_all_stop
@@ -403,6 +409,15 @@ class ScriptExecutor:
 
                     self.stop_all()
                     break
+
+                elif evt_type == "post_start":
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.POST_START
+
+                    if self._on_post_start is not None:
+                        self._on_post_start(pid)
+
+                    if self.controller is not None:
+                        self.controller.on_post_start(pid)
 
                 elif evt_type == "pause":
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.WAITING if is_wait else RB_Flow_Manager_ProgramState.PAUSED
@@ -697,8 +712,8 @@ class ScriptExecutor:
 
         # self.processes[process_id].join(timeout=1)
 
-        if process_id in self.completion_events:
-            self.completion_events[process_id].set()
+        # if process_id in self.completion_events:
+        #     self.completion_events[process_id].set()
 
         # print(f"Stopped kill process: {process_id}", flush=True)
 

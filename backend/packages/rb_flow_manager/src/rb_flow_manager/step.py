@@ -312,7 +312,7 @@ class Step:
                 if "Execution stopped by user" not in str(e):
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                raise StopExecution(str(e)) from e
+                raise RuntimeError(str(e)) from e
             except Exception as e:  # noqa: BLE001
                 ctx.emit_error(self.step_id, e)
                 print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)

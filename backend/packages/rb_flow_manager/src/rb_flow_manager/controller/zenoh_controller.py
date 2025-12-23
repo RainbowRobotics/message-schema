@@ -89,6 +89,9 @@ class Zenoh_Controller(BaseController):
     def on_done(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.COMPLETED)
 
+    def on_post_start(self, task_id: str) -> None:
+        self.update_executor_state(state=RB_Flow_Manager_ProgramState.AFTER_COMPLETED)
+
     def on_complete(self, task_id: str) -> None:
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 

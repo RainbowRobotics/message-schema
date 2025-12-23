@@ -324,6 +324,7 @@ class PlayState(str, Enum):
     STOP = "stop"
     IDLE = "idle"
     WAITING = "waiting"
+    POST_START = "post_start"
 
 class TaskState(TypedDict):
     state: RB_Flow_Manager_ProgramState
