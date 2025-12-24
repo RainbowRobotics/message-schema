@@ -9,11 +9,17 @@ from multiprocessing.context import SpawnProcess
 from multiprocessing.managers import SyncManager
 from multiprocessing.synchronize import Event as EventType
 from threading import Thread
-from typing import Any
+from typing import Any, Literal
 
 from .context import ExecutionContext
 from .controller.base_controller import BaseController
-from .exception import BreakRepeat, ContinueRepeat, JumpToStepException, StopExecution
+from .exception import (
+    BreakRepeat,
+    ContinueRepeat,
+    JumpToStepException,
+    StopExecution,
+    SubTaskException,
+)
 from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
 
@@ -71,7 +77,6 @@ def _execute_tree_in_process(
                     if state_dict["current_repeat"] > 1:
                         step.execute_children(ctx)
                     else:
-                        print("here??????????", flush=True)
                         step.execute(ctx)
                 except JumpToStepException as e:
                     ctx.data["finding_jump_to_step"] = True
@@ -84,6 +89,16 @@ def _execute_tree_in_process(
                         raise RuntimeError("JumpToStep: Target step not found.") from e
                     else:
                         continue
+                except SubTaskException as e:
+                    tree = e.sub_task_tree
+
+                    if e.sub_task_post_tree is not None:
+                        post_tree = e.sub_task_post_tree
+
+                    if tree is None:
+                        raise RuntimeError("SubTask: Tree is not found.") from e
+
+                    tree.execute(ctx)
                 except RuntimeError as e:
                     print("RuntimeError", flush=True)
                     raise e
@@ -113,7 +128,16 @@ def _execute_tree_in_process(
                         raise RuntimeError("JumpToStep: Target step not found.") from e
                     else:
                         continue
+                except SubTaskException as e:
+                    tree = e.sub_task_tree
 
+                    if e.sub_task_post_tree is not None:
+                        post_tree = e.sub_task_post_tree
+
+                    if tree is None:
+                        raise RuntimeError("SubTask: Tree is not found.") from e
+
+                    tree.execute(ctx)
                 except Exception as e:
                     print("Exception", flush=True)
                     raise e
@@ -205,6 +229,8 @@ class ScriptExecutor:
         on_resume: Callable[[str, str], None] | None = None,
         on_stop: Callable[[str, str], None] | None = None,
         on_next: Callable[[str, str], None] | None = None,
+        on_sub_task_start: Callable[[str, Literal["INSERT", "CHANGE"]], None] | None = None,
+        on_sub_task_done: Callable[[str, Literal["INSERT", "CHANGE"]], None] | None = None,
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
         on_done: Callable[[str], None] | None = None,
@@ -223,6 +249,8 @@ class ScriptExecutor:
         self._on_resume = on_resume
         self._on_stop = on_stop
         self._on_next = on_next
+        self._on_sub_task_start = on_sub_task_start
+        self._on_sub_task_done = on_sub_task_done
         self._on_error = on_error
         self._on_close = on_close
         self._on_done = on_done
@@ -368,6 +396,7 @@ class ScriptExecutor:
             step_id = evt.get("step_id")
             is_wait = evt.get("is_wait", False)
             evt_gen = evt.get("generation")
+            sub_task_type = evt.get("sub_task_type")
 
             cur_gen = self._pid_generation.get(pid)
 
@@ -387,6 +416,20 @@ class ScriptExecutor:
 
                     if self.controller is not None:
                         self.controller.on_next(pid, step_id)
+
+                elif evt_type == "sub_task_start":
+                    if self._on_sub_task_start is not None:
+                        self._on_sub_task_start(pid, sub_task_type)
+
+                    if self.controller is not None:
+                        self.controller.on_sub_task_start(pid, sub_task_type)
+
+                elif evt_type == "sub_task_done":
+                    if self._on_sub_task_done is not None:
+                        self._on_sub_task_done(pid, sub_task_type)
+
+                    if self.controller is not None:
+                        self.controller.on_sub_task_done(pid, sub_task_type)
 
                 elif evt_type == "done":
                     if self._on_done is not None:

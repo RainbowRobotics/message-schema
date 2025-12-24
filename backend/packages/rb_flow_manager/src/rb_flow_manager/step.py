@@ -1,14 +1,22 @@
+import importlib
 import time
 import uuid
 from collections.abc import Callable
 from multiprocessing import Event
-from typing import Any
+from typing import Any, Literal
 
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import call_with_matching_args, eval_value, safe_eval_expr
 
 from .context import ExecutionContext
-from .exception import BreakFolder, BreakRepeat, ContinueRepeat, JumpToStepException, StopExecution
+from .exception import (
+    BreakFolder,
+    BreakRepeat,
+    ContinueRepeat,
+    JumpToStepException,
+    StopExecution,
+    SubTaskException,
+)
 from .utils import _resolve_arg_scope_value
 
 
@@ -62,6 +70,9 @@ class Step:
 
         if d.get("method") == "Break":
             return BreakStep.from_dict(d)
+
+        if d.get("method") == "SubTask":
+            return SubTaskStep.from_dict(d)
 
         return Step(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
@@ -786,3 +797,79 @@ class JumpToStep(Step):
 
         if self.target_step_id is not None:
             raise JumpToStepException(target_step_id=self.target_step_id)
+
+class SubTaskStep(Step):
+    """서브 태스크 Step"""
+    _class_name = "SubTaskStep"
+
+    def __init__(self, *, step_id: str, name: str, sub_task_type: Literal["INSERT", "CHANGE"], sub_task_script_path: str, disabled: bool | None = None):
+        super().__init__(step_id=step_id, name=name, sub_task_type=sub_task_type, sub_task_script_path=sub_task_script_path, disabled=disabled)
+        self.sub_task_type = sub_task_type
+        self.sub_task_script_path = sub_task_script_path
+
+        tree, post_tree = self._load_sub_task_trees()
+
+        self.sub_task_tree: Step = tree
+        self.sub_task_post_tree: Step | None = post_tree
+
+    @staticmethod
+    def from_dict(d) -> "SubTaskStep":
+        return SubTaskStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            sub_task_type=d.get("subTaskType"),
+            sub_task_script_path=d.get("subTaskScriptPath"),
+            disabled=d.get("disabled"),
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "subTaskType": self.sub_task_type,
+            "subTaskScriptPath": self.sub_task_script_path,
+            "disabled": self.disabled,
+        }
+
+    def _load_sub_task_trees(self):
+        module = importlib.import_module(self.sub_task_script_path)
+        tree = getattr(module, "tree", None)
+        post_tree = getattr(module, "post_tree", None)
+
+        if module is None:
+            raise RuntimeError(f"'{self.sub_task_script_path}' not found")
+
+        if tree is None:
+            raise RuntimeError(f"'{self.sub_task_script_path}' must define global `tree`")
+
+        return tree, post_tree
+
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if self.disabled or is_skip:
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
+        self._pre_execute(ctx)
+
+        ctx.emit_next(self.step_id)
+
+        ctx.check_stop()
+
+        if self.sub_task_type == "INSERT":
+            ctx.emit_sub_task_start(self.step_id, self.sub_task_type)
+            self.sub_task_tree.execute_children(ctx, target_step_id=target_step_id)
+            ctx.emit_sub_task_done(self.step_id, self.sub_task_type)
+        elif self.sub_task_type == "CHANGE":
+            ctx.step_num = 0
+            raise SubTaskException(task_id=self.step_id, sub_task_tree=self.sub_task_tree, sub_task_post_tree=self.sub_task_post_tree)
+
+        self._post_execute(ctx, ignore_step_interval=True)
+
+        if self.sub_task_post_tree is not None:
+            self.sub_task_post_tree.execute(ctx)
+
+        ctx.emit_done(self.step_id)

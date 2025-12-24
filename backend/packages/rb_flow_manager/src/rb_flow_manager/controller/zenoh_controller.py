@@ -1,7 +1,7 @@
 import time
 from collections.abc import MutableMapping
 from multiprocessing.managers import DictProxy, ListProxy
-from typing import Any
+from typing import Any, Literal
 
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import (
     RB_Flow_Manager_ProgramState,
@@ -78,6 +78,12 @@ class Zenoh_Controller(BaseController):
 
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
+
+    def on_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+        self.sub_task_start_or_done()
+
+    def on_sub_task_done(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+        self.sub_task_start_or_done()
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
         str_error = str(error)
@@ -163,6 +169,9 @@ class Zenoh_Controller(BaseController):
         except Exception as e:
             print(f"Error updating executor state: {e}")
             raise e
+
+    def sub_task_start_or_done(self):
+        pass
 
     def _proxy_to_dict(self, obj):
         if isinstance(obj, dict):

@@ -5,7 +5,7 @@ from abc import (
 from collections.abc import (
     MutableMapping,
 )
-from typing import Any
+from typing import Any, Literal
 
 
 class BaseController(ABC):
@@ -38,6 +38,14 @@ class BaseController(ABC):
     @abstractmethod
     def on_next(self, task_id: str, step_id: str) -> None:
         """각 Step이 다음 Step으로 이동 할때 동작을 수행"""
+
+    @abstractmethod
+    def on_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+        """각 Step이 서브 태스크 시작 시점에 동작을 수행"""
+
+    @abstractmethod
+    def on_sub_task_done(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+        """각 Step이 서브 태스크 완료 시점에 동작을 수행"""
 
     @abstractmethod
     def on_done(self, task_id: str, step_id: str) -> None:

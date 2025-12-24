@@ -36,6 +36,8 @@ class Step_Base(BaseModel):
     funcName: str | None = Field(default=None)
     summary: str | None = Field(default=None)
     doneScript: str | None = Field(default=None)
+    subTaskScriptPath: str | None = Field(default=None)
+    subTaskType: Literal["INSERT", "CHANGE"] | None = Field(default=None)
     notAstEval: bool = Field(default=False)
     order: int
     color: str | None = Field(default=None)

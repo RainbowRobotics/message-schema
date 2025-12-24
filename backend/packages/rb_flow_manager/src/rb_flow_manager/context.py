@@ -11,7 +11,7 @@ from multiprocessing import (
 from multiprocessing.synchronize import (
     Event as EventType,
 )
-from typing import Any
+from typing import Any, Literal
 
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
@@ -264,6 +264,32 @@ class ExecutionContext:
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": str(error),
+            }
+        )
+
+    def emit_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]):
+        """sub_task_start 이벤트 발생"""
+        self.result_queue.put(
+            {
+                "type": "sub_task_start",
+                "process_id": task_id,
+                "sub_task_type": sub_task_type,
+                "ts": time.time(),
+                "generation": self._generation,
+                "error": None,
+            }
+        )
+
+    def emit_sub_task_done(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]):
+        """sub_task_done 이벤트 발생"""
+        self.result_queue.put(
+            {
+                "type": "sub_task_done",
+                "process_id": task_id,
+                "sub_task_type": sub_task_type,
+                "ts": time.time(),
+                "generation": self._generation,
+                "error": None,
             }
         )
 
