@@ -488,45 +488,54 @@ void MainWindow::init_modules()
 
     // comm cooperative module init
     {
-        COMM_COOP::instance()->set_config_module(CONFIG::instance());
-        COMM_COOP::instance()->set_logger_module(LOGGER::instance());
-        COMM_COOP::instance()->set_mobile_module(MOBILE::instance());
-        COMM_COOP::instance()->set_unimap_module(UNIMAP::instance());
-        COMM_COOP::instance()->set_obsmap_module(OBSMAP::instance());
-        COMM_COOP::instance()->set_autocontrol_module(AUTOCONTROL::instance());
-        COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
+        if(CONFIG::instance()->get_use_coop())
+        {
+            COMM_COOP::instance()->set_config_module(CONFIG::instance());
+            COMM_COOP::instance()->set_logger_module(LOGGER::instance());
+            COMM_COOP::instance()->set_mobile_module(MOBILE::instance());
+            COMM_COOP::instance()->set_unimap_module(UNIMAP::instance());
+            COMM_COOP::instance()->set_obsmap_module(OBSMAP::instance());
+            COMM_COOP::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+            COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
+        }
     }
 
     //comm cooperative module init(msa)
     {
-        COMM_FMS::instance()->set_config_module(CONFIG::instance());
-        COMM_FMS::instance()->set_logger_module(LOGGER::instance());
-        COMM_FMS::instance()->set_mobile_module(MOBILE::instance());
-        COMM_FMS::instance()->set_unimap_module(UNIMAP::instance());
-        COMM_FMS::instance()->set_obsmap_module(OBSMAP::instance());
-        COMM_FMS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        COMM_FMS::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        COMM_FMS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
-        COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
-        COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
-        COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
-        COMM_FMS::instance()->init();
+        if(CONFIG::instance()->get_use_fms())
+        {
+            COMM_FMS::instance()->set_config_module(CONFIG::instance());
+            COMM_FMS::instance()->set_logger_module(LOGGER::instance());
+            COMM_FMS::instance()->set_mobile_module(MOBILE::instance());
+            COMM_FMS::instance()->set_unimap_module(UNIMAP::instance());
+            COMM_FMS::instance()->set_obsmap_module(OBSMAP::instance());
+            COMM_FMS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+            COMM_FMS::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+            COMM_FMS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+            COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
+            COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
+            COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+            COMM_FMS::instance()->init();
+        }
     }
 
     // comm fms module init
     {
-        COMM_MSA::instance()->set_config_module(CONFIG::instance());
-        COMM_MSA::instance()->set_logger_module(LOGGER::instance());
-        COMM_MSA::instance()->set_mobile_module(MOBILE::instance());
-        COMM_MSA::instance()->set_unimap_module(UNIMAP::instance());
-        COMM_MSA::instance()->set_obsmap_module(OBSMAP::instance());
-        COMM_MSA::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        COMM_MSA::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        COMM_MSA::instance()->set_autocontrol_module(AUTOCONTROL::instance());
-        COMM_MSA::instance()->set_localization_module(LOCALIZATION::instance());
-        COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
-        COMM_MSA::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
-        COMM_MSA::instance()->init();
+        if(CONFIG::instance()->get_use_msa())
+        {
+            COMM_MSA::instance()->set_config_module(CONFIG::instance());
+            COMM_MSA::instance()->set_logger_module(LOGGER::instance());
+            COMM_MSA::instance()->set_mobile_module(MOBILE::instance());
+            COMM_MSA::instance()->set_unimap_module(UNIMAP::instance());
+            COMM_MSA::instance()->set_obsmap_module(OBSMAP::instance());
+            COMM_MSA::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+            COMM_MSA::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+            COMM_MSA::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+            COMM_MSA::instance()->set_localization_module(LOCALIZATION::instance());
+            COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
+            COMM_MSA::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+            COMM_MSA::instance()->init();
+        }
     }
 
     // docking module init
