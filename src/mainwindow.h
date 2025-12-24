@@ -4,6 +4,7 @@
 #include "global_defines.h"
 #include "my_utils.h"
 #include "comm_data.h"
+#include "tinycolormap.hpp"
 
 // modules
 #include "config.h"

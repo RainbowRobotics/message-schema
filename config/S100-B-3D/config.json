@@ -51,7 +51,7 @@
         "SERVER_PW": "rainbow",
         "USE_BEEP": true,
         "USE_QTUI": false,
-        "USE_SIM": false
+        "USE_SIM": true
     },
     "docking": {
         "CHARGE_TYPE": "XNERGY",
