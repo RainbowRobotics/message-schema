@@ -280,8 +280,10 @@ void COMM_FMS::send_move_status()
     goalObj["rz"]           = QString::number(goal_xi[2]*R2D, 'f', 3);
     dataObj["goal_node"]    = goalObj;
 
+    int step = ctrl->get_last_step();
+
     QJsonObject moveObj;
-    moveObj["step"]         = QString::number(ctrl->get_last_step(), 10);
+    moveObj["step"]         = QString::number(step, 10);
     moveObj["path"]         = ctrl->get_multi_reqest_state();
     moveObj["auto_move"]    = ctrl->get_auto_state();
     moveObj["path_time"]    = QString::number(ctrl->get_global_path_time(), 10);
@@ -1520,18 +1522,17 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
     }
 
     // and move path
-    std::vector<QString> path;
-    std::vector<int> step;
     {
         QString path_str = msg.path_str;
         QStringList path_str_list = path_str.split(",");
+
+        std::vector<QString> path;
         for(int p = 0; p < path_str_list.size(); p++)
         {
             path.push_back(path_str_list[p]);
-            step.push_back((int)p);
         }
 
-        ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
+        ctrl->set_path(path, msg.preset, (long long)(msg.time));
     }
 
     send_path_response(msg);

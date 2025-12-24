@@ -163,6 +163,18 @@ void AUTOCONTROL::set_cur_global_path(const PATH& val)
     cur_global_path = val;
 }
 
+void AUTOCONTROL::set_global_step(const std::vector<int>& val)
+{
+    std::lock_guard<std::mutex> lock(path_mtx);
+    global_step = val;
+}
+
+std::vector<int> AUTOCONTROL::get_global_step()
+{
+    std::lock_guard<std::mutex> lock(path_mtx);
+    return global_step;
+}
+
 PATH AUTOCONTROL::get_cur_local_path()
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -175,18 +187,39 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
     cur_local_path = val;
 }
 
-void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time)
+void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _global_preset, long long _global_path_time)
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
-    global_node_path = _global_node_path;
-    global_step      = _global_step;
-    global_preset    = _global_preset;
-
-    if(_global_path_time != global_path_time)
+    if(_global_path_time == global_path_time.load())
     {
-        last_step = 0;
+        return;
     }
-    global_path_time = _global_path_time;
+
+    {
+        std::lock_guard<std::mutex> lock(path_st_node_mtx);
+        path_st_node_id = _global_node_path.front();
+    }
+
+    set_global_node_path(_global_node_path);
+
+    std::vector<int> remove_duplicate_step = remove_duplicates_step(_global_node_path);
+    if(!remove_duplicate_step.empty())
+    {
+        set_global_step(remove_duplicate_step);
+    }
+    else
+    {
+        std::vector<int> step;
+        for(int i = 0; i < global_node_path.size(); i++)
+        {
+            step.push_back(i+1);
+        }
+        set_global_step(step);
+    }
+    set_last_step(1);
+
+    set_global_preset(_global_preset);
+
+    global_path_time.store(_global_path_time);
 }
 
 void AUTOCONTROL::set_cur_goal_state(QString str)
@@ -313,6 +346,22 @@ void AUTOCONTROL::set_cur_move_info(const DATA_MOVE& val)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     cur_move_info = val;
+}
+
+void AUTOCONTROL::set_last_step(int val)
+{
+    last_step.store(val);
+}
+
+void AUTOCONTROL::set_global_node_path(const std::vector<QString>& val)
+{
+    std::lock_guard<std::mutex> lock(path_mtx);
+    global_node_path = val;
+}
+
+void AUTOCONTROL::set_global_preset(int val)
+{
+    global_preset.store(val);
 }
 
 long long AUTOCONTROL::get_global_path_time()
@@ -806,7 +855,6 @@ std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_pa
 
     std::vector<QString> res;
     res.push_back(node_path[0]);
-
     for(size_t p = 1; p < node_path.size(); p++)
     {
         if(res.back() == node_path[p])
@@ -818,6 +866,30 @@ std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_pa
     }
 
     return res;
+}
+
+std::vector<int> AUTOCONTROL::remove_duplicates_step(const std::vector<QString>& node_path)
+{
+    constexpr int duplicates_check_min_node_size = 2;
+    if(node_path.size() < duplicates_check_min_node_size)
+    {
+        return {};
+    }
+
+    std::vector<int> duplicated_step;
+    for(size_t p = 1; p < node_path.size()-1; p++)
+    {
+        if(node_path[p] == node_path[p+1])
+        {
+            continue;
+        }
+
+        duplicated_step.push_back(static_cast<int>(p+1));
+    }
+
+    duplicated_step.push_back(static_cast<int>(node_path.size()));
+
+    return duplicated_step;
 }
 
 std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString> node_path)
@@ -923,6 +995,8 @@ void AUTOCONTROL::move_multi_backward()
     // control params clear
     is_pause = false;
     is_moving = false;
+
+
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(global_node_path);
@@ -3916,20 +3990,29 @@ void AUTOCONTROL::node_loop()
             else
             {
                 // calc pre node id
-                NODE *node = unimap->get_node_by_id(_cur_node_id);
+                NODE* node = unimap->get_node_by_id(_cur_node_id);
                 if(node != nullptr)
                 {
                     double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
-                        if(pre_node_id != _cur_node_id)
+                        int _last_step = get_last_step();
+                        if(pre_node_id != _cur_node_id && !cur_node_id.isEmpty())
                         {
                             pre_node_id = _cur_node_id;
 
-                            // update
-                            std::lock_guard<std::recursive_mutex> lock(mtx);
-                            cur_node_id = pre_node_id;
+                            std::lock_guard<std::mutex> lock(path_mtx);
+
+                            if(!global_step.empty())
+                            {
+                                last_step.store(global_step.front());
+                                global_step.erase(global_step.begin());
+                            }
                         }
+
+                        // update
+                        std::lock_guard<std::recursive_mutex> lock(mtx);
+                        cur_node_id = pre_node_id;
                     }
                 }
             }

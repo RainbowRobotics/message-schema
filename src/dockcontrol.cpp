@@ -616,7 +616,6 @@ void DOCKCONTROL::stop()
     ddock.time = get_time();
     Q_EMIT signal_dock_response(ddock);
 
-    log_info("Docking state: {}", fsm_state);
     log_info("dockcontrol stop complete");
 }
 

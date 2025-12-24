@@ -80,11 +80,11 @@ QString LIVOX::get_info_text(int idx)
         imu = cur_imu[idx];
     }
 
-    res += QString().sprintf("[LIDAR %d]\nimu_t: %.3f, pts_t: %.3f (%d)\n", idx, cur_imu_t[idx].load(), cur_frm_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("acc: %.2f, %.2f, %.2f\n", imu.acc_x, imu.acc_y, imu.acc_z);
-    res += QString().sprintf("gyr: %.2f, %.2f, %.2f\n", imu.gyr_x * R2D, imu.gyr_y * R2D, imu.gyr_z * R2D);
-    res += QString().sprintf("so3: %.1f, %.1f, %.1f\n", imu.rx * R2D, imu.ry * R2D, imu.rz * R2D);
-    res += QString().sprintf("time_sync_type: %d\n fq: %d,", time_type[idx].load(), (int)frm_que[idx].unsafe_size());
+    res += QString::asprintf("[LIDAR %d]\nimu_t: %.3f, pts_t: %.3f (%d)\n", idx, cur_imu_t[idx].load(), cur_frm_t[idx].load(), cur_pts_num[idx].load());
+    res += QString::asprintf("acc: %.2f, %.2f, %.2f\n", imu.acc_x, imu.acc_y, imu.acc_z);
+    res += QString::asprintf("gyr: %.2f, %.2f, %.2f\n", imu.gyr_x * R2D, imu.gyr_y * R2D, imu.gyr_z * R2D);
+    res += QString::asprintf("so3: %.1f, %.1f, %.1f\n", imu.rx * R2D, imu.ry * R2D, imu.rz * R2D);
+    res += QString::asprintf("time_sync_type: %d\n fq: %d,", time_type[idx].load(), static_cast<int>(frm_que[idx].unsafe_size()));
 
     return res;
 }

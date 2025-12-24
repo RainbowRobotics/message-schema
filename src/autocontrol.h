@@ -107,8 +107,9 @@ public:
     Eigen::Vector3d get_last_tgt_pos();             // get last target pos
     Eigen::Vector3d get_last_local_goal();          // get last local goal
     std::vector<Eigen::Matrix4d> get_obs_traj();
+    std::vector<int> get_global_step();
 
-    void set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time);
+    void set_path(const std::vector<QString>& _global_node_path, int _global_preset, long long _global_path_time);
     void set_is_rrs(bool flag);
     void set_is_pause(bool val);
     void set_is_debug(bool val);
@@ -120,6 +121,11 @@ public:
     void set_cur_global_path(const PATH& val);
     void set_cur_local_path(const PATH& val);
     void set_cur_move_info(const DATA_MOVE& val);
+
+    void set_last_step(int val);
+    void set_global_node_path(const std::vector<QString>& val);
+    void set_global_preset(int val);
+    void set_global_step(const std::vector<int>& val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
@@ -137,6 +143,7 @@ public:
     void set_obsmap_module(OBSMAP* _obsmap);
     void set_localization_module(LOCALIZATION* _localization);
     void set_policy_module(POLICY* _policy);
+
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
     void slot_move(DATA_MOVE msg);
@@ -211,6 +218,9 @@ private:
     // delete duplicate nodes in the node path
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
 
+    // delete duplicate steps in the node path
+    std::vector<int> remove_duplicates_step(const std::vector<QString>& node_path);
+
     // find the tf closest to the current position among the line segments formed by nodes and nodes
     Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
 
@@ -257,6 +267,10 @@ private:
     std::unique_ptr<std::thread> node_thread; // node thread
     void node_loop();                         // node loop
 
+    // todo 코드리펙토링 필요
+    std::mutex path_st_node_mtx;
+    QString path_st_node_id = "";
+
     QString last_node_id = "";
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
@@ -265,7 +279,7 @@ private:
     tbb::concurrent_queue<PATH> global_path_que;
 
     // for multi-robot control
-    int global_preset = 0;
+    std::atomic<int> global_preset = {0};
     std::mutex path_mtx;
     std::vector<int> global_step;
     std::atomic<int> last_step = {0};

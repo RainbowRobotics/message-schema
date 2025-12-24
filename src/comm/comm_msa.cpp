@@ -2120,19 +2120,17 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
     if(msg.command == "path")
     {
         // and move path
-        std::vector<QString> path;
-        std::vector<int> step;
         {
             QString path_str = msg.path_str;
             QStringList path_str_list = path_str.split(",");
+
+            std::vector<QString> path;
             for(int p = 0; p < path_str_list.size(); p++)
             {
                 path.push_back(path_str_list[p]);
-                step.push_back(p);
             }
 
-
-            ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
+            ctrl->set_path(path, msg.preset, (long long)(msg.time));
         }
 
     }
