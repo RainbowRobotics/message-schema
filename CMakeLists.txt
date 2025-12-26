@@ -83,6 +83,7 @@ find_library(SIOCLIENT_TLS_LIB
 
 # ---- subdir: common library ----
 add_subdirectory(${SRC_DIR}/slamnav-common)
+add_subdirectory(${SRC_DIR}/slamnav-robot)
 
 # ---- SLAMNAV2 executable ----
 file(GLOB_RECURSE PROJECT_SOURCES ${SRC_DIR}/*.cpp)
@@ -113,6 +114,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ---- link ----
 target_link_libraries(${PROJECT_NAME} PRIVATE
     slamnav-common
+    slamnav-robot
 
     # Qt
     Qt${QT_VERSION_MAJOR}::Core
