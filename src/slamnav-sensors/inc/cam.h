@@ -10,7 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 
-#include "cam/ORBBEC/ORBBEC.h"
+#include "cam/ORBBEC/inc/ORBBEC.h"
 
 #include <QObject>
 
