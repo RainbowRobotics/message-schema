@@ -44,9 +44,8 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
 # spdlog header-only
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-    SPDLOG_HEADER_ONLY
-)
+target_include_directories(${PROJECT_NAME} PUBLIC "${LIBS_DIR}/spdlog/include")
+# target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_HEADER_ONLY)
 
 # ---- includes ----
 target_include_directories(${PROJECT_NAME}

@@ -44,22 +44,22 @@ pkg_check_modules(OCTOMAP REQUIRED octomap)
 find_package(rs_driver REQUIRED)
 
 # Orbbec SDK
-set(ORBBEC_SDK_DIR      "${LIBS_DIR}/OrbbecSDK/SDK")
-set(ORBBEC_INCLUDE_DIR  "${ORBBEC_SDK_DIR}/include")
-set(ORBBEC_LIB_DIR      "${ORBBEC_SDK_DIR}/lib")
-find_library(ORBBEC_SDK_LIB
-    NAMES OrbbecSDK libOrbbecSDK
-    PATHS ${ORBBEC_LIB_DIR}
-    NO_DEFAULT_PATH
-)
-if(NOT ORBBEC_SDK_LIB)
-    message(FATAL_ERROR "OrbbecSDK library not found in: ${ORBBEC_LIB_DIR}")
-endif()
-add_library(Orbbec::SDK SHARED IMPORTED GLOBAL)
-set_target_properties(Orbbec::SDK PROPERTIES
-    IMPORTED_LOCATION "${ORBBEC_SDK_LIB}"
-    INTERFACE_INCLUDE_DIRECTORIES "${ORBBEC_INCLUDE_DIR}"
-)
+# set(ORBBEC_SDK_DIR      "${LIBS_DIR}/OrbbecSDK/SDK")
+# set(ORBBEC_INCLUDE_DIR  "${ORBBEC_SDK_DIR}/include")
+# set(ORBBEC_LIB_DIR      "${ORBBEC_SDK_DIR}/lib")
+# find_library(ORBBEC_SDK_LIB
+#     NAMES OrbbecSDK libOrbbecSDK
+#     PATHS ${ORBBEC_LIB_DIR}
+#     NO_DEFAULT_PATH
+# )
+# if(NOT ORBBEC_SDK_LIB)
+#     message(FATAL_ERROR "OrbbecSDK library not found in: ${ORBBEC_LIB_DIR}")
+# endif()
+# add_library(Orbbec::SDK SHARED IMPORTED GLOBAL)
+# set_target_properties(Orbbec::SDK PROPERTIES
+#     IMPORTED_LOCATION "${ORBBEC_SDK_LIB}"
+#     INTERFACE_INCLUDE_DIRECTORIES "${ORBBEC_INCLUDE_DIR}"
+# )
 
 # RPLIDAR SDK
 set(RPLIDAR_SDK_DIR      "${LIBS_DIR}/rplidar_sdk")
@@ -105,7 +105,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SRC_DIR}/qr_sensor
 
     # external SDK headers
-    ${ORBBEC_INCLUDE_DIR}
+    # ${ORBBEC_INCLUDE_DIR}
     ${RPLIDAR_INCLUDE_DIR}
     ${CSPC_LIDAR_INCLUDE_DIR}
     ${OCTOMAP_INCLUDE_DIRS}
@@ -146,7 +146,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
     ${OCTOMAP_LIBRARIES}
 
-    Orbbec::SDK
+    # Orbbec::SDK
     ${RPLIDAR_LIB}
     ${CSPC_LIDAR_LIB}
 
