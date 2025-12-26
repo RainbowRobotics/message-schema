@@ -86,7 +86,7 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 #include <octomap/math/Utils.h>
 
 // pseudo color
-#include "tinycolormap.hpp"
+// #include "tinycolormap.hpp"
 
 // pdal
 #include <pdal/PointTable.hpp>
