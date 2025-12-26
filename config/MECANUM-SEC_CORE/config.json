@@ -115,7 +115,7 @@
         "USE_EKF": true
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/251216_starpack"
+        "MAP_PATH": "/home/juyeon/maps/251105_unicos_test"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
