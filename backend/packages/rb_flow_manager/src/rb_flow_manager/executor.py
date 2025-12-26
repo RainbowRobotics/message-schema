@@ -177,6 +177,7 @@ def _execute_tree_in_process(
     finally:
         try:
             if post_tree is not None:
+                stop_event.clear()
                 state_dict["ignore_stop"] = True
 
                 ctx.emit_post_start()
@@ -207,7 +208,6 @@ def _execute_tree_in_process(
         except JumpToStepException as jump_to_step_exception:
             raise RuntimeError("JumpToStep: Post program tree is not allowed.") from jump_to_step_exception
         finally:
-            print("finally >>>>>>>", flush=True)
             # 완료 이벤트 설정
             completion_event.set()
 

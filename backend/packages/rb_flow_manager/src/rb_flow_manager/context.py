@@ -186,7 +186,7 @@ class ExecutionContext:
 
             # resume 올 때까지 대기
             while True:
-                if self.stop_event.is_set():
+                if self.stop_event.is_set() and not self.state_dict.get("ignore_stop", False):
                     self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
                     raise StopExecution("Execution stopped by user")
                 if self.resume_event.wait(timeout=0.01):  # 10ms 타임슬라이스
