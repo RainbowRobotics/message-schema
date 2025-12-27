@@ -433,7 +433,21 @@ void ORBBEC::grab_loop(int idx)
                     cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
 
                     cv::Mat img;
-                    cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                    if(colorFrame->format() == OB_FORMAT_MJPG)
+                    {
+                        std::vector<uchar> buf;
+                        buf.assign((const uint8_t*)colorFrame->data(), (const uint8_t*)colorFrame->data() + (int)colorFrame->dataSize());
+
+                        cv::Mat decoded = cv::imdecode(buf, cv::IMREAD_COLOR);
+                        if(!decoded.empty())
+                        {
+                            img = decoded;
+                        }
+                    }
+                    else
+                    {
+                        cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                    }
 
                     if(!img.empty())
                     {

@@ -363,6 +363,7 @@ void CAM::post_process_loop(int idx)
 {
     const double dt = 0.1; // 10hz
 
+    log_info("post_process_loop start");
     while(post_process_flag[idx])
     {
         // =======================
