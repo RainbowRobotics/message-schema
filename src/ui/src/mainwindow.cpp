@@ -8,7 +8,6 @@ const char* MODULE_NAME = "MAIN";
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   , ui(new Ui::MainWindow)
-  , gamepad(nullptr)
 {
     ui->setupUi(this);
 
@@ -32,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     SAFETY::instance(this);
     TASK::instance(this);
     ERROR_MANAGER::instance(this);
-    COMM_COOP::instance(this);
     COMM_MSA::instance(this);
     COMM_FMS::instance(this);
 
@@ -183,9 +181,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // ipv4
     get_cur_ip_adddress();
-
-    // gamepad
-    init_gamepad();
 
     // plot timer (pcl-vtk viewr & Qlabel)
     plot_timer = new QTimer(this);
@@ -486,21 +481,7 @@ void MainWindow::init_modules()
         SIM::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
-    // comm cooperative module init
-    {
-        if(CONFIG::instance()->get_use_coop())
-        {
-            COMM_COOP::instance()->set_config_module(CONFIG::instance());
-            COMM_COOP::instance()->set_logger_module(LOGGER::instance());
-            COMM_COOP::instance()->set_mobile_module(MOBILE::instance());
-            COMM_COOP::instance()->set_unimap_module(UNIMAP::instance());
-            COMM_COOP::instance()->set_obsmap_module(OBSMAP::instance());
-            COMM_COOP::instance()->set_autocontrol_module(AUTOCONTROL::instance());
-            COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
-        }
-    }
-
-    //comm cooperative module init(msa)
+    //comm msa module init(msa)
     {
         if(CONFIG::instance()->get_use_fms())
         {
@@ -574,10 +555,6 @@ void MainWindow::init_modules()
         TASK::instance()->pause();
         TASK::instance()->cancel();
     }
-
-    // start jog loop
-    jog_flag = true;
-    jog_thread = std::make_unique<std::thread>(&MainWindow::jog_loop, this);
 
     // start watchdog loop
     watch_flag = true;
@@ -1046,227 +1023,6 @@ Eigen::Vector3d MainWindow::ray_intersection(Eigen::Vector3d ray_center, Eigen::
     return ray_center + t*ray_direction;
 }
 
-void MainWindow::update_jog_values(double vx, double vy, double wz)
-{
-    last_jog_update_time = get_time();
-
-    vx_target = vx;
-    vy_target = vy;
-    wz_target = wz;
-}
-
-double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt)
-{
-    double err = tgt_vel - cur_vel;
-
-    if(tgt_vel != 0)
-    {
-        cur_vel += saturation(err, -acc*dt, acc*dt);
-    }
-    else
-    {
-        cur_vel += saturation(err, -dcc*dt, dcc*dt);
-    }
-
-    return cur_vel;
-}
-
-void MainWindow::init_gamepad()
-{
-    connect(QGamepadManager::instance(), &QGamepadManager::gamepadConnected, this, [this](int id){ init_gamepad(); });
-    connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int id)
-    {
-        if(gamepad && gamepad->deviceId() == id)
-        {
-            gamepad->deleteLater();
-            gamepad = nullptr;
-        }
-
-        // reset
-        cur_lx = 0.0;
-        cur_ly = 0.0;
-        cur_rx = 0.0;
-        lb_pressed.store(false);
-        rb_pressed.store(false);
-        is_jog_pressed.store(false);
-        bt_JogReleased();
-    });
-
-    if(gamepad)
-    {
-        return;
-    }
-
-    QList<int> ids = QGamepadManager::instance()->connectedGamepads();
-    if(ids.isEmpty())
-    {
-        return;
-    }
-
-    int id = *ids.begin();
-    gamepad = new QGamepad(id, this);
-    printf("[MAIN] gamepad id=%d, name=%s\n", id, gamepad->name().toUtf8().constData());
-
-    cur_lx = 0.0;
-    cur_ly = 0.0;
-    cur_rx = 0.0;
-
-    // deadzone + hysteresis
-    const double deadzone = 0.25;
-    const double hyst  = 0.05;
-
-    // deadzone
-    auto remap_axis = [deadzone](double a) -> double
-    {
-        double v = 0.0;
-
-        if(a > deadzone)
-        {
-            v = (a - deadzone) / (1.0 - deadzone);
-        }
-        else if(a < -deadzone)
-        {
-            v = (a + deadzone) / (1.0 - deadzone);
-        }
-        else
-        {
-            v = 0.0;
-        }
-
-        if(v > 1.0)  v = 1.0;
-        if(v < -1.0) v = -1.0;
-        return v;
-    };
-
-    auto eval_analog = [this, remap_axis, deadzone, hyst]()
-    {
-        // dead-man (Y button)
-        if(!(lb_pressed.load() && rb_pressed.load()))
-        {
-            if(is_jog_pressed.load())
-            {
-                is_jog_pressed.store(false);
-                bt_JogReleased();
-            }
-            return;
-        }
-
-        double lx_raw = cur_lx;
-        double ly_raw = cur_ly;
-        double rx_raw = cur_rx;
-
-        bool lx_active = (lx_raw >  (deadzone + hyst)) || (lx_raw < -(deadzone + hyst));
-        bool ly_active = (ly_raw >  (deadzone + hyst)) || (ly_raw < -(deadzone + hyst));
-        bool rx_active = (rx_raw >  (deadzone + hyst)) || (rx_raw < -(deadzone + hyst));
-
-        double lx = lx_active ? remap_axis(lx_raw) : 0.0;
-        double ly = ly_active ? remap_axis(ly_raw) : 0.0;
-        double rx = rx_active ? remap_axis(rx_raw) : 0.0;
-
-        double vx = -ly * ui->spb_JogV->value();
-        double vy = (CONFIG::instance()->get_robot_wheel_type() == "MECANUM") ? (-lx * ui->spb_JogV->value()) : 0.0;
-        double wz = -rx * ui->spb_JogW->value() * D2R;
-
-        if(vx == 0.0 && vy == 0.0 && wz == 0.0)
-        {
-            if(is_jog_pressed.load())
-            {
-                is_jog_pressed.store(false);
-                bt_JogReleased();
-            }
-            return;
-        }
-
-        is_jog_pressed.store(true);
-        update_jog_values(vx, vy, wz);
-
-        // debug
-        // printf("[AXIS] LX=% .2f LY=% .2f RX=% .2f | vx=% .2f vy=% .2f wz=% .2f\n", cur_lx, cur_ly, cur_rx, vx, vy, wz);
-    };
-
-    connect(gamepad, &QGamepad::axisLeftXChanged, this, [this, eval_analog](double v)
-    {
-        cur_lx = v;
-        eval_analog();
-    });
-    connect(gamepad, &QGamepad::axisLeftYChanged, this, [this, eval_analog](double v)
-    {
-        cur_ly = v;
-        eval_analog();
-    });
-    connect(gamepad, &QGamepad::axisRightXChanged, this, [this, eval_analog](double v)
-    {
-        cur_rx = v;
-        eval_analog();
-    });
-
-    connect(gamepad, &QGamepad::buttonAChanged, this, [this, eval_analog](double v)
-    {
-        MOBILE_STATUS ms = MOBILE::instance()->get_status();
-        if(ms.t != 0)
-        {
-            if(CONFIG::instance() -> get_robot_wheel_type() == "MECANUM")
-            {
-                if(ms.status_m0 != 1 ||ms.status_m1 != 1 || ms.status_m2 != 1 || ms.status_m3 != 1)
-                {
-                    bt_MotorInit();
-                }
-            }
-            else
-            {
-                if(ms.status_m0 != 1 || ms.status_m1 != 1)
-                {
-                    bt_MotorInit();
-                }
-
-            }
-        }
-    });
-
-    connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int)
-    {
-        cur_lx = 0.0;
-        cur_ly = 0.0;
-        cur_rx = 0.0;
-        is_jog_pressed.store(false);
-        bt_JogReleased();
-    });
-
-    connect(gamepad, &QGamepad::buttonL1Changed, this, [this, eval_analog](bool p)
-    {
-        lb_pressed.store(p);
-        if(!p)
-        {
-            if(is_jog_pressed.load())
-            {
-                is_jog_pressed.store(false);
-                bt_JogReleased();
-            }
-        }
-        else
-        {
-            eval_analog();
-        }
-    });
-
-    connect(gamepad, &QGamepad::buttonR1Changed, this, [this, eval_analog](bool p)
-    {
-        rb_pressed.store(p);
-        if(!p)
-        {
-            if(is_jog_pressed.load())
-            {
-                is_jog_pressed.store(false);
-                bt_JogReleased();
-            }
-        }
-        else
-        {
-            eval_analog();
-        }
-    });
-}
-
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
@@ -1409,44 +1165,78 @@ void MainWindow::bt_MoveStop()
 
 void MainWindow::bt_JogMecaL()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(0, ui->spb_JogV->value(), 0);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, ui->spb_JogV->value(), 0));
 }
 
 void MainWindow::bt_JogMecaR()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(0, -ui->spb_JogV->value(), 0);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, -ui->spb_JogV->value(), 0));
 }
 
 void MainWindow::bt_JogF()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(ui->spb_JogV->value(), 0, 0);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(ui->spb_JogV->value(), 0, 0));
 }
 
 void MainWindow::bt_JogB()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(-ui->spb_JogV->value(), 0, 0);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(-ui->spb_JogV->value(), 0, 0));
 }
 
 void MainWindow::bt_JogL()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, 0, ui->spb_JogW->value()*D2R));
 }
 
 void MainWindow::bt_JogR()
 {
-    is_jog_pressed.store(true);
-    update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(true);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, 0, -ui->spb_JogW->value()*D2R));
 }
 
 void MainWindow::bt_JogReleased()
 {
-    is_jog_pressed.store(false);
-    update_jog_values(0, 0, 0);
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_is_jog_pressed(false);
+    MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, 0,0));
 }
 
 // mapping
@@ -2930,72 +2720,6 @@ void MainWindow::bt_TaskCancel()
     //spdlog::info("[TASK] TaskCancel");
     log_info("[TASK] TaskCancel");
     TASK::instance()->cancel();
-}
-
-// jog
-void MainWindow::jog_loop()
-{
-    // loop params
-    const double dt = 0.05; // 20hz
-    double pre_loop_time = get_time();
-
-    //printf("[JOG] loop start\n");
-    //spdlog::info("[JOG] loop start");
-    log_info("[JOG] loop start");
-    while(jog_flag)
-    {
-        // check autodrive
-        if(!AUTOCONTROL::instance()->get_is_moving() /*|| AUTOCONTROL::instance()->get_is_debug()*/)
-        {
-            // action
-            double v_acc   = ui->spb_AccV->value();
-            double v_decel = ui->spb_DecelV->value();
-            double w_acc   = ui->spb_AccW->value()*D2R;
-            double w_decel = ui->spb_DecelW->value()*D2R;
-
-            Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
-            double vx0 = control_input[0];
-            double vy0 = control_input[1];
-            double wz0 = control_input[2];
-
-            double vx = apply_jog_acc(vx0, vx_target, v_acc, v_decel, dt);
-            double vy = apply_jog_acc(vy0, vy_target, v_acc, v_decel, dt);
-            double wz = apply_jog_acc(wz0, wz_target, w_acc, w_decel, dt);
-            if(!is_jog_pressed && (get_time() - last_jog_update_time) > 1.0)
-            {
-                if(std::abs((double)vx_target) > 1e-09 || std::abs((double)vy_target) > 1e-09 || std::abs((double)wz_target) > 1e-09)
-                {
-                    vx_target = 0.;
-                    vy_target = 0.;
-                    wz_target = 0.;
-                    //printf("[JOG] no input, stop\n");
-                    //spdlog::info("[JOG] no input, stop");
-                    log_info("[JOG] no input, stop");
-
-                }
-            }
-            MOBILE::instance()->move(vx, vy, wz);
-        }
-
-        // for real time loop
-        double cur_loop_time = get_time();
-        double delta_loop_time = cur_loop_time - pre_loop_time;
-        if(delta_loop_time < dt)
-        {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-        }
-        else
-        {
-            //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
-            //spdlog::warn("[JOG] loop time drift, dt:{}", delta_loop_time);
-            log_warn("loop time drift, dt:{}", delta_loop_time);
-        }
-        pre_loop_time = get_time();
-    }
-    //printf("[JOG] loop stop\n");
-    //spdlog::info("[JOG] loop stop");
-    log_info("[JOG] loop stop");
 }
 
 // watchdog

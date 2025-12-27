@@ -1362,6 +1362,21 @@ void MAPPING::last_loop_closing()
     }
 }
 
+void MAPPING::slot_map_build_start()
+{
+
+}
+
+void MAPPING::slot_map_build_stop()
+{
+
+}
+
+void MAPPING::slot_map_save()
+{
+
+}
+
 void MAPPING::set_config_module(CONFIG* _config)
 {
     config = _config;

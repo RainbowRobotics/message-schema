@@ -117,6 +117,11 @@ private:
 
     // extended kalman filter
     EKF ekf;
+
+public Q_SLOTS:
+    void slot_map_build_start();
+    void slot_map_build_stop();
+    void slot_map_save();
 };
 
 #endif // MAPPING_H

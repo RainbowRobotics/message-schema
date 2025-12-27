@@ -23,6 +23,9 @@ target_include_directories(${PROJECT_NAME}
 )
 
 # ---- link ----
-target_link_libraries(${PROJECT_NAME} PUBLIC slamnav-common)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        slamnav-common
+        Qt${QT_VERSION_MAJOR}::Gamepad
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_robot")

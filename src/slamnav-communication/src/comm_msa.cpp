@@ -93,7 +93,6 @@ COMM_MSA::~COMM_MSA()
     reconnect_timer->stop();
 
     stop_all_thread();
-
 }
 
 void COMM_MSA::init()
@@ -1609,7 +1608,7 @@ void COMM_MSA::handle_move_jog(const DATA_MOVE& msg)
 
     if(MainWindow* _main = qobject_cast<MainWindow*>(main))
     {
-        _main->update_jog_values(vx, vy, wz);
+        //_main->update_jog_values(vx, vy, wz);
     }
 }
 
@@ -2630,6 +2629,9 @@ void COMM_MSA::set_mobile_module(MOBILE* _mobile)
     }
 
     mobile = _mobile;
+
+    connect(this, &COMM_MSA::signal_mobile_jog_update,        mobile, &MOBILE::slot_jog_update);
+    connect(this, &COMM_MSA::signal_mobile_profile_move_stop, mobile, &MOBILE::slot_profile_move_stop);
 }
 
 void COMM_MSA::set_lidar_2d_module(LIDAR_2D* _lidar)
@@ -2680,6 +2682,10 @@ void COMM_MSA::set_mapping_module(MAPPING* _mapping)
     }
 
     mapping = _mapping;
+
+    connect(this, &COMM_MSA::signal_map_build_start, mapping, &MAPPING::slot_map_build_start);
+    connect(this, &COMM_MSA::signal_map_build_stop,  mapping, &MAPPING::slot_map_build_stop);
+    connect(this, &COMM_MSA::signal_map_save,        mapping, &MAPPING::slot_map_save);
 }
 
 void COMM_MSA::set_unimap_module(UNIMAP* _unimap)
@@ -2710,6 +2716,8 @@ void COMM_MSA::set_autocontrol_module(AUTOCONTROL* _ctrl)
     }
 
     ctrl = _ctrl;
+
+    connect(this, SIGNAL(signal_auto_move_stop()), ctrl, SLOT(slot_auto_move_stop()));
 }
 
 void COMM_MSA::set_dockcontrol_module(DOCKCONTROL* _dctrl)

@@ -16,6 +16,8 @@
 
 // qt
 #include <QObject>
+#include <QGamepad>
+#include <QGamepadManager>
 
 enum class RobotWheelModel
 {
@@ -67,6 +69,8 @@ public:
     // software sync to pdu & pc
     void sync();
 
+    void init_gamepad();
+
     /***********************
      * interface funcs
      ***********************/
@@ -83,6 +87,8 @@ public:
     QString get_cur_pdu_state();
     QString get_status_text();
     QString get_pose_text();
+    bool get_is_auto_move();
+    bool get_is_jog_pressed();
 
     double get_move_distance();
 
@@ -101,6 +107,8 @@ public:
     void set_is_connected(bool val);
     void set_cur_pdu_state(QString str);
     void set_is_inter_lock_foot(bool val);
+    void set_is_auto_move(bool val);
+    void set_is_jog_pressed(bool val);
 
     // this func only use simulation mode
     void set_cur_pose(MOBILE_POSE mp);
@@ -172,16 +180,24 @@ private:
     // socket
     int fd = 0;
 
+    double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
+
     // recv loop
     std::atomic<bool> recv_flag = {false};
     std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
     bool connect_to_pdu(const QString& ip, int port);
     void receive_data_loop();
+
     // send loop
     std::atomic<bool> send_flag = {false};
     std::unique_ptr<std::thread> send_thread;
     void send_loop();
+
+    // jog loop
+    std::atomic<bool> jog_flag = {false};
+    std::unique_ptr<std::thread> jog_thread;
+    void jog_loop();
 
     // storage
     tbb::concurrent_queue<std::vector<uchar>> msg_que;
@@ -210,6 +226,7 @@ private:
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};
     std::atomic<bool> is_synced = {false};
+    std::atomic<bool> is_auto_move = {false};
     std::atomic<double> sync_st_time = {0};
     std::atomic<double> offset_t = {0};
     std::atomic<bool>  mobile_first_connected = {false};
@@ -221,6 +238,28 @@ private:
     std::atomic<double> last_pose_t = {0};
     std::atomic<double> last_imu_t = {0};
 
+    // for gamepad
+    std::atomic<bool> is_gamepad_connected = {false};
+    std::atomic<double> last_gamepad_update_time = {0};
+    std::atomic<double> cur_lx = {0.};
+    std::atomic<double> cur_ly = {0.};
+    std::atomic<double> cur_rx = {0.};
+    std::atomic<bool> is_lb_pressed = {false};
+    std::atomic<bool> is_rb_pressed = {false};
+
+    // for jog
+    std::atomic<bool> is_jog_pressed = {false};
+    std::atomic<double> last_jog_update_time = {0};
+    std::atomic<double> vx_target = {0.};
+    std::atomic<double> vy_target = {0.};
+    std::atomic<double> wz_target = {0.};
+    std::atomic<double> jog_limit_v = {1.};
+    std::atomic<double> jog_limit_w = {1.};
+    std::atomic<double> jog_limit_v_acc = {1.};
+    std::atomic<double> jog_limit_v_dcc = {1.};
+    std::atomic<double> jog_limit_w_acc = {30.};
+    std::atomic<double> jog_limit_w_dcc = {30.};
+
     // last control input
     std::atomic<double> vx0 = {0};
     std::atomic<double> vy0 = {0};
@@ -231,9 +270,15 @@ private:
 
     float f_distance = 0.0;
 
+    // Gamepad
+    QGamepad* gamepad;
+
     // device varibale
     bool speaker_io_state[4] = {false,};
 
+public Q_SLOTS:
+    void slot_jog_update(const Eigen::Vector3d& val);
+    void slot_profile_move_stop();
 };
 
 #endif // MOBILE_H

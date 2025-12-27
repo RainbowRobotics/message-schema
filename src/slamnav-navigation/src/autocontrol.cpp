@@ -513,6 +513,7 @@ void AUTOCONTROL::stop_obs_thread()
 void AUTOCONTROL::clear_control_params()
 {
     mobile->move(0, 0, 0);
+    mobile->set_is_auto_move(false);
 
     // control params clear
     is_moving = false;
@@ -690,6 +691,7 @@ void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 
     // explicitly change flag (racing issue: control_loop <-> obs_loop)
     is_moving = true;
+    mobile->set_is_auto_move(true);
 
     // start control loop
     if(control_flag == false)
@@ -719,6 +721,7 @@ void AUTOCONTROL::move_multi()
     // control params clear
     is_pause = false;
     is_moving = false;
+    mobile->set_is_auto_move(false);
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(global_node_path);
@@ -966,6 +969,7 @@ void AUTOCONTROL::move_single_backward(Eigen::Matrix4d goal_tf, int preset)
 
     // explicitly change flag (racing issue: control_loop <-> obs_loop)
     is_moving = true;
+    mobile->set_is_auto_move(true);
 
     // start control loop
     if(control_flag == false)
@@ -995,8 +999,7 @@ void AUTOCONTROL::move_multi_backward()
     // control params clear
     is_pause = false;
     is_moving = false;
-
-
+    mobile->set_is_auto_move(false);
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(global_node_path);
@@ -2600,6 +2603,7 @@ void AUTOCONTROL::control_loop()
 {
     // set flag
     is_moving = true;
+    mobile->set_is_auto_move(true);
 
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);

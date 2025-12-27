@@ -20,7 +20,8 @@ file(GLOB_RECURSE MAP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE MAP_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
 # ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${MAP_SOURCES} ${MAP_HEADERS})
+add_library(${PROJECT_NAME} SHARED ${MAP_SOURCES} ${MAP_HEADERS}
+        inc/slam_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)

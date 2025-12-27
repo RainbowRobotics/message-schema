@@ -191,6 +191,16 @@ private:
     double  get_json_double(const QJsonObject& json, QString key);
     QString get_json(const QJsonObject& json, QString key);
 
+Q_SIGNALS:
+    void signal_map_build_start();
+    void signal_map_build_stop();
+    void signal_map_save();
+
+    void signal_auto_move_stop();
+
+    void signal_mobile_jog_update(const Eigen::Vector3d& val);
+    void signal_mobile_profile_move_stop();
+
 private Q_SLOTS:
     void connected();
     void disconnected();

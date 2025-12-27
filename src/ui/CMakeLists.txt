@@ -19,7 +19,8 @@ file(GLOB_RECURSE UI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE UI_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
 # ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${UI_SOURCES} ${UI_HEADERS})
+add_library(${PROJECT_NAME} SHARED ${UI_SOURCES} ${UI_HEADERS}
+        inc/ui_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
@@ -44,7 +45,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::WebSockets
-    Qt${QT_VERSION_MAJOR}::Gamepad
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ui")

@@ -24,7 +24,6 @@
 #include "task.h"
 #include "error_manager.h"
 
-#include "comm_coop.h"
 #include "comm_msa.h"
 #include "comm_fms.h"
 
@@ -37,8 +36,6 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGraphicsOpacityEffect>
-#include <QGamepad>
-#include <QGamepadManager>
 #include <QNetworkInterface>
 
 QT_BEGIN_NAMESPACE
@@ -66,11 +63,6 @@ public:
     // pcl viewer (point cloud viewer)
     boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer;
 
-    // qt gui jog func
-    std::atomic<bool> jog_flag = {false};
-    std::unique_ptr<std::thread> jog_thread;
-    void jog_loop();
-
     // watchdog loop -> planned for future modularization
     std::atomic<bool> watch_flag = {false};
     std::unique_ptr<std::thread> watch_thread;
@@ -78,9 +70,7 @@ public:
 
     // funcs
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
-    double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
-    void update_jog_values(double vx, double vy, double wz);
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     void all_plot_clear();
     void ui_tasks_update();
@@ -107,10 +97,6 @@ public:
 
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};
-
-    // jog
-    std::atomic<bool> is_jog_pressed = {false};
-    std::atomic<double> last_jog_update_time = {0};
 
     std::atomic<double> vx_target = {0.};
     std::atomic<double> vy_target = {0.};
@@ -310,9 +296,6 @@ public Q_SLOTS:
 private:
     Ui::MainWindow *ui;
     std::shared_mutex mtx;
-
-    // Gamepad
-    QGamepad* gamepad = nullptr;;
 
     std::atomic<bool> lb_pressed = {false};
     std::atomic<bool> rb_pressed = {false};

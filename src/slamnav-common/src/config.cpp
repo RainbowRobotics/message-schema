@@ -238,7 +238,6 @@ void CONFIG::load_network_config(const QJsonObject &obj)
     QJsonObject obj_net = obj["network"].toObject();
 
     check_and_set_bool(obj_net, "USE_MULTI", USE_MULTI,     "network");
-    check_and_set_bool(obj_net, "USE_COOP",  USE_COMM_COOP, "network");
     check_and_set_bool(obj_net, "USE_RTSP",  USE_COMM_RTSP, "network");
     check_and_set_bool(obj_net, "USE_RRS",   USE_COMM_RRS,  "network");
     check_and_set_bool(obj_net, "USE_MSA",   USE_COMM_MSA,  "network");
