@@ -4,8 +4,6 @@
 #include "global_defines.h"
 #include "my_utils.h"
 
-#include "unimap.h"
-
 #include <QObject>
 #include <QTcpSocket>
 #include <QByteArray>
@@ -13,6 +11,10 @@
 #include <QDir>
 #include <QSettings>
 #include <QTimer>
+
+// module
+#include "config.h"
+#include "logger.h"
 
 class GLS611 : public QObject
 {
@@ -36,7 +38,6 @@ public:
     // other modules
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
-    UNIMAP* unimap = NULL;
 
     QTcpSocket socket_bqr;
     QTimer reconnect_timer;

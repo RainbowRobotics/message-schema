@@ -2,6 +2,7 @@
 #define COIN_D4_H
 
 #include "global_defines.h"
+#include "my_utils.h"
 
 #include "C_CSPC_Lidar.h"
 #include "pthread.h"

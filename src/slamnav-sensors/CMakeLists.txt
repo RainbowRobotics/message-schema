@@ -1,8 +1,18 @@
 cmake_minimum_required(VERSION 3.16)
 project(slamnav-sensors LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # ---- add drivers ----
 add_subdirectory(drivers/cam/ORBBEC)
+add_subdirectory(drivers/lidar/LIVOX)
+add_subdirectory(drivers/lidar/AIRY)
+add_subdirectory(drivers/lidar/SICK)
+add_subdirectory(drivers/lidar/RP)
+add_subdirectory(drivers/lidar/LAKI)
+add_subdirectory(drivers/lidar/COIN_D4)
+add_subdirectory(drivers/qr_sensor/GLS611)
 
 # ---- Sources ----
 file(GLOB_RECURSE SENSORS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -24,6 +34,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # ---- link ----
 target_link_libraries(${PROJECT_NAME} PUBLIC
     slamnav_sensors_orbbec
+    slamnav_sensors_livox
+    slamnav_sensors_airy
+    slamnav_sensors_sick
+    slamnav_sensors_rp
+    slamnav_sensors_laki
+    slamnav_sensors_coin_d4
+    slamnav_sensors_gls611
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_sensors")

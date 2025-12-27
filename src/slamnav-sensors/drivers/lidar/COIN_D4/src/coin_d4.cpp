@@ -1,4 +1,4 @@
-#include "lidar_bottom.h"
+#include "coin_d4.h"
 
 namespace
 {
@@ -41,7 +41,7 @@ COIN_D4::~COIN_D4()
 
     if(is_connected)
     {
-        logger->write_log("[BLIDAR] Destructor cleanup: turning off laser.");
+        logger->write_log("[COIN_D4] Destructor cleanup: turning off laser.");
         laser.turnOff();           // mottor off
         laser.disconnecting();     // lidar disconnect
         is_connected = false;
@@ -194,7 +194,7 @@ void COIN_D4::recv_loop()
     {
         if(!is_connected)
         {
-            logger->write_log("[BLIDAR] Attempting to (re)connect...");
+            logger->write_log("[COIN_D4] Attempting to (re)connect...");
             laser.turnOff();
             laser.disconnecting();
 
@@ -241,12 +241,12 @@ void COIN_D4::recv_loop()
                 {
                     is_connected = true;
                     failure_count = 0;
-                    logger->write_log("[BLIDAR] LIDAR connected successfully.");
+                    logger->write_log("[COIN_D4] LIDAR connected successfully.");
                 }
             }
             else
             {
-                logger->write_log("[BLIDAR] LIDAR initialize() failed. Retrying...");
+                logger->write_log("[COIN_D4] LIDAR initialize() failed. Retrying...");
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                 continue;
             }
@@ -260,7 +260,7 @@ void COIN_D4::recv_loop()
             failure_count++;
             if(failure_count >= max_failures)
             {
-                logger->write_log("[BLIDAR] Data stream failed multiple times. Disconnecting.");
+                logger->write_log("[COIN_D4] Data stream failed multiple times. Disconnecting.");
                 is_connected = false;
                 continue;
             }
@@ -276,5 +276,5 @@ void COIN_D4::recv_loop()
     // wrap up grab_flag loop
     laser.turnOff();
     laser.disconnecting();
-    logger->write_log("[BLIDAR] recv_loop terminated.");
+    logger->write_log("[COIN_D4] recv_loop terminated.");
 }

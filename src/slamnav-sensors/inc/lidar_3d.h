@@ -9,8 +9,8 @@
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
-#include "lidar/LIVOX/livox.h"
-#include "lidar/AIRY/airy.h"
+#include "lidar/LIVOX/inc/livox.h"
+#include "lidar/AIRY/inc/airy.h"
 
 // imu filter
 #include "imu_filter.h"

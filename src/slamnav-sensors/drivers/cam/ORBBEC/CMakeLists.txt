@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(slamnav_sensors_orbbec LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # ---- paths ----
 set(LIBS_DIR $ENV{HOME}/libs)
 
@@ -46,4 +49,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     Orbbec::SDK
 )
 
-set_target_properties(slamnav_sensors_orbbec PROPERTIES BUILD_RPATH "${ORBBEC_LIB_DIR}")
+set_target_properties(${PROJECT_NAME} PROPERTIES BUILD_RPATH "${ORBBEC_LIB_DIR}")

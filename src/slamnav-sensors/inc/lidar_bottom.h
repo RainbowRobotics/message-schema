@@ -10,7 +10,7 @@
 #include "config.h"
 #include "mobile.h"
 
-#include "lidar/COIN_D4/coin_d4.h"
+#include "lidar/COIN_D4/inc/coin_d4.h"
 
 #include <QObject>
 

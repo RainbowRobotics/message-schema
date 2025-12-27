@@ -10,9 +10,9 @@
 #include "logger.h"
 #include "mobile.h"
 
-#include "lidar/SICK/sick.h"
-#include "lidar/LAKI/laki.h"
-#include "lidar/RP/rp_lidar.h"  
+#include "lidar/SICK/inc/sick.h"
+#include "lidar/LAKI/inc/laki.h"
+#include "lidar/RP/inc/rp_lidar.h"
 
 #include <QObject>
 
