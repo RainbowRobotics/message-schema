@@ -45,7 +45,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
 # spdlog header-only
 target_include_directories(${PROJECT_NAME} PUBLIC "${LIBS_DIR}/spdlog/include")
-# target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_HEADER_ONLY)
 
 # ---- includes ----
 target_include_directories(${PROJECT_NAME}
@@ -73,8 +72,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     Boost::thread
     Threads::Threads
     fmt::fmt
-
     gtsam
+    OpenMP::OpenMP_CXX
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_common")

@@ -24,9 +24,9 @@
 #include "task.h"
 #include "error_manager.h"
 
-#include "comm/comm_coop.h"
-#include "comm/comm_msa.h"
-#include "comm/comm_fms.h"
+#include "comm_coop.h"
+#include "comm_msa.h"
+#include "comm_fms.h"
 
 // qt
 #include <QMainWindow>
