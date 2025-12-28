@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "global_defines.h"
+#include "slamnav_navigation_types.h"
 #include "my_utils.h"
 
 // other modules

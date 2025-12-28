@@ -5,7 +5,7 @@
 #ifndef SLAMNAV2_LIDAR_BOTTOM_H
 #define SLAMNAV2_LIDAR_BOTTOM_H
 
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 
 #include "config.h"
 #include "mobile.h"

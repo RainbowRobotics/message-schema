@@ -16,12 +16,21 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(OCTOMAP REQUIRED octomap)
 
 # ---- Sources ----
-file(GLOB_RECURSE MAP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB_RECURSE MAP_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
+file(GLOB_RECURSE SLAM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SLAM_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
 # ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${MAP_SOURCES} ${MAP_HEADERS}
-        inc/slam_types.h)
+add_library(${PROJECT_NAME} SHARED ${SLAM_SOURCES} ${SLAM_HEADERS}
+        inc/slamnav_slam_types.h)
+
+add_library(slamnav-slam-types INTERFACE)
+target_include_directories(slamnav-slam-types INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+target_link_libraries(slamnav-slam-types INTERFACE
+        slamnav-sensors-types
+        slamnav-map-types
+)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
@@ -38,6 +47,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     slamnav-common
     slamnav-robot
     slamnav-sensors
+        slamnav-map
 
     gtsam
 

@@ -1,7 +1,7 @@
 #ifndef SAFETY_H
 #define SAFETY_H
 
-#include "global_defines.h"
+#include "slamnav_navigation_types.h"
 #include "my_utils.h"
 
 // other modules
@@ -25,9 +25,6 @@ class SAFETY : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(SAFETY)
-
-private:
-    static SAFETY* m_instance;
 
 public:
     // make singleton

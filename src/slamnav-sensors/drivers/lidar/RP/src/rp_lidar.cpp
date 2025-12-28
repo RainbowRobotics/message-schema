@@ -54,7 +54,7 @@ void RP_LIDAR::open()
         if(grab_thread[idx] == nullptr)
         {
             grab_flag[idx] = true;
-            grab_thread[idx] = make_unique<std::thread>(&RP_LIDAR::grab_loop, this, idx);
+            grab_thread[idx] = std::make_unique<std::thread>(&RP_LIDAR::grab_loop, this, idx);
             printf("[RP_LIDAR] start grab loop idx:%d\n", idx);
         }
     }

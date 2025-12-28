@@ -1,8 +1,9 @@
 #ifndef COMM_DATA_H
 #define COMM_DATA_H
 
+#include "../../slamnav-communication/inc/slamnav_communication_types.h"
+
 #include <sio_client.h>
-#include "global_defines.h"
 
 struct SOCKET_MESSAGE
 {
@@ -576,7 +577,7 @@ struct DATA_PDU_UPDATE
     std::vector<PARAM_ITEM> param_list; // key, type, value 배열
     QString result;
     QString message;
-    MOBILE_SETTING setting;
+    //MOBILE_SETTING setting;
 
     DATA_PDU_UPDATE()
     {
@@ -587,7 +588,7 @@ struct DATA_PDU_UPDATE
 
         result = "";
         message = "";
-        setting = MOBILE_SETTING();
+        //setting = MOBILE_SETTING();
     }
 
     DATA_PDU_UPDATE(const DATA_PDU_UPDATE& p)
@@ -599,7 +600,7 @@ struct DATA_PDU_UPDATE
 
         result = p.result;
         message = p.message;
-        setting = p.setting;
+        //setting = p.setting;
     }
 
     DATA_PDU_UPDATE& operator=(const DATA_PDU_UPDATE& p)
@@ -611,7 +612,7 @@ struct DATA_PDU_UPDATE
 
         result = p.result;
         message = p.message;
-        setting = p.setting;
+        //setting = p.setting;
         return *this;
     }
 };

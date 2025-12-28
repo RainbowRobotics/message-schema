@@ -1,7 +1,8 @@
 #ifndef ORBBEC_H
 #define ORBBEC_H
 
-#include "global_defines.h"
+
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 // module
@@ -97,6 +98,10 @@ private:
 
     tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
     tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
+
+    std::shared_ptr<ob::Context> persistent_ctx;
+    std::atomic<bool> device_ready[max_cam_cnt] = {false};
+
 
 Q_SIGNALS:
     void signal_restart(int idx);

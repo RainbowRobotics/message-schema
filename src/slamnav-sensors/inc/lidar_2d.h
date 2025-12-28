@@ -2,7 +2,7 @@
 #define LIDAR_2D_H
 
 // global defines
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 // modules

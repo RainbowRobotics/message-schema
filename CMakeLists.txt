@@ -32,14 +32,16 @@ add_subdirectory(${SRC_DIR}/slamnav-slam)
 add_subdirectory(${SRC_DIR}/slamnav-navigation)
 add_subdirectory(${SRC_DIR}/slamnav-communication)
 add_subdirectory(${SRC_DIR}/slamnav-debug)
+add_subdirectory(${SRC_DIR}/slamnav-map)
 add_subdirectory(${SRC_DIR}/ui)
 
 # ---- SLAMNAV2 executable ----
-file(GLOB_RECURSE PROJECT_SOURCES ${SRC_DIR}/*.cpp)
-file(GLOB_RECURSE PROJECT_HEADERS ${SRC_DIR}/*.h ${SRC_DIR}/*.hpp)
-file(GLOB PROJECT_UI ${SRC_DIR}/*.ui)
-
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_UI})
+add_executable(${PROJECT_NAME}
+        ${SRC_DIR}/ui/src/main.cpp
+)
+#file(GLOB_RECURSE PROJECT_SOURCES ${SRC_DIR}/*.cpp)
+#file(GLOB_RECURSE PROJECT_HEADERS ${SRC_DIR}/*.h ${SRC_DIR}/*.hpp)
+#file(GLOB PROJECT_UI ${SRC_DIR}/*.ui)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
@@ -58,6 +60,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     slamnav-navigation
     slamnav-communication
     slamnav-debug
+        slamnav-map
     ui
 )
 

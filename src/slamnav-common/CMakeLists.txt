@@ -26,12 +26,10 @@ find_package(Threads REQUIRED)
 find_package(OpenMP)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(VTK 9.1 REQUIRED)
 find_package(PCL 1.12 REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem system thread)
 find_package(fmt REQUIRED)
-find_package(GTSAM CONFIG REQUIRED)
 
 # ---- Sources ----
 file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -48,32 +46,30 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${LIBS_DIR}/spdlog/include")
 
 # ---- includes ----
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
+        PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
-    PRIVATE
+        PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # ---- link ----
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    # Qt
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Gui
-    Qt${QT_VERSION_MAJOR}::Widgets
+        # Qt
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
 
-    # deps
-    Eigen3::Eigen
-    ${OpenCV_LIBS}
-    ${VTK_LIBRARIES}
-    ${PCL_LIBRARIES}
-    TBB::tbb
-    Boost::filesystem
-    Boost::system
-    Boost::thread
-    Threads::Threads
-    fmt::fmt
-    gtsam
-    OpenMP::OpenMP_CXX
+        # deps
+        Eigen3::Eigen
+        ${OpenCV_LIBS}
+        ${PCL_LIBRARIES}
+        TBB::tbb
+        Boost::filesystem
+        Boost::system
+        Boost::thread
+        Threads::Threads
+        fmt::fmt
+        OpenMP::OpenMP_CXX
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_common")

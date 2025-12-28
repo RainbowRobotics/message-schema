@@ -2,7 +2,7 @@
 #define MAPPING_H
 
 // defines
-#include "global_defines.h"
+#include "slamnav_slam_types.h"
 #include "my_utils.h"
 
 // module
@@ -121,7 +121,7 @@ private:
 public Q_SLOTS:
     void slot_map_build_start();
     void slot_map_build_stop();
-    void slot_map_save();
+    std::pair<bool, QString> sync_map_save(const QString& _map_name);
 };
 
 #endif // MAPPING_H

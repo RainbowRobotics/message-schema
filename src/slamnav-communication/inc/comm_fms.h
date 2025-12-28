@@ -2,7 +2,7 @@
 #define COMM_FMS_H
 
 // global defines
-#include "global_defines.h"
+#include "slamnav_communication_types.h"
 #include "my_utils.h"
 
 // other modules
@@ -20,7 +20,6 @@
 
 // qt
 #include <QObject>
-#include <QMainWindow>
 #include <QTimer>
 #include <QWebSocket>
 #include <QJsonObject>
@@ -83,7 +82,6 @@ private:
     LOGGER* logger;
     MOBILE* mobile;
     OBSMAP* obsmap;
-    QObject* main;
     MAPPING* mapping;
     LIDAR_2D* lidar_2d;
     LIDAR_3D* lidar_3d;
@@ -104,9 +102,6 @@ private:
     // for semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
     std::unique_ptr<std::thread> semi_auto_init_thread;
-
-    QMainWindow* get_main_window();
-    bool is_main_window_valid();
 
     tbb::concurrent_queue<QString> send_queue;
 

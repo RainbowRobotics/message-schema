@@ -1,7 +1,7 @@
 #ifndef OBSMAP_H
 #define OBSMAP_H
 
-#include "global_defines.h"
+#include "slamnav_slam_types.h"
 #include "my_utils.h"
 
 // other modules
@@ -162,8 +162,6 @@ private:
     int cx = 150;
     int cy = 150;
     double gs = 0.05;
-
-
 
 Q_SIGNALS:
     void obs_updated();

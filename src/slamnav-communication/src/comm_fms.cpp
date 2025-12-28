@@ -18,7 +18,6 @@ COMM_FMS* COMM_FMS::instance(QObject *parent)
 
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
-    , main(parent)
 {
     client = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     send_timer = new QTimer(this);
@@ -765,21 +764,21 @@ void COMM_FMS::common_loop()
             QString command = msg.command;
             if(command == "randomseq")
             {
-                if(is_main_window_valid())
-                {
-                    msg.result = "accept";
-                    msg.message = "";
-
-                    MainWindow* _main = (MainWindow*)main;
-                    QMetaObject::invokeMethod(_main, "slot_sim_random_seq", Qt::QueuedConnection);
-                }
-                else
-                {
-                    msg.result = "reject";
-                    msg.message = "mainwindow module not available";
-
-                    logger->write_log("[COMM_RRS] MainWindow not available for mapping", "Red");
-                }
+                //if(is_main_window_valid())
+                //{
+                //    msg.result = "accept";
+                //    msg.message = "";
+//
+                //    //MainWindow* _main = (MainWindow*)main;
+                //    //QMetaObject::invokeMethod(_main, "slot_sim_random_seq", Qt::QueuedConnection);
+                //}
+                //else
+                //{
+                //    msg.result = "reject";
+                //    msg.message = "mainwindow module not available";
+//
+                //    logger->write_log("[COMM_RRS] MainWindow not available for mapping", "Red");
+                //}
             }
         }
         else if(cmd == DATA_COMMON::TYPE::DOCKING)
@@ -788,39 +787,39 @@ void COMM_FMS::common_loop()
             QString command = msg.command;
             if(command == "dock")
             {
-                if(is_main_window_valid())
-                {
-                    msg.result = "accept";
-                    msg.message = "";
-
-                    MainWindow* _main = (MainWindow*)main;
-                    QMetaObject::invokeMethod(_main, "bt_DockStart", Qt::QueuedConnection);
-                }
-                else
-                {
-                    msg.result = "reject";
-                    msg.message = "mainwindow module not available";
-
-                    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
-                }
+                //if(is_main_window_valid())
+                //{
+                //    msg.result = "accept";
+                //    msg.message = "";
+//
+                //    //MainWindow* _main = (MainWindow*)main;
+                //    //QMetaObject::invokeMethod(_main, "bt_DockStart", Qt::QueuedConnection);
+                //}
+                //else
+                //{
+                //    msg.result = "reject";
+                //    msg.message = "mainwindow module not available";
+//
+                //    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
+                //}
             }
             else if(command == "undock")
             {
-                if(is_main_window_valid())
-                {
-                    msg.result = "accept";
-                    msg.message = "";
-
-                    MainWindow* _main = (MainWindow*)main;
-                    QMetaObject::invokeMethod(_main, "bt_UnDockStart", Qt::QueuedConnection);
-                }
-                else
-                {
-                    msg.result = "reject";
-                    msg.message = "mainwindow module not available";
-
-                    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
-                }
+                //if(is_main_window_valid())
+                //{
+                //    msg.result = "accept";
+                //    msg.message = "";
+//
+                //    //MainWindow* _main = (MainWindow*)main;
+                //    //QMetaObject::invokeMethod(_main, "bt_UnDockStart", Qt::QueuedConnection);
+                //}
+                //else
+                //{
+                //    msg.result = "reject";
+                //    msg.message = "mainwindow module not available";
+//
+                //    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
+                //}
             }
         }
         else if(cmd == DATA_COMMON::TYPE::LOCALIZATION)
@@ -967,22 +966,22 @@ void COMM_FMS::common_loop()
             }
             else if(command == "randominit")
             {
-                if(is_main_window_valid())
-                {
-                    msg.result = "accept";
-                    msg.message = "";
-
-                    QString seed = msg.seed;
-                    MainWindow* _main = (MainWindow*)main;
-                    QMetaObject::invokeMethod(_main, "slot_sim_random_init", Qt::QueuedConnection, Q_ARG(QString, seed));
-                }
-                else
-                {
-                    msg.result = "reject";
-                    msg.message = "mainwindow module not available";
-
-                    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
-                }
+                //if(is_main_window_valid())
+                //{
+                //    //msg.result = "accept";
+                //    //msg.message = "";
+////
+                //    //QString seed = msg.seed;
+                //    //MainWindow* _main = (MainWindow*)main;
+                //    //QMetaObject::invokeMethod(_main, "slot_sim_random_init", Qt::QueuedConnection, Q_ARG(QString, seed));
+                //}
+                //else
+                //{
+                //    msg.result = "reject";
+                //    msg.message = "mainwindow module not available";
+//
+                //    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
+                //}
             }
         }
         else if(cmd == DATA_COMMON::TYPE::VIEW_LIDAR)
@@ -993,13 +992,13 @@ void COMM_FMS::common_loop()
             {
                 if(msg.frequency > 0)
                 {
-                    MainWindow* _main = (MainWindow*)main;
+                    //MainWindow* _main = (MainWindow*)main;
                     //_main->lidar_view_frequency = msg.frequency;
                 }
             }
             else if(command == "off")
             {
-                MainWindow* _main = (MainWindow*)main;
+                //MainWindow* _main = (MainWindow*)main;
                 //_main->lidar_view_frequency = -1;
             }
         }
@@ -1011,13 +1010,13 @@ void COMM_FMS::common_loop()
             {
                 if(msg.frequency > 0)
                 {
-                    MainWindow* _main = (MainWindow*)main;
+                    //MainWindow* _main = (MainWindow*)main;
                     //_main->path_view_frequency = msg.frequency;
                 }
             }
             else if(command == "off")
             {
-                MainWindow* _main = (MainWindow*)main;
+                //MainWindow* _main = (MainWindow*)main;
                 //_main->path_view_frequency = -1;
             }
         }
@@ -1027,70 +1026,12 @@ void COMM_FMS::common_loop()
             QString command = msg.command;
             if(command == "on")
             {
-                MainWindow* _main = (MainWindow*)main;
-                _main->is_user_led = true;
-
-                QString led = msg.led;
-                if(led == "none")
-                {
-                    _main->user_led_color = LED_OFF;
-                }
-                else if(led == "red")
-                {
-                    _main->user_led_color = LED_RED;
-                }
-                else if(led == "blue")
-                {
-                    _main->user_led_color = LED_BLUE;
-                }
-                else if(led == "white")
-                {
-                    _main->user_led_color = LED_WHITE;
-                }
-                else if(led == "green")
-                {
-                    _main->user_led_color = LED_GREEN;
-                }
-                else if(led == "magenta")
-                {
-                    _main->user_led_color = LED_MAGENTA;
-                }
-                else if(led == "yellow")
-                {
-                    _main->user_led_color = LED_YELLOW;
-                }
-                else if(led == "red blink")
-                {
-                    _main->user_led_color = LED_RED_BLINK;
-                }
-                else if(led == "blue blink")
-                {
-                    _main->user_led_color = LED_BLUE_BLINK;
-                }
-                else if(led == "white blink")
-                {
-                    _main->user_led_color = LED_WHITE_BLINK;
-                }
-                else if(led == "green blink")
-                {
-                    _main->user_led_color = LED_GREEN_BLINK;
-                }
-                else if(led == "magenta blink")
-                {
-                    _main->user_led_color = LED_MAGENTA_BLINK;
-                }
-                else if(led == "yellow blink")
-                {
-                    _main->user_led_color = LED_YELLOW_BLINK;
-                }
 
                 msg.result = "accept";
                 msg.message = "";
             }
             else if(command == "off")
             {
-                MainWindow* _main = (MainWindow*)main;
-                _main->is_user_led = false;
 
                 msg.result = "accept";
                 msg.message = "";
@@ -1249,12 +1190,7 @@ void COMM_FMS::send_loop()
 
 void COMM_FMS::handle_move_jog(const DATA_MOVE& msg)
 {
-    double vx = msg.jog_val[0];
-    double vy = msg.jog_val[1];
-    double wz = msg.jog_val[2];
 
-    MainWindow* _main = (MainWindow*)main;
-    QMetaObject::invokeMethod(_main, "update_jog_values", Qt::QueuedConnection, Q_ARG(Eigen::Vector3d, Eigen::Vector3d(vx, vy, wz)));
 }
 
 void COMM_FMS::handle_move_target(DATA_MOVE &msg)
@@ -1436,23 +1372,23 @@ void COMM_FMS::handle_move_resume(DATA_MOVE &msg)
 
 void COMM_FMS::handle_move_stop(DATA_MOVE &msg)
 {
-    if(is_main_window_valid())
-    {
-        msg.result = "accept";
-        msg.message = "";
-        send_move_response(msg);
-
-        MainWindow* _main = (MainWindow*)main;
-        QMetaObject::invokeMethod(_main, "bt_Emergency", Qt::QueuedConnection);
-    }
-    else
-    {
-        msg.result = "reject";
-        msg.message = "mainwindow module not available";
-        send_move_response(msg);
-
-        logger->write_log("[COMM_RRS] MainWindow not available", "Red");
-    }
+    //if(is_main_window_valid())
+    //{
+    //    msg.result = "accept";
+    //    msg.message = "";
+    //    send_move_response(msg);
+//
+    //    //MainWindow* _main = (MainWindow*)main;
+    //    //QMetaObject::invokeMethod(_main, "bt_Emergency", Qt::QueuedConnection);
+    //}
+    //else
+    //{
+    //    msg.result = "reject";
+    //    msg.message = "mainwindow module not available";
+    //    send_move_response(msg);
+//
+    //    logger->write_log("[COMM_RRS] MainWindow not available", "Red");
+    //}
 }
 
 void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg)
@@ -1618,8 +1554,8 @@ void COMM_FMS::handle_common_load_map(DATA_LOAD& msg)
         msg.message = "";
         unimap->load_map(load_dir);
 
-        MainWindow* _main = (MainWindow*)main;
-        QMetaObject::invokeMethod(_main, "all_update", Qt::QueuedConnection);
+        //MainWindow* _main = (MainWindow*)main;
+        //QMetaObject::invokeMethod(_main, "all_update", Qt::QueuedConnection);
     }
 }
 
@@ -1633,16 +1569,6 @@ void COMM_FMS::handle_common_load_config(DATA_LOAD& msg)
 {
     msg.result = "reject";
     msg.message = "[R0Sx0401]not support yet";
-}
-
-QMainWindow* COMM_FMS::get_main_window()
-{
-    return qobject_cast<QMainWindow*>(main);
-}
-
-bool COMM_FMS::is_main_window_valid()
-{
-    return (qobject_cast<QMainWindow*>(main) != nullptr);
 }
 
 void COMM_FMS::set_config_module(CONFIG* _config)

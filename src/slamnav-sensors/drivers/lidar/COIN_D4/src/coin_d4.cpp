@@ -26,14 +26,14 @@ COIN_D4::COIN_D4(QObject *parent) : QObject{parent}
 COIN_D4::~COIN_D4()
 {
     recv_flag = false;
-    if(!recv_thread && recv_thread->joinable())
+    if(recv_thread && recv_thread->joinable())
     {
         recv_thread->join();
     }
     recv_thread.reset();
 
     grab_flag = false;
-    if(!grab_thread && grab_thread->joinable())
+    if(grab_thread && grab_thread->joinable())
     {
         grab_thread->join();
     }

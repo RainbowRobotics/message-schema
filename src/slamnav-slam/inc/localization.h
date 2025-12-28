@@ -2,7 +2,7 @@
 #define LOCALIZATION_H
 
 // defines
-#include "global_defines.h"
+#include "slamnav_slam_types.h"
 #include "my_utils.h"
 
 // module

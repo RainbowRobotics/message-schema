@@ -1364,7 +1364,20 @@ void MAPPING::last_loop_closing()
 
 void MAPPING::slot_map_build_start()
 {
+    if(config->get_use_sim())
+    {
+        log_warn("map build not allowed SIM_MODE");
+        return;
+    }
 
+    // stop first
+    stop();
+
+    // clear
+    clear();
+
+    // mapping start
+    start();
 }
 
 void MAPPING::slot_map_build_stop()
@@ -1372,9 +1385,112 @@ void MAPPING::slot_map_build_stop()
 
 }
 
-void MAPPING::slot_map_save()
+std::pair<bool, QString> MAPPING::sync_map_save(const QString& _map_name)
 {
+    if(config->get_use_sim())
+    {
+        QString msg = "map save not allowed SIM_MODE";
+        log_warn(msg.toStdString());
+        return std::make_pair(false, msg);
+    }
 
+    QString _map_path = "/data/maps/";
+    if(_map_name.isEmpty())
+    {
+        _map_path = _map_path + get_time_str();
+    }
+    else
+    {
+        _map_path = _map_path + _map_name;
+    }
+
+    if(!QDir().mkpath(_map_path))
+    {
+        QString msg = QString("Failed to create map directory: %1").arg(_map_path);
+        log_error(msg.toStdString());
+        return std::make_pair(false, msg);
+    }
+
+    unimap->set_map_path(_map_path);
+    log_info("Creating map directory:{}", _map_path.toLocal8Bit().data());
+
+    // stop first
+    stop();
+
+    // check kfrm
+    if(get_kfrm_storage_size() == 0)
+    {
+        QString msg = "No keyframe";
+        log_warn(msg.toStdString());
+        return std::make_pair(false, msg);
+    }
+
+    // get all points and sampling
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
+    const double voxel_size = config->get_mapping_voxel_size();
+    const auto _kfrm_storage = get_kfrm_storage();
+
+    std::unordered_map<int64_t, uint8_t> hash_map;
+    std::vector<PT_XYZR> pts;
+    for(size_t p = 0; p < _kfrm_storage->size(); p++)
+    {
+        Eigen::Matrix4d G = (*_kfrm_storage)[p].opt_G;
+        for(size_t q = 0; q < (*_kfrm_storage)[p].pts.size(); q++)
+        {
+            Eigen::Vector3d P;
+            P[0] = (*_kfrm_storage)[p].pts[q].x;
+            P[1] = (*_kfrm_storage)[p].pts[q].y;
+            P[2] = (*_kfrm_storage)[p].pts[q].z;
+
+            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+            int64_t x = std::floor(_P[0]/voxel_size);
+            int64_t y = std::floor(_P[1]/voxel_size);
+            int64_t z = std::floor(_P[2]/voxel_size);
+            int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+            if(hash_map.find(key) == hash_map.end())
+            {
+                hash_map[key] = 1;
+
+                PT_XYZR pt;
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
+                pt.r = (*_kfrm_storage)[p].pts[q].r;
+                pts.push_back(pt);
+            }
+        }
+
+        log_info("convert: {}/{} ..", static_cast<int>(p+1), static_cast<int>(_kfrm_storage->size()));
+    }
+
+    // write file
+    QString cloud_csv_path = _map_path + "/cloud.csv";
+    QFile cloud_csv_file(cloud_csv_path);
+    if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    {
+        for(size_t p = 0; p < pts.size(); p++)
+        {
+            double x = pts[p].x;
+            double y = pts[p].y;
+            double z = pts[p].z;
+            double r = pts[p].r;
+
+            QString str = QString("%1,%2,%3,%4\n")
+                              .arg(x, 0, 'f', 6)
+                              .arg(y, 0, 'f', 6)
+                              .arg(z, 0, 'f', 6)
+                              .arg(r, 0, 'f', 6);
+
+            cloud_csv_file.write(str.toUtf8());
+        }
+
+        cloud_csv_file.close();
+        log_info("{}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
+    }
+
+    return std::make_pair(true, "");
 }
 
 void MAPPING::set_config_module(CONFIG* _config)

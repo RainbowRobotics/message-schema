@@ -2,7 +2,7 @@
 #define AUTOCONTROL_H
 
 // global headers
-#include "global_defines.h"
+#include "slamnav_navigation_types.h"
 #include "my_utils.h"
 #include "comm_data.h"
 

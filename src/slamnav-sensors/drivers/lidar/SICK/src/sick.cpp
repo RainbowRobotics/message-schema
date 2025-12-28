@@ -65,7 +65,7 @@ void SICK::open()
         if(grab_thread[idx] == nullptr)
         {
             grab_flag[idx] = true;
-            grab_thread[idx] = make_unique<std::thread>(&SICK::grab_loop, this, idx);
+            grab_thread[idx] = std::make_unique<std::thread>(&SICK::grab_loop, this, idx);
         }
     }
 }

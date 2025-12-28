@@ -1,7 +1,7 @@
 #ifndef MOBILE_H
 #define MOBILE_H
 
-#include "global_defines.h"
+#include "slamnav_robot_types.h"
 #include "my_utils.h"
 
 // other modules

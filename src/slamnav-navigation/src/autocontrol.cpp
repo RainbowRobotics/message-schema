@@ -189,7 +189,7 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
 
 void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _global_preset, long long _global_path_time)
 {
-    if(_global_path_time == global_path_time.load())
+    if(_global_path_time == global_path_time.load() || _global_node_path.empty())
     {
         return;
     }
@@ -202,20 +202,16 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
     set_global_node_path(_global_node_path);
 
     std::vector<int> remove_duplicate_step = remove_duplicates_step(_global_node_path);
-    if(!remove_duplicate_step.empty())
+    set_global_step(remove_duplicate_step);
+
+    if(remove_duplicate_step.size() == 1)
     {
-        set_global_step(remove_duplicate_step);
+        set_last_step(remove_duplicate_step.front());
     }
-    else
+    if(remove_duplicate_step.size() > 1)
     {
-        std::vector<int> step;
-        for(int i = 0; i < global_node_path.size(); i++)
-        {
-            step.push_back(i+1);
-        }
-        set_global_step(step);
+        set_last_step(1);
     }
-    set_last_step(1);
 
     set_global_preset(_global_preset);
 
@@ -876,7 +872,12 @@ std::vector<int> AUTOCONTROL::remove_duplicates_step(const std::vector<QString>&
     constexpr int duplicates_check_min_node_size = 2;
     if(node_path.size() < duplicates_check_min_node_size)
     {
-        return {};
+        std::vector<int> step;
+        for(size_t p = 0; p < node_path.size(); p++)
+        {
+            step.push_back(static_cast<int>(p+1));
+        }
+        return step;
     }
 
     std::vector<int> duplicated_step;

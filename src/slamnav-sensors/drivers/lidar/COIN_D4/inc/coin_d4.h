@@ -1,7 +1,7 @@
 #ifndef COIN_D4_H
 #define COIN_D4_H
 
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 #include "C_CSPC_Lidar.h"

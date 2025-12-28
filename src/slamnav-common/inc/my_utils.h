@@ -68,7 +68,7 @@ Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
 Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size);
-std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size);
+//std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size);
 
 bool check_self_collision(double x, double y, double z,
                           double robot_min_x, double robot_max_x,
@@ -82,7 +82,6 @@ Eigen::Vector3d array_to_pose(QJsonArray arr);
 QJsonArray links_to_array(std::vector<QString> links);
 std::vector<QString> array_to_links(QJsonArray arr);
 
-CAM_INTRINSIC string_to_intrinsic(QString str);
 void precise_sleep(double seconds);
 
 void remove_duplicates_nodes(std::vector<QString>& src);
@@ -90,8 +89,5 @@ void remove_duplicates_nodes(std::vector<QString>& src);
 std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P1, double step);
 
 int get_major_axis(Eigen::Vector3d& N);
-
-double get_cpu_usage();
-double get_cpu_temperature();
 
 #endif // MY_UTILS_H

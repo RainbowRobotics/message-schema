@@ -2,7 +2,7 @@
 #define CAM_H
 
 // global defines
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 // modules
@@ -57,6 +57,8 @@ public:
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
+
+    CAM_INTRINSIC string_to_intrinsic(QString str);
 
     std::vector<bool> get_rtsp_flag();
 

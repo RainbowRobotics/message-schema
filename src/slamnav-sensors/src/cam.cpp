@@ -152,58 +152,6 @@ TIME_PTS CAM::get_scan(int idx)
     return cur_scan[idx];
 }
 
-//void CAM::post_process_loop(int idx)
-//{
-////    const double dt = 0.025; // 40hz
-//    const double dt = 0.1; // 10hz
-//    double pre_loop_time = get_time();
-
-//    while(post_process_flag)
-//    {
-//        if(config->get_cam_type() == "ORBBEC" && orbbec)
-//        {
-//            TIME_PTS tp;
-//            if(orbbec->try_pop_depth_que(idx, tp))
-//            {
-//                if(is_connected[idx] == false)
-//                {
-//                    is_connected[idx] = true;
-//                }
-
-//                std::lock_guard<std::mutex> lock(mtx);
-//                cur_scan[idx] = tp;
-//            }
-
-//            TIME_IMG ti;
-//            if(orbbec->try_pop_img_que(idx, ti))
-//            {
-//                if(is_connected[idx] == false)
-//                {
-//                    is_connected[idx] = true;
-//                }
-
-//                std::lock_guard<std::mutex> lock(mtx);
-//                cur_time_img[idx] = ti;
-//            }
-//        }
-
-//        // for real time loop
-//        double cur_loop_time = get_time();
-//        double delta_loop_time = cur_loop_time - pre_loop_time;
-//        if(delta_loop_time < dt)
-//        {
-//            int sleep_ms = (dt-delta_loop_time)*1000;
-//            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-//        }
-//        else
-//        {
-//            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
-//        }
-//        process_time_post[idx] = delta_loop_time;
-//        pre_loop_time = get_time();
-//    }
-//}
-
 TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER)
 {
     double t0 = get_time();
@@ -541,6 +489,29 @@ void CAM::rtsp_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
+}
+
+CAM_INTRINSIC CAM::string_to_intrinsic(QString str)
+{
+    // w, h, fx, fy, cx, cy, k1, k2, p1, p2
+    QStringList str_list = str.split(",");
+    if(str_list.size() != 10)
+    {
+        return CAM_INTRINSIC();
+    }
+
+    CAM_INTRINSIC res;
+    res.w = str_list[0].toDouble();
+    res.h = str_list[1].toDouble();
+    res.fx = str_list[2].toDouble();
+    res.fy = str_list[3].toDouble();
+    res.cx = str_list[4].toDouble();
+    res.cy = str_list[5].toDouble();
+    res.k1 = str_list[6].toDouble();
+    res.k2 = str_list[7].toDouble();
+    res.p1 = str_list[8].toDouble();
+    res.p2 = str_list[9].toDouble();
+    return res;
 }
 
 std::vector<bool> CAM::get_rtsp_flag()

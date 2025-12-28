@@ -29,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME} PUBLIC
     slamnav-common
     slamnav-robot
+    slamnav-sensors-types
     sick_safetyscanners_base
 )
 

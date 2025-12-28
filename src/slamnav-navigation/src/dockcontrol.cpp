@@ -1030,17 +1030,17 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
         res2 = generate_sample_points(p2,p3,40);
         res3 = generate_sample_points(p3,p4,40);
 
-        for (const auto& pt : res1.pts)
+        for(const auto& pt : res1.pts)
         {
             frame.pts.push_back(pt);
 
         }
-        for (const auto& pt : res2.pts)
+        for(const auto& pt : res2.pts)
         {
             frame.pts.push_back(pt);
 
         }
-        for (const auto& pt : res3.pts)
+        for(const auto& pt : res3.pts)
         {
             frame.pts.push_back(pt);
         }

@@ -1,7 +1,7 @@
 #ifndef GLS611_H
 #define GLS611_H
 
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 #include <QObject>

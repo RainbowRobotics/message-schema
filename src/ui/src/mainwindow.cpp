@@ -1242,150 +1242,14 @@ void MainWindow::bt_JogReleased()
 // mapping
 void MainWindow::bt_MapBuild()
 {
-    if(CONFIG::instance()->get_use_sim())
-    {
-        LOGGER::instance()->write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
-        //spdlog::warn("[MAIN] map build not allowed SIM_MODE");
-        log_warn("map build not allowed SIM_MODE");
+    MAPPING::instance()->slot_map_build_start();
 
-        return;
-    }
-
-    // stop first
-    MAPPING::instance()->stop();
-
-    // clear
-    all_plot_clear();
-    UNIMAP::instance()->clear();
-
-    // mapping start
-    MAPPING::instance()->start();
     change_map_name =  false;
 }
 
 void MainWindow::bt_MapSave()
 {
-    if(CONFIG::instance()->get_use_sim())
-    {
-        LOGGER::instance()->write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
-        //spdlog::warn("[MAIN] map save not allowed SIM_MODE");
-        log_warn("map save not allowed SIM_MODE");
-
-        return;
-    }
-
-    if(!change_map_name)
-    {
-        // auto generation dir path
-        QString _map_dir = "/data/maps/" + get_time_str();
-        log_info("Creating map directory:{}", _map_dir.toLocal8Bit().data());
-
-        QDir().mkpath(_map_dir);
-
-        UNIMAP::instance()->set_map_path(_map_dir);
-        map_dir = _map_dir;
-    }
-    else
-    {
-        QString _map_dir = "/data/maps/" + map_dir;
-        log_info("Using existing map directory:{}",map_dir.toLocal8Bit().data());
-
-        QDir().mkpath(_map_dir);
-
-        UNIMAP::instance()->set_map_path(_map_dir);
-        map_dir = _map_dir;
-    }
-
-    // check
-    QString map_path = UNIMAP::instance()->get_map_path();
-    if(map_path.isEmpty())
-    {
-        log_warn("no map_dir");
-        return;
-    }
-
-    // stop first
-    MAPPING::instance()->stop();
-
-    // check kfrm
-    if(MAPPING::instance()->get_kfrm_storage_size() == 0)
-    {
-        //printf("[MAIN] no keyframe\n");
-        //spdlog::warn("[MAIN] no keyframe");
-        log_warn("no keyframe");
-
-        return;
-    }
-
-    // get all points and sampling
-    const int64_t p1 = 73856093;
-    const int64_t p2 = 19349669;
-    const int64_t p3 = 83492791;
-    const double voxel_size = CONFIG::instance()->get_mapping_voxel_size();
-    const auto kfrm_storage = MAPPING::instance()->get_kfrm_storage();
-
-    std::unordered_map<int64_t, uint8_t> hash_map;
-    std::vector<PT_XYZR> pts;
-    for(size_t p = 0; p < kfrm_storage->size(); p++)
-    {
-        Eigen::Matrix4d G = (*kfrm_storage)[p].opt_G;
-        for(size_t q = 0; q < (*kfrm_storage)[p].pts.size(); q++)
-        {
-            Eigen::Vector3d P;
-            P[0] = (*kfrm_storage)[p].pts[q].x;
-            P[1] = (*kfrm_storage)[p].pts[q].y;
-            P[2] = (*kfrm_storage)[p].pts[q].z;
-
-            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
-
-            // int64_t x = _P[0];
-            // int64_t y = _P[1];
-            // int64_t z = _P[2];
-
-            int64_t x = std::floor(_P[0]/voxel_size);
-            int64_t y = std::floor(_P[1]/voxel_size);
-            int64_t z = std::floor(_P[2]/voxel_size);
-            int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
-            if(hash_map.find(key) == hash_map.end())
-            {
-                hash_map[key] = 1;
-
-                PT_XYZR pt;
-                pt.x = _P[0];
-                pt.y = _P[1];
-                pt.z = _P[2];
-                pt.r = (*kfrm_storage)[p].pts[q].r;
-                pts.push_back(pt);
-            }
-        }
-
-        //printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
-        //spdlog::info("[MAIN] convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
-        log_info("convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
-    }
-
-    // write file
-    QString cloud_csv_path = map_path + "/cloud.csv";
-    QFile cloud_csv_file(cloud_csv_path);
-    if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
-    {
-        for(size_t p = 0; p < pts.size(); p++)
-        {
-            double x = pts[p].x;
-            double y = pts[p].y;
-            double z = pts[p].z;
-            double r = pts[p].r;
-
-            QString str;
-            str.sprintf("%f,%f,%f,%f\n", x, y, z, r);
-            cloud_csv_file.write(str.toUtf8());
-        }
-
-        cloud_csv_file.close();
-        //printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
-        //spdlog::info("[MAIN] {}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
-        log_info("{}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
-    }
+    MAPPING::instance()->sync_map_save("");
 }
 
 void MainWindow::bt_MapLoad()
@@ -1410,24 +1274,19 @@ void MainWindow::bt_MapLoad()
 void MainWindow::bt_MapLastLc()
 {
     MAPPING::instance()->last_loop_closing();
-    //spdlog::info("[MAIN] bt_MapLastLc");
     log_info("bt_MapLastLc");
 }
 
 void MainWindow::bt_MapPause()
 {
     MAPPING::instance()->is_pause.store(true);
-    //printf("[MAIN] mapping pasue\n");
-    //spdlog::info("[MAIN] mapping pasue");
     log_info("mapping pause");
 }
 
 void MainWindow::bt_MapResume()
 {
     MAPPING::instance()->is_pause.store(false);
-    //printf("[MAIN] mapping resume\n");
-    //spdlog::info("[MAIN] mapping resume");
-    spdlog::info("mapping resume");
+    log_info("mapping resume");
 }
 
 // localization
@@ -5467,4 +5326,151 @@ void MainWindow::qa_loop()
             log_warn("[QA] Failed to add new node");
         }
     }
+}
+
+double MainWindow::get_cpu_usage()
+{
+    static CPU_USAGE prev_usage;
+    static bool first_call = true;
+
+    CPU_USAGE curr_usage;
+
+    // Read /proc/stat
+    QFile file("/proc/stat");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return 0.0;
+    }
+
+    QTextStream in(&file);
+    QString line = in.readLine();
+    file.close();
+
+    // Parse first line: cpu  user nice system idle iowait irq softirq
+    QStringList parts = line.split(QRegExp("\\s+"), Qt::SkipEmptyParts);
+    if (parts.size() < 8 || parts[0] != "cpu")
+    {
+        return 0.0;
+    }
+
+    // Parse current values
+    curr_usage.user = parts[1].toInt();
+    curr_usage.nice = parts[2].toInt();
+    curr_usage.system = parts[3].toInt();
+    curr_usage.idle = parts[4].toInt();
+    curr_usage.iowait = parts[5].toInt();
+    curr_usage.irq = parts[6].toInt();
+    curr_usage.softirq = parts[7].toInt();
+
+    if (first_call)
+    {
+        prev_usage = curr_usage;
+        first_call = false;
+        return 0.0;
+    }
+
+    // Calculate differences
+    int prev_idle = prev_usage.idle + prev_usage.iowait;
+    int curr_idle = curr_usage.idle + curr_usage.iowait;
+
+    int prev_non_idle = prev_usage.user + prev_usage.nice + prev_usage.system + prev_usage.irq + prev_usage.softirq;
+    int curr_non_idle = curr_usage.user + curr_usage.nice + curr_usage.system + curr_usage.irq + curr_usage.softirq;
+
+    int prev_total = prev_idle + prev_non_idle;
+    int curr_total = curr_idle + curr_non_idle;
+
+    int total_diff = curr_total - prev_total;
+    int idle_diff = curr_idle - prev_idle;
+
+    prev_usage = curr_usage;
+
+    if (total_diff == 0)
+    {
+        return 0.0;
+    }
+
+    double cpu_percentage = 100.0 * (total_diff - idle_diff) / total_diff;
+    return cpu_percentage;
+}
+
+// Get CPU temperature in Celsius
+double MainWindow::get_cpu_temperature()
+{
+    // Try different thermal zone files (expanded list for better compatibility)
+    QStringList thermal_paths;
+
+    // Add thermal zones 0-9
+    for (int i = 0; i < 10; i++)
+    {
+        thermal_paths << QString("/sys/class/thermal/thermal_zone%1/temp").arg(i);
+    }
+
+    // Add hwmon paths
+    for (int i = 0; i < 10; i++)
+    {
+        thermal_paths << QString("/sys/class/hwmon/hwmon%1/temp1_input").arg(i);
+        thermal_paths << QString("/sys/class/hwmon/hwmon%1/temp2_input").arg(i);
+    }
+
+    // Additional common paths
+    thermal_paths << "/sys/devices/platform/coretemp.0/hwmon/hwmon0/temp1_input"
+                  << "/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
+                  << "/sys/devices/virtual/thermal/thermal_zone0/temp"
+                  << "/sys/devices/virtual/thermal/thermal_zone1/temp";
+
+    static bool first_call = true;
+    static QString working_path = "";
+
+    if (!working_path.isEmpty())
+    {
+        QFile file(working_path);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&file);
+            QString temp_str = in.readLine();
+            file.close();
+
+            bool ok;
+            double temp = temp_str.toDouble(&ok);
+            if (ok && temp > 0)
+            {
+                return temp / 1000.0;
+            }
+        }
+    }
+
+    // Try all paths
+    for (const QString& path : thermal_paths)
+    {
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&file);
+            QString temp_str = in.readLine();
+            file.close();
+
+            bool ok;
+            double temp = temp_str.toDouble(&ok);
+            if (ok && temp > 0)
+            {
+                // Temperature is in millidegrees, convert to degrees
+                working_path = path;
+                if (first_call)
+                {
+                    spdlog::debug("[CPU_TEMP] Found working thermal path: {}", path.toStdString());
+                    first_call = false;
+                }
+                return temp / 1000.0;
+            }
+        }
+    }
+
+    // If no thermal zone found, log warning once
+    if (first_call)
+    {
+        spdlog::warn("[CPU_TEMP] No valid temperature found on this system");
+        first_call = false;
+    }
+
+    return 0.0;
 }

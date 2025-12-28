@@ -2,7 +2,7 @@
 #define RP_LIDAR_H
 
 // defines
-#include "global_defines.h"
+#include "slamnav_sensor_types.h"
 #include "my_utils.h"
 
 // S1 Lidar

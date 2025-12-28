@@ -2,8 +2,7 @@
 #define COMM_MSA_H
 
 // global defines
-#include "global_defines.h"
-#include "my_utils.h"
+#include "slamnav_communication_types.h"
 
 // other modules
 #include "config.h"
@@ -23,16 +22,10 @@
 
 // qt
 #include <QObject>
-#include <QMainWindow>
 #include <QTimer>
-#include <QWebSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QCoreApplication>
-#include <QProcess>
-
-#include <filesystem>
 
 struct COMM_MSA_INFO
 {
@@ -119,7 +112,6 @@ private:
     LOGGER* logger;
     MOBILE* mobile;
     OBSMAP* obsmap;
-    QObject* main;
     MAPPING* mapping;
     LIDAR_2D* lidar_2d;
     LIDAR_3D* lidar_3d;
@@ -180,8 +172,6 @@ private:
     void recv_message_array(sio::event& ev);
 
     /* utils function */
-    bool is_main_window_valid();
-    QMainWindow* get_main_window();
     void calc_remaining_time_distance(DATA_MOVE& msg); // todo ---> move to autoctorl !
     QJsonObject sio_object_to_qt_json_object(const std::map<std::string, sio::message::ptr>& obj);
     QJsonValue convert_item(sio::message::ptr item);
@@ -194,7 +184,7 @@ private:
 Q_SIGNALS:
     void signal_map_build_start();
     void signal_map_build_stop();
-    void signal_map_save();
+    void signal_map_save(const QString& _map_name);
 
     void signal_auto_move_stop();
 

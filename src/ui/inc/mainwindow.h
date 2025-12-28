@@ -1,9 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "global_defines.h"
 #include "my_utils.h"
 #include "comm_data.h"
+#include "slamnav_ui_types.h"
+
 #include "tinycolormap.hpp"
 
 // modules
@@ -162,6 +163,10 @@ public:
 
     float old_total_mileage;
 
+private:
+    double get_cpu_usage();
+    double get_cpu_temperature();
+
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
@@ -192,11 +197,8 @@ public Q_SLOTS:
     void bt_MoveLinearY();
     void bt_MoveRotate();
 
-
     void bt_JogMecaL();
     void bt_JogMecaR();
-
-
     void bt_JogF();
     void bt_JogB();
     void bt_JogL();
@@ -265,7 +267,6 @@ public Q_SLOTS:
     void bt_QuickAddCloud();
     void bt_QuickAddCloud2();
 
-
     // for safety debug
     void bt_ClearMismatch();
     void bt_ClearOverSpd();
@@ -295,16 +296,5 @@ public Q_SLOTS:
 
 private:
     Ui::MainWindow *ui;
-    std::shared_mutex mtx;
-
-    std::atomic<bool> lb_pressed = {false};
-    std::atomic<bool> rb_pressed = {false};
-
-    double cur_lx = 0.0; // left stick X  -> vy
-    double cur_ly = 0.0; // left stick Y  -> vx
-    double cur_rx = 0.0; // right stick X -> wz
-
-    // gamepad init
-    void init_gamepad();
 };
 #endif // MAINWINDOW_H

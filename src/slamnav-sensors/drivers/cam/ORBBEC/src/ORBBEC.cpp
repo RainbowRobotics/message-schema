@@ -48,9 +48,54 @@ ORBBEC::~ORBBEC()
 
 void ORBBEC::init()
 {
+    persistent_ctx = std::make_shared<ob::Context>();
+    persistent_ctx->setLoggerSeverity(OB_LOG_SEVERITY_OFF);
+
+
+    persistent_ctx->setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removed,
+                                                     std::shared_ptr<ob::DeviceList> added) {
+        if(removed && removed->deviceCount() > 0)
+        {
+            for(uint32_t i = 0; i < removed->deviceCount(); i++)
+            {
+                auto info = removed->getDevice(i)->getDeviceInfo();
+                QString sn = info->serialNumber();
+                log_warn("Device removed: {}", sn.toStdString());
+
+                for(int idx = 0; idx < config->get_cam_num(); idx++)
+                {
+                    if(config->get_cam_serial_number(idx) == sn)
+                    {
+                        device_ready[idx] = false;
+                        is_connected[idx] = false;
+                    }
+                }
+            }
+        }
+
+        if(added && added->deviceCount() > 0)
+        {
+            for(uint32_t i = 0; i < added->deviceCount(); i++)
+            {
+                auto info = added->getDevice(i)->getDeviceInfo();
+                QString sn = info->serialNumber();
+                log_info("Device added: {}", sn.toStdString());
+
+                for(int idx = 0; idx < config->get_cam_num(); idx++)
+                {
+                    if(config->get_cam_serial_number(idx) == sn)
+                    {
+                        device_ready[idx] = true;
+                    }
+                }
+            }
+        }
+    });
+
     for(int i = 0; i < config->get_cam_num(); i++)
     {
         extrinsic[i] = string_to_TF(config->get_cam_tf(i));
+        device_ready[i] = false;
     }
 
     //printf("[ORBBEC] init\n");
@@ -92,7 +137,8 @@ void ORBBEC::close()
 
 void ORBBEC::restart(int idx)
 {
-    // close
+    log_info("restart requested, idx:{}", idx);
+
     grab_flag[idx] = false;
     if(grab_thread[idx] && grab_thread[idx]->joinable())
     {
@@ -100,12 +146,72 @@ void ORBBEC::restart(int idx)
     }
     grab_thread[idx].reset();
 
-    // open
+    bool reboot_success = false;
+    try
+    {
+        QString target_sn = config->get_cam_serial_number(idx);
+        auto dev_list = persistent_ctx->queryDeviceList();
+
+        for(uint32_t d = 0; d < dev_list->deviceCount(); d++)
+        {
+            auto dev = dev_list->getDevice(d);
+            QString sn = dev->getDeviceInfo()->serialNumber();
+
+            if(sn == target_sn)
+            {
+                log_info("Rebooting device, idx:{}, sn:{}", idx, sn.toStdString());
+
+                device_ready[idx] = false;
+                dev->reboot();
+                reboot_success = true;
+                break;
+            }
+        }
+    }
+    catch(const ob::Error& e)
+    {
+        log_warn("device->reboot() failed, idx:{}, msg:{}", idx, e.getMessage());
+    }
+    catch(const std::exception& e)
+    {
+        log_warn("device->reboot() exception, idx:{}, what:{}", idx, e.what());
+    }
+
+    if(reboot_success)
+    {
+        const int MAX_WAIT_SEC = 10;
+        int waited = 0;
+
+        log_info("Waiting for device to reconnect, idx:{}", idx);
+
+        while(!device_ready[idx] && waited < MAX_WAIT_SEC)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            waited++;
+            log_debug("Waiting... {}/{}s, idx:{}", waited, MAX_WAIT_SEC, idx);
+        }
+
+        if(device_ready[idx])
+        {
+            log_info("Device reconnected after reboot, idx:{}, waited:{}s", idx, waited);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+        else
+        {
+            log_warn("Device not reconnected after {}s, idx:{}", MAX_WAIT_SEC, idx);
+        }
+    }
+    else
+    {
+        log_info("Reboot not performed, waiting 2s before retry, idx:{}", idx);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    }
+
     grab_flag[idx] = true;
     grab_thread[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, idx);
+
+    log_info("restart complete, idx:{}", idx);
 }
-
-
 
 QString ORBBEC::get_cam_info_str()
 {
@@ -187,23 +293,22 @@ bool ORBBEC::try_pop_img_que(int idx, TIME_IMG &ti)
 
 void ORBBEC::grab_loop(int idx)
 {
+    std::shared_ptr<ob::Device> dev;
+    std::shared_ptr<ob::Pipeline> pipe;
+
     try
     {
-        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_DEBUG);
+        if(idx == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        }
+
+        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_OFF);
 
         // check device
         ob::Context ctx;
         ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
         ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
-
-        auto dev_list = ctx.queryDeviceList();
-        int dev_count = dev_list->deviceCount();
-        if(dev_count == 0)
-        {
-            grab_flag[idx] = false;
-            log_error("no camera");
-            return;
-        }
 
         QString target_sn = config->get_cam_serial_number(idx);
         if(target_sn.isEmpty())
@@ -213,23 +318,59 @@ void ORBBEC::grab_loop(int idx)
             return;
         }
 
+        int retry = 0;
         int dev_idx = -1;
-        for(int d = 0; d < dev_count; d++)
+        constexpr int reconnection_max_try = 5;
+        while(retry < reconnection_max_try && dev_idx < 0)
         {
-            QString sn = dev_list->getDevice(d)->getDeviceInfo()->serialNumber();
-            if(sn == target_sn)
+            auto dev_list = ctx.queryDeviceList();
+            int dev_count = dev_list->deviceCount();
+
+            if(dev_count == 0)
             {
-                dev_idx = d;
-                break;
+                retry++;
+                log_warn("no camera found, retry {}/{}, idx:{}", retry, reconnection_max_try, idx);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+
+            for(int d = 0; d < dev_count; d++)
+            {
+                try
+                {
+                    QString sn = dev_list->getDevice(d)->getDeviceInfo()->serialNumber();
+                    if(sn == target_sn)
+                    {
+                        dev_idx = d;
+                        dev = dev_list->getDevice(d);
+                        break;
+                    }
+                }
+                catch(const ob::Error& e)
+                {
+                    log_error("failed to get device info: idx:{}, msg:{}", d, e.getMessage());
+                    continue;
+                }
+            }
+
+            if(dev_idx < 0)
+            {
+                retry++;
+                log_warn("camera not found in list, retry {}/{}, idx:{}, sn:{}",
+                         retry, reconnection_max_try, idx, target_sn.toStdString());
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
         }
 
-        if(dev_idx < 0)
+
+        if(dev_idx < 0 || !dev)
         {
             grab_flag[idx] = false;
-            log_error("camera not found, idx:{}, sn:{}", idx, target_sn.toStdString());
+            log_error("camera not found after {} retries, idx:{}, sn:{}", reconnection_max_try, idx, target_sn.toStdString());
             return;
         }
+
+        log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
 
         double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
         double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
@@ -237,12 +378,19 @@ void ORBBEC::grab_loop(int idx)
         double voxel_size = config->get_mapping_voxel_size();
 
         // set cam
-        auto dev = dev_list->getDevice(dev_idx);
-        dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
-        dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
-        log_info("detected camera, idx:{}, dev_idx:{}, sn:{}, tf:{}", idx, dev_idx, target_sn.toStdString(), config->get_cam_tf(idx).toStdString());
+        try
+        {
+            dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
+            dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
+        }
+        catch(const ob::Error& e)
+        {
+            log_warn("failed to set mirror property, idx:{}, msg:{}", idx, e.getMessage());
+        }
 
-        std::shared_ptr<ob::Pipeline> pipe = std::make_shared<ob::Pipeline>(dev);
+        pipe = std::make_shared<ob::Pipeline>(dev);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
         Eigen::Matrix4d TF = string_to_TF(config->get_cam_tf(idx));
         Eigen::Matrix3d TF_R = TF.block(0,0,3,3);
         Eigen::Vector3d TF_t = TF.block(0,3,3,1);
@@ -260,82 +408,87 @@ void ORBBEC::grab_loop(int idx)
         if(depth_profile_idx >= depth_profile_list->count())
         {
             log_error("Invalid depth_profile_idx: {} (max {})", depth_profile_idx, depth_profile_list->count() - 1);
-
-            log_info("Available Depth Profiles List:");
             for(size_t p = 0; p < depth_profile_list->count(); p++)
             {
                 auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-//                printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
                 log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
             }
-            std::terminate();
             return;
         }
+
         auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         cur_w_depth[idx] = depth_profile->width();
         cur_h_depth[idx] = depth_profile->height();
-        //printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx[idx], depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
         log_info("Current depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
 
         auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
         if(color_profile_idx >= color_profile_list->count())
         {
             log_error("Invalid color_profile_idx: {} (max {})", color_profile_idx, color_profile_list->count() - 1);
-
-            log_info("Available Color Profiles List:");
             for(size_t p = 0; p < color_profile_list->count(); p++)
             {
                 auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-                //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
                 log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
             }
-            std::terminate();
             return;
         }
+
         auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx[idx], color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
-        log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
         cur_w_color[idx] = color_profile->width();
         cur_h_color[idx] = color_profile->height();
+        log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
 
+        double depth_aspect = static_cast<double>(depth_profile->width()) / depth_profile->height();
+        double color_aspect = static_cast<double>(color_profile->width()) / color_profile->height();
+        if(std::abs(depth_aspect - color_aspect) > 0.1)
+        {
+            log_warn("Aspect ratio mismatch: depth={:.2f}, color={:.2f}", depth_aspect, color_aspect);
+        }
 
         std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
-
-        // if(idx == 0)
-        // {
-        //     cam_config->disableAllStream();
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // }
         cam_config->enableStream(depth_profile);
         cam_config->enableStream(color_profile);
         cam_config->setAlignMode(ALIGN_DISABLE);
 
         pipe->start(cam_config);
-
         log_info("grab loop started, idx:{}", idx);
-        std::this_thread::sleep_for(std::chrono::milliseconds(idx * 500));
 
-        int cnt = 0;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500 + idx * 500));
+
+        int no_depth_cnt = 0, no_color_cnt = 0;
+        int timeout_cnt = 0;
+        constexpr int MAX_NO_DEPTH_CNT = 50;
+        constexpr int MAX_NO_COLOR_CNT = 50;
+        constexpr int MAX_TIMEOUT_CNT = 20;
 
         ob::PointCloudFilter point_cloud;
         bool filter_param_set = false;
         while(grab_flag[idx])
         {
-            // double pre_loop_time = get_time();
-
-            auto fs = pipe->waitForFrames(100);
-            if(!fs)
-            {
-                continue;
-            }
-
             try
             {
+                auto fs = pipe->waitForFrames(150);
+                if(!fs)
+                {
+                    timeout_cnt++;
+                    if(timeout_cnt > MAX_TIMEOUT_CNT)
+                    {
+                        log_error("frame timeout exceeded, idx:{}, restarting", idx);
+                        Q_EMIT signal_restart(idx);
+                        break;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                    continue;
+                }
+
+                timeout_cnt = 0;
+
                 if(auto df = fs->depthFrame())
                 {
+                    no_depth_cnt = 0;
+
                     uint64_t ts = df->systemTimeStamp();
                     double t = static_cast<double>(ts) / 1000.0;
-
                     cam_t[idx].store(get_time());
 
                     if(!filter_param_set)
@@ -381,12 +534,9 @@ void ORBBEC::grab_loop(int idx)
                                 continue;
                             }
 
-                            //_P[2] = 0;
                             pts.push_back(_P);
                         }
                     }
-
-                    //std::cout << idx << ", pts.size(): " << pts.size() << std::endl;
 
                     pts = voxel_filtering(pts, voxel_size);
                     cur_pts_size[idx] = pts.size();
@@ -409,45 +559,28 @@ void ORBBEC::grab_loop(int idx)
                 }
                 else
                 {
-                    cnt ++;
-                    if(cnt > 100)
+                    no_depth_cnt++;
+                    if(no_depth_cnt > MAX_NO_DEPTH_CNT)
                     {
-                        log_info("signal_restart requested, idx:{}, cnt:{}", idx, cnt);
-                        cnt = 0;
+                        log_error("no depth frame for too long, idx:{}, restarting", idx);
                         Q_EMIT signal_restart(idx);
                         break;
                     }
                 }
 
-                if(fs->colorFrame() != nullptr)
+                if(auto cf = fs->colorFrame())
                 {
                     if(!is_connected[idx])
                     {
                         is_connected[idx] = true;
                     }
 
-                    uint64_t ts = fs->colorFrame()->systemTimeStamp();
+                    uint64_t ts = cf->systemTimeStamp();
                     double t = static_cast<double>(ts) / 1000.0;
 
-                    std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-                    cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-
+                    cv::Mat raw(cf->height(), cf->width(), CV_8UC3, cf->data());
                     cv::Mat img;
-                    if(colorFrame->format() == OB_FORMAT_MJPG)
-                    {
-                        std::vector<uchar> buf;
-                        buf.assign((const uint8_t*)colorFrame->data(), (const uint8_t*)colorFrame->data() + (int)colorFrame->dataSize());
-
-                        cv::Mat decoded = cv::imdecode(buf, cv::IMREAD_COLOR);
-                        if(!decoded.empty())
-                        {
-                            img = decoded;
-                        }
-                    }
-                    else
-                    {
-                        cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-                    }
+                    cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
 
                     if(!img.empty())
                     {
@@ -470,6 +603,16 @@ void ORBBEC::grab_loop(int idx)
                             cur_img[idx]      = plot_img.clone();
                             cur_time_img[idx] = time_img;
                         }
+                    }
+                }
+                else
+                {
+                    no_color_cnt++;
+                    if(no_color_cnt > MAX_NO_COLOR_CNT)
+                    {
+                        log_error("no color frame for too long, idx:{}, restarting", idx);
+                        Q_EMIT signal_restart(idx);
+                        break;
                     }
                 }
 
@@ -499,44 +642,47 @@ void ORBBEC::grab_loop(int idx)
             }
             catch(ob::Error &e)
             {
-                log_info("inner ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
+                log_error("ob::Error in loop, idx:{}, msg:{}", idx, e.getMessage());
                 Q_EMIT signal_restart(idx);
                 break;
             }
             catch(const std::exception& e)
             {
-                log_info("inner std::exception idx:{}, what:{}", idx, e.what());
+                log_error("std::exception in loop, idx:{}, what:{}", idx, e.what());
                 Q_EMIT signal_restart(idx);
                 break;
             }
-
-            // =======================
-            // loop time check
-            // =======================
-
-            // double cur_loop_time = get_time();
-            // double delta_loop_time = cur_loop_time - pre_loop_time;
-            // log_warn("cam_{} loop time, dt:{}", idx, delta_loop_time);
         }
-
         is_connected[idx] = false;
+    }
+    catch(ob::Error &e)
+    {
+        is_connected[idx] = false;
+        log_error("ob::Error in grab_loop, idx:{}, msg:{}", idx, e.getMessage());
+    }
+    catch(const std::exception& e)
+    {
+        is_connected[idx] = false;
+        log_error("std::exception in grab_loop, idx:{}, what:{}", idx, e.what());
+    }
 
+    if(pipe)
+    {
         try
         {
             pipe->stop();
         }
         catch (const ob::Error& e)
         {
-            log_info("stop() ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
+            log_warn("pipe->stop() error, idx:{}, msg:{}", idx, e.getMessage());
         }
 
         pipe.reset();
-        log_info("grab loop stopped, idx:{}", idx);
     }
-    catch(ob::Error &e)
-    {
-        log_info("ob::Error idx:{}, name:{}, args:{}, msg:{}, type:{}", idx, e.getName(), e.getArgs(), e.getMessage(), static_cast<int>(e.getExceptionType()));
-    }
+    dev.reset();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    log_info("grab loop stopped, idx:{}", idx);
 }
 
 void ORBBEC::slot_restart(int idx)

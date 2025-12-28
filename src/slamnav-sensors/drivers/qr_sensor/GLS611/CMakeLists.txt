@@ -29,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # ---- link ----
 target_link_libraries(${PROJECT_NAME} PUBLIC
     slamnav-common
+    slamnav-sensors-types
     Qt${QT_VERSION_MAJOR}::Network
 )
 

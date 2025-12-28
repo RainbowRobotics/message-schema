@@ -1016,7 +1016,7 @@ std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, 
     return res;
 }
 
-std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size)
+/*std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size)
 {
     // get all points and sampling
     const int64_t p1 = 73856093;
@@ -1040,7 +1040,7 @@ std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_siz
     }
 
     return res;
-}
+}*/
 
 bool check_self_collision(double x, double y, double z,
                           double robot_min_x, double robot_max_x,
@@ -1183,29 +1183,6 @@ std::vector<QString> array_to_links(QJsonArray arr)
     return res;
 }
 
-CAM_INTRINSIC string_to_intrinsic(QString str)
-{
-    // w, h, fx, fy, cx, cy, k1, k2, p1, p2
-    QStringList str_list = str.split(",");
-    if(str_list.size() != 10)
-    {
-        return CAM_INTRINSIC();
-    }
-
-    CAM_INTRINSIC res;
-    res.w = str_list[0].toDouble();
-    res.h = str_list[1].toDouble();
-    res.fx = str_list[2].toDouble();
-    res.fy = str_list[3].toDouble();
-    res.cx = str_list[4].toDouble();
-    res.cy = str_list[5].toDouble();
-    res.k1 = str_list[6].toDouble();
-    res.k2 = str_list[7].toDouble();
-    res.p1 = str_list[8].toDouble();
-    res.p2 = str_list[9].toDouble();
-    return res;
-}
-
 void precise_sleep(double seconds)
 {
     if(seconds <= 0)
@@ -1288,153 +1265,6 @@ int get_major_axis(Eigen::Vector3d& N)
         }
     }
     return max_idx;
-}
-
-double get_cpu_usage()
-{
-    static CPU_USAGE prev_usage;
-    static bool first_call = true;
-    
-    CPU_USAGE curr_usage;
-    
-    // Read /proc/stat
-    QFile file("/proc/stat");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        return 0.0;
-    }
-    
-    QTextStream in(&file);
-    QString line = in.readLine();
-    file.close();
-    
-    // Parse first line: cpu  user nice system idle iowait irq softirq
-    QStringList parts = line.split(QRegExp("\\s+"), Qt::SkipEmptyParts);
-    if (parts.size() < 8 || parts[0] != "cpu")
-    {
-        return 0.0;
-    }
-    
-    // Parse current values
-    curr_usage.user = parts[1].toInt();
-    curr_usage.nice = parts[2].toInt();
-    curr_usage.system = parts[3].toInt();
-    curr_usage.idle = parts[4].toInt();
-    curr_usage.iowait = parts[5].toInt();
-    curr_usage.irq = parts[6].toInt();
-    curr_usage.softirq = parts[7].toInt();
-    
-    if (first_call)
-    {
-        prev_usage = curr_usage;
-        first_call = false;
-        return 0.0;
-    }
-    
-    // Calculate differences
-    int prev_idle = prev_usage.idle + prev_usage.iowait;
-    int curr_idle = curr_usage.idle + curr_usage.iowait;
-    
-    int prev_non_idle = prev_usage.user + prev_usage.nice + prev_usage.system + prev_usage.irq + prev_usage.softirq;
-    int curr_non_idle = curr_usage.user + curr_usage.nice + curr_usage.system + curr_usage.irq + curr_usage.softirq;
-    
-    int prev_total = prev_idle + prev_non_idle;
-    int curr_total = curr_idle + curr_non_idle;
-    
-    int total_diff = curr_total - prev_total;
-    int idle_diff = curr_idle - prev_idle;
-    
-    prev_usage = curr_usage;
-    
-    if (total_diff == 0)
-    {
-        return 0.0;
-    }
-    
-    double cpu_percentage = 100.0 * (total_diff - idle_diff) / total_diff;
-    return cpu_percentage;
-}
-
-// Get CPU temperature in Celsius
-double get_cpu_temperature()
-{
-    // Try different thermal zone files (expanded list for better compatibility)
-    QStringList thermal_paths;
-    
-    // Add thermal zones 0-9
-    for (int i = 0; i < 10; i++)
-    {
-        thermal_paths << QString("/sys/class/thermal/thermal_zone%1/temp").arg(i);
-    }
-    
-    // Add hwmon paths
-    for (int i = 0; i < 10; i++)
-    {
-        thermal_paths << QString("/sys/class/hwmon/hwmon%1/temp1_input").arg(i);
-        thermal_paths << QString("/sys/class/hwmon/hwmon%1/temp2_input").arg(i);
-    }
-    
-    // Additional common paths
-    thermal_paths << "/sys/devices/platform/coretemp.0/hwmon/hwmon0/temp1_input"
-                  << "/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
-                  << "/sys/devices/virtual/thermal/thermal_zone0/temp"
-                  << "/sys/devices/virtual/thermal/thermal_zone1/temp";
-    
-    static bool first_call = true;
-    static QString working_path = "";
-    
-    if (!working_path.isEmpty())
-    {
-        QFile file(working_path);
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            QTextStream in(&file);
-            QString temp_str = in.readLine();
-            file.close();
-            
-            bool ok;
-            double temp = temp_str.toDouble(&ok);
-            if (ok && temp > 0)
-            {
-                return temp / 1000.0;
-            }
-        }
-    }
-    
-    // Try all paths
-    for (const QString& path : thermal_paths)
-    {
-        QFile file(path);
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            QTextStream in(&file);
-            QString temp_str = in.readLine();
-            file.close();
-            
-            bool ok;
-            double temp = temp_str.toDouble(&ok);
-            if (ok && temp > 0)
-            {
-                // Temperature is in millidegrees, convert to degrees
-                working_path = path;
-                if (first_call)
-                {
-                    spdlog::debug("[CPU_TEMP] Found working thermal path: {}", path.toStdString());
-                    first_call = false;
-                }
-                return temp / 1000.0;
-            }
-        }
-    }
-    
-    // If no thermal zone found, log warning once
-    if (first_call)
-    {
-        spdlog::warn("[CPU_TEMP] No valid temperature found on this system");
-        first_call = false;
-    }
-    
-    return 0.0;
 }
 
 

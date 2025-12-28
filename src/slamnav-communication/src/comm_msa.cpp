@@ -1,5 +1,4 @@
 #include "comm_msa.h"
-#include "mainwindow.h"
 
 namespace
 {
@@ -54,7 +53,6 @@ COMM_MSA* COMM_MSA::instance(QObject* parent)
 
 COMM_MSA::COMM_MSA(QObject *parent)
     : QObject{parent}
-    , main(parent)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -954,17 +952,8 @@ void COMM_MSA::handle_localization_stop(DATA_LOCALIZATION& msg)
 
 void COMM_MSA::handle_localization_randominit(DATA_LOCALIZATION& msg)
 {
-    if(!is_main_window_valid())
-    {
-        msg.result = "reject";
-        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
-        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
-        send_localization_response(msg);
-
-        log_error("MainWindow not available for randominit");
-    }
-
     // todo
+    return;
 }
 
 void COMM_MSA::handle_mapping_start(DATA_MAPPING& msg)
@@ -982,10 +971,7 @@ void COMM_MSA::handle_mapping_start(DATA_MAPPING& msg)
     msg.message = "";
     send_mapping_response(msg);
 
-    if(MainWindow* _main = qobject_cast<MainWindow*>(main))
-    {
-        QMetaObject::invokeMethod(_main, "bt_MapBuild", Qt::QueuedConnection);
-    }
+    Q_EMIT (signal_map_build_start());
 }
 
 void COMM_MSA::handle_mapping_stop(DATA_MAPPING& msg)
@@ -995,47 +981,24 @@ void COMM_MSA::handle_mapping_stop(DATA_MAPPING& msg)
 
     send_mapping_response(msg);
 
-    if(MainWindow* _main = qobject_cast<MainWindow*>(main))
-    {
-        _main->bt_MapSave();
-    }
+    Q_EMIT (signal_map_build_stop());
 }
 
 void COMM_MSA::handle_mapping_save(DATA_MAPPING& msg)
 {
-    MainWindow* _main = qobject_cast<MainWindow*>(main);
-    if(!_main)
+    if(!mapping)
     {
+        msg.result = "fail";
+        msg.message = "Mapping is not running";
+        send_mapping_response(msg);
         return;
     }
 
-    _main->map_dir = "";
-    if(msg.map_name != "")
+    std::pair<bool, QString> val = mapping->sync_map_save(msg.map_name);
+    if(!val.first)
     {
-        _main->change_map_name = true;
-        _main->map_dir =  msg.map_name;
-    }
-    _main->bt_MapSave();
-
-    const QString map_name = msg.map_name;
-    const QString save_dir = "/data/maps/" + map_name;
-
-    bool found_csv = false;
-    if(std::filesystem::exists(save_dir.toStdString()) && std::filesystem::is_directory(save_dir.toStdString()))
-    {
-        for(const auto& entry : std::filesystem::directory_iterator(save_dir.toStdString()))
-        {
-            if(entry.is_regular_file() && entry.path().extension() == ".csv")
-            {
-                found_csv = true;
-                break;
-            }
-        }
-    }
-
-    if(!found_csv)
-    {
-        msg.result = "fail";
+        msg.result  = "fail";
+        msg.message = val.second;
         send_mapping_response(msg);
         return;
     }
@@ -1606,10 +1569,7 @@ void COMM_MSA::handle_move_jog(const DATA_MOVE& msg)
     double vy = msg.jog_val[1];
     double wz = msg.jog_val[2]*D2R;
 
-    if(MainWindow* _main = qobject_cast<MainWindow*>(main))
-    {
-        //_main->update_jog_values(vx, vy, wz);
-    }
+    mobile->slot_jog_update(Eigen::Vector3d(vx, vy, wz));
 }
 
 void COMM_MSA::handle_move_target(DATA_MOVE &msg)
@@ -2040,41 +2000,21 @@ void COMM_MSA::handle_move_profile(DATA_MOVE& msg)
     }
     else if(command == "stop")
     {
-        if(MainWindow* _main = qobject_cast<MainWindow*>(main))
-        {
-            _main->bt_MoveStop();
+        Q_EMIT (signal_mobile_profile_move_stop());
 
-            msg.result = "success";
-            msg.message = "";
-            send_move_response(msg);
-        }
-        else
-        {
-            msg.result = "fail";
-            msg.message = "";
-            send_move_response(msg);
-        }
+        msg.result = "success";
+        msg.message = "";
+        send_move_response(msg);
     }
 }
 
 void COMM_MSA::handle_move_stop(DATA_MOVE &msg)
 {
-    if(is_main_window_valid())
-    {
-        msg.result = "accept";
-        msg.message = "";
-        send_move_response(msg);
+    msg.result = "accept";
+    msg.message = "";
+    send_move_response(msg);
 
-        MainWindow* _main = (MainWindow*)main;
-        QMetaObject::invokeMethod(_main, "bt_Emergency", Qt::QueuedConnection);
-    }
-    else
-    {
-        msg.result = "reject";
-        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_STOP);
-        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_STOP);
-        send_move_response(msg);
-    }
+    Q_EMIT (signal_auto_move_stop());
 }
 
 void COMM_MSA::calc_remaining_time_distance(DATA_MOVE &msg)
@@ -2245,8 +2185,8 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
         send_load_response(msg);
         unimap->load_map(load_dir);
 
-        MainWindow* _main = (MainWindow*)main;
-        QMetaObject::invokeMethod(_main, "all_update", Qt::QueuedConnection);
+        // todo make all update
+
     }
     else
     {
@@ -2574,11 +2514,6 @@ void COMM_MSA::set_last_tgt_pose_vec(const Eigen::Vector4d& val)
     last_tgt_pose_vec = val;
 }
 
-QMainWindow* COMM_MSA::get_main_window()
-{
-    return qobject_cast<QMainWindow*>(main);
-}
-
 bool COMM_MSA::get_is_connected()
 {
     return is_connected.load();
@@ -2594,11 +2529,6 @@ void COMM_MSA::set_last_receive_msg(QString val)
 {
     std::unique_lock<std::shared_mutex> lock(mtx);
     last_receive_msg = val;
-}
-
-bool COMM_MSA::is_main_window_valid()
-{
-    return (qobject_cast<QMainWindow*>(main) != nullptr);
 }
 
 void COMM_MSA::set_config_module(CONFIG* _config)
@@ -2685,7 +2615,6 @@ void COMM_MSA::set_mapping_module(MAPPING* _mapping)
 
     connect(this, &COMM_MSA::signal_map_build_start, mapping, &MAPPING::slot_map_build_start);
     connect(this, &COMM_MSA::signal_map_build_stop,  mapping, &MAPPING::slot_map_build_stop);
-    connect(this, &COMM_MSA::signal_map_save,        mapping, &MAPPING::slot_map_save);
 }
 
 void COMM_MSA::set_unimap_module(UNIMAP* _unimap)

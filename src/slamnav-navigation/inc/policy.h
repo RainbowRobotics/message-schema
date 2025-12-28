@@ -2,7 +2,7 @@
 #define POLICY_H
 
 // defines
-#include "global_defines.h"
+#include "slamnav_navigation_types.h"
 #include "my_utils.h"
 
 // module
