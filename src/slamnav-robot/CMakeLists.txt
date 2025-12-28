@@ -26,6 +26,9 @@ add_library(${PROJECT_NAME} SHARED ${ROBOT_SOURCES} ${ROBOT_HEADERS}
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
+# ---- PCH ----
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
+
 # ---- includes ----
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -35,11 +38,12 @@ target_include_directories(${PROJECT_NAME}
 )
 
 # ---- link ----
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
         slamnav-common
-        Qt${QT_VERSION_MAJOR}::Gamepad
-
         Eigen3::Eigen
+        Qt${QT_VERSION_MAJOR}::Gamepad
+    PRIVATE
         ${OpenCV_LIBS}
         TBB::tbb
         Threads::Threads

@@ -27,27 +27,30 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON)
 
+# ---- PCH ----
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
+
 # ---- includes ----
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
 )
 
 # ---- link ----
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    slamnav-common
-    slamnav-robot
-    slamnav-sensors
-    slamnav-slam
-    slamnav-navigation
-    slamnav-communication
-    slamnav-debug
-    ${VTK_LIBRARIES}
-
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Gui
-    Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::WebSockets
-
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        slamnav-common
+    PRIVATE
+        slamnav-robot
+        slamnav-sensors
+        slamnav-slam
+        slamnav-navigation
+        slamnav-communication
+        slamnav-debug
+        ${VTK_LIBRARIES}
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::WebSockets
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ui")

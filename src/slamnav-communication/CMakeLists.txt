@@ -44,6 +44,9 @@ add_library(${PROJECT_NAME} SHARED ${COMMUNICATION_SOURCES} ${COMMUNICATION_HEAD
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
+# ---- PCH ----
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
+
 # ---- includes ----
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
@@ -52,18 +55,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # ---- link ----
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    slamnav-common
-    slamnav-robot
-    slamnav-sensors
-    slamnav-slam
-    slamnav-navigation
-
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::WebSockets
-
-    ${SIOCLIENT_LIB}
-    ${SIOCLIENT_TLS_LIB}
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        slamnav-common
+        slamnav-robot
+        slamnav-sensors
+        slamnav-slam
+        slamnav-navigation
+        Qt${QT_VERSION_MAJOR}::WebSockets
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        ${SIOCLIENT_LIB}
+        ${SIOCLIENT_TLS_LIB}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_communication")

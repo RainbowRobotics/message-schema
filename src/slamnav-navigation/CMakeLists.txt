@@ -32,17 +32,21 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON)
 
+# ---- PCH ----
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
         slamnav-navigation-types
-
         slamnav-common
         slamnav-robot
         slamnav-sensors
         slamnav-slam
+    PRIVATE
         gtsam
 )
 

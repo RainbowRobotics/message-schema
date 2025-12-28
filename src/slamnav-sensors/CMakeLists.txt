@@ -37,6 +37,9 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON)
 
+# ---- PCH ----
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
+
 # ---- includes ----
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
@@ -44,17 +47,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # ---- link ----
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    slamnav_sensors_orbbec
-    slamnav_sensors_livox
-    slamnav_sensors_airy
-    slamnav_sensors_sick
-    slamnav_sensors_rp
-    slamnav_sensors_laki
-    slamnav_sensors_coin_d4
-    slamnav_sensors_gls611
-
-    ${OpenCV_LIBS}
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        ${OpenCV_LIBS}
+        slamnav_sensors_rp
+        slamnav_sensors_airy
+        slamnav_sensors_sick
+        slamnav_sensors_orbbec
+        slamnav_sensors_livox
+    PRIVATE
+        slamnav_sensors_laki
+        slamnav_sensors_coin_d4
+        slamnav_sensors_gls611
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_sensors")
