@@ -1,7 +1,7 @@
 #ifndef MY_UTILS_H
 #define MY_UTILS_H
 
-#include "global_defines.h"
+#include "slamnav_common_types.h"
 
 struct VoltageCapacity
 {

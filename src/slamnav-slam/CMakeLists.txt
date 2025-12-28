@@ -19,10 +19,7 @@ pkg_check_modules(OCTOMAP REQUIRED octomap)
 file(GLOB_RECURSE SLAM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE SLAM_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
-# ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${SLAM_SOURCES} ${SLAM_HEADERS}
-        inc/slamnav_slam_types.h)
-
+# ---- Types target (INTERFACE) ----
 add_library(slamnav-slam-types INTERFACE)
 target_include_directories(slamnav-slam-types INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
@@ -31,6 +28,10 @@ target_link_libraries(slamnav-slam-types INTERFACE
         slamnav-sensors-types
         slamnav-map-types
 )
+
+# ---- Main library ----
+add_library(${PROJECT_NAME} SHARED ${SLAM_SOURCES} ${SLAM_HEADERS}
+        inc/slamnav_slam_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)

@@ -28,11 +28,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_REQUIRED_COMPONENTS}
 add_subdirectory(${SRC_DIR}/slamnav-common)
 add_subdirectory(${SRC_DIR}/slamnav-robot)
 add_subdirectory(${SRC_DIR}/slamnav-sensors)
+add_subdirectory(${SRC_DIR}/slamnav-map)
 add_subdirectory(${SRC_DIR}/slamnav-slam)
 add_subdirectory(${SRC_DIR}/slamnav-navigation)
 add_subdirectory(${SRC_DIR}/slamnav-communication)
 add_subdirectory(${SRC_DIR}/slamnav-debug)
-add_subdirectory(${SRC_DIR}/slamnav-map)
 add_subdirectory(${SRC_DIR}/ui)
 
 # ---- SLAMNAV2 executable ----

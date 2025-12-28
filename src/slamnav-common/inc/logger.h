@@ -1,7 +1,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include "global_defines.h"
+#include "slamnav_common_types.h"
 
 #include <string>
 #include <iostream>

@@ -28,7 +28,16 @@ find_library(SIOCLIENT_TLS_LIB
 file(GLOB_RECURSE COMMUNICATION_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE COMMUNICATION_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
-# ---- Target ----
+# ---- Types target (INTERFACE) ----
+add_library(slamnav-communication-types INTERFACE)
+target_include_directories(slamnav-communication-types INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+target_link_libraries(slamnav-communication-types INTERFACE
+        slamnav-navigation-types
+)
+
+# ---- Main library ----
 add_library(${PROJECT_NAME} SHARED ${COMMUNICATION_SOURCES} ${COMMUNICATION_HEADERS}
         inc/slamnav_communication_types.h)
 

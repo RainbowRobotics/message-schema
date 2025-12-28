@@ -1,7 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "global_defines.h"
+#include "slamnav_debug_types.h"
 #include "my_utils.h"
 
 #include "config.h"

@@ -13,8 +13,18 @@ set(LIBS_DIR $ENV{HOME}/libs)
 file(GLOB_RECURSE DEBUG_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE DEBUG_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
 
-# ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${DEBUG_SOURCES} ${DEBUG_HEADERS})
+# ---- Types target (INTERFACE) ----
+add_library(slamnav-debug-types INTERFACE)
+target_include_directories(slamnav-debug-types INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+target_link_libraries(slamnav-debug-types INTERFACE
+        slamnav-navigation-types
+)
+
+# ---- Main library ----
+add_library(${PROJECT_NAME} SHARED ${DEBUG_SOURCES} ${DEBUG_HEADERS}
+        inc/slamnav_debug_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)

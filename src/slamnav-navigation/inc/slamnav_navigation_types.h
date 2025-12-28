@@ -6,6 +6,5 @@
 #define SLAMNAV2_SLAMNAV_NAVIGATION_TYPES_H
 
 #include "slamnav_slam_types.h"
-#include "slamnav_sensor_types.h"
 
 #endif //SLAMNAV2_SLAMNAV_NAVIGATION_TYPES_H

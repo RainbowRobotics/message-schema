@@ -7,7 +7,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfoList>
-#include "global_defines.h"
+#include "slamnav_common_types.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>

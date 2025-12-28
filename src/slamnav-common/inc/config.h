@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "global_defines.h"
+#include "slamnav_common_types.h"
 #include "error_manager.h"
 
 #include <cmath>

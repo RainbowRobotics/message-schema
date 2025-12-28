@@ -1,4 +1,4 @@
-#include "global_defines.h"
+#include "slamnav_common_types.h"
 #include "mainwindow.h"
 #include <QApplication>
 
