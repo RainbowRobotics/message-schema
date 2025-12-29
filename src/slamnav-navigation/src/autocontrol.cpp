@@ -1714,8 +1714,8 @@ std::vector<Eigen::Matrix4d> AUTOCONTROL::path_resampling(const std::vector<Eige
 std::vector<Eigen::Vector3d> AUTOCONTROL::path_ccma(const std::vector<Eigen::Vector3d>& src)
 {
     // init params
-    const int w_ma = 5; // 5
-    const int w_cc = 3; // 3
+    const int w_ma = 3;
+    const int w_cc = 2;
     const int w_ccma = w_ma + w_cc + 1;
 
     // not enough points
@@ -2072,7 +2072,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     }
 
     std::vector<double> list1(src.size());
-    v0 = v_end;
+    v0 = src.back(); // v_end;
     for(int p = (int)src.size()-1; p >= 0; p--)
     {
         double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);

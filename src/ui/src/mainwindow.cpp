@@ -496,6 +496,7 @@ void MainWindow::init_modules()
             COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
             COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
             COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+            COMM_FMS::instance()->set_simnulation_module(SIM::instance());
             COMM_FMS::instance()->init();
         }
     }

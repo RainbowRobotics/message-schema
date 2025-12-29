@@ -17,6 +17,7 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "dockcontrol.h"
+#include "sim.h"
 
 // qt
 #include <QObject>
@@ -66,6 +67,7 @@ public:
     void set_autocontrol_module(AUTOCONTROL* _ctrl);
     void set_dockcontrol_module(DOCKCONTROL* _dctrl);
     void set_localization_module(LOCALIZATION* _loc);
+    void set_simnulation_module(SIM* _sim);
     void set_mapping_module(MAPPING* _mapping);
 
 private:
@@ -88,6 +90,7 @@ private:
     AUTOCONTROL* ctrl;
     DOCKCONTROL* dctrl;
     LOCALIZATION* loc;
+    SIM* sim;
 
     // vars
     QTimer* send_timer;

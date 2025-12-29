@@ -178,6 +178,8 @@ void COMM_FMS::reconnect_loop()
 
         QString server_addr = QString("ws://%1:12334").arg(server_ip);
         client->open(QUrl(server_addr));
+
+        std::cout << "server_addr: " << server_addr.toStdString() << std::endl;
     }
 }
 
@@ -331,7 +333,71 @@ void COMM_FMS::recv_loop()
                 if(command == "randominit")
                 {
                     // todo sim 클래스랑 매칭시키기
+                    if(!config->get_use_sim())
+                    {
+                        printf("randominit command. allow only simulation mode\n");
+                        continue;
+                    }
 
+                    if(unimap->get_is_loaded() != MAP_LOADED)
+                    {
+                        printf("randominit command. map not loaded\n");
+                        continue;
+                    }
+
+                    QString seed = get_json(data, "seed");
+                    NODE* node = unimap->get_node_by_id(seed);
+                    if(!node)
+                    {
+                        continue;
+                    }
+
+                    // loc stop
+                    loc->stop();
+                    sim->stop();
+
+                    // set
+                    Eigen::Matrix4d tf = node->tf;
+                    sim->set_cur_tf(tf);
+                    loc->set_cur_tf(tf);
+
+                    // start
+                    sim->start();
+
+                    // make dummy
+                    mobile->set_is_connected(true);
+                    mobile->set_is_synced(true);
+
+                    lidar_2d->set_is_connected(true);
+                    lidar_2d->set_sync_flag(true);
+
+                    // loc start
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    loc->start();
+                }
+            }
+            else if(topic == "load")
+            {
+                QString command = get_json(data, "command");
+                if(command == "mapload")
+                {
+                    double  msg_time     = get_json(data, "time").toDouble()/1000;
+                    QString msg_command  = get_json(data, "command");
+                    QString msg_map_name = get_json(data, "name");
+
+                    QString load_dir = "/data/maps/" + msg_map_name;
+                    if(!load_dir.isNull())
+                    {
+                        if(!QDir(load_dir).exists())
+                        {
+                            continue;
+                        }
+
+                        loc->stop();
+                        obsmap->clear();
+                        config->set_map_path(load_dir);
+                        unimap->load_map(load_dir);
+                    }
                 }
             }
 
@@ -1121,6 +1187,16 @@ void COMM_FMS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 
     dctrl = _dctrl;
+}
+
+void COMM_FMS::set_simnulation_module(SIM* _sim)
+{
+    if(!_sim)
+    {
+        return;
+    }
+
+    sim = _sim;
 }
 
 void COMM_FMS::send_status_loop()
