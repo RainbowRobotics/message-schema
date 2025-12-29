@@ -48,6 +48,12 @@ void LOCALIZATION::start()
     // set flag
     is_loc = true;
 
+    // set loc_state to "good" for simulation mode
+    if(config->get_use_sim())
+    {
+        set_cur_loc_state("good");
+    }
+
     QString loc_mode = config->get_loc_mode();
 
     if(config->get_use_ekf() && !config->get_use_sim())

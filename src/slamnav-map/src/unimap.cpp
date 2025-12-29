@@ -157,6 +157,7 @@ void UNIMAP::load_map(QString path)
     }
 
     QString loc_mode = config->get_loc_mode();
+    spdlog::info("[UNIMAP] loc_mode: {}, loaded_2d: {}, loaded_3d: {}", loc_mode.toStdString(), loaded_2d, loaded_3d);
     if(loc_mode == "2D" && loaded_2d)
     {
         is_loaded.store(MAP_LOADED);
@@ -164,6 +165,12 @@ void UNIMAP::load_map(QString path)
     else if(loc_mode == "3D" && loaded_3d)
     {
         is_loaded.store(MAP_LOADED);
+    }
+    else if(loaded_2d || loaded_3d)
+    {
+        // fallback: at least one map loaded
+        is_loaded.store(MAP_LOADED);
+        spdlog::warn("[UNIMAP] fallback MAP_LOADED (2d:{}, 3d:{})", loaded_2d, loaded_3d);
     }
     else
     {

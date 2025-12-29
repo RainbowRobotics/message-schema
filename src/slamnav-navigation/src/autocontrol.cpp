@@ -2516,6 +2516,12 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
+    // skip motor check in simulation mode
+    if(config->get_use_sim())
+    {
+        return DRIVING_FINE;
+    }
+
     MOBILE_STATUS ms = mobile->get_status();
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
     {
