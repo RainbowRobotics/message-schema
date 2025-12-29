@@ -134,11 +134,15 @@ void UNIMAP::load_map(QString path)
     map_path = path;
 
     bool loaded_2d = load_2d();
-    auto future = std::async(std::launch::async, [this]()
+    bool loaded_3d = false;
+    if(!config->get_use_sim())
     {
-        return this->load_3d();
-    });
-    bool loaded_3d = future.get();
+        auto future = std::async(std::launch::async, [this]()
+        {
+            return this->load_3d();
+        });
+        loaded_3d = future.get();
+    }
 
     // topo or node load
     QFileInfo node_info(QString(map_path + "/node.json"));

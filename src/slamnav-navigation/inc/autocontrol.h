@@ -74,31 +74,28 @@ public:
     // init control module
     void init();
 
-    // stop control loop
-    void stop();
-
     void stop_control_thread();
     void stop_obs_thread();
 
     /***********************
      * interface funcs
      ***********************/
-    int get_fsm_state();                            // get current Finit State Machine state
+    int get_fsm_state();                            // get the current Finit State Machine state
     int get_last_step();
     bool get_is_debug();                            // check if debug
     bool get_is_pause();                            // check if paused
     bool get_is_moving();                           // check if moving
     PATH get_cur_global_path();                     // get current global path
-    PATH get_cur_local_path();                      // get current local path
+    PATH get_cur_local_path();                      // get the current local path
     double get_obs_dist();                          // get current obstacle far dist (1m, 2m)
     double get_process_time_control();              // get control loop processing time
     double get_process_time_node();                 // get node loop processing time
     double get_process_time_obs();                  // get obs loop processing time
     double get_cur_deadzone();                      // get current deadzone value
-    QString get_auto_state();                       // get current auto request state (stop, move, pause, good, vir, not ready, error)
+    QString get_auto_state();                       // get the current auto request state (stop, move, pause, good, vir, not ready, error)
     QString get_cur_node_id();                      // get current node id
     QString get_obs_condition();                    // get current obstacle condition (none, near, far, vir)
-    QString get_cur_move_state();                   // get current move state (none, move, complete, fail, obstacle, cancel)
+    QString get_cur_move_state();                   // get the current move state (none, move, complete, fail, obstacle, cancel)
     QString get_multi_reqest_state();               // get current multi request state (none, req_path, recv_path)
     DATA_MOVE get_cur_move_info();                  // get last received move msg
     long long get_global_path_time();
@@ -141,8 +138,8 @@ public:
     void set_mobile_module(MOBILE* _mobile);
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
-    void set_localization_module(LOCALIZATION* _localization);
     void set_policy_module(POLICY* _policy);
+    void set_localization_module(LOCALIZATION* _localization);
 
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
@@ -151,6 +148,8 @@ public Q_SLOTS:
 
     // slot func move(receive path) (start control loop)
     void slot_move_multi();
+
+    void stop();
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);

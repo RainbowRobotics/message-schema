@@ -115,32 +115,27 @@ private:
     std::mutex move_mtx;
     std::mutex path_mtx;
     std::mutex vobs_mtx;
-    std::mutex common_mtx;
     std::mutex response_mtx;
 
     std::queue<DATA_MOVE> move_queue;
     std::queue<DATA_PATH> path_queue;
     std::queue<DATA_VOBS> vobs_queue;
-    std::queue<DATA_COMMON> common_queue;
     std::queue<std::function<void()>> response_queue;
 
     std::condition_variable move_cv;
     std::condition_variable path_cv;
     std::condition_variable vobs_cv;
-    std::condition_variable common_cv;
     std::condition_variable response_cv;
 
     std::atomic<bool> is_move_running = {true};
     std::atomic<bool> is_path_running = {true};
     std::atomic<bool> is_vobs_running = {true};
-    std::atomic<bool> is_common_running = {true};
     std::atomic<bool> is_response_running = {true};
     std::atomic<bool> is_send_status_running = {true};
 
     std::unique_ptr<std::thread> move_thread;
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
-    std::unique_ptr<std::thread> common_thread;
     std::unique_ptr<std::thread> response_thread;
 
     std::unique_ptr<std::thread> send_status_thread;
@@ -148,11 +143,9 @@ private:
     void move_loop();
     void path_loop();
     void vobs_loop();
-    void common_loop();
     void response_loop();
 
     void handle_move_cmd(const QJsonObject& data);
-    void handle_move_jog(const DATA_MOVE& msg);
     void handle_move_goal(DATA_MOVE& msg);
     void handle_move_stop(DATA_MOVE& msg);
     void handle_move_pause(DATA_MOVE& msg);
@@ -166,29 +159,6 @@ private:
 
     void handle_vobs_cmd(const QJsonObject& data);
     void handle_vobs(DATA_VOBS& msg);
-
-    void handle_common_cmd(QString cmd, const QJsonObject& data);
-    void handle_common_load_map(DATA_LOAD& msg);
-    void handle_common_load_topo(DATA_LOAD& msg);
-    void handle_common_load_config(DATA_LOAD& msg);
-
-    void handle_common_random_seq(DATA_RANDOMSEQ& msg);
-
-    void handle_common_docking_dock(DATA_DOCK& msg);
-    void handle_common_docking_undock(DATA_DOCK& msg);
-
-    void handle_common_loc_semiautoinit(DATA_LOCALIZATION& msg);
-    void handle_common_loc_init(DATA_LOCALIZATION& msg);
-    void handle_common_loc_start(DATA_LOCALIZATION& msg);
-    void handle_common_loc_stop(DATA_LOCALIZATION& msg);
-    void handle_common_loc_randominit(DATA_LOCALIZATION& msg);
-
-    void handle_common_view_lidar(DATA_VIEW_LIDAR& msg);
-    void handle_common_view_path(DATA_VIEW_PATH& msg);
-
-    void handle_common_led(DATA_LED& msg);
-
-    void handle_common_motor(DATA_MOTOR& msg);
 
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};

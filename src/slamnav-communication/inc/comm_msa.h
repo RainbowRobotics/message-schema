@@ -235,7 +235,6 @@ private:
     std::queue<DATA_MAPPING> mapping_queue;
     std::queue<DATA_LOCALIZATION> localization_queue;
 
-    tbb::concurrent_queue<SOCKET_MESSAGE> send_status_queue;
     std::queue<SOCKET_MESSAGE> send_response_queue;
 
     std::condition_variable recv_cv;

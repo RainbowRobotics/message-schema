@@ -464,11 +464,6 @@ void COMM_MSA::send_move_status()
         std::lock_guard<std::mutex> sock_lock(send_mtx);
         rrs_socket->socket("slamnav")->emit("moveStatus", obj_root);
     }
-
-    /*SOCKET_MESSAGE socket_msg;
-    socket_msg.event = "moveStatus";
-    socket_msg.data  = obj_root;
-    send_status_queue.push(std::move(socket_msg));*/
 }
 
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
@@ -1079,7 +1074,10 @@ void COMM_MSA::send_local_path()
 
     root_obj->get_map()["path"] = arr;
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
-    send_status_queue.push({"localPath", root_obj});
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("localPath", root_obj);
+    }
 }
 
 void COMM_MSA::send_global_path()
@@ -1112,7 +1110,10 @@ void COMM_MSA::send_global_path()
     root_obj->get_map()["path"] = arr;
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
 
-    send_status_queue.push({"globalPath", root_obj});
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("globalPath", root_obj);
+    }
 }
 
 void COMM_MSA::send_lidar_2d()
@@ -1174,8 +1175,11 @@ void COMM_MSA::send_lidar_2d()
 
     add_to_obj(root_obj, "data", arr);
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
-    send_status_queue.push({"lidarCloud", root_obj});
 
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("lidarCloud", root_obj);
+    }
 }
 
 void COMM_MSA::send_lidar_3d()
@@ -1193,8 +1197,8 @@ void COMM_MSA::send_lidar_3d()
         return;
     }
 
-    sio::object_message::ptr root = sio::object_message::create();
-    root->get_map()["pose"] = create_pose_obj(cur_xi);
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    root_obj->get_map()["pose"] = create_pose_obj(cur_xi);
 
     sio::array_message::ptr arr = sio::array_message::create();
     for(const auto& p : pts)
@@ -1208,10 +1212,13 @@ void COMM_MSA::send_lidar_3d()
         arr->get_vector().push_back(p_arr);
     }
 
-    add_to_obj(root, "data", arr);
-    add_to_obj(root, "time", static_cast<long long>(get_time0() * 1000));
+    add_to_obj(root_obj, "data", arr);
+    add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
 
-    send_status_queue.push({"3DlidarCloud", root});
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("3DlidarCloud", root_obj);
+    }
 }
 
 void COMM_MSA::send_mapping_cloud()
@@ -1230,7 +1237,7 @@ void COMM_MSA::send_mapping_cloud()
         Eigen::Matrix3d R0 = kfrm.opt_G.block(0, 0, 3, 3);
         Eigen::Vector3d t0 = kfrm.opt_G.block(0, 3, 3, 1);
 
-        sio::array_message::ptr jsonArray = sio::array_message::create();
+        sio::array_message::ptr json_array = sio::array_message::create();
         for(const auto& pt : kfrm.pts)
         {
             if(pt.do_cnt < accum_num)
@@ -1241,25 +1248,24 @@ void COMM_MSA::send_mapping_cloud()
             Eigen::Vector3d P(pt.x, pt.y, pt.z);
             Eigen::Vector3d _P = R0 * P + t0;
 
-            sio::array_message::ptr jsonObj = sio::array_message::create();
+            sio::array_message::ptr json_obj = sio::array_message::create();
 
-            jsonObj->get_vector().push_back(sio::double_message::create(_P[0]));
-            jsonObj->get_vector().push_back(sio::double_message::create(_P[1]));
-            jsonObj->get_vector().push_back(sio::double_message::create(_P[2]));
-            jsonObj->get_vector().push_back(sio::double_message::create(pt.r));
+            json_obj->get_vector().push_back(sio::double_message::create(_P[0]));
+            json_obj->get_vector().push_back(sio::double_message::create(_P[1]));
+            json_obj->get_vector().push_back(sio::double_message::create(_P[2]));
+            json_obj->get_vector().push_back(sio::double_message::create(pt.r));
 
-            jsonArray->get_vector().push_back(jsonObj);
+            json_array->get_vector().push_back(json_obj);
         }
 
-        sio::object_message::ptr rootObj = sio::object_message::create();
-        rootObj->get_map()["data"] = jsonArray;
-        rootObj->get_map()["time"] = sio::double_message::create(static_cast<long long>(get_time0() * 1000));
+        sio::object_message::ptr root_obj = sio::object_message::create();
+        root_obj->get_map()["data"] = json_array;
+        root_obj->get_map()["time"] = sio::double_message::create(static_cast<long long>(get_time0() * 1000));
 
-        // send
-        SOCKET_MESSAGE socket_msg;
-        socket_msg.event = "mappingCloud";
-        socket_msg.data  = rootObj;
-        send_status_queue.push(socket_msg);
+        {
+            std::lock_guard<std::mutex> sock_lock(send_mtx);
+            rrs_socket->socket("slamnav")->emit("mappingCloud", root_obj);
+        }
 
         last_send_kfrm_idx++;
     }
@@ -1286,7 +1292,7 @@ void COMM_MSA::send_path_response(const DATA_PATH& msg)
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "pathResponse";
     socket_msg.data  = send_object;
-    send_status_queue.push(socket_msg);
+    send_response_queue.push(socket_msg);
 }
 
 void COMM_MSA::send_status_loop()
@@ -2646,7 +2652,7 @@ void COMM_MSA::set_autocontrol_module(AUTOCONTROL* _ctrl)
 
     ctrl = _ctrl;
 
-    connect(this, SIGNAL(signal_auto_move_stop()), ctrl, SLOT(slot_auto_move_stop()));
+    connect(this, SIGNAL(signal_auto_move_stop()), ctrl, SLOT(stop()));
 }
 
 void COMM_MSA::set_dockcontrol_module(DOCKCONTROL* _dctrl)
