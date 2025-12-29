@@ -4,6 +4,13 @@ project(SLAMNAV2 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# PCH를 위해 _REENTRANT를 전역으로 추가 (Qt 링크 시 자동 추가되는 플래그와 동기화)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
+
+# PCH 재사용을 위해 slamnav_common_EXPORTS를 전역으로 추가
+# (모든 타겟이 slamnav-common의 PCH를 재사용하므로 같은 EXPORTS 매크로 필요)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dslamnav_common_EXPORTS")
+
 # ---- paths ----
 set(LIBS_DIR $ENV{HOME}/libs)
 set(SRC_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -64,4 +71,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ui
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
