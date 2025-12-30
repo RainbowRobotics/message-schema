@@ -170,6 +170,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
     connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
 
+    // livox on / off
+    connect(ui->cb_LivoxSwitch, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_LivoxSwitch()));
+
     // set effect
     init_ui_effect();
 
@@ -555,6 +558,39 @@ void MainWindow::init_modules()
         TASK::instance()->init();
         TASK::instance()->pause();
         TASK::instance()->cancel();
+    }
+
+    // Livox on / off
+    {
+        QString type = CONFIG::instance()->get_lidar_3d_type();
+        int num = CONFIG::instance()->get_lidar_3d_num();
+
+        QStringList list;
+        QString text;
+        QString control[2] = {"ON", "OFF"};
+
+        for(int i = 0; i < 2; ++i)
+        {
+            list.push_back(type + "_" + control[i]);
+        }
+
+        for(int i = 0; i < num; ++i)
+        {
+            for(int j = 0; j < 2; ++j)
+            {
+                text.clear();
+                text = type + "_" + control[j] + "_" + QString::number(i);
+                list.push_back(text);
+            }
+        }
+
+        QSignalBlocker blocker(ui->cb_LivoxSwitch);
+        ui->cb_LivoxSwitch->addItems(list);
+        ui->cb_LivoxSwitch->setCurrentText(control[0]);
+        if(type != "LIVOX")
+        {
+            ui->cb_LivoxSwitch->setEnabled(false);
+        }
     }
 
     // start watchdog loop
@@ -5474,4 +5510,46 @@ double MainWindow::get_cpu_temperature()
     }
 
     return 0.0;
+}
+
+void MainWindow::cb_LivoxSwitch()
+{
+    QString text = ui->cb_LivoxSwitch->currentText();
+    QStringList list = text.split("_");
+    QString control = list[1];
+
+    // 추후 다른 센서에 on / off 기능이 생기면, 함수에 LiDAR_3D type도 인자로 넣을 예정.
+    if(control == "ON")
+    {
+        if(list.size() == 2)
+        {
+            for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); ++idx)
+            {
+                // LIDAR_3D::instance()->sensor_on(list[0], idx);
+                LIDAR_3D::instance()->sensor_on(idx);
+            }
+        }
+        else if(list.size() == 3)
+        {
+            int idx = list[2].toInt();
+            LIDAR_3D::instance()->sensor_on(idx);
+        }
+
+    }
+    else if(control == "OFF")
+    {
+        if(list.size() == 2)
+        {
+            for(int idx = 0; idx < CONFIG::instance()->get_lidar_3d_num(); ++idx)
+            {
+                // LIDAR_3D::instance()->sensor_off(list[0], idx);
+                LIDAR_3D::instance()->sensor_off(idx);
+            }
+        }
+        else if(list.size() == 3)
+        {
+            int idx = list[2].toInt();
+            LIDAR_3D::instance()->sensor_off(idx);
+        }
+    }
 }

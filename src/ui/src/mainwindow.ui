@@ -1768,6 +1768,16 @@ LC</string>
                <string>Resume</string>
               </property>
              </widget>
+             <widget class="QComboBox" name="cb_LivoxSwitch">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>130</y>
+                <width>86</width>
+                <height>25</height>
+               </rect>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="tab_2">
              <attribute name="title">

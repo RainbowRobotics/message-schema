@@ -627,3 +627,13 @@ void LIDAR_3D::set_mobile_module(MOBILE *_mobile)
 {
     mobile = _mobile;
 }
+
+bool LIDAR_3D::sensor_on(int idx)
+{
+    return livox->sensor_on(idx);
+}
+
+bool LIDAR_3D::sensor_off(int idx)
+{
+    return livox->sensor_off(idx);
+}
