@@ -939,6 +939,8 @@ class RBManipulateSDK(RBBaseSDK):
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """알림 또는 정지 호출"""
+        stop_type = "pause"
+
         if (
             is_only_at_ui
             and flow_manager_args is not None
@@ -958,8 +960,12 @@ class RBManipulateSDK(RBBaseSDK):
                 content=content,
                 robot_model=robot_model
             )
+
+            stop_type = "pause"
         elif option == "HALT":
             self.halt(robot_model=robot_model)
+
+            stop_type = "stop"
         elif option == "FOLDER_HALT" and flow_manager_args is not None:
             flow_manager_args.ctx.break_folder()
         elif option == "SUB_PROGRAM_HALT":
@@ -974,7 +980,10 @@ class RBManipulateSDK(RBBaseSDK):
             )
 
         if flow_manager_args is not None:
-            flow_manager_args.ctx.pause()
+            if stop_type == "pause":
+                flow_manager_args.ctx.pause()
+            elif stop_type == "stop":
+                flow_manager_args.ctx.stop()
             flow_manager_args.ctx.check_stop()
             flow_manager_args.done()
 
