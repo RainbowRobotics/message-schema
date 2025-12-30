@@ -63,6 +63,9 @@ public:
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
+    
+    bool sensor_on(int idx);
+    bool sensor_off(int idx);
 
 private:
     explicit LIDAR_3D(QObject *parent = nullptr);

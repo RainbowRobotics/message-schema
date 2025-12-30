@@ -55,6 +55,12 @@ public:
      ***********************/
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
+    
+    /***********************
+     * sensor on / off
+     ***********************/
+    bool sensor_on(int idx);
+    bool sensor_off(int idx);
 
 private:
     explicit LIVOX(QObject *parent = nullptr);
@@ -106,6 +112,12 @@ private:
 
     LVX_FRM cur_raw[2];
     IMU cur_imu[2];
+    
+    std::atomic<bool> ack_busy[2] = {false, false};
+    std::atomic<bool> ack_wakeup[2] = {false, false};
+    std::atomic<LivoxLidarWorkMode> req_mode[2] = {kLivoxLidarNormal, kLivoxLidarNormal};
+    static void work_mode_ack(livox_status status, uint32_t handle,
+                    LivoxLidarAsyncControlResponse* resp, void* client_data);
 
 private:
     const double lvx_frm_dt = 0.1;

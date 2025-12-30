@@ -479,3 +479,128 @@ void LIVOX::set_logger_module(LOGGER* _logger)
 {
     logger = _logger;
 }
+
+bool LIVOX::sensor_on(int idx)
+{
+    if(ack_busy[idx].load())
+    {
+        spdlog::info("[LIVOX] sensor is busy, skip sensor_on");
+        return false;
+    }
+
+    ack_busy[idx].store(true);
+    ack_wakeup[idx].store(true);
+    req_mode[idx].store(kLivoxLidarNormal);
+
+    auto livox_st = SetLivoxLidarWorkMode(livox_handles[idx], kLivoxLidarWakeUp, work_mode_ack, this);
+    if(livox_st != kLivoxLidarStatusSuccess)
+    {
+        spdlog::warn("[LIVOX] sensor_on req fail,  livox_st : {}", livox_st);
+        ack_busy[idx].store(false);
+        return false;
+    }
+    return true;
+}
+
+bool LIVOX::sensor_off(int idx)
+{
+    if(ack_busy[idx].load())
+    {
+        spdlog::info("[LIVOX] sensor is busy, skip sensor_off");
+        return false;
+    }
+
+    ack_busy[idx].store(true);
+    ack_wakeup[idx].store(true);
+    req_mode[idx].store(kLivoxLidarSleep);
+
+//    auto livox_st = DisableLivoxLidarPointSend(livox_handles[idx], work_mode_ack, this);
+    auto livox_st = SetLivoxLidarWorkMode(livox_handles[idx], kLivoxLidarWakeUp, work_mode_ack, this);
+
+    if(livox_st != kLivoxLidarStatusSuccess)
+    {
+        spdlog::warn("[LIVOX] sensor_off req fail,  livox_st : {}", livox_st);
+        ack_busy[idx].store(false);
+        return false;
+    }
+    return true;
+}
+
+void LIVOX::work_mode_ack(livox_status status, uint32_t handle,
+                LivoxLidarAsyncControlResponse* resp, void* client_data)
+{
+    if(client_data == nullptr)
+    {
+        spdlog::error("LIVOX] Mode Ack Error, livox is nullptr");
+        return;
+    }
+    LIVOX* livox = static_cast<LIVOX*>(client_data);
+    int idx = livox->get_livox_idx(handle);
+
+    if(!resp)
+    {
+        spdlog::warn("[LIVOX] Mode Ack Error, resp is nullptr");
+        livox->ack_busy[idx].store(false);
+        return;
+    }
+
+    if(livox->ack_wakeup[idx].load())
+    {
+        livox->ack_wakeup[idx].store(false);
+        if(status != kLivoxLidarStatusSuccess)
+        {
+            spdlog::warn("[LIVOX] Mode Wake-up resp fail,  livox_st : {}  ret_code : {}",
+                                 status, (int)resp->ret_code);
+            livox->ack_busy[idx].store(false);
+            return;
+        }
+
+        if(livox->req_mode[idx] == kLivoxLidarNormal)
+        {
+            auto livox_st = SetLivoxLidarWorkMode(livox->livox_handles[idx], kLivoxLidarNormal, work_mode_ack, livox);
+            if(livox_st != kLivoxLidarStatusSuccess)
+            {
+                spdlog::warn("[LIVOX] Mode Normal req fail,  livox_st : {}", livox_st);
+            }
+        }
+        else if(livox->req_mode[idx] == kLivoxLidarSleep)
+        {
+            auto livox_st = SetLivoxLidarWorkMode(livox->livox_handles[idx], kLivoxLidarSleep, work_mode_ack, livox);
+            if(livox_st != kLivoxLidarStatusSuccess)
+            {
+                spdlog::warn("[LIVOX] Mode Sleep req fail,  livox_st : {}", livox_st);
+            }
+        }
+
+    }
+    else
+    {
+        if(livox->req_mode[idx] == kLivoxLidarNormal)
+        {
+            if(status != kLivoxLidarStatusSuccess)
+            {
+                spdlog::warn("[LIVOX] Mode Normal resp fail,  livox_st : {}  ret_code : {}",
+                                     status, (int)resp->ret_code);
+                livox->ack_busy[idx].store(false);
+                return;
+            }
+
+            livox->ack_busy[idx].store(false);
+            spdlog::info("[LIVOX] sensor_on");
+        }
+
+        else if(livox->req_mode[idx] == kLivoxLidarSleep)
+        {
+            if(status != kLivoxLidarStatusSuccess)
+            {
+                spdlog::warn("[LIVOX] Mode Sleep resp fail,  livox_st : {}  ret_code : {}",
+                                     status, (int)resp->ret_code);
+                livox->ack_busy[idx].store(false);
+                return;
+            }
+
+            livox->ack_busy[idx].store(false);
+            spdlog::info("[LIVOX] sensor_off");
+        }
+    }
+}

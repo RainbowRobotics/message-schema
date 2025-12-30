@@ -294,6 +294,9 @@ public Q_SLOTS:
     void plot_loop();
     void qa_loop();
 
+    // Livox on / off
+    void cb_LivoxSwitch();
+
 private:
     Ui::MainWindow *ui;
 };
