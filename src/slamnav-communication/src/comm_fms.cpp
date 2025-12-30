@@ -115,10 +115,16 @@ double COMM_FMS::get_max_process_time_vobs()
 
 void COMM_FMS::init()
 {
-    // update robot id
-    robot_id = QString("R_%1").arg(static_cast<long long>(get_time()*1000));
-    //robot_id = "R_0001";
-    logger->write_log(QString("[COMM_FMS] ID: %1").arg(robot_id));
+    // make robot id
+    pid_t parent_pid = getppid();
+    QString _robot_id = "R_" + QString::fromStdString(std::to_string(parent_pid));
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        robot_id = _robot_id;
+        printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
+        //robot_id = "R_0001";
+        logger->write_log(QString("[COMM_FMS] ID: %1").arg(robot_id));
+    }
 
     // start reconnect loop
     reconnect_timer->start(3000);
