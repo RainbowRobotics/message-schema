@@ -18,14 +18,15 @@ find_package(VTK 9.1 REQUIRED)
 # ---- Sources ----
 file(GLOB_RECURSE UI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE UI_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
+file(GLOB_RECURSE UI_FORMS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.ui)
 
 # ---- Target ----
-add_library(${PROJECT_NAME} SHARED ${UI_SOURCES} ${UI_HEADERS}
+add_library(${PROJECT_NAME} SHARED ${UI_SOURCES} ${UI_HEADERS} ${UI_FORMS}
         inc/slamnav_ui_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
-set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTOUIC ON)
 
 # ---- PCH ----
 target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)

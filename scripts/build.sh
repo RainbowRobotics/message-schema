@@ -50,6 +50,11 @@ make -j$(nproc) || {
     exit 1
 }
 
+# .so 파일들을 bin으로 복사
+echo -e "${YELLOW}Copying shared libraries to bin...${NC}"
+find "$BUILD_DIR" -name "*.so" -type f -exec cp {} "$PROJECT_ROOT/bin/" \;
+echo -e "${GREEN}Shared libraries copied to bin/${NC}"
+
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Build completed successfully!${NC}"
 echo -e "${GREEN}========================================${NC}"
