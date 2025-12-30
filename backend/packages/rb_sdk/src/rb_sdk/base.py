@@ -12,6 +12,7 @@ from typing import Any, ClassVar, Literal, TypeVar
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
+from rb_flow_manager.exception import FlowControlException
 from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import make_builtins_allow_most
@@ -57,6 +58,8 @@ class RBBaseSDK:
         async def _async_wrapper(*args, **kwargs):
             try:
                 return await fn(*args, **kwargs)
+            except FlowControlException as e:
+                raise e
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
@@ -72,6 +75,8 @@ class RBBaseSDK:
         def _sync_wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
+            except FlowControlException as e:
+                raise e
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e

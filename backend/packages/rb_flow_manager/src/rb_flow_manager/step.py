@@ -16,6 +16,7 @@ from .exception import (
     BreakRepeat,
     ChangeSubTaskException,
     ContinueRepeat,
+    FlowControlException,
     JumpToStepException,
     StopExecution,
     SubTaskHaltException,
@@ -217,11 +218,6 @@ class Step:
                     ctx.data["finding_jump_to_step"] = False
 
                 child.execute(ctx, target_step_id=current_target_step_id)
-
-            except BreakFolder:
-                if getattr(self, "method", None) == "Folder":
-                    break
-                raise
             finally:
                 ctx.pop_args()
 
@@ -313,7 +309,8 @@ class Step:
 
                 if "robot_model" not in eval_args:
                     eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
-
+            except FlowControlException as e:
+                raise e
             except RuntimeError as e:
                 if "Execution stopped by user" not in str(e):
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
@@ -328,6 +325,8 @@ class Step:
 
             try:
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
+            except FlowControlException as e:
+                raise e
             except RuntimeError as e:
                 if "Execution stopped by user" not in str(e):
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
@@ -410,6 +409,8 @@ class FolderStep(Step):
 
         try:
             super().execute(ctx, target_step_id=target_step_id)
+        except BreakFolder:
+            return
         finally:
             ctx.leave_folder()
 

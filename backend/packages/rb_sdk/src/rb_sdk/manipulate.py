@@ -969,7 +969,7 @@ class RBManipulateSDK(RBBaseSDK):
         elif option == "FOLDER_HALT" and flow_manager_args is not None:
             flow_manager_args.ctx.break_folder()
             stop_type = "continue"
-        elif option == "SUB_PROGRAM_HALT":
+        elif option == "SUB_PROGRAM_HALT" and flow_manager_args is not None:
             flow_manager_args.ctx.halt_sub_task()
             stop_type = "continue"
 
@@ -979,6 +979,8 @@ class RBManipulateSDK(RBBaseSDK):
                 robot_model=robot_model,
                 level="USER"
             )
+
+        print("stop_type", stop_type, flush=True)
 
         if flow_manager_args is not None:
             if stop_type == "pause":
