@@ -39,7 +39,7 @@ public:
 
     // set config path
     void set_config_path(const QString& path);
-    bool set_cam_order(QString CAM_SERIAL_NUMBER[]);
+    bool set_cam_order(const std::vector<QString> &_cam_serial_number);
     bool set_value_change(QString key, QString value);
     void set_version_path(const QString& path);
     void set_serial_number_path(const QString& path);

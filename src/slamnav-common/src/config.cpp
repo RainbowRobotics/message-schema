@@ -975,12 +975,16 @@ bool CONFIG::set_value_change(QString key, QString value)
     return false;
 }
 
-bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
+bool CONFIG::set_cam_order(const std::vector<QString> &_cam_serial_number)
 {
+    if(_cam_serial_number.empty())
+    {
+        return false;
+    }
+
     QMutexLocker locker(&q_mtx);
 
     QFile file(path_config);
-    qDebug()<<"path_config : "<<path_config;
     spdlog::warn("[CONFIG] path_config : {}", qUtf8Printable(path_config));
     if(!file.open(QIODevice::ReadOnly))
     {
@@ -1009,8 +1013,8 @@ bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
     for (int i = 0; i < get_cam_num(); i++)
     {
         QJsonObject camObj = camArray[i].toObject();
-        camObj["SERIAL_NUMBER"] = CAM_SERIAL_NUMBER[i]; // save serial number
-        camArray[i] = camObj; // add object to array
+        camObj["SERIAL_NUMBER"] = _cam_serial_number[i]; // save serial number
+        camArray[i] = camObj; // add an object to array
     }
 
     rootObj["cam_config"] = camArray;

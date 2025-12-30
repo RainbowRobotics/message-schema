@@ -17,6 +17,7 @@
 
 // qt
 #include <QObject>
+#include <QTimer>
 
 /*
  * @class AUTOCONTORL
@@ -150,6 +151,8 @@ public Q_SLOTS:
     void slot_move_multi();
 
     void stop();
+
+    void slot_profile_move(DATA_MOVE msg);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);

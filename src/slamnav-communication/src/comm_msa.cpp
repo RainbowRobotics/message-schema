@@ -16,6 +16,10 @@ void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, 
     {
         obj->get_map()[key] = sio::int_message::create(value);
     }
+    else if constexpr(std::is_same_v<T, long long>)
+    {
+        obj->get_map()[key] = sio::int_message::create(value);
+    }
     else if constexpr(std::is_same_v<T, std::string>)
     {
         obj->get_map()[key] = sio::string_message::create(value);
@@ -32,6 +36,7 @@ void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, 
 
 template void COMM_MSA::add_to_obj<double>(sio::object_message::ptr, const std::string&, double);
 template void COMM_MSA::add_to_obj<int>(sio::object_message::ptr, const std::string&, int);
+template void COMM_MSA::add_to_obj<long long>(sio::object_message::ptr, const std::string&, long long);
 template void COMM_MSA::add_to_obj<bool>(sio::object_message::ptr, const std::string&, bool);
 template void COMM_MSA::add_to_obj<std::string>(sio::object_message::ptr, const std::string&, std::string);
 template void COMM_MSA::add_to_obj<QString>(sio::object_message::ptr, const std::string&, QString);
@@ -72,8 +77,10 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "cameraRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
+    BIND_EVENT(sock, "updateRequest",       std::bind(&COMM_MSA::recv_message_single_shot,       this, std::placeholders::_1));
     // status
     BIND_EVENT(sock, "vobs", std::bind(&COMM_MSA::recv_message, this, std::placeholders::_1));
 
@@ -171,6 +178,7 @@ void COMM_MSA::recv_message(sio::event& ev)
     sio::message::ptr msg = ev.get_message();
     if(!msg)
     {
+        log_warn("recv_message, invalid msg");
         return;
     }
 
@@ -209,6 +217,7 @@ void COMM_MSA::recv_message_array(sio::event& ev)
     sio::message::ptr msg = ev.get_message();
     if(!msg || msg->get_flag() != sio::message::flag_object)
     {
+        log_warn("recv_message_array, invalid msg");
         return;
     }
 
@@ -246,6 +255,33 @@ void COMM_MSA::recv_message_array(sio::event& ev)
     set_last_receive_msg(wrapped);
 }
 
+void COMM_MSA::recv_message_single_shot(sio::event& ev)
+{
+    sio::message::ptr msg = ev.get_message();
+    if(!msg || msg->get_flag() != sio::message::flag_object)
+    {
+        log_warn("recv_message_single_shot, invalid msg");
+        return;
+    }
+
+
+    auto obj = msg->get_map();
+    QJsonObject json_obj = sio_object_to_qt_json_object(obj);
+
+    QJsonObject root_obj;
+    root_obj.insert("topic", QString::fromStdString(ev.get_name()));
+    root_obj.insert("data", json_obj);
+
+    QString wrapped = QString(QJsonDocument(root_obj).toJson(QJsonDocument::Compact));
+    set_last_receive_msg(wrapped);
+
+    QString topic = get_json(root_obj, "topic");
+    if(topic == "updateRequest")
+    {
+        handle_update_cmd(json_obj);
+    }
+}
+
 void COMM_MSA::recv_loop()
 {
     log_info("recv_loop STARTED");
@@ -269,37 +305,41 @@ void COMM_MSA::recv_loop()
         QJsonObject root_obj = QJsonDocument::fromJson(recv_msg.toUtf8()).object();
         QJsonObject data = root_obj.value("data").toObject();
 
-        QString cmd = get_json(root_obj, "topic");
-        if(cmd == "moveRequest")
+        QString topic = get_json(root_obj, "topic");
+        if(topic == "moveRequest")
         {
             handle_move_cmd(data);
         }
-        else if(cmd == "loadRequest")
+        else if(topic == "loadRequest")
         {
             handle_load_cmd(data);
         }
-        else if(cmd == "localizationRequest")
+        else if(topic == "localizationRequest")
         {
             handle_localization_cmd(data);
         }
-        else if(cmd == "controlRequest")
+        else if(topic == "controlRequest")
         {
             //handle_control_cmd(data);
         }
-        else if(cmd == "mappingRequest")
+        else if(topic == "mappingRequest")
         {
             handle_mapping_cmd(data);
         }
-        else if(cmd == "pathResponse")
+        else if(topic == "pathResponse")
         {
             handle_path_cmd(data);
         }
-        else if(cmd == "vobs")
+        else if(topic == "cameraRequest")
+        {
+            handle_camera_cmd(data);
+        }
+        else if(topic == "vobs")
         {
             handle_vobs_cmd(data);
         }
 
-        log_info("recv, command: {}, time: {}", cmd.toStdString(), get_time0());
+        log_info("recv, command: {}, time: {}", topic.toStdString(), get_time0());
     }
 }
 
@@ -486,6 +526,51 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
     }
 }
 
+void COMM_MSA::handle_camera_cmd(const QJsonObject& data)
+{
+    DATA_CAM_INFO msg;
+    msg.id = get_json(data, "id");
+    msg.command = get_json(data, "command");
+
+    if(msg.command == "getCameraInfo")
+    {
+        handle_camera_get_info(msg);
+    }
+    else if(msg.command == "setCameraOrder")
+    {
+        msg.serial_cam0 = get_json(data, "cam1");
+        msg.serial_cam1 = get_json(data, "cam2");
+        handle_camera_set_info(msg);
+    }
+}
+
+void COMM_MSA::handle_camera_get_info(DATA_CAM_INFO& msg)
+{
+    msg.serial_cam0 = config->get_cam_serial_number(0);
+    msg.serial_cam1 = config->get_cam_serial_number(1);
+    msg.result = "success";
+
+    send_camera_response(msg);
+}
+
+void COMM_MSA::handle_camera_set_info(DATA_CAM_INFO& msg)
+{
+    std::vector<QString> cam_serial_number;
+    cam_serial_number.push_back(msg.serial_cam0);
+    cam_serial_number.push_back(msg.serial_cam1);
+
+    if(config->set_cam_order(cam_serial_number))
+    {
+        msg.result = "success";
+    }
+    else
+    {
+        msg.result = "fail";
+    }
+
+    send_camera_response(msg);
+}
+
 void COMM_MSA::handle_vobs_cmd(const QJsonObject& data)
 {
     DATA_VOBS msg;
@@ -593,6 +678,27 @@ void COMM_MSA::handle_localization_cmd(const QJsonObject& data)
         std::lock_guard<std::mutex> lock(localization_mtx);
         localization_queue.push(msg);
         localization_cv.notify_one();
+    }
+}
+
+void COMM_MSA::handle_update_cmd(const QJsonObject& data)
+{
+    QString command = get_json(data, "command");
+
+    if(command == "getVersion")
+    {
+
+    }
+    else if(command == "update")
+    {
+        DATA_SOFTWARE msg;
+        msg.id = get_json(data, "id");
+        msg.branch = get_json(data, "branch");
+        msg.version = get_json(data, "version");
+        msg.command = get_json(data, "command");
+        msg.time = get_json_double(data, "time")/1000;
+
+        handle_update_software(msg);
     }
 }
 
@@ -917,7 +1023,7 @@ void COMM_MSA::handle_localization_init(DATA_LOCALIZATION& msg)
     loc->stop();
     loc->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
 
-    log_info("recv, command: {}, (x,y,test,th,th_test): {}, {}, {}, {}, {}, time: {}", x, y, test, rz, rz*D2R, msg.time);
+    log_info("recv, command: init, time: {}", msg.time);
 }
 
 void COMM_MSA::handle_localization_start(DATA_LOCALIZATION& msg)
@@ -1289,20 +1395,56 @@ void COMM_MSA::send_path_response(const DATA_PATH& msg)
         return;
     }
 
-    sio::object_message::ptr send_object = sio::object_message::create();
-
-    sio::object_message::ptr robotObj = sio::object_message::create();
-
-    sio::object_message::ptr dataObj = sio::object_message::create();
-    dataObj->get_map()["command"] = sio::string_message::create("path");
-    dataObj->get_map()["time"] = sio::double_message::create(msg.time);
-
-    send_object->get_map()["robot"] = robotObj;
-    send_object->get_map()["data"]  = dataObj;
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    add_to_obj(root_obj, "result", msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+    add_to_obj(root_obj, "time", static_cast<long long>(msg.time*1000));
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "pathResponse";
-    socket_msg.data  = send_object;
+    socket_msg.data  = root_obj;
+    send_response_queue.push(socket_msg);
+}
+
+void COMM_MSA::send_update_response(const DATA_SOFTWARE& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    add_to_obj(root_obj, "id",      msg.id);
+    add_to_obj(root_obj, "result",  msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+    add_to_obj(root_obj, "branch",  msg.branch);
+    add_to_obj(root_obj, "version", msg.version);
+    add_to_obj(root_obj, "time",    static_cast<long long>(msg.time*1000));
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "updateResponse";
+    socket_msg.data  = root_obj;
+    send_response_queue.push(socket_msg);
+}
+
+void COMM_MSA::send_camera_response(const DATA_CAM_INFO& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    add_to_obj(root_obj, "id",      msg.id);
+    add_to_obj(root_obj, "result",  msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+    add_to_obj(root_obj, "cam1",  msg.serial_cam0);
+    add_to_obj(root_obj, "cam2", msg.serial_cam1);
+    add_to_obj(root_obj, "time",    static_cast<long long>(msg.time*1000));
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "cameraResponse";
+    socket_msg.data  = root_obj;
     send_response_queue.push(socket_msg);
 }
 
@@ -1417,7 +1559,6 @@ void COMM_MSA::send_status()
     root_obj->get_map()["setting"]               = create_robot_info_obj();
 
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
-
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
         rrs_socket->socket("slamnav")->emit("status", root_obj);
@@ -1856,24 +1997,7 @@ void COMM_MSA::handle_move_profile(DATA_MOVE& msg)
         msg.message = "";
         send_move_response(msg);
 
-        //--------------------------------
-        AUTOCONTROL::instance()->set_is_moving(true);
-        MOBILE::instance()->move_linear_x(target_linear_, target_speed_);
-
-        double t = std::abs(target_linear_/target_speed_) + 0.5;
-        QTimer::singleShot(t*1000, [this, msg]() mutable
-        {
-            AUTOCONTROL::instance()->set_is_moving(false);
-
-            float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
-            float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
-
-            msg.result = "success";
-            msg.message = "";
-            msg.remaining_dist = res_linear_remain_dist;
-            msg.meassured_dist = res_linear_dist;
-            send_move_response(msg);
-        });
+        Q_EMIT (signal_auto_profile_move(msg));
     }
     else if(command == "yLinear")
     {
@@ -1888,45 +2012,28 @@ void COMM_MSA::handle_move_profile(DATA_MOVE& msg)
             send_move_response(msg);
             return;
         }
-        else
-        {
-            msg.result = "accept";
-            msg.message = "";
-            send_move_response(msg);
 
-            AUTOCONTROL::instance()->set_is_moving(true);
+        msg.result = "accept";
+        msg.message = "";
+        send_move_response(msg);
 
-            MOBILE::instance()->move_linear_y(target_linear_, target_speed_);
-            double t = std::abs(target_linear_/target_speed_) + 0.5;
-
-            QTimer::singleShot(t*1000, [this, msg]() mutable
-            {
-                if(!this)
-                {
-                    return;
-                }
-
-                AUTOCONTROL::instance()->set_is_moving(false);
-
-                float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
-                float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
-
-                msg.result = "success";
-                msg.message = "";
-                msg.remaining_dist = res_linear_remain_dist;
-                msg.meassured_dist = res_linear_dist;
-                send_move_response(msg);
-                return;
-            });
-        }
+        Q_EMIT (signal_auto_profile_move(msg));
     }
     else if(command == "circular")
     {
-        int direction_ = -1;
         target_linear_ = static_cast<float>(msg.target * D2R);
         target_speed_ = static_cast<float>(msg.speed * D2R);
 
+        if(fabs(target_linear_) > 360.0 || fabs(target_speed_) > 60.0)
+        {
+            //exception
+            msg.result = "reject";
+            send_move_response(msg);
+            return;
+        }
+
         // setting direction
+        int direction_ = -1;
         if(msg.dir == "right")
         {
             direction_ = 0;
@@ -1936,43 +2043,19 @@ void COMM_MSA::handle_move_profile(DATA_MOVE& msg)
             direction_ = 1;
         }
 
-        if(fabs(target_linear_) > 360.0 || fabs(target_speed_) > 60.0)
-        {
-            //exception
-            msg.result = "reject";
-            send_move_response(msg);
-            return;
-        }
-        else
-        {
-            msg.result = "accept";
-            msg.message = "";
-            send_move_response(msg);
+         if(direction_ == -1)
+         {
+             //exception
+             msg.result = "reject";
+             send_move_response(msg);
+             return;
+         }
 
-            AUTOCONTROL::instance()->set_is_moving(true);
+        msg.result = "accept";
+        msg.message = "";
+        send_move_response(msg);
 
-            MOBILE::instance()->move_circular(target_linear_, target_speed_, direction_);
-            double t = std::abs(target_linear_/target_speed_) +1.0;
-
-            QTimer::singleShot(t*1000, [this, msg]() mutable
-            {
-                if (!this) return;
-
-                AUTOCONTROL::instance()->set_is_moving(false);
-
-                float res_circular_dist = MOBILE::instance()->get_res_linear_dist();
-                float res_circular_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
-
-                msg.result = "success";
-                msg.message = "";
-                msg.remaining_dist = res_circular_remain_dist;
-                msg.meassured_dist = res_circular_dist;
-
-                send_move_response(msg);
-                return;
-            });
-
-        }
+        Q_EMIT (signal_auto_profile_move(msg));
     }
     else if(command == "rotate")
     {
@@ -1992,32 +2075,12 @@ void COMM_MSA::handle_move_profile(DATA_MOVE& msg)
             msg.message = "";
             send_move_response(msg);
 
-            AUTOCONTROL::instance()->set_is_moving(true);
-
-            MOBILE::instance()->move_rotate(target_linear_, target_speed_);
-            double t = std::abs(target_linear_/target_speed_) + 0.5;
-
-            QTimer::singleShot(t*1000, [this, msg]() mutable
-            {
-                if (!this) return;
-
-                AUTOCONTROL::instance()->set_is_moving(false);
-
-                float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
-                float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
-
-                msg.result = "success";
-                msg.message = "";
-                msg.remaining_dist = res_linear_remain_dist;
-                msg.meassured_dist = res_linear_dist;
-                send_move_response(msg);
-                return;
-            });
+            Q_EMIT (signal_auto_profile_move(msg));
         }
     }
     else if(command == "stop")
     {
-        Q_EMIT (signal_mobile_profile_move_stop());
+        //Q_EMIT (signal_mobile_profile_move());
 
         msg.result = "success";
         msg.message = "";
@@ -2148,6 +2211,62 @@ void COMM_MSA::handle_vobs(DATA_VOBS& msg)
             obsmap->set_vobs_list_closures(vobs_c_list);
         }
         obsmap->update_vobs_map();
+    }
+}
+
+void COMM_MSA::handle_update_software(DATA_SOFTWARE& msg)
+{
+    MOBILE_STATUS ms = mobile->get_status();
+    if(ms.charge_state == 1 || ms.motor_stop_state == 0)
+    {
+        QString script_path = "/home/rainbow/rainbow-deploy-kit/slamnav2/slamnav2-update.sh";
+
+        QStringList args;
+        args << script_path;
+
+        if(!msg.version.isEmpty())
+        {
+            QString version_str = "--version=" + msg.version;
+            args << version_str;
+        }
+
+        if(!msg.branch.isEmpty())
+        {
+            QString branch_str = "--mode=" + msg.branch;
+            args << branch_str;
+        }
+
+        bool ok = QProcess::startDetached("bash", args, QString());
+        if(ok)
+        {
+            logger->write_log("[COMM_RRS] swUpdate started update script detached");
+
+            msg.result = "true";
+            msg.message = "";
+            //send_update_response(msg);
+        }
+        else
+        {
+            logger->write_log("[COMM_RRS] swUpdate fail to start update script");
+        }
+
+        return;
+    }
+    else
+    {
+        if(ms.charge_state == 0)
+        {
+            msg.result = "false";
+            msg.message = "not charging";
+            //send_update_response(msg);
+        }
+
+        if(ms.motor_stop_state >= 1)
+        {
+            msg.result = "false";
+            msg.message = "emo released";
+            //send_update_response(msg);
+        }
     }
 }
 
@@ -2578,7 +2697,6 @@ void COMM_MSA::set_mobile_module(MOBILE* _mobile)
     mobile = _mobile;
 
     connect(this, &COMM_MSA::signal_mobile_jog_update,        mobile, &MOBILE::slot_jog_update);
-    connect(this, &COMM_MSA::signal_mobile_profile_move_stop, mobile, &MOBILE::slot_profile_move_stop);
 }
 
 void COMM_MSA::set_lidar_2d_module(LIDAR_2D* _lidar)
@@ -2663,7 +2781,9 @@ void COMM_MSA::set_autocontrol_module(AUTOCONTROL* _ctrl)
 
     ctrl = _ctrl;
 
-    connect(this, SIGNAL(signal_auto_move_stop()), ctrl, SLOT(stop()));
+    connect(this, &COMM_MSA::signal_auto_profile_move, ctrl, &AUTOCONTROL::slot_profile_move);
+    connect(this, &COMM_MSA::signal_auto_move_stop,    ctrl, &AUTOCONTROL::stop);
+    connect(ctrl, &AUTOCONTROL::signal_move_response,  this, &COMM_MSA::send_move_response);
 }
 
 void COMM_MSA::set_dockcontrol_module(DOCKCONTROL* _dctrl)

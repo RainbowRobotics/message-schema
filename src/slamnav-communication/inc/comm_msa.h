@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QJsonObject>
+#include <QProcess>
 #include <QJsonDocument>
 #include <QJsonArray>
 
@@ -170,6 +171,7 @@ private:
 
     void recv_message(sio::event& ev);
     void recv_message_array(sio::event& ev);
+    void recv_message_single_shot(sio::event& ev);
 
     /* utils function */
     void calc_remaining_time_distance(DATA_MOVE& msg); // todo ---> move to autoctorl !
@@ -186,10 +188,10 @@ Q_SIGNALS:
     void signal_map_build_stop();
     void signal_map_save(const QString& _map_name);
 
+    void signal_auto_profile_move(DATA_MOVE msg);
     void signal_auto_move_stop();
 
     void signal_mobile_jog_update(const Eigen::Vector3d& val);
-    void signal_mobile_profile_move_stop();
 
 private Q_SLOTS:
     void connected();
@@ -212,6 +214,8 @@ private Q_SLOTS:
     void send_mapping_response(const DATA_MAPPING& msg);
     void send_load_response(const DATA_LOAD& msg);
     void send_path_response(const DATA_PATH& msg);
+    void send_update_response(const DATA_SOFTWARE& msg);
+    void send_camera_response(const DATA_CAM_INFO& msg);
 
 private:
     std::mutex move_mtx;
@@ -287,6 +291,8 @@ private:
     void handle_vobs_cmd(const QJsonObject& data);
     void handle_mapping_cmd(const QJsonObject& data);
     void handle_localization_cmd(const QJsonObject& data);
+    void handle_update_cmd(const QJsonObject& data);
+    void handle_camera_cmd(const QJsonObject& data);
 
     /* move handler */
     void handle_move_jog(const DATA_MOVE& msg);
@@ -319,6 +325,14 @@ private:
 
     /* vobs handler */
     void handle_vobs(DATA_VOBS& msg);
+
+    /* update handler */
+    void handle_update_software(DATA_SOFTWARE& msg);
+    void handle_update_get_version(DATA_SOFTWARE& msg);
+
+    /* camera handler */
+    void handle_camera_get_info(DATA_CAM_INFO& msg);
+    void handle_camera_set_info(DATA_CAM_INFO& msg);
 };
 
 #endif // COMM_MSA_H

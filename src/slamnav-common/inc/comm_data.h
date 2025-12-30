@@ -1079,6 +1079,10 @@ struct DATA_VOBS
 struct DATA_SOFTWARE
 {
     double time;
+    QString id;
+
+    QString command;
+
     QString branch;
     QString version;
 
@@ -1088,6 +1092,8 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE()
     {
         time = 0.0;
+        id = "";
+        command = "";
         branch = "";
         version = "";
 
@@ -1098,6 +1104,8 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE(const DATA_SOFTWARE& p)
     {
         time = p.time;
+        id = p.id;
+        command = p.command;
         branch = p.branch;
         version = p.version;
 
@@ -1108,6 +1116,8 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE& operator=(const DATA_SOFTWARE& p)
     {
         time = p.time;
+        id = p.id;
+        command = p.command;
         branch = p.branch;
         version = p.version;
 
@@ -1263,6 +1273,8 @@ struct DATA_TEMPERATURE
 struct DATA_CAM_INFO
 {
     double time;
+    QString id;
+    QString command;
     QString serial_cam0;
     QString serial_cam1;
 
@@ -1272,6 +1284,8 @@ struct DATA_CAM_INFO
     DATA_CAM_INFO()
     {
         time = 0.0;
+        id = "";
+        command = "";
         serial_cam0 = "";
         serial_cam1 = "";
 
@@ -1282,6 +1296,8 @@ struct DATA_CAM_INFO
     DATA_CAM_INFO(const DATA_CAM_INFO& p)
     {
         time = p.time;
+        id = p.id;
+        command = p.command;
         serial_cam0 = p.serial_cam0;
         serial_cam1 = p.serial_cam1;
 
@@ -1292,6 +1308,8 @@ struct DATA_CAM_INFO
     DATA_CAM_INFO& operator=(const DATA_CAM_INFO& p)
     {
         time = p.time;
+        id = p.id;
+        command = p.command;
         serial_cam0 = p.serial_cam0;
         serial_cam1 = p.serial_cam1;
 

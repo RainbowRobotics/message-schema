@@ -4082,6 +4082,128 @@ void AUTOCONTROL::node_loop()
     log_info("node loop stop");
 }
 
+void AUTOCONTROL::slot_profile_move(DATA_MOVE msg)
+{
+    stop();
+
+    if(msg.command == "xLinear")
+    {
+        float target_linear_x = static_cast<float>(msg.target);
+        float target_speed = static_cast<float>(msg.speed);
+
+        set_is_moving(true);
+        MOBILE::instance()->move_linear_x(target_linear_x, target_speed);
+
+        double t = std::abs(target_linear_x/(target_speed + 1e-06)) + 0.5;
+        QTimer::singleShot(t*1000, [this, msg]() mutable
+        {
+            set_is_moving(false);
+            {
+                float res_linear_dist = mobile->get_res_linear_dist();
+                float res_linear_remain_dist = mobile->get_res_linear_remain_dist();
+
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+                cur_move_info.result = "success";
+                cur_move_info.message = "";
+                cur_move_info.remaining_dist = res_linear_remain_dist;
+                cur_move_info.meassured_dist = res_linear_dist;
+
+                Q_EMIT signal_move_response(cur_move_info);
+            }
+        });
+    }
+   else if(msg.command == "yLinear")
+   {
+       float target_linear_y = static_cast<float>(msg.target);
+       float target_speed = static_cast<float>(msg.speed);
+
+       set_is_moving(true);
+
+       mobile->move_linear_y(target_linear_y, target_speed);
+       double t = std::abs(target_linear_y/(target_speed + 1e-06)) + 0.5;
+       QTimer::singleShot(t*1000, [this, msg]() mutable
+       {
+           set_is_moving(false);
+           {
+               float res_linear_dist = mobile->get_res_linear_dist();
+               float res_linear_remain_dist = mobile->get_res_linear_remain_dist();
+
+               std::lock_guard<std::recursive_mutex> lock(mtx);
+               cur_move_info.result = "success";
+               cur_move_info.message = "";
+               cur_move_info.remaining_dist = res_linear_remain_dist;
+               cur_move_info.meassured_dist = res_linear_dist;
+
+               Q_EMIT signal_move_response(cur_move_info);
+           }
+       });
+   }
+    else if(msg.command == "circular")
+    {
+        float target_circular = static_cast<float>(msg.target*D2R);
+        float target_speed = static_cast<float>(msg.speed*D2R);
+
+        set_is_moving(true);
+
+        int direction = -1;
+        if(msg.direction == "right")
+        {
+            direction = 0;
+        }
+        else if(msg.direction == "left")
+        {
+            direction = 1;
+        }
+
+        mobile->move_circular(target_circular, target_speed, direction);
+        double t = std::abs(target_circular/(target_speed +1e-06)) +1.0;
+
+        QTimer::singleShot(t*1000, [this, msg]() mutable
+        {
+            set_is_moving(false);
+            {
+                float res_circular_dist = mobile->get_res_linear_dist();
+                float res_circular_remain_dist = mobile->get_res_linear_remain_dist();
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+
+                cur_move_info.result = "success";
+                cur_move_info.message = "";
+                cur_move_info.remaining_dist = res_circular_remain_dist;
+                cur_move_info.meassured_dist = res_circular_remain_dist;
+
+                Q_EMIT signal_move_response(cur_move_info);
+            }
+        });
+    }
+    else if(msg.command == "rotate")
+    {
+        float target_circular = static_cast<float>(msg.target*D2R);
+        float target_speed = static_cast<float>(msg.speed*D2R);
+
+        set_is_moving(true);
+
+        MOBILE::instance()->move_rotate(target_circular, target_circular);
+        double t = std::abs(target_circular/(target_circular+1e-06)) + 0.5;
+
+        QTimer::singleShot(t*1000, [this, msg]() mutable
+        {
+            set_is_moving(false);
+            {
+                float res_circular_dist = mobile->get_res_linear_dist();
+                float res_circular_remain_dist = mobile->get_res_linear_remain_dist();
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+
+                cur_move_info.result = "success";
+                cur_move_info.message = "";
+                cur_move_info.remaining_dist = res_circular_remain_dist;
+                cur_move_info.meassured_dist = res_circular_remain_dist;
+
+                Q_EMIT signal_move_response(cur_move_info);
+            }
+        });
+    }
+}
+
 void AUTOCONTROL::set_config_module(CONFIG* _config)
 {
     config = _config;
