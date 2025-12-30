@@ -11,7 +11,7 @@ from datetime import (
     datetime,
 )
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from bson import ObjectId
 from fastapi import HTTPException
@@ -67,6 +67,7 @@ from .program_schema import (
     Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
     Request_Update_StepStatePD,
+    Response_Get_Task_ListPD,
     TaskType,
 )
 
@@ -294,6 +295,38 @@ class ProgramService(BaseService):
 
         return await self.get_program_info(program_id=program_id, db=db)
 
+    async def get_task_list(
+        self,
+        *,
+        task_type: TaskType | None = None,
+        robot_model: str,
+        search_text: str | None = None,
+        db: MongoDB,
+    ) -> Response_Get_Task_ListPD:
+        """
+        Task 목록을 조회하는 함수.
+        """
+        if not robot_model:
+            raise HTTPException(status_code=400, detail="Robot model is required")
+
+        tasks_col = db["tasks"]
+        query: dict[str, Any] = {"robotModel": robot_model}
+        if task_type:
+            query["type"] = task_type
+
+        if search_text:
+            search_text = search_text.replace(f"{robot_model}_", "")
+            query = make_check_search_text_query("scriptName", search_text, query=query)
+
+        tasks_docs = await tasks_col.find(query).to_list(length=None)
+
+        for doc in tasks_docs:
+            doc["taskId"] = str(doc.pop("_id"))
+
+        return {
+            "tasks": tasks_docs,
+        }
+
     def build_step_tree(self, steps: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         평면 steps를 트리로 변환한다.
@@ -303,6 +336,8 @@ class ProgramService(BaseService):
         for step in steps:
             step_id = step.get("stepId") or step.get("_id")
             step["stepId"] = str(step_id)
+            step["createdAt"] = step["createdAt"].isoformat()
+            step["updatedAt"] = step["updatedAt"].isoformat()
             step.pop("_id", None)
             nodes[step["stepId"]] = step.copy()
 
@@ -357,6 +392,8 @@ class ProgramService(BaseService):
             raise HTTPException(status_code=404, detail="Step not found")
 
         step_doc["stepId"] = str(step_doc.pop("_id"))
+        step_doc["createdAt"] = step_doc["createdAt"].isoformat()
+        step_doc["updatedAt"] = step_doc["updatedAt"].isoformat()
 
         return step_doc
 
@@ -375,6 +412,8 @@ class ProgramService(BaseService):
 
         for doc in steps_docs:
             doc["stepId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         return {
             "steps": steps_docs,
@@ -383,7 +422,7 @@ class ProgramService(BaseService):
 
     async def upsert_steps(self, *, request: Request_Create_Multiple_StepPD, db: MongoDB):
         req = Request_Create_Multiple_StepPD.model_validate(t_to_dict(request)).model_dump()
-        now = datetime.now(UTC).isoformat()
+        now = datetime.now(UTC)
 
         steps_col = db["steps"]
         tasks_col = db["tasks"]
@@ -572,6 +611,23 @@ class ProgramService(BaseService):
         state = request_dict["state"]
         error_value: str | None = request_dict.get("error")
 
+        execute_states = self.script_executor.get_all_states()
+
+        if execute_states is not None and task_id in execute_states:
+            execute_state = execute_states.get(task_id)
+
+            fire_and_log(
+                socket_client.emit(
+                    f"program/{execute_state.get('robot_model')}/change-variables",
+                    {
+                        "taskId": task_id,
+                        "variables": execute_state.get("variables", {}),
+                    },
+                ),
+            )
+
+
+
         fire_and_log(
             socket_client.emit(
                 f"program/task/{task_id}/update_state",
@@ -702,7 +758,7 @@ class ProgramService(BaseService):
             "w",
             encoding="utf-8",
         ) as f:
-            return f.write(script_context.encode("utf-8").decode("unicode_escape"))
+            return f.write(script_context)
 
     def parse_step_context(self, step: dict[str, Any], depth: int = 0, *, to_string: bool = False):
         """Steps tree를 컨텍스트로 변환하는 함수."""
@@ -818,7 +874,7 @@ class ProgramService(BaseService):
             f"        repeat_count={repeat_count},\n"
             f"        robot_model='{robot_model}',\n"
             f"        category='{category}',\n"
-            f"        post_tree=post_tree,\n"
+            f"        post_tree={"post_tree" if post_tree else None},\n"
             f"    )\n\n"
         )
 
@@ -883,6 +939,8 @@ class ProgramService(BaseService):
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         return {
             "tasks": tasks_docs,
@@ -904,6 +962,8 @@ class ProgramService(BaseService):
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         return {
             "tasks": tasks_docs,
@@ -921,6 +981,8 @@ class ProgramService(BaseService):
             raise HTTPException(status_code=400, detail=f"No task found with taskId: {task_id}")
 
         task_doc["taskId"] = str(task_doc.pop("_id"))
+        task_doc["createdAt"] = task_doc["createdAt"].isoformat()
+        task_doc["updatedAt"] = task_doc["updatedAt"].isoformat()
 
         return {
             "task": task_doc,
@@ -935,7 +997,7 @@ class ProgramService(BaseService):
             program_col = db["programs"]
 
             request_dict = Request_Create_Multiple_TaskPD.model_validate(
-                t_to_dict(request)
+                request
             ).model_dump()
 
             tasks = request_dict["tasks"]
@@ -985,6 +1047,8 @@ class ProgramService(BaseService):
             for task, inserted_id in zip(tasks, res.inserted_ids, strict=False):
                 task["taskId"] = str(inserted_id)
                 task.pop("_id", None)
+                task["createdAt"] = task["createdAt"].isoformat()
+                task["updatedAt"] = task["updatedAt"].isoformat()
 
                 if task["type"] == TaskType.MAIN:
                     fire_and_log(
@@ -1004,15 +1068,15 @@ class ProgramService(BaseService):
         Task들을 업데이트하는 함수.
         """
 
-        now = datetime.now(UTC).isoformat()
+        now = datetime.now(UTC)
         ops = []
 
         tasks_col = db["tasks"]
         program_col = db["programs"]
 
         request_dict = Request_Update_Multiple_TaskPD.model_validate(
-                t_to_dict(request)
-            ).model_dump(exclude_none=True, exclude_unset=True)
+                request
+            ).model_dump(exclude_none=False, exclude_unset=True)
 
         tasks = request_dict["tasks"]
 
@@ -1052,6 +1116,8 @@ class ProgramService(BaseService):
 
         for doc in res:
             doc["taskId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         return {
             "tasks": res,
@@ -1107,11 +1173,15 @@ class ProgramService(BaseService):
             }
 
         program_doc["programId"] = str(program_doc.pop("_id"))
+        program_doc["createdAt"] = program_doc["createdAt"].isoformat()
+        program_doc["updatedAt"] = program_doc["updatedAt"].isoformat()
 
         tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
 
@@ -1132,6 +1202,7 @@ class ProgramService(BaseService):
         self,
         *,
         search_name: str | None = None,
+        order: Literal["ASC", "DESC"] = "DESC",
         db: MongoDB,
     ):
         """
@@ -1148,10 +1219,14 @@ class ProgramService(BaseService):
 
             query = make_check_search_text_query("name", search_name, query=query)
 
-        program_docs = await program_col.find(query).to_list(length=None)
+        sort_spec = [("createdAt", 1 if order == "ASC" else -1)]
+
+        program_docs = await program_col.find(query).sort(sort_spec).to_list(length=None)
 
         for doc in program_docs:
             doc["programId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat() if isinstance(doc.get("createdAt"), datetime) else None
+            doc["updatedAt"] = doc["updatedAt"].isoformat() if isinstance(doc.get("updatedAt"), datetime) else None
 
         return {
             "programs": program_docs,
@@ -1164,7 +1239,10 @@ class ProgramService(BaseService):
 
         now = datetime.now(UTC)
 
-        program_doc = Request_Create_ProgramPD.model_validate(t_to_dict(request)).model_dump()
+        program_doc = Request_Create_ProgramPD.model_validate(request).model_dump()
+
+        program_doc["createdAt"] = now
+        program_doc["updatedAt"] = now
 
         robot_info = await info_service.get_robot_info(db=db)
 
@@ -1190,6 +1268,8 @@ class ProgramService(BaseService):
             if find_program_doc:
                 find_program_doc["programId"] = str(program_res.inserted_id)
                 find_program_doc.pop("_id", None)
+                find_program_doc["createdAt"] = find_program_doc["createdAt"].isoformat()
+                find_program_doc["updatedAt"] = find_program_doc["updatedAt"].isoformat()
 
             tasks = []
 
@@ -1201,8 +1281,8 @@ class ProgramService(BaseService):
                     name=name,
                     scriptName=name,
                     scriptPath="",
-                    createdAt=now.isoformat(),
-                    updatedAt=now.isoformat(),
+                    createdAt=now,
+                    updatedAt=now,
                 )
 
                 tasks.append(task)
@@ -1240,7 +1320,7 @@ class ProgramService(BaseService):
             program_doc = Request_Update_ProgramPD.model_validate(t_to_dict(request)).model_dump(
                 exclude_none=True, exclude_unset=True
             )
-            program_doc["updatedAt"] = now.isoformat()
+            program_doc["updatedAt"] = now
 
             col = db["programs"]
 
@@ -1256,6 +1336,8 @@ class ProgramService(BaseService):
             )
 
             program_res["programId"] = str(program_res.pop("_id"))
+            program_res["createdAt"] = program_res["createdAt"].isoformat()
+            program_res["updatedAt"] = program_res["updatedAt"].isoformat()
 
             return {
                 "program": program_res,
@@ -1290,8 +1372,8 @@ class ProgramService(BaseService):
             clone_program = find_doc.copy()
             clone_program.pop("_id")
             clone_program["name"] = new_name
-            clone_program["createdAt"] = now.isoformat()
-            clone_program["updatedAt"] = now.isoformat()
+            clone_program["createdAt"] = now
+            clone_program["updatedAt"] = now
 
             find_same_name_program = await program_col.find_one({"name": new_name})
 
@@ -1312,9 +1394,8 @@ class ProgramService(BaseService):
                 pre_task_id = str(task.pop("_id"))
                 task["programId"] = new_program_id
                 task["scriptName"] = task["scriptName"].replace(find_doc["name"], new_name)
-                task["createdAt"] = now.isoformat()
-                task["updatedAt"] = now.isoformat()
-
+                task["createdAt"] = now
+                task["updatedAt"] = now
                 new_task_res = await tasks_col.insert_one(task)
 
                 new_task_id = str(new_task_res.inserted_id)
@@ -1347,9 +1428,17 @@ class ProgramService(BaseService):
         tasks_col = db["tasks"]
         steps_col = db["steps"]
 
+        task_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
         program_deleted_res = await program_col.delete_one({"_id": ObjectId(program_id)})
         task_deleted_res = await tasks_col.delete_many({"programId": program_id})
         step_deleted_res = await steps_col.delete_many({"programId": program_id})
+
+        for task in task_docs:
+            script_full_path = f"{task['scriptPath']}/{task['scriptName']}.{task['extension']}"
+
+            if os.path.exists(script_full_path):
+                os.remove(script_full_path)
 
         return {
             "programDeleted": program_deleted_res.deleted_count,
@@ -1604,6 +1693,23 @@ class ProgramService(BaseService):
             raise AttributeError(f"{path} 안에 `tree` 변수가 없습니다.")
 
         return cast(Step, module.tree)
+
+    def get_executor_variables(self, robot_model: str):
+        """
+        Executor의 모든 변수를 조회하는 함수.
+        """
+
+        execute_states = self.script_executor.get_all_states()
+
+        variables: dict[str, Any] = {}
+
+        for execute_state in execute_states.values():
+            if execute_state.get("robot_model") == robot_model:
+                variables.update(execute_state.get("variables", {}))
+
+        return {
+            "variables": variables,
+        }
 
     def get_executor_state(self):
         return self.script_executor.get_all_states()

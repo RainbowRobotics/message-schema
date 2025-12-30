@@ -54,8 +54,8 @@ class Step_Base(BaseModel):
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
-    createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
-    updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     model_config = {
         "populate_by_name": True  # Pydantic v2에서 모델을 생성할 때 alias 대신 실제 필드명으로도 값을 채울 수 있게 허용하는 설정
@@ -137,8 +137,8 @@ class Task_Base(BaseModel):
     begin: MainTaskBegin | None = Field(default=None)
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
-    createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
-    updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 class Response_Get_TaskInfoPD(BaseModel):
     task: Task_Base
@@ -182,8 +182,8 @@ class Program_Base(BaseModel):
     name: str | None = Field(default=None)
     repeatCnt: int = Field(default=1)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
-    createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
-    updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class Request_Get_Program_ListPD(BaseModel):
@@ -355,3 +355,10 @@ class Request_Program_Log(TypedDict):
     content: str
     robot_model: str
     level: Literal["INFO", "WARNING", "ERROR", "USER", "DEBUG", "GENERAL"]
+
+class Program_Variable(TypedDict):
+    value: Any
+    type: Literal["global", "local"]
+
+class Response_Get_Executor_VariablesPD(BaseModel):
+    variables: dict[str, Program_Variable]

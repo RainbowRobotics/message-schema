@@ -76,6 +76,17 @@ async def on_get_step_list(data, task_id: str):
     res = await program_service.get_step_list(task_id=task_id, db=db)
     return to_json(res)
 
+@program_socket_router.on("program/task/list")
+async def on_get_task_list(data):
+    data_dict = t_to_dict(data)
+    robot_model = data_dict.get("robot_model", None)
+    task_type = data_dict.get("task_type", None)
+    search_text = data_dict.get("search_text", None)
+    db = await get_db()
+
+    res = await program_service.get_task_list(robot_model=robot_model, task_type=task_type, search_text=search_text, db=db)
+    return to_json(res)
+
 
 @program_socket_router.on("program/tasks/upsert")
 async def on_upsert_tasks(data):
@@ -113,3 +124,8 @@ async def on_resume_program(data):
     return await program_service.call_resume_or_pause(
         is_pause=False,
     )
+
+@program_socket_router.on("program/{robot_model}/variables")
+async def on_get_executor_variables(data, robot_model: str):
+    res = program_service.get_executor_variables(robot_model=robot_model)
+    return to_json(res)

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from rb_database.mongo_db import MongoDB
@@ -24,6 +26,7 @@ from .program_schema import (
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
     Response_Get_Current_Program_StatePD,
+    Response_Get_Executor_VariablesPD,
     Response_Get_Program_ListPD,
     Response_Get_ProgramPD,
     Response_Get_Script_ContextPD,
@@ -35,6 +38,7 @@ from .program_schema import (
     Response_Update_ProgramPD,
     Response_Upsert_StepsPD,
     Step_Base,
+    TaskType,
 )
 
 program_service = ProgramService()
@@ -54,8 +58,8 @@ async def get_program_info(program_id: str, db: MongoDB):
 
 
 @program_router.get("/programs", response_model=Response_Get_Program_ListPD)
-async def get_program_list(db: MongoDB, search_name: str | None = None):
-    res = await program_service.get_program_list(search_name=search_name, db=db)
+async def get_program_list(db: MongoDB, search_name: str | None = None, order: Literal["ASC", "DESC"] | None = None):
+    res = await program_service.get_program_list(search_name=search_name, order=order, db=db)
     return JSONResponse(res)
 
 
@@ -106,6 +110,10 @@ async def get_current_program_state():
     res = program_service.get_play_state()
     return JSONResponse(res)
 
+@program_router.get("/program/task/list", response_model=Response_Get_Task_ListPD)
+async def get_task_list(db: MongoDB, robot_model: str, task_type: TaskType | None = None, search_text: str | None = None):
+    res = await program_service.get_task_list(task_type=task_type, robot_model=robot_model, search_text=search_text, db=db)
+    return JSONResponse(res)
 
 @program_router.get("/program/task/{task_id}", response_model=Response_Get_TaskInfoPD)
 async def get_task_info(task_id: str, db: MongoDB):
@@ -150,6 +158,11 @@ async def delete_steps(request: Request_Delete_StepsPD, db: MongoDB):
 @program_router.get("/program/executor/state", response_model=dict)
 async def get_executor_state():
     res = program_service.get_executor_state()
+    return JSONResponse(res)
+
+@program_router.get("/program/{robot_model}/variables", response_model=Response_Get_Executor_VariablesPD)
+async def get_executor_variables(robot_model: str):
+    res = program_service.get_executor_variables(robot_model=robot_model)
     return JSONResponse(res)
 
 
