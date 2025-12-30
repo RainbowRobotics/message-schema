@@ -100,15 +100,11 @@ def _execute_tree_in_process(
                 ctx.emit_sub_task_start(tree.step_id, "CHANGE")
 
             # 기존 정책 유지:
-            # - 2회차 이상이면(메인 실행일 때만) root는 다시 실행하지 않고 children만 실행
-            if (not is_sub_task) and state_dict["current_repeat"] > 1:
+            # - 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
+            if state_dict["current_repeat"] > 1:
                 tree.execute_children(ctx)
             else:
                 tree.execute(ctx)
-
-        except SubTaskHaltException:
-            # Sub-task만 중단시키고 흐름 유지
-            return
 
         except JumpToStepException as e:
             # 특정 step으로 점프해서 children 실행
@@ -123,7 +119,13 @@ def _execute_tree_in_process(
             if e.sub_task_post_tree is not None:
                 post_tree_ref["value"] = e.sub_task_post_tree
 
-            execute_task(e.sub_task_tree, current_repeat, is_sub_task=True)
+            try:
+                execute_task(e.sub_task_tree, current_repeat, is_sub_task=True)
+            except SubTaskHaltException:
+                pass
+            finally:
+                ctx.emit_sub_task_done(tree.step_id, "CHANGE")
+
             return
 
         finally:
@@ -172,14 +174,6 @@ def _execute_tree_in_process(
             run_main_loop()
             if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
                 state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
-
-        except BreakRepeat:
-            # 반복 중단
-            pass
-
-        except ContinueRepeat:
-            # 현재 반복 스킵
-            pass
 
         except StopExecution:
             # post_tree가 없을 때만 여기서 STOPPED 처리(기존 정책 유지)

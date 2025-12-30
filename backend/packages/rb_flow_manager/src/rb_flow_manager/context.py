@@ -16,7 +16,7 @@ from typing import Any, Literal
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
 
-from .exception import BreakFolder, StopExecution
+from .exception import BreakFolder, StopExecution, SubTaskHaltException
 from .schema import RB_Flow_Manager_ProgramState
 
 
@@ -346,6 +346,10 @@ class ExecutionContext:
         """Folder 실행 중단"""
         if self._folder_depth > 0:
             raise BreakFolder()
+
+    def halt_sub_task(self):
+        """서브 태스크 실행 중단"""
+        raise SubTaskHaltException()
 
     def _safe_close_sdk(self):
         """SDK 안전 종료"""

@@ -968,9 +968,10 @@ class RBManipulateSDK(RBBaseSDK):
             stop_type = "stop"
         elif option == "FOLDER_HALT" and flow_manager_args is not None:
             flow_manager_args.ctx.break_folder()
+            stop_type = "continue"
         elif option == "SUB_PROGRAM_HALT":
-            # TODO: 서브 프로그램 정지 처리
-            pass
+            flow_manager_args.ctx.halt_sub_task()
+            stop_type = "continue"
 
         if save_log:
             self.log(
