@@ -3602,7 +3602,7 @@ void MOBILE::jog_loop()
     while(jog_flag)
     {
         // check autodrive
-        if(get_is_auto_move())
+        if(!get_is_auto_move())
         {
             Eigen::Vector3d control_input = get_control_input();
             double _vx0 = control_input[0];
@@ -3616,6 +3616,7 @@ void MOBILE::jog_loop()
             double vx = apply_jog_acc(_vx0, _vx_target, jog_limit_v_acc.load(), jog_limit_v_dcc.load(), dt);
             double vy = apply_jog_acc(_vy0, _vy_target, jog_limit_v_acc.load(), jog_limit_v_dcc.load(), dt);
             double wz = apply_jog_acc(_wz0, _wz_target, jog_limit_w_acc.load(), jog_limit_w_dcc.load(), dt);
+
             if(!get_is_jog_pressed() && (get_time() - last_jog_update_time) > 1.0)
             {
                 if(std::abs((double)_vx_target) > 1e-09 || std::abs((double)_vy_target) > 1e-09 || std::abs((double)_wz_target) > 1e-09)
