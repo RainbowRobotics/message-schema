@@ -4,6 +4,17 @@ project(SLAMNAV2 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ---- Output directories ----
+# All executables and libraries go to bin folder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+# ---- RPATH settings ----
+# Use RPATH relative to executable location
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+
 # PCH를 위해 _REENTRANT를 전역으로 추가 (Qt 링크 시 자동 추가되는 플래그와 동기화)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
 
@@ -70,5 +81,3 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         slamnav-map
     ui
 )
-
-set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
