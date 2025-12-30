@@ -3700,6 +3700,26 @@ void MOBILE::set_is_jog_pressed(bool val)
     is_jog_pressed.store(val);
 }
 
+void MOBILE::set_jog_limit_v_acc(double val)
+{
+    jog_limit_v_acc.store(val);
+}
+
+void MOBILE::set_jog_limit_v_dcc(double val)
+{
+    jog_limit_v_dcc.store(val);
+}
+
+void MOBILE::set_jog_limit_w_acc(double val)
+{
+    jog_limit_w_acc.store(val);
+}
+
+void MOBILE::set_jog_limit_w_dcc(double val)
+{
+    jog_limit_w_dcc.store(val);
+}
+
 void MOBILE::set_config_module(CONFIG* _config)
 {
     config = _config;

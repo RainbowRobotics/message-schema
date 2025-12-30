@@ -76,6 +76,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_JogMecaR,  SIGNAL(pressed()),  this, SLOT(bt_JogMecaR()));      // if button pressed, move robot to right
     connect(ui->bt_JogMecaL,  SIGNAL(released()), this, SLOT(bt_JogReleased()));   // if button released, slow down and stop
     connect(ui->bt_JogMecaR,  SIGNAL(released()), this, SLOT(bt_JogReleased()));   // if button released, slow down and stop
+    connect(ui->spb_AccV,     SIGNAL(valueChanged(double)), this, SLOT(spb_AccVChanged(double)));
+    connect(ui->spb_DecelV,   SIGNAL(valueChanged(double)), this, SLOT(spb_DecelVChanged(double)));
+    connect(ui->spb_AccW,     SIGNAL(valueChanged(double)), this, SLOT(spb_AccWChanged(double)));
+    connect(ui->spb_DecelW,   SIGNAL(valueChanged(double)), this, SLOT(spb_DecelWChanged(double)));
+
     // mapping
     connect(ui->bt_MapBuild,  SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));  // mapping start
     connect(ui->bt_MapSave,   SIGNAL(clicked()),  this, SLOT(bt_MapSave()));   // if mapping end, save map file
@@ -389,6 +394,11 @@ void MainWindow::init_modules()
         MOBILE::instance()->set_config_module(CONFIG::instance());
         MOBILE::instance()->set_logger_module(LOGGER::instance());
         MOBILE::instance()->open();
+
+        MOBILE::instance()->set_jog_limit_v_acc(ui->spb_AccV->value());
+        MOBILE::instance()->set_jog_limit_v_dcc(ui->spb_DecelV->value());
+        MOBILE::instance()->set_jog_limit_w_acc(ui->spb_AccW->value());
+        MOBILE::instance()->set_jog_limit_w_dcc(ui->spb_DecelW->value());
     }
 
     // cam module init
@@ -1274,6 +1284,46 @@ void MainWindow::bt_JogReleased()
 
     MOBILE::instance()->set_is_jog_pressed(false);
     MOBILE::instance()->slot_jog_update(Eigen::Vector3d(0, 0,0));
+}
+
+void MainWindow::spb_AccVChanged(double val)
+{
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_jog_limit_v_acc(val);
+}
+
+void MainWindow::spb_DecelVChanged(double val)
+{
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_jog_limit_v_dcc(val);
+}
+
+void MainWindow::spb_AccWChanged(double val)
+{
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_jog_limit_w_acc(val);
+}
+
+void MainWindow::spb_DecelWChanged(double val)
+{
+    if(!MOBILE::instance())
+    {
+        return;
+    }
+
+    MOBILE::instance()->set_jog_limit_w_dcc(val);
 }
 
 // mapping

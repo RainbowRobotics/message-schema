@@ -204,6 +204,10 @@ public Q_SLOTS:
     void bt_JogL();
     void bt_JogR();
     void bt_JogReleased();
+    void spb_AccVChanged(double val);
+    void spb_DecelVChanged(double val);
+    void spb_AccWChanged(double val);
+    void spb_DecelWChanged(double val);
 
     // for simulation
     void bt_SimInit();

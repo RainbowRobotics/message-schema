@@ -110,6 +110,11 @@ public:
     void set_is_auto_move(bool val);
     void set_is_jog_pressed(bool val);
 
+    void set_jog_limit_v_acc(double val);
+    void set_jog_limit_v_dcc(double val);
+    void set_jog_limit_w_acc(double val);
+    void set_jog_limit_w_dcc(double val);
+
     // this func only use simulation mode
     void set_cur_pose(MOBILE_POSE mp);
     void set_cur_status(MOBILE_STATUS ms);
