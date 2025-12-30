@@ -1,8 +1,10 @@
 import importlib
+import sys
 import time
 import uuid
 from collections.abc import Callable
 from multiprocessing import Event
+from pathlib import Path
 from typing import Any, Literal
 
 from rb_schemas.sdk import FlowManagerArgs
@@ -12,10 +14,11 @@ from .context import ExecutionContext
 from .exception import (
     BreakFolder,
     BreakRepeat,
+    ChangeSubTaskException,
     ContinueRepeat,
     JumpToStepException,
     StopExecution,
-    SubTaskException,
+    SubTaskHaltException,
 )
 from .utils import _resolve_arg_scope_value
 
@@ -113,7 +116,7 @@ class Step:
 
         if self.children:
             inner_steps = [child.to_py_string(depth + 8) for child in self.children]
-            inner_src = ",\n".join(inner_steps)
+            inner_src = "\n".join(inner_steps)
 
             children_block = "[\n" + inner_src + "\n" + (" " * (depth + 4)) + "]"
         else:
@@ -161,19 +164,22 @@ class Step:
             + (" " * (depth + 4))
             + f"children={children_block},\n"
             + (" " * depth)
-            + ")"
+            + f"){',' if depth > 0 else ''}"
         )
 
     def _pre_execute(self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False):
         if reset_condition_result:
-            condition_map: dict[str, bool] = ctx.data.get("condition_map") or {}
+            condition_map: dict[str, bool] = ctx.data.get("condition_map", {})
 
             for key in list(condition_map.keys()):
-                if key.endswith(f".{ctx.current_depth}"):
+                condition_depth = int(key.split(".")[-1])
+
+                if condition_depth > ctx.current_depth:
                     condition_map.pop(key)
-            ctx.data["condition_map"] = condition_map
+                ctx.data["condition_map"] = condition_map
 
         ctx.state_dict["current_step_id"] = self.step_id
+        ctx.state_dict["ignore_stop"] = False
         ctx.push_args(self.args)
 
         if not is_skip:
@@ -239,6 +245,7 @@ class Step:
         fn = self.func
         func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
         args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
+
 
         if fn is None and func_name and not self.disabled and not is_skip:
             fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
@@ -496,21 +503,41 @@ class RepeatStep(Step):
             return
 
         if self.count is not None:
-            for i in range(int(self.count)):
-                self._pre_execute(ctx, is_skip=is_skip)
-                ctx.emit_next(self.step_id)
-                ctx.check_stop()
+            if int(self.count) == -1:
+                i = 0
+                while True:
+                    i += 1
 
-                ctx.data["repeat_index"] = i
+                    self._pre_execute(ctx, is_skip=is_skip)
+                    ctx.emit_next(self.step_id)
+                    ctx.check_stop()
 
-                try:
-                    self.execute_children(ctx, target_step_id=target_step_id)
-                    self._post_execute(ctx, ignore_step_interval=True)
-                    ctx.emit_done(self.step_id)
-                except BreakRepeat:
-                    break
-                except ContinueRepeat:
-                    continue
+                    ctx.data["repeat_index"] = i
+
+                    try:
+                        self.execute_children(ctx, target_step_id=target_step_id)
+                        self._post_execute(ctx, ignore_step_interval=True)
+                        ctx.emit_done(self.step_id)
+                    except BreakRepeat:
+                        break
+                    except ContinueRepeat:
+                        continue
+            else:
+                for i in range(int(self.count)):
+                    self._pre_execute(ctx, is_skip=is_skip)
+                    ctx.emit_next(self.step_id)
+                    ctx.check_stop()
+
+                    ctx.data["repeat_index"] = i
+
+                    try:
+                        self.execute_children(ctx, target_step_id=target_step_id)
+                        self._post_execute(ctx, ignore_step_interval=True)
+                        ctx.emit_done(self.step_id)
+                    except BreakRepeat:
+                        break
+                    except ContinueRepeat:
+                        continue
 
         elif self.while_cond is not None:
             if isinstance(self.while_cond, str):
@@ -659,7 +686,7 @@ class ConditionStep(Step):
 
         condition_result = condition_map.get(key)
 
-        if self.condition_type == "If":
+        if self.condition_type == "Case" and condition_result is None or self.condition_type == "If":
             condition_map[key] = False
             condition_result = False
         else:
@@ -697,6 +724,10 @@ class ConditionStep(Step):
                 return
 
         elif isinstance(self.condition, str):
+            if self.method == "Case":
+                parent_switch_value = ctx.lookup("switch_value")
+                self.condition = self.condition.replace("$parent.switch_value", parent_switch_value)
+
             if safe_eval_expr(
                 self.condition,
                 variables=ctx.variables,
@@ -805,15 +836,10 @@ class SubTaskStep(Step):
     """서브 태스크 Step"""
     _class_name = "SubTaskStep"
 
-    def __init__(self, *, step_id: str, name: str, sub_task_type: Literal["INSERT", "CHANGE"], sub_task_script_path: str, disabled: bool | None = None):
+    def __init__(self, *, step_id: str, name: str, sub_task_type: Literal["INSERT", "CHANGE"], sub_task_script_path: str, disabled: bool | None = None, children: list | None = None):
         super().__init__(step_id=step_id, name=name, sub_task_type=sub_task_type, sub_task_script_path=sub_task_script_path, disabled=disabled)
         self.sub_task_type = sub_task_type
         self.sub_task_script_path = sub_task_script_path
-
-        tree, post_tree = self._load_sub_task_trees()
-
-        self.sub_task_tree: Step = tree
-        self.sub_task_post_tree: Step | None = post_tree
 
     @staticmethod
     def from_dict(d) -> "SubTaskStep":
@@ -834,8 +860,26 @@ class SubTaskStep(Step):
             "disabled": self.disabled,
         }
 
+    def _load_module_from_file(self, py_path: str):
+        path = Path(py_path)
+
+        if not path.exists():
+            raise RuntimeError(f"script not found: {path}")
+
+        module_name = f"subtask_{path.stem}"
+
+        spec = importlib.util.spec_from_file_location(module_name, str(path))
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot create module spec: {path}")
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        return module
+
     def _load_sub_task_trees(self):
-        module = importlib.import_module(self.sub_task_script_path)
+        module = self._load_module_from_file(self.sub_task_script_path)
         tree = getattr(module, "tree", None)
         post_tree = getattr(module, "post_tree", None)
 
@@ -848,6 +892,11 @@ class SubTaskStep(Step):
         return tree, post_tree
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+        tree, post_tree = self._load_sub_task_trees()
+
+        sub_task_tree: Step = tree
+        sub_task_post_tree: Step | None = post_tree
+
         is_skip = target_step_id is not None and target_step_id != self.step_id
 
         self._pre_execute(ctx, is_skip=is_skip)
@@ -863,16 +912,18 @@ class SubTaskStep(Step):
         ctx.check_stop()
 
         if self.sub_task_type == "INSERT":
-            ctx.emit_sub_task_start(self.step_id, self.sub_task_type)
-            self.sub_task_tree.execute_children(ctx, target_step_id=target_step_id)
-            ctx.emit_sub_task_done(self.step_id, self.sub_task_type)
+            try:
+                ctx.emit_sub_task_start(self.step_id, self.sub_task_type)
+                sub_task_tree.execute_children(ctx, target_step_id=target_step_id)
+            except SubTaskHaltException:
+                pass
+            finally:
+                ctx.emit_sub_task_done(self.step_id, self.sub_task_type)
+
         elif self.sub_task_type == "CHANGE":
             ctx.step_num = 0
-            raise SubTaskException(task_id=self.step_id, sub_task_tree=self.sub_task_tree, sub_task_post_tree=self.sub_task_post_tree)
+            raise ChangeSubTaskException(task_id=self.step_id, sub_task_tree=sub_task_tree, sub_task_post_tree=sub_task_post_tree)
 
         self._post_execute(ctx, ignore_step_interval=True)
-
-        if self.sub_task_post_tree is not None:
-            self.sub_task_post_tree.execute(ctx)
 
         ctx.emit_done(self.step_id)

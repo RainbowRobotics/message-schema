@@ -59,11 +59,24 @@ class ExecutionContext:
 
         self.initialize_sdk_functions()
 
+    def update_vars_to_state_dict(self):
+        current = dict(self.state_dict.get("variables", {}))
+
+        for k, v in self.variables.get("global", {}).items():
+            current[k] = {"value": v, "type": "global"}
+
+        for k, v in self.variables.get("local", {}).items():
+            current[k] = {"value": v, "type": "local"}
+
+        self.state_dict["variables"] = current
+
     def update_local_variables(self, variables: dict[str, Any]):
         self.variables["local"].update(variables)
+        self.update_vars_to_state_dict()
 
     def update_global_variables(self, variables: dict[str, Any]):
         self.variables["global"].update(variables)
+        self.update_vars_to_state_dict()
 
     def get_global_variable(self, var_name: str) -> Any:
         if self.sdk_functions is None:
@@ -168,6 +181,7 @@ class ExecutionContext:
             return
 
         self.stop_event.set()
+        self.pause_event.clear()
 
         self.emit_stop(self.state_dict["current_step_id"])
 
@@ -178,6 +192,8 @@ class ExecutionContext:
         if self.stop_event.is_set() and not self.state_dict.get("ignore_stop", False):
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
             raise StopExecution("Execution stopped by user")
+
+
 
         if self.pause_event.is_set():
             self.resume_event.clear()

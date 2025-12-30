@@ -15,10 +15,11 @@ from .context import ExecutionContext
 from .controller.base_controller import BaseController
 from .exception import (
     BreakRepeat,
+    ChangeSubTaskException,
     ContinueRepeat,
     JumpToStepException,
     StopExecution,
-    SubTaskException,
+    SubTaskHaltException,
 )
 from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
@@ -41,21 +42,119 @@ def _execute_tree_in_process(
     stop_event: EventType,
     repeat_count: int = 1,
     min_step_interval: float | None = None,
-    step_mode: bool = False
+    step_mode: bool = False,
 ):
-    """프로세스에서 실행될 트리 실행 함수"""
+    """
+    프로세스에서 실행될 트리 실행 함수
+
+    - step(메인 트리)을 repeat_count 만큼 실행 (0이면 무한 반복)
+    - 실행 중 Jump/Stop/SubTask 변경 등의 예외를 처리
+    - 마지막에 post_tree가 있으면 후처리 트리 실행
+    - 종료 시 completion_event.set() 보장
+    """
     os.environ["_PYINSTALLER_WORKER"] = "1"
 
     ctx: ExecutionContext | None = None
+    error_msg: str | None = None
 
-    try:
+    # post_tree가 SubTaskChange로 바뀔 수 있으므로 mutable 래퍼로 감싼다
+    post_tree_ref: dict[str, Step | None] = {"value": post_tree}
 
+    def set_error(msg: str):
+        nonlocal error_msg
+        state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
+        state_dict["error"] = msg
+        error_msg = msg
+        print(f"Execution error: {msg}", flush=True)
+
+    def emit_error_or_stop(step_id: str, msg: str):
+        # "Execution stopped by user" 문자열 기반 정책은 기존 그대로 유지
+        if ctx is None:
+            return
+        if "Execution stopped by user" in msg:
+            ctx.emit_stop(step_id)
+        else:
+            ctx.emit_error(step_id, RuntimeError(msg))
+
+    def init_state():
         state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
         state_dict["step"] = step.to_dict()
         state_dict["current_step_id"] = step.step_id
         state_dict["current_step_name"] = step.name
         state_dict["total_repeat"] = "infinity" if repeat_count == 0 else repeat_count
         state_dict["current_repeat"] = 0
+        state_dict.pop("error", None)
+
+    def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False):
+        """
+        step 트리 1회 실행.
+        - JumpToStep / SubTaskChange 같은 제어 예외를 내부에서 처리(또는 재귀)
+        """
+        if not is_sub_task:
+            state_dict["condition_map"] = {}
+
+        state_dict["current_repeat"] = current_repeat
+
+        try:
+            if is_sub_task and ctx is not None:
+                ctx.emit_sub_task_start(tree.step_id, "CHANGE")
+
+            # 기존 정책 유지:
+            # - 2회차 이상이면(메인 실행일 때만) root는 다시 실행하지 않고 children만 실행
+            if (not is_sub_task) and state_dict["current_repeat"] > 1:
+                tree.execute_children(ctx)
+            else:
+                tree.execute(ctx)
+
+        except SubTaskHaltException:
+            # Sub-task만 중단시키고 흐름 유지
+            return
+
+        except JumpToStepException as e:
+            # 특정 step으로 점프해서 children 실행
+            tree.execute_children(ctx, target_step_id=e.target_step_id)
+            return
+
+        except ChangeSubTaskException as e:
+            # sub-task 트리로 교체 실행 (재귀)
+            if e.sub_task_tree is None:
+                raise RuntimeError("SubTask: Tree is not found.") from e
+
+            if e.sub_task_post_tree is not None:
+                post_tree_ref["value"] = e.sub_task_post_tree
+
+            execute_task(e.sub_task_tree, current_repeat, is_sub_task=True)
+            return
+
+        finally:
+            if is_sub_task and ctx is not None:
+                ctx.emit_sub_task_done(tree.step_id, "CHANGE")
+
+    def run_main_loop():
+        if repeat_count > 0:
+            for i in range(1, repeat_count + 1):
+                execute_task(step, i)
+        else:
+            i = 1
+            while True:
+                execute_task(step, i)
+                i += 1
+
+    def run_post_tree():
+        pt = post_tree_ref["value"]
+        if pt is None:
+            return
+
+        stop_event.clear()
+        state_dict["ignore_stop"] = True
+
+        if ctx is not None:
+            ctx.emit_post_start()
+
+        pt.execute(ctx)
+
+    try:
+        init_state()
 
         ctx = ExecutionContext(
             process_id,
@@ -68,120 +167,41 @@ def _execute_tree_in_process(
             step_mode=step_mode,
         )
 
-        if repeat_count > 0:
-            for i in range(repeat_count):
-                state_dict["condition_map"] = {}
-                state_dict["current_repeat"] = i + 1
-
-                try:
-                    if state_dict["current_repeat"] > 1:
-                        step.execute_children(ctx)
-                    else:
-                        step.execute(ctx)
-                except JumpToStepException as e:
-                    ctx.data["finding_jump_to_step"] = True
-
-                    target_step_id = e.target_step_id
-
-                    step.execute_children(ctx, target_step_id=target_step_id)
-
-                    if ctx.data.get("finding_jump_to_step", False):
-                        raise RuntimeError("JumpToStep: Target step not found.") from e
-                    else:
-                        continue
-                except SubTaskException as e:
-                    tree = e.sub_task_tree
-
-                    if e.sub_task_post_tree is not None:
-                        post_tree = e.sub_task_post_tree
-
-                    if tree is None:
-                        raise RuntimeError("SubTask: Tree is not found.") from e
-
-                    tree.execute(ctx)
-                except RuntimeError as e:
-                    print("RuntimeError", flush=True)
-                    raise e
-                except Exception as e:
-                    print("Exception", flush=True)
-                    raise e
-        else:
-            i = 0
-
-            while True:
-                state_dict["condition_map"] = {}
-                state_dict["current_repeat"] = i + 1
-
-                try:
-                    if state_dict["current_repeat"] > 1:
-                        step.execute_children(ctx)
-                    else:
-                        step.execute(ctx)
-                except JumpToStepException as e:
-                    ctx.data["finding_jump_to_step"] = True
-
-                    target_step_id = e.target_step_id
-
-                    step.execute_children(ctx, target_step_id=target_step_id)
-
-                    if ctx.data.get("finding_jump_to_step", False):
-                        raise RuntimeError("JumpToStep: Target step not found.") from e
-                    else:
-                        continue
-                except SubTaskException as e:
-                    tree = e.sub_task_tree
-
-                    if e.sub_task_post_tree is not None:
-                        post_tree = e.sub_task_post_tree
-
-                    if tree is None:
-                        raise RuntimeError("SubTask: Tree is not found.") from e
-
-                    tree.execute(ctx)
-                except Exception as e:
-                    print("Exception", flush=True)
-                    raise e
-
-                i += 1
-
-        if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
-            state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
-
-    except BreakRepeat:
-        pass
-
-    except ContinueRepeat:
-        pass
-
-    except StopExecution:
-        if post_tree is None:
-            state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-
-            if ctx is not None:
-                ctx.emit_stop(step.step_id)
-
-    except RuntimeError as e:  # noqa: BLE001
-        if post_tree is None:
-            state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
-            state_dict["error"] = str(e)
-
-            print(f"Execution error: {state_dict['error']}", flush=True)
-
-            if ctx is not None:
-                if "Execution stopped by user" in state_dict["error"]:
-                    ctx.emit_stop(step.step_id)
-                else:
-                    ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
-    except JumpToStepException:
-        pass
-    finally:
+        # ---- 메인 실행 ----
         try:
-            if post_tree is not None:
-                stop_event.clear()
-                state_dict["ignore_stop"] = True
+            run_main_loop()
+            if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
+                state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
 
-                ctx.emit_post_start()
-                post_tree.execute(ctx)
+        except BreakRepeat:
+            # 반복 중단
+            pass
+
+        except ContinueRepeat:
+            # 현재 반복 스킵
+            pass
+
+        except StopExecution:
+            # post_tree가 없을 때만 여기서 STOPPED 처리(기존 정책 유지)
+            if post_tree_ref["value"] is None:
+                state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+                if ctx is not None:
+                    ctx.emit_stop(step.step_id)
+
+        except RuntimeError as e:
+            # post_tree가 없을 때만 여기서 ERROR 처리(기존 정책 유지)
+            if post_tree_ref["value"] is None:
+                set_error(str(e))
+                emit_error_or_stop(step.step_id, str(e))
+
+        except JumpToStepException:
+            # 메인 루프 바깥으로 점프 예외가 올라오는 경우는 무시(기존 정책 유지)
+            pass
+
+        # ---- post_tree 실행(항상 finally에 가까운 의미) ----
+        try:
+            run_post_tree()
+
         except BreakRepeat:
             pass
 
@@ -190,29 +210,22 @@ def _execute_tree_in_process(
 
         except StopExecution:
             state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-
             if ctx is not None:
                 ctx.emit_stop(step.step_id)
 
-        except RuntimeError as e:  # noqa: BLE001
-            state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
-            state_dict["error"] = str(e)
+        except RuntimeError as e:
+            set_error(str(e))
+            emit_error_or_stop(step.step_id, str(e))
 
-            print(f"Execution error: {state_dict['error']}", flush=True)
+        except JumpToStepException as e:
+            raise RuntimeError("JumpToStep: Post program tree is not allowed.") from e
 
-            if ctx is not None:
-                if "Execution stopped by user" in state_dict["error"]:
-                    ctx.emit_stop(step.step_id)
-                else:
-                    ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
-        except JumpToStepException as jump_to_step_exception:
-            raise RuntimeError("JumpToStep: Post program tree is not allowed.") from jump_to_step_exception
-        finally:
-            # 완료 이벤트 설정
-            completion_event.set()
+    finally:
+        print("completion_event set >>>>>>>", completion_event.is_set(), flush=True)
+        completion_event.set()
 
-            if ctx is not None:
-                ctx.close()
+        if ctx is not None:
+            ctx.close()
 
 
 class ScriptExecutor:
@@ -695,6 +708,7 @@ class ScriptExecutor:
 
     def stop(self, process_id: str) -> bool:
         """스크립트 중지"""
+        self.pause_events[process_id].clear()
         if process_id not in self.processes:
             print(f"Process {process_id} not found")
             return False
