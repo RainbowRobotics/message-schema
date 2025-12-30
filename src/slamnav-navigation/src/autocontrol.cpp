@@ -1297,9 +1297,27 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
     else
     {
+        const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
+
+        size_t min_seg_idx = 0;
+        double min_seg_dist = std::numeric_limits<double>::max();
+
+        for(size_t p = 0; p < node_pose.size()-1; p++)
+        {
+            Eigen::Vector3d pos0 = node_pose[p].block(0,3,3,1);
+            Eigen::Vector3d pos1 = node_pose[p+1].block(0,3,3,1);
+
+            double dist = calc_seg_dist(pos0, pos1, _cur_pos);
+            if(dist < min_seg_dist)
+            {
+                min_seg_idx = p;
+                min_seg_dist = dist;
+            }
+        }
+
         // approach point
-        Eigen::Matrix4d app = get_approach_pose(node_pose[0], node_pose[1], cur_tf);
-        node_pose.erase(node_pose.begin());
+        Eigen::Matrix4d app = get_approach_pose(node_pose[min_seg_idx], node_pose[min_seg_idx+1], cur_tf);
+        node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
         node_pose.insert(node_pose.begin(), app);
         node_pose.insert(node_pose.begin(), cur_tf);
     }
@@ -1388,8 +1406,27 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         }
         else
         {
-            Eigen::Matrix4d app = get_approach_pose(node_pose[0], node_pose[1], cur_tf);
-            node_pose.erase(node_pose.begin());
+            const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
+
+            size_t min_seg_idx = 0;
+            double min_seg_dist = std::numeric_limits<double>::max();
+
+            for(size_t p = 0; p < node_pose.size()-1; p++)
+            {
+                Eigen::Vector3d pos0 = node_pose[p].block(0,3,3,1);
+                Eigen::Vector3d pos1 = node_pose[p+1].block(0,3,3,1);
+
+                double dist = calc_seg_dist(pos0, pos1, _cur_pos);
+                if(dist < min_seg_dist)
+                {
+                    min_seg_idx = p;
+                    min_seg_dist = dist;
+                }
+            }
+
+            // approach point
+            Eigen::Matrix4d app = get_approach_pose(node_pose[min_seg_idx], node_pose[min_seg_idx+1], cur_tf);
+            node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
             node_pose.insert(node_pose.begin(), app);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
@@ -2653,7 +2690,7 @@ void AUTOCONTROL::control_loop()
         log_info("set back_mode from PATH: {}", (is_move_backward ? "true" : "false"));
     }
 
-    if(global_path.pose.size() == 0)
+    if(global_path.pose.empty())
     {
         clear_control_params();
         set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);

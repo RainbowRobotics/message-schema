@@ -2797,7 +2797,7 @@ void MainWindow::watch_loop()
             }
 
             // check cam
-            if(CONFIG::instance()->get_use_cam())
+            /*if(CONFIG::instance()->get_use_cam())
             {
                 for(int idx = 0; idx < CONFIG::instance()->get_cam_num(); idx++)
                 {
@@ -2819,7 +2819,7 @@ void MainWindow::watch_loop()
 
                     pre_cam_t[idx] = cur_cam_t;
                 }
-            }
+            }*/
         }
 
         // plot mobile distance info

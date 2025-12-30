@@ -66,6 +66,7 @@ private:
     explicit ORBBEC(QObject *parent = nullptr);
     ~ORBBEC();
     std::mutex mtx;
+    std::mutex restart_mtx;
 
     // other modules
     CONFIG* config;
@@ -101,6 +102,7 @@ private:
 
     std::shared_ptr<ob::Context> persistent_ctx;
     std::atomic<bool> device_ready[max_cam_cnt] = {false};
+    std::atomic<bool> is_restarting[max_cam_cnt] = {false};
 
 
 Q_SIGNALS:

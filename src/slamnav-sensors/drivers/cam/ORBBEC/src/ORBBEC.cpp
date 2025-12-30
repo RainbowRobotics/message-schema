@@ -137,8 +137,20 @@ void ORBBEC::close()
 
 void ORBBEC::restart(int idx)
 {
+    // restart를 순차적으로 실행 (persistent_ctx 공유 보호)
+    std::lock_guard<std::mutex> lock(restart_mtx);
+
+    // 이미 restart 중이면 무시
+    bool expected = false;
+    if(!is_restarting[idx].compare_exchange_strong(expected, true))
+    {
+        log_warn("restart already in progress, idx:{}", idx);
+        return;
+    }
+
     log_info("restart requested, idx:{}", idx);
 
+    // grab_loop 중지
     grab_flag[idx] = false;
     if(grab_thread[idx] && grab_thread[idx]->joinable())
     {
@@ -146,70 +158,16 @@ void ORBBEC::restart(int idx)
     }
     grab_thread[idx].reset();
 
-    bool reboot_success = false;
-    try
-    {
-        QString target_sn = config->get_cam_serial_number(idx);
-        auto dev_list = persistent_ctx->queryDeviceList();
+    // reboot 시도하지 않고 grab_loop만 재시작
+    // device가 다시 나타날 때까지 grab_loop에서 재시도
+    log_info("Restarting grab_loop without reboot, idx:{}", idx);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
-        for(uint32_t d = 0; d < dev_list->deviceCount(); d++)
-        {
-            auto dev = dev_list->getDevice(d);
-            QString sn = dev->getDeviceInfo()->serialNumber();
-
-            if(sn == target_sn)
-            {
-                log_info("Rebooting device, idx:{}, sn:{}", idx, sn.toStdString());
-
-                device_ready[idx] = false;
-                dev->reboot();
-                reboot_success = true;
-                break;
-            }
-        }
-    }
-    catch(const ob::Error& e)
-    {
-        log_warn("device->reboot() failed, idx:{}, msg:{}", idx, e.getMessage());
-    }
-    catch(const std::exception& e)
-    {
-        log_warn("device->reboot() exception, idx:{}, what:{}", idx, e.what());
-    }
-
-    if(reboot_success)
-    {
-        const int MAX_WAIT_SEC = 10;
-        int waited = 0;
-
-        log_info("Waiting for device to reconnect, idx:{}", idx);
-
-        while(!device_ready[idx] && waited < MAX_WAIT_SEC)
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            waited++;
-            log_debug("Waiting... {}/{}s, idx:{}", waited, MAX_WAIT_SEC, idx);
-        }
-
-        if(device_ready[idx])
-        {
-            log_info("Device reconnected after reboot, idx:{}, waited:{}s", idx, waited);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
-        else
-        {
-            log_warn("Device not reconnected after {}s, idx:{}", MAX_WAIT_SEC, idx);
-        }
-    }
-    else
-    {
-        log_info("Reboot not performed, waiting 2s before retry, idx:{}", idx);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    }
-
+    // grab_loop 재시작
     grab_flag[idx] = true;
     grab_thread[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, idx);
 
+    is_restarting[idx] = false;
     log_info("restart complete, idx:{}", idx);
 }
 
@@ -305,11 +263,6 @@ void ORBBEC::grab_loop(int idx)
 
         ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_OFF);
 
-        // check device
-        ob::Context ctx;
-        ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
-        ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
-
         QString target_sn = config->get_cam_serial_number(idx);
         if(target_sn.isEmpty())
         {
@@ -323,7 +276,7 @@ void ORBBEC::grab_loop(int idx)
         constexpr int reconnection_max_try = 5;
         while(retry < reconnection_max_try && dev_idx < 0)
         {
-            auto dev_list = ctx.queryDeviceList();
+            auto dev_list = persistent_ctx->queryDeviceList();
             int dev_count = dev_list->deviceCount();
 
             if(dev_count == 0)
@@ -457,9 +410,9 @@ void ORBBEC::grab_loop(int idx)
 
         int no_depth_cnt = 0, no_color_cnt = 0;
         int timeout_cnt = 0;
-        constexpr int MAX_NO_DEPTH_CNT = 50;
-        constexpr int MAX_NO_COLOR_CNT = 50;
-        constexpr int MAX_TIMEOUT_CNT = 20;
+        constexpr int MAX_NO_DEPTH_CNT = 500;
+        constexpr int MAX_NO_COLOR_CNT = 500;
+        constexpr int MAX_TIMEOUT_CNT = 200;
 
         ob::PointCloudFilter point_cloud;
         bool filter_param_set = false;
@@ -570,6 +523,8 @@ void ORBBEC::grab_loop(int idx)
 
                 if(auto cf = fs->colorFrame())
                 {
+                    no_color_cnt = 0;
+
                     if(!is_connected[idx])
                     {
                         is_connected[idx] = true;
@@ -642,13 +597,33 @@ void ORBBEC::grab_loop(int idx)
             }
             catch(ob::Error &e)
             {
-                log_error("ob::Error in loop, idx:{}, msg:{}", idx, e.getMessage());
+                try
+                {
+                    log_error("ob::Error in loop, idx:{}, msg:{}", idx, e.getMessage());
+                }
+                catch(...)
+                {
+                    log_error("ob::Error in loop, idx:{} (message unavailable)", idx);
+                }
                 Q_EMIT signal_restart(idx);
                 break;
             }
             catch(const std::exception& e)
             {
-                log_error("std::exception in loop, idx:{}, what:{}", idx, e.what());
+                try
+                {
+                    log_error("std::exception in loop, idx:{}, what:{}", idx, e.what());
+                }
+                catch(...)
+                {
+                    log_error("std::exception in loop, idx:{} (message unavailable)", idx);
+                }
+                Q_EMIT signal_restart(idx);
+                break;
+            }
+            catch(...)
+            {
+                log_error("Unknown exception in loop, idx:{}", idx);
                 Q_EMIT signal_restart(idx);
                 break;
             }
@@ -658,12 +633,31 @@ void ORBBEC::grab_loop(int idx)
     catch(ob::Error &e)
     {
         is_connected[idx] = false;
-        log_error("ob::Error in grab_loop, idx:{}, msg:{}", idx, e.getMessage());
+        try
+        {
+            log_error("ob::Error in grab_loop, idx:{}, msg:{}", idx, e.getMessage());
+        }
+        catch(...)
+        {
+            log_error("ob::Error in grab_loop, idx:{} (message unavailable)", idx);
+        }
     }
     catch(const std::exception& e)
     {
         is_connected[idx] = false;
-        log_error("std::exception in grab_loop, idx:{}, what:{}", idx, e.what());
+        try
+        {
+            log_error("std::exception in grab_loop, idx:{}, what:{}", idx, e.what());
+        }
+        catch(...)
+        {
+            log_error("std::exception in grab_loop, idx:{} (message unavailable)", idx);
+        }
+    }
+    catch(...)
+    {
+        is_connected[idx] = false;
+        log_error("Unknown exception in grab_loop, idx:{}", idx);
     }
 
     if(pipe)
@@ -672,9 +666,13 @@ void ORBBEC::grab_loop(int idx)
         {
             pipe->stop();
         }
-        catch (const ob::Error& e)
+        catch(const ob::Error& e)
         {
             log_warn("pipe->stop() error, idx:{}, msg:{}", idx, e.getMessage());
+        }
+        catch(...)
+        {
+            log_warn("pipe->stop() unknown error, idx:{}", idx);
         }
 
         pipe.reset();

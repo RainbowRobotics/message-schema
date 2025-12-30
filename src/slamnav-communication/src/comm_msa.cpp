@@ -95,6 +95,8 @@ COMM_MSA::~COMM_MSA()
 
 void COMM_MSA::init()
 {
+    log_info("init() called");
+
     if(!config)
     {
         log_warn("config module not set");
@@ -195,6 +197,7 @@ void COMM_MSA::recv_message(sio::event& ev)
         {
             std::lock_guard<std::mutex> lock(recv_mtx);
             recv_queue.push(wrapped);
+            recv_cv.notify_one();
         }
 
         set_last_receive_msg(wrapped);
@@ -237,6 +240,7 @@ void COMM_MSA::recv_message_array(sio::event& ev)
     {
         std::lock_guard<std::mutex> lock(recv_mtx);
         recv_queue.push(wrapped);
+        recv_cv.notify_one();
     }
 
     set_last_receive_msg(wrapped);
@@ -244,6 +248,7 @@ void COMM_MSA::recv_message_array(sio::event& ev)
 
 void COMM_MSA::recv_loop()
 {
+    log_info("recv_loop STARTED");
     while(is_recv_running)
     {
         std::unique_lock<std::mutex> lock(recv_mtx);
@@ -550,6 +555,12 @@ void COMM_MSA::handle_mapping_cmd(const QJsonObject& data)
     msg.time     = get_json_double(data, "time")/1000;
     msg.command  = get_json(data, "command");
     msg.map_name = get_json(data, "mapName");
+
+    QJsonDocument doc(data);
+    QString json_string = doc.toJson(QJsonDocument::Compact);
+
+    std::cout << "json_string: " << json_string.toStdString() << std::endl;
+
     {
         std::lock_guard<std::mutex> lock(mapping_mtx);
         mapping_queue.push(msg);
@@ -2680,10 +2691,18 @@ void COMM_MSA::start_all_thread()
 
 void COMM_MSA::start_recv_thread()
 {
+    log_info("start_recv_thread() called, recv_thread is null: {}", (recv_thread == nullptr));
+
     if(recv_thread == nullptr)
     {
+        log_info("creating new recv_thread");
         is_recv_running = true;
         recv_thread = std::make_unique<std::thread>(&COMM_MSA::recv_loop, this);
+        log_info("recv_thread created successfully");
+    }
+    else
+    {
+        log_warn("recv_thread already exists, skipping creation");
     }
 }
 
@@ -2768,10 +2787,12 @@ void COMM_MSA::stop_all_thread()
 void COMM_MSA::stop_recv_thread()
 {
     is_recv_running = false;
+    recv_cv.notify_all();  // wake up waiting thread
     if(recv_thread && recv_thread->joinable())
     {
         recv_thread->join();
     }
+    recv_thread.reset();  // ✅ 추가: thread 포인터 초기화
 }
 
 void COMM_MSA::stop_move_thread()
@@ -2782,73 +2803,81 @@ void COMM_MSA::stop_move_thread()
     {
         move_thread->join();
     }
+    move_thread.reset();
 }
 
 void COMM_MSA::stop_load_thread()
 {
     is_load_running = false;
     load_cv.notify_all();
-    if(load_thread->joinable())
+    if(load_thread && load_thread->joinable())
     {
         load_thread->join();
     }
+    load_thread.reset();
 }
 
 void COMM_MSA::stop_mapping_thread()
 {
     is_mapping_running = false;
     mapping_cv.notify_all();
-    if(mapping_thread->joinable())
+    if(mapping_thread && mapping_thread->joinable())
     {
         mapping_thread->join();
     }
+    mapping_thread.reset();
 }
 
 void COMM_MSA::stop_localization_thread()
 {
     is_localization_running = false;
     localization_cv.notify_all();
-    if(localization_thread->joinable())
+    if(localization_thread && localization_thread->joinable())
     {
         localization_thread->join();
     }
+    localization_thread.reset();
 }
 
 void COMM_MSA::stop_path_thread()
 {
     is_path_running = false;
     path_cv.notify_all();
-    if(path_thread->joinable())
+    if(path_thread && path_thread->joinable())
     {
         path_thread->join();
     }
+    path_thread.reset();
 }
 
 void COMM_MSA::stop_vobs_thread()
 {
     is_vobs_running = false;
     vobs_cv.notify_all();
-    if(vobs_thread->joinable())
+    if(vobs_thread && vobs_thread->joinable())
     {
         vobs_thread->join();
     }
+    vobs_thread.reset();
 }
 
 void COMM_MSA::stop_send_status_thread()
 {
     is_send_status_running = false;
-    if(send_status_thread->joinable())
+    if(send_status_thread && send_status_thread->joinable())
     {
         send_status_thread->join();
     }
+    send_status_thread.reset();
 }
 
 void COMM_MSA::stop_send_response_thread()
 {
     is_send_response_running = false;
     send_response_cv.notify_all();
-    if(send_response_thread->joinable())
+    if(send_response_thread && send_response_thread->joinable())
     {
         send_response_thread->join();
     }
+    send_response_thread.reset();
 }
