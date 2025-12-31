@@ -122,6 +122,9 @@ public Q_SLOTS:
     void slot_map_build_start();
     void slot_map_build_stop();
     std::pair<bool, QString> sync_map_save(const QString& _map_name);
+
+Q_SIGNALS:
+    void signal_plot_clear();
 };
 
 #endif // MAPPING_H

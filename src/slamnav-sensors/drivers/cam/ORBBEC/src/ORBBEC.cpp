@@ -137,10 +137,8 @@ void ORBBEC::close()
 
 void ORBBEC::restart(int idx)
 {
-    // restart를 순차적으로 실행 (persistent_ctx 공유 보호)
     std::lock_guard<std::mutex> lock(restart_mtx);
 
-    // 이미 restart 중이면 무시
     bool expected = false;
     if(!is_restarting[idx].compare_exchange_strong(expected, true))
     {
@@ -150,20 +148,15 @@ void ORBBEC::restart(int idx)
 
     log_info("restart requested, idx:{}", idx);
 
-    // grab_loop 중지
     grab_flag[idx] = false;
     if(grab_thread[idx] && grab_thread[idx]->joinable())
     {
         grab_thread[idx]->join();
     }
     grab_thread[idx].reset();
-
-    // reboot 시도하지 않고 grab_loop만 재시작
-    // device가 다시 나타날 때까지 grab_loop에서 재시도
     log_info("Restarting grab_loop without reboot, idx:{}", idx);
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
-    // grab_loop 재시작
     grab_flag[idx] = true;
     grab_thread[idx] = std::make_unique<std::thread>(&ORBBEC::grab_loop, this, idx);
 
@@ -410,9 +403,9 @@ void ORBBEC::grab_loop(int idx)
 
         int no_depth_cnt = 0, no_color_cnt = 0;
         int timeout_cnt = 0;
-        constexpr int MAX_NO_DEPTH_CNT = 500;
-        constexpr int MAX_NO_COLOR_CNT = 500;
-        constexpr int MAX_TIMEOUT_CNT = 200;
+        constexpr int MAX_NO_DEPTH_CNT = 100;
+        constexpr int MAX_NO_COLOR_CNT = 100;
+        constexpr int MAX_TIMEOUT_CNT  = 100;
 
         ob::PointCloudFilter point_cloud;
         bool filter_param_set = false;
@@ -430,7 +423,7 @@ void ORBBEC::grab_loop(int idx)
                         Q_EMIT signal_restart(idx);
                         break;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
 

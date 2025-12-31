@@ -1,27 +1,26 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "slamnav_common_types.h"
-#include "error_manager.h"
-
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <shared_mutex>
 
-#include <QObject>
-#include <QMessageBox>
-#include <QStringList>
+#include <QDebug>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
 #include <QJsonParseError>
-#include <QDebug>
+#include <QMessageBox>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QObject>
+#include <QStringList>
+
+#include "error_manager.h"
+#include "slamnav_common_types.h"
 
 constexpr int max_cam_cnt = 10;
-
 
 class CONFIG : public QObject
 {
@@ -29,7 +28,7 @@ class CONFIG : public QObject
     Q_DISABLE_COPY(CONFIG)
 
 public:
-    QMutex q_mtx;
+    QRecursiveMutex q_mtx;
 
     // make singleton
     static CONFIG* instance(QObject* parent = nullptr);
@@ -52,12 +51,12 @@ public:
     /***********************
      * robot unique
      ***********************/
-    QString get_robot_type_str();       // robot type_str
-    QString get_robot_model_str();      // robot model_str
-    QString get_robot_wheel_type();  // robot wheel type
-    QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
-    RobotType get_robot_type();         // robot type  : S100-A-3D
-    RobotModel get_robot_model();       // robot model : S100, D400, Mecanum, SEM ...
+    QString get_robot_type_str();           // robot type_str
+    QString get_robot_model_str();          // robot model_str
+    QString get_robot_wheel_type();         // robot wheel type
+    QString get_robot_serial_number();      // robot serial number: in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
+    RobotType get_robot_type();             // robot type  : S100-A-3D
+    RobotModel get_robot_model();           // robot model : S100, D400, Mecanum, SEM ...
 
     /***********************
      * robot hardware
@@ -79,98 +78,98 @@ public:
     double get_robot_ly();                  // robot ly
     double get_robot_alarm_bat_low();       // robot battery low alarm threshold (%)
     double get_robot_alarm_bat_critical();  // robot battery critical alarm threshold (%)
-    bool get_robot_use_alarm();       // robot use robot alarm
+    bool get_robot_use_alarm();             // robot use robot alarm
 
     /***********************
      * sensor common
      ***********************/
-    bool get_use_lidar_2d();            // check if the robot uses 2d lidar
-    QString get_lidar_2d_type();        // check 2d lidar type
-    QString get_lidar_2d_dev(int idx);  // check 2d lidar dev
-    int get_lidar_2d_num();             // check 2d lidar number
-    bool get_use_lidar_3d();            // check if the robot uses 3d lidar
-    QString get_lidar_3d_type();        // check 3d lidar type
-    int get_lidar_3d_num();             // check 3d lidar number
-    bool get_use_cam();                 // check if the robot uses cam
-    bool get_use_cam_rgb();             // check if the robot uses cam rgb
-    bool get_use_cam_depth();           // check if the robot uses cam depth
-    bool get_use_cam_filter();          // check if the robot uses cam filter
-    double get_cam_filter_ror_radius();
-    int get_cam_filter_ror_min_neighbors();
-    int get_cam_filter_cluster_min_size();
-    QString get_cam_type();             // check cam type
-    int get_cam_num();                  // check cam number
-    bool get_use_bqr();                 // check if the robot uses bottom QR sensor
-    bool get_use_imu();                 // check if the robot uses external IMU
-    bool get_use_aruco();               // check if the robot uses aruco marker (must used cam)
-    bool get_use_ekf();               // check if the robot uses aruco marker (must used cam)
+    bool    get_use_lidar_2d();                     // check if the robot uses 2d lidar
+    bool    get_use_lidar_2d_obstacle();            // check if the robot uses 2d lidar
+    QString get_lidar_2d_type();                    // check 2d lidar type
+    QString get_lidar_2d_dev(int idx);              // check 2d lidar dev
+    int     get_lidar_2d_num();                     // check 2d lidar number
+    bool    get_use_lidar_3d();                     // check if the robot uses 3d lidar
+    bool    get_use_lidar_3d_obstacle();            // check if the robot uses 3d lidar
+    QString get_lidar_3d_type();                    // check 3d lidar type
+    int     get_lidar_3d_num();                     // check 3d lidar number
+    bool    get_use_cam();                          // check if the robot uses cam
+    bool    get_use_cam_obstacle();                 // check if the robot uses 3d lidar
+    bool    get_use_cam_rgb();                      // check if the robot uses cam rgb
+    bool    get_use_cam_depth();                    // check if the robot uses cam depth
+    bool    get_use_cam_filter();                   // check if the robot uses cam filter
+    double  get_cam_filter_ror_radius();            // cam filter radius of removal radius
+    int     get_cam_filter_ror_min_neighbors();     // cam filter radius of removal min neighbors
+    int     get_cam_filter_cluster_min_size();      // cam filter cluster min size
+    QString get_cam_type();                         // check cam type
+    int     get_cam_num();                          // check cam number
+    bool    get_use_bqr();                          // check if the robot uses bottom QR sensor
+    bool    get_use_imu();                          // check if the robot uses external IMU
+    bool    get_use_aruco();                        // check if the robot uses aruco marker (must used cam)
+    bool    get_use_ekf();                          // check if the robot uses ekf(Extended-Kalman-Filter)
 
 
     /***********************
      * localization
      ***********************/
-    QString get_loc_mode();             // localization mode : 2D, 3D
+    QString get_loc_mode();                         // localization mode : 2D, 3D
 
     /***********************
      * networking
      ***********************/
-    bool get_use_multi();               // check if the robot mode is multi control
-    bool get_use_coop();                // check if the robot mode is coop control (cooperation control)
-    bool get_use_rtsp();                // check if the robot uses rtsp streaming (cam img)
-    bool get_use_rrs();                 // check if the robot uses rrs communication (robot repeat server)
-    bool get_use_msa();
-    bool get_use_fms();                 // check if the robot uses fms direct communication (must used test or simulation)
+    bool get_use_multi();                           // check if the robot mode is multi control
+    bool get_use_rtsp();                            // check if the robot uses rtsp streaming (cam img)
+    bool get_use_msa();                             // check if the robot uses msa communication
+    bool get_use_fms();                             // check if the robot uses fms direct communication (must used test or simulation)
 
     /***********************
      * debug & test
      ***********************/
-    bool get_use_sim();                 // check if the robot uses simulation mode
-    bool get_use_beep();                // check if the robot uses beep sound (internal beep sound when obstacle is detected)
-    QString get_server_ip();
-    QString get_server_id();
-    QString get_server_pw();
+    bool get_use_sim();                             // check if the robot uses simulation mode
+    bool get_use_beep();                            // check if the robot uses beep sound (internal beep sound when obstacle is detected)
+    QString get_server_ip();                        // get server ip address
+    QString get_server_id();                        // get server id
+    QString get_server_pw();                        // get server password
 
     /***********************
      * logging
      ***********************/
-    QString get_log_level();            // get spdlog level (trace, debug, info, warn, error, critical, off)
-    bool set_debug_lidar_2d();          // enable/disable LIDAR debug logs
-    bool set_debug_lidar_3d();
-    bool set_debug_mobile();            // enable/disable MOBILE debug logs
-    bool set_debug_comm_rrs();          // enable/disable COMM RRS debug logs
-    bool set_debug_autocontrol();
-    bool set_debug_localization();
-    bool set_debug_obsmap();
+    QString get_log_level();                        // get spdlog level (trace, debug, info, warn, error, critical, off)
+    bool get_debug_lidar_2d();                      // enable/disable LIDAR 2D debug logs
+    bool get_debug_lidar_3d();                      // enable/disable LIDAR 3D debug logs
+    bool get_debug_mobile();                        // enable/disable MOBILE debug logs
+    bool get_debug_comm_rrs();                      // enable/disable COMM RRS debug logs
+    bool get_debug_autocontrol();                   // enable/disable AUTOCONTROL debug logs
+    bool get_debug_localization();                  // enable/disable LOCALIZATION debug logs
+    bool get_debug_obsmap();                        // enable/disable OBSMAP debug logs
 
-    bool get_log_enable_file_output();  // enable/disable file output
-    QString get_log_file_path();        // get log file path
-    void set_spdlog_level();            // setup spdlog level from config
-    void set_spdlog_file_output();      // setup spdlog file output from config
+    bool get_log_enable_file_output();              // enable/disable file output
+    QString get_log_file_path();                    // get log file path
+    void set_spdlog_level();                        // setup spdlog level from config
 
     /***********************
-    * 3d lidar sensor
-    ***********************/
-    double get_lidar_bottom_min_range();    // bottom lidar tf list (maximum lidar number is 2)
-    double get_lidar_bottom_max_range();    // bottom lidar ip list (maximum lidar number is 2)
-    QString get_lidar_bottom_ip(int idx);   // bottom lidar max range (defalut: depends on the lidar)
-    QString get_lidar_bottom_tf(int idx);   // bottom lidar min range (defalut: 0.05~0.1m)
-    QString get_lidar_bottom_dev(int idx);  // bottom lidar tty dev
+     * lidar bottom sensor
+     ***********************/
+    double get_lidar_bottom_min_range();        // bottom lidar min range (defalut: 0.05~0.1m)
+    double get_lidar_bottom_max_range();        // bottom lidar max range (defalut: depends on the lidar)
+    QString get_lidar_bottom_ip(int idx);       // bottom lidar ip list (maximum lidar number is 2)
+    QString get_lidar_bottom_tf(int idx);       // bottom lidar tf list (maximum lidar number is 2)
+    QString get_lidar_bottom_dev(int idx);      // bottom lidar tty dev
 
     /***********************
      * 2d lidar sensor
      ***********************/
-    double get_lidar_2d_min_range();    // 2d lidar min range (defalut: 0.05~0.1m)
-    double get_lidar_2d_max_range();    // 2d lidar max range (defalut: depends on the lidar)
-    QString get_lidar_2d_ip(int idx);   // 2d lidar ip list (maximum lidar number is 2)
-    QString get_lidar_2d_tf(int idx);   // 2d lidar tf list (maximum lidar number is 2)
+    double get_lidar_2d_min_range();            // 2d lidar min range (defalut: 0.05~0.1m)
+    double get_lidar_2d_max_range();            // 2d lidar max range (defalut: depends on the lidar)
+    QString get_lidar_2d_ip(int idx);           // 2d lidar ip list (maximum lidar number is 2)
+    QString get_lidar_2d_tf(int idx);           // 2d lidar tf list (maximum lidar number is 2)
 
     /***********************
      * 3d lidar sensor
      ***********************/
-    double get_lidar_3d_min_range();    // 3d lidar tf list (maximum lidar number is 2)
-    double get_lidar_3d_max_range();    // 3d lidar ip list (maximum lidar number is 2)
-    QString get_lidar_3d_ip(int idx);   // 3d lidar max range (defalut: depends on the lidar)
-    QString get_lidar_3d_tf(int idx);   // 3d lidar min range (defalut: 0.05~0.1m)
+    double get_lidar_3d_min_range();            // 3d lidar min range (defalut: 0.05~0.1m)
+    double get_lidar_3d_max_range();            // 3d lidar max range (defalut: depends on the lidar)
+    QString get_lidar_3d_ip(int idx);           // 3d lidar ip list (maximum lidar number is 2)
+    QString get_lidar_3d_tf(int idx);           // 3d lidar tf list (maximum lidar number is 2)
 
     /***********************
      * cam sensor
@@ -245,119 +244,119 @@ public:
     /***********************
      * obstacle map
      ***********************/
-    int get_obs_avoid_mode();               // is avoid mode (0: not avoie, 1: avoid mode)
-    double get_obs_deadzone();              // obstacle stopping distance
-    double get_obs_local_goal_dist();       //
-    double get_obs_safe_margin_x();         //
-    double get_obs_safe_margin_y();         //
-    double get_obs_path_margin_x();         //
-    double get_obs_path_margin_y();         //
-    double get_obs_map_grid_size();         //
-    double get_obs_map_range();             //
-    double get_obs_map_min_v();             //
-    double get_obs_map_min_z();             //
-    double get_obs_map_max_z();             //
-    double get_obs_predict_time();          //
-    double get_obs_distance_led_near();     // LED near distance
-    double get_obs_distance_led_far();      // LED far distance
+    int get_obs_avoid_mode();                       // is avoid mode (0: not avoie, 1: avoid mode)
+    double get_obs_deadzone();                      // obstacle stopping distance
+    double get_obs_local_goal_dist();               // local goal distance
+    double get_obs_safe_margin_x();                 // safe margin x-axis
+    double get_obs_safe_margin_y();                 // safe margin y-axis
+    double get_obs_path_margin_x();                 // path margin x-axis
+    double get_obs_path_margin_y();                 // path margin y-axis
+    double get_obs_map_grid_size();                 // obstacle map grid size
+    double get_obs_map_range();                     // obstacle map range
+    double get_obs_map_min_v();                     // obstacle map minimum velocity
+    double get_obs_map_min_z();                     // obstacle map minimum z height
+    double get_obs_map_max_z();                     // obstacle map maximum z height
+    double get_obs_predict_time();                  // obstacle prediction time
+    double get_obs_distance_led_near();             // LED near distance
+    double get_obs_distance_led_far();              // LED far distance
 
     /***********************
      * drive
      ***********************/
-    double get_drive_goal_approach_gain();      //
-    double get_drive_goal_dist();               //
-    double get_drive_goal_th();                 //
-    double get_drive_extended_control_time();   //
-    double get_drive_v_deadzone();              //
-    double get_drive_w_deadzone();              //
+    double get_drive_goal_approach_gain();          // drive goal approach gain
+    double get_drive_goal_dist();                   // drive goal distance threshold
+    double get_drive_goal_th();                     // drive goal angle threshold
+    double get_drive_extended_control_time();       // drive extended control time
+    double get_drive_v_deadzone();                  // drive linear velocity deadzone
+    double get_drive_w_deadzone();                  // drive angular velocity deadzone
 
     /***********************
      * docking
      ***********************/
-    int get_docking_type();                         //
-    double get_docking_pointdock_margin();          //
-    double get_docking_goal_dist();                 //
-    double get_docking_goal_th();                   //
-    double get_docking_extended_control_time();     //
-    double get_docking_undock_reversing_distance(); //
-    double get_docking_kp_dist();                   //
-    double get_docking_kd_dist();                   //
-    double get_docking_kp_th();                     //
-    double get_docking_kd_th();                     //
-    double get_docking_clust_dist_threshold();      //
-    double get_docking_clust_dist_threshold_min();  //
-    double get_docking_clust_dist_threshold_max();  //
-    double get_docking_clust_angle_threshold();     //
-    double get_docking_size_x_min();                //
-    double get_docking_size_x_max();                //
-    double get_docking_icp_err_threshold();
-    double get_docking_find_vmark_dist_threshold_max();
-    double get_docking_chg_length();
-    double get_docking_dwa_yaw_weight();
-    double get_docking_check_motor_a();
-    double get_docking_waiting_time();
-    double get_docking_final_icp_err_threshold();
-    double get_docking_x_offset();
-    double get_docking_y_offset();
-    double get_docking_linear_x_offset();
-    bool get_docking_reverse_mode();
-    QString get_charge_type();
-    QString get_lidar_type();
-    int get_docking_field();
-    double get_xnergy_set_current();
-    int get_docking_retry_count();
+    int get_docking_type();                                 // docking type (0: L_dock, 1: FQR_dock, 2: bqr)
+    double get_docking_pointdock_margin();                  // point dock margin distance
+    double get_docking_goal_dist();                         // docking goal distance threshold
+    double get_docking_goal_th();                           // docking goal angle threshold
+    double get_docking_kp_dist();                           // docking PD controller proportional gain for distance
+    double get_docking_kd_dist();                           // docking PD controller derivative gain for distance
+    double get_docking_kp_th();                             // docking PD controller proportional gain for angle
+    double get_docking_kd_th();                             // docking PD controller derivative gain for angle
+    double get_docking_clust_dist_threshold();              // docking cluster distance threshold
+    double get_docking_clust_dist_threshold_min();          // docking cluster distance threshold minimum
+    double get_docking_clust_dist_threshold_max();          // docking cluster distance threshold maximum
+    double get_docking_clust_angle_threshold();             // docking cluster angle threshold
+    double get_docking_size_x_min();                        // docking size x-axis minimum
+    double get_docking_size_x_max();                        // docking size x-axis maximum
+    double get_docking_icp_err_threshold();                 // docking ICP error threshold
+    double get_docking_find_vmark_dist_threshold_max();     // docking find vmark distance threshold maximum
+    double get_docking_chg_length();                        // docking charge length
+    double get_docking_dwa_yaw_weight();                    // docking DWA yaw weight
+    double get_docking_check_motor_a();                     // docking check motor acceleration
+    double get_docking_waiting_time();                      // docking waiting time
+    double get_docking_final_icp_err_threshold();           // docking final ICP error threshold
+    double get_docking_x_offset();                          // docking x-axis offset
+    double get_docking_y_offset();                          // docking y-axis offset
+    double get_docking_linear_x_offset();                   // docking linear x-axis offset
+    bool get_docking_reverse_mode();                        // docking reverse mode
+    QString get_charge_type();                              // charge type (RAINBOW, XNERGY, etc)
+    int get_docking_field();                                // docking field number
+    double get_xnergy_set_current();                        // xnergy set current
+    int get_docking_retry_count();                          // docking retry count
     /***********************
      * map
      ***********************/
-    QString get_map_path();
-    void set_map_path(const QString& path);
+    QString get_map_path();                             // get map file path
+    void set_map_path(const QString& path);             // set map file path
 
     /***********************
      * safety monitoring
      ***********************/
-    bool get_use_monitoring_field();
-    int get_monitoring_field_num();
-    double get_monitoring_traj_dt();
-    double get_monitoring_predict_t();
-    std::vector<double> get_field_size_min_x();
-    std::vector<double> get_field_size_max_x();
-    std::vector<double> get_field_size_min_y();
-    std::vector<double> get_field_size_max_y();
-    bool get_use_safety_cross_monitor();
-    bool get_use_safety_speed_control();
-    bool get_use_safety_obstacle_detect();
-    bool get_use_safety_bumper();
-    bool get_use_safety_interlock();
+    bool get_use_monitoring_field();                    // check if the robot uses monitoring field
+    int get_monitoring_field_num();                     // get number of monitoring fields
+    double get_monitoring_traj_dt();                    // get monitoring trajectory delta time
+    double get_monitoring_predict_t();                  // get monitoring prediction time
+    std::vector<double> get_field_size_min_x();         // get field size minimum x values
+    std::vector<double> get_field_size_max_x();         // get field size maximum x values
+    std::vector<double> get_field_size_min_y();         // get field size minimum y values
+    std::vector<double> get_field_size_max_y();         // get field size maximum y values
+    bool get_use_safety_cross_monitor();                // check if the robot uses cross monitor safety
+    bool get_use_safety_speed_control();                // check if the robot uses speed control safety
+    bool get_use_safety_obstacle_detect();              // check if the robot uses obstacle detection safety
+    bool get_use_safety_bumper();                       // check if the robot uses bumper safety
+    bool get_use_safety_interlock();                    // check if the robot uses interlock safety
 
-    //set mileage
-    double get_mileage();
-
-    void set_mileage(const QString &mileage);
+    /***********************
+     * mileage
+     ***********************/
+    double get_mileage();                               // get robot mileage
+    void set_mileage(const QString &mileage);           // set robot mileage
 
     /***********************
      * missing variables check
      ***********************/
-    QStringList get_missing_variables();
-    bool has_missing_variables();
-    void show_missing_variables_dialog();
+    QStringList get_missing_variables();                // get list of missing variables
+    bool has_missing_variables();                       // check if there are missing variables
+    void show_missing_variables_dialog();               // show missing variables dialog
 
     /***********************
      * QA
      ***********************/
-    double get_qa_step_distance();
-    double get_qa_stop_min_distance();
+    double get_qa_step_distance();                      // get QA step distance
+    double get_qa_stop_min_distance();                  // get QA stop minimum distance
 
     /***********************
      * auto update config
      ***********************/
-    void set_update_config_file();
-    bool set_backup_config_file();
-    void set_restore_config_file_backup();
-    void set_default_config_template();
-    void cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups);
+    void set_update_config_file();                      // update config file
+    bool set_backup_config_file();                      // backup config file
+    void set_restore_config_file_backup();              // restore config file from backup
+    void set_default_config_template();                 // set default config template
+    void cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups);  // cleanup old backup files
 
-    // update 
-    bool get_update_use_config();
+    /***********************
+     * update
+     ***********************/
+    bool get_update_use_config();                       // check if the robot uses config update
 
 private:
     /***********************
@@ -398,8 +397,7 @@ private:
      * default config objects
      ***********************/
     QJsonObject set_default_config_object();
-    QJsonObject merge_config_objects(const QJsonObject& existing, const QJsonObject& defaults);  
-    void add_missing_keys_to_section(QJsonObject& target, const QJsonObject& defaults, const QString& section_name);
+    QJsonObject merge_config_objects(const QJsonObject& existing, const QJsonObject& defaults);
 
     QJsonObject set_default_robot_config();
     QJsonObject set_default_sensors_config();
@@ -423,10 +421,6 @@ private:
     QJsonObject set_default_rplidar_config();
     QJsonObject set_default_livox_config();
     QJsonObject set_default_orbbec_config();
-    
-    QJsonArray set_default_lidar_2d_config_array();
-    QJsonArray set_default_lidar_3d_config_array();
-    QJsonArray set_default_cam_config_array();
 
 private:
     explicit CONFIG(QObject *parent = nullptr);
@@ -476,9 +470,7 @@ private:
 
     // Networking
     bool USE_MULTI     = false;
-    bool USE_COMM_COOP = false;
     bool USE_COMM_RTSP = false;
-    bool USE_COMM_RRS  = false;
     bool USE_COMM_MSA  = false;
     bool USE_COMM_FMS  = false;
 
@@ -515,6 +507,7 @@ private:
     // lidar 2d
     int LIDAR_2D_NUM = 1;
     bool USE_LIDAR_2D = false;
+    bool USE_LIDAR_2D_OBSTACLE = true;
     QString LIDAR_2D_TYPE = "";
     double LIDAR_2D_MIN_RANGE = 1.0;
     double LIDAR_2D_MAX_RANGE = 40.0;
@@ -524,6 +517,7 @@ private:
 
     // lidar 3d
     bool USE_LIDAR_3D = false;
+    bool USE_LIDAR_3D_OBSTACLE = true;
     QString LIDAR_3D_TYPE = "";
     int LIDAR_3D_NUM = 1;
     double LIDAR_3D_MIN_RANGE = 1.0;
@@ -538,6 +532,7 @@ private:
     double  CAM_HEIGHT_MIN = 0.1; // for rgbd-cam cloud cropping
     double  CAM_HEIGHT_MAX = 1.0;
     bool    USE_CAM = false;
+    bool    USE_CAM_OBSTACLE = true;
     bool    USE_CAM_RGB = false;
     bool    USE_CAM_DEPTH = false;
     bool    USE_CAM_FILTER = false;
@@ -677,11 +672,8 @@ private:
     double QA_STEP_DISTANCE = 0.7;
     double QA_STOP_MIN_DISTANCE = 0.3;
 
-
     // update 
     bool USE_CONFIG_UPDATE = false;
-
-    
 
     QStringList load_folder_list();
 

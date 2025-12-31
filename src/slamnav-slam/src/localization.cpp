@@ -1045,11 +1045,13 @@ void LOCALIZATION::obs_loop()
     //printf("[LOCALIZATION] get_obs_map_max_z: %.3f, get_obs_map_min_z: %.3f, get_obs_map_range: %.3f\n", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
     spdlog::info("[LOCALIZATION] get_obs_map_max_z: {}, get_obs_map_min_z: {}, get_obs_map_range: {}", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
 
-    if(obsmap)
+    if(!obsmap)
     {
-        //printf("[LOCALIZATION] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
-        spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_min_z(),obsmap->get_obs_box_range());
+        log_error("obsmap is not initialized");
+        return;
     }
+
+    spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_min_z(),obsmap->get_obs_box_range());
 
     std::vector<Eigen::Vector3d> temp_pts;
     temp_pts.reserve(10000);
@@ -1068,7 +1070,7 @@ void LOCALIZATION::obs_loop()
         }
 
         Eigen::Matrix4d _cur_tf = get_cur_tf();
-        if(config->get_use_lidar_2d())
+        if(config->get_use_lidar_2d() && config->get_use_lidar_2d_obstacle())
         {
             FRAME scan = lidar_2d->get_cur_frm();
             if(!scan.pts.empty())
@@ -1088,7 +1090,7 @@ void LOCALIZATION::obs_loop()
             }
         }
 
-        if(config->get_use_lidar_3d())
+        if(config->get_use_lidar_3d() && config->get_use_lidar_3d_obstacle())
         {
             TIME_PTS scan = lidar_3d->get_cur_frm();
             if(!scan.pts.empty())
@@ -1108,7 +1110,7 @@ void LOCALIZATION::obs_loop()
             }
         }
 
-        if(config->get_use_cam())
+        if(config->get_use_cam() && config->get_use_cam_obstacle())
         {
             for(int i = 0; i < config->get_cam_num(); ++i)
             {
@@ -1122,17 +1124,15 @@ void LOCALIZATION::obs_loop()
 
                     std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
                     #pragma omp parallel for
-                    for(size_t i = 0; i < scan.pts.size(); i++)
+                    for(size_t p = 0; p < scan.pts.size(); p++)
                     {
-                        transformed_pts[i] = R0 * scan.pts[i] + t0;
+                        transformed_pts[p] = R0 * scan.pts[p] + t0;
                     }
 
                     temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
                 }
             }
         }
-
-        // std::cout << "temp_pts size: " << temp_pts.size() << std::endl;
 
         TIME_POSE_PTS tpp;
         tpp.tf = _cur_tf;

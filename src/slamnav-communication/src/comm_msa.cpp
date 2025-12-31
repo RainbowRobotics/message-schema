@@ -1083,6 +1083,7 @@ void COMM_MSA::handle_mapping_start(DATA_MAPPING& msg)
     msg.message = "";
     send_mapping_response(msg);
 
+
     Q_EMIT (signal_map_build_start());
 }
 
@@ -1616,6 +1617,10 @@ void COMM_MSA::send_move_response(const DATA_MOVE& msg)
         send_response_queue.push(socket_msg);
         send_response_cv.notify_one();
     }
+
+    QJsonObject root_obj_json = sio_object_to_qt_json_object(root_obj->get_map());
+    QString wrapped = QString(QJsonDocument(root_obj_json).toJson(QJsonDocument::Compact));
+    log_info("{}", wrapped.toStdString());
 }
 
 void COMM_MSA::send_localization_response(const DATA_LOCALIZATION& msg)
@@ -1646,6 +1651,10 @@ void COMM_MSA::send_localization_response(const DATA_LOCALIZATION& msg)
         send_response_queue.push(socket_msg);
         send_response_cv.notify_one();
     }
+
+    QJsonObject root_obj_json = sio_object_to_qt_json_object(root_obj->get_map());
+    QString wrapped = QString(QJsonDocument(root_obj_json).toJson(QJsonDocument::Compact));
+    log_info("{}", wrapped.toStdString());
 }
 
 void COMM_MSA::send_load_response(const DATA_LOAD& msg)
@@ -1667,12 +1676,15 @@ void COMM_MSA::send_load_response(const DATA_LOAD& msg)
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "loadResponse";
     socket_msg.data  = root_obj;
-
     {
         std::lock_guard<std::mutex> lock(send_response_mtx);
         send_response_queue.push(socket_msg);
         send_response_cv.notify_one();
     }
+
+    QJsonObject root_obj_json = sio_object_to_qt_json_object(root_obj->get_map());
+    QString wrapped = QString(QJsonDocument(root_obj_json).toJson(QJsonDocument::Compact));
+    log_info("{}", wrapped.toStdString());
 }
 
 void COMM_MSA::send_mapping_response(const DATA_MAPPING& msg)
@@ -1682,19 +1694,23 @@ void COMM_MSA::send_mapping_response(const DATA_MAPPING& msg)
         return;
     }
 
-    sio::object_message::ptr root = sio::object_message::create();
+    sio::object_message::ptr root_obj = sio::object_message::create();
 
-    add_to_obj(root, "id", msg.id);
-    add_to_obj(root, "command", msg.command);
-    add_to_obj(root, "result", msg.result);
-    add_to_obj(root, "message", msg.message);
-    add_to_obj(root, "time", static_cast<long long>(msg.time * 1000));
+    add_to_obj(root_obj, "id", msg.id);
+    add_to_obj(root_obj, "command", msg.command);
+    add_to_obj(root_obj, "result", msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+    add_to_obj(root_obj, "time", static_cast<long long>(msg.time * 1000));
 
     {
         std::lock_guard<std::mutex> lock(send_response_mtx);
-        send_response_queue.push({"mappingResponse", root});
+        send_response_queue.push({"mappingResponse", root_obj});
         send_response_cv.notify_one();
     }
+
+    QJsonObject root_obj_json = sio_object_to_qt_json_object(root_obj->get_map());
+    QString wrapped = QString(QJsonDocument(root_obj_json).toJson(QJsonDocument::Compact));
+    log_info("{}", wrapped.toStdString());
 }
 
 void COMM_MSA::send_response_loop()
@@ -2281,9 +2297,6 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
         if(!QDir(load_dir).exists())
         {
             msg.result = "reject";
-            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
-            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
-
             send_load_response(msg);
             return;
         }
@@ -2292,10 +2305,6 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
         if(map_exist_msg == "no 2d map!")
         {
             msg.result = "reject";
-            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_2D_MAP, ERROR_MANAGER::LOAD_MAP);
-            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_2D_MAP, ERROR_MANAGER::LOAD_MAP);
-
-
             send_load_response(msg);
             return;
         }
@@ -2304,25 +2313,31 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
             if(map_exist_msg == "no 3d map!")
             {
                 msg.result = "reject";
-                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
-                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
-
                 send_load_response(msg);
                 return;
             }
         }
 
+
         loc->stop();
         obsmap->clear();
         config->set_map_path(load_dir);
-
-        msg.result = "accept";
-        msg.message = "";
-        send_load_response(msg);
         unimap->load_map(load_dir);
 
-        // todo make all update
+        if(unimap->get_is_loaded() == MAP_LOADED)
+        {
+            msg.result = "success";
+            msg.message = "";
+            send_load_response(msg);
+        }
+        else
+        {
+            msg.result = "fail";
+            msg.message = "";
+            send_load_response(msg);
+        }
 
+        Q_EMIT (signal_ui_all_update());
     }
     else
     {
@@ -2331,7 +2346,6 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
         ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
 
         send_load_response(msg);
-        return;
     }
 }
 

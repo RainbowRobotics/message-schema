@@ -1300,24 +1300,64 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
 
         size_t min_seg_idx = 0;
-        double min_seg_dist = std::numeric_limits<double>::max();
-
+        bool found_inside = false;
         for(size_t p = 0; p < node_pose.size()-1; p++)
         {
             Eigen::Vector3d pos0 = node_pose[p].block(0,3,3,1);
             Eigen::Vector3d pos1 = node_pose[p+1].block(0,3,3,1);
 
-            double dist = calc_seg_dist(pos0, pos1, _cur_pos);
-            if(dist < min_seg_dist)
+            Eigen::Vector3d ab = pos1 - pos0;
+            Eigen::Vector3d av = _cur_pos - pos0;
+            double t = av.dot(ab) / ab.dot(ab);
+
+            if(t >= 0.0 && t <= 1.0)
             {
                 min_seg_idx = p;
-                min_seg_dist = dist;
+                found_inside = true;
+                break;
             }
         }
 
+        if(!found_inside)
+        {
+            size_t min_node_idx = 0;
+            double min_node_dist = std::numeric_limits<double>::max();
+
+            for(size_t p = 0; p < node_pose.size(); p++)
+            {
+                double dist = calc_dist_2d(node_pose[p].block(0,3,3,1) - _cur_pos);
+                if(dist < min_node_dist)
+                {
+                    min_node_idx = p;
+                    min_node_dist = dist;
+                }
+            }
+
+            if(min_node_idx >= node_pose.size() - 1)
+            {
+                min_seg_idx = node_pose.size() - 2;
+            }
+            else
+            {
+                min_seg_idx = min_node_idx;
+            }
+        }
+
+        log_info("min_seg_idx: {}, found_inside: {}, node_pose.size(): {}",
+        min_seg_idx, found_inside, node_pose.size());
+
         // approach point
         Eigen::Matrix4d app = get_approach_pose(node_pose[min_seg_idx], node_pose[min_seg_idx+1], cur_tf);
-        node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
+
+        if(min_seg_idx == 0)
+        {
+            node_pose.erase(node_pose.begin(), node_pose.begin() + (min_seg_idx + 1));
+        }
+        else
+        {
+            node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
+        }
+
         node_pose.insert(node_pose.begin(), app);
         node_pose.insert(node_pose.begin(), cur_tf);
     }
@@ -1406,27 +1446,67 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         }
         else
         {
-            const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
+            Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
 
             size_t min_seg_idx = 0;
-            double min_seg_dist = std::numeric_limits<double>::max();
-
+            bool found_inside = false;
             for(size_t p = 0; p < node_pose.size()-1; p++)
             {
                 Eigen::Vector3d pos0 = node_pose[p].block(0,3,3,1);
                 Eigen::Vector3d pos1 = node_pose[p+1].block(0,3,3,1);
 
-                double dist = calc_seg_dist(pos0, pos1, _cur_pos);
-                if(dist < min_seg_dist)
+                Eigen::Vector3d ab = pos1 - pos0;
+                Eigen::Vector3d av = _cur_pos - pos0;
+                double t = av.dot(ab) / ab.dot(ab);
+
+                if(t >= 0.0 && t <= 1.0)
                 {
                     min_seg_idx = p;
-                    min_seg_dist = dist;
+                    found_inside = true;
+                    break;
                 }
             }
 
+            if(!found_inside)
+            {
+                size_t min_node_idx = 0;
+                double min_node_dist = std::numeric_limits<double>::max();
+
+                for(size_t p = 0; p < node_pose.size(); p++)
+                {
+                    double dist = calc_dist_2d(node_pose[p].block(0,3,3,1) - _cur_pos);
+                    if(dist < min_node_dist)
+                    {
+                        min_node_idx = p;
+                        min_node_dist = dist;
+                    }
+                }
+
+                if(min_node_idx >= node_pose.size() - 1)
+                {
+                    min_seg_idx = node_pose.size() - 2;
+                }
+                else
+                {
+                    min_seg_idx = min_node_idx;
+                }
+            }
+
+            log_info("min_seg_idx: {}, found_inside: {}, node_pose.size(): {}",
+            min_seg_idx, found_inside, node_pose.size());
+
             // approach point
             Eigen::Matrix4d app = get_approach_pose(node_pose[min_seg_idx], node_pose[min_seg_idx+1], cur_tf);
-            node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
+
+            if(min_seg_idx == 0)
+            {
+                node_pose.erase(node_pose.begin(), node_pose.begin() + (min_seg_idx + 1));
+            }
+            else
+            {
+                node_pose.erase(node_pose.begin(), node_pose.begin() + min_seg_idx);
+            }
+
             node_pose.insert(node_pose.begin(), app);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
@@ -2224,14 +2304,21 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     std::vector<Eigen::Matrix4d> _path_pose;
     std::vector<Eigen::Vector3d> _path_pos;
     int range = config->get_obs_local_goal_dist()/AUTOCONTROL_INFO::global_path_step;
-    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
+    int st_idx = saturation(cur_idx - 1, 0, global_path.pos.size()-2);
     int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
     for(int p = st_idx; p <= ed_idx; p++)
     {
         _path_pose.push_back(global_path.pose[p]);
         _path_pos.push_back(global_path.pos[p]);
     }
-    double st_v = global_path.ref_v[st_idx];
+
+    Eigen::Vector3d control_input = mobile->get_control_input();
+
+    double cur_vx = control_input[0];
+    double cur_vy = control_input[1];
+    double cur_v = std::sqrt(cur_vx*cur_vx + cur_vy*cur_vy);
+
+    double st_v = std::max<double>(global_path.ref_v[st_idx], cur_v);
 
     if(_path_pose.size() == 1)
     {
@@ -2323,120 +2410,6 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         res.ed_tf = path_pose.back(); // local goal
         return res;
     }
-}
-
-PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
-{
-    // get current pose & velocity
-    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-    Eigen::Vector3d cur_vel = mobile->get_control_input();
-
-    if (is_move_backward)
-    {
-        // flip robot frame for back mode
-        Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
-        Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);
-        Rz(1,0) =  sin(M_PI);  Rz(1,1) =  cos(M_PI);
-        cur_tf = cur_tf * Rz;
-
-        // make current velocity negative
-        cur_vel[0] = -std::abs(cur_vel[0]);
-    }
-
-    Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-    int cur_idx = get_nn_idx(global_path.pos, cur_pos);
-
-    // get local path segment
-    std::vector<Eigen::Matrix4d> _path_pose;
-    std::vector<Eigen::Vector3d> _path_pos;
-    int range = config->get_obs_local_goal_dist() / AUTOCONTROL_INFO::global_path_step;
-    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
-    int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
-
-    for(int p = st_idx; p <= ed_idx; p++)
-    {
-        _path_pose.push_back(global_path.pose[p]);
-        _path_pos.push_back(global_path.pos[p]);
-    }
-
-    double st_v = global_path.ref_v[st_idx];
-    if (is_move_backward)
-    {
-        st_v = - std::abs(st_v);
-
-    }
-    if(_path_pose.size() == 1)
-    {
-        std::vector<double> ref_v{ st_v };
-        PATH res;
-        res.t = get_time();
-        res.pose = _path_pose;
-        res.pos = _path_pos;
-        res.ref_v = ref_v;
-        res.ed_tf = _path_pose.back();
-        return res;
-    }
-
-    // resample & smooth
-    std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
-    path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
-
-    std::vector<Eigen::Vector3d> path_pos;
-    for(size_t i=0; i<path_pose.size(); i++)
-    {
-        path_pos.push_back(path_pose[i].block(0,3,3,1));
-    }
-
-    // ccma smoothing
-    path_pos = path_ccma(path_pos);
-    for(size_t i=0; i<path_pose.size(); i++)
-    {
-        path_pose[i].block(0,3,3,1) = path_pos[i];
-    }
-
-    // calc ref_v
-    std::vector<double> ref_v;
-    calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
-
-    // back mode: force all velocities negative
-    if(is_move_backward)
-    {
-        for(size_t i=0; i<ref_v.size(); i++)
-        {
-            ref_v[i] = -std::abs(ref_v[i]);
-        }
-    }
-
-    // adjust initial part to current velocity
-    int cur_local_idx = get_nn_idx(path_pos, cur_pos);
-    for(int i=0; i <= cur_local_idx && i < ref_v.size(); i++)
-    {
-        ref_v[i] = cur_vel[0];
-    }
-
-    // check global path end
-    double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
-    if(d < config->get_drive_goal_dist())
-    {
-        ref_v.back() = params.ED_V;
-        int edv_padding_num = std::min((int)(AUTOCONTROL_INFO::global_path_step/AUTOCONTROL_INFO::local_path_step*2), (int)ref_v.size());
-        for(int i = 0; i < edv_padding_num; i++)
-        {
-            ref_v[ref_v.size() - i - 1] = params.ED_V;
-        }
-    }
-
-    // smoothing ref_v
-    ref_v = smoothing_v(ref_v, AUTOCONTROL_INFO::local_path_step);
-
-    // set result
-    PATH res;
-    res.t = get_time();
-    res.pose = path_pose;
-    res.pos = path_pos;
-    res.ref_v = ref_v;
-    res.ed_tf = path_pose.back();
-    return res;
 }
 
 PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
@@ -2744,7 +2717,8 @@ void AUTOCONTROL::control_loop()
             }
 
             // final goal reached
-            if(err_th < config->get_drive_goal_th()*D2R)
+            bool is_single_node_path = (global_path.node.size() == 1);
+            if(err_th < config->get_drive_goal_th()*D2R && !is_single_node_path)
             {
                 // move response
                 Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
@@ -2769,7 +2743,7 @@ void AUTOCONTROL::control_loop()
             else
             {
                 // jump to final align
-                fsm_state = AUTO_FSM_FINAL_ALIGN;
+                fsm_state = AUTO_FSM_DRIVING;
                 log_info("jump to final align state, err_d: {}, err_th: {}", err_d, err_th*R2D);
             }
         }

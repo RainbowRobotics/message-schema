@@ -615,7 +615,7 @@ void LIDAR_2D::merge_loop()
             storage[1].erase(storage[1].begin(), storage[1].begin() + best_j + 1);
 
             //printf("[LIDAR] paired t=%.6f, idx: (%zu, %zu), pts0_t=%.6f, pts1_t=%.6f, pts0=%zu, pts1=%zu, total=%zu (storage: %zu, %zu))\n", merge_frm.t, ref_i, best_j, best0.t0, best1.t0, merge_frm.pts.size(), best0.pts.size(), best1_pts.size(), storage[0].size(), storage[1].size());
-            if(config->set_debug_lidar_2d())
+            if(config->get_debug_lidar_2d())
             {
                 spdlog::debug("[LIDAR] paired t={:.6f}, idx: ({}, {}), pts0_t={:.6f}, pts1_t={:.6f},pts0={}, pts1={}, total={} (storage: {}, {})",merge_frm.t,ref_i, best_j,best0.t0, best1.t0,merge_frm.pts.size(),best0.pts.size(), best1_pts.size(),storage[0].size(),storage[1].size());
             }

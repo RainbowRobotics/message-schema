@@ -243,7 +243,6 @@ private:
      ***********************/
     // calculate paths with higher resolution (local path)
     PATH calc_local_path(PATH& global_path);
-    PATH calc_local_path_with_cur_vel(PATH& global_path);
 
     // calculate paths with higher resolution (avoid path)
     PATH calc_avoid_path(PATH& global_path);

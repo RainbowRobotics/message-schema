@@ -1371,10 +1371,12 @@ void MAPPING::slot_map_build_start()
     }
 
     // stop first
+    loc->stop();
     stop();
 
     // clear
-    clear();
+    unimap->clear();
+    Q_EMIT (signal_plot_clear());
 
     // mapping start
     start();

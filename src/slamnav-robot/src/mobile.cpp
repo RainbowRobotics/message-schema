@@ -2283,13 +2283,11 @@ void MOBILE::move(double vx, double vy, double wz)
         return;
     }
 
-
-    if(config->set_debug_mobile())
+    if(config->get_debug_mobile())
     {
         // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz*R2D);
         spdlog::debug("[MOBILE] cmd: {:.6f},{:.6f},{:.6f}",vx, vy, wz*R2D);
     }
-
 
     // packet
     float _vx = vx;

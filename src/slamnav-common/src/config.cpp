@@ -1,6 +1,7 @@
 #include "config.h"
+#include "logger.h"
 
-namespace 
+namespace
 {
     const char* MODULE_NAME = "CONFIG";
 }
@@ -55,23 +56,20 @@ void CONFIG::load_cam_serial_number()
             for(int p = 0; p < cam_cnt; p++)
             {
                 CAM_SERIAL_NUMBER[p] = obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString();
-                //printf("[CONFIG] CAM_SERIAL_NUMBER_%d, %s\n", p, obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString().toLocal8Bit().data());
-                spdlog::info("[CONFIG] CAM_SERIAL_NUMBER_{}: {}", p, qUtf8Printable(CAM_SERIAL_NUMBER[p]));
+                log_info("CAM_SERIAL_NUMBER_{}: {}", p, qUtf8Printable(CAM_SERIAL_NUMBER[p]));
             }
         }
 
         QJsonObject obj_robot = obj["robot"].toObject();
         {
             ROBOT_SERIAL_NUMBER = obj_robot["ROBOT_SERIAL_NUMBER"].toString();
-            //printf("[CONFIG] ROBOT_SERIAL_NUMBER, %s\n", obj_robot["ROBOT_SERIAL_NUMBER"].toString().toLocal8Bit().data());
-            spdlog::info("[CONFIG] ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
+            log_info("ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
         }
 
         // complete
         is_load = true;
         config_sn_file.close();
-        //printf("[CONFIG] %s, load successed\n", path_cam_serial_number.toLocal8Bit().data());
-        spdlog::info("[CONFIG] {}, load succeeded", qUtf8Printable(path_cam_serial_number));
+        log_info("{}, load succeeded", qUtf8Printable(path_cam_serial_number));
     }
 }
 
@@ -82,7 +80,7 @@ void CONFIG::load()
     QFile config_file(path_config);
     if(!config_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        spdlog::warn("[CONFIG] Failed to open config file: {}", qUtf8Printable(path_config));
+        log_warn("Failed to open config file: {}", qUtf8Printable(path_config));
         return;
     }
 
@@ -93,7 +91,7 @@ void CONFIG::load()
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        spdlog::warn("[CONFIG] JSON parse error: {}", qUtf8Printable(parseError.errorString()));
+        log_warn("JSON parse error: {}", qUtf8Printable(parseError.errorString()));
         return;
     }
 
@@ -121,8 +119,7 @@ void CONFIG::load()
     load_update_config(obj);
 
     is_load = true;
-    //printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
-    spdlog::info("[CONFIG] {}, load succeeded", qUtf8Printable(path_config));
+    log_info("{}, load succeeded", qUtf8Printable(path_config));
 
     // spdlog level setup
     set_spdlog_level();
@@ -164,8 +161,7 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
     double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
     ROBOT_RADIUS = std::sqrt(lx * lx + ly * ly);
-    //printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
-    spdlog::info("[CONFIG] ROBOT_RADIUS(auto calc): {:.3f}", ROBOT_RADIUS);
+    log_info("ROBOT_RADIUS(auto calc): {:.3f}", ROBOT_RADIUS);
 }
 
 void CONFIG::load_sensors_config(const QJsonObject &obj)
@@ -186,6 +182,9 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_string(obj_sensors, "LIDAR_2D_TYPE",  LIDAR_2D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "LIDAR_3D_TYPE",  LIDAR_3D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_OBSTACLE",   USE_CAM_OBSTACLE,  "sensors");
+    check_and_set_bool(obj_sensors,   "USE_LIDAR_2D_OBSTACLE",   USE_LIDAR_2D_OBSTACLE,  "sensors");
+    check_and_set_bool(obj_sensors,   "USE_LIDAR_3D_OBSTACLE",   USE_LIDAR_3D_OBSTACLE,  "sensors");
 
     check_and_set_double(obj_sensors, "CAM_FILTER_ROR_RADIUS",        CAM_FILTER_ROR_RADIUS,        "sensors");
     check_and_set_int(obj_sensors,    "CAM_FILTER_ROR_MIN_NEIGHBORS", CAM_FILTER_ROR_MIN_NEIGHBORS, "sensors");
@@ -196,9 +195,9 @@ void CONFIG::load_localization_config(const QJsonObject &obj)
 {
     QJsonObject obj_loc = obj["localization"].toObject();
 
-    check_and_set_string(obj_loc,   "MODE",             LOC_MODE,       "localization");
-    check_and_set_bool(obj_loc,     "USE_ARUCO",        USE_ARUCO,      "localization");
-    check_and_set_bool(obj_loc,     "USE_EKF",        USE_EKF,      "localization");
+    check_and_set_string(obj_loc, "MODE",             LOC_MODE,       "localization");
+    check_and_set_bool(obj_loc,   "USE_ARUCO",        USE_ARUCO,      "localization");
+    check_and_set_bool(obj_loc,   "USE_EKF",        USE_EKF,      "localization");
 }
 
 void CONFIG::load_localization_2d_config(const QJsonObject &obj)
@@ -239,7 +238,6 @@ void CONFIG::load_network_config(const QJsonObject &obj)
 
     check_and_set_bool(obj_net, "USE_MULTI", USE_MULTI,     "network");
     check_and_set_bool(obj_net, "USE_RTSP",  USE_COMM_RTSP, "network");
-    check_and_set_bool(obj_net, "USE_RRS",   USE_COMM_RRS,  "network");
     check_and_set_bool(obj_net, "USE_MSA",   USE_COMM_MSA,  "network");
     check_and_set_bool(obj_net, "USE_FMS",   USE_COMM_FMS,  "network");
 }
@@ -260,13 +258,13 @@ void CONFIG::load_logging_config(const QJsonObject &obj)
     QJsonObject obj_logging = obj["logging"].toObject();
 
     check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_LIDAR_2D", DEBUG_LIDAR_2D, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_LIDAR_3D", DEBUG_LIDAR_3D, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_MOBILE", DEBUG_MOBILE, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_COMM_RRS", DEBUG_COMM_RRS, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_AUTOCONTROL", DEBUG_MOBILE, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_LOCALIZATION", DEBUG_COMM_RRS, "logging");
-    check_and_set_bool(obj_logging, "DEBUG_OBSMAP", DEBUG_COMM_RRS, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LIDAR_2D",     DEBUG_LIDAR_2D,     "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LIDAR_3D",     DEBUG_LIDAR_3D,     "logging");
+    check_and_set_bool(obj_logging, "DEBUG_MOBILE",       DEBUG_MOBILE,       "logging");
+    check_and_set_bool(obj_logging, "DEBUG_COMM_RRS",     DEBUG_COMM_RRS,     "logging");
+    check_and_set_bool(obj_logging, "DEBUG_AUTOCONTROL",  DEBUG_AUTOCONTROL,  "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LOCALIZATION", DEBUG_LOCALIZATION, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_OBSMAP",       DEBUG_OBSMAP,        "logging");
 
     check_and_set_bool(obj_logging, "LOG_ENABLE_FILE_OUTPUT", LOG_ENABLE_FILE_OUTPUT, "logging");
     check_and_set_string(obj_logging, "LOG_FILE_PATH", LOG_FILE_PATH, "logging");
@@ -398,7 +396,7 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
 
         if(fields_array.size() < MONITORING_FIELD_NUM)
         {
-            spdlog::info("[CONFIG] MONITORING_FIELD_NUM is not equal to fields_array.size()");
+            log_info("MONITORING_FIELD_NUM is not equal to fields_array.size()");
             return;
         }
 
@@ -411,7 +409,7 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
         {
             if(!fields_array[i].isObject())
             {
-                spdlog::warn("[CONFIG] MONITORING_FIELDS[{}] is not an object; set zeros", i);
+                log_warn("MONITORING_FIELDS[{}] is not an object; set zeros", i);
                 FIELD_SIZE_MIN_X[i] = 0.0;
                 FIELD_SIZE_MAX_X[i] = 0.0;
                 FIELD_SIZE_MIN_Y[i] = 0.0;
@@ -428,7 +426,7 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
     }
     else
     {
-        spdlog::warn("[CONFIG] MONITORING_FIELDS not found or not an array");
+        log_warn("MONITORING_FIELDS not found or not an array");
         MONITORING_FIELD_NUM = 0;
     }
 }
@@ -467,7 +465,7 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             LIDAR_BOTTOM_TF[i] = obj_lidar_bottom["TF"].toString();
             LIDAR_BOTTOM_DEV[i] = obj_lidar_bottom["DEV"].toString();
 
-            spdlog::info("[CONFIG] LIDAR_BOTTOM[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
+            log_info("LIDAR_BOTTOM[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
         }
     }
 
@@ -481,7 +479,7 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             LIDAR_2D_TF[i] = obj_lidar_2d["TF"].toString();
             LIDAR_2D_DEV[i] = obj_lidar_2d["DEV"].toString();
 
-            spdlog::info("[CONFIG] LIDAR_2D[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
+            log_info("LIDAR_2D[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
         }
     }
 
@@ -493,8 +491,7 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             QJsonObject obj_lidar_3d = lidar_arr[i].toObject();
             LIDAR_3D_IP[i] = obj_lidar_3d["IP"].toString();
             LIDAR_3D_TF[i] = obj_lidar_3d["TF"].toString();
-            //printf("[CONFIG] LIDAR_3D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
-            spdlog::info("[CONFIG] LIDAR_3D[{}] IP: {}, TF: {}", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
+            log_info("LIDAR_3D[{}] IP: {}, TF: {}", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
         }
     }
 }
@@ -513,7 +510,7 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
             CAM_COLOR_PROFILE[i] = obj_cam["COLOR_PROFILE"].toString().toInt();
             CAM_DEPTH_PROFILE[i] = obj_cam["DEPTH_PROFILE"].toString().toInt();
 
-            spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}, COLOR_PROFILE: {}, DEPTH_PROFILE: {}", i,
+            log_info("CAM[{}] TF: {}, SERIAL_NUMBER: {}, COLOR_PROFILE: {}, DEPTH_PROFILE: {}", i,
                             qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]),
                             CAM_COLOR_PROFILE[i], CAM_DEPTH_PROFILE[i]);
         }
@@ -566,8 +563,7 @@ void CONFIG::check_and_set_string(const QJsonObject& obj, const QString& key, QS
     if(obj.contains(key) && !obj[key].toString().isEmpty())
     {
         target = obj[key].toString();
-        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), qUtf8Printable(target));
-        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(target));
+        log_info("{}, {}", qUtf8Printable(key), qUtf8Printable(target));
     }
     else
     {
@@ -580,8 +576,7 @@ void CONFIG::check_and_set_bool(const QJsonObject& obj, const QString& key, bool
     if(obj.contains(key))
     {
         target = obj[key].toBool();
-        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), target ? "true" : "false");
-        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), target ? "true" : "false");
+        log_info("{}, {}", qUtf8Printable(key), target ? "true" : "false");
     }
     else
     {
@@ -594,8 +589,7 @@ void CONFIG::check_and_set_int(const QJsonObject& obj, const QString& key, int& 
     if(obj.contains(key))
     {
         target = obj[key].toString().toInt();
-        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
-        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
+        log_info("{}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
     }
     else
     {
@@ -608,8 +602,7 @@ void CONFIG::check_and_set_double(const QJsonObject& obj, const QString& key, do
     if(obj.contains(key))
     {
         target = obj[key].toString().toDouble();
-        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
-        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
+        log_info("{}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
     }
     else
     {
@@ -640,8 +633,7 @@ void CONFIG::show_missing_variables_dialog()
         message += "- " + var + "\n";
     }
 
-    //printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
-    spdlog::warn("[CONFIG] {}", qUtf8Printable(message));
+    log_warn("{}", qUtf8Printable(message));
 }
 
 QStringList CONFIG::load_folder_list()
@@ -683,8 +675,7 @@ bool CONFIG::load_common(QString path)
     QFile common_file(path);
     if(!common_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        //qWarning() << "[CONFIG] Failed to open common file:" << path;
-        spdlog::warn("[CONFIG] Failed to open common file: {}", qUtf8Printable(path));
+        log_warn("Failed to open common file: {}", qUtf8Printable(path));
         return false;
     }
 
@@ -697,8 +688,7 @@ bool CONFIG::load_common(QString path)
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        //qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
-        spdlog::warn("[CONFIG] common JSON parse error: {}", qUtf8Printable(parseError.errorString()));
+        log_warn("common JSON parse error: {}", qUtf8Printable(parseError.errorString()));
         return false;
     }
 
@@ -789,14 +779,13 @@ bool CONFIG::load_common(QString path)
                 ROBOT_MODEL = RobotModel::NONE;
             }
         }
-        //printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
-        spdlog::info("[CONFIG] ROBOT_TYPE: {}, ROBOT_MODEL: {}", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
+        log_info("ROBOT_TYPE: {}, ROBOT_MODEL: {}", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
     }
 
     if(obj.contains("ROBOT_SERIAL_NUMBER"))
     {
         ROBOT_SERIAL_NUMBER = obj["ROBOT_SERIAL_NUMBER"].toString();
-        spdlog::info("[CONFIG] ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
+        log_info("ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
     }
 
     if(obj.contains("MILEAGE"))
@@ -822,8 +811,7 @@ void CONFIG::set_map_path(const QString &path)
 
     if(!config_file.open(QIODevice::ReadWrite))
     {
-        //printf("[config] failed to open config file for reading and writing.\n");
-        spdlog::warn("[config] failed to open config file for reading and writing.");
+        log_warn("failed to open config file for reading and writing.");
         return;
     }
 
@@ -856,8 +844,7 @@ void CONFIG::set_map_path(const QString &path)
 
     if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
     {
-        //printf("[config] failed to open config file for writing.\n");
-        spdlog::warn("[config] failed to open config file for writing.");
+        log_warn("failed to open config file for writing.");
         return;
     }
 
@@ -985,7 +972,7 @@ bool CONFIG::set_cam_order(const std::vector<QString> &_cam_serial_number)
     QMutexLocker locker(&q_mtx);
 
     QFile file(path_config);
-    spdlog::warn("[CONFIG] path_config : {}", qUtf8Printable(path_config));
+    log_warn("path_config : {}", qUtf8Printable(path_config));
     if(!file.open(QIODevice::ReadOnly))
     {
         return false;
@@ -1045,8 +1032,7 @@ void CONFIG::set_mileage(const QString &mileage)
 
     if(!config_file.open(QIODevice::ReadWrite))
     {
-        //printf("[config] failed to open config file for reading and writing.\n");
-        spdlog::info("[CONFIG] failed to open config file for reading and writing.");
+        log_info("failed to open config file for reading and writing.");
         return;
     }
 
@@ -1077,12 +1063,12 @@ void CONFIG::set_mileage(const QString &mileage)
             QString insertText = QString("\n    \"MILEAGE\": \"%1\",").arg(mileage);
             data.insert(insertPos, insertText);
             //qDebug() << "삽입 후 내용:" << data;
-            spdlog::info("[CONFIG] 삽입 후 내용: {}", data.toStdString());
+            log_info("삽입 후 내용: {}", data.toStdString());
         }
         else
         {
             //qDebug() << "[config] 중괄호 { 를 찾을 수 없습니다.";
-            spdlog::error("[CONFIG] 중괄호 { 를 찾을 수 없습니다.");
+            log_error("중괄호 { 를 찾을 수 없습니다.");
         }
     }
 
@@ -1091,7 +1077,7 @@ void CONFIG::set_mileage(const QString &mileage)
     QFile tempFile(tempPath);
     if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
     {
-        spdlog::error("[CONFIG] failed to open temp file for writing: {}", tempPath.toStdString());
+        log_error("failed to open temp file for writing: {}", tempPath.toStdString());
         return;
     }
 
@@ -1103,16 +1089,16 @@ void CONFIG::set_mileage(const QString &mileage)
 
     if (!QFile::remove(common_path))
     {
-        spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
+        log_warn("failed to remove old config file: {}", common_path.toStdString());
     }
 
     if (!QFile::rename(tempPath, common_path))
     {
-        spdlog::error("[CONFIG] failed to rename temp file to config file.");
+        log_error("failed to rename temp file to config file.");
         return;
     }
 
-    spdlog::debug("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
+    log_debug("config file updated successfully with mileage: {}", mileage.toStdString());
 
 }
 
@@ -1456,10 +1442,22 @@ int CONFIG::get_lidar_2d_num()
     return LIDAR_2D_NUM;
 }
 
+bool CONFIG::get_use_lidar_2d_obstacle()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_LIDAR_2D_OBSTACLE;
+}
+
 bool CONFIG::get_use_lidar_3d()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_LIDAR_3D;
+}
+
+bool CONFIG::get_use_lidar_3d_obstacle()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_LIDAR_3D_OBSTACLE;
 }
 
 QString CONFIG::get_lidar_3d_type()
@@ -1478,6 +1476,12 @@ bool CONFIG::get_use_cam()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_CAM;
+}
+
+bool CONFIG::get_use_cam_obstacle()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CAM_OBSTACLE;
 }
 
 bool CONFIG::get_use_cam_rgb()
@@ -1684,22 +1688,10 @@ bool CONFIG::get_use_multi()
     return USE_MULTI;
 }
 
-bool CONFIG::get_use_coop()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return USE_COMM_COOP;
-}
-
 bool CONFIG::get_use_rtsp()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_COMM_RTSP;
-}
-
-bool CONFIG::get_use_rrs()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return USE_COMM_RRS;
 }
 
 bool CONFIG::get_use_msa()
@@ -1756,22 +1748,46 @@ bool CONFIG::get_update_use_config()
     return USE_CONFIG_UPDATE;
 }
 
-bool CONFIG::set_debug_lidar_2d()
+bool CONFIG::get_debug_lidar_2d()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DEBUG_LIDAR_2D;
 }
 
-bool CONFIG::set_debug_mobile()
+bool CONFIG::get_debug_lidar_3d()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_LIDAR_3D;
+}
+
+bool CONFIG::get_debug_mobile()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DEBUG_MOBILE;
 }
 
-bool CONFIG::set_debug_comm_rrs()
+bool CONFIG::get_debug_comm_rrs()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DEBUG_COMM_RRS;
+}
+
+bool CONFIG::get_debug_autocontrol()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_AUTOCONTROL;
+}
+
+bool CONFIG::get_debug_localization()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_LOCALIZATION;
+}
+
+bool CONFIG::get_debug_obsmap()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_OBSMAP;
 }
 
 bool CONFIG::get_log_enable_file_output()
@@ -1823,8 +1839,7 @@ void CONFIG::set_spdlog_level()
     // set spdlog level
     spdlog::set_level(level);
     
-    //printf("[CONFIG] spdlog level set to: %s\n", qUtf8Printable(LOG_LEVEL));
-    spdlog::info("[CONFIG] spdlog level set to: {}", LOG_LEVEL.toStdString());
+    log_info("spdlog level set to: {}", LOG_LEVEL.toStdString());
 
 }
 
@@ -1835,7 +1850,7 @@ void CONFIG::set_update_config_file()
     if (path_config.isEmpty()) 
     {
         //ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_CONFIG, "Config path is empty");
-        spdlog::error("[CONFIG] Config path is empty");
+        log_error("Config path is empty");
         return;
     }
 
@@ -1845,7 +1860,7 @@ void CONFIG::set_update_config_file()
         if (!QFile::exists(template_path))
         {
             set_default_config_template();
-            spdlog::info("[CONFIG] Template file created: {}", template_path.toStdString());
+            log_info("Template file created: {}", template_path.toStdString());
         }
 
         QJsonObject existing_config;
@@ -1860,17 +1875,17 @@ void CONFIG::set_update_config_file()
             if (error.error == QJsonParseError::NoError && doc.isObject()) 
             {
                 existing_config = doc.object();
-                spdlog::info("[CONFIG] Existing config loaded successfully");
+                log_info("Existing config loaded successfully");
             }
             else
             {
-                spdlog::error("[CONFIG]docking.XNERGY_SET_CURRENT JSON parse error: {}", error.errorString().toStdString());
+                log_error("docking.XNERGY_SET_CURRENT JSON parse error: {}", error.errorString().toStdString());
                 return;
             }
         }
         else
         {
-            spdlog::warn("[CONFIG] Config file not found, will create new one: {}", path_config.toStdString());
+            log_warn("Config file not found, will create new one: {}", path_config.toStdString());
         }
 
         QJsonObject default_config = set_default_config_object();
@@ -1881,11 +1896,11 @@ void CONFIG::set_update_config_file()
 
         if (has_changes) 
         {
-            spdlog::info("[CONFIG] Changes detected, creating backup and updating config");
+            log_info("Changes detected, creating backup and updating config");
 
             if (!set_backup_config_file()) 
             {
-                spdlog::warn("[CONFIG] Failed to create backup, but continuing with update");
+                log_warn("Failed to create backup, but continuing with update");
             }
 
             QFile output_file(path_config);
@@ -1895,25 +1910,25 @@ void CONFIG::set_update_config_file()
                 output_file.write(output_doc.toJson(QJsonDocument::Indented));
                 output_file.close();
                 
-                spdlog::info("[CONFIG] Config file updated successfully: {}", path_config.toStdString());
+                log_info("Config file updated successfully: {}", path_config.toStdString());
                 
                 load();
             } 
             else 
             {
-                spdlog::error("[CONFIG] Failed to write updated config file: {}", path_config.toStdString());
+                log_error("Failed to write updated config file: {}", path_config.toStdString());
             }
         }
         else
         {
-            spdlog::info("[CONFIG] Config file is already up to date");
+            log_info("Config file is already up to date");
         }
     } 
     catch (const std::exception& e) 
     {
         //QString error_msg = QString("Exception during config update: %1").arg(e.what());
         //ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::LOAD_CONFIG, error_msg);
-        spdlog::error("[CONFIG] Exception during config update: {}", e.what());
+        log_error("Exception during config update: {}", e.what());
     }
 }
 
@@ -1932,7 +1947,7 @@ QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJso
             // if key is missing, add default value
             merged[key] = default_value;
             added_keys.append(key);
-            spdlog::info("[CONFIG] Added missing config key: {}", key.toStdString());
+            log_info("Added missing config key: {}", key.toStdString());
         } 
         else if (default_value.isObject() && merged[key].isObject()) 
         {
@@ -1951,14 +1966,14 @@ QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJso
                 added_keys.append(key + ".*");  //view lower level keys
             }
         }
-        //spdlog::info("[CONFIG] Config key Not changed: {}", key.toStdString());
+        //log_info("Config key Not changed: {}", key.toStdString());
     }
 
     if (!added_keys.isEmpty()) 
     {
         //QString log_msg = QString("Added missing config keys: %1").arg(added_keys.join(", "));
         //log_info("{}", log_msg.toStdString());
-        spdlog::info("[CONFIG] Added missing keys: {}", added_keys.join(", ").toStdString());
+        log_info("Added missing keys: {}", added_keys.join(", ").toStdString());
     }
     
     return merged;
@@ -1968,6 +1983,8 @@ QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJso
 // 1. backup config function
 bool CONFIG::set_backup_config_file()
 {
+    QMutexLocker locker(&q_mtx);
+
     if (path_config.isEmpty() || !QFile::exists(path_config)) 
     {
         return false;
@@ -1986,7 +2003,7 @@ bool CONFIG::set_backup_config_file()
     if (!today_backup.isEmpty()) 
     {
         QString existing_backup = today_backup.first().fileName();
-        spdlog::info("[CONFIG] Backup already exists for today: {}", existing_backup.toStdString());
+        log_info("Backup already exists for today: {}", existing_backup.toStdString());
         
         return true; 
     }
@@ -2006,11 +2023,11 @@ bool CONFIG::set_backup_config_file()
     
     if (success) 
     {
-        spdlog::info("[CONFIG] New backup created: {}", backup_path.toStdString());
+        log_info("New backup created: {}", backup_path.toStdString());
     }
     else 
     {
-        spdlog::error("[CONFIG] Failed to create backup: {}", backup_path.toStdString());
+        log_error("Failed to create backup: {}", backup_path.toStdString());
     }
     
     return success;
@@ -2035,20 +2052,22 @@ void CONFIG::cleanup_old_backups(const QFileInfo& config_info, const QDir& confi
             QString old_backup_path = all_backups[i].absoluteFilePath();
             if (QFile::remove(old_backup_path)) 
             {
-                spdlog::info("[CONFIG] Removed old backup: {}", old_backup_path.toStdString());
+                log_info("Removed old backup: {}", old_backup_path.toStdString());
             }
             else 
             {
-                spdlog::warn("[CONFIG] Failed to remove old backup: {}", old_backup_path.toStdString());
+                log_warn("Failed to remove old backup: {}", old_backup_path.toStdString());
             }
         }
         
-        spdlog::info("[CONFIG] Backup cleanup completed. Removed {} old backup(s)", files_to_remove);
+        log_info("Backup cleanup completed. Removed {} old backup(s)", files_to_remove);
     }
 }
 
 void CONFIG::set_restore_config_file_backup()
 {
+    QMutexLocker locker(&q_mtx);
+
     QFileInfo config_info(path_config);
     QDir config_dir(config_info.absolutePath());
     
@@ -2064,12 +2083,14 @@ void CONFIG::set_restore_config_file_backup()
         QFile::remove(path_config);
         QFile::copy(latest_backup, path_config);
         
-        spdlog::info("[CONFIG] Config restored from backup: {}", latest_backup.toStdString());
+        log_info("Config restored from backup: {}", latest_backup.toStdString());
     }
 }
 
 void CONFIG::set_default_config_template()
 {
+    QMutexLocker locker(&q_mtx);
+
     QString template_path = path_config + ".template";
     
     QJsonObject default_config = set_default_config_object();
@@ -2081,11 +2102,11 @@ void CONFIG::set_default_config_template()
         template_file.write(doc.toJson(QJsonDocument::Indented));
         template_file.close();
         
-        spdlog::info("[CONFIG] Default config template created: {}", template_path.toStdString());
+        log_info("Default config template created: {}", template_path.toStdString());
     }
     else 
     {
-        spdlog::error("[CONFIG] Failed to create config template: {}", template_path.toStdString());
+        log_error("Failed to create config template: {}", template_path.toStdString());
     }
 }
 
@@ -2219,9 +2240,7 @@ QJsonObject CONFIG::set_default_network_config()
 {
     QJsonObject network;
     network["USE_MULTI"] =      USE_MULTI;//QString(USE_MULTI ? "true" : "false");
-    network["USE_COOP"] =       USE_COMM_COOP; //QString(USE_COMM_COOP ? "true" : "false");
     network["USE_RTSP"] =       USE_COMM_RTSP;// QString(USE_COMM_RTSP ? "true" : "false");
-    network["USE_RRS"] =        USE_COMM_RRS;//QString(USE_COMM_RRS ? "true" : "false");
     network["USE_MSA"] =        USE_COMM_MSA;//QString(USE_COMM_MSA ? "true" : "false");
     network["USE_FMS"] =        USE_COMM_FMS;//QString(USE_COMM_FMS ? "true" : "false");
     return network;

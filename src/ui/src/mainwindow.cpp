@@ -300,6 +300,11 @@ void MainWindow::setup_vtk()
 
 void MainWindow::init_modules()
 {
+    // log module init
+    {
+        LOGGER::instance()->set_log_path(QCoreApplication::applicationDirPath() + "/snlog/");
+        LOGGER::instance()->init();
+    }
 
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
@@ -367,12 +372,6 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->get_loc_mode() == "3D")
     {
         ui->cb_ViewType->setCurrentText("VIEW_3D");
-    }
-
-    // log module init
-    {
-        LOGGER::instance()->set_log_path(QCoreApplication::applicationDirPath() + "/snlog/");
-        LOGGER::instance()->init();
     }
 
     // unimap module init
@@ -462,6 +461,8 @@ void MainWindow::init_modules()
             MAPPING::instance()->set_unimap_module(UNIMAP::instance());
             MAPPING::instance()->set_lidar_2d_module(LIDAR_2D::instance());
             MAPPING::instance()->set_localization_module(LOCALIZATION::instance());
+
+            connect(MAPPING::instance(), &MAPPING::signal_plot_clear, this, &MainWindow::all_plot_clear);
         }
     }
 
@@ -530,6 +531,8 @@ void MainWindow::init_modules()
             COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
             COMM_MSA::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
             COMM_MSA::instance()->init();
+
+            connect(COMM_MSA::instance(), &COMM_MSA::signal_ui_all_update, this, &MainWindow::all_update);
         }
     }
 

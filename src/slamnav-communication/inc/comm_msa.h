@@ -193,6 +193,8 @@ Q_SIGNALS:
 
     void signal_mobile_jog_update(const Eigen::Vector3d& val);
 
+    void signal_ui_all_update();
+
 private Q_SLOTS:
     void connected();
     void disconnected();
