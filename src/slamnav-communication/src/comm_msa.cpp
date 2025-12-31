@@ -77,7 +77,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
-    BIND_EVENT(sock, "cameraRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "sensorRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
     BIND_EVENT(sock, "updateRequest",       std::bind(&COMM_MSA::recv_message_single_shot,       this, std::placeholders::_1));
@@ -330,9 +330,9 @@ void COMM_MSA::recv_loop()
         {
             handle_path_cmd(data);
         }
-        else if(topic == "cameraRequest")
+        else if(topic == "sensorRequest")
         {
-            handle_camera_cmd(data);
+            handle_sensor_cmd(data);
         }
         else if(topic == "vobs")
         {
@@ -526,49 +526,19 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
     }
 }
 
-void COMM_MSA::handle_camera_cmd(const QJsonObject& data)
+void COMM_MSA::handle_sensor_cmd(const QJsonObject& data)
 {
-    DATA_CAM_INFO msg;
+    DATA_SENSOR_INFO msg;
+    msg.time = get_json_double(data, "time")/1000;
     msg.id = get_json(data, "id");
     msg.command = get_json(data, "command");
-
-    if(msg.command == "getCameraInfo")
+    msg.target = get_json(data, "target");
+    msg.index = parse_index_json(data, "index");
     {
-        handle_camera_get_info(msg);
+        std::lock_guard<std::mutex> lock(sensor_mtx);
+        sensor_queue.push(std::move(msg));
+        sensor_cv.notify_one();
     }
-    else if(msg.command == "setCameraOrder")
-    {
-        msg.serial_cam0 = get_json(data, "cam1");
-        msg.serial_cam1 = get_json(data, "cam2");
-        handle_camera_set_info(msg);
-    }
-}
-
-void COMM_MSA::handle_camera_get_info(DATA_CAM_INFO& msg)
-{
-    msg.serial_cam0 = config->get_cam_serial_number(0);
-    msg.serial_cam1 = config->get_cam_serial_number(1);
-    msg.result = "success";
-
-    send_camera_response(msg);
-}
-
-void COMM_MSA::handle_camera_set_info(DATA_CAM_INFO& msg)
-{
-    std::vector<QString> cam_serial_number;
-    cam_serial_number.push_back(msg.serial_cam0);
-    cam_serial_number.push_back(msg.serial_cam1);
-
-    if(config->set_cam_order(cam_serial_number))
-    {
-        msg.result = "success";
-    }
-    else
-    {
-        msg.result = "fail";
-    }
-
-    send_camera_response(msg);
 }
 
 void COMM_MSA::handle_vobs_cmd(const QJsonObject& data)
@@ -918,6 +888,57 @@ void COMM_MSA::localization_loop()
         {
             msg.result = "reject";
             send_localization_response(msg);
+        }
+    }
+}
+
+void COMM_MSA::sensor_loop()
+{
+    while(is_sensor_running)
+    {
+        std::unique_lock<std::mutex> lock(sensor_mtx);
+        sensor_cv.wait(lock, [this]
+        {
+            return !sensor_queue.empty() || !is_sensor_running;
+        });
+
+        DATA_SENSOR_INFO msg = sensor_queue.front();
+        sensor_queue.pop();
+        lock.unlock();
+
+        QString command = msg.command;
+        QString target = msg.target;
+
+        if(target == "cam")
+        {
+            if(command == "getInfo")
+            {
+                handle_camera_get_info(msg);
+            }
+            else if(command == "setOrder")
+            {
+                handle_camera_set_info(msg);
+            }
+        }
+        else if(target == "lidar2d")
+        {
+
+        }
+        else if(target == "lidar3d")
+        {
+            if(command == "setOn")
+            {
+                handle_lidar3d_set_on(msg);
+            }
+            else if(command == "setOff")
+            {
+                handle_lidar3d_set_off(msg);
+            }
+        }
+        else
+        {
+            msg.result = "reject";
+            send_sensor_response(msg);
         }
     }
 }
@@ -1428,7 +1449,7 @@ void COMM_MSA::send_update_response(const DATA_SOFTWARE& msg)
     send_response_queue.push(socket_msg);
 }
 
-void COMM_MSA::send_camera_response(const DATA_CAM_INFO& msg)
+void COMM_MSA::send_sensor_response(const DATA_SENSOR_INFO& msg)
 {
     if(!is_connected)
     {
@@ -1439,14 +1460,18 @@ void COMM_MSA::send_camera_response(const DATA_CAM_INFO& msg)
     add_to_obj(root_obj, "id",      msg.id);
     add_to_obj(root_obj, "result",  msg.result);
     add_to_obj(root_obj, "message", msg.message);
-    add_to_obj(root_obj, "cam1",  msg.serial_cam0);
-    add_to_obj(root_obj, "cam2", msg.serial_cam1);
+    add_to_obj(root_obj, "target", msg.target);
     add_to_obj(root_obj, "time",    static_cast<long long>(msg.time*1000));
+    root_obj->get_map()["index"] = create_index_obj(msg.index);
 
     SOCKET_MESSAGE socket_msg;
-    socket_msg.event = "cameraResponse";
+    socket_msg.event = "sensorResponse";
     socket_msg.data  = root_obj;
-    send_response_queue.push(socket_msg);
+    {
+        std::lock_guard<std::mutex> lock(send_response_mtx);
+        send_response_queue.push(socket_msg);
+        send_response_cv.notify_one();
+    }
 }
 
 void COMM_MSA::send_status_loop()
@@ -2404,6 +2429,125 @@ void COMM_MSA::handle_load_topo(DATA_LOAD& msg)
     send_load_response(msg);
 }
 
+void COMM_MSA::handle_camera_get_info(DATA_SENSOR_INFO& msg)
+{
+    std::vector<std::pair<int, QString>> index;
+
+    for(int idx = 0; idx < config->get_cam_num(); ++idx)
+    {
+        auto serial = config->get_cam_serial_number(idx);
+        std::cout << idx << " : " << serial.toStdString() << std::endl;
+        index.emplace_back(idx, serial);
+    }
+    msg.index.swap(index);
+    msg.result = "success";
+
+    send_sensor_response(msg);
+}
+
+void COMM_MSA::handle_camera_set_info(DATA_SENSOR_INFO& msg)
+{
+    std::vector<QString> cam_serial_number;
+    int cam_num = config->get_cam_num();
+    cam_serial_number.resize(cam_num);
+
+    for(int i =0; i < config->get_cam_num(); ++i)
+    {
+        int cur_idx = -1;
+        for(const auto& v : msg.index)
+        {
+            if(i == v.first)
+            {
+                cur_idx = i;
+                break;
+            }
+        }
+        if(cur_idx != -1)
+        {
+            cam_serial_number[cur_idx] = msg.index[cur_idx].second;
+        }
+        else
+        {
+            cam_serial_number[i] = config->get_cam_serial_number(i);
+        }
+    }
+
+    if(config->set_cam_order(cam_serial_number))
+    {
+        msg.result = "success";
+    }
+    else
+    {
+        msg.result = "fail";
+    }
+
+    send_sensor_response(msg);
+}
+
+void COMM_MSA::handle_lidar3d_set_on(DATA_SENSOR_INFO& msg)
+{
+    if(!lidar_3d->get_is_connected())
+    {
+        msg.result = "reject";
+        send_sensor_response(msg);
+        return;
+    }
+
+    std::vector<int> indexs;
+    for(const auto& v : msg.index)
+    {
+        indexs.push_back(v.first);
+    }
+    msg.result = "accept";
+    msg.message = "";
+    send_sensor_response(msg);
+
+    Q_EMIT (lidar_3d->signal_set_on(indexs));
+}
+
+void COMM_MSA::handle_lidar3d_set_off(DATA_SENSOR_INFO& msg)
+{
+    if(!lidar_3d->get_is_connected())
+    {
+        msg.result = "reject";
+        send_sensor_response(msg);
+        return;
+    }
+
+    std::vector<int> indexs;
+    for(const auto& v : msg.index)
+    {
+        indexs.push_back(v.first);
+    }
+    msg.result = "accept";
+    msg.message = "";
+    send_sensor_response(msg);
+
+    Q_EMIT (lidar_3d->signal_set_off(indexs));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 sio::object_message::ptr COMM_MSA::create_localization_score_obj(const Eigen::Vector2d& loc_ieir,
                                                                  const Eigen::Vector2d& mapping_ieir)
 {
@@ -2607,6 +2751,20 @@ sio::object_message::ptr COMM_MSA::create_robot_info_obj()
     return obj;
 }
 
+sio::array_message::ptr COMM_MSA::create_index_obj(const std::vector<std::pair<int, QString>>& index)
+{
+    sio::array_message::ptr arr = sio::array_message::create();
+
+    for(const auto& v : index)
+    {
+        sio::object_message::ptr obj = sio::object_message::create();
+        obj->get_map()["id"]     = sio::int_message::create(v.first);
+        obj->get_map()["serial"] = sio::string_message::create(v.second.toStdString());
+        arr->get_vector().push_back(obj);
+    }
+    return arr;
+}
+
 void COMM_MSA::set_global_path_update()
 {
     is_global_path_update2 = true;
@@ -2630,6 +2788,22 @@ int COMM_MSA::get_json_int(const QJsonObject& json, QString key)
 double COMM_MSA::get_json_double(const QJsonObject& json, QString key)
 {
     return json[key].toDouble();
+}
+
+std::vector<std::pair<int, QString>> COMM_MSA::parse_index_json(const QJsonObject& json, QString key)
+{
+    std::vector<std::pair<int, QString>> index;
+
+    QJsonArray q_array = json[key].toArray();
+    for(const auto& val : q_array)
+    {
+        QJsonObject obj = val.toObject();
+
+        int id = obj.value("id").toInt();
+        int serial = obj.value("serial").toInt();
+        index.emplace_back(id, serial);
+    }
+    return index;
 }
 
 double COMM_MSA::get_process_time_path()
@@ -2819,6 +2993,7 @@ void COMM_MSA::start_all_thread()
     start_localization_thread();
     start_path_thread();
     start_vobs_thread();
+    start_sensor_thread();
     start_send_status_thread();
     start_send_response_thread();
 }
@@ -2844,6 +3019,7 @@ void COMM_MSA::start_move_thread()
 {
     if(move_thread == nullptr)
     {
+        is_move_running = true;
         move_thread = std::make_unique<std::thread>(&COMM_MSA::move_loop, this);
     }
 }
@@ -2852,6 +3028,7 @@ void COMM_MSA::start_load_thread()
 {
     if(load_thread == nullptr)
     {
+        is_load_running = true;
         load_thread = std::make_unique<std::thread>(&COMM_MSA::load_loop, this);
     }
 }
@@ -2860,6 +3037,7 @@ void COMM_MSA::start_mapping_thread()
 {
     if(mapping_thread == nullptr)
     {
+        is_mapping_running = true;
         mapping_thread = std::make_unique<std::thread>(&COMM_MSA::mapping_loop, this);
     }
 }
@@ -2868,6 +3046,7 @@ void COMM_MSA::start_localization_thread()
 {
     if(localization_thread == nullptr)
     {
+        is_localization_running = true;
         localization_thread = std::make_unique<std::thread>(&COMM_MSA::localization_loop, this);
     }
 }
@@ -2876,6 +3055,7 @@ void COMM_MSA::start_path_thread()
 {
     if(path_thread == nullptr)
     {
+        is_path_running = true;
         path_thread = std::make_unique<std::thread>(&COMM_MSA::path_loop, this);
     }
 }
@@ -2884,7 +3064,17 @@ void COMM_MSA::start_vobs_thread()
 {
     if(vobs_thread == nullptr)
     {
+        is_vobs_running = true;
         vobs_thread = std::make_unique<std::thread>(&COMM_MSA::vobs_loop, this);
+    }
+}
+
+void COMM_MSA::start_sensor_thread()
+{
+    if(sensor_thread == nullptr)
+    {
+        is_sensor_running = true;
+        sensor_thread = std::make_unique<std::thread>(&COMM_MSA::sensor_loop, this);
     }
 }
 
@@ -2901,6 +3091,7 @@ void COMM_MSA::start_send_response_thread()
 {
     if(send_response_thread == nullptr)
     {
+        is_send_response_running = true;
         send_response_thread = std::make_unique<std::thread>(&COMM_MSA::send_response_loop, this);
     }
 }
@@ -2914,6 +3105,7 @@ void COMM_MSA::stop_all_thread()
     stop_localization_thread();
     stop_path_thread();
     stop_vobs_thread();
+    stop_sensor_thread();
     stop_send_status_thread();
     stop_send_response_thread();
 }
@@ -2993,6 +3185,17 @@ void COMM_MSA::stop_vobs_thread()
         vobs_thread->join();
     }
     vobs_thread.reset();
+}
+
+void COMM_MSA::stop_sensor_thread()
+{
+    is_sensor_running = false;
+    sensor_cv.notify_all();
+    if(sensor_thread && sensor_thread->joinable())
+    {
+        sensor_thread->join();
+    }
+    sensor_thread.reset();
 }
 
 void COMM_MSA::stop_send_status_thread()

@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
     // init qt app
     qRegisterMetaType<Eigen::Matrix4d>();
+    qRegisterMetaType<std::vector<int>>();
 
     qRegisterMetaType<DATA_MOVE>();
     qRegisterMetaType<DATA_LOCALIZATION>();

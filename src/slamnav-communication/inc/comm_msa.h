@@ -85,6 +85,7 @@ public:
     void start_localization_thread();
     void start_path_thread();
     void start_vobs_thread();
+    void start_sensor_thread();
     void start_send_status_thread();
     void start_send_response_thread();
 
@@ -96,6 +97,7 @@ public:
     void stop_localization_thread();
     void stop_path_thread();
     void stop_vobs_thread();
+    void stop_sensor_thread();
     void stop_send_status_thread();
     void stop_send_response_thread();
 
@@ -168,6 +170,7 @@ private:
     sio::object_message::ptr create_power_obj(const MOBILE_STATUS& ms);
     sio::object_message::ptr create_map_info_obj();
     sio::object_message::ptr create_robot_info_obj();
+    sio::array_message::ptr create_index_obj(const std::vector<std::pair<int, QString>>& index);
 
     void recv_message(sio::event& ev);
     void recv_message_array(sio::event& ev);
@@ -182,6 +185,10 @@ private:
     int     get_json_int(const QJsonObject& json, QString key);
     double  get_json_double(const QJsonObject& json, QString key);
     QString get_json(const QJsonObject& json, QString key);
+
+    // json --> vector<pair> switch utils
+    std::vector<std::pair<int, QString>> parse_index_json(const QJsonObject& json, QString key);
+
 
 Q_SIGNALS:
     void signal_map_build_start();
@@ -217,7 +224,7 @@ private Q_SLOTS:
     void send_load_response(const DATA_LOAD& msg);
     void send_path_response(const DATA_PATH& msg);
     void send_update_response(const DATA_SOFTWARE& msg);
-    void send_camera_response(const DATA_CAM_INFO& msg);
+    void send_sensor_response(const DATA_SENSOR_INFO& msg);
 
 private:
     std::mutex move_mtx;
@@ -226,6 +233,7 @@ private:
     std::mutex localization_mtx;
     std::mutex path_mtx;
     std::mutex vobs_mtx;
+    std::mutex sensor_mtx;
     std::mutex response_mtx;
     std::mutex recv_mtx;
 
@@ -240,6 +248,7 @@ private:
     std::queue<DATA_VOBS> vobs_queue;
     std::queue<DATA_MAPPING> mapping_queue;
     std::queue<DATA_LOCALIZATION> localization_queue;
+    std::queue<DATA_SENSOR_INFO> sensor_queue;
 
     std::queue<SOCKET_MESSAGE> send_response_queue;
 
@@ -250,17 +259,19 @@ private:
     std::condition_variable vobs_cv;
     std::condition_variable mapping_cv;
     std::condition_variable localization_cv;
+    std::condition_variable sensor_cv;
     std::condition_variable send_response_cv;
 
     std::atomic<bool> is_recv_running = {false};
-    std::atomic<bool> is_move_running = {true};
-    std::atomic<bool> is_load_running = {true};
-    std::atomic<bool> is_mapping_running = {true};
-    std::atomic<bool> is_localization_running = {true};
-    std::atomic<bool> is_path_running = {true};
-    std::atomic<bool> is_vobs_running = {true};
-    std::atomic<bool> is_send_status_running = {true};
-    std::atomic<bool> is_send_response_running = {true};
+    std::atomic<bool> is_move_running = {false};
+    std::atomic<bool> is_load_running = {false};
+    std::atomic<bool> is_mapping_running = {false};
+    std::atomic<bool> is_localization_running = {false};
+    std::atomic<bool> is_path_running = {false};
+    std::atomic<bool> is_vobs_running = {false};
+    std::atomic<bool> is_send_status_running = {false};
+    std::atomic<bool> is_sensor_running = {false};
+    std::atomic<bool> is_send_response_running = {false};
     std::atomic<bool> is_before_given_path = {false};
 
     // receive
@@ -270,6 +281,7 @@ private:
     std::unique_ptr<std::thread> mapping_thread;
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
+    std::unique_ptr<std::thread> sensor_thread;
     std::unique_ptr<std::thread> recv_thread;
 
     // send
@@ -283,6 +295,7 @@ private:
     void recv_loop();
     void mapping_loop();
     void localization_loop();
+    void sensor_loop();
     void send_status_loop();
     void send_response_loop();
 
@@ -294,7 +307,7 @@ private:
     void handle_mapping_cmd(const QJsonObject& data);
     void handle_localization_cmd(const QJsonObject& data);
     void handle_update_cmd(const QJsonObject& data);
-    void handle_camera_cmd(const QJsonObject& data);
+    void handle_sensor_cmd(const QJsonObject& data);
 
     /* move handler */
     void handle_move_jog(const DATA_MOVE& msg);
@@ -333,8 +346,10 @@ private:
     void handle_update_get_version(DATA_SOFTWARE& msg);
 
     /* camera handler */
-    void handle_camera_get_info(DATA_CAM_INFO& msg);
-    void handle_camera_set_info(DATA_CAM_INFO& msg);
+    void handle_camera_get_info(DATA_SENSOR_INFO& msg);
+    void handle_camera_set_info(DATA_SENSOR_INFO& msg);
+    void handle_lidar3d_set_on(DATA_SENSOR_INFO& msg);
+    void handle_lidar3d_set_off(DATA_SENSOR_INFO& msg);
 };
 
 #endif // COMM_MSA_H

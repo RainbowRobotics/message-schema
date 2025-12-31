@@ -108,6 +108,14 @@ private:
     // storage
     tbb::concurrent_queue<TIME_PTS> deskewing_que[2];               // deskewing queue (used in merge loop)
     tbb::concurrent_queue<TIME_PTS> merged_que;                     // merged queue (used in other modules)
+
+Q_SIGNALS:
+    void signal_set_on(std::vector<int> indexs);
+    void signal_set_off(std::vector<int> indexs);
+
+private Q_SLOTS:
+    void slot_set_on(std::vector<int> indexs);
+    void slot_set_off(std::vector<int> indexs);
 };
 
 #endif // LIDAR_3D_H

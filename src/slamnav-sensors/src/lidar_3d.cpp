@@ -23,7 +23,8 @@ LIDAR_3D::LIDAR_3D(QObject *parent) : QObject(parent),
     mobile(nullptr),
     livox(nullptr)
 {
-
+    connect(this, SIGNAL(signal_set_on(std::vector<int>)), this, SLOT(slot_set_on(std::vector<int>)));
+    connect(this, SIGNAL(signal_set_off(std::vector<int>)), this, SLOT(slot_set_off(std::vector<int>)));
 }
 
 LIDAR_3D::~LIDAR_3D()
@@ -636,4 +637,22 @@ bool LIDAR_3D::sensor_on(int idx)
 bool LIDAR_3D::sensor_off(int idx)
 {
     return livox->sensor_off(idx);
+}
+
+void LIDAR_3D::slot_set_on(std::vector<int> indexs)
+{
+    for(auto& idx : indexs)
+    {
+        livox->sensor_on(idx);
+        spdlog::info("[LIDAR_3D] slot set on, idx: {}", idx);
+    }
+}
+
+void LIDAR_3D::slot_set_off(std::vector<int> indexs)
+{
+    for(auto& idx : indexs)
+    {
+        livox->sensor_off(idx);
+        spdlog::info("[LIDAR_3D] slot set off, idx: {}", idx);
+    }
 }

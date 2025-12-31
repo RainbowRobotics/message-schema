@@ -92,6 +92,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 Q_DECLARE_METATYPE(Eigen::Matrix4d)
+Q_DECLARE_METATYPE(std::vector<int>)
 
 // defines
 constexpr double ACC_G  = 9.80665;

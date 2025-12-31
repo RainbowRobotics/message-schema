@@ -1270,48 +1270,48 @@ struct DATA_TEMPERATURE
     }
 };
 
-struct DATA_CAM_INFO
+struct DATA_SENSOR_INFO
 {
     double time;
     QString id;
     QString command;
-    QString serial_cam0;
-    QString serial_cam1;
+    QString target;
+    std::vector<std::pair<int, QString>> index;
 
     QString result;
     QString message;
 
-    DATA_CAM_INFO()
+    DATA_SENSOR_INFO()
     {
         time = 0.0;
         id = "";
         command = "";
-        serial_cam0 = "";
-        serial_cam1 = "";
+        target = "";    // cam, lidar2d, lidar3d ...
+        index = {};    // {id:0, serial:"") ...
 
         result = "";
         message = "";
     }
 
-    DATA_CAM_INFO(const DATA_CAM_INFO& p)
+    DATA_SENSOR_INFO(const DATA_SENSOR_INFO& p)
     {
         time = p.time;
         id = p.id;
         command = p.command;
-        serial_cam0 = p.serial_cam0;
-        serial_cam1 = p.serial_cam1;
+        target = p.target;
+        index = p.index;
 
         result = p.result;
         message = p.message;
     }
 
-    DATA_CAM_INFO& operator=(const DATA_CAM_INFO& p)
+    DATA_SENSOR_INFO& operator=(const DATA_SENSOR_INFO& p)
     {
         time = p.time;
         id = p.id;
         command = p.command;
-        serial_cam0 = p.serial_cam0;
-        serial_cam1 = p.serial_cam1;
+        target = p.target;
+        index = p.index;
 
         result = p.result;
         message = p.message;
@@ -1387,7 +1387,7 @@ struct DATA_COMMON
     DATA_MOTOR dmotor;
     DATA_SOFTWARE dsw;
     DATA_UPDATE_VARIABLE duv;
-    DATA_CAM_INFO dci;
+    DATA_SENSOR_INFO dsi;
     DATA_CONTROL dctl;
 };
 
@@ -1407,7 +1407,7 @@ Q_DECLARE_METATYPE(DATA_VOBS)
 Q_DECLARE_METATYPE(DATA_SOFTWARE)
 Q_DECLARE_METATYPE(DATA_FOOT)
 Q_DECLARE_METATYPE(DATA_FIELD)
-Q_DECLARE_METATYPE(DATA_CAM_INFO)
+Q_DECLARE_METATYPE(DATA_SENSOR_INFO)
 Q_DECLARE_METATYPE(DATA_UPDATE_VARIABLE)
 Q_DECLARE_METATYPE(DATA_COMMON)
 Q_DECLARE_METATYPE(DATA_SAFTYIO)
