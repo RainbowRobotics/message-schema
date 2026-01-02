@@ -100,7 +100,7 @@ void LIDAR_2D::init()
             }
         }
     }
-    else if(config->get_lidar_2d_type() == "RP")
+    else if(config->get_lidar_2d_type() == "RPLIDAR")
     {
         if(!rp)
         {
@@ -196,7 +196,7 @@ RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
     {
         res = laki->get_cur_raw(idx);
     }
-    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    else if(config->get_lidar_2d_type() == "RPLIDAR" && rp != nullptr)
     {
         res = rp->get_cur_raw(idx);
     }
@@ -228,7 +228,7 @@ QString LIDAR_2D::get_info_text()
             res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
         }
     }
-    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    else if(config->get_lidar_2d_type() == "RPLIDAR" && rp != nullptr)
     {
         for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
         {
@@ -281,13 +281,13 @@ void LIDAR_2D::set_sync_flag(bool flag)
             log_info("[LIDAR_2D] set laki->is_sync = {}", flag);
         }
     }
-    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    else if(config->get_lidar_2d_type() == "RPLIDAR" && rp != nullptr)
     {
         for(int p = 0; p < lidar_num; p++)
         {
             rp->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
-            spdlog::info("[LIDAR_2D] set rp->is_sync = %d", flag);
+            spdlog::info("[LIDAR_2D] set rp->is_sync = {}", flag);
         }
     }
 }
@@ -372,7 +372,7 @@ void LIDAR_2D::deskewing_loop(int idx)
         {
             is_try_pop = laki->try_pop_raw_que(idx, frm);
         }
-        else if(config->get_lidar_2d_type() == "RP")
+        else if(config->get_lidar_2d_type() == "RPLIDAR")
         {
             is_try_pop = rp->try_pop_raw_que(idx, frm);
         }
@@ -521,7 +521,7 @@ void LIDAR_2D::merge_loop()
             {
                 is_ok = (sick->get_is_connected(0) && sick->get_is_connected(1));
             }
-            else if(config->get_lidar_2d_type() == "RP")
+            else if(config->get_lidar_2d_type() == "RPLIDAR" && rp != nullptr)
             {
                 is_ok = (rp->get_is_connected(0) && rp->get_is_connected(1));
             }

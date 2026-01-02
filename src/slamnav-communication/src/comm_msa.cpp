@@ -1273,8 +1273,9 @@ void COMM_MSA::send_lidar_2d()
     auto root_obj = sio::object_message::create();
     root_obj->get_map()["pose"] = create_pose_obj(cur_xi);
 
-    // 360도 방위별 최소 거리 포인트 필터링
-    std::vector<Eigen::Vector3d> bins(360, Eigen::Vector3d(0,0,0));
+    // points 최소거리로 배열 생성.
+    double max = config->get_lidar_2d_max_range();
+    std::vector<Eigen::Vector3d> bins(360, Eigen::Vector3d(max, max, 0));
     for(const auto& p : pts)
     {
         if(!std::isfinite(p.x()) || !std::isfinite(p.y()))
@@ -1284,7 +1285,7 @@ void COMM_MSA::send_lidar_2d()
 
         double deg = std::atan2(p.y(), p.x()) * R2D;
         int idx = static_cast<int>(deg < 0 ? deg + 360.0 : deg) % 360;
-        if(std::isnan(bins[idx].x()) || p.head<2>().squaredNorm() < bins[idx].head<2>().squaredNorm())
+        if(p.head<2>().squaredNorm() < bins[idx].head<2>().squaredNorm())
         {
             bins[idx] = p;
         }
@@ -1292,29 +1293,24 @@ void COMM_MSA::send_lidar_2d()
 
     // 빈 공간 채우기 및 JSON 배열 생성
     auto arr = sio::array_message::create();
-    Eigen::Vector3d last_p = Eigen::Vector3d::Zero();
-    for(auto& p : bins)
+    auto& arr_vec = arr->get_vector();
+    arr_vec.reserve(bins.size());
+    for(const auto& p : bins)
     {
-        if(std::isfinite(p.x()))
+        auto p_obj = sio::array_message::create();
+        auto& v = p_obj->get_vector();
+        v.reserve(3);
+
+        for(double d : p)
         {
-            last_p = p;
-        }
-        else
-        {
-            p = last_p;
+            v.emplace_back(sio::double_message::create(d));
         }
 
-        auto p_obj = sio::array_message::create();
-        for(int i = 0; i < 3; ++i)
-        {
-            p_obj->get_vector().push_back(sio::double_message::create(p[i]));
-        }
-        arr->get_vector().push_back(p_obj);
+        arr_vec.emplace_back(p_obj);
     }
 
-    add_to_obj(root_obj, "data", arr);
+    root_obj->get_map()["data"] = arr;
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
-
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
         rrs_socket->socket("slamnav")->emit("lidarCloud", root_obj);
