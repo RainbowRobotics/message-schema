@@ -2436,37 +2436,47 @@ void COMM_MSA::handle_camera_get_info(DATA_SENSOR_INFO& msg)
     for(int idx = 0; idx < config->get_cam_num(); ++idx)
     {
         auto serial = config->get_cam_serial_number(idx);
-        std::cout << idx << " : " << serial.toStdString() << std::endl;
         index.emplace_back(idx, serial);
     }
     msg.index.swap(index);
     msg.result = "success";
+    msg.message = "";
+    log_info("Successfully notify cam info");
 
     send_sensor_response(msg);
 }
 
 void COMM_MSA::handle_camera_set_info(DATA_SENSOR_INFO& msg)
 {
-    std::vector<QString> cam_serial_number;
     int cam_num = config->get_cam_num();
-    cam_serial_number.resize(cam_num);
-
-    for(int i =0; i < config->get_cam_num(); ++i)
+    for(const auto& v : msg.index)
     {
-        int cur_idx = -1;
+        if(v.first >= cam_num)
+        {
+            msg.result = "reject";
+            msg.message = "fault index";
+            log_error("fault cam index : fail to change cam info");
+            send_sensor_response(msg);
+            return;
+        }
+    }
+
+    std::vector<QString> cam_serial_number;
+    cam_serial_number.resize(cam_num);
+    for(int i = 0; i < cam_num; ++i)
+    {
+        bool found = false;
         for(const auto& v : msg.index)
         {
-            if(i == v.first)
+            if(v.first == i)
             {
-                cur_idx = i;
+                cam_serial_number[i] = v.second;
+                found = true;
                 break;
             }
         }
-        if(cur_idx != -1)
-        {
-            cam_serial_number[cur_idx] = msg.index[cur_idx].second;
-        }
-        else
+
+        if(!found)
         {
             cam_serial_number[i] = config->get_cam_serial_number(i);
         }
@@ -2475,10 +2485,14 @@ void COMM_MSA::handle_camera_set_info(DATA_SENSOR_INFO& msg)
     if(config->set_cam_order(cam_serial_number))
     {
         msg.result = "success";
+        msg.message = "";
+        log_info("Successfully change cam info");
     }
     else
     {
         msg.result = "fail";
+        msg.message = "fail to call camera order";
+        log_error("fail to call set_cam_order");
     }
 
     send_sensor_response(msg);
@@ -2489,17 +2503,32 @@ void COMM_MSA::handle_lidar3d_set_on(DATA_SENSOR_INFO& msg)
     if(!lidar_3d->get_is_connected())
     {
         msg.result = "reject";
+        msg.message = "lidar3d not connected";
+        log_error("lidar3d not connected : fail to connect lidar");
         send_sensor_response(msg);
         return;
     }
 
     std::vector<int> indexs;
+    int lidar_num = config->get_lidar_3d_num();
     for(const auto& v : msg.index)
     {
-        indexs.push_back(v.first);
+        if(v.first >= lidar_num)
+        {
+            msg.result = "reject";
+            msg.message = "fault index";
+            log_error("fault lidar3d index : fail to set on");
+            send_sensor_response(msg);
+            return;
+        }
+        else
+        {
+            indexs.push_back(v.first);
+        }
     }
     msg.result = "accept";
     msg.message = "";
+    log_info("lidar3d set on");
     send_sensor_response(msg);
 
     Q_EMIT (lidar_3d->signal_set_on(indexs));
@@ -2515,38 +2544,29 @@ void COMM_MSA::handle_lidar3d_set_off(DATA_SENSOR_INFO& msg)
     }
 
     std::vector<int> indexs;
+    int lidar_num = config->get_lidar_3d_num();
     for(const auto& v : msg.index)
     {
-        indexs.push_back(v.first);
+        if(v.first >= lidar_num)
+        {
+            msg.result = "reject";
+            msg.message = "fault index";
+            log_error("fault lidar3d index : fail to set off");
+            send_sensor_response(msg);
+            return;
+        }
+        else
+        {
+            indexs.push_back(v.first);
+        }
     }
     msg.result = "accept";
     msg.message = "";
+    log_info("lidar3d set off");
     send_sensor_response(msg);
 
     Q_EMIT (lidar_3d->signal_set_off(indexs));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sio::object_message::ptr COMM_MSA::create_localization_score_obj(const Eigen::Vector2d& loc_ieir,
                                                                  const Eigen::Vector2d& mapping_ieir)
@@ -2800,7 +2820,7 @@ std::vector<std::pair<int, QString>> COMM_MSA::parse_index_json(const QJsonObjec
         QJsonObject obj = val.toObject();
 
         int id = obj.value("id").toInt();
-        int serial = obj.value("serial").toInt();
+        QString serial = obj.value("serial").toString();
         index.emplace_back(id, serial);
     }
     return index;

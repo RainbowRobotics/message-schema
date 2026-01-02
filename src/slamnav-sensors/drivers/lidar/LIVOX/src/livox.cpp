@@ -482,6 +482,13 @@ void LIVOX::set_logger_module(LOGGER* _logger)
 
 bool LIVOX::sensor_on(int idx)
 {
+    // livox sensor max index
+    if(idx >= 2)
+    {
+        spdlog::warn("[LIVOX] fault sensor index : {}", idx);
+        return false;
+    }
+
     if(ack_busy[idx].load())
     {
         spdlog::info("[LIVOX] sensor is busy, skip sensor_on");
@@ -504,6 +511,13 @@ bool LIVOX::sensor_on(int idx)
 
 bool LIVOX::sensor_off(int idx)
 {
+    // livox sensor max index
+    if(idx >= 2)
+    {
+        spdlog::warn("[LIVOX] fault sensor index : {}", idx);
+        return false;
+    }
+
     if(ack_busy[idx].load())
     {
         spdlog::info("[LIVOX] sensor is busy, skip sensor_off");
