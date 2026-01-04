@@ -1,0 +1,252 @@
+{
+    "LAKI": {
+        "LIDAR_2D_MAX_RANGE": "40.0",
+        "LIDAR_2D_MIN_RANGE": "1.0"
+    },
+    "LIVOX": {
+        "LIDAR_3D_MAX_RANGE": "70.0",
+        "LIDAR_3D_MIN_RANGE": "1.0"
+    },
+    "ORBBEC": {
+        "CAM_HEIGHT_MAX": "1.0",
+        "CAM_HEIGHT_MIN": "0.1"
+    },
+    "RPLIDAR": {
+        "LIDAR_2D_MAX_RANGE": "40.0",
+        "LIDAR_2D_MIN_RANGE": "0.5"
+    },
+    "SICK": {
+        "LIDAR_2D_MAX_RANGE": "24.0",
+        "LIDAR_2D_MIN_RANGE": "0.15"
+    },
+    "annotation": {
+        "ANNOT_QA_STEP": "0.3"
+    },
+    "cam_config": [
+        {
+            "SERIAL_NUMBER": "AY4W633000L",
+            "TF": "0.2292,-0.0875,0.2,-62.0,0.0,-115.0",
+            "COLOR_PROFILE": "112",
+            "DEPTH_PROFILE": "55"
+        },
+        {
+            "SERIAL_NUMBER": "AY4W633001A",
+            "TF": "0.2292,0.0875,0.2,62.0,0.0,115.0",
+            "COLOR_PROFILE": "112",
+            "DEPTH_PROFILE": "55"
+        }
+    ],
+    "control": {
+        "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
+        "DRIVE_GOAL_APPROACH_GAIN": "0.5",
+        "DRIVE_GOAL_APPROACH_GAIN_D": "0.008",
+        "DRIVE_GOAL_D": "0.1",
+        "DRIVE_GOAL_TH": "5.0",
+        "DRIVE_V_DEADZONE": "0.02",
+        "DRIVE_W_DEADZONE": "1.5"
+    },
+    "debug": {
+        "SERVER_ID": "rainbow",
+        "SERVER_IP": "10.108.1.180",
+        "SERVER_PW": "rainbow",
+        "USE_BEEP": true,
+        "USE_QTUI": false,
+        "USE_SIM": true
+    },
+    "docking": {
+        "CHARGE_TYPE": "XNERGY",
+        "DOCKING_CHECK_MOTOR_A": "300.0",
+        "DOCKING_CHG_LENGTH": "0.472",
+        "DOCKING_CLUST_ANGLE_THRESHOLD": "0.349",
+        "DOCKING_CLUST_DIST_THRESHOLD_MAX": "2.8",
+        "DOCKING_DWA_YAW_WEIGTH": "0.25",
+        "DOCKING_FIELD": "-1",
+        "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX": "2.8",
+        "DOCKING_GOAL_D": "0.025",
+        "DOCKING_GOAL_TH": "0.005",
+        "DOCKING_ICP_ERR_THRESHOLD": "0.01",
+        "DOCKING_KD_d": "0.2",
+        "DOCKING_KD_th": "0.15",
+        "DOCKING_KP_d": "0.25",
+        "DOCKING_KP_th": "0.25",
+        "DOCKING_LINEAR_X_OFFSET": "-0.05",
+        "DOCKING_POINTDOCK_MARGIN": "0.3",
+        "DOCKING_REVERSE_FLAG": true,
+        "DOCKING_TYPE": "0",
+        "DOCKING_WAITING_TIME": "20",
+        "DOCKING_X_OFFSET": "0.0",
+        "DOCKING_Y_OFFSET": "0.03",
+        "XNERGY_SET_CURRENT": "20.0"
+    },
+    "lidar_2d_config": [
+        {
+            "IP": "192.168.2.10",
+            "TF": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
+            "DEV": "/dev/ttyRP0"
+        }
+    ],
+    "lidar_3d_config": [
+        {
+            "IP": "192.168.1.100",
+            "TF": "-0.2079,0.0,1.34,0.0,0.0,90.0"
+        }
+    ],
+    "loc_2d": {
+        "LOC_ARUCO_ODO_FUSION_DIST": "2.0",
+        "LOC_ARUCO_ODO_FUSION_RATIO": "0.8",
+        "LOC_CHECK_DIST": "0.3",
+        "LOC_CHECK_IE": "0.2",
+        "LOC_CHECK_IR": "0.6",
+        "LOC_ICP_COST_THRESHOLD": "0.1",
+        "LOC_ICP_COST_THRESHOLD_0": "1.0",
+        "LOC_ICP_ERROR_THRESHOLD": "0.2",
+        "LOC_ICP_MAX_FEATURE_NUM": "500",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5",
+        "LOC_ROTATION_FALLBACK_RANGE": "180",
+        "LOC_ROTATION_FALLBACK_STEP": "10",
+        "LOC_ROTATION_FALLBACK_USE": false,
+        "LOC_SURFEL_NUM": "3",
+        "LOC_SURFEL_RANGE": "0.3"
+    },
+    "loc_3d": {
+        "LOC_COST_THRESHOLD": "0.1",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5",
+        "LOC_INLIER_CHECK_DIST": "0.3",
+        "LOC_MAX_FEATURE_NUM": "3000",
+        "LOC_SURFEL_BALANCE": "0.4",
+        "LOC_SURFEL_NN_NUM": "1",
+        "LOC_SURFEL_RANGE": "0.3"
+    },
+    "localization": {
+        "MODE": "3D",
+        "USE_ARUCO": true,
+        "USE_EKF": true
+    },
+    "logging": {
+        "DEBUG_AUTOCONTROL": false,
+        "DEBUG_COMM_RRS": false,
+        "DEBUG_LIDAR_2D": false,
+        "DEBUG_LIDAR_3D": false,
+        "DEBUG_LOCALIZATION": false,
+        "DEBUG_MOBILE": false,
+        "DEBUG_OBSMAP": false,
+        "LOG_ENABLE_FILE_OUTPUT": false,
+        "LOG_FILE_PATH": "logs/app.log",
+        "LOG_LEVEL": "info"
+    },
+    "map": {
+        "MAP_PATH": "/home/juyeon/maps/251208_test_map"
+    },
+    "mapping": {
+        "SLAM_ICP_COST_THRESHOLD": "0.5",
+        "SLAM_ICP_DO_ACCUM_NUM": "2",
+        "SLAM_ICP_DO_ERASE_GAP": "10",
+        "SLAM_ICP_ERROR_THRESHOLD": "0.2",
+        "SLAM_ICP_MAX_FEATURE_NUM": "1500",
+        "SLAM_ICP_VIEW_THRESHOLD": "170",
+        "SLAM_KFRM_LC_TRY_DIST": "3.0",
+        "SLAM_KFRM_LC_TRY_OVERLAP": "0.25",
+        "SLAM_KFRM_UPDATE_NUM": "50",
+        "SLAM_VOXEL_SIZE": "0.01",
+        "SLAM_WINDOW_SIZE": "100"
+    },
+    "motor": {
+        "MOTOR_DIR": "1",
+        "MOTOR_GAIN_KD": "100",
+        "MOTOR_GAIN_KI": "0",
+        "MOTOR_GAIN_KP": "4400",
+        "MOTOR_GEAR_RATIO": "12",
+        "MOTOR_ID_L": "1",
+        "MOTOR_ID_R": "0",
+        "MOTOR_LIMIT_V": "1.0",
+        "MOTOR_LIMIT_V_ACC": "1.0",
+        "MOTOR_LIMIT_W": "90",
+        "MOTOR_LIMIT_W_ACC": "90",
+        "MOTOR_SAFETY_LIMIT_V": "1.5",
+        "MOTOR_SAFETY_LIMIT_W": "110"
+    },
+    "network": {
+        "USE_COOP": false,
+        "USE_FMS": true,
+        "USE_MSA": false,
+        "USE_MULTI": false,
+        "USE_RRS": false,
+        "USE_RTSP": false
+    },
+    "obs": {
+        "OBS_AVOID": "0",
+        "OBS_DEADZONE": "0.5",
+        "OBS_DEADZONE_DYN": "0.5",
+        "OBS_DEADZONE_VIR": "0.5",
+        "OBS_DISTANCE_LED_FAR": "1.0",
+        "OBS_DISTANCE_LED_NEAR": "0.8",
+        "OBS_LOCAL_GOAL_D": "4.0",
+        "OBS_MAP_GRID_SIZE": "0.05",
+        "OBS_MAP_MAX_Z": "1.0",
+        "OBS_MAP_MIN_V": "0.3",
+        "OBS_MAP_MIN_Z": "0.0",
+        "OBS_MAP_RANGE": "5.0",
+        "OBS_PATH_MARGIN_X": "0.05",
+        "OBS_PATH_MARGIN_Y": "0.0",
+        "OBS_PREDICT_TIME": "3.0",
+        "OBS_SAFE_MARGIN_X": "0.1",
+        "OBS_SAFE_MARGIN_Y": "0.1"
+    },
+    "qa": {
+        "QA_STEP_DISTANCE": "0.7",
+        "QA_STOP_MIN_DISTANCE": "0.3"
+    },
+    "robot": {
+        "MILEAGE": "1218.954",
+        "ROBOT_ALARM": false,
+        "ROBOT_ALARM_BAT_CRITICAL": "40",
+        "ROBOT_ALARM_BAT_LOW": "60",
+        "ROBOT_LX": "0.430",
+        "ROBOT_LY": "0.2755",
+        "ROBOT_SIZE_ADD_X": "0",
+        "ROBOT_SIZE_ADD_Y": "0",
+        "ROBOT_SIZE_ADD_Z": "0",
+        "ROBOT_SIZE_MAX_X": "0.4",
+        "ROBOT_SIZE_MAX_Y": "0.35",
+        "ROBOT_SIZE_MAX_Z": "0.22",
+        "ROBOT_SIZE_MIN_X": "-0.35",
+        "ROBOT_SIZE_MIN_Y": "-0.35",
+        "ROBOT_SIZE_MIN_Z": "0",
+        "ROBOT_WHEEL_BASE": "0.387",
+        "ROBOT_WHEEL_RADIUS": "0.0635",
+        "ROBOT_WHEEL_TYPE": "DD",
+        "SPEAKER": false
+    },
+    "safety": {
+        "MONITORING_FIELDS": [
+        ],
+        "MONITORING_FIELD_COUNT": "0",
+        "USE_SAFETY_BUMPER": true,
+        "USE_SAFETY_CROSS_MONITOR": false,
+        "USE_SAFETY_INTERLOCK": false,
+        "USE_SAFETY_OBSTACLE_DETECT": true,
+        "USE_SAFETY_SPEED_CONTROL": false
+    },
+    "sensors": {
+        "CAM_NUM": "2",
+        "CAM_TYPE": "ORBBEC",
+        "LIDAR_2D_NUM": "1",
+        "LIDAR_2D_TYPE": "RPLIDAR",
+        "LIDAR_3D_NUM": "1",
+        "LIDAR_3D_TYPE": "LIVOX",
+        "USE_BQR": false,
+        "USE_CAM": false,
+        "USE_CAM_DEPTH": true,
+        "USE_CAM_FILTER": true,
+        "CAM_FILTER_ROR_RADIUS": "0.1",
+        "CAM_FILTER_ROR_MIN_NEIGHBORS": "15",
+        "CAM_FILTER_CLUSTER_MIN_SIZE": "30",
+        "USE_CAM_RGB": true,
+        "USE_IMU": false,
+        "USE_LIDAR_2D": true,
+        "USE_LIDAR_3D": true
+    },
+    "update": {
+        "CONFIG": false
+    }
+}

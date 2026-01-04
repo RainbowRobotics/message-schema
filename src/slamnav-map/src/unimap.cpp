@@ -133,9 +133,11 @@ void UNIMAP::load_map(QString path)
     // set load map dir
     map_path = path;
 
+    QString loc_mode = config->get_loc_mode();
+
     bool loaded_2d = load_2d();
     bool loaded_3d = false;
-    if(!config->get_use_sim())
+    if(loc_mode == "3D" && !config->get_use_sim())
     {
         auto future = std::async(std::launch::async, [this]()
         {
@@ -156,7 +158,6 @@ void UNIMAP::load_map(QString path)
         load_topo();
     }
 
-    QString loc_mode = config->get_loc_mode();
     spdlog::info("[UNIMAP] loc_mode: {}, loaded_2d: {}, loaded_3d: {}", loc_mode.toStdString(), loaded_2d, loaded_3d);
     if(loc_mode == "2D" && loaded_2d)
     {
@@ -168,7 +169,6 @@ void UNIMAP::load_map(QString path)
     }
     else if(loaded_2d || loaded_3d)
     {
-        // fallback: at least one map loaded
         is_loaded.store(MAP_LOADED);
         spdlog::warn("[UNIMAP] fallback MAP_LOADED (2d:{}, 3d:{})", loaded_2d, loaded_3d);
     }
@@ -334,7 +334,6 @@ bool UNIMAP::load_3d()
     QString file_path = path + "/map.las";
     if(!QFile::exists(file_path))
     {
-        qDebug()<<"no las!!!!!!!!!!!";
         return false;
     }
 
