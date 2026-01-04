@@ -26,9 +26,6 @@ add_library(${PROJECT_NAME} SHARED ${ROBOT_SOURCES} ${ROBOT_HEADERS}
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
-# ---- PCH ----
-target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
-
 # ---- includes ----
 target_include_directories(${PROJECT_NAME}
     PUBLIC

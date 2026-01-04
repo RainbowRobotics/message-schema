@@ -25,13 +25,6 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
-# PCH를 위해 _REENTRANT를 전역으로 추가 (Qt 링크 시 자동 추가되는 플래그와 동기화)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_REENTRANT")
-
-# PCH 재사용을 위해 slamnav_common_EXPORTS를 전역으로 추가
-# (모든 타겟이 slamnav-common의 PCH를 재사용하므로 같은 EXPORTS 매크로 필요)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dslamnav_common_EXPORTS")
-
 # ---- paths ----
 set(LIBS_DIR $ENV{HOME}/libs)
 set(SRC_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src)

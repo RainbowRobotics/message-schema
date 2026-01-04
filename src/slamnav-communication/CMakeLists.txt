@@ -44,9 +44,6 @@ add_library(${PROJECT_NAME} SHARED ${COMMUNICATION_SOURCES} ${COMMUNICATION_HEAD
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
-# ---- PCH ----
-target_precompile_headers(${PROJECT_NAME} REUSE_FROM slamnav-common)
-
 # ---- includes ----
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc

@@ -41,34 +41,6 @@ add_library(${PROJECT_NAME} SHARED ${COMMON_SOURCES} ${COMMON_HEADERS})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
-# ---- PCH ----
-target_precompile_headers(${PROJECT_NAME} PRIVATE
-    <vector>
-    <memory>
-    <atomic>
-    <chrono>
-    <algorithm>
-    <mutex>
-    <thread>
-    <unordered_map>
-    <unordered_set>
-    <iostream>
-
-    <Eigen/Core>
-    <Eigen/Dense>
-    <Eigen/Geometry>
-
-    <opencv2/opencv.hpp>
-
-    <pcl/point_types.h>
-    <pcl/common/common.h>
-    <pcl/common/transforms.h>
-
-    <QObject>
-    <QString>
-    <QDir>
-)
-
 # spdlog header-only
 target_include_directories(${PROJECT_NAME} PUBLIC "${LIBS_DIR}/spdlog/include")
 
