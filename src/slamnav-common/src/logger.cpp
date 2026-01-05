@@ -250,7 +250,7 @@ void LOGGER::write_log_file(QString log)
 
         FILE* pFile;
         pFile = fopen(log_file_name.toStdString().c_str(), "a");
-        fprintf(pFile, log.toStdString().c_str());
+        fprintf(pFile, "%s", log.toStdString().c_str());
         fclose(pFile);
     }
     mtx.unlock();

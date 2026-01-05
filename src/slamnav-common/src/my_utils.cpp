@@ -353,8 +353,7 @@ QString TF_to_string(Eigen::Matrix4d TF)
     double ry = euler[1]*R2D;
     double rz = euler[0]*R2D;
 
-    QString res;
-    res.sprintf("%f,%f,%f,%f,%f,%f", tx, ty, tz, rx, ry, rz);
+    QString res = QString("%1,%2,%3,%4,%5,%6").arg(tx).arg(ty).arg(tz).arg(rx).arg(ry).arg(rz);
     return res;
 }
 
@@ -1211,7 +1210,7 @@ void precise_sleep(double seconds)
     }
 
     uint64_t expirations;
-    read(fd, &expirations, sizeof(expirations));
+    ssize_t ret __attribute__((unused)) = read(fd, &expirations, sizeof(expirations));
     close(fd);
 }
 

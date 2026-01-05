@@ -3059,7 +3059,7 @@ Save2</string>
          <string>request</string>
         </property>
        </widget>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="layoutWidget_multi">
         <property name="geometry">
          <rect>
           <x>170</x>
@@ -3416,7 +3416,7 @@ Save2</string>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="layoutWidget_auto">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -3856,7 +3856,7 @@ Save2</string>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="layoutWidget_mobile">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -4245,7 +4245,7 @@ Save2</string>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="layoutWidget_safety">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -4988,7 +4988,7 @@ Save2</string>
      </widget>
     </item>
    </layout>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QWidget" name="layoutWidget_main">
     <property name="geometry">
      <rect>
       <x>0</x>

@@ -986,8 +986,7 @@ std::vector<LINK> UNIMAP::get_links()
 
 QString UNIMAP::gen_node_id()
 {
-    QString res;
-    res.sprintf("N_%lld", (long long)(get_time()*1000));
+    QString res = QString("N_%1").arg((long long)(get_time()*1000));
     return res;
 }
 

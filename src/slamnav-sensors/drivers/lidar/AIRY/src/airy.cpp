@@ -353,12 +353,25 @@ QString AIRY::get_info_text(int idx)
     double cur_frm_t = client->cur_frm_t;
 
     QString res;
-    res += QString().sprintf("[LIDAR %d]\nimu_t: %.3f, pts_t: %.3f (%d)\n", idx, cur_imu_t, cur_frm_t, cur_pts_num);
-    res += QString().sprintf("acc: %.2f, %.2f, %.2f\n", imu.acc_x, imu.acc_y, imu.acc_z);
-    res += QString().sprintf("gyr: %.2f, %.2f, %.2f\n", imu.gyr_x * R2D, imu.gyr_y * R2D, imu.gyr_z * R2D);
-    res += QString().sprintf("so3: %.1f, %.1f, %.1f\n", imu.rx * R2D, imu.ry * R2D, imu.rz * R2D);
+    res += QString("[LIDAR %1]\nimu_t: %2, pts_t: %3 (%4)\n")
+        .arg(idx)
+        .arg(cur_imu_t, 0, 'f', 3)
+        .arg(cur_frm_t, 0, 'f', 3)
+        .arg(cur_pts_num);
+    res += QString("acc: %1, %2, %3\n")
+        .arg(imu.acc_x, 0, 'f', 2)
+        .arg(imu.acc_y, 0, 'f', 2)
+        .arg(imu.acc_z, 0, 'f', 2);
+    res += QString("gyr: %1, %2, %3\n")
+        .arg(imu.gyr_x * R2D, 0, 'f', 2)
+        .arg(imu.gyr_y * R2D, 0, 'f', 2)
+        .arg(imu.gyr_z * R2D, 0, 'f', 2);
+    res += QString("so3: %1, %2, %3\n")
+        .arg(imu.rx * R2D, 0, 'f', 1)
+        .arg(imu.ry * R2D, 0, 'f', 1)
+        .arg(imu.rz * R2D, 0, 'f', 1);
     // time_type = 1
-    res += QString().sprintf("time_sync_type: %d\n fq: %d,", 1, frame_que_size);
+    res += QString("time_sync_type: %1\n fq: %2,").arg(1).arg(frame_que_size);
 
     return res;
 }

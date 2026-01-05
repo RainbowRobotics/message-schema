@@ -23,11 +23,16 @@ GLS611::~GLS611()
 QString GLS611::get_bqr_info_str()
 {
     BQR_INFO _cur_code = get_cur_bqr();
-    QString str;
-    str.sprintf("[BQR]\nconnection:%d,recv:%d,id:%s,num:%d\nerr(x,y,th):%.3f,%.3f,%.3f,(xymcl):%.3f,%.3f",
-                (int)is_connected, (int)is_recv_data, _cur_code.id.toStdString().c_str(), _cur_code.code_num,
-                (double)err_x, (double)err_y, (double)err_th*R2D,
-                _cur_code.xmcl, _cur_code.ymcl);
+    QString str = QString("[BQR]\nconnection:%1,recv:%2,id:%3,num:%4\nerr(x,y,th):%5,%6,%7,(xymcl):%8,%9")
+        .arg((int)is_connected)
+        .arg((int)is_recv_data)
+        .arg(_cur_code.id)
+        .arg(_cur_code.code_num)
+        .arg((double)err_x, 0, 'f', 3)
+        .arg((double)err_y, 0, 'f', 3)
+        .arg((double)err_th*R2D, 0, 'f', 3)
+        .arg(_cur_code.xmcl, 0, 'f', 3)
+        .arg(_cur_code.ymcl, 0, 'f', 3);
 
     return str;
 }
@@ -148,8 +153,7 @@ void GLS611::process_data(QString data)
 
     if(ref_bqr_codes.find(code.id) == ref_bqr_codes.end())
     {
-        QString str;
-        str.sprintf("[BQR] no exist ref code.id: %s", code.id.toStdString().c_str());
+        QString str = QString("[BQR] no exist ref code.id: %1").arg(code.id);
         logger->write_log(str, "Red", true, false);
         return;
     }

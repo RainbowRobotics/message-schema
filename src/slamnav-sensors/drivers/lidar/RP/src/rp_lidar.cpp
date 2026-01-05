@@ -78,8 +78,11 @@ void RP_LIDAR::close()
 QString RP_LIDAR::get_info_text(int idx)
 {
     QString res;
-    res += QString().sprintf("[RP %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
+    res += QString("[RP %1]\npts_t: %2 (%3)\n")
+        .arg(idx)
+        .arg(cur_raw_t[idx].load(), 0, 'f', 3)
+        .arg(cur_pts_num[idx].load());
+    res += QString("fq: %1,").arg((int)raw_que[idx].unsafe_size());
 
     return res;
 }

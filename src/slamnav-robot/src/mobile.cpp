@@ -585,12 +585,17 @@ void MOBILE::receive_data_loop()
                                     pose_storage.erase(pose_storage.begin());
                                 }
 
-                                QString mobile_pose_str;
-                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f,%.2f,%.2f\ncmd:%.2f,%.2f,%.2f",
-                                                      mobile_pose.t,
-                                                      mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                                      mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                                      cmd[0], cmd[1], cmd[2]*R2D);
+                                QString mobile_pose_str = QString("[MOBILE_POSE]\nt:%1\npos:%2,%3,%4\nvel:%5,%6,%7\ncmd:%8,%9,%10")
+                                    .arg(mobile_pose.t, 0, 'f', 3)
+                                    .arg(mobile_pose.pose[0], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[1], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[2]*R2D, 0, 'f', 2)
+                                    .arg(mobile_pose.vel[0], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[1], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[2]*R2D, 0, 'f', 2)
+                                    .arg(cmd[0], 0, 'f', 2)
+                                    .arg(cmd[1], 0, 'f', 2)
+                                    .arg(cmd[2]*R2D, 0, 'f', 2);
                                 pose_text = mobile_pose_str;
 
                                 // update last t
@@ -1539,78 +1544,98 @@ void MOBILE::receive_data_loop()
 
                             if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
                             {
+                                mobile_pose_str = QString("[MOBILE_POSE]\nt:%1\npos:%2,%3,%4\nvel:%5, %6, %7\ncmd:%8, %9, %10")
+                                    .arg(mobile_pose.t, 0, 'f', 3)
+                                    .arg(mobile_pose.pose[0], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[1], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[2]*R2D, 0, 'f', 2)
+                                    .arg(mobile_pose.vel[0], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[1], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[2]*R2D, 0, 'f', 2)
+                                    .arg(cmd[0], 0, 'f', 2)
+                                    .arg(cmd[1], 0, 'f', 2)
+                                    .arg(cmd[2]*R2D, 0, 'f', 2);
 
-                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                                          mobile_pose.t,
-                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                                          cmd[0], cmd[1], cmd[2]*R2D);
-
-                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
-                                                          mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
-                                                          (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                                          mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
-                                                          mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
-                                                          mobile_status.power, mobile_status.total_power,
-                                                          mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
+                                mobile_status_str = QString("[MOBILE_STATUS]\nconnection(m0,m1):%1,%2, status(m0,m1):%3,%4\ntemp(m0,m1): %5,%6, cur(m0,m1):%7,%8\ncharge,power,emo,remote:%9,%10,%11,%12\nBAT(in,out,cur,per):%13,%14,%15,%16%%\npower:%17, total power:%18\ncore_temp(m0,m1,state): %19, %20, %21")
+                                    .arg(mobile_status.connection_m0).arg(mobile_status.connection_m1).arg(mobile_status.status_m0).arg(mobile_status.status_m1)
+                                    .arg(mobile_status.temp_m0).arg(mobile_status.temp_m1)
+                                    .arg((double)mobile_status.cur_m0/10.0, 0, 'f', 2).arg((double)mobile_status.cur_m1/10.0, 0, 'f', 2)
+                                    .arg(mobile_status.charge_state).arg(mobile_status.power_state).arg(mobile_status.motor_stop_state).arg(mobile_status.remote_state)
+                                    .arg(mobile_status.bat_in, 0, 'f', 3).arg(mobile_status.bat_out, 0, 'f', 3).arg(mobile_status.bat_current, 0, 'f', 3).arg(mobile_status.bat_percent)
+                                    .arg(mobile_status.power, 0, 'f', 3).arg(mobile_status.total_power, 0, 'f', 3)
+                                    .arg(mobile_status.core_temp0).arg(mobile_status.core_temp1).arg(mobile_status.state);
                             }
                             else if(robot_type == RobotType_PDU::ROBOT_TYPE_D400 || robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
-                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                                          mobile_pose.t,
-                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                                          cmd[0], cmd[1], cmd[2]*R2D);
+                                mobile_pose_str = QString("[MOBILE_POSE]\nt:%1\npos:%2,%3,%4\nvel:%5, %6, %7\ncmd:%8, %9, %10")
+                                    .arg(mobile_pose.t, 0, 'f', 3)
+                                    .arg(mobile_pose.pose[0], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[1], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[2]*R2D, 0, 'f', 2)
+                                    .arg(mobile_pose.vel[0], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[1], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[2]*R2D, 0, 'f', 2)
+                                    .arg(cmd[0], 0, 'f', 2)
+                                    .arg(cmd[1], 0, 'f', 2)
+                                    .arg(cmd[2]*R2D, 0, 'f', 2);
 
-                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
-                                             "temp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\n"
-                                             "charge,om_state,emo,ri_state:%d,%d,%d,%d\n"
-                                             "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
-                                             "power:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\n"
-                                             "gyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\n"
-                                             "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n"
-                                             "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
-                                             "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
-                                             "bumper:{%d,%d} lidar_field:%d)",
-                                            mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
-                                            (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                            mobile_status.charge_state, mobile_status.om_state, mobile_status.motor_stop_state, mobile_status.ri_state,
-                                            mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
-                                            mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
-                                            mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                            mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                            mobile_status.tabos_voltage, mobile_status.tabos_current, mobile_status.tabos_ttf, mobile_status.tabos_tte, mobile_status.tabos_soc, mobile_status.tabos_soh,
-                                            mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status,
-                                            mobile_status.safety_state_emo_pressed_1,         mobile_status.safety_state_emo_pressed_2,
-                                            mobile_status.safety_state_ref_meas_mismatch_1,   mobile_status.safety_state_ref_meas_mismatch_2,
-                                            mobile_status.safety_state_over_speed_1,          mobile_status.safety_state_over_speed_2,
-                                            mobile_status.safety_state_obstacle_detected_1,   mobile_status.safety_state_obstacle_detected_2,
-                                            mobile_status.safety_state_speed_field_mismatch_1,mobile_status.safety_state_speed_field_mismatch_2,
-                                            mobile_status.safety_state_interlock_stop_1,      mobile_status.safety_state_interlock_stop_2,
-                                            mobile_status.operational_stop_state_flag_1,      mobile_status.operational_stop_state_flag_2,
-                                            mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
-                                            mobile_status.lidar_field);
+                                mobile_status_str = QString("[MOBILE_STATUS]\nconnection(m0,m1):%1,%2, status(m0,m1):%3,%4\n"
+                                             "temp(m0,m1): %5,%6,(%7,%8), cur(m0,m1):%9,%10\n")
+                                    .arg(mobile_status.connection_m0).arg(mobile_status.connection_m1).arg(mobile_status.status_m0).arg(mobile_status.status_m1)
+                                    .arg(mobile_status.temp_m0).arg(mobile_status.temp_m1).arg(mobile_status.esti_temp_m0).arg(mobile_status.esti_temp_m1)
+                                    .arg((double)mobile_status.cur_m0/10.0, 0, 'f', 2).arg((double)mobile_status.cur_m1/10.0, 0, 'f', 2);
+                                mobile_status_str += QString("charge,om_state,emo,ri_state:%1,%2,%3,%4\n"
+                                             "BAT(in,out,cur,per):%5,%6,%7,%8%%\n"
+                                             "power:%9, total power:%10, c.c:%11, c.v:%12\n")
+                                    .arg(mobile_status.charge_state).arg(mobile_status.om_state).arg(mobile_status.motor_stop_state).arg(mobile_status.ri_state)
+                                    .arg(mobile_status.bat_in, 0, 'f', 3).arg(mobile_status.bat_out, 0, 'f', 3).arg(mobile_status.bat_current, 0, 'f', 3).arg(mobile_status.bat_percent)
+                                    .arg(mobile_status.power, 0, 'f', 3).arg(mobile_status.total_power, 0, 'f', 3).arg(mobile_status.charge_current, 0, 'f', 3).arg(mobile_status.contact_voltage, 0, 'f', 3);
+                                mobile_status_str += QString("gyr:%1,%2,%3 acc:%4,%5,%6\n"
+                                             "bms_v:%7, bms_a:%8, bms_ttf:%9, bms_tte:%10, bms_soc:%11 \n")
+                                    .arg(mobile_status.imu_gyr_x, 0, 'f', 2).arg(mobile_status.imu_gyr_y, 0, 'f', 2).arg(mobile_status.imu_gyr_z, 0, 'f', 2)
+                                    .arg(mobile_status.imu_acc_x, 0, 'f', 3).arg(mobile_status.imu_acc_y, 0, 'f', 3).arg(mobile_status.imu_acc_z, 0, 'f', 3)
+                                    .arg(mobile_status.tabos_voltage, 0, 'f', 2).arg(mobile_status.tabos_current, 0, 'f', 2).arg(mobile_status.tabos_ttf).arg(mobile_status.tabos_tte).arg(mobile_status.tabos_soc);
+                                mobile_status_str += QString("bms_soh:%1, bms_temp:%2, bms_rc:%3, bms_ae:%4, bms_sat:%5 \n")
+                                    .arg(mobile_status.tabos_soh).arg(mobile_status.tabos_temperature, 0, 'f', 2).arg(mobile_status.tabos_rc, 0, 'f', 2).arg(mobile_status.tabos_ae, 0, 'f', 2).arg(mobile_status.tabos_status);
+                                mobile_status_str += QString("SFTY(emo,refm,spd,obs,sfld,intlk,op):{%1,%2},{%3,%4},{%5,%6},{%7,%8},{%9,%10},{%11,%12},{%13,%14}\n")
+                                    .arg(mobile_status.safety_state_emo_pressed_1).arg(mobile_status.safety_state_emo_pressed_2)
+                                    .arg(mobile_status.safety_state_ref_meas_mismatch_1).arg(mobile_status.safety_state_ref_meas_mismatch_2)
+                                    .arg(mobile_status.safety_state_over_speed_1).arg(mobile_status.safety_state_over_speed_2)
+                                    .arg(mobile_status.safety_state_obstacle_detected_1).arg(mobile_status.safety_state_obstacle_detected_2)
+                                    .arg(mobile_status.safety_state_speed_field_mismatch_1).arg(mobile_status.safety_state_speed_field_mismatch_2)
+                                    .arg(mobile_status.safety_state_interlock_stop_1).arg(mobile_status.safety_state_interlock_stop_2)
+                                    .arg(mobile_status.operational_stop_state_flag_1).arg(mobile_status.operational_stop_state_flag_2);
+                                mobile_status_str += QString("bumper:{%1,%2} lidar_field:%3)")
+                                    .arg(mobile_status.safety_state_bumper_stop_1).arg(mobile_status.safety_state_bumper_stop_2).arg(mobile_status.lidar_field);
                             }
                             else if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
-                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                                          mobile_pose.t,
-                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                                          cmd[0], cmd[1], cmd[2]*R2D);
+                                mobile_pose_str = QString("[MOBILE_POSE]\nt:%1\npos:%2,%3,%4\nvel:%5, %6, %7\ncmd:%8, %9, %10")
+                                    .arg(mobile_pose.t, 0, 'f', 3)
+                                    .arg(mobile_pose.pose[0], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[1], 0, 'f', 2)
+                                    .arg(mobile_pose.pose[2]*R2D, 0, 'f', 2)
+                                    .arg(mobile_pose.vel[0], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[1], 0, 'f', 2)
+                                    .arg(mobile_pose.vel[2]*R2D, 0, 'f', 2)
+                                    .arg(cmd[0], 0, 'f', 2)
+                                    .arg(cmd[1], 0, 'f', 2)
+                                    .arg(cmd[2]*R2D, 0, 'f', 2);
 
-                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection:%d,%d,%d,%d\nstatus:%d,%d,%d,%d\ntemp:%d,%d,%d,%d, cur:%.2f,%.2f,%2f,%2f\ncharge,power,emo,remote:%d,%d,%d,%d\ncharge cur,vol:%.2f,%.2f\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\nTFB:%d",
-                                                          mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.connection_m2, mobile_status.connection_m3,
-                                                          mobile_status.status_m0, mobile_status.status_m1, mobile_status.status_m2, mobile_status.status_m3,
-                                                          mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.temp_m2, mobile_status.temp_m3,
-                                                          (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0, (double)mobile_status.cur_m2/10.0, (double)mobile_status.cur_m3/10.0,
-                                                          mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
-                                                          mobile_status.charge_current, mobile_status.contact_voltage,
-                                                          mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
-                                                          mobile_status.power, mobile_status.total_power,
-                                                          mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                                          mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                                          mobile_status.inter_lock_state);
+                                mobile_status_str = QString("[MOBILE_STATUS]\nconnection:%1,%2,%3,%4\nstatus:%5,%6,%7,%8\ntemp:%9,%10,%11,%12, cur:%13,%14,%15,%16\n")
+                                    .arg(mobile_status.connection_m0).arg(mobile_status.connection_m1).arg(mobile_status.connection_m2).arg(mobile_status.connection_m3)
+                                    .arg(mobile_status.status_m0).arg(mobile_status.status_m1).arg(mobile_status.status_m2).arg(mobile_status.status_m3)
+                                    .arg(mobile_status.temp_m0).arg(mobile_status.temp_m1).arg(mobile_status.temp_m2).arg(mobile_status.temp_m3)
+                                    .arg((double)mobile_status.cur_m0/10.0, 0, 'f', 2).arg((double)mobile_status.cur_m1/10.0, 0, 'f', 2).arg((double)mobile_status.cur_m2/10.0, 0, 'f', 2).arg((double)mobile_status.cur_m3/10.0, 0, 'f', 2);
+                                mobile_status_str += QString("charge,power,emo,remote:%1,%2,%3,%4\ncharge cur,vol:%5,%6\nBAT(in,out,cur):%7,%8,%9\n")
+                                    .arg(mobile_status.charge_state).arg(mobile_status.power_state).arg(mobile_status.motor_stop_state).arg(mobile_status.remote_state)
+                                    .arg(mobile_status.charge_current, 0, 'f', 2).arg(mobile_status.contact_voltage, 0, 'f', 2)
+                                    .arg(mobile_status.bat_in, 0, 'f', 3).arg(mobile_status.bat_out, 0, 'f', 3).arg(mobile_status.bat_current, 0, 'f', 3);
+                                mobile_status_str += QString("power:%1, total power:%2\ngyr:%3,%4,%5 acc:%6,%7,%8\nTFB:%9")
+                                    .arg(mobile_status.power, 0, 'f', 3).arg(mobile_status.total_power, 0, 'f', 3)
+                                    .arg(mobile_status.imu_gyr_x, 0, 'f', 2).arg(mobile_status.imu_gyr_y, 0, 'f', 2).arg(mobile_status.imu_gyr_z, 0, 'f', 2)
+                                    .arg(mobile_status.imu_acc_x, 0, 'f', 3).arg(mobile_status.imu_acc_y, 0, 'f', 3).arg(mobile_status.imu_acc_z, 0, 'f', 3)
+                                    .arg(mobile_status.inter_lock_state);
                             }
 
                             // storing

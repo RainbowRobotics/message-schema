@@ -1543,7 +1543,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
             COST_JACOBIAN cj;
             cj.c = cost;
             cj.w = 1.0;
-            memcpy(cj.J, J, sizeof(double)*12);
+            memcpy(cj.J, J, sizeof(double)*6);
 
             cj_set.push_back(cj);
             costs.push_back(cost);

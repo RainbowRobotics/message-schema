@@ -2781,21 +2781,20 @@ void MainWindow::watch_loop()
                 if(ms.t != 0)
                 {
                     // when motor status 0, emo released, no charging
-                    if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0)
-                    {
-                        //                        MOBILE::instance()->motor_on();
-                    }
+                    //if(CONFIG::instance()->get_robot_model() == RobotModel::S100 &&((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0))
+                    //{
+                    //    MOBILE::instance()->motor_on();
+                    //}
 
-                    if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
-                            ms.status_m0 == 1 && ms.status_m1 == 1 &&
-                            ms.motor_stop_state == 1 && ms.charge_state == 0)
+                    if(ms.connection_m0 == 1    && ms.connection_m1 == 1 &&
+                       ms.status_m0 == 1        && ms.status_m1 == 1 &&
+                       ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
                         MOBILE::instance()->set_cur_pdu_state("good");
                     }
                     else
                     {
                         MOBILE::instance()->set_cur_pdu_state("fail");
-                        //                        led_color = LED_MAGENTA;
                     }
                 }
             }
@@ -3423,8 +3422,10 @@ void MainWindow::plot_pick()
             pcl_viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
 
             // plot text
-            QString text;
-            text.sprintf("x:%.2f, y:%.2f, th:%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            QString text = QString("x:%1, y:%2, th:%3")
+                .arg(pick.r_pose[0], 0, 'f', 2)
+                .arg(pick.r_pose[1], 0, 'f', 2)
+                .arg(pick.r_pose[2]*R2D, 0, 'f', 2);
             ui->lb_PickPose->setText(text);
         }
     }
@@ -3488,16 +3489,15 @@ void MainWindow::plot_info()
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
         //        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
-        QString auto_info_str;
-        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
-                              AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
-                              AUTOCONTROL::instance()->get_is_moving() ? "1" : "0",
-                              AUTOCONTROL::instance()->get_is_pause() ? "1" : "0",
-                              AUTOCONTROL::instance()->get_obs_condition().toLocal8Bit().data(),
-                              AUTOCONTROL::instance()->get_obs_dist(),
-                              CONFIG::instance()->get_use_multi(),
-                              AUTOCONTROL::instance()->get_multi_reqest_state().toLocal8Bit().data(),
-                              _multi_state.toLocal8Bit().data());
+        QString auto_info_str = QString("[AUTO_INFO]\nfsm_state: %1\nis_moving: %2, is_pause: %3, obs: %4 (%5),\nis_multi: %6, request: %7, multi_state: %8")
+            .arg(AUTO_FSM_STATE_STR[fsm_state])
+            .arg(AUTOCONTROL::instance()->get_is_moving() ? "1" : "0")
+            .arg(AUTOCONTROL::instance()->get_is_pause() ? "1" : "0")
+            .arg(AUTOCONTROL::instance()->get_obs_condition())
+            .arg(AUTOCONTROL::instance()->get_obs_dist(), 0, 'f', 3)
+            .arg(CONFIG::instance()->get_use_multi())
+            .arg(AUTOCONTROL::instance()->get_multi_reqest_state())
+            .arg(_multi_state);
         ui->lb_AutoInfo->setText(auto_info_str);
     }
 
@@ -3574,8 +3574,8 @@ void MainWindow::plot_safety()
         ui->le_Setting_Wheel_Type->setText("MECANUM");
     }
 
-    ui->le_Setting_Lx->setText(QString().sprintf("%.2f", cur_setting.lx));
-    ui->le_Setting_Ly->setText(QString().sprintf("%.2f", cur_setting.ly));
+    ui->le_Setting_Lx->setText(QString("%1").arg(cur_setting.lx, 0, 'f', 2));
+    ui->le_Setting_Ly->setText(QString("%1").arg(cur_setting.ly, 0, 'f', 2));
 
     MOBILE_STATUS cur_status = MOBILE::instance()->get_status();
 
@@ -3674,7 +3674,7 @@ void MainWindow::plot_safety()
     }
 
     ui->le_Robot_Init_State->setText(ri_state);
-    ui->le_Lidar_Field_Read->setText(QString().sprintf("%d", cur_status.lidar_field));
+    ui->le_Lidar_Field_Read->setText(QString("%1").arg(cur_status.lidar_field));
 
     QString charge_state = "";
     if(cur_status.charge_state == 0)
@@ -3711,85 +3711,85 @@ void MainWindow::plot_safety()
     //emo status
     if(cur_status.safety_state_emo_pressed_1 || cur_status.safety_state_emo_pressed_2)
     {
-        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("trig"));
+        ui->le_Safety_Emo_Pressed->setText("trig");
     }
     else
     {
-        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("none"));
+        ui->le_Safety_Emo_Pressed->setText("none");
     }
 
     //speed mismatch
     if(cur_status.safety_state_ref_meas_mismatch_1 || cur_status.safety_state_ref_meas_mismatch_2)
     {
-        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("trig"));
+        ui->le_Safety_Ref_Meas_Mismatch->setText("trig");
     }
     else
     {
-        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("none"));
+        ui->le_Safety_Ref_Meas_Mismatch->setText("none");
     }
 
     //overspeed
     if(cur_status.safety_state_over_speed_1 || cur_status.safety_state_over_speed_2)
     {
-        ui->le_Safety_Over_Speed->setText(QString().sprintf("trig"));
+        ui->le_Safety_Over_Speed->setText("trig");
     }
     else
     {
-        ui->le_Safety_Over_Speed->setText(QString().sprintf("none"));
+        ui->le_Safety_Over_Speed->setText("none");
     }
 
     //obstacle detect
     if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
     {
-        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("trig"));
+        ui->le_Safety_Obstacle_Detect->setText("trig");
     }
     else
     {
-        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("none"));
+        ui->le_Safety_Obstacle_Detect->setText("none");
     }
 
     //speed field mismatch
     if(cur_status.safety_state_speed_field_mismatch_1 || cur_status.safety_state_speed_field_mismatch_1)
     {
-        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("trig"));
+        ui->le_Safety_Speed_Field_Mismatch->setText("trig");
     }
     else
     {
-        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("none"));
+        ui->le_Safety_Speed_Field_Mismatch->setText("none");
     }
 
     //interlock detect
     if(cur_status.safety_state_interlock_stop_1 || cur_status.safety_state_interlock_stop_2)
     {
-        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
+        ui->le_Safety_Interlock_Stop->setText("trig");
     }
     else
     {
-        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("none"));
+        ui->le_Safety_Interlock_Stop->setText("none");
     }
 
     //bumper detect
     if(cur_status.safety_state_bumper_stop_1 || cur_status.safety_state_bumper_stop_2)
     {
-        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("trig"));
+        ui->le_Safety_Bumper_Stop->setText("trig");
     }
     else
     {
-        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("none"));
+        ui->le_Safety_Bumper_Stop->setText("none");
     }
 
     //operation stop detect
     if(cur_status.operational_stop_state_flag_1 || cur_status.operational_stop_state_flag_2)
     {
-        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("trig"));
+        ui->le_Safety_Op_Stop_State->setText("trig");
     }
     else
     {
-        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("none"));
+        ui->le_Safety_Op_Stop_State->setText("none");
     }
 
-    ui->le_mainstate->setText(QString().sprintf("%d", cur_status.xnergy_main_state));
-    ui->le_errorcode->setText(QString().sprintf("%d", cur_status.xnergy_error_code_low));
+    ui->le_mainstate->setText(QString("%1").arg(cur_status.xnergy_main_state));
+    ui->le_errorcode->setText(QString("%1").arg(cur_status.xnergy_error_code_low));
 }
 
 void MainWindow::plot_raw_2d()
@@ -4129,8 +4129,7 @@ void MainWindow::plot_mapping()
                 KFRAME kfrm = MAPPING::instance()->get_kfrm(kfrm_id);
                 opt_G = kfrm.opt_G;
 
-                QString name;
-                name.sprintf("kfrm_%d", kfrm_id);
+                QString name = QString("kfrm_%1").arg(kfrm_id);
 
                 if(!pcl_viewer->contains(name.toStdString()))
                 {
@@ -4556,8 +4555,7 @@ void MainWindow::plot_ctrl()
             {
                 if(p == local_path.pose.size()-1 || p % 50 == 0)
                 {
-                    QString name;
-                    name.sprintf("local_path_%d", (int)p);
+                    QString name = QString("local_path_%1").arg((int)p);
 
                     Eigen::Matrix4d tf = local_path.pose[p];
                     pcl_viewer->addCube(x_min, x_max,
@@ -4653,8 +4651,10 @@ void MainWindow::plot_ctrl()
         }
 
         Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
-        QString text;
-        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f", control_input[0], control_input[1], control_input[2]*R2D);
+        QString text = QString("vx:%1, vy:%2, wz:%3")
+            .arg(control_input[0], 0, 'f', 2)
+            .arg(control_input[1], 0, 'f', 2)
+            .arg(control_input[2]*R2D, 0, 'f', 2);
         ui->lb_RobotVel->setText(text);
 
         // draw cur node

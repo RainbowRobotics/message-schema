@@ -86,10 +86,13 @@ QString LAKI::get_info_text(int idx)
     double current_time = get_time();
     double time_since_last_data = current_time - last_data_time[idx].load();
     
-    res += QString().sprintf("[LAKI %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
-    res += QString().sprintf("fq: %d, ", (int)raw_que[idx].unsafe_size());
-    res += QString().sprintf("last_data: %.1fs ago\n", time_since_last_data);
-    res += QString().sprintf("reconnects: %d", (int)reconnect_count[idx].load());
+    res += QString("[LAKI %1]\npts_t: %2 (%3)\n")
+        .arg(idx)
+        .arg(cur_raw_t[idx].load(), 0, 'f', 3)
+        .arg(cur_pts_num[idx].load());
+    res += QString("fq: %1, ").arg((int)raw_que[idx].unsafe_size());
+    res += QString("last_data: %1s ago\n").arg(time_since_last_data, 0, 'f', 1);
+    res += QString("reconnects: %1").arg((int)reconnect_count[idx].load());
 
     return res;
 }
