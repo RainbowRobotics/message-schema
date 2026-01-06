@@ -76,7 +76,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
-    BIND_EVENT(sock, "pathResponse",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "pathRequest",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "sensorRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
@@ -326,7 +326,7 @@ void COMM_MSA::recv_loop()
         {
             handle_mapping_cmd(data);
         }
-        else if(topic == "pathResponse")
+        else if(topic == "pathRequest")
         {
             handle_path_cmd(data);
         }
@@ -643,6 +643,13 @@ void COMM_MSA::handle_localization_cmd(const QJsonObject& data)
     {
         msg.tgt_pose_vec = get_last_tgt_pose_vec();
     }
+    else
+    {
+        msg.result = "reject";
+        msg.message = "undefined command";
+        send_localization_response(msg);
+        return;
+    }
 
     {
         std::lock_guard<std::mutex> lock(localization_mtx);
@@ -653,22 +660,27 @@ void COMM_MSA::handle_localization_cmd(const QJsonObject& data)
 
 void COMM_MSA::handle_update_cmd(const QJsonObject& data)
 {
-    QString command = get_json(data, "command");
+    DATA_SOFTWARE msg;
+    msg.id = get_json(data, "id");
+    msg.time = get_json_double(data, "time")/1000;
+    msg.command = get_json(data, "command");
 
-    if(command == "getVersion")
+    if(msg.command == "getVersion")
     {
 
     }
-    else if(command == "update")
+    else if(msg.command == "update")
     {
-        DATA_SOFTWARE msg;
-        msg.id = get_json(data, "id");
         msg.branch = get_json(data, "branch");
         msg.version = get_json(data, "version");
-        msg.command = get_json(data, "command");
-        msg.time = get_json_double(data, "time")/1000;
-
         handle_update_software(msg);
+    }
+    else
+    {
+        msg.result = "reject";
+        msg.message = "undefined command";
+//        send_update_response(msg);
+        return;
     }
 }
 
@@ -1301,9 +1313,10 @@ void COMM_MSA::send_lidar_2d()
         auto& v = p_obj->get_vector();
         v.reserve(3);
 
-        for(double d : p)
         {
-            v.emplace_back(sio::double_message::create(d));
+            v.emplace_back(p[0]);
+            v.emplace_back(p[1]);
+            v.emplace_back(0);
         }
 
         arr_vec.emplace_back(p_obj);
