@@ -479,6 +479,30 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("call_tcp_weaving_on", {
+                    if(a.size() == 2){
+                        return {rb_motion::Start_Wrapper_Tcp_Weaving(std::stof(a[0]), std::stof(a[1])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_tcp_weaving_off", {
+                    if(a.size() == 0){
+                        return {rb_motion::Stop_Wrapper_Tcp_Weaving(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_base_conveyor_on", {
+                    if(a.size() == 3){
+                        return {rb_motion::Start_Wrapper_Base_Conv(std::stof(a[0]), std::stof(a[1]), std::stof(a[2])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_base_conveyor_off", {
+                    if(a.size() == 0){
+                        return {rb_motion::Stop_Wrapper_Base_Conv(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Just for Testing
                 // -----------------------------------------------------------------------
@@ -492,7 +516,7 @@ namespace rb_socket_command_server {
 
             auto it = dispatch.find(func);
             if (it != dispatch.end()) {
-                std::cout<<"[SCS] Found command: " << func << "\n";
+                // std::cout<<"[SCS] Found command: " << func << "\n";
                 try {
                     return it->second(args);
                 } catch (const std::exception &e) {

@@ -447,10 +447,38 @@ CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_motion/types/move_speed_l.cpp -o CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.s
 
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o: CMakeFiles/rb_program.dir/flags.make
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o: /root/Desktop/test_project/rb_motion/types/wrapper_tcp_weave_sym.cpp
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o -MF CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o.d -o CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o -c /root/Desktop/test_project/rb_motion/types/wrapper_tcp_weave_sym.cpp
+
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Desktop/test_project/rb_motion/types/wrapper_tcp_weave_sym.cpp > CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.i
+
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_motion/types/wrapper_tcp_weave_sym.cpp -o CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.s
+
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o: CMakeFiles/rb_program.dir/flags.make
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o: /root/Desktop/test_project/rb_motion/types/wrapper_base_convey.cpp
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o -MF CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o.d -o CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o -c /root/Desktop/test_project/rb_motion/types/wrapper_base_convey.cpp
+
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Desktop/test_project/rb_motion/types/wrapper_base_convey.cpp > CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.i
+
+CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_motion/types/wrapper_base_convey.cpp -o CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.s
+
 CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o: /root/Desktop/test_project/rb_service/shareddata.cpp
 CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o -c /root/Desktop/test_project/rb_service/shareddata.cpp
 
 CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.i: cmake_force
@@ -464,7 +492,7 @@ CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.s: cmake_force
 CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o: /root/Desktop/test_project/rb_service/joystick/joystick.cpp
 CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o -c /root/Desktop/test_project/rb_service/joystick/joystick.cpp
 
 CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.i: cmake_force
@@ -478,7 +506,7 @@ CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.s: cmake_force
 CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o: /root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.cpp
 CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o -c /root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.cpp
 
 CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.i: cmake_force
@@ -492,7 +520,7 @@ CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.s: cmake_for
 CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: /root/Desktop/test_project/rb_service/socket_server/command_server.cpp
 CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o -c /root/Desktop/test_project/rb_service/socket_server/command_server.cpp
 
 CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.i: cmake_force
@@ -506,7 +534,7 @@ CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.s: cmake_f
 CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: /root/Desktop/test_project/rb_service/socket_server/data_server.cpp
 CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o -c /root/Desktop/test_project/rb_service/socket_server/data_server.cpp
 
 CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.i: cmake_force
@@ -520,7 +548,7 @@ CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s: cmake_forc
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: /root/Desktop/test_project/rb_motion/rrbdl.cpp
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o -MF CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o.d -o CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o -c /root/Desktop/test_project/rb_motion/rrbdl.cpp
 
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.i: cmake_force
@@ -560,6 +588,8 @@ rb_program_OBJECTS = \
 "CMakeFiles/rb_program.dir/rb_motion/types/move_cir.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_j.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.o" \
+"CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o" \
+"CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o" \
@@ -597,6 +627,8 @@ rb_program: CMakeFiles/rb_program.dir/rb_motion/types/move_xb.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_motion/types/move_cir.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_motion/types/move_speed_j.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.o
+rb_program: CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o
+rb_program: CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o
@@ -713,7 +745,7 @@ rb_program: /usr/lib/x86_64-linux-gnu/libabsl_log_severity.so
 rb_program: /usr/local/lib/libzenohc.so
 rb_program: /usr/local/lib/libflatbuffers.a
 rb_program: CMakeFiles/rb_program.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Linking CXX executable rb_program"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Linking CXX executable rb_program"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/rb_program.dir/link.txt --verbose=$(VERBOSE)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Stripping binary to reduce size"
 	/usr/bin/strip /root/Desktop/test_project/build/rb_program

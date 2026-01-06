@@ -1,0 +1,91 @@
+I 09:45:35.185   [SYSTEM]       PAUSE
+I 09:45:36.943   [SYSTEM]       RESUME from PAUSE
+I 09:45:41.291   [SYSTEM]       PAUSE
+I 09:51:56.649   [MAIN]         System Version: 1.0.0
+I 09:51:57.666   [LAN2CAN]      Succeed to create socket
+I 09:51:58.169   [DAEMON]       Succeed to start read thread
+I 09:51:58.169   [DAEMON]       Succeed to start real-time thread
+I 09:52:01.682   [MAIN]         SYSTEM STARTING
+I 09:55:03.556   [SYSTEM]       PAUSE
+I 09:55:05.763   [SYSTEM]       RESUME from PAUSE
+I 09:55:05.770   [MOTION]       Motion Mode Changed: 0->1
+I 09:55:05.774   [MOTION]       Motion-Time Done
+I 09:55:05.774   [MOTION]       Motion Mode Changed: 1->0
+I 09:55:05.845   [MOTION]       Motion Mode Changed: 0->1
+I 09:55:07.603   [MOTION]       Motion Mode Changed: 1->0
+I 09:55:12.766   [SYSTEM]       PAUSE
+I 09:55:14.558   [SYSTEM]       RESUME from PAUSE
+I 09:55:14.565   [MOTION]       Motion Mode Changed: 0->1
+I 09:55:15.587   [MOTION]       Motion Mode Changed: 1->0
+I 09:55:29.158   [SYSTEM]       PAUSE
+I 09:55:36.942   [SYSTEM]       PAUSE
+I 09:55:39.293   [SYSTEM]       RESUME from PAUSE
+I 09:55:51.745   [SYSTEM]       PAUSE
+I 09:55:53.201   [SYSTEM]       RESUME from PAUSE
+I 09:55:56.923   [SYSTEM]       PAUSE
+I 09:56:03.926   [SYSTEM]       PAUSE
+I 09:56:57.670   [SYSTEM]       PAUSE
+I 09:56:59.007   [SYSTEM]       RESUME from PAUSE
+I 09:57:15.749   [SYSTEM]       PAUSE
+I 09:57:17.646   [SYSTEM]       RESUME from PAUSE
+I 09:57:40.825   [SYSTEM]       PAUSE
+I 09:57:43.186   [SYSTEM]       RESUME from PAUSE
+I 10:03:06.523   [SYSTEM]       PAUSE
+I 10:03:08.050   [SYSTEM]       RESUME from PAUSE
+I 10:03:14.860   [SYSTEM]       PAUSE
+I 10:03:26.307   [SYSTEM]       PAUSE
+I 10:03:34.490   [SYSTEM]       PAUSE
+I 10:03:43.147   [SYSTEM]       PAUSE
+I 10:03:53.932   [SYSTEM]       PAUSE
+I 10:03:55.135   [SYSTEM]       RESUME from PAUSE
+I 10:04:02.664   [SYSTEM]       PAUSE
+I 10:04:12.522   [SYSTEM]       PAUSE
+I 10:04:18.522   [SYSTEM]       PAUSE
+I 10:10:36.629   [SYSTEM]       PAUSE
+M 15:29:41.451   [SYSTEM]       MSG:0/MSG_OK
+M 15:30:21.171   [SYSTEM]       MSG:0/MSG_OK
+I 16:44:48.840   [MAIN]         System Version: 1.0.0
+I 16:44:49.850   [LAN2CAN]      Succeed to create socket
+I 16:44:50.353   [DAEMON]       Succeed to start read thread
+I 16:44:50.353   [DAEMON]       Succeed to start real-time thread
+I 16:44:53.866   [MAIN]         SYSTEM STARTING
+I 17:06:54.237   [SYSTEM]       PAUSE
+I 17:06:59.243   [SYSTEM]       RESUME from PAUSE
+I 17:07:07.819   [SYSTEM]       PAUSE
+I 17:07:10.224   [SYSTEM]       RESUME from PAUSE
+I 17:07:11.634   [SYSTEM]       PAUSE
+I 17:07:13.174   [SYSTEM]       RESUME from PAUSE
+I 17:08:03.734   [SYSTEM]       PAUSE
+I 17:08:07.014   [SYSTEM]       RESUME from PAUSE
+I 17:08:07.055   [SYSTEM]       PAUSE
+I 17:08:07.957   [SYSTEM]       RESUME from PAUSE
+I 17:08:18.620   [SYSTEM]       PAUSE
+I 17:14:56.170   [SYSTEM]       PAUSE
+I 17:14:57.779   [SYSTEM]       RESUME from PAUSE
+I 17:14:58.083   [SYSTEM]       PAUSE
+I 17:14:59.640   [SYSTEM]       RESUME from PAUSE
+I 17:14:59.891   [SYSTEM]       PAUSE
+I 17:15:01.211   [SYSTEM]       RESUME from PAUSE
+I 17:15:08.229   [SYSTEM]       PAUSE
+I 17:15:10.391   [SYSTEM]       RESUME from PAUSE
+I 17:15:12.452   [SYSTEM]       PAUSE
+I 17:25:08.100   [SYSTEM]       PAUSE
+I 17:25:10.494   [SYSTEM]       RESUME from PAUSE
+I 17:25:21.292   [SYSTEM]       PAUSE
+I 17:25:25.235   [SYSTEM]       RESUME from PAUSE
+I 17:25:49.111   [SYSTEM]       PAUSE
+I 17:35:45.581   [MAIN]         System Version: 1.0.0
+I 17:35:46.591   [LAN2CAN]      Succeed to create socket
+I 17:35:47.094   [DAEMON]       Succeed to start read thread
+I 17:35:47.094   [DAEMON]       Succeed to start real-time thread
+I 17:35:50.607   [MAIN]         SYSTEM STARTING
+I 17:39:29.092   [MAIN]         System Version: 1.0.0
+I 17:39:30.102   [LAN2CAN]      Succeed to create socket
+I 17:39:30.605   [DAEMON]       Succeed to start read thread
+I 17:39:30.605   [DAEMON]       Succeed to start real-time thread
+I 17:39:34.116   [MAIN]         SYSTEM STARTING
+I 17:57:21.390   [SYSTEM]       PAUSE
+I 17:58:03.523   [SYSTEM]       PAUSE
+I 17:58:05.577   [SYSTEM]       RESUME from PAUSE
+I 17:58:17.244   [SYSTEM]       PAUSE
+I 17:58:54.503   [SYSTEM]       RESUME from PAUSE

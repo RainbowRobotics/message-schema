@@ -16,3 +16,14 @@ table Response_Get_Core_Data {
     payload_str : string;
 }
 //--------------------------------------------------------------
+table Request_Get_Relative_Value {
+    relative_value :    MoveInput_Target;
+    reference_value:    MoveInput_Target;
+    move_type:          int;    
+}
+
+table Response_Get_Relative_Value {
+    calculated_result:  int;
+    calculated_value:   MoveInput_Target;
+}
+//--------------------------------------------------------------

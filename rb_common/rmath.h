@@ -32,7 +32,7 @@ enum UNIT_LIST{
 
 struct TARGET_INPUT{
     // bigger number between NO_OF_JOINT vs NO_OF_CARTE
-    double  target_value[NO_OF_JOINT];    
+    float  target_value[NO_OF_JOINT];    
 
     // -1 : Joint
     // 0  : Global

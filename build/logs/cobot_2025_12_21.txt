@@ -1,0 +1,10 @@
+I 09:36:44.441   [MOTION]       Motion Mode Changed: 0->1
+I 09:36:44.444   [MOTION]       Motion-Time Done
+I 09:36:44.444   [MOTION]       Motion Mode Changed: 1->0
+I 09:36:44.618   [SYSTEM]       PAUSE
+I 09:36:46.020   [SYSTEM]       RESUME from PAUSE
+I 09:37:19.910   [MOTION]       Motion Mode Changed: 0->1
+I 09:37:19.912   [MOTION]       Motion-Time Done
+I 09:37:19.912   [MOTION]       Motion Mode Changed: 1->0
+I 09:37:20.075   [SYSTEM]       PAUSE
+I 09:37:21.200   [SYSTEM]       RESUME from PAUSE

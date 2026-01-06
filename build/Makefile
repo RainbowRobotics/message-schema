@@ -814,6 +814,54 @@ rb_motion/types/move_xb.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_xb.cpp.s
 .PHONY : rb_motion/types/move_xb.cpp.s
 
+rb_motion/types/wrapper_base_convey.o: rb_motion/types/wrapper_base_convey.cpp.o
+.PHONY : rb_motion/types/wrapper_base_convey.o
+
+# target to build an object file
+rb_motion/types/wrapper_base_convey.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.o
+.PHONY : rb_motion/types/wrapper_base_convey.cpp.o
+
+rb_motion/types/wrapper_base_convey.i: rb_motion/types/wrapper_base_convey.cpp.i
+.PHONY : rb_motion/types/wrapper_base_convey.i
+
+# target to preprocess a source file
+rb_motion/types/wrapper_base_convey.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.i
+.PHONY : rb_motion/types/wrapper_base_convey.cpp.i
+
+rb_motion/types/wrapper_base_convey.s: rb_motion/types/wrapper_base_convey.cpp.s
+.PHONY : rb_motion/types/wrapper_base_convey.s
+
+# target to generate assembly for a file
+rb_motion/types/wrapper_base_convey.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_base_convey.cpp.s
+.PHONY : rb_motion/types/wrapper_base_convey.cpp.s
+
+rb_motion/types/wrapper_tcp_weave_sym.o: rb_motion/types/wrapper_tcp_weave_sym.cpp.o
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.o
+
+# target to build an object file
+rb_motion/types/wrapper_tcp_weave_sym.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.o
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.cpp.o
+
+rb_motion/types/wrapper_tcp_weave_sym.i: rb_motion/types/wrapper_tcp_weave_sym.cpp.i
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.i
+
+# target to preprocess a source file
+rb_motion/types/wrapper_tcp_weave_sym.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.i
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.cpp.i
+
+rb_motion/types/wrapper_tcp_weave_sym.s: rb_motion/types/wrapper_tcp_weave_sym.cpp.s
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.s
+
+# target to generate assembly for a file
+rb_motion/types/wrapper_tcp_weave_sym.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/wrapper_tcp_weave_sym.cpp.s
+.PHONY : rb_motion/types/wrapper_tcp_weave_sym.cpp.s
+
 rb_service/joystick/joystick.o: rb_service/joystick/joystick.cpp.o
 .PHONY : rb_service/joystick/joystick.o
 
@@ -1028,6 +1076,12 @@ help:
 	@echo "... rb_motion/types/move_xb.o"
 	@echo "... rb_motion/types/move_xb.i"
 	@echo "... rb_motion/types/move_xb.s"
+	@echo "... rb_motion/types/wrapper_base_convey.o"
+	@echo "... rb_motion/types/wrapper_base_convey.i"
+	@echo "... rb_motion/types/wrapper_base_convey.s"
+	@echo "... rb_motion/types/wrapper_tcp_weave_sym.o"
+	@echo "... rb_motion/types/wrapper_tcp_weave_sym.i"
+	@echo "... rb_motion/types/wrapper_tcp_weave_sym.s"
 	@echo "... rb_service/joystick/joystick.o"
 	@echo "... rb_service/joystick/joystick.i"
 	@echo "... rb_service/joystick/joystick.s"

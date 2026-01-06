@@ -1,0 +1,163 @@
+W 11:01:57.984   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 11:01:57.985   [SYSTEM]       Servo Call: 1/1
+I 11:01:57.985   [SYSTEM]       ServoState: 0
+W 11:01:57.985   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 11:03:11.619   [MOTION]       Motion Mode Changed: 0->8
+I 11:03:11.680   [SYSTEM]       Break Called
+I 11:03:11.980   [SYSTEM]       Break Finished
+I 11:03:11.980   [MOTION]       Motion Mode Changed: 8->0
+I 11:03:13.144   [MOTION]       Motion Mode Changed: 0->8
+E 11:03:13.146   [MOTION]       IK ERR ... !!! 1
+E 11:03:13.146   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 11:03:13.146   [MOTION]       Motion-Ik Problem
+I 11:03:13.146   [MOTION]       Motion Mode Changed: 8->0
+I 11:03:17.480   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:17.529   [SYSTEM]       Break Called
+I 11:03:17.830   [SYSTEM]       Break Finished
+I 11:03:17.830   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:18.992   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:20.453   [SYSTEM]       Break Called
+I 11:03:20.754   [SYSTEM]       Break Finished
+I 11:03:20.754   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:22.424   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:23.657   [SYSTEM]       Break Called
+I 11:03:23.958   [SYSTEM]       Break Finished
+I 11:03:23.958   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:24.674   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:25.772   [SYSTEM]       Break Called
+I 11:03:26.072   [SYSTEM]       Break Finished
+I 11:03:26.072   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:26.791   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:28.059   [SYSTEM]       Break Called
+I 11:03:28.360   [SYSTEM]       Break Finished
+I 11:03:28.360   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:29.042   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:30.607   [SYSTEM]       Break Called
+I 11:03:30.908   [SYSTEM]       Break Finished
+I 11:03:30.908   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:32.234   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:32.384   [SYSTEM]       Break Called
+I 11:03:32.684   [SYSTEM]       Break Finished
+I 11:03:32.684   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:32.822   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:33.087   [SYSTEM]       Break Called
+I 11:03:33.388   [SYSTEM]       Break Finished
+I 11:03:33.388   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:33.452   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:33.487   [SYSTEM]       Break Called
+I 11:03:33.788   [SYSTEM]       Break Finished
+I 11:03:33.788   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:34.050   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:34.066   [SYSTEM]       Break Called
+I 11:03:34.366   [SYSTEM]       Break Finished
+I 11:03:34.366   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:34.612   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:34.649   [SYSTEM]       Break Called
+I 11:03:34.950   [SYSTEM]       Break Finished
+I 11:03:34.950   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:36.207   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:36.275   [SYSTEM]       Break Called
+I 11:03:36.576   [SYSTEM]       Break Finished
+I 11:03:36.576   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:36.823   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:36.890   [SYSTEM]       Break Called
+I 11:03:37.192   [SYSTEM]       Break Finished
+I 11:03:37.192   [MOTION]       Motion Mode Changed: 7->0
+I 11:03:37.361   [MOTION]       Motion Mode Changed: 0->7
+I 11:03:37.432   [SYSTEM]       Break Called
+I 11:03:37.732   [SYSTEM]       Break Finished
+I 11:03:37.732   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:01.944   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:02.024   [SYSTEM]       Break Called
+I 11:09:02.326   [SYSTEM]       Break Finished
+I 11:09:02.326   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:02.521   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:02.588   [SYSTEM]       Break Called
+I 11:09:02.890   [SYSTEM]       Break Finished
+I 11:09:02.890   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:03.670   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:03.729   [SYSTEM]       Break Called
+I 11:09:04.030   [SYSTEM]       Break Finished
+I 11:09:04.030   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:04.210   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:04.277   [SYSTEM]       Break Called
+I 11:09:04.578   [SYSTEM]       Break Finished
+I 11:09:04.578   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:06.282   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:07.249   [SYSTEM]       Break Called
+I 11:09:07.550   [SYSTEM]       Break Finished
+I 11:09:07.550   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:07.911   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:08.794   [SYSTEM]       Break Called
+I 11:09:09.096   [SYSTEM]       Break Finished
+I 11:09:09.096   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:09.566   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:11.186   [SYSTEM]       Break Called
+I 11:09:11.486   [SYSTEM]       Break Finished
+I 11:09:11.486   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:12.662   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:14.029   [SYSTEM]       Break Called
+I 11:09:14.330   [SYSTEM]       Break Finished
+I 11:09:14.330   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:16.397   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:18.434   [SYSTEM]       Break Called
+I 11:09:18.736   [SYSTEM]       Break Finished
+I 11:09:18.736   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:19.757   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:22.771   [SYSTEM]       Break Called
+I 11:09:23.072   [SYSTEM]       Break Finished
+I 11:09:23.072   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:24.432   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:29.934   [SYSTEM]       Break Called
+I 11:09:30.234   [SYSTEM]       Break Finished
+I 11:09:30.234   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:31.145   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:34.073   [SYSTEM]       Break Called
+I 11:09:34.374   [SYSTEM]       Break Finished
+I 11:09:34.374   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:36.188   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:36.695   [SYSTEM]       Break Called
+I 11:09:36.996   [SYSTEM]       Break Finished
+I 11:09:36.996   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:37.659   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:42.724   [SYSTEM]       Break Called
+I 11:09:43.024   [SYSTEM]       Break Finished
+I 11:09:43.024   [MOTION]       Motion Mode Changed: 7->0
+I 11:09:45.167   [MOTION]       Motion Mode Changed: 0->7
+I 11:09:50.002   [SYSTEM]       Break Called
+I 11:09:50.302   [SYSTEM]       Break Finished
+I 11:09:50.302   [MOTION]       Motion Mode Changed: 7->0
+W 11:09:55.351   [SYSTEM]       MSG:128/MSG_SYSTEM_CANNOT_REF_ON_BEFORE_SERVO
+I 11:10:37.747   [MOTION]       Motion Mode Changed: 0->8
+E 11:10:38.522   [SYSTEM]       JNT OVR SPD REF: 3 / 199.514378
+I 11:10:38.522   [MOTION]       Motion Mode Changed: 8->0
+E 11:10:38.522   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 11:10:42.975   [MOTION]       Motion Mode Changed: 0->7
+I 11:10:44.107   [SYSTEM]       Break Called
+I 11:10:44.408   [SYSTEM]       Break Finished
+I 11:10:44.408   [MOTION]       Motion Mode Changed: 7->0
+I 11:10:45.700   [MOTION]       Motion Mode Changed: 0->7
+I 11:10:47.166   [SYSTEM]       Break Called
+I 11:10:47.468   [SYSTEM]       Break Finished
+I 11:10:47.468   [MOTION]       Motion Mode Changed: 7->0
+M 11:11:36.770   [SYSTEM]       MSG:0/MSG_OK
+M 11:11:46.616   [SYSTEM]       MSG:0/MSG_OK
+I 19:02:49.549   [MAIN]         System Version: 1.0.0
+I 19:02:50.566   [LAN2CAN]      Succeed to create socket
+I 19:02:51.069   [DAEMON]       Succeed to start read thread
+I 19:02:51.069   [DAEMON]       Succeed to start real-time thread
+I 19:02:54.582   [MAIN]         SYSTEM STARTING
+I 19:03:22.483   [SYSTEM]       PAUSE
+I 19:03:25.719   [SYSTEM]       RESUME from PAUSE
+I 19:03:40.914   [SYSTEM]       PAUSE
+I 19:03:52.629   [SYSTEM]       PAUSE
+I 19:03:58.836   [SYSTEM]       PAUSE
+I 19:04:11.756   [SYSTEM]       PAUSE
+I 19:04:37.788   [SYSTEM]       PAUSE
+I 19:06:07.652   [SYSTEM]       PAUSE
+I 19:06:50.418   [SYSTEM]       PAUSE
+I 19:08:06.472   [SYSTEM]       RESUME from PAUSE
+I 19:08:45.949   [SYSTEM]       PAUSE
+I 19:09:23.531   [SYSTEM]       PAUSE
+I 19:37:16.327   [SYSTEM]       PAUSE
+I 19:37:25.252   [SYSTEM]       PAUSE

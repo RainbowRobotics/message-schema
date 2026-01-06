@@ -1,9 +1,0 @@
-I 08:50:23.847   [SYSTEM]       CMD Power On
-W 08:50:25.942   [SYSTEM]       CMD Power Off
-I 08:50:25.942   [SYSTEM]       ServoState: 0
-W 08:50:25.942   [SYSTEM]       MSG:126/MSG_SYSTEM_NO_CAN_MESSAGE_CHECK_CABLE
-I 08:50:25.942   [SYSTEM]       Servo Call: 1/1
-I 08:50:25.942   [SYSTEM]       ServoState: 0
-I 08:50:25.942   [SYSTEM]       ServoState: 1
-E 08:50:25.942   [SYSTEM]       MSG:500/MSG_TFB_NOT_DETECTED
-W 09:29:23.961   [SIDE_IO]      SIDE DISCON

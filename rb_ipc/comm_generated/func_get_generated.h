@@ -26,6 +26,14 @@ struct Response_Get_Core_Data;
 struct Response_Get_Core_DataBuilder;
 struct Response_Get_Core_DataT;
 
+struct Request_Get_Relative_Value;
+struct Request_Get_Relative_ValueBuilder;
+struct Request_Get_Relative_ValueT;
+
+struct Response_Get_Relative_Value;
+struct Response_Get_Relative_ValueBuilder;
+struct Response_Get_Relative_ValueT;
+
 struct Request_Get_Core_DataT : public ::flatbuffers::NativeTable {
   typedef Request_Get_Core_Data TableType;
   int32_t option = 0;
@@ -219,6 +227,154 @@ inline ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Dat
 
 ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Data(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Core_DataT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Get_Relative_ValueT : public ::flatbuffers::NativeTable {
+  typedef Request_Get_Relative_Value TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> relative_value{};
+  std::unique_ptr<IPC::MoveInput_TargetT> reference_value{};
+  int32_t move_type = 0;
+  Request_Get_Relative_ValueT() = default;
+  Request_Get_Relative_ValueT(const Request_Get_Relative_ValueT &o);
+  Request_Get_Relative_ValueT(Request_Get_Relative_ValueT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Get_Relative_ValueT &operator=(Request_Get_Relative_ValueT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Get_Relative_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Get_Relative_ValueT NativeTableType;
+  typedef Request_Get_Relative_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RELATIVE_VALUE = 4,
+    VT_REFERENCE_VALUE = 6,
+    VT_MOVE_TYPE = 8
+  };
+  const IPC::MoveInput_Target *relative_value() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_RELATIVE_VALUE);
+  }
+  const IPC::MoveInput_Target *reference_value() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_REFERENCE_VALUE);
+  }
+  int32_t move_type() const {
+    return GetField<int32_t>(VT_MOVE_TYPE, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_RELATIVE_VALUE) &&
+           verifier.VerifyTable(relative_value()) &&
+           VerifyOffset(verifier, VT_REFERENCE_VALUE) &&
+           verifier.VerifyTable(reference_value()) &&
+           VerifyField<int32_t>(verifier, VT_MOVE_TYPE, 4) &&
+           verifier.EndTable();
+  }
+  Request_Get_Relative_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Get_Relative_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Get_Relative_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Relative_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Get_Relative_ValueBuilder {
+  typedef Request_Get_Relative_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_relative_value(::flatbuffers::Offset<IPC::MoveInput_Target> relative_value) {
+    fbb_.AddOffset(Request_Get_Relative_Value::VT_RELATIVE_VALUE, relative_value);
+  }
+  void add_reference_value(::flatbuffers::Offset<IPC::MoveInput_Target> reference_value) {
+    fbb_.AddOffset(Request_Get_Relative_Value::VT_REFERENCE_VALUE, reference_value);
+  }
+  void add_move_type(int32_t move_type) {
+    fbb_.AddElement<int32_t>(Request_Get_Relative_Value::VT_MOVE_TYPE, move_type, 0);
+  }
+  explicit Request_Get_Relative_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Get_Relative_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Get_Relative_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Get_Relative_Value> CreateRequest_Get_Relative_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> relative_value = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> reference_value = 0,
+    int32_t move_type = 0) {
+  Request_Get_Relative_ValueBuilder builder_(_fbb);
+  builder_.add_move_type(move_type);
+  builder_.add_reference_value(reference_value);
+  builder_.add_relative_value(relative_value);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Get_Relative_Value> CreateRequest_Get_Relative_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Relative_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Response_Get_Relative_ValueT : public ::flatbuffers::NativeTable {
+  typedef Response_Get_Relative_Value TableType;
+  int32_t calculated_result = 0;
+  std::unique_ptr<IPC::MoveInput_TargetT> calculated_value{};
+  Response_Get_Relative_ValueT() = default;
+  Response_Get_Relative_ValueT(const Response_Get_Relative_ValueT &o);
+  Response_Get_Relative_ValueT(Response_Get_Relative_ValueT&&) FLATBUFFERS_NOEXCEPT = default;
+  Response_Get_Relative_ValueT &operator=(Response_Get_Relative_ValueT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Response_Get_Relative_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Response_Get_Relative_ValueT NativeTableType;
+  typedef Response_Get_Relative_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CALCULATED_RESULT = 4,
+    VT_CALCULATED_VALUE = 6
+  };
+  int32_t calculated_result() const {
+    return GetField<int32_t>(VT_CALCULATED_RESULT, 0);
+  }
+  const IPC::MoveInput_Target *calculated_value() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_CALCULATED_VALUE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_CALCULATED_RESULT, 4) &&
+           VerifyOffset(verifier, VT_CALCULATED_VALUE) &&
+           verifier.VerifyTable(calculated_value()) &&
+           verifier.EndTable();
+  }
+  Response_Get_Relative_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Response_Get_Relative_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Response_Get_Relative_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Relative_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Response_Get_Relative_ValueBuilder {
+  typedef Response_Get_Relative_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_calculated_result(int32_t calculated_result) {
+    fbb_.AddElement<int32_t>(Response_Get_Relative_Value::VT_CALCULATED_RESULT, calculated_result, 0);
+  }
+  void add_calculated_value(::flatbuffers::Offset<IPC::MoveInput_Target> calculated_value) {
+    fbb_.AddOffset(Response_Get_Relative_Value::VT_CALCULATED_VALUE, calculated_value);
+  }
+  explicit Response_Get_Relative_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Response_Get_Relative_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Response_Get_Relative_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Response_Get_Relative_Value> CreateResponse_Get_Relative_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t calculated_result = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> calculated_value = 0) {
+  Response_Get_Relative_ValueBuilder builder_(_fbb);
+  builder_.add_calculated_value(calculated_value);
+  builder_.add_calculated_result(calculated_result);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Response_Get_Relative_Value> CreateResponse_Get_Relative_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Relative_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Get_Core_DataT *Request_Get_Core_Data::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Get_Core_DataT>(new Request_Get_Core_DataT());
   UnPackTo(_o.get(), _resolver);
@@ -301,6 +457,91 @@ inline ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Dat
       _payload_num,
       _payload_arr,
       _payload_str);
+}
+
+inline Request_Get_Relative_ValueT::Request_Get_Relative_ValueT(const Request_Get_Relative_ValueT &o)
+      : relative_value((o.relative_value) ? new IPC::MoveInput_TargetT(*o.relative_value) : nullptr),
+        reference_value((o.reference_value) ? new IPC::MoveInput_TargetT(*o.reference_value) : nullptr),
+        move_type(o.move_type) {
+}
+
+inline Request_Get_Relative_ValueT &Request_Get_Relative_ValueT::operator=(Request_Get_Relative_ValueT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(relative_value, o.relative_value);
+  std::swap(reference_value, o.reference_value);
+  std::swap(move_type, o.move_type);
+  return *this;
+}
+
+inline Request_Get_Relative_ValueT *Request_Get_Relative_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Get_Relative_ValueT>(new Request_Get_Relative_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Get_Relative_Value::UnPackTo(Request_Get_Relative_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = relative_value(); if (_e) { if(_o->relative_value) { _e->UnPackTo(_o->relative_value.get(), _resolver); } else { _o->relative_value = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->relative_value) { _o->relative_value.reset(); } }
+  { auto _e = reference_value(); if (_e) { if(_o->reference_value) { _e->UnPackTo(_o->reference_value.get(), _resolver); } else { _o->reference_value = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->reference_value) { _o->reference_value.reset(); } }
+  { auto _e = move_type(); _o->move_type = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Get_Relative_Value> Request_Get_Relative_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Relative_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Get_Relative_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Get_Relative_Value> CreateRequest_Get_Relative_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Relative_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Get_Relative_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _relative_value = _o->relative_value ? CreateMoveInput_Target(_fbb, _o->relative_value.get(), _rehasher) : 0;
+  auto _reference_value = _o->reference_value ? CreateMoveInput_Target(_fbb, _o->reference_value.get(), _rehasher) : 0;
+  auto _move_type = _o->move_type;
+  return IPC::CreateRequest_Get_Relative_Value(
+      _fbb,
+      _relative_value,
+      _reference_value,
+      _move_type);
+}
+
+inline Response_Get_Relative_ValueT::Response_Get_Relative_ValueT(const Response_Get_Relative_ValueT &o)
+      : calculated_result(o.calculated_result),
+        calculated_value((o.calculated_value) ? new IPC::MoveInput_TargetT(*o.calculated_value) : nullptr) {
+}
+
+inline Response_Get_Relative_ValueT &Response_Get_Relative_ValueT::operator=(Response_Get_Relative_ValueT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(calculated_result, o.calculated_result);
+  std::swap(calculated_value, o.calculated_value);
+  return *this;
+}
+
+inline Response_Get_Relative_ValueT *Response_Get_Relative_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Response_Get_Relative_ValueT>(new Response_Get_Relative_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Response_Get_Relative_Value::UnPackTo(Response_Get_Relative_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = calculated_result(); _o->calculated_result = _e; }
+  { auto _e = calculated_value(); if (_e) { if(_o->calculated_value) { _e->UnPackTo(_o->calculated_value.get(), _resolver); } else { _o->calculated_value = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->calculated_value) { _o->calculated_value.reset(); } }
+}
+
+inline ::flatbuffers::Offset<Response_Get_Relative_Value> Response_Get_Relative_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Relative_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateResponse_Get_Relative_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Response_Get_Relative_Value> CreateResponse_Get_Relative_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Relative_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Response_Get_Relative_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _calculated_result = _o->calculated_result;
+  auto _calculated_value = _o->calculated_value ? CreateMoveInput_Target(_fbb, _o->calculated_value.get(), _rehasher) : 0;
+  return IPC::CreateResponse_Get_Relative_Value(
+      _fbb,
+      _calculated_result,
+      _calculated_value);
 }
 
 }  // namespace IPC

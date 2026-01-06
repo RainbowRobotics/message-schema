@@ -602,15 +602,15 @@ namespace rb_system {
             din_mode.fill(0);
             dout_mode.fill(0);
             
-            din_mode.at(0) = 1;
-            din_mode.at(1) = 2;
+            // din_mode.at(0) = 1;
+            // din_mode.at(1) = 2;
 
-            dout_mode.at(0) = 1;
-            dout_mode.at(1) = 2;
-            dout_mode.at(2) = 3;
-            dout_mode.at(3) = 4;
-            dout_mode.at(4) = 5;
-            dout_mode.at(5) = 6;
+            // dout_mode.at(0) = 1;
+            // dout_mode.at(1) = 2;
+            // dout_mode.at(2) = 3;
+            // dout_mode.at(3) = 4;
+            // dout_mode.at(4) = 5;
+            // dout_mode.at(5) = 6;
 
             //---------------------------------------------
             // Special Input
@@ -1457,6 +1457,7 @@ namespace rb_system {
     int Call_Program_After(int option){
         (void)option;
 
+        rb_motion::Stop_Wrapper_All();
         rb_system::Recover_UserFrameParameter(-1);
         rb_system::Recover_AreaParameter(-1);
         rb_motion::Clear_Motion_Shift(-1);
@@ -1639,6 +1640,8 @@ namespace rb_system {
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
+
+        std::cout<<"Set_Box_Digital_Output: "<<p_num<<", "<<value<<std::endl;
 
         if(p_num < 0){
             for(unsigned int i = 0; i < NO_OF_DOUT; ++i){
@@ -2250,7 +2253,7 @@ namespace rb_system {
                     std::cout<<"self coll will occur at "<<sc_idx<<" = "<<sc_dist<<std::endl;
                 }
                 rb_motion::Set_Motion_Mode(rb_motion::MotionMode::MOVE_NONE);
-                rb_motion::Stop_Wrapper_Conv();
+                rb_motion::Stop_Wrapper_All();
 
                 for(int i = 0; i < NO_OF_JOINT; i++){
                     double forced_angle = output_lpf_q_input(i);
@@ -2301,7 +2304,7 @@ namespace rb_system {
         }
         if(is_there_q_speed_err){
             rb_motion::Set_Motion_Mode(rb_motion::MotionMode::MOVE_NONE);
-            rb_motion::Stop_Wrapper_Conv();
+            rb_motion::Stop_Wrapper_All();
 
             for(int i = 0; i < NO_OF_JOINT; i++){
                 double forced_angle = output_lpf_q_input(i);

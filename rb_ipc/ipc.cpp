@@ -529,6 +529,39 @@ namespace rb_ipc {
                 core_data_T.payload_str = return_str;
                 return IPC::Response_Get_Core_Data::Pack(fbb, &core_data_T);
             });
+            ADD_SERVE_BLANK("get_relative_value", IPC::Request_Get_Relative_Value, IPC::Response_Get_Relative_Value, {
+                TARGET_INPUT rel_value;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    rel_value.target_value[i] = req->relative_value()->tar_values()->f()->Get(i);
+                }
+                rel_value.target_frame  = req->relative_value()->tar_frame();
+                rel_value.target_unit   = req->relative_value()->tar_unit();
+
+                TARGET_INPUT ref_value;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    ref_value.target_value[i] = req->reference_value()->tar_values()->f()->Get(i);
+                }
+                ref_value.target_frame  = req->reference_value()->tar_frame();
+                ref_value.target_unit   = req->reference_value()->tar_unit();
+
+                int move_type = req->move_type();
+                auto [ret_result, ret_value] = rb_motion::Calc_Relative_Value(rel_value, ref_value, move_type);
+
+                std::array<float, NO_OF_CARTE> value_arr;
+                for (int i = 0; i < NO_OF_CARTE; ++i) {
+                    value_arr[i] = static_cast<float>(ret_value.target_value[i]);
+                }
+                
+                auto ret_T = std::make_unique<IPC::MoveInput_TargetT>();
+                ret_T->tar_values = std::make_unique<IPC::N_INPUT_f>(::flatbuffers::span<const float, NO_OF_CARTE>(value_arr.data(), NO_OF_CARTE));
+                ret_T->tar_frame  = ret_value.target_frame;
+                ret_T->tar_unit   = ret_value.target_unit;
+
+                IPC::Response_Get_Relative_ValueT get_return_T;
+                get_return_T.calculated_value = std::move(ret_T);
+                get_return_T.calculated_result = ret_result;
+                return IPC::Response_Get_Relative_Value::Pack(fbb, &get_return_T);
+            });            
 
             // -----------------------------------------------------------------------
             // Move Call

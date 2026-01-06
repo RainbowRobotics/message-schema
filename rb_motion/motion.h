@@ -22,6 +22,8 @@ namespace rb_motion {
     std::tuple<int,  TARGET_INPUT>      Calc_L_Relative(TARGET_INPUT delta_);
     std::tuple<int,  TARGET_INPUT>      Calc_L_Relative(TARGET_INPUT delta_, TARGET_INPUT pin_);
 
+    std::tuple<int,  TARGET_INPUT>      Calc_Relative_Value(TARGET_INPUT delta_, TARGET_INPUT pin_, int move_type);
+
     //--------------------------------------------------------------------------------------
     // Sector Motion
     //--------------------------------------------------------------------------------------
@@ -76,16 +78,20 @@ namespace rb_motion {
     //--------------------------------------------------------------------------------------
     // Sector Wrapper
     //--------------------------------------------------------------------------------------
-    enum class WrapperMode          {WRAPPER_NONE, WRAPPER_CONV};
+
     std::tuple<VectorJd, VectorJd, VectorJd> Task_Wrapper_Handler(double System_DT, double External_Alpha, VectorJd pre_motion_q, VectorCd pre_motion_x);
     void        Set_Wrapper_q(unsigned int idx, double angle);
     std::array<float, NO_OF_CARTE>    Get_Wrapper_X();
     std::array<float, NO_OF_CARTE>    Get_Wrapper_X_User();
     std::array<float, NO_OF_JOINT>    Get_Wrapper_J();
-    void        Wait_Wrapper_Finish();
 
-    int         Start_Wrapper_Conv(Eigen::Vector3d target_vel_mmps);
-    int         Stop_Wrapper_Conv();
+    int         Stop_Wrapper_All();
+
+    int         Start_Wrapper_Tcp_Weaving(float magnitude, float time);
+    int         Stop_Wrapper_Tcp_Weaving();
+
+    int         Start_Wrapper_Base_Conv(float vel_x, float vel_y, float vel_z);
+    int         Stop_Wrapper_Base_Conv();
 
 }
 #endif // MOTION_H

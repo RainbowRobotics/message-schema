@@ -117,6 +117,9 @@ add_executable(rb_program
     rb_motion/types/move_speed_j.cpp
     rb_motion/types/move_speed_l.cpp
 
+    rb_motion/types/wrapper_tcp_weave_sym.cpp
+    rb_motion/types/wrapper_base_convey.cpp
+
     rb_service/shareddata.cpp
     rb_service/joystick/joystick.cpp
     rb_service/mbus_server/mbustcp_server.cpp

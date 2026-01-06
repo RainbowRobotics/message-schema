@@ -11,6 +11,10 @@
 #include "types/move_cir.h"
 #include "types/move_speed_j.h"
 #include "types/move_speed_l.h"
+
+#include "types/wrapper_tcp_weave_sym.h"
+#include "types/wrapper_base_convey.h"
+
 #include "rrbdl.h"
 
 
@@ -57,18 +61,15 @@ namespace rb_motion {
         // Sector Wrapper
         //--------------------------------------------------------------
         RBDLrobot       _wrapper_Robot;
-        WrapperMode     _wrapper_mode = WrapperMode::WRAPPER_NONE;
-
         VectorJd        _wrapper_q_ang;
         VectorJd        _wrapper_q_vel;
         VectorJd        _wrapper_q_acc;
-
         VectorCd        _wrapper_x_pos;
         double          _wrapper_x_jacobdet;
-
         bool            _wrapper_is_First;
-        Vector3d        _wrapper_sum;
-        Vector3d        _wrapper_vel;
+
+        wrapper_tcp_weave_sym   _wrapper_tcp_weave_sym;
+        wrapper_base_conveyor   _wrapper_base_conveyor;
 
         //--------------------------------------------------------------
 
@@ -279,7 +280,7 @@ namespace rb_motion {
             return ret;
         }
 
-        VectorCd PreMotion_to_L_for_Speed(TARGET_INPUT input){
+        VectorCd PreMotion_to_L_for_Speed(TARGET_INPUT input, Matrix3d additional_info_R){
             VectorCd ret;
             if(input.target_frame == FRAME_JOINT){
                 ret = VectorCd::Zero(NO_OF_CARTE, 1);
@@ -289,6 +290,8 @@ namespace rb_motion {
                     frame_R = rb_math::get_R_3x3(_wrapper_x_pos);
                 }else if(input.target_frame == FRAME_USER){
                     frame_R = rb_system::Get_CurrentUserFrameParameter().userf_rotation;
+                }else if(input.target_frame == FRAME_TARGET){
+                    frame_R = additional_info_R;
                 }
 
                 for(int i = 0; i < NO_OF_CARTE; i++){
@@ -302,19 +305,6 @@ namespace rb_motion {
             return ret;
         }
 
-        void Set_Wrapper_Mode(WrapperMode t_mode){
-            if(_wrapper_mode != t_mode){
-                LOG_INFO("Wrapper Mode Changed: " + std::to_string((int)_motion_mode) + "->" + std::to_string((int)t_mode));
-            }
-
-            if(t_mode == WrapperMode::WRAPPER_NONE){
-                Set_Motion_Mode(MotionMode::MOVE_NONE);
-                Sync_Wrapper_to_Motion();
-            }
-
-            _wrapper_mode = t_mode;
-        }
-
         void Terminate_Wrapper(MoveTerminate type){
             if(type == MoveTerminate::IK_ERR){
                 LOG_ERROR("Wrapper-Ik Problem");
@@ -324,9 +314,8 @@ namespace rb_motion {
                 LOG_INFO("Wrapper-Time Done");
             }
 
-            Set_Wrapper_Mode(WrapperMode::WRAPPER_NONE);
+            Stop_Wrapper_All();
         }
-
         ;
     }
 
@@ -346,8 +335,7 @@ namespace rb_motion {
     }
 
     bool Get_Is_Idle(){
-        return (_motion_mode == MotionMode::MOVE_NONE
-                && _wrapper_mode == WrapperMode::WRAPPER_NONE);
+        return (Get_Is_Motion_Idle() && Get_Is_Wrapper_Idle());
     }
 
     bool Get_Is_Motion_Idle(){
@@ -355,7 +343,8 @@ namespace rb_motion {
     }
 
     bool Get_Is_Wrapper_Idle(){
-        return (_wrapper_mode == WrapperMode::WRAPPER_NONE);
+        return (_wrapper_tcp_weave_sym.IsWorking() == false
+                && _wrapper_base_conveyor.IsWorking() == false);
     }
 
     void Sync_Wrapper_to_Motion(){
@@ -406,7 +395,7 @@ namespace rb_motion {
             ret_v.target_value[i] = _wrapper_x_pos(i);
         }
 
-        VectorCd delta_Cd = PreMotion_to_L_for_Speed(delta_);
+        VectorCd delta_Cd = PreMotion_to_L_for_Speed(delta_, rb_math::get_R_3x3(pre_pin.c_output));
 
         if(pre_pin.ret != MSG_OK){
             return {pre_pin.ret, ret_v};
@@ -423,6 +412,27 @@ namespace rb_motion {
 
         for(int i = 0; i < NO_OF_CARTE; ++i){
             ret_v.target_value[i] = new_cartesian(i);
+        }
+        return {MSG_OK, ret_v};
+    }
+    std::tuple<int,  TARGET_INPUT> Calc_Relative_Value(TARGET_INPUT delta_, TARGET_INPUT pin_, int move_type){
+        TARGET_INPUT ret_v = pin_;
+        if(move_type == 0){
+            // J Rel
+            auto [ret_code, ret_input] = Calc_J_Relative(delta_, pin_);
+            if(ret_code != MSG_OK){
+                return {ret_code, ret_v};
+            }
+            ret_v = ret_input;
+        }else if(move_type == 1){
+            // L Rel
+            auto [ret_code, ret_input] = Calc_L_Relative(delta_, pin_);
+            if(ret_code != MSG_OK){
+                return {ret_code, ret_v};
+            }
+            ret_v = ret_input;
+        }else{
+            return {MSG_DESIRED_OPTION_IS_OVER_BOUND, ret_v};
         }
         return {MSG_OK, ret_v};
     }
@@ -1126,7 +1136,7 @@ namespace rb_motion {
             }
         }
 
-        VectorCd interpreted_v = PreMotion_to_L_for_Speed(tar);
+        VectorCd interpreted_v = PreMotion_to_L_for_Speed(tar, Matrix3d::Identity());
 
         if(_motion_mode == MotionMode::MOVE_SPD_L){
             int ret_update = _motion_move_speed_l.Set_Taget_Velocity(interpreted_v);
@@ -1193,39 +1203,37 @@ namespace rb_motion {
 
         double temp_time_scaler = External_Alpha;
 
-        switch(_wrapper_mode){
-            case WrapperMode::WRAPPER_NONE:
-            {
-                temp_q_ang = pre_motion_q;
-                break;
+        if(Get_Is_Wrapper_Idle()){
+            temp_q_ang = pre_motion_q;
+        }else{
+            VectorCd current_target_x = pre_motion_x;
+            if(1){
+                current_target_x = _wrapper_tcp_weave_sym.Control(current_target_x).L_output;
             }
-            case WrapperMode::WRAPPER_CONV:
-            {
-                VectorCd current_target_x = pre_motion_x;
-                current_target_x.block(0, 0, 3, 1) = current_target_x.block(0, 0, 3, 1) + _wrapper_sum;
 
-                VectorJd temp_q_min = rb_system::Get_Motor_Limit_Ang_Low();
-                VectorJd temp_q_max = rb_system::Get_Motor_Limit_Ang_Up();
-                VectorJd temp_dq_max = rb_system::Get_Motor_Limit_Vel();
-                VectorJd temp_ddq_max = rb_system::Get_Motor_HwMax_Acc();
+            if(1){
+                current_target_x = _wrapper_base_conveyor.Control(current_target_x).L_output;
+            }
 
-                IkResult ik_ret = _wrapper_Robot.Calc_InverseKinematics_Loop(IkMode::IK_GENERAL, System_DT, current_target_x, _wrapper_x_pos
-                , temp_q_ang, temp_q_min, temp_q_max, temp_dq_max, temp_ddq_max, _wrapper_q_vel, 5.0, 1.0, _wrapper_is_First);
-                if(_wrapper_is_First){
-                    _wrapper_is_First = false;
-                }
+            VectorJd temp_q_min = rb_system::Get_Motor_Limit_Ang_Low();
+            VectorJd temp_q_max = rb_system::Get_Motor_Limit_Ang_Up();
+            VectorJd temp_dq_max = rb_system::Get_Motor_Limit_Vel();
+            VectorJd temp_ddq_max = rb_system::Get_Motor_HwMax_Acc();
 
-                if(ik_ret.result == IkRet::IK_OK){
-                    temp_q_ang = ik_ret.q_out_deg;
+            IkResult ik_ret = _wrapper_Robot.Calc_InverseKinematics_Loop(IkMode::IK_GENERAL, System_DT, current_target_x, _wrapper_x_pos
+            , temp_q_ang, temp_q_min, temp_q_max, temp_dq_max, temp_ddq_max, _wrapper_q_vel, 5.0, 1.0, _wrapper_is_First);
+            if(_wrapper_is_First){
+                _wrapper_is_First = false;
+            }
 
-                    _wrapper_sum += (_wrapper_vel * System_DT * ik_ret.time_scaler * temp_time_scaler);
+            if(ik_ret.result == IkRet::IK_OK){
+                temp_q_ang = ik_ret.q_out_deg;
 
-                    // std::cout<<"_wrapper_sum: "<<_wrapper_sum.transpose()<<std::endl;
-                }else{
-                    LOG_ERROR("IK ERR ... !!! " + std::to_string((int)ik_ret.result));
-                    Terminate_Wrapper(MoveTerminate::IK_ERR);
-                }
-                break;
+                _wrapper_tcp_weave_sym.Update_Timer(System_DT * ik_ret.time_scaler * temp_time_scaler);
+                _wrapper_base_conveyor.Update_Sum(System_DT * ik_ret.time_scaler * temp_time_scaler);
+            }else{
+                LOG_ERROR("IK ERR ... !!! " + std::to_string((int)ik_ret.result));
+                Terminate_Wrapper(MoveTerminate::IK_ERR);
             }
         }
 
@@ -1285,26 +1293,59 @@ namespace rb_motion {
         return ret;
     }
 
-    void Wait_Wrapper_Finish(){
-        while(1){
-            if(_wrapper_mode == WrapperMode::WRAPPER_NONE){
-                break;
-            }
-            std::this_thread::sleep_for(10ms);
-        }
-    }
+    int Stop_Wrapper_All(){
+        if(Get_Is_Wrapper_Idle())   return MSG_OK;
 
-    int Start_Wrapper_Conv(Eigen::Vector3d target_vel_mmps){
-        _wrapper_sum = Vector3d(0, 0, 0);
-        _wrapper_vel = target_vel_mmps;
-        _wrapper_is_First = true;
-
-        Set_Wrapper_Mode(WrapperMode::WRAPPER_CONV);
+        Stop_Wrapper_Tcp_Weaving();
+        Stop_Wrapper_Base_Conv();
         return MSG_OK;
     }
 
-    int Stop_Wrapper_Conv(){
-        Set_Wrapper_Mode(WrapperMode::WRAPPER_NONE);
+    int Start_Wrapper_Tcp_Weaving(float magnitude, float time){
+        if(Get_Is_Wrapper_Idle()){
+            _wrapper_tcp_weave_sym.Set_Timer(0.);
+            _wrapper_base_conveyor.Set_Sum(Eigen::Vector3d(0, 0, 0));
+
+            _wrapper_is_First = true;
+        }
+        _wrapper_tcp_weave_sym.Start(magnitude, time);
+        return MSG_OK;
+    }
+    int Stop_Wrapper_Tcp_Weaving(){
+        if(Get_Is_Wrapper_Idle())   return MSG_OK;
+        _wrapper_tcp_weave_sym.Finish();
+
+        if(Get_Is_Wrapper_Idle()){
+            Set_Motion_Mode(MotionMode::MOVE_NONE);
+            Sync_Wrapper_to_Motion();
+
+            _wrapper_tcp_weave_sym.Set_Timer(0.);
+            _wrapper_base_conveyor.Set_Sum(Eigen::Vector3d(0, 0, 0));
+        }
+        return MSG_OK;
+    }
+
+    int Start_Wrapper_Base_Conv(float vel_x, float vel_y, float vel_z){
+        if(Get_Is_Wrapper_Idle()){
+            _wrapper_tcp_weave_sym.Set_Timer(0.);
+            _wrapper_base_conveyor.Set_Sum(Eigen::Vector3d(0, 0, 0));
+
+            _wrapper_is_First = true;
+        }
+        _wrapper_base_conveyor.Start(Eigen::Vector3d(vel_x, vel_y, vel_z));
+        return MSG_OK;
+    }
+    int Stop_Wrapper_Base_Conv(){
+        if(Get_Is_Wrapper_Idle())   return MSG_OK;
+        _wrapper_base_conveyor.Finish();
+
+        if(Get_Is_Wrapper_Idle()){
+            Set_Motion_Mode(MotionMode::MOVE_NONE);
+            Sync_Wrapper_to_Motion();
+
+            _wrapper_tcp_weave_sym.Set_Timer(0.);
+            _wrapper_base_conveyor.Set_Sum(Eigen::Vector3d(0, 0, 0));
+        }
         return MSG_OK;
     }
     

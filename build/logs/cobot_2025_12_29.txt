@@ -1,0 +1,78 @@
+I 09:13:10.576   [MAIN]         System Version: 1.0.0
+I 09:13:11.587   [LAN2CAN]      Succeed to create socket
+I 09:13:12.089   [DAEMON]       Succeed to start real-time thread
+I 09:13:12.089   [DAEMON]       Succeed to start read thread
+I 09:13:32.583   [MAIN]         System Version: 1.0.0
+I 09:13:33.593   [LAN2CAN]      Succeed to create socket
+I 09:13:34.096   [DAEMON]       Succeed to start read thread
+I 09:13:34.096   [DAEMON]       Succeed to start real-time thread
+I 09:13:37.607   [MAIN]         SYSTEM STARTING
+I 09:14:00.993   [MOTION]       Motion Mode Changed: 0->1
+I 09:14:02.994   [MOTION]       Motion-Time Done
+I 09:14:02.994   [MOTION]       Motion Mode Changed: 1->0
+I 09:18:42.491   [MOTION]       Motion Mode Changed: 0->7
+I 09:18:43.263   [SYSTEM]       Break Called
+I 09:18:43.564   [SYSTEM]       Break Finished
+I 09:18:43.564   [MOTION]       Motion Mode Changed: 7->0
+I 09:18:44.756   [MOTION]       Motion Mode Changed: 0->7
+I 09:18:45.249   [SYSTEM]       Break Called
+I 09:18:45.550   [SYSTEM]       Break Finished
+I 09:18:45.550   [MOTION]       Motion Mode Changed: 7->0
+I 09:18:46.749   [MOTION]       Motion Mode Changed: 0->7
+I 09:18:47.356   [SYSTEM]       Break Called
+I 09:18:47.656   [SYSTEM]       Break Finished
+I 09:18:47.656   [MOTION]       Motion Mode Changed: 7->0
+I 09:18:48.470   [MOTION]       Motion Mode Changed: 0->7
+I 09:18:49.047   [SYSTEM]       Break Called
+I 09:18:49.348   [SYSTEM]       Break Finished
+I 09:18:49.348   [MOTION]       Motion Mode Changed: 7->0
+I 09:20:34.115   [SYSTEM]       PAUSE
+I 09:20:40.943   [SYSTEM]       RESUME from PAUSE
+I 09:20:41.027   [SYSTEM]       PAUSE
+I 09:20:42.537   [SYSTEM]       RESUME from PAUSE
+I 09:20:42.647   [SYSTEM]       PAUSE
+I 09:20:43.327   [SYSTEM]       RESUME from PAUSE
+I 09:21:14.827   [SYSTEM]       PAUSE
+I 09:22:27.429   [SYSTEM]       PAUSE
+I 09:22:29.582   [SYSTEM]       RESUME from PAUSE
+I 09:22:43.141   [SYSTEM]       PAUSE
+I 09:33:24.481   [SYSTEM]       PAUSE
+I 09:35:58.504   [SYSTEM]       PAUSE
+I 09:39:43.928   [SYSTEM]       PAUSE
+I 09:43:47.900   [SYSTEM]       PAUSE
+I 09:43:49.401   [SYSTEM]       PAUSE
+I 09:52:29.053   [SYSTEM]       PAUSE
+I 09:52:30.791   [SYSTEM]       PAUSE
+I 11:00:49.256   [SYSTEM]       PAUSE
+I 16:07:45.515   [SYSTEM]       PAUSE
+I 16:55:23.528   [MOTION]       Motion Mode Changed: 0->1
+I 16:55:24.360   [MOTION]       Motion-Time Done
+I 16:55:24.360   [MOTION]       Motion Mode Changed: 1->0
+I 16:55:25.386   [MOTION]       Motion Mode Changed: 0->1
+I 16:55:27.144   [MOTION]       Motion-Time Done
+I 16:55:27.144   [MOTION]       Motion Mode Changed: 1->0
+I 16:55:27.180   [MOTION]       Motion Mode Changed: 0->1
+I 16:55:29.234   [MOTION]       Motion-Time Done
+I 16:55:29.234   [MOTION]       Motion Mode Changed: 1->0
+I 16:55:30.293   [MOTION]       Motion Mode Changed: 0->2
+I 16:55:33.724   [MOTION]       Motion-Time Done
+I 16:55:33.724   [MOTION]       Motion Mode Changed: 2->0
+I 16:56:42.896   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:43.828   [MOTION]       Motion-Time Done
+I 16:56:43.828   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:44.893   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:46.650   [MOTION]       Motion-Time Done
+I 16:56:46.650   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:46.685   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:48.738   [MOTION]       Motion-Time Done
+I 16:56:48.738   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:49.798   [MOTION]       Motion Mode Changed: 0->2
+I 16:56:53.230   [MOTION]       Motion-Time Done
+I 16:56:53.230   [MOTION]       Motion Mode Changed: 2->0
+I 16:56:54.255   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:55.186   [MOTION]       Motion-Time Done
+I 16:56:55.186   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:56.210   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:57.184   [SYSTEM]       PAUSE
+I 16:56:59.135   [MOTION]       Motion Mode Changed: 1->0
+I 17:46:05.472   [SYSTEM]       PAUSE
