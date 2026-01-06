@@ -608,6 +608,7 @@ class ConditionStep(Step):
         *,
         step_id: str,
         group_id: str,
+        name: str,
         condition_type: str,
         condition: str | Callable | bool | None = True,
         disabled: bool | None = None,
@@ -646,6 +647,7 @@ class ConditionStep(Step):
         return ConditionStep(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             group_id=d.get("groupId"),
+            name=d.get("conditionType") or d.get("name"),
             condition_type=condition_type,
             condition=condition,
             disabled=d.get("disabled"),
@@ -725,7 +727,7 @@ class ConditionStep(Step):
                 return
 
         elif isinstance(self.condition, str):
-            if self.method == "Case":
+            if self.condition_type == "Case":
                 parent_switch_value = ctx.lookup("switch_value")
                 self.condition = self.condition.replace("$parent.switch_value", parent_switch_value)
 

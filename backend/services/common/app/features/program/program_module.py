@@ -322,6 +322,8 @@ class ProgramService(BaseService):
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
+            doc["createdAt"] = doc["createdAt"].isoformat()
+            doc["updatedAt"] = doc["updatedAt"].isoformat()
 
         return {
             "tasks": tasks_docs,
@@ -336,8 +338,8 @@ class ProgramService(BaseService):
         for step in steps:
             step_id = step.get("stepId") or step.get("_id")
             step["stepId"] = str(step_id)
-            step["createdAt"] = step["createdAt"].isoformat()
-            step["updatedAt"] = step["updatedAt"].isoformat()
+            step["createdAt"] = step["createdAt"].isoformat() if isinstance(step["createdAt"], datetime) else step["createdAt"]
+            step["updatedAt"] = step["updatedAt"].isoformat() if isinstance(step["updatedAt"], datetime) else step["updatedAt"]
             step.pop("_id", None)
             nodes[step["stepId"]] = step.copy()
 
@@ -412,8 +414,8 @@ class ProgramService(BaseService):
 
         for doc in steps_docs:
             doc["stepId"] = str(doc.pop("_id"))
-            doc["createdAt"] = doc["createdAt"].isoformat()
-            doc["updatedAt"] = doc["updatedAt"].isoformat()
+            doc["createdAt"] = doc["createdAt"].isoformat() if isinstance(doc["createdAt"], datetime) else doc["createdAt"]
+            doc["updatedAt"] = doc["updatedAt"].isoformat() if isinstance(doc["updatedAt"], datetime) else doc["updatedAt"]
 
         return {
             "steps": steps_docs,

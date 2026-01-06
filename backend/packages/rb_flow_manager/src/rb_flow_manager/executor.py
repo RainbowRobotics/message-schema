@@ -85,7 +85,7 @@ def _execute_tree_in_process(
         state_dict["current_repeat"] = 0
         state_dict.pop("error", None)
 
-    def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False):
+    def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False, target_step_id: str | None = None):
         """
         step 트리 1회 실행.
         - JumpToStep / SubTaskChange 같은 제어 예외를 내부에서 처리(또는 재귀)
@@ -101,14 +101,14 @@ def _execute_tree_in_process(
 
             # 기존 정책 유지:
             # - 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
-            if state_dict["current_repeat"] > 1:
-                tree.execute_children(ctx)
+            if state_dict["current_repeat"] > 1 or target_step_id is not None:
+                tree.execute_children(ctx, target_step_id=target_step_id)
             else:
                 tree.execute(ctx)
 
         except JumpToStepException as e:
             # 특정 step으로 점프해서 children 실행
-            tree.execute_children(ctx, target_step_id=e.target_step_id)
+            execute_task(tree, current_repeat, target_step_id=e.target_step_id)
             return
 
         except ChangeSubTaskException as e:

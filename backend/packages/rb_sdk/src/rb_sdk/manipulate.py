@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Literal
+from typing import Literal
 
 from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
@@ -89,7 +89,7 @@ class RBManipulateSDK(RBBaseSDK):
 
         return res["dict_payload"]
 
-    async def set_begin(self, *, robot_model: str, position: Any, is_enable: bool = True, speed_ratio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
+    async def set_begin(self, *, robot_model: str, position: list[float | int] | None = None, is_enable: bool = True, speed_ratio: float | None = None, flow_manager_args: FlowManagerArgs | None = None):
         """메인 태스크 시작 위치 설정"""
 
         if is_enable:
@@ -106,6 +106,13 @@ class RBManipulateSDK(RBBaseSDK):
                         flow_manager_args.ctx.update_local_variables({
                             "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [0,0,0,0,0,0,0])
                         })
+
+                    if position is not None:
+                        flow_manager_args.ctx.update_local_variables({
+                            "MANIPULATE_BEGIN_JOINTS": position
+                        })
+
+
                 except Exception:
                     flow_manager_args.ctx.update_local_variables({
                         "MANIPULATE_BEGIN_JOINTS": [0,0,0,0,0,0,0]
