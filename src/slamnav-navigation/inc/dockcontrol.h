@@ -143,7 +143,6 @@ private:
     double dist_y_old = 0.0;
     double undock_time =0.0;
 
-
     // params for rrs & plot
     QString obs_condition       = "none";
     QString failed_reason       = "";
@@ -159,8 +158,21 @@ private:
     QR_SENSOR* qr_sensor;
     OBSMAP* obsmap;
 
+    // add for docking
+    std::atomic<bool> watch_flag;
+    int dock_retry_count;
+    std::unique_ptr<std::thread> watch_thread;
+    void watch_stop();
+    void watch_loop();
+
 Q_SIGNALS:
     void signal_dock_response(DATA_DOCK msg);
+
+    // add for docking
+public Q_SLOTS:
+    void slot_docking_start();
+    void slot_undocking_start();
+    void slot_docking_stop();
 
 };
 

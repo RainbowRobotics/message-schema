@@ -1882,3 +1882,71 @@ double DOCKCONTROL::wrapToPi(double angle)
     while (angle < -M_PI) angle += 2.0 * M_PI;
     return angle;
 }
+
+void DOCKCONTROL::watch_stop()
+{
+    if(watch_flag)
+    {
+        watch_flag = false;
+    }
+    if(watch_thread && watch_thread->joinable())
+    {
+        watch_thread->join();
+    }
+    watch_thread.reset();
+}
+
+void DOCKCONTROL::watch_loop()
+{
+    const int retry_max_count = config->get_docking_retry_count();
+    watch_flag.store(true);
+    int dock_retry_count = 0;
+    int last_state = -1;
+    int cur_state = -1;
+
+    while(watch_flag)
+    {
+        cur_state = static_cast<int>(fsm_state.load());
+        if(cur_state == DOCKING_FSM_POINTDOCK && last_state == DOCKING_FSM_CHKCHARGE)
+        {
+            dock_retry_count++;
+        }
+        last_state = cur_state;
+
+        if(dock_retry_count >= retry_max_count)
+        {
+            watch_flag.store(false);
+            stop();
+            spdlog::warn("[DOCKING] docking fail. docking stop");
+            break;
+        }
+
+        if(dock_retry_flag)
+        {
+            stop();
+            move();
+            dock_retry_flag.store(false);
+            spdlog::info("[DOCKING] docking fail. retry count : {}", dock_retry_count);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+}
+
+void DOCKCONTROL::slot_docking_start()
+{
+    watch_stop();
+    stop();
+    move();
+    watch_thread = std::make_unique<std::thread>(&DOCKCONTROL::watch_loop, this);
+}
+
+void DOCKCONTROL::slot_undocking_start()
+{
+    watch_stop();
+    undock();
+}
+
+void DOCKCONTROL::slot_docking_stop()
+{
+    watch_stop();
+}
