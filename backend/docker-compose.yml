@@ -6,8 +6,6 @@ services:
     image: rrs-fastapi:latest
     container_name: amr-service
     profiles: [amr, all]
-    env_file:
-      - ./.env
     environment:
       - SERVICE=amr
       - PORT=8007
@@ -22,7 +20,7 @@ services:
     volumes:
       - ./services/amr/amr.arm64.bin:/amr.arm64.bin
       - ./services/amr/amr.amd64.bin:/amr.amd64.bin
-      - DATA_DIR:/data
+      - /data:/data
 
   common:
     build:
