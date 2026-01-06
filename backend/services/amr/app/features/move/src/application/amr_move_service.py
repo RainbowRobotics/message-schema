@@ -28,18 +28,24 @@ from rb_utils.service_exception import (
 )
 
 from app.features.move.schema.move_api import (
+    Request_Move_CircularPD,
     Request_Move_GoalPD,
     Request_Move_JogPD,
+    Request_Move_RotatePD,
     Request_Move_TargetPD,
+    Request_Move_XLinearPD,
     RequestAmrMoveArchiveLogPD,
     RequestAmrMoveExportLogPD,
     RequestAmrMoveLogsPD,
+    Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LogsPD,
     Response_Move_PausePD,
     Response_Move_ResumePD,
+    Response_Move_RotatePD,
     Response_Move_StopPD,
     Response_Move_TargetPD,
+    Response_Move_XLinearPD,
 )
 from app.features.move.src.adapters.output.mongo import (
     MoveMongoDatabaseAdapter,
@@ -305,6 +311,99 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveResume] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_linear(self, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
+        """
+        [AMR 선형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveLinear : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_linear(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveLinear] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await self.slamnav_port.send_move_linear(model)
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveLinear] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_circular(self, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
+        """
+        [AMR 원형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveCircular : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_circular(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveCircular] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await self.slamnav_port.send_move_circular(model)
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveCircular] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_rotate(self, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
+        """
+        [AMR 원형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveRotate : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_rotate(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveRotate] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await self.slamnav_port.send_move_rotate(model)
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveRotate] DB Exception : ", e)
         return model.to_dict()
 
 

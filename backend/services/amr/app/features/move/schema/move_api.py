@@ -83,12 +83,12 @@ class Response_Move_CircularPD(BaseModel):
     message: str | None = Field(None, description="상태 메시지", example="")
 
 class Request_Move_RotatePD(BaseModel):
-    target: float = Field(..., description="이동 목표 좌표 [deg]", example=3.5)
-    speed: float = Field(..., description="이동 속도 [deg/s]", example=0.5)
+    target: float = Field(..., description="이동 목표 좌표 [deg]", example=30)
+    speed: float = Field(..., description="이동 속도 [deg/s]", example=10)
 
 class Response_Move_RotatePD(BaseModel):
-    target: float = Field(..., description="이동 목표 좌표 [deg]", example=3.5)
-    speed: float = Field(..., description="이동 속도 [deg/s]", example=0.5)
+    target: float = Field(..., description="이동 목표 좌표 [deg]", example=30)
+    speed: float = Field(..., description="이동 속도 [deg/s]", example=10)
     result: str = Field(..., description="이동 회전 명령 처리 결과", example="accept")
     message: str | None = Field(None, description="상태 메시지", example="")
 

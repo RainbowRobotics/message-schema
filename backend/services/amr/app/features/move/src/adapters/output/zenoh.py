@@ -1,3 +1,6 @@
+from rb_flat_buffers.SLAMNAV.Request_Move_Circular import (
+    Request_Move_CircularT,
+)
 from rb_flat_buffers.SLAMNAV.Request_Move_Goal import (
     Request_Move_GoalT,
 )
@@ -10,11 +13,20 @@ from rb_flat_buffers.SLAMNAV.Request_Move_Pause import (
 from rb_flat_buffers.SLAMNAV.Request_Move_Resume import (
     Request_Move_ResumeT,
 )
+from rb_flat_buffers.SLAMNAV.Request_Move_Rotate import (
+    Request_Move_RotateT,
+)
 from rb_flat_buffers.SLAMNAV.Request_Move_Stop import (
     Request_Move_StopT,
 )
 from rb_flat_buffers.SLAMNAV.Request_Move_Target import (
     Request_Move_TargetT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_XLinear import (
+    Request_Move_XLinearT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Circular import (
+    Response_Move_CircularT,
 )
 from rb_flat_buffers.SLAMNAV.Response_Move_Goal import (
     Response_Move_GoalT,
@@ -25,12 +37,16 @@ from rb_flat_buffers.SLAMNAV.Response_Move_Pause import (
 from rb_flat_buffers.SLAMNAV.Response_Move_Resume import (
     Response_Move_ResumeT,
 )
+from rb_flat_buffers.SLAMNAV.Response_Move_Rotate import (
+    Response_Move_RotateT,
+)
 from rb_flat_buffers.SLAMNAV.Response_Move_Stop import (
     Response_Move_StopT,
 )
 from rb_flat_buffers.SLAMNAV.Response_Move_Target import (
     Response_Move_TargetT,
 )
+from rb_flat_buffers.SLAMNAV.Response_Move_XLinear import Response_Move_XLinearT
 from rb_flat_buffers.SLAMNAV.State_Change_Move import (
     State_Change_MoveT,
 )
@@ -215,4 +231,72 @@ class SlamnavZenohAdapter(SlamnavPort):
         dt = t_to_dict(result["dict_payload"])
         return self._to_state_change_move_t(dt)
 
+    async def send_move_linear(self, model: MoveModel) -> State_Change_MoveT:
+        """
+        [Move Linear 전송]
+        - model: MoveModel
+        - State_Change_MoveT 객체 반환
+        """
+        # 1) Request_Move_XLinearT 객체 생성
+        req = Request_Move_XLinearT()
+        req.id = model.id
+        req.target = model.target
+        req.speed = model.speed
 
+        # 2) 요청 전송
+        result = zenoh_client.query_one(
+            "test/v1/move/linear",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Move_XLinearT,
+            flatbuffer_buf_size=100,
+        )
+        # 3) 결과 처리 및 반환
+        dt = t_to_dict(result["dict_payload"])
+        return self._to_state_change_move_t(dt)
+
+    async def send_move_circular(self, model: MoveModel) -> State_Change_MoveT:
+        """
+        [Move Circular 전송]
+        - model: MoveModel
+        - State_Change_MoveT 객체 반환
+        """
+        # 1) Request_Move_CircularT 객체 생성
+        req = Request_Move_CircularT()
+        req.id = model.id
+        req.target = model.target
+        req.speed = model.speed
+        req.direction = model.direction
+
+        # 2) 요청 전송
+        result = zenoh_client.query_one(
+            "test/v1/move/circular",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Move_CircularT,
+            flatbuffer_buf_size=100,
+        )
+        # 3) 결과 처리 및 반환
+        dt = t_to_dict(result["dict_payload"])
+        return self._to_state_change_move_t(dt)
+
+    async def send_move_rotate(self, model: MoveModel) -> State_Change_MoveT:
+        """
+        [Move Rotate 전송]
+        - model: MoveModel
+        - State_Change_MoveT 객체 반환
+        """
+        # 1) Request_Move_RotateT 객체 생성
+        req = Request_Move_RotateT()
+        req.id = model.id
+        req.target = model.target
+        req.speed = model.speed
+
+        # 2) 요청 전송
+        result = zenoh_client.query_one(
+            "test/v1/move/rotate",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Move_RotateT,
+            flatbuffer_buf_size=100,
+        )
+        # 3) 결과 처리 및 반환
+        dt = t_to_dict(result["dict_payload"])
+        return self._to_state_change_move_t(dt)
