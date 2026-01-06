@@ -1778,6 +1778,7 @@ void MainWindow::bt_DockStart()
     }
 
     AUTOCONTROL::instance()->set_is_moving(true);
+    MOBILE::instance()->set_is_auto_move(true);
     DOCKCONTROL::instance()->move();
 }
 
@@ -1794,6 +1795,7 @@ void MainWindow::bt_DockStop()
 
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
+    MOBILE::instance()->set_is_auto_move(false);
 }
 
 void MainWindow::bt_UnDockStart()
@@ -1824,6 +1826,7 @@ void MainWindow::bt_UnDockStart()
         QTimer::singleShot(t*1000, [&]()
         {
             AUTOCONTROL::instance()->set_is_moving(false);
+            MOBILE::instance()->set_is_auto_move(false);
         });
     }
     else
