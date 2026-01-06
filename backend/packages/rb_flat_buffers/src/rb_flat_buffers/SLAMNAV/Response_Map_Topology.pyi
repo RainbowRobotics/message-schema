@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from rb_flat_buffers.IPC.Node import Node, NodeT
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Node import Node, NodeT
-from rb_flat_buffers.SLAMNAV.Response_Map_Topology import Response_Map_Topology
+from SLAMNAV.Node import Node, NodeT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -44,6 +41,21 @@ class Response_Map_TopologyT(object):
   result: str | None
   message: str | None
   data: typing.List[NodeT]
+  def __init__(
+    self,
+    id: str | None = ...,
+    mapName: str | None = ...,
+    pageNo: int = ...,
+    pageSize: int = ...,
+    totalPage: int = ...,
+    nodeType: str | None = ...,
+    searchText: str | None = ...,
+    sortOption: str | None = ...,
+    sortDirection: str | None = ...,
+    result: str | None = ...,
+    message: str | None = ...,
+    data: typing.List['NodeT'] | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Map_TopologyT: ...
   @classmethod

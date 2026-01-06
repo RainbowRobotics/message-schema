@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.FileChunk import FileChunk
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -27,6 +25,13 @@ class FileChunkT(object):
   index: int
   offset: int
   data: typing.List[int]
+  def __init__(
+    self,
+    session: str | None = ...,
+    index: int = ...,
+    offset: int = ...,
+    data: typing.List[int] | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> FileChunkT: ...
   @classmethod

@@ -81,10 +81,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_XLinearT(object):
 
     # Request_Move_XLinearT
-    def __init__(self):
-        self.id = None  # type: str
-        self.target = 0.0  # type: float
-        self.speed = 0.0  # type: float
+    def __init__(
+        self,
+        id = None,
+        target = 0.0,
+        speed = 0.0,
+    ):
+        self.id = id  # type: Optional[str]
+        self.target = target  # type: float
+        self.speed = speed  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

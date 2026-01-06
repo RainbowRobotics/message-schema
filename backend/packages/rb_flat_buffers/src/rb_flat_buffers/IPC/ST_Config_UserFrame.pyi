@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame
-from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
+from IPC.Vec3f import Vec3f, Vec3fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -23,6 +21,12 @@ class ST_Config_UserFrameT(object):
   userfName: str | None
   userfOffset: Vec3fT | None
   userfEuler: Vec3fT | None
+  def __init__(
+    self,
+    userfName: str | None = ...,
+    userfOffset: 'Vec3fT' | None = ...,
+    userfEuler: 'Vec3fT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> ST_Config_UserFrameT: ...
   @classmethod

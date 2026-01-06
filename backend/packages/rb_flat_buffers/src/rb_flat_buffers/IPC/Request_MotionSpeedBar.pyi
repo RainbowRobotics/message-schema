@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBar
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,6 +16,10 @@ class Request_MotionSpeedBar(object):
   def Alpha(self) -> float: ...
 class Request_MotionSpeedBarT(object):
   alpha: float
+  def __init__(
+    self,
+    alpha: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_MotionSpeedBarT: ...
   @classmethod

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.ST_Tool_Para import ST_Tool_Para, ST_Tool_ParaT
+from IPC.ST_Tool_Para import ST_Tool_Para
 from typing import Optional
 np = import_numpy()
 
@@ -175,15 +175,25 @@ except:
 class Response_CallConfigToolListT(object):
 
     # Response_CallConfigToolListT
-    def __init__(self):
-        self.tConfigs0 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs1 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs2 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs3 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs4 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs5 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs6 = None  # type: Optional[ST_Tool_ParaT]
-        self.tConfigs7 = None  # type: Optional[ST_Tool_ParaT]
+    def __init__(
+        self,
+        tConfigs0 = None,
+        tConfigs1 = None,
+        tConfigs2 = None,
+        tConfigs3 = None,
+        tConfigs4 = None,
+        tConfigs5 = None,
+        tConfigs6 = None,
+        tConfigs7 = None,
+    ):
+        self.tConfigs0 = tConfigs0  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs1 = tConfigs1  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs2 = tConfigs2  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs3 = tConfigs3  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs4 = tConfigs4  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs5 = tConfigs5  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs6 = tConfigs6  # type: Optional[ST_Tool_ParaT]
+        self.tConfigs7 = tConfigs7  # type: Optional[ST_Tool_ParaT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

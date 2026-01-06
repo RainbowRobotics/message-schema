@@ -94,11 +94,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_GoalT(object):
 
     # Request_Move_GoalT
-    def __init__(self):
-        self.id = None  # type: str
-        self.goalId = None  # type: str
-        self.method = None  # type: str
-        self.preset = 0  # type: int
+    def __init__(
+        self,
+        id = None,
+        goalId = None,
+        method = None,
+        preset = 0,
+    ):
+        self.id = id  # type: Optional[str]
+        self.goalId = goalId  # type: Optional[str]
+        self.method = method  # type: Optional[str]
+        self.preset = preset  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

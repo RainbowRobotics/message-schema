@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
+from IPC.Vec3f import Vec3f
 from typing import Optional
 np = import_numpy()
 
@@ -92,10 +92,15 @@ except:
 class ST_Config_UserFrameT(object):
 
     # ST_Config_UserFrameT
-    def __init__(self):
-        self.userfName = None  # type: str
-        self.userfOffset = None  # type: Optional[Vec3fT]
-        self.userfEuler = None  # type: Optional[Vec3fT]
+    def __init__(
+        self,
+        userfName = None,
+        userfOffset = None,
+        userfEuler = None,
+    ):
+        self.userfName = userfName  # type: Optional[str]
+        self.userfOffset = userfOffset  # type: Optional[Vec3fT]
+        self.userfEuler = userfEuler  # type: Optional[Vec3fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

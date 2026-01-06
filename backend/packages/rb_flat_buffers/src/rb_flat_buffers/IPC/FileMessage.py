@@ -9,10 +9,6 @@ from flatbuffers.table import Table
 from typing import Optional
 np = import_numpy()
 
-from rb_flat_buffers.IPC.FileRequest import FileRequest, FileRequestT
-from rb_flat_buffers.IPC.FileMeta import FileMeta, FileMetaT
-from rb_flat_buffers.IPC.FileChunk import FileChunk, FileChunkT
-from rb_flat_buffers.IPC.FileAck import FileAck, FileAckT
 class FileMessage(object):
     __slots__ = ['_tab']
 
@@ -79,9 +75,13 @@ except:
 class FileMessageT(object):
 
     # FileMessageT
-    def __init__(self):
-        self.payloadType = 0  # type: int
-        self.payload = None  # type: Union[None, FileMetaT, FileChunkT, FileAckT, FileRequestT]
+    def __init__(
+        self,
+        payloadType = 0,
+        payload = None,
+    ):
+        self.payloadType = payloadType  # type: int
+        self.payload = payload  # type: Union[None, 'FileMetaT', 'FileChunkT', 'FileAckT', 'FileRequestT']
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.SLAMNAV.Node import Node, NodeT
+from SLAMNAV.Node import Node
 from typing import Optional
 np = import_numpy()
 
@@ -226,19 +226,33 @@ except:
 class Response_Map_TopologyT(object):
 
     # Response_Map_TopologyT
-    def __init__(self):
-        self.id = None  # type: str
-        self.mapName = None  # type: str
-        self.pageNo = 0  # type: int
-        self.pageSize = 0  # type: int
-        self.totalPage = 0  # type: int
-        self.nodeType = None  # type: str
-        self.searchText = None  # type: str
-        self.sortOption = None  # type: str
-        self.sortDirection = None  # type: str
-        self.result = None  # type: str
-        self.message = None  # type: str
-        self.data = None  # type: List[NodeT]
+    def __init__(
+        self,
+        id = None,
+        mapName = None,
+        pageNo = 0,
+        pageSize = 0,
+        totalPage = 0,
+        nodeType = None,
+        searchText = None,
+        sortOption = None,
+        sortDirection = None,
+        result = None,
+        message = None,
+        data = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.mapName = mapName  # type: Optional[str]
+        self.pageNo = pageNo  # type: int
+        self.pageSize = pageSize  # type: int
+        self.totalPage = totalPage  # type: int
+        self.nodeType = nodeType  # type: Optional[str]
+        self.searchText = searchText  # type: Optional[str]
+        self.sortOption = sortOption  # type: Optional[str]
+        self.sortDirection = sortDirection  # type: Optional[str]
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
+        self.data = data  # type: Optional[List[NodeT]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

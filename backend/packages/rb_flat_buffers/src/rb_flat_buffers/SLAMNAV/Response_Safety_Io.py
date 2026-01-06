@@ -254,15 +254,25 @@ except:
 class Response_Safety_IoT(object):
 
     # Response_Safety_IoT
-    def __init__(self):
-        self.id = None  # type: str
-        self.command = None  # type: str
-        self.mcu0Dio = None  # type: List[bool]
-        self.mcu1Dio = None  # type: List[bool]
-        self.mcu0Din = None  # type: List[bool]
-        self.mcu1Din = None  # type: List[bool]
-        self.result = None  # type: str
-        self.message = None  # type: str
+    def __init__(
+        self,
+        id = None,
+        command = None,
+        mcu0Dio = None,
+        mcu1Dio = None,
+        mcu0Din = None,
+        mcu1Din = None,
+        result = None,
+        message = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.command = command  # type: Optional[str]
+        self.mcu0Dio = mcu0Dio  # type: Optional[List[bool]]
+        self.mcu1Dio = mcu1Dio  # type: Optional[List[bool]]
+        self.mcu0Din = mcu0Din  # type: Optional[List[bool]]
+        self.mcu1Din = mcu1Din  # type: Optional[List[bool]]
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

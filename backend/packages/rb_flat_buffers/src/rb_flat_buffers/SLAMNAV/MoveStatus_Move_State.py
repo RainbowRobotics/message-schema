@@ -107,12 +107,19 @@ def End(builder: flatbuffers.Builder) -> int:
 class MoveStatus_Move_StateT(object):
 
     # MoveStatus_Move_StateT
-    def __init__(self):
-        self.autoMove = None  # type: str
-        self.dockMove = None  # type: str
-        self.jogMove = None  # type: str
-        self.obs = None  # type: str
-        self.path = None  # type: str
+    def __init__(
+        self,
+        autoMove = None,
+        dockMove = None,
+        jogMove = None,
+        obs = None,
+        path = None,
+    ):
+        self.autoMove = autoMove  # type: Optional[str]
+        self.dockMove = dockMove  # type: Optional[str]
+        self.jogMove = jogMove  # type: Optional[str]
+        self.obs = obs  # type: Optional[str]
+        self.path = path  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

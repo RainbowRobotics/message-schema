@@ -55,8 +55,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Map_ListT(object):
 
     # Request_Map_ListT
-    def __init__(self):
-        self.id = None  # type: str
+    def __init__(
+        self,
+        id = None,
+    ):
+        self.id = id  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

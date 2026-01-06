@@ -94,11 +94,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Control_MotorT(object):
 
     # Response_Control_MotorT
-    def __init__(self):
-        self.id = None  # type: str
-        self.onoff = False  # type: bool
-        self.result = None  # type: str
-        self.message = None  # type: str
+    def __init__(
+        self,
+        id = None,
+        onoff = False,
+        result = None,
+        message = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.onoff = onoff  # type: bool
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Request_Control_Frequency import Request_Control_Frequency
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -24,6 +22,13 @@ class Request_Control_FrequencyT(object):
   target: str | None
   onoff: bool
   frequency: int
+  def __init__(
+    self,
+    id: str | None = ...,
+    target: str | None = ...,
+    onoff: bool = ...,
+    frequency: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Control_FrequencyT: ...
   @classmethod

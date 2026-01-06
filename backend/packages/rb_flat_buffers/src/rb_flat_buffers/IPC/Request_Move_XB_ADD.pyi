@@ -3,12 +3,10 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
-from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_Type, MoveInput_TypeT
-from rb_flat_buffers.IPC.Request_Move_XB_ADD import Request_Move_XB_ADD
+from IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
+from IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from IPC.MoveInput_Type import MoveInput_Type, MoveInput_TypeT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -27,6 +25,13 @@ class Request_Move_XB_ADDT(object):
   speed: MoveInput_SpeedT | None
   type: MoveInput_TypeT | None
   method: int
+  def __init__(
+    self,
+    target: 'MoveInput_TargetT' | None = ...,
+    speed: 'MoveInput_SpeedT' | None = ...,
+    type: 'MoveInput_TypeT' | None = ...,
+    method: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_XB_ADDT: ...
   @classmethod

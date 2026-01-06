@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from IPC.MoveInput_Target import MoveInput_Target
 from typing import Optional
 np = import_numpy()
 
@@ -63,8 +63,11 @@ except:
 class Request_Move_SmoothJogLT(object):
 
     # Request_Move_SmoothJogLT
-    def __init__(self):
-        self.target = None  # type: Optional[MoveInput_TargetT]
+    def __init__(
+        self,
+        target = None,
+    ):
+        self.target = target  # type: Optional[MoveInput_TargetT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

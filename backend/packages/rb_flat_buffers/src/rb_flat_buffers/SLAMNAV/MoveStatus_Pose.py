@@ -80,10 +80,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class MoveStatus_PoseT(object):
 
     # MoveStatus_PoseT
-    def __init__(self):
-        self.x = 0.0  # type: float
-        self.y = 0.0  # type: float
-        self.rz = 0.0  # type: float
+    def __init__(
+        self,
+        x = 0.0,
+        y = 0.0,
+        rz = 0.0,
+    ):
+        self.x = x  # type: float
+        self.y = y  # type: float
+        self.rz = rz  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

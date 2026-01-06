@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area
-from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
+from IPC.Vec3f import Vec3f, Vec3fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -27,6 +25,14 @@ class ST_Config_AreaT(object):
   areaOffset: Vec3fT | None
   areaEuler: Vec3fT | None
   areaPara: Vec3fT | None
+  def __init__(
+    self,
+    areaName: str | None = ...,
+    areaType: int = ...,
+    areaOffset: 'Vec3fT' | None = ...,
+    areaEuler: 'Vec3fT' | None = ...,
+    areaPara: 'Vec3fT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> ST_Config_AreaT: ...
   @classmethod

@@ -5,10 +5,10 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State, MoveStatus_Move_StateT
-from rb_flat_buffers.SLAMNAV.MoveStatus_Node import MoveStatus_Node, MoveStatus_NodeT
-from rb_flat_buffers.SLAMNAV.MoveStatus_Pose import MoveStatus_Pose, MoveStatus_PoseT
-from rb_flat_buffers.SLAMNAV.MoveStatus_Vel import MoveStatus_Vel, MoveStatus_VelT
+from SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State
+from SLAMNAV.MoveStatus_Node import MoveStatus_Node
+from SLAMNAV.MoveStatus_Pose import MoveStatus_Pose
+from SLAMNAV.MoveStatus_Vel import MoveStatus_Vel
 from typing import Optional
 np = import_numpy()
 
@@ -130,12 +130,19 @@ except:
 class MoveStatusT(object):
 
     # MoveStatusT
-    def __init__(self):
-        self.moveState = None  # type: Optional[MoveStatus_Move_StateT]
-        self.pose = None  # type: Optional[MoveStatus_PoseT]
-        self.vel = None  # type: Optional[MoveStatus_VelT]
-        self.goalNode = None  # type: Optional[MoveStatus_NodeT]
-        self.curNode = None  # type: Optional[MoveStatus_NodeT]
+    def __init__(
+        self,
+        moveState = None,
+        pose = None,
+        vel = None,
+        goalNode = None,
+        curNode = None,
+    ):
+        self.moveState = moveState  # type: Optional[MoveStatus_Move_StateT]
+        self.pose = pose  # type: Optional[MoveStatus_PoseT]
+        self.vel = vel  # type: Optional[MoveStatus_VelT]
+        self.goalNode = goalNode  # type: Optional[MoveStatus_NodeT]
+        self.curNode = curNode  # type: Optional[MoveStatus_NodeT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

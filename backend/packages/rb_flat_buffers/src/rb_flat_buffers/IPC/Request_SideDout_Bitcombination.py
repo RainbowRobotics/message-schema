@@ -93,11 +93,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_SideDout_BitcombinationT(object):
 
     # Request_SideDout_BitcombinationT
-    def __init__(self):
-        self.portStart = 0  # type: int
-        self.portEnd = 0  # type: int
-        self.desiredValue = 0  # type: int
-        self.directionOption = 0  # type: int
+    def __init__(
+        self,
+        portStart = 0,
+        portEnd = 0,
+        desiredValue = 0,
+        directionOption = 0,
+    ):
+        self.portStart = portStart  # type: int
+        self.portEnd = portEnd  # type: int
+        self.desiredValue = desiredValue  # type: int
+        self.directionOption = directionOption  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

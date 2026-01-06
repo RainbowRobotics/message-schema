@@ -5,14 +5,14 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.SLAMNAV.Status_Condition import Status_Condition, Status_ConditionT
-from rb_flat_buffers.SLAMNAV.Status_Imu import Status_Imu, Status_ImuT
-from rb_flat_buffers.SLAMNAV.Status_Map import Status_Map, Status_MapT
-from rb_flat_buffers.SLAMNAV.Status_Motor import Status_Motor, Status_MotorT
-from rb_flat_buffers.SLAMNAV.Status_Power import Status_Power, Status_PowerT
-from rb_flat_buffers.SLAMNAV.Status_Robot_Safety_Io_State import Status_Robot_Safety_Io_State, Status_Robot_Safety_Io_StateT
-from rb_flat_buffers.SLAMNAV.Status_Robot_State import Status_Robot_State, Status_Robot_StateT
-from rb_flat_buffers.SLAMNAV.Status_Setting import Status_Setting, Status_SettingT
+from SLAMNAV.Status_Condition import Status_Condition
+from SLAMNAV.Status_Imu import Status_Imu
+from SLAMNAV.Status_Map import Status_Map
+from SLAMNAV.Status_Motor import Status_Motor
+from SLAMNAV.Status_Power import Status_Power
+from SLAMNAV.Status_Robot_Safety_Io_State import Status_Robot_Safety_Io_State
+from SLAMNAV.Status_Robot_State import Status_Robot_State
+from SLAMNAV.Status_Setting import Status_Setting
 from typing import Optional
 np = import_numpy()
 
@@ -198,16 +198,27 @@ except:
 class StatusT(object):
 
     # StatusT
-    def __init__(self):
-        self.imu = None  # type: Optional[Status_ImuT]
-        self.motor0 = None  # type: Optional[Status_MotorT]
-        self.motor1 = None  # type: Optional[Status_MotorT]
-        self.condition = None  # type: Optional[Status_ConditionT]
-        self.robotState = None  # type: Optional[Status_Robot_StateT]
-        self.robotSafetyIoState = None  # type: Optional[Status_Robot_Safety_Io_StateT]
-        self.power = None  # type: Optional[Status_PowerT]
-        self.setting = None  # type: Optional[Status_SettingT]
-        self.map = None  # type: Optional[Status_MapT]
+    def __init__(
+        self,
+        imu = None,
+        motor0 = None,
+        motor1 = None,
+        condition = None,
+        robotState = None,
+        robotSafetyIoState = None,
+        power = None,
+        setting = None,
+        map = None,
+    ):
+        self.imu = imu  # type: Optional[Status_ImuT]
+        self.motor0 = motor0  # type: Optional[Status_MotorT]
+        self.motor1 = motor1  # type: Optional[Status_MotorT]
+        self.condition = condition  # type: Optional[Status_ConditionT]
+        self.robotState = robotState  # type: Optional[Status_Robot_StateT]
+        self.robotSafetyIoState = robotSafetyIoState  # type: Optional[Status_Robot_Safety_Io_StateT]
+        self.power = power  # type: Optional[Status_PowerT]
+        self.setting = setting  # type: Optional[Status_SettingT]
+        self.map = map  # type: Optional[Status_MapT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

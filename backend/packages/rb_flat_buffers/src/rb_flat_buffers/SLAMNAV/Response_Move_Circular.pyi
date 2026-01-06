@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Response_Move_Circular import Response_Move_Circular
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -28,6 +26,15 @@ class Response_Move_CircularT(object):
   direction: str | None
   result: str | None
   message: str | None
+  def __init__(
+    self,
+    id: str | None = ...,
+    target: float = ...,
+    speed: float = ...,
+    direction: str | None = ...,
+    result: str | None = ...,
+    message: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Move_CircularT: ...
   @classmethod

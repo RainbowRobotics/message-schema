@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.SLAMNAV.PointArray import PointArray, PointArrayT
+from SLAMNAV.PointArray import PointArray
 from typing import Optional
 np = import_numpy()
 
@@ -82,8 +82,11 @@ except:
 class PathT(object):
 
     # PathT
-    def __init__(self):
-        self.value = None  # type: List[PointArrayT]
+    def __init__(
+        self,
+        value = None,
+    ):
+        self.value = value  # type: Optional[List[PointArrayT]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

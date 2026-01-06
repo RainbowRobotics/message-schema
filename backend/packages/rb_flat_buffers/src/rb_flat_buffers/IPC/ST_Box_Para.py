@@ -54,8 +54,11 @@ except:
 class ST_Box_ParaT(object):
 
     # ST_Box_ParaT
-    def __init__(self):
-        self.f = None  # type: List[float]
+    def __init__(
+        self,
+        f = None,
+    ):
+        self.f = f  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -88,4 +91,4 @@ class ST_Box_ParaT(object):
 
     # ST_Box_ParaT
     def Pack(self, builder):
-        return CreateST_Box_Para(builder, self.f)
+        return CreateStBoxPara(builder, self.f)

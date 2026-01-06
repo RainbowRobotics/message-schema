@@ -5,8 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from IPC.MoveInput_Speed import MoveInput_Speed
+from IPC.MoveInput_Target import MoveInput_Target
 from typing import Optional
 np = import_numpy()
 
@@ -80,9 +80,13 @@ except:
 class Request_Move_JT(object):
 
     # Request_Move_JT
-    def __init__(self):
-        self.target = None  # type: Optional[MoveInput_TargetT]
-        self.speed = None  # type: Optional[MoveInput_SpeedT]
+    def __init__(
+        self,
+        target = None,
+        speed = None,
+    ):
+        self.target = target  # type: Optional[MoveInput_TargetT]
+        self.speed = speed  # type: Optional[MoveInput_SpeedT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

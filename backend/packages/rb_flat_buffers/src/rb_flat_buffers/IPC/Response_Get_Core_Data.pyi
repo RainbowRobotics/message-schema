@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.FloatArray32 import FloatArray32, FloatArray32T
-from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_Data
+from IPC.FloatArray32 import FloatArray32, FloatArray32T
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -27,6 +25,14 @@ class Response_Get_Core_DataT(object):
   payloadNum: float
   payloadArr: FloatArray32T | None
   payloadStr: str | None
+  def __init__(
+    self,
+    valid: int = ...,
+    type: int = ...,
+    payloadNum: float = ...,
+    payloadArr: 'FloatArray32T' | None = ...,
+    payloadStr: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Get_Core_DataT: ...
   @classmethod

@@ -54,8 +54,11 @@ except:
 class N_AIN_fT(object):
 
     # N_AIN_fT
-    def __init__(self):
-        self.f = None  # type: List[float]
+    def __init__(
+        self,
+        f = None,
+    ):
+        self.f = f  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -88,4 +91,4 @@ class N_AIN_fT(object):
 
     # N_AIN_fT
     def Pack(self, builder):
-        return CreateN_AIN_f(builder, self.f)
+        return CreateNAinF(builder, self.f)

@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Status_Imu import Status_Imu
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -34,6 +32,18 @@ class Status_ImuT(object):
   imuRx: float
   imuRy: float
   imuRz: float
+  def __init__(
+    self,
+    accX: float = ...,
+    accY: float = ...,
+    accZ: float = ...,
+    gyrX: float = ...,
+    gyrY: float = ...,
+    gyrZ: float = ...,
+    imuRx: float = ...,
+    imuRy: float = ...,
+    imuRz: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_ImuT: ...
   @classmethod

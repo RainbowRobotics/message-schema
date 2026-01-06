@@ -5,8 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.ST_Box_Para import ST_Box_Para, ST_Box_ParaT
-from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
+from IPC.ST_Box_Para import ST_Box_Para
+from IPC.Vec3f import Vec3f
 from typing import Optional
 np = import_numpy()
 
@@ -151,14 +151,23 @@ except:
 class ST_Tool_ParaT(object):
 
     # ST_Tool_ParaT
-    def __init__(self):
-        self.toolName = None  # type: str
-        self.comMass = 0.0  # type: float
-        self.comOffset = None  # type: Optional[Vec3fT]
-        self.tcpOffset = None  # type: Optional[Vec3fT]
-        self.tcpEuler = None  # type: Optional[Vec3fT]
-        self.boxType = 0  # type: int
-        self.boxParameter = None  # type: Optional[ST_Box_ParaT]
+    def __init__(
+        self,
+        toolName = None,
+        comMass = 0.0,
+        comOffset = None,
+        tcpOffset = None,
+        tcpEuler = None,
+        boxType = 0,
+        boxParameter = None,
+    ):
+        self.toolName = toolName  # type: Optional[str]
+        self.comMass = comMass  # type: float
+        self.comOffset = comOffset  # type: Optional[Vec3fT]
+        self.tcpOffset = tcpOffset  # type: Optional[Vec3fT]
+        self.tcpEuler = tcpEuler  # type: Optional[Vec3fT]
+        self.boxType = boxType  # type: int
+        self.boxParameter = boxParameter  # type: Optional[ST_Box_ParaT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

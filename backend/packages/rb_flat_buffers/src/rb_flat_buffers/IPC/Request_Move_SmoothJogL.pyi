@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
-from rb_flat_buffers.IPC.Request_Move_SmoothJogL import Request_Move_SmoothJogL
+from IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -19,6 +17,10 @@ class Request_Move_SmoothJogL(object):
   def Target(self) -> MoveInput_Target | None: ...
 class Request_Move_SmoothJogLT(object):
   target: MoveInput_TargetT | None
+  def __init__(
+    self,
+    target: 'MoveInput_TargetT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_SmoothJogLT: ...
   @classmethod

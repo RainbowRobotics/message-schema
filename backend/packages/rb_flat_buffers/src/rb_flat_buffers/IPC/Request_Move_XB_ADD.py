@@ -5,9 +5,9 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
-from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_Type, MoveInput_TypeT
+from IPC.MoveInput_Speed import MoveInput_Speed
+from IPC.MoveInput_Target import MoveInput_Target
+from IPC.MoveInput_Type import MoveInput_Type
 from typing import Optional
 np = import_numpy()
 
@@ -110,11 +110,17 @@ except:
 class Request_Move_XB_ADDT(object):
 
     # Request_Move_XB_ADDT
-    def __init__(self):
-        self.target = None  # type: Optional[MoveInput_TargetT]
-        self.speed = None  # type: Optional[MoveInput_SpeedT]
-        self.type = None  # type: Optional[MoveInput_TypeT]
-        self.method = 0  # type: int
+    def __init__(
+        self,
+        target = None,
+        speed = None,
+        type = None,
+        method = 0,
+    ):
+        self.target = target  # type: Optional[MoveInput_TargetT]
+        self.speed = speed  # type: Optional[MoveInput_SpeedT]
+        self.type = type  # type: Optional[MoveInput_TypeT]
+        self.method = method  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from IPC.MoveInput_Target import MoveInput_Target
 from typing import Optional
 np = import_numpy()
 
@@ -89,10 +89,15 @@ except:
 class Request_Set_ShiftT(object):
 
     # Request_Set_ShiftT
-    def __init__(self):
-        self.shiftNo = 0  # type: int
-        self.shiftMode = 0  # type: int
-        self.target = None  # type: Optional[MoveInput_TargetT]
+    def __init__(
+        self,
+        shiftNo = 0,
+        shiftMode = 0,
+        target = None,
+    ):
+        self.shiftNo = shiftNo  # type: int
+        self.shiftMode = shiftMode  # type: int
+        self.target = target  # type: Optional[MoveInput_TargetT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

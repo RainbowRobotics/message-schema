@@ -54,8 +54,11 @@ except:
 class N_JOINT_fT(object):
 
     # N_JOINT_fT
-    def __init__(self):
-        self.f = None  # type: List[float]
+    def __init__(
+        self,
+        f = None,
+    ):
+        self.f = f  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -88,4 +91,4 @@ class N_JOINT_fT(object):
 
     # N_JOINT_fT
     def Pack(self, builder):
-        return CreateN_JOINT_f(builder, self.f)
+        return CreateNJointF(builder, self.f)

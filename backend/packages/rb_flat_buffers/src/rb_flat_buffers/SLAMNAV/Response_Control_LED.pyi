@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Response_Control_LED import Response_Control_LED
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -26,6 +24,14 @@ class Response_Control_LEDT(object):
   color: str | None
   result: str | None
   message: str | None
+  def __init__(
+    self,
+    id: str | None = ...,
+    onoff: bool = ...,
+    color: str | None = ...,
+    result: str | None = ...,
+    message: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Control_LEDT: ...
   @classmethod

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from IPC.N_JOINT_f import N_JOINT_f
 from typing import Optional
 np = import_numpy()
 
@@ -92,10 +92,15 @@ except:
 class Request_Set_Joint_ImpedanceT(object):
 
     # Request_Set_Joint_ImpedanceT
-    def __init__(self):
-        self.onoff = 0  # type: int
-        self.stiffness = None  # type: Optional[N_JOINT_fT]
-        self.torquelimit = None  # type: Optional[N_JOINT_fT]
+    def __init__(
+        self,
+        onoff = 0,
+        stiffness = None,
+        torquelimit = None,
+    ):
+        self.onoff = onoff  # type: int
+        self.stiffness = stiffness  # type: Optional[N_JOINT_fT]
+        self.torquelimit = torquelimit  # type: Optional[N_JOINT_fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

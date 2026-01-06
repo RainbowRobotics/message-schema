@@ -94,11 +94,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_DockT(object):
 
     # Response_DockT
-    def __init__(self):
-        self.id = None  # type: str
-        self.command = None  # type: str
-        self.result = None  # type: str
-        self.message = None  # type: str
+    def __init__(
+        self,
+        id = None,
+        command = None,
+        result = None,
+        message = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.command = command  # type: Optional[str]
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from IPC.N_JOINT_f import N_JOINT_f
 from typing import Optional
 np = import_numpy()
 
@@ -63,8 +63,11 @@ except:
 class Request_Save_Direct_Teach_SensitivityT(object):
 
     # Request_Save_Direct_Teach_SensitivityT
-    def __init__(self):
-        self.sensitivity = None  # type: Optional[N_JOINT_fT]
+    def __init__(
+        self,
+        sensitivity = None,
+    ):
+        self.sensitivity = sensitivity  # type: Optional[N_JOINT_fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

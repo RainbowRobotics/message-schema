@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.MoveStatus_Pose import MoveStatus_Pose
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class MoveStatus_PoseT(object):
   x: float
   y: float
   rz: float
+  def __init__(
+    self,
+    x: float = ...,
+    y: float = ...,
+    rz: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> MoveStatus_PoseT: ...
   @classmethod

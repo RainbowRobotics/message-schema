@@ -47,11 +47,11 @@ from rb_flat_buffers.SLAMNAV.Response_Move_Target import (
     Response_Move_TargetT,
 )
 from rb_flat_buffers.SLAMNAV.Response_Move_XLinear import Response_Move_XLinearT
-from rb_flat_buffers.SLAMNAV.State_Change_Move import (
-    State_Change_MoveT,
-)
 from rb_utils.parser import (
     t_to_dict,
+)
+from rb_flat_buffers.SLAMNAV.State_Change_Move import (
+    State_Change_MoveT,
 )
 
 from app.features.gateway.amr_zenoh import (
@@ -154,6 +154,7 @@ class SlamnavZenohAdapter(SlamnavPort):
         - model: MoveModel
         - None 반환
         """
+
         # 1) Request_Move_JogT 객체 생성
         req = Request_Move_JogT()
         req.vx = model.vx
