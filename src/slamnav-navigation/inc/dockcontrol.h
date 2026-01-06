@@ -160,7 +160,6 @@ private:
 
     // add for docking
     std::atomic<bool> watch_flag;
-    int dock_retry_count;
     std::unique_ptr<std::thread> watch_thread;
     void watch_stop();
     void watch_loop();
