@@ -32,3 +32,6 @@ backend/docker-compose.preview.yml
 .out-arm64
 
 backend/temp-data/**
+
+rb_flat_buffers/SLAMNAV/**
+rb_flat_buffers/IPC/**
