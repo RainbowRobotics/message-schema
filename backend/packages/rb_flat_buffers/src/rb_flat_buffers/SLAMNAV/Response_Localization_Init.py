@@ -8,144 +8,144 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class Response_Localization(object):
+class Response_Localization_Init(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Response_Localization()
+        x = Response_Localization_Init()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsResponse_Localization(cls, buf, offset=0):
+    def GetRootAsResponse_Localization_Init(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Response_Localization
+    # Response_Localization_Init
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Response_Localization
+    # Response_Localization_Init
     def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Localization
+    # Response_Localization_Init
     def Command(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Localization
+    # Response_Localization_Init
     def X(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Response_Localization
+    # Response_Localization_Init
     def Y(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Response_Localization
+    # Response_Localization_Init
     def Z(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Response_Localization
+    # Response_Localization_Init
     def Rz(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Response_Localization
+    # Response_Localization_Init
     def Result(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Localization
+    # Response_Localization_Init
     def Message(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-def Response_LocalizationStart(builder: flatbuffers.Builder):
+def Response_Localization_InitStart(builder: flatbuffers.Builder):
     builder.StartObject(8)
 
 def Start(builder: flatbuffers.Builder):
-    Response_LocalizationStart(builder)
+    Response_Localization_InitStart(builder)
 
-def Response_LocalizationAddId(builder: flatbuffers.Builder, id: int):
+def Response_Localization_InitAddId(builder: flatbuffers.Builder, id: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 
 def AddId(builder: flatbuffers.Builder, id: int):
-    Response_LocalizationAddId(builder, id)
+    Response_Localization_InitAddId(builder, id)
 
-def Response_LocalizationAddCommand(builder: flatbuffers.Builder, command: int):
+def Response_Localization_InitAddCommand(builder: flatbuffers.Builder, command: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(command), 0)
 
 def AddCommand(builder: flatbuffers.Builder, command: int):
-    Response_LocalizationAddCommand(builder, command)
+    Response_Localization_InitAddCommand(builder, command)
 
-def Response_LocalizationAddX(builder: flatbuffers.Builder, x: float):
+def Response_Localization_InitAddX(builder: flatbuffers.Builder, x: float):
     builder.PrependFloat32Slot(2, x, 0.0)
 
 def AddX(builder: flatbuffers.Builder, x: float):
-    Response_LocalizationAddX(builder, x)
+    Response_Localization_InitAddX(builder, x)
 
-def Response_LocalizationAddY(builder: flatbuffers.Builder, y: float):
+def Response_Localization_InitAddY(builder: flatbuffers.Builder, y: float):
     builder.PrependFloat32Slot(3, y, 0.0)
 
 def AddY(builder: flatbuffers.Builder, y: float):
-    Response_LocalizationAddY(builder, y)
+    Response_Localization_InitAddY(builder, y)
 
-def Response_LocalizationAddZ(builder: flatbuffers.Builder, z: float):
+def Response_Localization_InitAddZ(builder: flatbuffers.Builder, z: float):
     builder.PrependFloat32Slot(4, z, 0.0)
 
 def AddZ(builder: flatbuffers.Builder, z: float):
-    Response_LocalizationAddZ(builder, z)
+    Response_Localization_InitAddZ(builder, z)
 
-def Response_LocalizationAddRz(builder: flatbuffers.Builder, rz: float):
+def Response_Localization_InitAddRz(builder: flatbuffers.Builder, rz: float):
     builder.PrependFloat32Slot(5, rz, 0.0)
 
 def AddRz(builder: flatbuffers.Builder, rz: float):
-    Response_LocalizationAddRz(builder, rz)
+    Response_Localization_InitAddRz(builder, rz)
 
-def Response_LocalizationAddResult(builder: flatbuffers.Builder, result: int):
+def Response_Localization_InitAddResult(builder: flatbuffers.Builder, result: int):
     builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
 
 def AddResult(builder: flatbuffers.Builder, result: int):
-    Response_LocalizationAddResult(builder, result)
+    Response_Localization_InitAddResult(builder, result)
 
-def Response_LocalizationAddMessage(builder: flatbuffers.Builder, message: int):
+def Response_Localization_InitAddMessage(builder: flatbuffers.Builder, message: int):
     builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
 
 def AddMessage(builder: flatbuffers.Builder, message: int):
-    Response_LocalizationAddMessage(builder, message)
+    Response_Localization_InitAddMessage(builder, message)
 
-def Response_LocalizationEnd(builder: flatbuffers.Builder) -> int:
+def Response_Localization_InitEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Response_LocalizationEnd(builder)
+    return Response_Localization_InitEnd(builder)
 
 
-class Response_LocalizationT(object):
+class Response_Localization_InitT(object):
 
-    # Response_LocalizationT
+    # Response_Localization_InitT
     def __init__(
         self,
         id = None,
@@ -168,9 +168,9 @@ class Response_LocalizationT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        responseLocalization = Response_Localization()
-        responseLocalization.Init(buf, pos)
-        return cls.InitFromObj(responseLocalization)
+        responseLocalizationInit = Response_Localization_Init()
+        responseLocalizationInit.Init(buf, pos)
+        return cls.InitFromObj(responseLocalizationInit)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -178,25 +178,25 @@ class Response_LocalizationT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, responseLocalization):
-        x = Response_LocalizationT()
-        x._UnPack(responseLocalization)
+    def InitFromObj(cls, responseLocalizationInit):
+        x = Response_Localization_InitT()
+        x._UnPack(responseLocalizationInit)
         return x
 
-    # Response_LocalizationT
-    def _UnPack(self, responseLocalization):
-        if responseLocalization is None:
+    # Response_Localization_InitT
+    def _UnPack(self, responseLocalizationInit):
+        if responseLocalizationInit is None:
             return
-        self.id = responseLocalization.Id()
-        self.command = responseLocalization.Command()
-        self.x = responseLocalization.X()
-        self.y = responseLocalization.Y()
-        self.z = responseLocalization.Z()
-        self.rz = responseLocalization.Rz()
-        self.result = responseLocalization.Result()
-        self.message = responseLocalization.Message()
+        self.id = responseLocalizationInit.Id()
+        self.command = responseLocalizationInit.Command()
+        self.x = responseLocalizationInit.X()
+        self.y = responseLocalizationInit.Y()
+        self.z = responseLocalizationInit.Z()
+        self.rz = responseLocalizationInit.Rz()
+        self.result = responseLocalizationInit.Result()
+        self.message = responseLocalizationInit.Message()
 
-    # Response_LocalizationT
+    # Response_Localization_InitT
     def Pack(self, builder):
         if self.id is not None:
             id = builder.CreateString(self.id)
@@ -206,18 +206,18 @@ class Response_LocalizationT(object):
             result = builder.CreateString(self.result)
         if self.message is not None:
             message = builder.CreateString(self.message)
-        Response_LocalizationStart(builder)
+        Response_Localization_InitStart(builder)
         if self.id is not None:
-            Response_LocalizationAddId(builder, id)
+            Response_Localization_InitAddId(builder, id)
         if self.command is not None:
-            Response_LocalizationAddCommand(builder, command)
-        Response_LocalizationAddX(builder, self.x)
-        Response_LocalizationAddY(builder, self.y)
-        Response_LocalizationAddZ(builder, self.z)
-        Response_LocalizationAddRz(builder, self.rz)
+            Response_Localization_InitAddCommand(builder, command)
+        Response_Localization_InitAddX(builder, self.x)
+        Response_Localization_InitAddY(builder, self.y)
+        Response_Localization_InitAddZ(builder, self.z)
+        Response_Localization_InitAddRz(builder, self.rz)
         if self.result is not None:
-            Response_LocalizationAddResult(builder, result)
+            Response_Localization_InitAddResult(builder, result)
         if self.message is not None:
-            Response_LocalizationAddMessage(builder, message)
-        responseLocalization = Response_LocalizationEnd(builder)
-        return responseLocalization
+            Response_Localization_InitAddMessage(builder, message)
+        responseLocalizationInit = Response_Localization_InitEnd(builder)
+        return responseLocalizationInit

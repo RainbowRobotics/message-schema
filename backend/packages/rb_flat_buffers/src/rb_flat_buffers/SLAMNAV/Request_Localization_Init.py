@@ -8,118 +8,118 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class Request_Localization(object):
+class Request_Localization_Init(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Request_Localization()
+        x = Request_Localization_Init()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsRequest_Localization(cls, buf, offset=0):
+    def GetRootAsRequest_Localization_Init(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Request_Localization
+    # Request_Localization_Init
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Request_Localization
+    # Request_Localization_Init
     def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Localization
+    # Request_Localization_Init
     def Command(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Localization
+    # Request_Localization_Init
     def X(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Request_Localization
+    # Request_Localization_Init
     def Y(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Request_Localization
+    # Request_Localization_Init
     def Z(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-    # Request_Localization
+    # Request_Localization_Init
     def Rz(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-def Request_LocalizationStart(builder: flatbuffers.Builder):
+def Request_Localization_InitStart(builder: flatbuffers.Builder):
     builder.StartObject(6)
 
 def Start(builder: flatbuffers.Builder):
-    Request_LocalizationStart(builder)
+    Request_Localization_InitStart(builder)
 
-def Request_LocalizationAddId(builder: flatbuffers.Builder, id: int):
+def Request_Localization_InitAddId(builder: flatbuffers.Builder, id: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 
 def AddId(builder: flatbuffers.Builder, id: int):
-    Request_LocalizationAddId(builder, id)
+    Request_Localization_InitAddId(builder, id)
 
-def Request_LocalizationAddCommand(builder: flatbuffers.Builder, command: int):
+def Request_Localization_InitAddCommand(builder: flatbuffers.Builder, command: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(command), 0)
 
 def AddCommand(builder: flatbuffers.Builder, command: int):
-    Request_LocalizationAddCommand(builder, command)
+    Request_Localization_InitAddCommand(builder, command)
 
-def Request_LocalizationAddX(builder: flatbuffers.Builder, x: float):
+def Request_Localization_InitAddX(builder: flatbuffers.Builder, x: float):
     builder.PrependFloat32Slot(2, x, 0.0)
 
 def AddX(builder: flatbuffers.Builder, x: float):
-    Request_LocalizationAddX(builder, x)
+    Request_Localization_InitAddX(builder, x)
 
-def Request_LocalizationAddY(builder: flatbuffers.Builder, y: float):
+def Request_Localization_InitAddY(builder: flatbuffers.Builder, y: float):
     builder.PrependFloat32Slot(3, y, 0.0)
 
 def AddY(builder: flatbuffers.Builder, y: float):
-    Request_LocalizationAddY(builder, y)
+    Request_Localization_InitAddY(builder, y)
 
-def Request_LocalizationAddZ(builder: flatbuffers.Builder, z: float):
+def Request_Localization_InitAddZ(builder: flatbuffers.Builder, z: float):
     builder.PrependFloat32Slot(4, z, 0.0)
 
 def AddZ(builder: flatbuffers.Builder, z: float):
-    Request_LocalizationAddZ(builder, z)
+    Request_Localization_InitAddZ(builder, z)
 
-def Request_LocalizationAddRz(builder: flatbuffers.Builder, rz: float):
+def Request_Localization_InitAddRz(builder: flatbuffers.Builder, rz: float):
     builder.PrependFloat32Slot(5, rz, 0.0)
 
 def AddRz(builder: flatbuffers.Builder, rz: float):
-    Request_LocalizationAddRz(builder, rz)
+    Request_Localization_InitAddRz(builder, rz)
 
-def Request_LocalizationEnd(builder: flatbuffers.Builder) -> int:
+def Request_Localization_InitEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Request_LocalizationEnd(builder)
+    return Request_Localization_InitEnd(builder)
 
 
-class Request_LocalizationT(object):
+class Request_Localization_InitT(object):
 
-    # Request_LocalizationT
+    # Request_Localization_InitT
     def __init__(
         self,
         id = None,
@@ -138,9 +138,9 @@ class Request_LocalizationT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        requestLocalization = Request_Localization()
-        requestLocalization.Init(buf, pos)
-        return cls.InitFromObj(requestLocalization)
+        requestLocalizationInit = Request_Localization_Init()
+        requestLocalizationInit.Init(buf, pos)
+        return cls.InitFromObj(requestLocalizationInit)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -148,36 +148,36 @@ class Request_LocalizationT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, requestLocalization):
-        x = Request_LocalizationT()
-        x._UnPack(requestLocalization)
+    def InitFromObj(cls, requestLocalizationInit):
+        x = Request_Localization_InitT()
+        x._UnPack(requestLocalizationInit)
         return x
 
-    # Request_LocalizationT
-    def _UnPack(self, requestLocalization):
-        if requestLocalization is None:
+    # Request_Localization_InitT
+    def _UnPack(self, requestLocalizationInit):
+        if requestLocalizationInit is None:
             return
-        self.id = requestLocalization.Id()
-        self.command = requestLocalization.Command()
-        self.x = requestLocalization.X()
-        self.y = requestLocalization.Y()
-        self.z = requestLocalization.Z()
-        self.rz = requestLocalization.Rz()
+        self.id = requestLocalizationInit.Id()
+        self.command = requestLocalizationInit.Command()
+        self.x = requestLocalizationInit.X()
+        self.y = requestLocalizationInit.Y()
+        self.z = requestLocalizationInit.Z()
+        self.rz = requestLocalizationInit.Rz()
 
-    # Request_LocalizationT
+    # Request_Localization_InitT
     def Pack(self, builder):
         if self.id is not None:
             id = builder.CreateString(self.id)
         if self.command is not None:
             command = builder.CreateString(self.command)
-        Request_LocalizationStart(builder)
+        Request_Localization_InitStart(builder)
         if self.id is not None:
-            Request_LocalizationAddId(builder, id)
+            Request_Localization_InitAddId(builder, id)
         if self.command is not None:
-            Request_LocalizationAddCommand(builder, command)
-        Request_LocalizationAddX(builder, self.x)
-        Request_LocalizationAddY(builder, self.y)
-        Request_LocalizationAddZ(builder, self.z)
-        Request_LocalizationAddRz(builder, self.rz)
-        requestLocalization = Request_LocalizationEnd(builder)
-        return requestLocalization
+            Request_Localization_InitAddCommand(builder, command)
+        Request_Localization_InitAddX(builder, self.x)
+        Request_Localization_InitAddY(builder, self.y)
+        Request_Localization_InitAddZ(builder, self.z)
+        Request_Localization_InitAddRz(builder, self.rz)
+        requestLocalizationInit = Request_Localization_InitEnd(builder)
+        return requestLocalizationInit

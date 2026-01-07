@@ -27,46 +27,72 @@ class Response_Update(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Response_Update
-    def Version(self) -> Optional[str]:
+    def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # Response_Update
-    def Result(self) -> Optional[str]:
+    def Branch(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # Response_Update
-    def Message(self) -> Optional[str]:
+    def Version(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # Response_Update
+    def Result(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # Response_Update
+    def Message(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def Response_UpdateStart(builder: flatbuffers.Builder):
-    builder.StartObject(3)
+    builder.StartObject(5)
 
 def Start(builder: flatbuffers.Builder):
     Response_UpdateStart(builder)
 
+def Response_UpdateAddId(builder: flatbuffers.Builder, id: int):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
+
+def AddId(builder: flatbuffers.Builder, id: int):
+    Response_UpdateAddId(builder, id)
+
+def Response_UpdateAddBranch(builder: flatbuffers.Builder, branch: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(branch), 0)
+
+def AddBranch(builder: flatbuffers.Builder, branch: int):
+    Response_UpdateAddBranch(builder, branch)
+
 def Response_UpdateAddVersion(builder: flatbuffers.Builder, version: int):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
 
 def AddVersion(builder: flatbuffers.Builder, version: int):
     Response_UpdateAddVersion(builder, version)
 
 def Response_UpdateAddResult(builder: flatbuffers.Builder, result: int):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
 
 def AddResult(builder: flatbuffers.Builder, result: int):
     Response_UpdateAddResult(builder, result)
 
 def Response_UpdateAddMessage(builder: flatbuffers.Builder, message: int):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
 
 def AddMessage(builder: flatbuffers.Builder, message: int):
     Response_UpdateAddMessage(builder, message)
@@ -83,10 +109,14 @@ class Response_UpdateT(object):
     # Response_UpdateT
     def __init__(
         self,
+        id = None,
+        branch = None,
         version = None,
         result = None,
         message = None,
     ):
+        self.id = id  # type: Optional[str]
+        self.branch = branch  # type: Optional[str]
         self.version = version  # type: Optional[str]
         self.result = result  # type: Optional[str]
         self.message = message  # type: Optional[str]
@@ -112,12 +142,18 @@ class Response_UpdateT(object):
     def _UnPack(self, responseUpdate):
         if responseUpdate is None:
             return
+        self.id = responseUpdate.Id()
+        self.branch = responseUpdate.Branch()
         self.version = responseUpdate.Version()
         self.result = responseUpdate.Result()
         self.message = responseUpdate.Message()
 
     # Response_UpdateT
     def Pack(self, builder):
+        if self.id is not None:
+            id = builder.CreateString(self.id)
+        if self.branch is not None:
+            branch = builder.CreateString(self.branch)
         if self.version is not None:
             version = builder.CreateString(self.version)
         if self.result is not None:
@@ -125,6 +161,10 @@ class Response_UpdateT(object):
         if self.message is not None:
             message = builder.CreateString(self.message)
         Response_UpdateStart(builder)
+        if self.id is not None:
+            Response_UpdateAddId(builder, id)
+        if self.branch is not None:
+            Response_UpdateAddBranch(builder, branch)
         if self.version is not None:
             Response_UpdateAddVersion(builder, version)
         if self.result is not None:
