@@ -4,9 +4,9 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
-from IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
-from IPC.MoveInput_Type import MoveInput_Type, MoveInput_TypeT
+from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
+from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_Type, MoveInput_TypeT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

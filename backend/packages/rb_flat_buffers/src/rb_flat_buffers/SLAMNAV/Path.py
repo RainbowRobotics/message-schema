@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from SLAMNAV.PointArray import PointArray
+from rb_flat_buffers.SLAMNAV.PointArray import PointArray, PointArrayT
 from typing import Optional
 np = import_numpy()
 

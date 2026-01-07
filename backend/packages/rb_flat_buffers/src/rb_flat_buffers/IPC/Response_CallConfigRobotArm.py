@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.N_JOINT_f import N_JOINT_f
+from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
 from typing import Optional
 np = import_numpy()
 

@@ -91,4 +91,4 @@ class ST_Box_ParaT(object):
 
     # ST_Box_ParaT
     def Pack(self, builder):
-        return CreateStBoxPara(builder, self.f)
+        return CreateST_Box_Para(builder, self.f)

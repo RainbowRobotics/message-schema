@@ -5,8 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.ST_Box_Para import ST_Box_Para
-from IPC.Vec3f import Vec3f
+from rb_flat_buffers.IPC.ST_Box_Para import ST_Box_Para, ST_Box_ParaT
+from rb_flat_buffers.IPC.Vec3f import Vec3f, Vec3fT
 from typing import Optional
 np = import_numpy()
 

@@ -4,7 +4,7 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

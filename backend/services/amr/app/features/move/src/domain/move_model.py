@@ -174,7 +174,7 @@ class MoveModel:
         self.update_at = datetime.now(UTC)
 
     def set_move_rotate(self, req: Request_Move_RotatePD):
-        """ 
+        """
         - req: Request_Move_RotatePD
         - return: None
         """
@@ -291,17 +291,17 @@ class MoveModel:
         d = {}
         d["id"] = self.id
         d["command"] = self.command
-        d["status"] = self.status.value
+        d["status"] = self.status
         d["created_at"] = self.created_at
         d["update_at"] = self.update_at
         d["result"] = self.result
         d["message"] = self.message
         if self.command == MoveCommand.MOVE_GOAL:
-            d["method"] = self.method.value
+            d["method"] = self.method
             d["preset"] = self.preset
             d["goal_id"] = self.goal_id
         elif self.command == MoveCommand.MOVE_TARGET:
-            d["method"] = self.method.value
+            d["method"] = self.method
             d["preset"] = self.preset
             d["x"] = self.x
             d["y"] = self.y

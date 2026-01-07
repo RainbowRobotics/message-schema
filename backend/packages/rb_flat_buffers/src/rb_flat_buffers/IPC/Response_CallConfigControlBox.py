@@ -5,10 +5,10 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.N_DIN_u import N_DIN_u
-from IPC.N_DOUT_u import N_DOUT_u
-from IPC.ST_Config_Area import ST_Config_Area
-from IPC.ST_Config_UserFrame import ST_Config_UserFrame
+from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
+from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
+from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
+from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 from typing import Optional
 np = import_numpy()
 

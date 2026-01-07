@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.FloatArray32 import FloatArray32
+from rb_flat_buffers.IPC.FloatArray32 import FloatArray32, FloatArray32T
 from typing import Optional
 np = import_numpy()
 

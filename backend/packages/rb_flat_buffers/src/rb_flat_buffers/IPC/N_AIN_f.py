@@ -91,4 +91,4 @@ class N_AIN_fT(object):
 
     # N_AIN_fT
     def Pack(self, builder):
-        return CreateNAinF(builder, self.f)
+        return CreateN_AIN_f(builder, self.f)

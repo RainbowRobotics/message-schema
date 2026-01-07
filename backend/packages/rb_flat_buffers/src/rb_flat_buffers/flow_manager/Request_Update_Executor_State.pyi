@@ -4,7 +4,7 @@ import flatbuffers
 import numpy as np
 
 import typing
-from flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
+from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

@@ -91,4 +91,4 @@ class N_DIN_uT(object):
 
     # N_DIN_uT
     def Pack(self, builder):
-        return CreateNDinU(builder, self.u)
+        return CreateN_DIN_u(builder, self.u)

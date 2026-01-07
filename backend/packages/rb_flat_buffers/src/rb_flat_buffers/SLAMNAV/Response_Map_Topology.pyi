@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from rb_flat_buffers.IPC.Node import Node, NodeT
 import flatbuffers
 import numpy as np
 
 import typing
-from SLAMNAV.Node import Node, NodeT
+from rb_flat_buffers.SLAMNAV.Node import Node, NodeT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

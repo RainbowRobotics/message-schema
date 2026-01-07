@@ -5,10 +5,10 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State
-from SLAMNAV.MoveStatus_Node import MoveStatus_Node
-from SLAMNAV.MoveStatus_Pose import MoveStatus_Pose
-from SLAMNAV.MoveStatus_Vel import MoveStatus_Vel
+from rb_flat_buffers.SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State, MoveStatus_Move_StateT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Node import MoveStatus_Node, MoveStatus_NodeT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Pose import MoveStatus_Pose, MoveStatus_PoseT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Vel import MoveStatus_Vel, MoveStatus_VelT
 from typing import Optional
 np = import_numpy()
 

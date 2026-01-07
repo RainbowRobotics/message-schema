@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from SLAMNAV.Node import Node
+from rb_flat_buffers.SLAMNAV.Node import Node, NodeT
 from typing import Optional
 np = import_numpy()
 

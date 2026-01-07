@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.FileMessage import FileMessage
+from rb_flat_buffers.IPC.FileMessage import FileMessage, FileMessageT
 from typing import Optional
 np = import_numpy()
 

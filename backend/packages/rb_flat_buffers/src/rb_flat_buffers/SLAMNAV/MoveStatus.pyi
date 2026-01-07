@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from rb_flat_buffers.IPC.MoveStatus_Vel import MoveStatus_Vel, MoveStatus_VelT
+from rb_flat_buffers.IPC.MoveStatus_Pose import MoveStatus_Pose, MoveStatus_PoseT
+from rb_flat_buffers.IPC.MoveStatus_Node import MoveStatus_Node, MoveStatus_NodeT
+from rb_flat_buffers.IPC.MoveStatus_Move_State import MoveStatus_Move_State, MoveStatus_Move_StateT
 import flatbuffers
 import numpy as np
 
 import typing
-from SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State, MoveStatus_Move_StateT
-from SLAMNAV.MoveStatus_Node import MoveStatus_Node, MoveStatus_NodeT
-from SLAMNAV.MoveStatus_Pose import MoveStatus_Pose, MoveStatus_PoseT
-from SLAMNAV.MoveStatus_Vel import MoveStatus_Vel, MoveStatus_VelT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Move_State import MoveStatus_Move_State, MoveStatus_Move_StateT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Node import MoveStatus_Node, MoveStatus_NodeT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Pose import MoveStatus_Pose, MoveStatus_PoseT
+from rb_flat_buffers.SLAMNAV.MoveStatus_Vel import MoveStatus_Vel, MoveStatus_VelT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

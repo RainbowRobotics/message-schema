@@ -5,14 +5,14 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from SLAMNAV.Status_Condition import Status_Condition
-from SLAMNAV.Status_Imu import Status_Imu
-from SLAMNAV.Status_Map import Status_Map
-from SLAMNAV.Status_Motor import Status_Motor
-from SLAMNAV.Status_Power import Status_Power
-from SLAMNAV.Status_Robot_Safety_Io_State import Status_Robot_Safety_Io_State
-from SLAMNAV.Status_Robot_State import Status_Robot_State
-from SLAMNAV.Status_Setting import Status_Setting
+from rb_flat_buffers.SLAMNAV.Status_Condition import Status_Condition, Status_ConditionT
+from rb_flat_buffers.SLAMNAV.Status_Imu import Status_Imu, Status_ImuT
+from rb_flat_buffers.SLAMNAV.Status_Map import Status_Map, Status_MapT
+from rb_flat_buffers.SLAMNAV.Status_Motor import Status_Motor, Status_MotorT
+from rb_flat_buffers.SLAMNAV.Status_Power import Status_Power, Status_PowerT
+from rb_flat_buffers.SLAMNAV.Status_Robot_Safety_Io_State import Status_Robot_Safety_Io_State, Status_Robot_Safety_Io_StateT
+from rb_flat_buffers.SLAMNAV.Status_Robot_State import Status_Robot_State, Status_Robot_StateT
+from rb_flat_buffers.SLAMNAV.Status_Setting import Status_Setting, Status_SettingT
 from typing import Optional
 np = import_numpy()
 

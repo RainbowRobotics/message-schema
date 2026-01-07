@@ -51,7 +51,7 @@ SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
 
 | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
 |-|-|-|-|-|-|
-| goalId | string | - | - | 지도 상의 목표 노드의 ID를 입력하세요. | 'N_123' |
+| goal_id | string | - | - | 지도 상의 목표 노드의 ID를 입력하세요. | 'N_123' |
 | preset | number | - | - | 지정된 속도프리셋을 설정합니다. | 0 |
 | method | string | - | - | 주행방식을 선언합니다. 기본 pp (point to point) 방식으로 주행하며 그 외 주행방식은 모델마다 지원하는 방식이 다릅니다. | 'pp', 'hpp' |
 
@@ -60,7 +60,7 @@ SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
 | command | string | 요청 명령 | 'goal' |
-| goalId | string | command가 goal인 경우, 목표 노드의 ID. | 'N_123' |
+| goal_id | string | command가 goal인 경우, 목표 노드의 ID. | 'N_123' |
 | preset | number | 지정된 속도프리셋 | 0 |
 | method | string | 주행방식 | 'pp', 'hpp' |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
@@ -388,7 +388,7 @@ async def slamnav_move_rotate(request: Request_Move_RotatePD) -> Response_Move_R
 
     - limit: 페이지 당 로그 수
     - page: 페이지 번호
-    - searchText: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
+    - search_text: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
     - sort: 정렬 기준 필드
     - order: 정렬 순서 "asc" 또는 "desc"
     - filter: 검색 필터. JSON 문자열로 입력합니다. MongoDB 조건식에 맞춰 입력해주세요. 예) {'result': 'success'}
@@ -426,10 +426,10 @@ async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
     summary="이동 로그 내보내기",
     description="""
     검색과 동시에 이동 로그를 파일 혹은 메일을 이용해 내보냅니다.
-    - startDt: 내보내기 기준 시작 날짜 (해당날짜기준부터 내보냅니다)
-    - endDt: 내보내기 기준 종료 날짜 (해당날짜기준까지 내보냅니다)
+    - start_dt: 내보내기 기준 시작 날짜 (해당날짜기준부터 내보냅니다)
+    - end_dt: 내보내기 기준 종료 날짜 (해당날짜기준까지 내보냅니다)
     - filters: 검색 필터. JSON 문자열로 입력합니다. MongoDB 조건식에 맞춰 입력해주세요. 예) {'result': 'success'}
-    - searchText: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
+    - search_text: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
     - sort: 정렬 기준 필드
     - order: 정렬 순서 "asc" 또는 "desc"
     - method: 내보내기 방식 (file, email)

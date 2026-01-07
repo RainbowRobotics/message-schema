@@ -91,4 +91,4 @@ class N_AOUT_fT(object):
 
     # N_AOUT_fT
     def Pack(self, builder):
-        return CreateNAoutF(builder, self.f)
+        return CreateN_AOUT_f(builder, self.f)

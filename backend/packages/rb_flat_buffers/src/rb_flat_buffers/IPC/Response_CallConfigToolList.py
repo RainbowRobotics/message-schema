@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.ST_Tool_Para import ST_Tool_Para
+from rb_flat_buffers.IPC.ST_Tool_Para import ST_Tool_Para, ST_Tool_ParaT
 from typing import Optional
 np = import_numpy()
 

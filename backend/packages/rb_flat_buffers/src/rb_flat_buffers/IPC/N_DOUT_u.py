@@ -91,4 +91,4 @@ class N_DOUT_uT(object):
 
     # N_DOUT_uT
     def Pack(self, builder):
-        return CreateNDoutU(builder, self.u)
+        return CreateN_DOUT_u(builder, self.u)

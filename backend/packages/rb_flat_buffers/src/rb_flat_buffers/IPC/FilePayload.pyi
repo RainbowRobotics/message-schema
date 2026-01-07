@@ -4,10 +4,10 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.FileAck import FileAck
-from IPC.FileChunk import FileChunk
-from IPC.FileMeta import FileMeta
-from IPC.FileRequest import FileRequest
+from rb_flat_buffers.IPC.FileAck import FileAck
+from rb_flat_buffers.IPC.FileChunk import FileChunk
+from rb_flat_buffers.IPC.FileMeta import FileMeta
+from rb_flat_buffers.IPC.FileRequest import FileRequest
 from flatbuffers import table
 from typing import cast
 

@@ -4,11 +4,11 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.FileAck import FileAckT
-from IPC.FileChunk import FileChunkT
-from IPC.FileMeta import FileMetaT
-from IPC.FilePayload import FilePayload
-from IPC.FileRequest import FileRequestT
+from rb_flat_buffers.IPC.FileAck import FileAckT
+from rb_flat_buffers.IPC.FileChunk import FileChunkT
+from rb_flat_buffers.IPC.FileMeta import FileMetaT
+from rb_flat_buffers.IPC.FilePayload import FilePayload
+from rb_flat_buffers.IPC.FileRequest import FileRequestT
 from flatbuffers import table
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type

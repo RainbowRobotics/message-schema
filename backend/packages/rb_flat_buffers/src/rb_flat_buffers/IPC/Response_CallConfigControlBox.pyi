@@ -4,10 +4,10 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.N_DIN_u import N_DIN_u, N_DIN_uT
-from IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
-from IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
-from IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
+from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
+from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
+from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
+from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

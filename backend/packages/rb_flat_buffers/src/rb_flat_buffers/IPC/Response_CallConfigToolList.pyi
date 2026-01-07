@@ -4,7 +4,7 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.ST_Tool_Para import ST_Tool_Para, ST_Tool_ParaT
+from rb_flat_buffers.IPC.ST_Tool_Para import ST_Tool_Para, ST_Tool_ParaT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

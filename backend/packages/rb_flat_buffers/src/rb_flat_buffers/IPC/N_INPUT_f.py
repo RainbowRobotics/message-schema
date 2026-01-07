@@ -91,4 +91,4 @@ class N_INPUT_fT(object):
 
     # N_INPUT_fT
     def Pack(self, builder):
-        return CreateNInputF(builder, self.f)
+        return CreateN_INPUT_f(builder, self.f)

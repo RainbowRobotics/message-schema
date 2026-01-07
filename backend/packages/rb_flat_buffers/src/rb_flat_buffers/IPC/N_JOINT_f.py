@@ -91,4 +91,4 @@ class N_JOINT_fT(object):
 
     # N_JOINT_fT
     def Pack(self, builder):
-        return CreateNJointF(builder, self.f)
+        return CreateN_JOINT_f(builder, self.f)

@@ -9,6 +9,10 @@ from flatbuffers.table import Table
 from typing import Optional
 np = import_numpy()
 
+from rb_flat_buffers.IPC.FileRequest import FileRequest, FileRequestT
+from rb_flat_buffers.IPC.FileMeta import FileMeta, FileMetaT
+from rb_flat_buffers.IPC.FileChunk import FileChunk, FileChunkT
+from rb_flat_buffers.IPC.FileAck import FileAck, FileAckT
 class FileMessage(object):
     __slots__ = ['_tab']
 

@@ -4,12 +4,12 @@ import flatbuffers
 import numpy as np
 
 import typing
-from IPC.N_AIN_f import N_AIN_f, N_AIN_fT
-from IPC.N_AOUT_f import N_AOUT_f, N_AOUT_fT
-from IPC.N_CARTE_f import N_CARTE_f, N_CARTE_fT
-from IPC.N_DIN_u import N_DIN_u, N_DIN_uT
-from IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
-from IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from rb_flat_buffers.IPC.N_AIN_f import N_AIN_f, N_AIN_fT
+from rb_flat_buffers.IPC.N_AOUT_f import N_AOUT_f, N_AOUT_fT
+from rb_flat_buffers.IPC.N_CARTE_f import N_CARTE_f, N_CARTE_fT
+from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
+from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
+from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 

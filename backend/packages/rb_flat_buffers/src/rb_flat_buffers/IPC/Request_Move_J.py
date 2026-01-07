@@ -5,8 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from IPC.MoveInput_Speed import MoveInput_Speed
-from IPC.MoveInput_Target import MoveInput_Target
+from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
+from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
 from typing import Optional
 np = import_numpy()
 
