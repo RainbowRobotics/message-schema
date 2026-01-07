@@ -33,5 +33,5 @@ backend/docker-compose.preview.yml
 
 backend/temp-data/**
 
-rb_flat_buffers/SLAMNAV/**
-rb_flat_buffers/IPC/**
+packages/rb_flat_buffers/src/rb_flat_buffers/SLAMNAV/**
+packages/rb_flat_buffers/src/rb_flat_buffers/IPC/**
