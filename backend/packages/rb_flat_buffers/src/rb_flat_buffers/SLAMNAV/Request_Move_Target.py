@@ -124,11 +124,17 @@ except:
 class Request_Move_TargetT(object):
 
     # Request_Move_TargetT
-    def __init__(self):
-        self.id = None  # type: str
-        self.goalPose = None  # type: List[float]
-        self.method = None  # type: str
-        self.preset = 0  # type: int
+    def __init__(
+        self,
+        id = None,
+        goalPose = None,
+        method = None,
+        preset = 0,
+    ):
+        self.id = id  # type: Optional[str]
+        self.goalPose = goalPose  # type: Optional[List[float]]
+        self.method = method  # type: Optional[str]
+        self.preset = preset  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

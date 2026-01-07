@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Request_Move_Rotate import Request_Move_Rotate
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class Request_Move_RotateT(object):
   id: str | None
   target: float
   speed: float
+  def __init__(
+    self,
+    id: str | None = ...,
+    target: float = ...,
+    speed: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_RotateT: ...
   @classmethod

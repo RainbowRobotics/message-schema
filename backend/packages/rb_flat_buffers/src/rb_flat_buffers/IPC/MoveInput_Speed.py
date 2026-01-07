@@ -80,10 +80,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class MoveInput_SpeedT(object):
 
     # MoveInput_SpeedT
-    def __init__(self):
-        self.spdMode = 0  # type: int
-        self.spdVelPara = 0.0  # type: float
-        self.spdAccPara = 0.0  # type: float
+    def __init__(
+        self,
+        spdMode = 0,
+        spdVelPara = 0.0,
+        spdAccPara = 0.0,
+    ):
+        self.spdMode = spdMode  # type: int
+        self.spdVelPara = spdVelPara  # type: float
+        self.spdAccPara = spdAccPara  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

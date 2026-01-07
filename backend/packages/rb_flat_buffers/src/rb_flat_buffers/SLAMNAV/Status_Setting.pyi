@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Status_Setting import Status_Setting
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Status_Setting(object):
 class Status_SettingT(object):
   platformType: str | None
   platformName: str | None
+  def __init__(
+    self,
+    platformType: str | None = ...,
+    platformName: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_SettingT: ...
   @classmethod

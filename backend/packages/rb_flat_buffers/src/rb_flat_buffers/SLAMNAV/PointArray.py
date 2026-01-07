@@ -54,8 +54,11 @@ except:
 class PointArrayT(object):
 
     # PointArrayT
-    def __init__(self):
-        self.point = None  # type: List[float]
+    def __init__(
+        self,
+        point = None,
+    ):
+        self.point = point  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

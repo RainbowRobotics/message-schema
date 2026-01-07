@@ -133,14 +133,23 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Obs_BoxT(object):
 
     # Response_Obs_BoxT
-    def __init__(self):
-        self.id = None  # type: str
-        self.command = None  # type: str
-        self.minZ = 0.0  # type: float
-        self.maxZ = 0.0  # type: float
-        self.mapRange = 0.0  # type: float
-        self.result = None  # type: str
-        self.message = None  # type: str
+    def __init__(
+        self,
+        id = None,
+        command = None,
+        minZ = 0.0,
+        maxZ = 0.0,
+        mapRange = 0.0,
+        result = None,
+        message = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.command = command  # type: Optional[str]
+        self.minZ = minZ  # type: float
+        self.maxZ = maxZ  # type: float
+        self.mapRange = mapRange  # type: float
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

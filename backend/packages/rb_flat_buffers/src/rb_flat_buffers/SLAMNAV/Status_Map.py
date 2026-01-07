@@ -68,9 +68,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_MapT(object):
 
     # Status_MapT
-    def __init__(self):
-        self.mapName = None  # type: str
-        self.mapStatus = None  # type: str
+    def __init__(
+        self,
+        mapName = None,
+        mapStatus = None,
+    ):
+        self.mapName = mapName  # type: Optional[str]
+        self.mapStatus = mapStatus  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -93,11 +93,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_ConditionT(object):
 
     # Status_ConditionT
-    def __init__(self):
-        self.inlierError = 0.0  # type: float
-        self.inlierRatio = 0.0  # type: float
-        self.mappingError = 0.0  # type: float
-        self.mappingRatio = 0.0  # type: float
+    def __init__(
+        self,
+        inlierError = 0.0,
+        inlierRatio = 0.0,
+        mappingError = 0.0,
+        mappingRatio = 0.0,
+    ):
+        self.inlierError = inlierError  # type: float
+        self.inlierRatio = inlierRatio  # type: float
+        self.mappingError = mappingError  # type: float
+        self.mappingRatio = mappingRatio  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

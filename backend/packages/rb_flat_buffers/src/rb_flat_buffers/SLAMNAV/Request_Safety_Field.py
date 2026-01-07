@@ -81,10 +81,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Safety_FieldT(object):
 
     # Request_Safety_FieldT
-    def __init__(self):
-        self.id = None  # type: str
-        self.command = None  # type: str
-        self.safetyField = 0  # type: int
+    def __init__(
+        self,
+        id = None,
+        command = None,
+        safetyField = 0,
+    ):
+        self.id = id  # type: Optional[str]
+        self.command = command  # type: Optional[str]
+        self.safetyField = safetyField  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

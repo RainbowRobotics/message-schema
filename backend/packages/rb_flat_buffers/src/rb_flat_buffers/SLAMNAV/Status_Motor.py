@@ -93,11 +93,17 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_MotorT(object):
 
     # Status_MotorT
-    def __init__(self):
-        self.connection = False  # type: bool
-        self.status = 0  # type: int
-        self.temp = 0.0  # type: float
-        self.current = 0.0  # type: float
+    def __init__(
+        self,
+        connection = False,
+        status = 0,
+        temp = 0.0,
+        current = 0.0,
+    ):
+        self.connection = connection  # type: bool
+        self.status = status  # type: int
+        self.temp = temp  # type: float
+        self.current = current  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

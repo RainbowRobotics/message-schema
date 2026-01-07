@@ -82,8 +82,11 @@ except:
 class PathT(object):
 
     # PathT
-    def __init__(self):
-        self.value = None  # type: List[PointArrayT]
+    def __init__(
+        self,
+        value = None,
+    ):
+        self.value = value  # type: Optional[List[PointArrayT]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

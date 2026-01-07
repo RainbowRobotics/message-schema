@@ -22,33 +22,37 @@ import rb_database.mongo_db as mongo_db  # pylint: disable=import-error,no-name-
 from fastapi import BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
+from rb_sdk.amr import RBAmrSDK
 from rb_utils.date import convert_dt  # pylint: disable=import-error,no-name-in-module
 from rb_utils.service_exception import (
     ServiceException,  # pylint: disable=import-error,no-name-in-module
 )
 
 from app.features.move.schema.move_api import (
+    Request_Move_CircularPD,
     Request_Move_GoalPD,
     Request_Move_JogPD,
+    Request_Move_RotatePD,
     Request_Move_TargetPD,
+    Request_Move_XLinearPD,
     RequestAmrMoveArchiveLogPD,
     RequestAmrMoveExportLogPD,
     RequestAmrMoveLogsPD,
+    Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LogsPD,
     Response_Move_PausePD,
     Response_Move_ResumePD,
+    Response_Move_RotatePD,
     Response_Move_StopPD,
     Response_Move_TargetPD,
+    Response_Move_XLinearPD,
 )
 from app.features.move.src.adapters.output.mongo import (
     MoveMongoDatabaseAdapter,
 )
 from app.features.move.src.adapters.output.smtplib import (
     MoveSmtpLibEmailAdapter,
-)
-from app.features.move.src.adapters.output.zenoh import (
-    SlamnavZenohAdapter,
 )
 from app.features.move.src.domain.move_model import (
     MoveModel,
@@ -58,6 +62,7 @@ from app.socket.socket_client import (
     socket_client,
 )
 
+rb_amr_sdk = RBAmrSDK()
 
 def handle_move_error(fn):
     @wraps(fn)
@@ -89,7 +94,7 @@ class AmrMoveService:
         print("안녕 나는 AMR 서비스야")
         rb_log.info("안녕 나는 AMR 서비스야")
         self.database_port = MoveMongoDatabaseAdapter()
-        self.slamnav_port = SlamnavZenohAdapter()
+        # self.slamnav_port = SlamnavZenohAdapter()
         self.email_port = MoveSmtpLibEmailAdapter()
         self._locks = defaultdict(asyncio.Lock)
 
@@ -132,6 +137,7 @@ class AmrMoveService:
         rb_log.info(f"[amr_move_service] moveGoal : {req.model_dump()}")
         # 1) moveModel 객체 생성
         model.set_move_goal(req)
+        rb_log.info(f"[amr_move_service] moveGoal Model Setted")
 
         # 2) DB 저장
         try:
@@ -139,11 +145,17 @@ class AmrMoveService:
         except ServiceException as e:
             print("[moveGoal] DB Exception : ", e)
 
+        rb_log.info(f"[amr_move_service] moveGoal DB Upserted")
         # 3) 요청 검사
         model.check_variables()
 
         # 4) 요청 전송
-        result = await self.slamnav_port.send_move_goal(model)
+        result = await rb_amr_sdk.move_sdk.send_move_goal(
+            req_id=model.id,
+            goal_id=model.goal_id,
+            method=model.method,
+            preset=model.preset
+            )
 
         model.result_change(result.result)
         model.message = result.message
@@ -175,7 +187,15 @@ class AmrMoveService:
         model.check_variables()
 
         # 4) 요청 전송
-        result = await self.slamnav_port.send_move_target(model)
+        result = await rb_amr_sdk.move_sdk.send_move_target(
+            req_id=model.id,
+            x=model.x,
+            y=model.y,
+            z=model.z,
+            rz=model.rz,
+            method=model.method,
+            preset=model.preset
+            )
 
         model.result_change(result.result)
         model.message = result.message
@@ -203,7 +223,11 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            await self.slamnav_port.send_move_jog(model)
+            await rb_amr_sdk.move_sdk.send_move_jog(
+                vx=model.vx,
+                vy=model.vy,
+                wz=model.wz
+                )
         except ServiceException as e:
             print("[moveJog] ServiceException : ", e.message, e.status_code)
             return JSONResponse(status_code=e.status_code,content=model.to_dict())
@@ -233,7 +257,9 @@ class AmrMoveService:
         model.check_variables()
 
         # 4) 요청 전송
-        result = await self.slamnav_port.send_move_stop(model)
+        result = await rb_amr_sdk.move_sdk.send_move_stop(
+            req_id=model.id
+            )
 
         model.result_change(result.result)
         model.message = result.message
@@ -263,7 +289,9 @@ class AmrMoveService:
         model.check_variables()
 
         # 4) 요청 전송
-        result = await self.slamnav_port.send_move_pause(model)
+        result = await rb_amr_sdk.move_sdk.send_move_pause(
+            req_id=model.id
+            )
 
         model.result_change(result.result)
         model.message = result.message
@@ -295,7 +323,9 @@ class AmrMoveService:
         model.check_variables()
 
         # 4) 요청 전송
-        result = await self.slamnav_port.send_move_resume(model)
+        result = await rb_amr_sdk.move_sdk.send_move_resume(
+            req_id=model.id
+            )
 
         model.result_change(result.result)
         model.message = result.message
@@ -305,6 +335,112 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveResume] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_linear(self, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
+        """
+        [AMR 선형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveLinear : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_linear(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveLinear] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await rb_amr_sdk.move_sdk.send_move_linear(
+            req_id=model.id,
+            target=model.target,
+            speed=model.speed
+            )
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveLinear] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_circular(self, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
+        """
+        [AMR 원형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveCircular : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_circular(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveCircular] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await rb_amr_sdk.move_sdk.send_move_circular(
+            req_id=model.id,
+            target=model.target,
+            speed=model.speed,
+            direction=model.direction
+            )
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveCircular] DB Exception : ", e)
+        return model.to_dict()
+
+    @handle_move_error
+    async def move_rotate(self, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
+        """
+        [AMR 원형 이동]
+        """
+        rb_log.info(f"[amr_move_service] moveRotate : {req.model_dump()}")
+        # 1) moveModel 객체 생성
+        model.set_move_rotate(req)
+
+        # 2) DB 저장
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveRotate] DB Exception : ", e)
+
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        result = await rb_amr_sdk.move_sdk.send_move_rotate(
+            req_id=model.id,
+            target=model.target,
+            speed=model.speed
+            )
+
+        model.result_change(result.result)
+        model.message = result.message
+        model.status_change(result.result)
+
+        try:
+            await self.database_port.upsert(model.to_dict())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print("[moveRotate] DB Exception : ", e)
         return model.to_dict()
 
 

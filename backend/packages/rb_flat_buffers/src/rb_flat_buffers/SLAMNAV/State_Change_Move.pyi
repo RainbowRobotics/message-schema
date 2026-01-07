@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.State_Change_Move import State_Change_Move
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -59,6 +57,26 @@ class State_Change_MoveT(object):
   target: float
   speed: float
   batPercent: int
+  def __init__(
+    self,
+    id: str | None = ...,
+    command: str | None = ...,
+    curPose: typing.List[float] | None = ...,
+    goalPose: typing.List[float] | None = ...,
+    mapName: str | None = ...,
+    vel: typing.List[float] | None = ...,
+    goalId: str | None = ...,
+    goalName: str | None = ...,
+    method: str | None = ...,
+    direction: str | None = ...,
+    preset: int = ...,
+    result: str | None = ...,
+    message: str | None = ...,
+    remainingDist: float = ...,
+    target: float = ...,
+    speed: float = ...,
+    batPercent: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> State_Change_MoveT: ...
   @classmethod

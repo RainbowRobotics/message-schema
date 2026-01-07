@@ -120,13 +120,21 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Control_FrequencyT(object):
 
     # Response_Control_FrequencyT
-    def __init__(self):
-        self.id = None  # type: str
-        self.target = None  # type: str
-        self.onoff = False  # type: bool
-        self.frequency = 0  # type: int
-        self.result = None  # type: str
-        self.message = None  # type: str
+    def __init__(
+        self,
+        id = None,
+        target = None,
+        onoff = False,
+        frequency = 0,
+        result = None,
+        message = None,
+    ):
+        self.id = id  # type: Optional[str]
+        self.target = target  # type: Optional[str]
+        self.onoff = onoff  # type: bool
+        self.frequency = frequency  # type: int
+        self.result = result  # type: Optional[str]
+        self.message = message  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigToolList
 from rb_flat_buffers.IPC.ST_Tool_Para import ST_Tool_Para, ST_Tool_ParaT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -33,6 +31,17 @@ class Response_CallConfigToolListT(object):
   tConfigs5: ST_Tool_ParaT | None
   tConfigs6: ST_Tool_ParaT | None
   tConfigs7: ST_Tool_ParaT | None
+  def __init__(
+    self,
+    tConfigs0: 'ST_Tool_ParaT' | None = ...,
+    tConfigs1: 'ST_Tool_ParaT' | None = ...,
+    tConfigs2: 'ST_Tool_ParaT' | None = ...,
+    tConfigs3: 'ST_Tool_ParaT' | None = ...,
+    tConfigs4: 'ST_Tool_ParaT' | None = ...,
+    tConfigs5: 'ST_Tool_ParaT' | None = ...,
+    tConfigs6: 'ST_Tool_ParaT' | None = ...,
+    tConfigs7: 'ST_Tool_ParaT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_CallConfigToolListT: ...
   @classmethod

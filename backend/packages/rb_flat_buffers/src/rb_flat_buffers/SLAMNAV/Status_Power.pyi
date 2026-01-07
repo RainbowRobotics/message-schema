@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Status_Power import Status_Power
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -52,6 +50,27 @@ class Status_PowerT(object):
   tabosAe: float
   chargeCurrent: float
   contactVoltage: float
+  def __init__(
+    self,
+    batIn: float = ...,
+    batOut: float = ...,
+    batCurrent: float = ...,
+    totalPower: float = ...,
+    power: float = ...,
+    batPercent: float = ...,
+    tabosVoltage: float = ...,
+    tabosCurrent: float = ...,
+    tabosStatus: float = ...,
+    tabosTtf: float = ...,
+    tabosTte: float = ...,
+    tabosSoc: float = ...,
+    tabosSoh: float = ...,
+    tabosTemp: float = ...,
+    tabosRc: float = ...,
+    tabosAe: float = ...,
+    chargeCurrent: float = ...,
+    contactVoltage: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_PowerT: ...
   @classmethod

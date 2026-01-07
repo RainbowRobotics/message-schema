@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_PowerControl import Request_PowerControl
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,6 +16,10 @@ class Request_PowerControl(object):
   def PowerOption(self) -> int: ...
 class Request_PowerControlT(object):
   powerOption: int
+  def __init__(
+    self,
+    powerOption: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_PowerControlT: ...
   @classmethod

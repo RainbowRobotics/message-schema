@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Request_Map_Topology import Request_Map_Topology
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -34,6 +32,18 @@ class Request_Map_TopologyT(object):
   searchText: str | None
   sortOption: str | None
   sortDirection: str | None
+  def __init__(
+    self,
+    id: str | None = ...,
+    mapName: str | None = ...,
+    pageNo: int = ...,
+    pageSize: int = ...,
+    totalPage: int = ...,
+    nodeType: str | None = ...,
+    searchText: str | None = ...,
+    sortOption: str | None = ...,
+    sortDirection: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Map_TopologyT: ...
   @classmethod

@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.deploy.Response_Deploy_Upload import Response_Deploy_Upload
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -24,6 +22,13 @@ class Response_Deploy_UploadT(object):
   fileName: str | None
   sha256: str | None
   path: str | None
+  def __init__(
+    self,
+    tag: str | None = ...,
+    fileName: str | None = ...,
+    sha256: str | None = ...,
+    path: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Deploy_UploadT: ...
   @classmethod

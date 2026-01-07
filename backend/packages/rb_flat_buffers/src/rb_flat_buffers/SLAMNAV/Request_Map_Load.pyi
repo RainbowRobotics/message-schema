@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Request_Map_Load import Request_Map_Load
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Request_Map_Load(object):
 class Request_Map_LoadT(object):
   id: str | None
   mapName: str | None
+  def __init__(
+    self,
+    id: str | None = ...,
+    mapName: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Map_LoadT: ...
   @classmethod

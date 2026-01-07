@@ -68,9 +68,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_SettingT(object):
 
     # Status_SettingT
-    def __init__(self):
-        self.platformType = None  # type: str
-        self.platformName = None  # type: str
+    def __init__(
+        self,
+        platformType = None,
+        platformName = None,
+    ):
+        self.platformType = platformType  # type: Optional[str]
+        self.platformName = platformName  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

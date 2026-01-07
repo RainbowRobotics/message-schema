@@ -107,12 +107,19 @@ def End(builder: flatbuffers.Builder) -> int:
 class Status_Robot_StateT(object):
 
     # Status_Robot_StateT
-    def __init__(self):
-        self.charge = None  # type: str
-        self.dock = False  # type: bool
-        self.emo = False  # type: bool
-        self.localization = None  # type: str
-        self.power = False  # type: bool
+    def __init__(
+        self,
+        charge = None,
+        dock = False,
+        emo = False,
+        localization = None,
+        power = False,
+    ):
+        self.charge = charge  # type: Optional[str]
+        self.dock = dock  # type: bool
+        self.emo = emo  # type: bool
+        self.localization = localization  # type: Optional[str]
+        self.power = power  # type: bool
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

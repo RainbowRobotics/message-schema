@@ -120,13 +120,21 @@ def End(builder: flatbuffers.Builder) -> int:
 class MoveStatus_NodeT(object):
 
     # MoveStatus_NodeT
-    def __init__(self):
-        self.nodeId = None  # type: str
-        self.name = None  # type: str
-        self.state = None  # type: str
-        self.x = 0.0  # type: float
-        self.y = 0.0  # type: float
-        self.rz = 0.0  # type: float
+    def __init__(
+        self,
+        nodeId = None,
+        name = None,
+        state = None,
+        x = 0.0,
+        y = 0.0,
+        rz = 0.0,
+    ):
+        self.nodeId = nodeId  # type: Optional[str]
+        self.name = name  # type: Optional[str]
+        self.state = state  # type: Optional[str]
+        self.x = x  # type: float
+        self.y = y  # type: float
+        self.rz = rz  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

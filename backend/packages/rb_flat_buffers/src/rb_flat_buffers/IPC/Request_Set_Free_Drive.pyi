@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Set_Free_Drive import Request_Set_Free_Drive
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Request_Set_Free_Drive(object):
 class Request_Set_Free_DriveT(object):
   onoff: int
   sensitivity: float
+  def __init__(
+    self,
+    onoff: int = ...,
+    sensitivity: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_Free_DriveT: ...
   @classmethod

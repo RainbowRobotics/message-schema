@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Request_Random_Sequence import Request_Random_Sequence
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,6 +16,10 @@ class Request_Random_Sequence(object):
   def Id(self) -> str | None: ...
 class Request_Random_SequenceT(object):
   id: str | None
+  def __init__(
+    self,
+    id: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Random_SequenceT: ...
   @classmethod

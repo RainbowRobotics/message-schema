@@ -4,9 +4,7 @@ from rb_flat_buffers.IPC.PointArray import PointArray, PointArrayT
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.SLAMNAV.Path import Path
 from rb_flat_buffers.SLAMNAV.PointArray import PointArray, PointArrayT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -22,6 +20,10 @@ class Path(object):
   def ValueIsNone(self) -> bool: ...
 class PathT(object):
   value: typing.List[PointArrayT]
+  def __init__(
+    self,
+    value: typing.List['PointArrayT'] | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> PathT: ...
   @classmethod

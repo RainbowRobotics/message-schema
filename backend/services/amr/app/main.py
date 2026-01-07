@@ -6,6 +6,7 @@ from rb_modules.rb_fastapi_app import (
     create_app,
 )
 
+from .features.control.src.adapters.input.amr_control_api import amr_control_router
 from .features.gateway.amr_zenoh import (
     amr_zenoh_router,
 )
@@ -30,7 +31,7 @@ app = create_app(
     zenoh_routers=[amr_zenoh_router, move_zenoh_router],
     api_routers=[
         amr_move_router,
-        # amr_control_router,
+        amr_control_router,
         # amr_localization_router,
         # amr_map_router,
         # amr_network_router,

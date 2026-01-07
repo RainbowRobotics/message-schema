@@ -119,13 +119,21 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_SideDout_PulseT(object):
 
     # Request_SideDout_PulseT
-    def __init__(self):
-        self.portNum = 0  # type: int
-        self.blockMode = 0  # type: int
-        self.direction = 0  # type: int
-        self.time1 = 0.0  # type: float
-        self.time2 = 0.0  # type: float
-        self.time3 = 0.0  # type: float
+    def __init__(
+        self,
+        portNum = 0,
+        blockMode = 0,
+        direction = 0,
+        time1 = 0.0,
+        time2 = 0.0,
+        time3 = 0.0,
+    ):
+        self.portNum = portNum  # type: int
+        self.blockMode = blockMode  # type: int
+        self.direction = direction  # type: int
+        self.time1 = time1  # type: float
+        self.time2 = time2  # type: float
+        self.time3 = time3  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

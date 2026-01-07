@@ -120,13 +120,21 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_LocalizationT(object):
 
     # Request_LocalizationT
-    def __init__(self):
-        self.id = None  # type: str
-        self.command = None  # type: str
-        self.x = 0.0  # type: float
-        self.y = 0.0  # type: float
-        self.z = 0.0  # type: float
-        self.rz = 0.0  # type: float
+    def __init__(
+        self,
+        id = None,
+        command = None,
+        x = 0.0,
+        y = 0.0,
+        z = 0.0,
+        rz = 0.0,
+    ):
+        self.id = id  # type: Optional[str]
+        self.command = command  # type: Optional[str]
+        self.x = x  # type: float
+        self.y = y  # type: float
+        self.z = z  # type: float
+        self.rz = rz  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
