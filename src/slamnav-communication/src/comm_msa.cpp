@@ -460,11 +460,12 @@ void COMM_MSA::send_move_status()
 
     // create move object
     sio::object_message::ptr obj_move_state = sio::object_message::create();
-    obj_move_state->get_map()["auto_move"] = sio::string_message::create(ctrl->get_auto_state().toStdString()); // "stop", "move", "pause", "error", "not ready", "vir"
-    obj_move_state->get_map()["dock_move"] = sio::string_message::create("stop");
-    obj_move_state->get_map()["jog_move"] = sio::string_message::create("none");
-    obj_move_state->get_map()["obs"] = sio::string_message::create(ctrl->get_obs_condition().toStdString());
-    obj_move_state->get_map()["path"] = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
+    obj_move_state->get_map()["auto_move"]  = sio::string_message::create(ctrl->get_auto_state().toStdString()); // "stop", "move", "pause", "error", "not ready", "vir"
+    obj_move_state->get_map()["dock_move"]  = sio::string_message::create("stop");
+    obj_move_state->get_map()["jog_move"]   = sio::string_message::create("none");
+    obj_move_state->get_map()["obs"]        = sio::string_message::create(ctrl->get_obs_condition().toStdString());
+    obj_move_state->get_map()["path"]       = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
+    obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
 
     // create pose object
     sio::object_message::ptr obj_pose = sio::object_message::create();
@@ -515,11 +516,35 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
     DATA_PATH msg;
     msg.time              = get_json_double(data, "time")/1000;
-    msg.path_str          = get_json(data, "path");
+    if(msg.time == 0)
+    {
+        msg.time = data["time"].toString().toDouble()/1000;
+    }
     msg.preset            = get_json_int(data, "preset");
     msg.command           = get_json(data, "command");
-    msg.vobs_closures_str = get_json(data, "vobs_c");
+
+    // path 배열 파싱
+    QJsonArray path_arr = data["path"].toArray();
+    QStringList path_list;
+    for(const auto& item : path_arr)
     {
+        path_list.append(item.toString());
+    }
+    msg.path_str = path_list.join(",");
+
+    QJsonArray vobs_arr = data["vobs_c"].toArray();
+    QStringList vobs_list;
+    for(const auto& item : vobs_arr)
+    {
+        vobs_list.append(item.toString());
+    }
+    msg.vobs_closures_str = vobs_list.join(",");
+
+    QJsonDocument doc(data);
+    QString json_string = doc.toJson(QJsonDocument::Compact);
+    log_info("path cmd: {}", json_string.toStdString());
+    {
+
         std::lock_guard<std::mutex> lock(path_mtx);
         path_queue.push(std::move(msg));
         path_cv.notify_one();
@@ -582,6 +607,10 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     msg.bat_percent     = get_json_int(data, "battery");
     msg.result          = get_json(data, "result");
     msg.message         = get_json(data, "message");
+
+    QJsonDocument doc(data);
+    QString json_string = doc.toJson(QJsonDocument::Compact);
+    log_info("move cmd: {}", json_string.toStdString());
     {
         std::lock_guard<std::mutex> lock(move_mtx);
         move_queue.push(std::move(msg));
@@ -613,9 +642,7 @@ void COMM_MSA::handle_mapping_cmd(const QJsonObject& data)
 
     QJsonDocument doc(data);
     QString json_string = doc.toJson(QJsonDocument::Compact);
-
-    std::cout << "json_string: " << json_string.toStdString() << std::endl;
-
+    log_info("mapping cmd: {}", json_string.toStdString());
     {
         std::lock_guard<std::mutex> lock(mapping_mtx);
         mapping_queue.push(msg);
@@ -1314,9 +1341,9 @@ void COMM_MSA::send_lidar_2d()
         v.reserve(3);
 
         {
-            v.emplace_back(p[0]);
-            v.emplace_back(p[1]);
-            v.emplace_back(0);
+            v.push_back(sio::double_message::create(p[0]));
+            v.push_back(sio::double_message::create(p[1]));
+            v.push_back(sio::double_message::create(0));
         }
 
         arr_vec.emplace_back(p_obj);
@@ -2200,12 +2227,8 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
             }
 
             ctrl->set_path(path, msg.preset, (long long)(msg.time));
+            ctrl->signal_move_multi();
         }
-
-    }
-    else if(msg.command == "move")
-    {
-        ctrl->signal_move_multi();
     }
 
     send_path_response(msg);

@@ -191,7 +191,13 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
 {
     if(_global_path_time == global_path_time.load() || _global_node_path.empty())
     {
+        log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time, global_path_time.load(), _global_node_path.size());
         return;
+    }
+
+    for(const auto& node_id : _global_node_path)
+    {
+        std::cout << "_global_node_path: " << node_id.toStdString() << std::endl;
     }
 
     {
@@ -208,6 +214,7 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
     {
         set_last_step(remove_duplicate_step.front());
     }
+
     if(remove_duplicate_step.size() > 1)
     {
         set_last_step(1);
