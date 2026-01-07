@@ -118,8 +118,8 @@ public:
     atomic<double> last_sync_time = {0.};
 
     // for user led
-    std::atomic<bool> is_user_led = {false};
-    std::atomic<int> user_led_color = {LED_OFF};
+//    std::atomic<bool> is_user_led = {false};
+//    std::atomic<int> user_led_color = {LED_OFF};
 
     //for change map name
     std::atomic<bool> change_map_name = {false};

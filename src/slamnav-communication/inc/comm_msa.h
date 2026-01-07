@@ -83,6 +83,7 @@ public:
     void start_load_thread();
     void start_mapping_thread();
     void start_localization_thread();
+    void start_control_thread();
     void start_path_thread();
     void start_vobs_thread();
     void start_sensor_thread();
@@ -95,6 +96,7 @@ public:
     void stop_load_thread();
     void stop_mapping_thread();
     void stop_localization_thread();
+    void stop_control_thread();
     void stop_path_thread();
     void stop_vobs_thread();
     void stop_sensor_thread();
@@ -202,6 +204,11 @@ Q_SIGNALS:
 
     void signal_ui_all_update();
 
+    // add for docking
+    void signal_docking_start();
+    void signal_undocking_start();
+    void signal_docking_stop();
+
 private Q_SLOTS:
     void connected();
     void disconnected();
@@ -225,12 +232,14 @@ private Q_SLOTS:
     void send_path_response(const DATA_PATH& msg);
     void send_update_response(const DATA_SOFTWARE& msg);
     void send_sensor_response(const DATA_SENSOR_INFO& msg);
+    void send_control_response(const DATA_CONTROL& msg);
 
 private:
     std::mutex move_mtx;
     std::mutex load_mtx;
     std::mutex mapping_mtx;
     std::mutex localization_mtx;
+    std::mutex control_mtx;
     std::mutex path_mtx;
     std::mutex vobs_mtx;
     std::mutex sensor_mtx;
@@ -244,6 +253,7 @@ private:
     std::queue<QString> recv_queue;
     std::queue<DATA_MOVE> move_queue;
     std::queue<DATA_LOAD> load_queue;
+    std::queue<DATA_CONTROL> control_queue;
     std::queue<DATA_PATH> path_queue;
     std::queue<DATA_VOBS> vobs_queue;
     std::queue<DATA_MAPPING> mapping_queue;
@@ -255,6 +265,7 @@ private:
     std::condition_variable recv_cv;
     std::condition_variable move_cv;
     std::condition_variable load_cv;
+    std::condition_variable control_cv;
     std::condition_variable path_cv;
     std::condition_variable vobs_cv;
     std::condition_variable mapping_cv;
@@ -267,6 +278,7 @@ private:
     std::atomic<bool> is_load_running = {false};
     std::atomic<bool> is_mapping_running = {false};
     std::atomic<bool> is_localization_running = {false};
+    std::atomic<bool> is_control_running = {true};
     std::atomic<bool> is_path_running = {false};
     std::atomic<bool> is_vobs_running = {false};
     std::atomic<bool> is_send_status_running = {false};
@@ -278,6 +290,7 @@ private:
     std::unique_ptr<std::thread> move_thread;
     std::unique_ptr<std::thread> load_thread;
     std::unique_ptr<std::thread> localization_thread;
+    std::unique_ptr<std::thread> control_thread;
     std::unique_ptr<std::thread> mapping_thread;
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
@@ -295,6 +308,7 @@ private:
     void recv_loop();
     void mapping_loop();
     void localization_loop();
+    void control_loop();
     void sensor_loop();
     void send_status_loop();
     void send_response_loop();
@@ -308,6 +322,7 @@ private:
     void handle_localization_cmd(const QJsonObject& data);
     void handle_update_cmd(const QJsonObject& data);
     void handle_sensor_cmd(const QJsonObject& data);
+    void handle_control_cmd(const QJsonObject& data);
 
     /* move handler */
     void handle_move_jog(const DATA_MOVE& msg);
@@ -350,6 +365,13 @@ private:
     void handle_camera_set_info(DATA_SENSOR_INFO& msg);
     void handle_lidar3d_set_on(DATA_SENSOR_INFO& msg);
     void handle_lidar3d_set_off(DATA_SENSOR_INFO& msg);
+
+    /* safety handler */
+    void handle_safetyio_cmd(const QJsonObject& data);
+    void slot_safety_io(DATA_SAFTYIO msg);
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
+    void handle_send_safetyIO(const QJsonObject& data);
+
 };
 
 #endif // COMM_MSA_H
