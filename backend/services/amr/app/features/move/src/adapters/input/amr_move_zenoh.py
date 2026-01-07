@@ -4,9 +4,6 @@
 from rb_flat_buffers.SLAMNAV.State_Change_Move import (
     State_Change_MoveT,
 )
-from rb_utils.parser import (
-    t_to_dict,
-)
 from rb_zenoh.router import (
     ZenohRouter,
 )
@@ -20,5 +17,5 @@ move_zenoh_router = ZenohRouter()
     flatbuffer_obj_t=State_Change_MoveT
 )
 async def on_sub_slamnav_move_response(*, topic, obj):
-    dict_obj = t_to_dict(obj)
-    await amr_move_service.move_state_change(topic, dict_obj)
+    print("OnSub Slamnav Move Response : ", obj)
+    await amr_move_service.move_state_change(topic, obj)

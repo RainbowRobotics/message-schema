@@ -7,9 +7,6 @@ import os
 from collections import (
     defaultdict,
 )
-from contextlib import (
-    suppress,
-)
 from datetime import (
     UTC,
     datetime,
@@ -18,12 +15,13 @@ from functools import wraps
 from pathlib import Path
 from typing import Any
 
-import rb_database.mongo_db as mongo_db  # pylint: disable=import-error,no-name-in-module
+# pylint: disable=import-error,no-name-in-module
 from fastapi import BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.date import convert_dt  # pylint: disable=import-error,no-name-in-module
+from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import (
     ServiceException,  # pylint: disable=import-error,no-name-in-module
 )
@@ -76,13 +74,13 @@ def handle_move_error(fn):
             print("[moveGoal] ServiceException : ", e.message, e.status_code)
             model.status_change(MoveStatus.FAIL)
             model.message = str(e.message)
-            await self.database_port.upsert(mongo_db.db, model.to_dict())
+            await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=model.to_dict())
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveGoal] Exception : ", e)
             model.status_change(MoveStatus.FAIL)
             model.message = str(e)
-            await self.database_port.upsert(mongo_db.db, model.to_dict())
+            await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=500,content=model.to_dict())
     return wrapper
 
@@ -91,8 +89,7 @@ class AmrMoveService:
     [AMR 이동 서비스 초기화]
     """
     def __init__(self):
-        print("안녕 나는 AMR 서비스야")
-        rb_log.info("안녕 나는 AMR 서비스야")
+        self.robot_model = "test/v1"
         self.database_port = MoveMongoDatabaseAdapter()
         # self.slamnav_port = SlamnavZenohAdapter()
         self.email_port = MoveSmtpLibEmailAdapter()
@@ -127,7 +124,7 @@ class AmrMoveService:
                 db["status"] = MoveStatus.PAUSE
 
             await self.database_port.upsert(db)
-            await socket_client.emit(topic, obj)
+            await socket_client.emit(topic, t_to_dict(obj))
 
     @handle_move_error
     async def move_goal(self, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
@@ -137,7 +134,6 @@ class AmrMoveService:
         rb_log.info(f"[amr_move_service] moveGoal : {req.model_dump()}")
         # 1) moveModel 객체 생성
         model.set_move_goal(req)
-        rb_log.info(f"[amr_move_service] moveGoal Model Setted")
 
         # 2) DB 저장
         try:
@@ -145,21 +141,21 @@ class AmrMoveService:
         except ServiceException as e:
             print("[moveGoal] DB Exception : ", e)
 
-        rb_log.info(f"[amr_move_service] moveGoal DB Upserted")
         # 3) 요청 검사
         model.check_variables()
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_goal(
+            robot_model=self.robot_model,
             req_id=model.id,
             goal_id=model.goal_id,
             method=model.method,
             preset=model.preset
-            )
+        )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -167,6 +163,7 @@ class AmrMoveService:
             print("[moveGoal] DB Exception : ", e)
         return model.to_dict()
 
+    @handle_move_error
     async def move_target(self,
     req: Request_Move_TargetPD,
     model:MoveModel | None = None) -> Response_Move_TargetPD:
@@ -188,18 +185,16 @@ class AmrMoveService:
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_target(
+            robot_model=self.robot_model,
             req_id=model.id,
-            x=model.x,
-            y=model.y,
-            z=model.z,
-            rz=model.rz,
+            goal_pose=model.goal_pose,
             method=model.method,
             preset=model.preset
-            )
+        )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -208,62 +203,59 @@ class AmrMoveService:
 
         return model.to_dict()
 
+    @handle_move_error
     async def move_jog(self, req: Request_Move_JogPD, model:MoveModel | None = None):
         """
         [AMR 조이스틱 이동]
         """
         rb_log.info(f"[amr_move_service] moveJog : {req.model_dump()}")
-        try:
-            # 1) moveModel 객체 생성
-            model.set_move_jog(req)
 
-            # 2) DB 저장 (패스)
+        # 1) moveModel 객체 생성
+        model.set_move_jog(req)
 
-            # 3) 요청 검사
-            model.check_variables()
+        # 2) DB 저장 (패스)
 
-            # 4) 요청 전송
-            await rb_amr_sdk.move_sdk.send_move_jog(
-                vx=model.vx,
-                vy=model.vy,
-                wz=model.wz
-                )
-        except ServiceException as e:
-            print("[moveJog] ServiceException : ", e.message, e.status_code)
-            return JSONResponse(status_code=e.status_code,content=model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            return {
-                "vx": req.vx if 'req' in locals() else 0,
-                "vy": req.vy if 'req' in locals() else 0,
-                "wz": req.wz if 'req' in locals() else 0,
-                "result": "error",
-                "message": f"Qt 프로그램으로 이동 명령 전송 실패: {str(e)}"
-            }
+        # 3) 요청 검사
+        model.check_variables()
+
+        # 4) 요청 전송
+        await rb_amr_sdk.move_sdk.send_move_jog(
+            robot_model=self.robot_model,
+            vx=model.vx,
+            vy=model.vy,
+            wz=model.wz
+        )
+
+        return None
+
 
     @handle_move_error
     async def move_stop(self, model: MoveModel | None = None) -> Response_Move_StopPD:
         """
         [AMR 이동 중지]
         """
-        rb_log.info(f"[amr_move_service] moveStop : {model.model_dump()}")
+        rb_log.info("[amr_move_service] moveStop")
         # 1) moveModel 객체 생성
         model.set_move_stop()
 
         # 2) DB 저장
-        with suppress(Exception):  # pylint: disable=broad-exception-caught  # 필요하면 유지
+        try:
             await self.database_port.upsert(model.to_dict())
+        except ServiceException as e:
+            print("[moveGoal] DB Exception : ", e)
 
         # 3) 요청 검사
         model.check_variables()
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_stop(
+            robot_model=self.robot_model,
             req_id=model.id
-            )
+        )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
         try:
             await self.database_port.upsert(model.to_dict())
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -275,7 +267,7 @@ class AmrMoveService:
         """
         [AMR 이동 일시정지]
         """
-        rb_log.info(f"[amr_move_service] movePause : {model.model_dump()}")
+        rb_log.info("[amr_move_service] movePause")
         # 1) moveModel 객체 생성
         model.set_move_pause()
 
@@ -290,12 +282,13 @@ class AmrMoveService:
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_pause(
+            robot_model=self.robot_model,
             req_id=model.id
             )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -308,7 +301,7 @@ class AmrMoveService:
         """
         [AMR 이동 재개]
         """
-        rb_log.info(f"[amr_move_service] moveResume : {model.model_dump()}")
+        rb_log.info("[amr_move_service] moveResume")
         # 1) moveModel 객체 생성
         model.set_move_resume()
 
@@ -317,19 +310,19 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
         except Exception as e:
             print("[moveResume] DB Exception : ", e)
-            raise e
 
         # 3) 요청 검사
         model.check_variables()
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_resume(
+            robot_model=self.robot_model,
             req_id=model.id
             )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -344,7 +337,7 @@ class AmrMoveService:
         """
         rb_log.info(f"[amr_move_service] moveLinear : {req.model_dump()}")
         # 1) moveModel 객체 생성
-        model.set_move_linear(req)
+        model.set_move_x_linear(req)
 
         # 2) DB 저장
         try:
@@ -357,14 +350,15 @@ class AmrMoveService:
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_linear(
+            robot_model=self.robot_model,
             req_id=model.id,
             target=model.target,
             speed=model.speed
             )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -383,7 +377,7 @@ class AmrMoveService:
 
         # 2) DB 저장
         try:
-            await self.database_port.upsert(model.to_dict())
+            await self.database_port.upsert(model)
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveCircular] DB Exception : ", e)
 
@@ -392,15 +386,16 @@ class AmrMoveService:
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_circular(
+            robot_model=self.robot_model,
             req_id=model.id,
             target=model.target,
             speed=model.speed,
             direction=model.direction
             )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())
@@ -419,7 +414,7 @@ class AmrMoveService:
 
         # 2) DB 저장
         try:
-            await self.database_port.upsert(model.to_dict())
+            await self.database_port.upsert(model)
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveRotate] DB Exception : ", e)
 
@@ -428,14 +423,15 @@ class AmrMoveService:
 
         # 4) 요청 전송
         result = await rb_amr_sdk.move_sdk.send_move_rotate(
+            robot_model=self.robot_model,
             req_id=model.id,
             target=model.target,
             speed=model.speed
             )
 
-        model.result_change(result.result)
-        model.message = result.message
-        model.status_change(result.result)
+        model.result_change(result.get("result"))
+        model.message = result.get("message")
+        model.status_change(result.get("result"))
 
         try:
             await self.database_port.upsert(model.to_dict())

@@ -17,25 +17,25 @@ from rb_utils.pagination import (
 
 
 class Request_Move_GoalPD(BaseModel):
-    goal_id: str = Field(..., description="이동할 목표 지점의 ID", example="N_1734940733829")
+    goalId: str = Field(..., description="이동할 목표 지점의 ID", example="N_1734940733829")
     method: str = Field(..., description="이동 방식", example="pp")
     preset: int = Field(..., description="사전 설정된 이동 프로파일 번호", example=0)
 
 class Response_Move_GoalPD(BaseModel):
-    goal_id: str = Field(..., description="이동한 목표 지점 ID", example="N_1734940733829")
+    goalId: str = Field(..., description="이동한 목표 지점 ID", example="N_1734940733829")
     method: str = Field(..., description="사용된 이동 방식", example="pp")
     preset: int = Field(..., description="사용된 이동 프로파일 번호", example=0)
     result: str | None = Field(..., description="이동 명령 처리 결과", example="accept")
     message: str | None | None = Field(None, description="상태 메시지", example="")
 
 class Request_Move_TargetPD(BaseModel):
-    goal_pose: list[float] = Field(..., description="이동할 목표 좌표 [x, y, z, rz]", example=[3.5,2.7,0,90])
+    goalPose: list[float] = Field(..., description="이동할 목표 좌표 [x, y, z, rz]", example=[3.5,2.7,0,90])
     method: str = Field(..., description="이동 방식", example="pp")
     preset: int = Field(..., description="사전 설정된 이동 프로파일 번호", example=1)
 
 
 class Response_Move_TargetPD(BaseModel):
-    goal_pose: list[float] = Field(..., description="이동한 목표 좌표 [x, y, z, rz]", example=[3.5,2.7,0,90])
+    goalPose: list[float] = Field(..., description="이동한 목표 좌표 [x, y, z, rz]", example=[3.5,2.7,0,90])
     method: str = Field(..., description="사용된 이동 방식", example="pp")
     preset: int = Field(..., description="사용된 이동 프로파일 번호", example=0)
     result: str = Field(..., description="이동 명령 처리 결과", example="accept")
@@ -95,7 +95,7 @@ class Response_Move_RotatePD(BaseModel):
 class RequestAmrMoveLogsPD(BaseModel):
     limit: int = Field(..., description="페이지 당 로그 수", example=10)
     page: int = Field(..., description="페이지 번호", example=1)
-    search_text: str | None = Field(None, description="검색어", example="")
+    searchText: str | None = Field(None, description="검색어", example="")
     sort: str = Field(..., description="정렬 필드", example="createdAt")
     order: Literal["asc", "desc"] = Field(..., description="정렬 순서", example="desc")
     filter: str | dict[str, Any] | None = Field(..., description="검색 필터. JSON 문자열로 입력합니다. MongoDB 조건식에 맞춰 입력해주세요. 예) {'result': 'success'} ", example={'result': 'success'})
@@ -110,37 +110,37 @@ class RequestAmrMoveLogsPD(BaseModel):
 
 class Response_Move_LogsPD(BaseModel):
     items: list[dict] = Field(..., description="로그 목록", example=[{"id": "1", "createdAt": "2021-01-01 12:00:00", "message": "로그 메시지"}])
-    page_info: PageInfo = Field(..., description="페이지 정보", example={"mode": "offset", "page": 1, "pages": 10, "limit": 10, "total": 100, "sort": "createdAt", "order": "desc"})
+    pageInfo: PageInfo = Field(..., description="페이지 정보", example={"mode": "offset", "page": 1, "pages": 10, "limit": 10, "total": 100, "sort": "createdAt", "order": "desc"})
 
 
 class RequestAmrMoveArchiveLogPD(BaseModel):
-    cut_off_date: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
-    is_dry_run: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
+    cutOffDate: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
+    isDryRun: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
 
 class ResponseAmrMoveArchiveLogPD(BaseModel):
-    cut_off_date: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
-    is_dry_run: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
+    cutOffDate: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
+    isDryRun: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
 
 class RequestAmrMoveArchiveLogFilterPD(BaseModel):
-    cut_off_date: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
+    cutOffDate: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
     filters: str | dict[str, Any] | None = Field(..., description="", example="{'result': 'success'}")
-    is_dry_run: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
+    isDryRun: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
 
 
 class RequestAmrMoveExportLogPD(BaseModel):
-    start_dt: datetime | date | None = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
-    end_dt: datetime | date | None = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
+    startDt: datetime | date | None = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
+    endDt: datetime | date | None = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
     filters: dict[str, Any] | None = Field(..., description="", example={"result": "success"})
     filename: str = Field(..., description="내보내기 파일명(확장자는 gz로 고정됩니다)", example="move_logs")
-    search_text: str | None = Field(None, description="검색어")
+    searchText: str | None = Field(None, description="검색어")
     sort: str = Field("createdAt", description="정렬 필드")
     order: Literal["asc", "desc"] = Field("desc", description="정렬 순서")
     method: Literal["file", "email"] = Field(..., description="내보내기 방식", example="file")
     email: str | None = Field(None, description="메일 주소 (method가 email인 경우 필수)", example="test@example.com")
 
 class ResponseAmrMoveExportLogPD(BaseModel):
-    start_dt: datetime | date = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
-    end_dt: datetime | date = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
+    startDt: datetime | date = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
+    endDt: datetime | date = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
     filters: str | dict[str, Any] | None = Field(..., description="", example="{'result': 'success'}")
     filename: str = Field(..., description="내보내기 파일명(확장자는 gz로 고정됩니다)", example="move_logs")
     method: str = Field(..., description="내보내기 방식", example="stream")

@@ -53,6 +53,7 @@ table Response_Map_Cloud {
     size: int;
     data: [double];
 }
+
 table Node {
     id: string;
     name: string;
@@ -90,16 +91,31 @@ table Response_Map_Topology {
 table Request_Map_Tiles {}
 table Response_Map_Tiles {}
 
-table Request_Mapping {
+table Request_Mapping_Start {
     id: string;
-    command: string;
-    map_name: string;
 }
-table Response_Mapping {
+table Response_Mapping_Start {
     id: string;
-    command: string;
-    map_name: string;
     result: string;
     message: string;
 }
 
+table Request_Mapping_Stop {
+    id: string;
+}
+table Response_Mapping_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Save {
+    id: string;
+    map_name: string;
+}
+table Response_Mapping_Save {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}

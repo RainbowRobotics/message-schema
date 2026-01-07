@@ -44,14 +44,24 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
 
     async def check_db(self):
         try:
+            # 0) 인덱스 삭제용..(필요할때만..주석해제..)
+            # await mongo_db.db[self.name].drop_index("move_index")
+            # await mongo_db.db[self.name].drop_index("created_at_1")
+
+
+
             # 1) 컬렉션 생성(이미 존재하면 패스)
             await mongo_db.add_collection(mongo_db.db, self.name)
 
             # 2) 인덱스 생성(이미 존재하면 패스)
-            await mongo_db.ensure_index(mongo_db.db, self.name, [("message", "text"),("result", "text"),("status", "text"),
-            ("method", "text"),("id", "text"),("goalId", "text"),("command", "text"),("mapName", "text"),
-            ("direction", "text"),("createdAt", -1)], name="move_index")
-            await mongo_db.ensure_index(mongo_db.db, self.name, [("createdAt", 1)], name="createdAt_1")
+            await mongo_db.ensure_index(mongo_db.db, self.name, [
+                ("message", "text"),("goalPose", "text"),
+                ("result", "text"),("status", "text"),
+                ("method", "text"),("id", "text"),
+                ("goalId", "text"),("command", "text"),
+                ("mapName", "text"),
+                ("direction", "text"),("createdAt", -1)], name="move_index")
+            await mongo_db.ensure_index(mongo_db.db, self.name, [("createdAt", 1)], name="created_at_1")
 
             # 3) 현재 컬렉션 사이즈 조회(디버그용)
             stats = await mongo_db.get_collection_stats(mongo_db.db, self.name, 1024)

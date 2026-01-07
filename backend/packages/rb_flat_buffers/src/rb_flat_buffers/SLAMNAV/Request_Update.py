@@ -27,20 +27,46 @@ class Request_Update(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Request_Update
-    def Version(self) -> Optional[str]:
+    def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # Request_Update
+    def Branch(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # Request_Update
+    def Version(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def Request_UpdateStart(builder: flatbuffers.Builder):
-    builder.StartObject(1)
+    builder.StartObject(3)
 
 def Start(builder: flatbuffers.Builder):
     Request_UpdateStart(builder)
 
+def Request_UpdateAddId(builder: flatbuffers.Builder, id: int):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
+
+def AddId(builder: flatbuffers.Builder, id: int):
+    Request_UpdateAddId(builder, id)
+
+def Request_UpdateAddBranch(builder: flatbuffers.Builder, branch: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(branch), 0)
+
+def AddBranch(builder: flatbuffers.Builder, branch: int):
+    Request_UpdateAddBranch(builder, branch)
+
 def Request_UpdateAddVersion(builder: flatbuffers.Builder, version: int):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
 
 def AddVersion(builder: flatbuffers.Builder, version: int):
     Request_UpdateAddVersion(builder, version)
@@ -57,8 +83,12 @@ class Request_UpdateT(object):
     # Request_UpdateT
     def __init__(
         self,
+        id = None,
+        branch = None,
         version = None,
     ):
+        self.id = id  # type: Optional[str]
+        self.branch = branch  # type: Optional[str]
         self.version = version  # type: Optional[str]
 
     @classmethod
@@ -82,13 +112,23 @@ class Request_UpdateT(object):
     def _UnPack(self, requestUpdate):
         if requestUpdate is None:
             return
+        self.id = requestUpdate.Id()
+        self.branch = requestUpdate.Branch()
         self.version = requestUpdate.Version()
 
     # Request_UpdateT
     def Pack(self, builder):
+        if self.id is not None:
+            id = builder.CreateString(self.id)
+        if self.branch is not None:
+            branch = builder.CreateString(self.branch)
         if self.version is not None:
             version = builder.CreateString(self.version)
         Request_UpdateStart(builder)
+        if self.id is not None:
+            Request_UpdateAddId(builder, id)
+        if self.branch is not None:
+            Request_UpdateAddBranch(builder, branch)
         if self.version is not None:
             Request_UpdateAddVersion(builder, version)
         requestUpdate = Request_UpdateEnd(builder)

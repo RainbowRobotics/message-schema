@@ -93,10 +93,7 @@ class MoveModel:
     goal_id: str | None = None
 
     # moveTarget
-    x: float | None = None
-    y: float | None = None
-    z: float | None = None
-    rz: float | None = None
+    goal_pose: list[float] | None = None
 
     # moveJog
     vx: float | None = None
@@ -111,7 +108,6 @@ class MoveModel:
     # response
     cur_pose: list[float] | None = None
     cur_vel: list[float] | None = None
-    goal_pose: list[float] | None = None
     remaining_time: float | None = None
     goal_name: str | None = None
     bat_percent: int | None = None
@@ -124,7 +120,7 @@ class MoveModel:
         self.command = MoveCommand.MOVE_GOAL
         self.method = req.method if req.method is not None else MoveMethod.PP.value
         self.preset = req.preset if req.preset is not None else 0
-        self.goal_id = req.goal_id
+        self.goal_id = req.goalId
         self.update_at = datetime.now(UTC)
 
     def set_move_target(self, req: Request_Move_TargetPD):
@@ -135,10 +131,7 @@ class MoveModel:
         self.command = MoveCommand.MOVE_TARGET
         self.method = req.method if req.method is not None else MoveMethod.PP.value
         self.preset = req.preset if req.preset is not None else 0
-        self.x = req.x
-        self.y = req.y
-        self.z = req.z
-        self.rz = req.rz
+        self.goal_pose = req.goalPose
         self.update_at = datetime.now(UTC)
 
     def set_move_jog(self, req: Request_Move_JogPD):
@@ -244,9 +237,10 @@ class MoveModel:
                 raise ServiceException("goal_id 값이 없습니다", status_code=400)
 
         elif self.command == MoveCommand.MOVE_TARGET:
-            missing = [k for k in ("x", "y", "z", "rz") if getattr(self, k) is None]
-            if missing:
-                raise ServiceException("target 값이 비어있습니다", status_code=400)
+            if self.goal_pose is None:
+                raise ServiceException("goalPose 값이 비어있습니다", status_code=400)
+            if len(self.goal_pose) < 3:
+                raise ServiceException("goalPose 값이 x,y,z,rz 값을 가져야 합니다", status_code=400)
             if self.method is None:
                 self.method = MoveMethod.PP.value
             if self.preset is None:
@@ -292,21 +286,18 @@ class MoveModel:
         d["id"] = self.id
         d["command"] = self.command
         d["status"] = self.status
-        d["created_at"] = self.created_at
-        d["update_at"] = self.update_at
+        d["createdAt"] = self.created_at
+        d["updateAt"] = self.update_at
         d["result"] = self.result
         d["message"] = self.message
         if self.command == MoveCommand.MOVE_GOAL:
             d["method"] = self.method
             d["preset"] = self.preset
-            d["goal_id"] = self.goal_id
+            d["goalId"] = self.goal_id
         elif self.command == MoveCommand.MOVE_TARGET:
             d["method"] = self.method
             d["preset"] = self.preset
-            d["x"] = self.x
-            d["y"] = self.y
-            d["z"] = self.z
-            d["rz"] = self.rz
+            d["goalPose"] = self.goal_pose
         elif self.command == MoveCommand.MOVE_JOG:
             d["vx"] = self.vx
             d["vy"] = self.vy

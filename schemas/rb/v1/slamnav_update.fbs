@@ -1,15 +1,25 @@
 namespace SLAMNAV;
 
 table Request_Update {
+    id: string;
+    branch: string;
     version: string;
 }
 
 table Response_Update {
+    id: string;
+    branch: string;
     version: string;
     result: string;
     message: string;
 }
 
-table Request_Version {
+table Request_Current_Version {
+    id: string;
 }
-
+table Response_Current_Version {
+    id: string;
+    version: string;
+    result: string;
+    message: string;
+}
