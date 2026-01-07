@@ -465,6 +465,7 @@ void COMM_MSA::send_move_status()
     obj_move_state->get_map()["jog_move"]   = sio::string_message::create("none");
     obj_move_state->get_map()["obs"]        = sio::string_message::create(ctrl->get_obs_condition().toStdString());
     obj_move_state->get_map()["path"]       = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
+    obj_move_state->get_map()["path_time"]  = sio::string_message::create(QString::number(ctrl->get_global_path_time()).toStdString());
     obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
 
     // create pose object
@@ -515,13 +516,13 @@ void COMM_MSA::send_move_status()
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
     DATA_PATH msg;
-    msg.time              = get_json_double(data, "time")/1000;
+    msg.time = get_json_double(data, "time");
     if(msg.time == 0)
     {
-        msg.time = data["time"].toString().toDouble()/1000;
+        msg.time = data["time"].toString().toDouble();
     }
-    msg.preset            = get_json_int(data, "preset");
-    msg.command           = get_json(data, "command");
+    msg.preset = get_json_int(data, "preset");
+    msg.command = get_json(data, "command");
 
     // path 배열 파싱
     QJsonArray path_arr = data["path"].toArray();
