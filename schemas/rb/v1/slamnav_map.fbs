@@ -25,12 +25,12 @@ table Response_Map_List {
 
 //------------------------------------
 
-table Request_Map_File {
+table Request_Get_Map_File {
     id: string;
     map_name: string;
     file_name: string;
 }
-table Response_Map_File {
+table Response_Get_Map_File {
     id: string;
     map_name: string;
     file_name: string;
@@ -39,12 +39,12 @@ table Response_Map_File {
     size: uint32;
     data: [ubyte];
 }
-table Request_Map_Cloud {
+table Request_Get_Map_Cloud {
     id: string;
     map_name: string;
     file_name: string;
 }
-table Response_Map_Cloud {
+table Response_Get_Map_Cloud {
     id: string;
     map_name: string;
     file_name: string;
@@ -52,6 +52,20 @@ table Response_Map_Cloud {
     message: string;
     size: int;
     data: [double];
+}
+table Request_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: int;
+    data: [double];
+}
+table Response_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
 }
 
 table Node {
@@ -63,9 +77,10 @@ table Node {
     type: string;
 }
 
-table Request_Map_Topology {
+table Request_Get_Map_Topology {
     id: string;
     map_name: string;
+    file_name: string;
     page_no: int;
     page_size: int;
     total_page: int;
@@ -74,9 +89,10 @@ table Request_Map_Topology {
     sort_option: string;
     sort_direction: string;
 }
-table Response_Map_Topology {
+table Response_Get_Map_Topology {
     id: string;
     map_name: string;
+    file_name: string;
     page_no: int;
     page_size: int;
     total_page: int;
@@ -88,8 +104,20 @@ table Response_Map_Topology {
     message: string;
     data: [Node];
 }
-table Request_Map_Tiles {}
-table Response_Map_Tiles {}
+table Request_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+}
+table Response_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+table Request_Get_Map_Tiles {}
+table Response_Get_Map_Tiles {}
+
 
 table Request_Mapping_Start {
     id: string;

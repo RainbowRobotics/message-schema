@@ -1,18 +1,25 @@
+from rb_flat_buffers.SLAMNAV.Request_Localization_AutoInit import Request_Localization_AutoInitT
+from rb_flat_buffers.SLAMNAV.Request_Localization_Init import Request_Localization_InitT
+from rb_flat_buffers.SLAMNAV.Request_Localization_RandomInit import Request_Localization_RandomInitT
+from rb_flat_buffers.SLAMNAV.Request_Localization_SemiAutoInit import (
+    Request_Localization_SemiAutoInitT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Localization_Start import Request_Localization_StartT
+from rb_flat_buffers.SLAMNAV.Request_Localization_Stop import Request_Localization_StopT
+from rb_flat_buffers.SLAMNAV.Response_Localization_AutoInit import Response_Localization_AutoInitT
+from rb_flat_buffers.SLAMNAV.Response_Localization_Init import Response_Localization_InitT
+from rb_flat_buffers.SLAMNAV.Response_Localization_RandomInit import (
+    Response_Localization_RandomInitT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Localization_SemiAutoInit import (
+    Response_Localization_SemiAutoInitT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Localization_Start import Response_Localization_StartT
+from rb_flat_buffers.SLAMNAV.Response_Localization_Stop import Response_Localization_StopT
 from rb_zenoh.client import ZenohClient
 
 from .schema.amr_localization_schema import SlamnavLocalizationPort
-from rb_flat_buffers.SLAMNAV.Response_Localization_Init import Response_Localization_InitT
-from rb_flat_buffers.SLAMNAV.Request_Localization_Init import Request_Localization_InitT
-from rb_flat_buffers.SLAMNAV.Response_Localization_SemiAutoInit import Response_Localization_SemiAutoInitT
-from rb_flat_buffers.SLAMNAV.Request_Localization_SemiAutoInit import Request_Localization_SemiAutoInitT
-from rb_flat_buffers.SLAMNAV.Response_Localization_AutoInit import Response_Localization_AutoInitT
-from rb_flat_buffers.SLAMNAV.Request_Localization_AutoInit import Request_Localization_AutoInitT
-from rb_flat_buffers.SLAMNAV.Response_Localization_Start import Response_Localization_StartT
-from rb_flat_buffers.SLAMNAV.Request_Localization_Start import Request_Localization_StartT
-from rb_flat_buffers.SLAMNAV.Response_Localization_Stop import Response_Localization_StopT
-from rb_flat_buffers.SLAMNAV.Request_Localization_Stop import Request_Localization_StopT
-from rb_flat_buffers.SLAMNAV.Response_Localization_RandomInit import Response_Localization_RandomInitT
-from rb_flat_buffers.SLAMNAV.Request_Localization_RandomInit import Request_Localization_RandomInitT
+
 
 class RBAmrLocalizationSDK(SlamnavLocalizationPort):
     """Rainbow Robotics AMR Localization SDK"""
@@ -39,7 +46,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_InitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -60,7 +67,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/semi_auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_SemiAutoInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -81,7 +88,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_AutoInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -102,7 +109,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StartT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -123,7 +130,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StopT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -145,7 +152,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/random_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_RandomInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환

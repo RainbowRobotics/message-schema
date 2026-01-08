@@ -37,8 +37,6 @@ COPY schemas ../schemas
 COPY backend/Makefile ./
 COPY backend/backend.mk ./
 
-RUN make backend.flatc
-
 COPY scripts/backend/development-entrypoint.sh /usr/local/bin/development-entrypoint.sh
 RUN dos2unix /usr/local/bin/development-entrypoint.sh \
   && chmod +x /usr/local/bin/development-entrypoint.sh

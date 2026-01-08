@@ -1,23 +1,28 @@
 
-from rb_zenoh.client import ZenohClient
-
-from .schema.amr_map_schema import SlamnavMapPort
-from rb_flat_buffers.SLAMNAV.Response_Map_File import Response_Map_FileT
-from rb_flat_buffers.SLAMNAV.Request_Map_File import Request_Map_FileT
-from rb_flat_buffers.SLAMNAV.Response_Map_List import Response_Map_ListT
 from rb_flat_buffers.SLAMNAV.Request_Map_List import Request_Map_ListT
-from rb_flat_buffers.SLAMNAV.Response_Map_Load import Response_Map_LoadT
 from rb_flat_buffers.SLAMNAV.Request_Map_Load import Request_Map_LoadT
-from rb_flat_buffers.SLAMNAV.Response_Map_Topology import Response_Map_TopologyT
-from rb_flat_buffers.SLAMNAV.Request_Map_Topology import Request_Map_TopologyT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Start import Response_Mapping_StartT
-from rb_flat_buffers.SLAMNAV.Request_Mapping_Start import Request_Mapping_StartT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Stop import Response_Mapping_StopT
-from rb_flat_buffers.SLAMNAV.Request_Mapping_Stop import Request_Mapping_StopT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Save import Response_Mapping_SaveT
 from rb_flat_buffers.SLAMNAV.Request_Mapping_Save import Request_Mapping_SaveT
-from rb_flat_buffers.SLAMNAV.Response_Map_Cloud import Response_Map_CloudT
-from rb_flat_buffers.SLAMNAV.Request_Map_Cloud import Request_Map_CloudT
+from rb_flat_buffers.SLAMNAV.Request_Mapping_Start import Request_Mapping_StartT
+from rb_flat_buffers.SLAMNAV.Request_Mapping_Stop import Request_Mapping_StopT
+from rb_flat_buffers.SLAMNAV.Response_Map_List import Response_Map_ListT
+from rb_flat_buffers.SLAMNAV.Response_Map_Load import Response_Map_LoadT
+from rb_flat_buffers.SLAMNAV.Response_Mapping_Save import Response_Mapping_SaveT
+from rb_flat_buffers.SLAMNAV.Response_Mapping_Start import Response_Mapping_StartT
+from rb_flat_buffers.SLAMNAV.Response_Mapping_Stop import Response_Mapping_StopT
+from rb_zenoh.client import ZenohClient
+from rb_flat_buffers.SLAMNAV.Request_Get_Map_File import Request_Get_Map_FileT
+from rb_flat_buffers.SLAMNAV.Response_Get_Map_File import Response_Get_Map_FileT
+from rb_flat_buffers.SLAMNAV.Request_Get_Map_Cloud import Request_Get_Map_CloudT
+from rb_flat_buffers.SLAMNAV.Response_Get_Map_Cloud import Response_Get_Map_CloudT
+from rb_flat_buffers.SLAMNAV.Request_Set_Map_Cloud import Request_Set_Map_CloudT
+from rb_flat_buffers.SLAMNAV.Response_Set_Map_Cloud import Response_Set_Map_CloudT
+from rb_flat_buffers.SLAMNAV.Request_Get_Map_Topology import Request_Get_Map_TopologyT
+from rb_flat_buffers.SLAMNAV.Response_Get_Map_Topology import Response_Get_Map_TopologyT
+from rb_flat_buffers.SLAMNAV.Request_Set_Map_Topology import Request_Set_Map_TopologyT
+from rb_flat_buffers.SLAMNAV.Response_Set_Map_Topology import Response_Set_Map_TopologyT
+from rb_flat_buffers.SLAMNAV.Node import NodeT
+from .schema.amr_map_schema import SlamnavMapPort
+
 
 class RBAmrMapSDK(SlamnavMapPort):
     """Rainbow Robotics AMR Map SDK"""
@@ -25,14 +30,14 @@ class RBAmrMapSDK(SlamnavMapPort):
     def __init__(self, client: ZenohClient):
         self.client = client
 
-    async def map_file(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Map_FileT:
+    async def get_map_file(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_FileT:
         """
         [Map File 전송]
         - model: MapRequestModel
-        - Response_Map_FileT 객체 반환
+        - Response_Get_Map_FileT 객체 반환
         """
-        # 1) Request_Map_FileT 객체 생성
-        req = Request_Map_FileT()
+        # 1) Request_Get_Map_FileT 객체 생성
+        req = Request_Get_Map_FileT()
         req.id = req_id
         req.map_name = map_name
         req.file_name = file_name
@@ -40,14 +45,14 @@ class RBAmrMapSDK(SlamnavMapPort):
         result = self.client.query_one(
             f"{robot_model}/map/file",
             flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_Map_FileT,
-            flatbuffer_buf_size=100,
+            flatbuffer_res_T_class=Response_Get_Map_FileT,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
 
-    async def map_list(self, robot_model: str, req_id: str) -> Response_Map_ListT:
+    async def get_map_list(self, robot_model: str, req_id: str) -> Response_Map_ListT:
         """
         [Map List 전송]
         - model: MapRequestModel
@@ -61,7 +66,7 @@ class RBAmrMapSDK(SlamnavMapPort):
             f"{robot_model}/map/list",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Map_ListT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -82,46 +87,102 @@ class RBAmrMapSDK(SlamnavMapPort):
             f"{robot_model}/map/load",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Map_LoadT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
 
-    async def map_cloud(self, robot_model: str, req_id: str) -> Response_Map_CloudT:
+    async def get_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_CloudT:
         """
         [Map Cloud 전송]
         - model: MapRequestModel
         - Response_Map_CloudT 객체 반환
         """
         # 1) Request_Map_CloudT 객체 생성
-        req = Request_Map_CloudT()
+        req = Request_Get_Map_CloudT()
         req.id = req_id
+        req.map_name = map_name
+        req.file_name = file_name
+
         # 2) 요청 전송
         result = self.client.query_one(
-            f"{robot_model}/map/cloud",
+            f"{robot_model}/map/cloud/get",
             flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_Map_CloudT,
-            flatbuffer_buf_size=100,
+            flatbuffer_res_T_class=Response_Get_Map_CloudT,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
 
-    async def map_topology(self, robot_model: str, req_id: str) -> Response_Map_TopologyT:
+    async def set_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str, size: int, data: list[float]) -> Response_Set_Map_CloudT:
+        """
+        [Map Cloud 전송]
+        - model: MapRequestModel
+        - Response_Map_CloudT 객체 반환
+        """
+
+        # 1) Request_Map_CloudT 객체 생성
+        req = Request_Set_Map_CloudT()
+        req.id = req_id
+        req.map_name = map_name
+        req.file_name = file_name
+        req.size = size
+        req.data = data
+
+        # 2) 요청 전송
+        result = self.client.query_one(
+            f"{robot_model}/map/cloud/set",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Set_Map_CloudT,
+            flatbuffer_buf_size=1000,
+        )
+
+        # 3) 결과 처리 및 반환
+        return result["dict_payload"]
+
+    async def get_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_TopologyT:
         """
         [Map Topology 전송]
         - model: MapRequestModel
         - Response_Map_TopologyT 객체 반환
         """
         # 1) Request_Map_TopologyT 객체 생성
-        req = Request_Map_TopologyT()
+        req = Request_Get_Map_TopologyT()
         req.id = req_id
+        req.map_name = map_name
+        req.file_name = file_name
+
         # 2) 요청 전송
         result = self.client.query_one(
-            f"{robot_model}/map/topology",
+            f"{robot_model}/map/topology/get",
             flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_Map_TopologyT,
-            flatbuffer_buf_size=100,
+            flatbuffer_res_T_class=Response_Get_Map_TopologyT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        return result["dict_payload"]
+
+    async def set_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str, data: list[NodeT]) -> Response_Set_Map_TopologyT:
+        """
+        [Map Topology 전송]
+        - model: MapRequestModel
+        - Response_Map_TopologyT 객체 반환
+        """
+        # 1) Request_Map_TopologyT 객체 생성
+        req = Request_Get_Map_TopologyT()
+        req.id = req_id
+        req.map_name = map_name
+        req.file_name = file_name
+        req.data = data
+
+        # 2) 요청 전송
+        result = self.client.query_one(
+            f"{robot_model}/map/topology/set",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Set_Map_TopologyT,
+            flatbuffer_buf_size=1000,
         )
 
         # 3) 결과 처리 및 반환
@@ -141,7 +202,7 @@ class RBAmrMapSDK(SlamnavMapPort):
             f"{robot_model}/mapping/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_StartT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -161,7 +222,7 @@ class RBAmrMapSDK(SlamnavMapPort):
             f"{robot_model}/mapping/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_StopT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -182,7 +243,7 @@ class RBAmrMapSDK(SlamnavMapPort):
             f"{robot_model}/mapping/save",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_SaveT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환

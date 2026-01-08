@@ -70,7 +70,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/goal",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_GoalT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -95,7 +95,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/target",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_TargetT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 6) 결과 처리 및 반환
@@ -136,7 +136,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_StopT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -157,7 +157,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/pause",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_PauseT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -178,7 +178,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/resume",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_ResumeT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -200,7 +200,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/linear",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_XLinearT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -223,7 +223,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/circular",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_CircularT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -245,7 +245,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
             f"{robot_model}/move/rotate",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_RotateT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]

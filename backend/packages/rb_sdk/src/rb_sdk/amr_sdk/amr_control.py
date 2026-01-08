@@ -1,25 +1,26 @@
 
+from rb_flat_buffers.SLAMNAV.Request_Control_Frequency import Request_Control_FrequencyT
+from rb_flat_buffers.SLAMNAV.Request_Control_LED import Request_Control_LEDT
+from rb_flat_buffers.SLAMNAV.Request_Control_Motor import Request_Control_MotorT
+from rb_flat_buffers.SLAMNAV.Request_Dock import Request_DockT
+from rb_flat_buffers.SLAMNAV.Request_Obs_Box import Request_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Request_Random_Sequence import Request_Random_SequenceT
+from rb_flat_buffers.SLAMNAV.Request_Reset_Safety_Flag import Request_Reset_Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Request_Safety_Field import Request_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Request_Safety_Io import Request_Safety_IoT
+from rb_flat_buffers.SLAMNAV.Response_Control_Frequency import Response_Control_FrequencyT
+from rb_flat_buffers.SLAMNAV.Response_Control_LED import Response_Control_LEDT
+from rb_flat_buffers.SLAMNAV.Response_Control_Motor import Response_Control_MotorT
+from rb_flat_buffers.SLAMNAV.Response_Dock import Response_DockT
+from rb_flat_buffers.SLAMNAV.Response_Obs_Box import Response_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Response_Random_Sequence import Response_Random_SequenceT
+from rb_flat_buffers.SLAMNAV.Response_Reset_Safety_Flag import Response_Reset_Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Response_Safety_Field import Response_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Response_Safety_Io import Response_Safety_IoT
 from rb_zenoh.client import ZenohClient
 
 from .schema.amr_control_schema import SlamnavControlPort
-from rb_flat_buffers.SLAMNAV.Response_Control_Frequency import Response_Control_FrequencyT
-from rb_flat_buffers.SLAMNAV.Request_Control_Frequency import Request_Control_FrequencyT
-from rb_flat_buffers.SLAMNAV.Response_Control_LED import Response_Control_LEDT
-from rb_flat_buffers.SLAMNAV.Request_Control_LED import Request_Control_LEDT
-from rb_flat_buffers.SLAMNAV.Response_Control_Motor import Response_Control_MotorT
-from rb_flat_buffers.SLAMNAV.Request_Control_Motor import Request_Control_MotorT
-from rb_flat_buffers.SLAMNAV.Response_Dock import Response_DockT
-from rb_flat_buffers.SLAMNAV.Request_Dock import Request_DockT
-from rb_flat_buffers.SLAMNAV.Response_Obs_Box import Response_Obs_BoxT
-from rb_flat_buffers.SLAMNAV.Request_Obs_Box import Request_Obs_BoxT
-from rb_flat_buffers.SLAMNAV.Response_Random_Sequence import Response_Random_SequenceT
-from rb_flat_buffers.SLAMNAV.Request_Random_Sequence import Request_Random_SequenceT
-from rb_flat_buffers.SLAMNAV.Response_Reset_Safety_Flag import Response_Reset_Safety_FlagT
-from rb_flat_buffers.SLAMNAV.Request_Reset_Safety_Flag import Request_Reset_Safety_FlagT
-from rb_flat_buffers.SLAMNAV.Response_Safety_Field import Response_Safety_FieldT
-from rb_flat_buffers.SLAMNAV.Request_Safety_Field import Request_Safety_FieldT
-from rb_flat_buffers.SLAMNAV.Response_Safety_Io import Response_Safety_IoT
-from rb_flat_buffers.SLAMNAV.Request_Safety_Io import Request_Safety_IoT
+
 
 class RBAmrControlSDK(SlamnavControlPort):
     """Rainbow Robotics AMR Control SDK"""
@@ -45,7 +46,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/frequency",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_FrequencyT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -68,7 +69,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/led",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_LEDT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -90,7 +91,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/motor",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_MotorT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -112,7 +113,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/dock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_DockT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -135,7 +136,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/obs_box",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Obs_BoxT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -157,7 +158,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/safety_field",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_FieldT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -178,7 +179,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/reset_safety_flag",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Reset_Safety_FlagT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -201,7 +202,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/safety_io",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_IoT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -221,7 +222,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/random_sequence",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Random_SequenceT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환

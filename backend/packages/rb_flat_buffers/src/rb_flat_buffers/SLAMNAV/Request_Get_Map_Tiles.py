@@ -7,40 +7,40 @@ from flatbuffers.compat import import_numpy
 from typing import Any
 np = import_numpy()
 
-class Response_Map_Tiles(object):
+class Request_Get_Map_Tiles(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Response_Map_Tiles()
+        x = Request_Get_Map_Tiles()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsResponse_Map_Tiles(cls, buf, offset=0):
+    def GetRootAsRequest_Get_Map_Tiles(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Response_Map_Tiles
+    # Request_Get_Map_Tiles
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-def Response_Map_TilesStart(builder: flatbuffers.Builder):
+def Request_Get_Map_TilesStart(builder: flatbuffers.Builder):
     builder.StartObject(0)
 
 def Start(builder: flatbuffers.Builder):
-    Response_Map_TilesStart(builder)
+    Request_Get_Map_TilesStart(builder)
 
-def Response_Map_TilesEnd(builder: flatbuffers.Builder) -> int:
+def Request_Get_Map_TilesEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Response_Map_TilesEnd(builder)
+    return Request_Get_Map_TilesEnd(builder)
 
 
-class Response_Map_TilesT(object):
+class Request_Get_Map_TilesT(object):
 
-    # Response_Map_TilesT
+    # Request_Get_Map_TilesT
     def __init__(
         self,
     ):
@@ -48,9 +48,9 @@ class Response_Map_TilesT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        responseMapTiles = Response_Map_Tiles()
-        responseMapTiles.Init(buf, pos)
-        return cls.InitFromObj(responseMapTiles)
+        requestGetMapTiles = Request_Get_Map_Tiles()
+        requestGetMapTiles.Init(buf, pos)
+        return cls.InitFromObj(requestGetMapTiles)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -58,18 +58,18 @@ class Response_Map_TilesT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, responseMapTiles):
-        x = Response_Map_TilesT()
-        x._UnPack(responseMapTiles)
+    def InitFromObj(cls, requestGetMapTiles):
+        x = Request_Get_Map_TilesT()
+        x._UnPack(requestGetMapTiles)
         return x
 
-    # Response_Map_TilesT
-    def _UnPack(self, responseMapTiles):
-        if responseMapTiles is None:
+    # Request_Get_Map_TilesT
+    def _UnPack(self, requestGetMapTiles):
+        if requestGetMapTiles is None:
             return
 
-    # Response_Map_TilesT
+    # Request_Get_Map_TilesT
     def Pack(self, builder):
-        Response_Map_TilesStart(builder)
-        responseMapTiles = Response_Map_TilesEnd(builder)
-        return responseMapTiles
+        Request_Get_Map_TilesStart(builder)
+        requestGetMapTiles = Request_Get_Map_TilesEnd(builder)
+        return requestGetMapTiles

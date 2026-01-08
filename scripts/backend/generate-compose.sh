@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BE="$ROOT/backend"
+DOCKER_USER="${DOCKER_USER-}"
+
+USER_LINE=""
+if [[ -n "${DOCKER_USER}" ]]; then
+  USER_LINE="    user: \"${DOCKER_USER}\""
+fi
 
 OUT_DEV="backend/docker-compose.dev.yml"
 OUT_PREVIEW="backend/docker-compose.preview.yml"

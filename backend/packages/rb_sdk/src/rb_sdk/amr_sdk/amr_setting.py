@@ -1,25 +1,26 @@
 
+from rb_flat_buffers.SLAMNAV.Request_Get_Pdu_Param import Request_Get_Pdu_ParamT
+from rb_flat_buffers.SLAMNAV.Request_Get_Robot_Type import Request_Get_Robot_TypeT
+from rb_flat_buffers.SLAMNAV.Request_Get_Sensor_Index import Request_Get_Sensor_IndexT
+from rb_flat_buffers.SLAMNAV.Request_Get_Sensor_Off import Request_Get_Sensor_OffT
+from rb_flat_buffers.SLAMNAV.Request_Set_Pdu_Param import Request_Set_Pdu_ParamT
+from rb_flat_buffers.SLAMNAV.Request_Set_Robot_Type import Request_Set_Robot_TypeT
+from rb_flat_buffers.SLAMNAV.Request_Set_Sensor_Index import Request_Set_Sensor_IndexT
+from rb_flat_buffers.SLAMNAV.Request_Set_Sensor_On import Request_Set_Sensor_OnT
+from rb_flat_buffers.SLAMNAV.Response_Get_Pdu_Param import Response_Get_Pdu_ParamT
+from rb_flat_buffers.SLAMNAV.Response_Get_Robot_Type import Response_Get_Robot_TypeT
+from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Index import Response_Get_Sensor_IndexT
+from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Off import Response_Get_Sensor_OffT
+from rb_flat_buffers.SLAMNAV.Response_Set_Pdu_Param import Response_Set_Pdu_ParamT
+from rb_flat_buffers.SLAMNAV.Response_Set_Robot_Type import Response_Set_Robot_TypeT
+from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_Index import Response_Set_Sensor_IndexT
+from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_On import Response_Set_Sensor_OnT
+from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_InfoT
+from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_ParamT
 from rb_zenoh.client import ZenohClient
 
 from .schema.amr_setting_schema import SlamnavSettingPort
-from rb_flat_buffers.SLAMNAV.Response_Get_Robot_Type import Response_Get_Robot_TypeT
-from rb_flat_buffers.SLAMNAV.Request_Get_Robot_Type import Request_Get_Robot_TypeT
-from rb_flat_buffers.SLAMNAV.Response_Set_Robot_Type import Response_Set_Robot_TypeT
-from rb_flat_buffers.SLAMNAV.Request_Set_Robot_Type import Request_Set_Robot_TypeT
-from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Index import Response_Get_Sensor_IndexT
-from rb_flat_buffers.SLAMNAV.Request_Get_Sensor_Index import Request_Get_Sensor_IndexT
-from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_Index import Response_Set_Sensor_IndexT
-from rb_flat_buffers.SLAMNAV.Request_Set_Sensor_Index import Request_Set_Sensor_IndexT
-from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_On import Response_Set_Sensor_OnT
-from rb_flat_buffers.SLAMNAV.Request_Set_Sensor_On import Request_Set_Sensor_OnT
-from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Off import Response_Get_Sensor_OffT
-from rb_flat_buffers.SLAMNAV.Request_Get_Sensor_Off import Request_Get_Sensor_OffT
-from rb_flat_buffers.SLAMNAV.Response_Get_Pdu_Param import Response_Get_Pdu_ParamT
-from rb_flat_buffers.SLAMNAV.Request_Get_Pdu_Param import Request_Get_Pdu_ParamT
-from rb_flat_buffers.SLAMNAV.Response_Set_Pdu_Param import Response_Set_Pdu_ParamT
-from rb_flat_buffers.SLAMNAV.Request_Set_Pdu_Param import Request_Set_Pdu_ParamT
-from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_InfoT
-from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_ParamT
+
 
 class RBAmrSettingSDK(SlamnavSettingPort):
     """Rainbow Robotics AMR Setting SDK"""
@@ -41,7 +42,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Robot_TypeT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -61,7 +62,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Robot_TypeT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -81,7 +82,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_IndexT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -102,7 +103,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_IndexT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -122,7 +123,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_sensor_on",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_OnT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -142,7 +143,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_sensor_off",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_OffT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -161,7 +162,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Pdu_ParamT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -181,7 +182,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Pdu_ParamT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
