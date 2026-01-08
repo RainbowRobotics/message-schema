@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BE="$ROOT/backend"
+DOCKER_USER="${DOCKER_USER-}"
+
+USER_LINE=""
+if [[ -n "${DOCKER_USER}" ]]; then
+  USER_LINE="    user: \"${DOCKER_USER}\""
+fi
 
 OUT_DEV="backend/docker-compose.dev.yml"
 OUT_PREVIEW="backend/docker-compose.preview.yml"
@@ -46,6 +52,7 @@ for dir in "$BE/services"/*; do
     environment:
       - SERVICE=${NAME}
       - PORT=${PORT}
+      - PYTHONDONTWRITEBYTECODE=1
       - IS_DEV=true
     restart: unless-stopped
     ports:
