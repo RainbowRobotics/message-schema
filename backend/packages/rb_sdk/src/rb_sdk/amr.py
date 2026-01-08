@@ -1,12 +1,11 @@
 
 
-from .amr_sdk.amr_move import RBAmrMoveSDK
-from .base import RBBaseSDK
-from .amr_sdk.amr_setting import RBAmrSettingSDK
 from .amr_sdk.amr_control import RBAmrControlSDK
 from .amr_sdk.amr_localization import RBAmrLocalizationSDK
 from .amr_sdk.amr_map import RBAmrMapSDK
+from .amr_sdk.amr_move import RBAmrMoveSDK
 from .amr_sdk.amr_setting import RBAmrSettingSDK
+from .base import RBBaseSDK
 
 
 class RBAmrSDK(RBBaseSDK):

@@ -4,16 +4,17 @@ from typing import (
     runtime_checkable,
 )
 
+from rb_flat_buffers.SLAMNAV.Response_Get_Pdu_Param import Response_Get_Pdu_ParamT
 from rb_flat_buffers.SLAMNAV.Response_Get_Robot_Type import Response_Get_Robot_TypeT
-from rb_flat_buffers.SLAMNAV.Response_Set_Robot_Type import Response_Set_Robot_TypeT
 from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Index import Response_Get_Sensor_IndexT
+from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Off import Response_Get_Sensor_OffT
+from rb_flat_buffers.SLAMNAV.Response_Set_Pdu_Param import Response_Set_Pdu_ParamT
+from rb_flat_buffers.SLAMNAV.Response_Set_Robot_Type import Response_Set_Robot_TypeT
 from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_Index import Response_Set_Sensor_IndexT
 from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_On import Response_Set_Sensor_OnT
-from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Off import Response_Get_Sensor_OffT
-from rb_flat_buffers.SLAMNAV.Response_Get_Pdu_Param import Response_Get_Pdu_ParamT
-from rb_flat_buffers.SLAMNAV.Response_Set_Pdu_Param import Response_Set_Pdu_ParamT
 from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_InfoT
 from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_ParamT
+
 
 @runtime_checkable
 class SlamnavSettingPort(Protocol):

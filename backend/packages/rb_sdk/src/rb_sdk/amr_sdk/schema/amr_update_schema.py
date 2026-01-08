@@ -4,8 +4,9 @@ from typing import (
     runtime_checkable,
 )
 
-from rb_flat_buffers.SLAMNAV.Response_Update import Response_UpdateT
 from rb_flat_buffers.SLAMNAV.Response_Current_Version import Response_Current_VersionT
+from rb_flat_buffers.SLAMNAV.Response_Update import Response_UpdateT
+
 
 @runtime_checkable
 class SlamnavUpdatePort(Protocol):
