@@ -19,7 +19,9 @@ COIN_D4* COIN_D4::instance(QObject *parent)
     return inst;
 }
 
-COIN_D4::COIN_D4(QObject *parent) : QObject{parent}
+COIN_D4::COIN_D4(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr)
 {
 }
 

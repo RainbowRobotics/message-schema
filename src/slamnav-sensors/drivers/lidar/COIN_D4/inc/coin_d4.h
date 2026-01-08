@@ -27,10 +27,8 @@ public:
     // sync between mobile, sick
     void sync();
 
-
     std::vector<Eigen::Vector3d> get_cur_scan();
     TIME_PTS get_cur_tp();
-
 
 private:
     explicit COIN_D4(QObject *parent = nullptr);
@@ -41,8 +39,8 @@ private:
     LaserScan get_raw_scan();
 
     // other modules
-    CONFIG* config = nullptr;
-    LOGGER* logger = nullptr;
+    CONFIG* config;
+    LOGGER* logger;
 
     std::vector<Eigen::Vector3d> cur_scan_blidar;
     TIME_PTS cur_tp;

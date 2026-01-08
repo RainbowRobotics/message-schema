@@ -3355,7 +3355,7 @@ sio::object_message::ptr COMM_MSA::create_robot_state_obj(const MOBILE_STATUS& m
     add_to_obj(obj, "charge", charge_str);
     add_to_obj(obj, "dock", dctrl->get_dock_state());
     add_to_obj(obj, "localization", loc->get_cur_loc_state().toStdString());
-    add_to_obj(obj, "power", ms.power_state == 1);
+    add_to_obj(obj, "power", static_cast<int>(ms.power_state == 1));
     add_to_obj(obj, "sss_recovery", ms.sss_recovery_state == 1);
     add_to_obj(obj, "sw_reset", ms.sw_reset == 1);
     add_to_obj(obj, "sw_stop", ms.sw_stop == 1);
@@ -3389,17 +3389,17 @@ sio::object_message::ptr COMM_MSA::create_robot_io_obj(const MOBILE_STATUS& ms)
 sio::object_message::ptr COMM_MSA::create_power_obj(const MOBILE_STATUS& ms)
 {
     sio::object_message::ptr obj = sio::object_message::create();
-    add_to_obj(obj, "bat_in", ms.bat_in);
-    add_to_obj(obj, "bat_out", ms.bat_out);
-    add_to_obj(obj, "bat_current", ms.bat_current);
-    add_to_obj(obj, "total_power", ms.total_power);
-    add_to_obj(obj, "power", ms.power);
+    add_to_obj(obj, "bat_in", static_cast<double>(ms.bat_in));
+    add_to_obj(obj, "bat_out", static_cast<double>(ms.bat_out));
+    add_to_obj(obj, "bat_current", static_cast<double>(ms.bat_current));
+    add_to_obj(obj, "total_power", static_cast<double>(ms.total_power));
+    add_to_obj(obj, "power", static_cast<double>(ms.power));
     add_to_obj(obj, "bat_percent", static_cast<double>(ms.bat_percent));
-    add_to_obj(obj, "tabos_voltage", ms.tabos_voltage);
-    add_to_obj(obj, "tabos_current", ms.tabos_current);
-    add_to_obj(obj, "tabos_soc", ms.tabos_soc);
-    add_to_obj(obj, "tabos_soh", ms.tabos_soh);
-    add_to_obj(obj, "tabos_temp", ms.tabos_temperature);
+    add_to_obj(obj, "tabos_voltage", static_cast<double>(ms.tabos_voltage));
+    add_to_obj(obj, "tabos_current", static_cast<double>(ms.tabos_current));
+    add_to_obj(obj, "tabos_soc", static_cast<double>(ms.tabos_soc));
+    add_to_obj(obj, "tabos_soh", static_cast<double>(ms.tabos_soh));
+    add_to_obj(obj, "tabos_temp", static_cast<double>(ms.tabos_temperature));
 
     double chg_cur = 0.0, con_vol = 0.0;
     if(config->get_robot_model() != RobotModel::S100)

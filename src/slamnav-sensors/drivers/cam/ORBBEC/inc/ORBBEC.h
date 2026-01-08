@@ -47,6 +47,7 @@ public:
     CAM_INTRINSIC get_intrinsic(int cam_idx);
     Eigen::Matrix4d get_extrinsic(int cam_idx);
     TIME_PTS get_scan(int cam_idx);
+    bool get_is_param_loaded(int cam_idx);
     QString get_cam_info_str();
 
     bool try_pop_depth_que(int idx, TIME_PTS& tp);

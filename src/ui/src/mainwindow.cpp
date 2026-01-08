@@ -2784,10 +2784,10 @@ void MainWindow::watch_loop()
                 if(ms.t != 0)
                 {
                     // when motor status 0, emo released, no charging
-                    //if(CONFIG::instance()->get_robot_model() == RobotModel::S100 &&((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0))
-                    //{
-                    //    MOBILE::instance()->motor_on();
-                    //}
+                    if(CONFIG::instance()->get_robot_model() == RobotModel::S100 &&((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0))
+                    {
+                        MOBILE::instance()->motor_on();
+                    }
 
                     if(ms.connection_m0 == 1    && ms.connection_m1 == 1 &&
                        ms.status_m0 == 1        && ms.status_m1 == 1 &&

@@ -222,6 +222,11 @@ Eigen::Matrix4d ORBBEC::get_extrinsic(int cam_idx)
     return res;
 }
 
+bool ORBBEC::get_is_param_loaded(int cam_idx)
+{
+    return is_param_loaded[cam_idx].load();
+}
+
 bool ORBBEC::try_pop_depth_que(int idx, TIME_PTS &tp)
 {
     if(depth_que[idx].try_pop(tp))

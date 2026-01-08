@@ -152,6 +152,33 @@ TIME_PTS CAM::get_scan(int idx)
     return cur_scan[idx];
 }
 
+bool CAM::get_is_param_loaded(int idx)
+{
+    if(config->get_cam_type() == "ORBBEC" && orbbec)
+    {
+        return orbbec->get_is_param_loaded(idx);
+    }
+    return false;
+}
+
+CAM_INTRINSIC CAM::get_intrinsic(int idx)
+{
+    if(config->get_cam_type() == "ORBBEC" && orbbec)
+    {
+        return orbbec->get_intrinsic(idx);
+    }
+    return CAM_INTRINSIC();
+}
+
+Eigen::Matrix4d CAM::get_extrinsic(int idx)
+{
+    if(config->get_cam_type() == "ORBBEC" && orbbec)
+    {
+        return orbbec->get_extrinsic(idx);
+    }
+    return Eigen::Matrix4d::Identity();
+}
+
 TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER)
 {
     double t0 = get_time();
