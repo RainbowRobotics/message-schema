@@ -184,8 +184,9 @@ private:
     QJsonValue convert_item(sio::message::ptr item);
 
     // get json utils
-    int     get_json_int(const QJsonObject& json, QString key);
-    double  get_json_double(const QJsonObject& json, QString key);
+    int get_json_int(const QJsonObject& json, QString key);
+    bool get_json_bool(const QJsonObject& json, QString key);
+    double get_json_double(const QJsonObject& json, QString key);
     QString get_json(const QJsonObject& json, QString key);
 
     // json --> vector<pair> switch utils
@@ -233,6 +234,7 @@ private Q_SLOTS:
     void send_update_response(const DATA_SOFTWARE& msg);
     void send_sensor_response(const DATA_SENSOR_INFO& msg);
     void send_control_response(const DATA_CONTROL& msg);
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
 
 private:
     std::mutex move_mtx;
@@ -368,9 +370,19 @@ private:
 
     /* safety handler */
     void handle_safetyio_cmd(const QJsonObject& data);
-    void slot_safety_io(DATA_SAFTYIO msg);
-    void send_safetyio_response(const DATA_SAFTYIO& msg);
     void handle_send_safetyIO(const QJsonObject& data);
+    void slot_safety_io(DATA_SAFTYIO msg);
+
+    /* control handler */
+    void handle_dock_start(DATA_CONTROL& msg);
+    void handle_undock_start(DATA_CONTROL& msg);
+    void handle_dock_stop(DATA_CONTROL& msg);
+    void handle_motor_control(DATA_CONTROL& msg);
+    void handle_set_safety_field(DATA_CONTROL& msg);
+    void handle_get_safety_field(DATA_CONTROL& msg);
+    void handle_reset_safety_field(DATA_CONTROL& msg);
+    void handle_get_safety_flag(DATA_CONTROL& msg);
+    void handle_charge_trigger(DATA_CONTROL& msg);
 
 };
 

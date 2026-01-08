@@ -1837,10 +1837,8 @@ void MainWindow::bt_UnDockStart()
 
 void MainWindow::bt_ChgTrig()
 {
-
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
-
 }
 
 void MainWindow::bt_ChgStop()

@@ -269,26 +269,26 @@ struct DATA_RANDOMSEQ
 
 struct DATA_CONTROL
 {
-    static constexpr const char* SetSafetyField     = "setSafetyField";
-    static constexpr const char* GetSafetyField     = "getSafetyField";
-    static constexpr const char* ResetSafetyField   = "resetSafetyField";
-    static constexpr const char* SetSafetyFlag      = "setSafetyFlag";
-    static constexpr const char* GetSafetyFlag      = "getSafetyFlag";
-    static constexpr const char* ResetSafetyFlag    = "resetSafetyFlag";
-    static constexpr const char* Dock               = "dock";
-    static constexpr const char* Undock             = "undock";
-    static constexpr const char* DockStop           = "dockStop";
-    static constexpr const char* RandomSeq          = "randomSeq";
-    static constexpr const char* LedControl         = "ledControl";
-    static constexpr const char* LidarOnOff         = "lidarOnOff";
-    static constexpr const char* PathOnOff          = "pathOnOff";
-    static constexpr const char* MotorOnOff         = "motorOnOff";
-    static constexpr const char* safetyIO           = "safetyIO";
-    static constexpr const char* setDigitalIO       = "setDigitalIO";
-    static constexpr const char* getDigitalIO       = "getDigitalIO";
+//    static constexpr const char* SetSafetyField     = "setSafetyField";
+//    static constexpr const char* GetSafetyField     = "getSafetyField";
+//    static constexpr const char* ResetSafetyField   = "resetSafetyField";
+//    static constexpr const char* SetSafetyFlag      = "setSafetyFlag";
+//    static constexpr const char* GetSafetyFlag      = "getSafetyFlag";
+//    static constexpr const char* ResetSafetyFlag    = "resetSafetyFlag";
+//    static constexpr const char* Dock               = "dock";
+//    static constexpr const char* Undock             = "undock";
+//    static constexpr const char* DockStop           = "dockStop";
+//    static constexpr const char* RandomSeq          = "randomSeq";
+//    static constexpr const char* LedControl         = "ledControl";
+//    static constexpr const char* LidarOnOff         = "lidarOnOff";
+//    static constexpr const char* PathOnOff          = "pathOnOff";
+//    static constexpr const char* MotorOnOff         = "motorOnOff";
+//    static constexpr const char* safetyIO           = "safetyIO";
+//    static constexpr const char* setDigitalIO       = "setDigitalIO";
+//    static constexpr const char* getDigitalIO       = "getDigitalIO";///
 
-    static constexpr const char* setObsBox          = "setObsBox";
-    static constexpr const char* getObsBox          = "getObsBox";
+//    static constexpr const char* setObsBox          = "setObsBox";//
+//    static constexpr const char* getObsBox          = "getObsBox";
 
     double time;
     QString id;

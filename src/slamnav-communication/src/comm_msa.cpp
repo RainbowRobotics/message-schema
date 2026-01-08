@@ -723,23 +723,21 @@ void COMM_MSA::handle_control_cmd(const QJsonObject& data)
     msg.time            = get_json_double(data, "time")/1000;
     msg.command         = get_json(data, "command");
 
-    if(msg.command == DATA_CONTROL::SetSafetyField)
+    std::cout << "msg.command : " << msg.command.toStdString() << std::endl;
+
+    if(msg.command == "setSafetyField" || msg.command == "getSafetyField")
     {
-        msg.safetyField = data["safetyField"].toString();
+        msg.safetyField = get_json(data, "safetyField");
     }
-    else if(msg.command == DATA_CONTROL::GetSafetyField)
-    {
-        msg.safetyField = data["safetyField"].toString();
-    }
-    else if(msg.command == DATA_CONTROL::ResetSafetyField || msg.command == DATA_CONTROL::SetSafetyFlag)
+    else if(msg.command == "resetSafetyField" || msg.command == "setSafetyFlag")
     {
         // safetyFlags 배열 파싱: [{"name": "obstacle", "value": false}, {"name": "bumper", "value": false}]
         QJsonArray safetyFlagsArr = data["safetyFlags"].toArray();
         for(const QJsonValue& val : safetyFlagsArr)
         {
             QJsonObject flagObj = val.toObject();
-            QString name = flagObj["name"].toString();
-            bool value = flagObj["value"].toBool();
+            QString name = get_json(flagObj, "name");
+            bool value = get_json_bool(flagObj, "value");
             msg.resetFlags.append(qMakePair(name, value));
         }
 
@@ -749,39 +747,40 @@ void COMM_MSA::handle_control_cmd(const QJsonObject& data)
             msg.resetField = data["resetField"].toString();
         }
     }
-    else if(msg.command == DATA_CONTROL::LedControl)
+    else if(msg.command == "ledControl")
     {
-        msg.onoff = data["onoff"].toBool();
-        msg.color = data["color"].toString();
+        msg.onoff = get_json_bool(data, "onoff");
+        msg.color = get_json(data, "color");
     }
-    else if(msg.command == DATA_CONTROL::LidarOnOff)
+    else if(msg.command == "lidarOnOff" || msg.command == "pathOnOff")
     {
-        msg.onoff = data["onoff"].toBool();
-        msg.frequency = data["frequency"].toInt();
+        msg.onoff = get_json_bool(data, "onoff");
+        msg.frequency = get_json_int(data, "frequency");
     }
-    else if(msg.command == DATA_CONTROL::PathOnOff)
+    else if(msg.command == "motorOnOff")
     {
-        msg.onoff = data["onoff"].toBool();
-        msg.frequency = data["frequency"].toInt();
+        msg.onoff = get_json_bool(data, "onoff");
     }
-    else if(msg.command == DATA_CONTROL::MotorOnOff)
-    {
-        msg.onoff = data["onoff"].toBool();
-    }
-    else if(msg.command == DATA_CONTROL::setDigitalIO)
+    else if(msg.command == "setDigitalIO")
     {
         handle_safetyio_cmd(data);
         return;
     }
-    else if(msg.command == DATA_CONTROL::getDigitalIO)
+    else if(msg.command == "getDigitalIO")
     {
         handle_send_safetyIO(data);
         return;
     }
+    else if(msg.command == "chargeTrigger")
+    {
+        handle_charge_trigger(msg);
+    }
 
-    std::lock_guard<std::mutex> lock(control_mtx);
-    control_queue.push(msg);
-    control_cv.notify_one();
+    {
+        std::lock_guard<std::mutex> lock(control_mtx);
+        control_queue.push(msg);
+        control_cv.notify_one();
+    }
 }
 
 void COMM_MSA::move_loop()
@@ -1065,351 +1064,89 @@ void COMM_MSA::control_loop()
             return !control_queue.empty() || !is_control_running;
         });
 
-        if(!is_control_running)
-        {
-            break;
-        }
-
-        if(control_queue.size() == 0)
-        {
-            continue;
-        }
-
         DATA_CONTROL msg = control_queue.front();
         control_queue.pop();
         lock.unlock();
 
         QString command = msg.command;
-        //spdlog::info("[MSA] control_loop received command: {}", command.toStdString());
         dctrl->set_cmd_id(msg.id);
-        if(command == DATA_CONTROL::Dock)
+
+        if(command == "dock")
         {
-            if(!dctrl || !ctrl)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            if(ctrl->get_is_moving())
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                log_info("Dock Start Failed : IS_MOVING is true");
-                return;
-            }
-
-            log_info("Docking start");
-            int d_field = config->get_docking_field();
-            if(d_field == -1)
-            {
-                mobile->set_detect_mode(0.0);
-            }
-            else
-            {
-                mobile->setlidarfield(d_field);
-            }
-
-            ctrl->set_is_moving(true);
-
-            Q_EMIT (signal_docking_start());
+            handle_dock_start(msg);
         }
-        else if(command == DATA_CONTROL::Undock)
+        else if(command == "undock")
         {
-            if(!dctrl || !ctrl)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            if(dctrl->get_dock_fsm_state() != DOCKING_FSM_OFF)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                log_info("UnDock Failed : DOCK_FSM_STATE is not OFF");
-                return;
-            }
-
-            log_info("UnDocking start");
-            int d_field = config->get_docking_field();
-            if(d_field == -1)
-            {
-                mobile->set_detect_mode(0.0);
-            }
-            else
-            {
-                mobile->setlidarfield(d_field);
-            }
-
-            Q_EMIT (signal_undocking_start());
-
-            double t = std::abs(config->get_robot_size_x_max() / 0.05) + 1.0;
-            QTimer::singleShot(t*1000, [&]()
-            {
-                ctrl->set_is_moving(false);
-            });
+            handle_undock_start(msg);
         }
-
-        else if(command == DATA_CONTROL::DockStop)
+        else if(command == "dockStop")
         {
-            if(!dctrl || !ctrl)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            log_info("Dock stop");
-
-            int d_field = config->get_docking_field();
-            if(d_field == -1)
-            {
-                mobile->set_detect_mode(0.0);
-            }
-
-            dctrl->stop();
-            ctrl->set_is_moving(false);
-
-            Q_EMIT (signal_docking_stop());
+            handle_dock_stop(msg);
         }
-        else if(command == DATA_CONTROL::RandomSeq)
+        else if(command == "randomSeq")
         {
             log_info("RandomSeq not developed");
             msg.result = "reject";
             msg.message = "not developed";
+
             send_control_response(msg);
-            return;
         }
-        else if(command == DATA_CONTROL::LedControl)
+        else if(command == "ledControl")
         {
-            log_info("LedControl not developed");
             // main->is_user_led
             // main->user_led_color
+            log_info("LedControl not developed");
             msg.result = "reject";
             msg.message = "not developed";
+
             send_control_response(msg);
-            return;
         }
-        else if(command == DATA_CONTROL::LidarOnOff)
+        else if(command == "lidarOnOff")
         {
-            log_info("LidarOnOff not developed");
             // main->lidar_view_frequency = msg.frequency;
+            log_info("LidarOnOff not developed");
             msg.result = "reject";
             msg.message = "not developed";
+
             send_control_response(msg);
-            return;
         }
-        else if(command == DATA_CONTROL::PathOnOff)
+        else if(command == "pathOnOff")
         {
-            log_info("PathOnOff not developed");
             // main->path_view_frequency = msg.frequency;
+            log_info("PathOnOff not developed");
             msg.result = "reject";
             msg.message = "not developed";
+
             send_control_response(msg);
-            return;
         }
-        else if(command == DATA_CONTROL::MotorOnOff)
+        else if(command == "motorOnOff")
         {
-            if(msg.onoff)
-            {
-                log_info("Motor On");
-                mobile->motor_on();
-                msg.result = "accept";
-                msg.message = "";
-            }
-            else
-            {
-                log_info("Motor Off");
-                //mobile->motor_off();
-                msg.result = "reject";
-                msg.message = "";
-            }
+            handle_motor_control(msg);
         }
-        else if(command == DATA_CONTROL::SetSafetyField)
+        else if(command == "setSafetyField")
         {
-            if(!mobile)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            unsigned int filed = msg.safetyField.toInt();
-            log_info("SetSafetyField : {}", (int)filed);
-            msg.result = "success";
-            msg.message = "";
-            mobile->setlidarfield(filed);
+            handle_set_safety_field(msg);
         }
-        else if(command == DATA_CONTROL::GetSafetyField)
+        else if(command == "getSafetyField")
         {
-            if(!mobile)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            auto status = mobile->get_status();
-            msg.result = "success";
-            msg.message = "";
-            msg.safetyField = QString::number(static_cast<int>(status.lidar_field));
+            handle_get_safety_field(msg);
         }
-        else if(command == DATA_CONTROL::ResetSafetyField || command == DATA_CONTROL::SetSafetyFlag)
+        else if(command == "resetSafetyField" || command == "setSafetyFlag")
         {
-            if(!mobile)
-            {
-                msg.result = "reject";
-                send_control_response(msg);
-                return;
-            }
-
-            bool allSuccess = true;
-            QStringList failedFields;
-            QStringList processedFields;
-
-            log_info("Received ResetSafetyField/setSafetyFlag command");
-
-            // 새로운 safetyFlags 배열 방식 처리
-            if(!msg.resetFlags.isEmpty())
-            {
-                for(const auto& flagPair : msg.resetFlags)
-                {
-                    QString name = flagPair.first;
-                    bool value = flagPair.second;
-
-                    // value가 false인 경우에만 리셋 수행 (flag를 클리어)
-                    if(!value)
-                    {
-                        if(name == "bumper")
-                        {
-                            if(mobile) mobile->clearbumperstop();
-                            processedFields.append(name);
-                        }
-                        else if(name == "interlock")
-                        {
-                            if(mobile) mobile->clearinterlockstop();
-                            processedFields.append(name);
-                        }
-                        else if(name == "obstacle")
-                        {
-                            if(mobile) mobile->clearobs();
-                            processedFields.append(name);
-                        }
-                        else if(name == "operationStop")
-                        {
-                            if(mobile) mobile->recover();
-                            processedFields.append(name);
-                        }
-                        else
-                        {
-                            allSuccess = false;
-                            failedFields.append(name);
-                        }
-                    }
-                }
-            }
-            // 기존 resetField 문자열 방식 (하위 호환성)
-            else if(!msg.resetField.isEmpty())
-            {
-                QStringList resetFieldList = msg.resetField.split(",", Qt::SkipEmptyParts);
-
-                for(const QString& field : resetFieldList)
-                {
-                    QString trimmedField = field.trimmed();
-
-                    if(trimmedField == "bumper")
-                    {
-                        if(mobile) mobile->clearbumperstop();
-                        processedFields.append(trimmedField);
-                    }
-                    else if(trimmedField == "interlock")
-                    {
-                        if(mobile) mobile->clearinterlockstop();
-                        processedFields.append(trimmedField);
-                    }
-                    else if(trimmedField == "obstacle")
-                    {
-                        if(mobile) mobile->clearobs();
-                        processedFields.append(trimmedField);
-                    }
-                    else if(trimmedField == "operationStop")
-                    {
-                        if(mobile) mobile->recover();
-                        processedFields.append(trimmedField);
-                    }
-                    else
-                    {
-                        allSuccess = false;
-                        failedFields.append(trimmedField);
-                    }
-                }
-            }
-
-            // 결과 설정
-            if(allSuccess && !processedFields.isEmpty())
-            {
-                msg.result = "success";
-                msg.message = "";
-                log_info("ResetSafetyField success: {}", processedFields.join(",").toStdString().c_str());
-            }
-            else if(processedFields.isEmpty() && failedFields.isEmpty())
-            {
-                msg.result = "reject";
-                msg.message = "";
-                log_error("Empty safetyFlags/resetField value");
-            }
-            else if(!failedFields.isEmpty())
-            {
-                // 일부 성공, 일부 실패한 경우
-                msg.result = processedFields.isEmpty() ? "reject" : "partial";
-                msg.message = QString("Invalid fields: %1").arg(failedFields.join(","));
-                log_error("Invalid resetField values: %s", failedFields.join(",").toStdString().c_str());
-            }
+            handle_reset_safety_field(msg);
         }
-        else if(command == DATA_CONTROL::GetSafetyFlag)
+        else if(command == "getSafetyFlag")
         {
-            if(!mobile)
-            {
-                msg.result = "reject";
-                msg.message = "mobile module not available";
-                log_error("Mobile module not available for GetSafetyFlag");
-                send_control_response(msg);
-                return;
-            }
-
-            auto ms = mobile->get_status();
-
-            // Get safety flag states (true = triggered/active, false = normal)
-            bool obstacleFlag = (ms.safety_state_obstacle_detected_1 != 0) || (ms.safety_state_obstacle_detected_2 != 0);
-            bool bumperFlag = (ms.safety_state_bumper_stop_1 != 0) || (ms.safety_state_bumper_stop_2 != 0);
-            bool interlockFlag = (ms.safety_state_interlock_stop_1 != 0) || (ms.safety_state_interlock_stop_2 != 0);
-            bool operationStopFlag = (ms.operational_stop_state_flag_1 != 0) || (ms.operational_stop_state_flag_2 != 0);
-
-            // Store in resetFlags for response (reusing the field for response)
-            msg.resetFlags.clear();
-            msg.resetFlags.append(qMakePair(QString("obstacle"), obstacleFlag));
-            msg.resetFlags.append(qMakePair(QString("bumper"), bumperFlag));
-            msg.resetFlags.append(qMakePair(QString("interlock"), interlockFlag));
-            msg.resetFlags.append(qMakePair(QString("operationStop"), operationStopFlag));
-
-            //spdlog::info("[MSA] GetSafetyFlag - obstacle: {}, bumper: {}, interlock: {}, operationStop: {}",
-            //             obstacleFlag, bumperFlag, interlockFlag, operationStopFlag);
-
-            msg.result = "success";
-            msg.message = "";
-
+            handle_get_safety_flag(msg);
         }
         else
         {
             msg.result = "reject";
             msg.message = "command 값이 잘못되었습니다.";
-            send_control_response(msg);
             log_error("Invalid command value");
-        }
 
-        send_control_response(msg);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            send_control_response(msg);
+        }
     }
 }
 
@@ -1651,7 +1388,6 @@ void COMM_MSA::handle_safetyio_cmd(const QJsonObject& data)
     }
 
     slot_safety_io(msg);
-    //    send_safetyio_response(data);
 }
 
 // for safetyio
@@ -1681,60 +1417,19 @@ void COMM_MSA::slot_safety_io(DATA_SAFTYIO msg)
     }
 }
 
-void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
-{
-    if(!is_connected)
-    {
-        return;
-    }
-    sio::object_message::ptr send_obj = sio::object_message::create();
-
-    send_obj->get_map()["command"] = sio::string_message::create(msg.command.toStdString());
-    send_obj->get_map()["command"] = sio::string_message::create(msg.id.toStdString());
-
-    // MCU 2차원 배열
-    sio::array_message::ptr total_arr = sio::array_message::create();
-
-    sio::array_message::ptr mcu0_arr = sio::array_message::create();
-    for(int i = 0; i < 8; i++)
-    {
-        mcu0_arr->get_vector().push_back(sio::int_message::create(msg.mcu0_dio[i]));
-    }
-    total_arr->get_vector().push_back(mcu0_arr);
-
-    sio::array_message::ptr mcu1_arr = sio::array_message::create();
-    for(int i = 0; i < 8; i++)
-    {
-        mcu1_arr->get_vector().push_back(sio::int_message::create(msg.mcu1_dio[i]));
-    }
-    total_arr->get_vector().push_back(mcu1_arr);
-
-    send_obj->get_map()["mcuDio"] = total_arr;
-
-    send_obj->get_map()["time"] = sio::string_message::create(QString::number(static_cast<qint64>(msg.time * 1000)).toStdString());
-
-    //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    rrs_socket->socket("slamnav")->emit("controlResponse", send_obj);
-}
-
 void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
 {
-    DATA_SAFTYIO msg;
-    msg.id              = get_json(data, "id");
-    msg.time            = get_json_double(data, "time")/1000;
-    msg.command         = get_json(data, "command");
-
-    MOBILE_STATUS ms = mobile->get_status();
-    sio::object_message::ptr rootObj = sio::object_message::create();
-    rootObj->get_map()["id"] = sio::string_message::create(msg.id.toStdString());
-
     auto toSioArray = [](unsigned char arr[8]) {
         sio::array_message::ptr jsonArr = sio::array_message::create();
-        for (int i = 0; i < 8; ++i) {
+        for(int i = 0; i < 8; ++i)
+        {
             jsonArr->get_vector().push_back(sio::int_message::create(arr[i]));
         }
         return jsonArr;
     };
+
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    MOBILE_STATUS ms = mobile->get_status();
 
     sio::array_message::ptr mcuDioArr = sio::array_message::create();
     mcuDioArr->get_vector().push_back(toSioArray(ms.mcu0_dio));
@@ -1744,46 +1439,337 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu0_din));
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu1_din));
 
-    rootObj->get_map()["mcuDio"] = mcuDioArr;
-    rootObj->get_map()["mcuDin"] = mcuDinArr;
+    add_to_obj(root_obj, "id", get_json(data, "id"));
+    add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
+    add_to_obj(root_obj, "result", std::string("success"));
+    root_obj->get_map()["mcuDio"] = mcuDioArr;
+    root_obj->get_map()["mcuDin"] = mcuDinArr;
 
-    msg.result = "success";
-
-    // Adding the time object
-    const double time = get_time0();
-    rootObj->get_map()["time"] = sio::string_message::create(std::to_string(static_cast<long long>(time * 1000)));
-    rootObj->get_map()["result"] = sio::string_message::create(msg.result.toStdString());
-
-    SOCKET_MESSAGE socket_msg;
-    socket_msg.event = "controlResponse";
-    socket_msg.data = rootObj;
-
-    rrs_socket->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("controlResponse", root_obj);
+    }
 }
 
-
-
-void COMM_MSA::send_dock_response(const DATA_DOCK& msg)
+void COMM_MSA::handle_dock_start(DATA_CONTROL& msg)
 {
-    if(!is_connected)
+    if(!dctrl || !ctrl)
     {
+        msg.result = "reject";
+        send_control_response(msg);
         return;
     }
 
-    sio::object_message::ptr send_object = sio::object_message::create();
-    add_to_obj(send_object, "id", msg.id);
-    add_to_obj(send_object, "command", msg.command);
-    add_to_obj(send_object, "result", msg.result);
-    add_to_obj(send_object, "message", msg.message);
-    add_to_obj(send_object, "time", static_cast<long long>(msg.time*1000));
-
-    SOCKET_MESSAGE socket_msg;
-    socket_msg.event = "controlResponse";
-    socket_msg.data  = send_object;
+    if(ctrl->get_is_moving())
     {
-        std::lock_guard<std::mutex> lock(send_response_mtx);
-        send_response_queue.push(socket_msg);
+        msg.result = "reject";
+        send_control_response(msg);
+        log_info("Dock Start Failed : IS_MOVING is true");
+        return;
     }
+
+    log_info("Docking start");
+    int d_field = config->get_docking_field();
+    if(d_field == -1)
+    {
+        mobile->set_detect_mode(0.0);
+    }
+    else
+    {
+        mobile->setlidarfield(d_field);
+    }
+
+    ctrl->set_is_moving(true);
+    send_control_response(msg);
+
+    Q_EMIT (signal_docking_start());
+}
+
+void COMM_MSA::handle_undock_start(DATA_CONTROL& msg)
+{
+    if(!dctrl || !ctrl)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    if(dctrl->get_dock_fsm_state() != DOCKING_FSM_OFF)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        log_info("UnDock Failed : DOCK_FSM_STATE is not OFF");
+        return;
+    }
+
+    log_info("UnDocking start");
+    int d_field = config->get_docking_field();
+    if(d_field == -1)
+    {
+        mobile->set_detect_mode(0.0);
+    }
+    else
+    {
+        mobile->setlidarfield(d_field);
+    }
+    send_control_response(msg);
+
+    Q_EMIT (signal_undocking_start());
+}
+
+void COMM_MSA::handle_dock_stop(DATA_CONTROL& msg)
+{
+    if(!dctrl || !ctrl)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    log_info("Dock stop");
+
+    int d_field = config->get_docking_field();
+    if(d_field == -1)
+    {
+        mobile->set_detect_mode(0.0);
+    }
+
+    dctrl->stop();
+    ctrl->set_is_moving(false);
+
+    Q_EMIT (signal_docking_stop());
+
+    double t = std::abs(config->get_robot_size_x_max() / 0.05) + 1.0;
+    QTimer::singleShot(t*1000, [&]()
+    {
+        ctrl->set_is_moving(false);
+    });
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_motor_control(DATA_CONTROL& msg)
+{
+    if(msg.onoff)
+    {
+        log_info("Motor On");
+        mobile->motor_on();
+        msg.result = "accept";
+        msg.message = "";
+    }
+    else
+    {
+        log_info("Motor Off");
+        //mobile->motor_off();
+        msg.result = "reject";
+        msg.message = "";
+    }
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_set_safety_field(DATA_CONTROL& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    unsigned int filed = msg.safetyField.toInt();
+    log_info("SetSafetyField : {}", (int)filed);
+    msg.result = "success";
+    msg.message = "";
+    mobile->setlidarfield(filed);
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_get_safety_field(DATA_CONTROL& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    auto status = mobile->get_status();
+    msg.result = "success";
+    msg.message = "";
+    msg.safetyField = QString::number(static_cast<int>(status.lidar_field));
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_reset_safety_field(DATA_CONTROL& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    bool allSuccess = true;
+    QStringList failedFields;
+    QStringList processedFields;
+
+    log_info("Received ResetSafetyField/setSafetyFlag command");
+
+    // 새로운 safetyFlags 배열 방식 처리
+    if(!msg.resetFlags.isEmpty())
+    {
+        for(const auto& flagPair : msg.resetFlags)
+        {
+            QString name = flagPair.first;
+            bool value = flagPair.second;
+
+            // value가 false인 경우에만 리셋 수행 (flag를 클리어)
+            if(!value)
+            {
+                if(name == "bumper")
+                {
+                    if(mobile) mobile->clearbumperstop();
+                    processedFields.append(name);
+                }
+                else if(name == "interlock")
+                {
+                    if(mobile) mobile->clearinterlockstop();
+                    processedFields.append(name);
+                }
+                else if(name == "obstacle")
+                {
+                    if(mobile) mobile->clearobs();
+                    processedFields.append(name);
+                }
+                else if(name == "operationStop")
+                {
+                    if(mobile) mobile->recover();
+                    processedFields.append(name);
+                }
+                else
+                {
+                    allSuccess = false;
+                    failedFields.append(name);
+                }
+            }
+        }
+    }
+    // 기존 resetField 문자열 방식 (하위 호환성)
+    else if(!msg.resetField.isEmpty())
+    {
+        QStringList resetFieldList = msg.resetField.split(",", Qt::SkipEmptyParts);
+
+        for(const QString& field : resetFieldList)
+        {
+            QString trimmedField = field.trimmed();
+
+            if(trimmedField == "bumper")
+            {
+                if(mobile) mobile->clearbumperstop();
+                processedFields.append(trimmedField);
+            }
+            else if(trimmedField == "interlock")
+            {
+                if(mobile) mobile->clearinterlockstop();
+                processedFields.append(trimmedField);
+            }
+            else if(trimmedField == "obstacle")
+            {
+                if(mobile) mobile->clearobs();
+                processedFields.append(trimmedField);
+            }
+            else if(trimmedField == "operationStop")
+            {
+                if(mobile) mobile->recover();
+                processedFields.append(trimmedField);
+            }
+            else
+            {
+                allSuccess = false;
+                failedFields.append(trimmedField);
+            }
+        }
+    }
+
+    // 결과 설정
+    if(allSuccess && !processedFields.isEmpty())
+    {
+        msg.result = "success";
+        msg.message = "";
+        log_info("ResetSafetyField success: {}", processedFields.join(",").toStdString().c_str());
+    }
+    else if(processedFields.isEmpty() && failedFields.isEmpty())
+    {
+        msg.result = "reject";
+        msg.message = "";
+        log_error("Empty safetyFlags/resetField value");
+    }
+    else if(!failedFields.isEmpty())
+    {
+        // 일부 성공, 일부 실패한 경우
+        msg.result = processedFields.isEmpty() ? "reject" : "partial";
+        msg.message = QString("Invalid fields: %1").arg(failedFields.join(","));
+        log_error("Invalid resetField values: %s", failedFields.join(",").toStdString().c_str());
+    }
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_get_safety_flag(DATA_CONTROL& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        msg.message = "mobile module not available";
+        log_error("Mobile module not available for GetSafetyFlag");
+        send_control_response(msg);
+        return;
+    }
+
+    auto ms = mobile->get_status();
+
+    // Get safety flag states (true = triggered/active, false = normal)
+    bool obstacleFlag = (ms.safety_state_obstacle_detected_1 != 0) || (ms.safety_state_obstacle_detected_2 != 0);
+    bool bumperFlag = (ms.safety_state_bumper_stop_1 != 0) || (ms.safety_state_bumper_stop_2 != 0);
+    bool interlockFlag = (ms.safety_state_interlock_stop_1 != 0) || (ms.safety_state_interlock_stop_2 != 0);
+    bool operationStopFlag = (ms.operational_stop_state_flag_1 != 0) || (ms.operational_stop_state_flag_2 != 0);
+
+    // Store in resetFlags for response (reusing the field for response)
+    msg.resetFlags.clear();
+    msg.resetFlags.append(qMakePair(QString("obstacle"), obstacleFlag));
+    msg.resetFlags.append(qMakePair(QString("bumper"), bumperFlag));
+    msg.resetFlags.append(qMakePair(QString("interlock"), interlockFlag));
+    msg.resetFlags.append(qMakePair(QString("operationStop"), operationStopFlag));
+
+    //spdlog::info("[MSA] GetSafetyFlag - obstacle: {}, bumper: {}, interlock: {}, operationStop: {}",
+    //             obstacleFlag, bumperFlag, interlockFlag, operationStopFlag);
+
+    msg.result = "success";
+    msg.message = "";
+
+    send_control_response(msg);
+}
+
+void COMM_MSA::handle_charge_trigger(DATA_CONTROL& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        msg.message = "mobile module not available";
+        send_control_response(msg);
+        return;
+    }
+
+    int non_used_int = 0;
+    mobile->xnergy_command(0, non_used_int);
+
+    msg.result = "success";
+    msg.message = "";
+
+    send_control_response(msg);
 }
 
 void COMM_MSA::send_local_path()
@@ -2077,6 +2063,29 @@ void COMM_MSA::send_sensor_response(const DATA_SENSOR_INFO& msg)
     }
 }
 
+void COMM_MSA::send_dock_response(const DATA_DOCK& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    add_to_obj(root_obj, "id", msg.id);
+    add_to_obj(root_obj, "command", msg.command);
+    add_to_obj(root_obj, "result", msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+    add_to_obj(root_obj, "time", static_cast<long long>(msg.time*1000));
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "controlResponse";
+    socket_msg.data  = root_obj;
+    {
+        std::lock_guard<std::mutex> lock(send_response_mtx);
+        send_response_queue.push(socket_msg);
+    }
+}
+
 void COMM_MSA::send_control_response(const DATA_CONTROL& msg)
 {
     if(!is_connected)
@@ -2084,47 +2093,39 @@ void COMM_MSA::send_control_response(const DATA_CONTROL& msg)
         return;
     }
 
-    sio::object_message::ptr send_object = sio::object_message::create();
+    sio::object_message::ptr root_obj = sio::object_message::create();
 
-    send_object->get_map()["id"]         = sio::string_message::create(msg.id.toStdString());
-    send_object->get_map()["command"]    = sio::string_message::create(msg.command.toStdString());
-    send_object->get_map()["result"]     = sio::string_message::create(msg.result.toStdString());
-    send_object->get_map()["message"]    = sio::string_message::create(msg.message.toStdString());
+    add_to_obj(root_obj, "id", msg.id);
+    add_to_obj(root_obj, "time", QString::number((long long)(msg.time*1000), 10));
+    add_to_obj(root_obj, "command", msg.command);
+    add_to_obj(root_obj, "result", msg.result);
+    add_to_obj(root_obj, "message", msg.message);
 
-    if(msg.command == DATA_CONTROL::Dock || msg.command == DATA_CONTROL::Undock || msg.command == DATA_CONTROL::RandomSeq)
+    if(msg.command == "dock" || msg.command == "undock" || msg.command == "randomSeq")
     {
     }
-    else if(msg.command == DATA_CONTROL::LedControl)
+    else if(msg.command == "ledControl")
     {
-        send_object->get_map()["onoff"] = sio::bool_message::create(msg.onoff);
+        add_to_obj(root_obj, "onoff", msg.onoff);
         if(msg.onoff)
         {
-            send_object->get_map()["color"]    = sio::string_message::create(msg.color.toStdString());
+            add_to_obj(root_obj, "color", msg.color);
         }
     }
-    else if(msg.command == DATA_CONTROL::LidarOnOff)
+    else if(msg.command == "lidarOnOff" || msg.command == "pathOnOff")
     {
-        send_object->get_map()["onoff"] = sio::bool_message::create(msg.onoff);
-        send_object->get_map()["frequency"] = sio::double_message::create(msg.frequency);
+        add_to_obj(root_obj, "onoff", msg.onoff);
+        add_to_obj(root_obj, "frequency", msg.frequency);
     }
-    else if(msg.command == DATA_CONTROL::PathOnOff)
+    else if(msg.command == "motorOnOff")
     {
-        send_object->get_map()["onoff"] = sio::bool_message::create(msg.onoff);
-        send_object->get_map()["frequency"] = sio::double_message::create(msg.frequency);
+        add_to_obj(root_obj, "onoff", msg.onoff);
     }
-    else if(msg.command == DATA_CONTROL::MotorOnOff)
+    else if(msg.command == "setSafetyField" || msg.command == "getSafetyField")
     {
-        send_object->get_map()["onoff"] = sio::bool_message::create(msg.onoff);
+        add_to_obj(root_obj, "safetyField", msg.safetyField);
     }
-    else if(msg.command == DATA_CONTROL::SetSafetyField)
-    {
-        send_object->get_map()["safetyField"]    = sio::string_message::create(msg.safetyField.toStdString());
-    }
-    else if(msg.command == DATA_CONTROL::GetSafetyField)
-    {
-        send_object->get_map()["safetyField"]    = sio::string_message::create(msg.safetyField.toStdString());
-    }
-    else if(msg.command == DATA_CONTROL::GetSafetyFlag)
+    else if(msg.command == "getSafetyFlag")
     {
         // Return safetyFlags array: [{"name": "obstacle", "value": true/false}, ...]
         sio::array_message::ptr safetyFlagsArr = sio::array_message::create();
@@ -2135,15 +2136,60 @@ void COMM_MSA::send_control_response(const DATA_CONTROL& msg)
             flagObj->get_map()["value"] = sio::bool_message::create(flag.second);
             safetyFlagsArr->get_vector().push_back(flagObj);
         }
-        send_object->get_map()["safetyFlags"] = safetyFlagsArr;
+        root_obj->get_map()["safetyFlags"] = safetyFlagsArr;
     }
-    else if(msg.command == DATA_CONTROL::ResetSafetyField)
+    else if(msg.command == "resetSafetyFlag")
     {
-        send_object->get_map()["resetField"]    = sio::string_message::create(msg.resetField.toStdString());
+        add_to_obj(root_obj, "resetField", msg.resetField);
     }
-    send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
-    rrs_socket->socket("slamnav")->emit("controlResponse", send_object);
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "controlResponse";
+    socket_msg.data  = root_obj;
+    {
+        std::lock_guard<std::mutex> lock(send_response_mtx);
+        send_response_queue.push(socket_msg);
+        send_response_cv.notify_one();
+    }
+}
+
+void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+    sio::object_message::ptr root_obj = sio::object_message::create();
+
+    add_to_obj(root_obj, "id", msg.id);
+    add_to_obj(root_obj, "command", msg.command);
+    add_to_obj(root_obj, "time", QString::number(static_cast<qint64>(msg.time * 1000)));
+
+    // MCU 2차원 배열
+    sio::array_message::ptr total_arr = sio::array_message::create();
+    {
+        sio::array_message::ptr mcu0_arr = sio::array_message::create();
+        for(int i = 0; i < 8; i++)
+        {
+            mcu0_arr->get_vector().push_back(sio::int_message::create(msg.mcu0_dio[i]));
+        }
+        total_arr->get_vector().push_back(mcu0_arr);
+
+        sio::array_message::ptr mcu1_arr = sio::array_message::create();
+        for(int i = 0; i < 8; i++)
+        {
+            mcu1_arr->get_vector().push_back(sio::int_message::create(msg.mcu1_dio[i]));
+        }
+        total_arr->get_vector().push_back(mcu1_arr);
+    }
+    root_obj->get_map()["mcuDio"] = total_arr;
+
+    //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    {
+        std::lock_guard<std::mutex> sock_lock(send_mtx);
+        rrs_socket->socket("slamnav")->emit("controlResponse", root_obj);
+    }
 }
 
 void COMM_MSA::send_status_loop()
@@ -3477,6 +3523,11 @@ int COMM_MSA::get_json_int(const QJsonObject& json, QString key)
 double COMM_MSA::get_json_double(const QJsonObject& json, QString key)
 {
     return json[key].toDouble();
+}
+
+bool COMM_MSA::get_json_bool(const QJsonObject& json, QString key)
+{
+    return json[key].toBool();
 }
 
 std::vector<std::pair<int, QString>> COMM_MSA::parse_index_json(const QJsonObject& json, QString key)
