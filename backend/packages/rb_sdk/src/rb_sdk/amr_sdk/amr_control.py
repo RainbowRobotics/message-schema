@@ -46,7 +46,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/frequency",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_FrequencyT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -69,7 +69,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/led",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_LEDT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -91,7 +91,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/motor",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Control_MotorT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -113,7 +113,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/dock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_DockT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -136,7 +136,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/obs_box",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Obs_BoxT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -158,7 +158,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/safety_field",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_FieldT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -179,7 +179,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/reset_safety_flag",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Reset_Safety_FlagT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -202,7 +202,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/safety_io",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_IoT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -222,7 +222,7 @@ class RBAmrControlSDK(SlamnavControlPort):
             f"{robot_model}/control/random_sequence",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Random_SequenceT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환

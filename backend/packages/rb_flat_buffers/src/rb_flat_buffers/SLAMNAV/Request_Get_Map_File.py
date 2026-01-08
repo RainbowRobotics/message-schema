@@ -8,79 +8,79 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class Request_Map_File(object):
+class Request_Get_Map_File(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Request_Map_File()
+        x = Request_Get_Map_File()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsRequest_Map_File(cls, buf, offset=0):
+    def GetRootAsRequest_Get_Map_File(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Request_Map_File
+    # Request_Get_Map_File
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Request_Map_File
+    # Request_Get_Map_File
     def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Map_File
+    # Request_Get_Map_File
     def MapName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Map_File
+    # Request_Get_Map_File
     def FileName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-def Request_Map_FileStart(builder: flatbuffers.Builder):
+def Request_Get_Map_FileStart(builder: flatbuffers.Builder):
     builder.StartObject(3)
 
 def Start(builder: flatbuffers.Builder):
-    Request_Map_FileStart(builder)
+    Request_Get_Map_FileStart(builder)
 
-def Request_Map_FileAddId(builder: flatbuffers.Builder, id: int):
+def Request_Get_Map_FileAddId(builder: flatbuffers.Builder, id: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 
 def AddId(builder: flatbuffers.Builder, id: int):
-    Request_Map_FileAddId(builder, id)
+    Request_Get_Map_FileAddId(builder, id)
 
-def Request_Map_FileAddMapName(builder: flatbuffers.Builder, mapName: int):
+def Request_Get_Map_FileAddMapName(builder: flatbuffers.Builder, mapName: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(mapName), 0)
 
 def AddMapName(builder: flatbuffers.Builder, mapName: int):
-    Request_Map_FileAddMapName(builder, mapName)
+    Request_Get_Map_FileAddMapName(builder, mapName)
 
-def Request_Map_FileAddFileName(builder: flatbuffers.Builder, fileName: int):
+def Request_Get_Map_FileAddFileName(builder: flatbuffers.Builder, fileName: int):
     builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(fileName), 0)
 
 def AddFileName(builder: flatbuffers.Builder, fileName: int):
-    Request_Map_FileAddFileName(builder, fileName)
+    Request_Get_Map_FileAddFileName(builder, fileName)
 
-def Request_Map_FileEnd(builder: flatbuffers.Builder) -> int:
+def Request_Get_Map_FileEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Request_Map_FileEnd(builder)
+    return Request_Get_Map_FileEnd(builder)
 
 
-class Request_Map_FileT(object):
+class Request_Get_Map_FileT(object):
 
-    # Request_Map_FileT
+    # Request_Get_Map_FileT
     def __init__(
         self,
         id = None,
@@ -93,9 +93,9 @@ class Request_Map_FileT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        requestMapFile = Request_Map_File()
-        requestMapFile.Init(buf, pos)
-        return cls.InitFromObj(requestMapFile)
+        requestGetMapFile = Request_Get_Map_File()
+        requestGetMapFile.Init(buf, pos)
+        return cls.InitFromObj(requestGetMapFile)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -103,20 +103,20 @@ class Request_Map_FileT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, requestMapFile):
-        x = Request_Map_FileT()
-        x._UnPack(requestMapFile)
+    def InitFromObj(cls, requestGetMapFile):
+        x = Request_Get_Map_FileT()
+        x._UnPack(requestGetMapFile)
         return x
 
-    # Request_Map_FileT
-    def _UnPack(self, requestMapFile):
-        if requestMapFile is None:
+    # Request_Get_Map_FileT
+    def _UnPack(self, requestGetMapFile):
+        if requestGetMapFile is None:
             return
-        self.id = requestMapFile.Id()
-        self.mapName = requestMapFile.MapName()
-        self.fileName = requestMapFile.FileName()
+        self.id = requestGetMapFile.Id()
+        self.mapName = requestGetMapFile.MapName()
+        self.fileName = requestGetMapFile.FileName()
 
-    # Request_Map_FileT
+    # Request_Get_Map_FileT
     def Pack(self, builder):
         if self.id is not None:
             id = builder.CreateString(self.id)
@@ -124,12 +124,12 @@ class Request_Map_FileT(object):
             mapName = builder.CreateString(self.mapName)
         if self.fileName is not None:
             fileName = builder.CreateString(self.fileName)
-        Request_Map_FileStart(builder)
+        Request_Get_Map_FileStart(builder)
         if self.id is not None:
-            Request_Map_FileAddId(builder, id)
+            Request_Get_Map_FileAddId(builder, id)
         if self.mapName is not None:
-            Request_Map_FileAddMapName(builder, mapName)
+            Request_Get_Map_FileAddMapName(builder, mapName)
         if self.fileName is not None:
-            Request_Map_FileAddFileName(builder, fileName)
-        requestMapFile = Request_Map_FileEnd(builder)
-        return requestMapFile
+            Request_Get_Map_FileAddFileName(builder, fileName)
+        requestGetMapFile = Request_Get_Map_FileEnd(builder)
+        return requestGetMapFile
