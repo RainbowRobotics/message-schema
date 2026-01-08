@@ -8,7 +8,7 @@ from multiprocessing import Queue
 from multiprocessing.context import SpawnProcess
 from multiprocessing.managers import SyncManager
 from multiprocessing.synchronize import Event as EventType
-from threading import Thread
+from threading import Lock, Thread
 from typing import Any, Literal
 
 from .context import ExecutionContext
@@ -86,7 +86,7 @@ def _execute_tree_in_process(
         state_dict["current_repeat"] = 0
         state_dict.pop("error", None)
 
-    def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False, target_step_id: str | None = None):
+    def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False):
         """
         step 트리 1회 실행.
         - JumpToStep / SubTaskChange 같은 제어 예외를 내부에서 처리(또는 재귀)
@@ -99,14 +99,14 @@ def _execute_tree_in_process(
         try:
             # 기존 정책 유지:
             # - 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
-            if state_dict["current_repeat"] > 1 or target_step_id is not None:
-                tree.execute_children(ctx, target_step_id=target_step_id)
+            if state_dict["current_repeat"] > 1:
+                tree.execute_children(ctx)
             else:
                 tree.execute(ctx)
 
         except JumpToStepException as e:
             # 특정 step으로 점프해서 children 실행
-            execute_task(tree, current_repeat, target_step_id=e.target_step_id)
+            tree.execute_children(ctx, target_step_id=e.target_step_id)
             return
 
         except ChangeSubTaskException as e:
@@ -117,16 +117,18 @@ def _execute_tree_in_process(
             if e.sub_task_post_tree is not None:
                 post_tree_ref["value"] = e.sub_task_post_tree
 
+            sub_task_tree = e.sub_task_tree
+
             try:
-                state_dict["sub_task_list"] = [{"task_id": tree.step_id, "sub_task_type": "CHANGE"}]
-                ctx.emit_sub_task_start(tree.step_id, "CHANGE")
+                state_dict["sub_task_list"] = [{"task_id": sub_task_tree.step_id, "sub_task_type": "CHANGE"}]
+                ctx.emit_sub_task_start(sub_task_tree.step_id, "CHANGE")
 
                 execute_task(e.sub_task_tree, current_repeat, is_sub_task=True)
             except SubTaskHaltException:
                 pass
             finally:
                 state_dict["sub_task_list"] = []
-                ctx.emit_sub_task_done(tree.step_id, "CHANGE")
+                ctx.emit_sub_task_done(sub_task_tree.step_id, "CHANGE")
 
             return
 
@@ -282,6 +284,7 @@ class ScriptExecutor:
         self.pause_events: dict[str, EventType] = {}
         self.resume_events: dict[str, EventType] = {}
         self.stop_events: dict[str, EventType] = {}
+        self._mu = Lock()
 
         # self._zenoh_client = zenoh_client
 
@@ -524,7 +527,7 @@ class ScriptExecutor:
             current_time = time.time()
 
             if current_time - last_event_process_time >= EVENT_BATCH_INTERVAL:
-                for pid in self.processes:
+                for pid in list(self.processes.keys()):
                     self._drain_events(pid)
                 last_event_process_time = current_time
 
@@ -546,15 +549,16 @@ class ScriptExecutor:
                 if self.controller is not None:
                     self.controller.on_complete(pid)
 
-                p = self.processes.pop(pid, None)
-                if p:
-                    p.join(timeout=0.1)
-                self.completion_events.pop(pid, None)
-                self.state_dicts.pop(pid, None)
-                self.pause_events.pop(pid, None)
-                self.resume_events.pop(pid, None)
-                self.stop_events.pop(pid, None)
-                self._pid_generation.pop(pid, None)
+                with self._mu:
+                    p = self.processes.pop(pid, None)
+                    if p:
+                        p.join(timeout=0.1)
+                    self.completion_events.pop(pid, None)
+                    self.state_dicts.pop(pid, None)
+                    self.pause_events.pop(pid, None)
+                    self.resume_events.pop(pid, None)
+                    self.stop_events.pop(pid, None)
+                    self._pid_generation.pop(pid, None)
 
             if not self.processes:
                 if self._on_all_complete is not None:
@@ -802,18 +806,20 @@ class ScriptExecutor:
 
     def get_state(self, process_id: str) -> dict:
         """프로세스 상태 조회"""
-        if process_id not in self.state_dicts:
-            return {"state": RB_Flow_Manager_ProgramState.IDLE}
+        with self._mu:
+            if process_id not in self.state_dicts:
+                return {"state": RB_Flow_Manager_ProgramState.IDLE}
 
-        state_dict = dict(self.state_dicts[process_id])
-        state_dict["is_alive"] = (
-            self.processes[process_id].is_alive() if process_id in self.processes else False
-        )
-        return state_dict
+            state_dict = dict(self.state_dicts[process_id])
+            is_alive = self.processes.get(process_id)
+            state_dict["is_alive"] = is_alive.is_alive() if is_alive else False
+            return state_dict
 
     def get_all_states(self) -> dict[str, dict]:
         """모든 프로세스 상태 조회"""
-        return {pid: self.get_state(pid) for pid in self.processes}
+        with self._mu:
+            pids = list(self.processes.keys())
+        return {pid: self.get_state(pid) for pid in pids}
 
     def stop_all(self):
         """모든 스크립트 중지"""

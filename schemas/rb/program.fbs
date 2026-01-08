@@ -1,4 +1,11 @@
+include "flow_manager.fbs";
+
 namespace program;
+
+enum RB_Program_Sub_Task_Type: byte {
+  SUB_TASK_INSERT,
+  SUB_TASK_CHANGE,
+}
 
 table RB_Program_Task_Status {
   task_id: string;
@@ -46,4 +53,10 @@ table Request_Program_At_Start {
 
 table Request_Program_At_End {
   task_id: string;
+}
+
+table Request_Update_Sub_Task_State {
+  sub_task_id: string;
+  sub_task_type: RB_Program_Sub_Task_Type;
+  state: flow_manager.RB_Flow_Manager_ProgramState;
 }

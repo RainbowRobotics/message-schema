@@ -926,9 +926,11 @@ class SubTaskStep(Step):
             except SubTaskHaltException:
                 pass
             finally:
-                print(f"sub_task_list end: {ctx.state_dict['sub_task_list']}", flush=True)
-                if len(ctx.state_dict["sub_task_list"]) > 0:
-                    ctx.state_dict["sub_task_list"].pop()
+                sub_task_list = ctx.state_dict.get("sub_task_list", [])
+                if len(sub_task_list) > 0:
+                    sub_task_list.pop()
+                    ctx.state_dict["sub_task_list"] = sub_task_list
+                    time.sleep(0.1)
 
                 ctx.emit_sub_task_done(sub_task_tree.step_id, self.sub_task_type)
 
