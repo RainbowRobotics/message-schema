@@ -35,9 +35,9 @@ async def send_email(
     to_email: Annotated[list[str], Form(..., example=["blike1234@gmail.com"])],
     subject: str = Form(..., example="안녕 나는 스웨거테스트"),
     body: str = Form(..., example="안녕 나는 스웨거테스트 본문"),
-    from_email: str = Form(None),
-    password: str = Form(None),
-    attachments: Annotated[list[UploadFile] | None, File()] =None
+    from_email: Annotated[str | None, Form()] = None,
+    password: Annotated[str | None, Form()] = None,
+    attachments: Annotated[list[UploadFile] | None, File()] = None,
     ):
     '''
     # email 전송 요청
@@ -85,6 +85,8 @@ async def send_email(
     - 수신자 이메일 주소가 유효하지 않습니다.
     ## ***500*** Internal Server Error
     - 서버 내부 로직 예외 발생
+
+    ***Swagger 테스트 시, Send empty value 체크박스는 반드시 체크 해제*** 후 보내야 합니다.
     '''
     rb_log.info(f"[send_email] Email 전송 요청: from_email={from_email}, to_email={to_email}, \
         subject={subject}, body={body}, \

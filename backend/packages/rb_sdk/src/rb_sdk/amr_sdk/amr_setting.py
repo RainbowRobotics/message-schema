@@ -42,7 +42,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Robot_TypeT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -62,7 +62,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Robot_TypeT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -82,7 +82,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_IndexT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -103,7 +103,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_IndexT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -123,7 +123,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_sensor_on",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_OnT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -143,7 +143,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_sensor_off",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_OffT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -162,7 +162,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/get_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Pdu_ParamT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
@@ -182,7 +182,7 @@ class RBAmrSettingSDK(SlamnavSettingPort):
             f"{robot_model}/setting/set_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Pdu_ParamT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
         return result["dict_payload"]

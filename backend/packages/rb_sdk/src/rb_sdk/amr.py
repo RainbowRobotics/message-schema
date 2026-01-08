@@ -12,8 +12,8 @@ class RBAmrSDK(RBBaseSDK):
     """Rainbow Robotics AMR SDK"""
     def __init__(self):
         super().__init__()
-        self.move_sdk = RBAmrMoveSDK(client=self.zenoh_client)
-        self.control_sdk = RBAmrControlSDK(client=self.zenoh_client)
-        self.localization_sdk = RBAmrLocalizationSDK(client=self.zenoh_client)
-        self.map_sdk = RBAmrMapSDK(client=self.zenoh_client)
-        self.setting_sdk = RBAmrSettingSDK(client=self.zenoh_client)
+        self.move = RBAmrMoveSDK(client=self.zenoh_client)
+        self.control = RBAmrControlSDK(client=self.zenoh_client)
+        self.localization = RBAmrLocalizationSDK(client=self.zenoh_client)
+        self.map = RBAmrMapSDK(client=self.zenoh_client)
+        self.setting = RBAmrSettingSDK(client=self.zenoh_client)

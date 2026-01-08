@@ -46,7 +46,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_InitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -67,7 +67,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/semi_auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_SemiAutoInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -88,7 +88,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_AutoInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -109,7 +109,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StartT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -130,7 +130,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StopT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환
@@ -152,7 +152,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
             f"{robot_model}/localization/random_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_RandomInitT,
-            flatbuffer_buf_size=100,
+            flatbuffer_buf_size=125,
         )
 
         # 3) 결과 처리 및 반환

@@ -8,161 +8,161 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class Response_Map_Cloud(object):
+class Response_Get_Map_File(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Response_Map_Cloud()
+        x = Response_Get_Map_File()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsResponse_Map_Cloud(cls, buf, offset=0):
+    def GetRootAsResponse_Get_Map_File(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def MapName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def FileName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Result(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Message(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Size(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
         return 0
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def Data(self, j: int):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 8))
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
         return 0
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def DataAsNumpy(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
-            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Float64Flags, o)
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
         return 0
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def DataLength(self) -> int:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
-    # Response_Map_Cloud
+    # Response_Get_Map_File
     def DataIsNone(self) -> bool:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         return o == 0
 
-def Response_Map_CloudStart(builder: flatbuffers.Builder):
+def Response_Get_Map_FileStart(builder: flatbuffers.Builder):
     builder.StartObject(7)
 
 def Start(builder: flatbuffers.Builder):
-    Response_Map_CloudStart(builder)
+    Response_Get_Map_FileStart(builder)
 
-def Response_Map_CloudAddId(builder: flatbuffers.Builder, id: int):
+def Response_Get_Map_FileAddId(builder: flatbuffers.Builder, id: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 
 def AddId(builder: flatbuffers.Builder, id: int):
-    Response_Map_CloudAddId(builder, id)
+    Response_Get_Map_FileAddId(builder, id)
 
-def Response_Map_CloudAddMapName(builder: flatbuffers.Builder, mapName: int):
+def Response_Get_Map_FileAddMapName(builder: flatbuffers.Builder, mapName: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(mapName), 0)
 
 def AddMapName(builder: flatbuffers.Builder, mapName: int):
-    Response_Map_CloudAddMapName(builder, mapName)
+    Response_Get_Map_FileAddMapName(builder, mapName)
 
-def Response_Map_CloudAddFileName(builder: flatbuffers.Builder, fileName: int):
+def Response_Get_Map_FileAddFileName(builder: flatbuffers.Builder, fileName: int):
     builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(fileName), 0)
 
 def AddFileName(builder: flatbuffers.Builder, fileName: int):
-    Response_Map_CloudAddFileName(builder, fileName)
+    Response_Get_Map_FileAddFileName(builder, fileName)
 
-def Response_Map_CloudAddResult(builder: flatbuffers.Builder, result: int):
+def Response_Get_Map_FileAddResult(builder: flatbuffers.Builder, result: int):
     builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
 
 def AddResult(builder: flatbuffers.Builder, result: int):
-    Response_Map_CloudAddResult(builder, result)
+    Response_Get_Map_FileAddResult(builder, result)
 
-def Response_Map_CloudAddMessage(builder: flatbuffers.Builder, message: int):
+def Response_Get_Map_FileAddMessage(builder: flatbuffers.Builder, message: int):
     builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
 
 def AddMessage(builder: flatbuffers.Builder, message: int):
-    Response_Map_CloudAddMessage(builder, message)
+    Response_Get_Map_FileAddMessage(builder, message)
 
-def Response_Map_CloudAddSize(builder: flatbuffers.Builder, size: int):
-    builder.PrependInt32Slot(5, size, 0)
+def Response_Get_Map_FileAddSize(builder: flatbuffers.Builder, size: int):
+    builder.PrependUint32Slot(5, size, 0)
 
 def AddSize(builder: flatbuffers.Builder, size: int):
-    Response_Map_CloudAddSize(builder, size)
+    Response_Get_Map_FileAddSize(builder, size)
 
-def Response_Map_CloudAddData(builder: flatbuffers.Builder, data: int):
+def Response_Get_Map_FileAddData(builder: flatbuffers.Builder, data: int):
     builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 def AddData(builder: flatbuffers.Builder, data: int):
-    Response_Map_CloudAddData(builder, data)
+    Response_Get_Map_FileAddData(builder, data)
 
-def Response_Map_CloudStartDataVector(builder, numElems: int) -> int:
-    return builder.StartVector(8, numElems, 8)
+def Response_Get_Map_FileStartDataVector(builder, numElems: int) -> int:
+    return builder.StartVector(1, numElems, 1)
 
 def StartDataVector(builder, numElems: int) -> int:
-    return Response_Map_CloudStartDataVector(builder, numElems)
+    return Response_Get_Map_FileStartDataVector(builder, numElems)
 
-def Response_Map_CloudEnd(builder: flatbuffers.Builder) -> int:
+def Response_Get_Map_FileEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Response_Map_CloudEnd(builder)
+    return Response_Get_Map_FileEnd(builder)
 
 try:
     from typing import List
 except:
     pass
 
-class Response_Map_CloudT(object):
+class Response_Get_Map_FileT(object):
 
-    # Response_Map_CloudT
+    # Response_Get_Map_FileT
     def __init__(
         self,
         id = None,
@@ -179,13 +179,13 @@ class Response_Map_CloudT(object):
         self.result = result  # type: Optional[str]
         self.message = message  # type: Optional[str]
         self.size = size  # type: int
-        self.data = data  # type: Optional[List[float]]
+        self.data = data  # type: Optional[List[int]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        responseMapCloud = Response_Map_Cloud()
-        responseMapCloud.Init(buf, pos)
-        return cls.InitFromObj(responseMapCloud)
+        responseGetMapFile = Response_Get_Map_File()
+        responseGetMapFile.Init(buf, pos)
+        return cls.InitFromObj(responseGetMapFile)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -193,30 +193,30 @@ class Response_Map_CloudT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, responseMapCloud):
-        x = Response_Map_CloudT()
-        x._UnPack(responseMapCloud)
+    def InitFromObj(cls, responseGetMapFile):
+        x = Response_Get_Map_FileT()
+        x._UnPack(responseGetMapFile)
         return x
 
-    # Response_Map_CloudT
-    def _UnPack(self, responseMapCloud):
-        if responseMapCloud is None:
+    # Response_Get_Map_FileT
+    def _UnPack(self, responseGetMapFile):
+        if responseGetMapFile is None:
             return
-        self.id = responseMapCloud.Id()
-        self.mapName = responseMapCloud.MapName()
-        self.fileName = responseMapCloud.FileName()
-        self.result = responseMapCloud.Result()
-        self.message = responseMapCloud.Message()
-        self.size = responseMapCloud.Size()
-        if not responseMapCloud.DataIsNone():
+        self.id = responseGetMapFile.Id()
+        self.mapName = responseGetMapFile.MapName()
+        self.fileName = responseGetMapFile.FileName()
+        self.result = responseGetMapFile.Result()
+        self.message = responseGetMapFile.Message()
+        self.size = responseGetMapFile.Size()
+        if not responseGetMapFile.DataIsNone():
             if np is None:
                 self.data = []
-                for i in range(responseMapCloud.DataLength()):
-                    self.data.append(responseMapCloud.Data(i))
+                for i in range(responseGetMapFile.DataLength()):
+                    self.data.append(responseGetMapFile.Data(i))
             else:
-                self.data = responseMapCloud.DataAsNumpy()
+                self.data = responseGetMapFile.DataAsNumpy()
 
-    # Response_Map_CloudT
+    # Response_Get_Map_FileT
     def Pack(self, builder):
         if self.id is not None:
             id = builder.CreateString(self.id)
@@ -232,23 +232,23 @@ class Response_Map_CloudT(object):
             if np is not None and type(self.data) is np.ndarray:
                 data = builder.CreateNumpyVector(self.data)
             else:
-                Response_Map_CloudStartDataVector(builder, len(self.data))
+                Response_Get_Map_FileStartDataVector(builder, len(self.data))
                 for i in reversed(range(len(self.data))):
-                    builder.PrependFloat64(self.data[i])
+                    builder.PrependUint8(self.data[i])
                 data = builder.EndVector()
-        Response_Map_CloudStart(builder)
+        Response_Get_Map_FileStart(builder)
         if self.id is not None:
-            Response_Map_CloudAddId(builder, id)
+            Response_Get_Map_FileAddId(builder, id)
         if self.mapName is not None:
-            Response_Map_CloudAddMapName(builder, mapName)
+            Response_Get_Map_FileAddMapName(builder, mapName)
         if self.fileName is not None:
-            Response_Map_CloudAddFileName(builder, fileName)
+            Response_Get_Map_FileAddFileName(builder, fileName)
         if self.result is not None:
-            Response_Map_CloudAddResult(builder, result)
+            Response_Get_Map_FileAddResult(builder, result)
         if self.message is not None:
-            Response_Map_CloudAddMessage(builder, message)
-        Response_Map_CloudAddSize(builder, self.size)
+            Response_Get_Map_FileAddMessage(builder, message)
+        Response_Get_Map_FileAddSize(builder, self.size)
         if self.data is not None:
-            Response_Map_CloudAddData(builder, data)
-        responseMapCloud = Response_Map_CloudEnd(builder)
-        return responseMapCloud
+            Response_Get_Map_FileAddData(builder, data)
+        responseGetMapFile = Response_Get_Map_FileEnd(builder)
+        return responseGetMapFile

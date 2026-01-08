@@ -62,7 +62,6 @@ backend.preview: ## Backend 운영 환경 실행
 backend.flatc: ## FlatBuffers 코드 생성
 	echo "WORKDIR: $(WORKDIR)"
 	echo "ROOT_DIR: $(ROOT_DIR)"
-	sudo chown -R $(USER):$(GROUP) ${WORKDIR}/packages/rb_flat_buffers
 	@if command -v flatc >/dev/null 2>&1; then \
 		find "$(WORKDIR)/packages/rb_flat_buffers/src/rb_flat_buffers" -mindepth 1 -exec rm -rf {} +; \
 		find "${WORKDIR}/../schemas" -name "*.fbs" -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy -o "${WORKDIR}/packages/rb_flat_buffers/src/rb_flat_buffers" {} \; ; \

@@ -8,79 +8,79 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class Request_Map_Cloud(object):
+class Request_Get_Map_Cloud(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Request_Map_Cloud()
+        x = Request_Get_Map_Cloud()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsRequest_Map_Cloud(cls, buf, offset=0):
+    def GetRootAsRequest_Get_Map_Cloud(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Request_Map_Cloud
+    # Request_Get_Map_Cloud
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Request_Map_Cloud
+    # Request_Get_Map_Cloud
     def Id(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Map_Cloud
+    # Request_Get_Map_Cloud
     def MapName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Request_Map_Cloud
+    # Request_Get_Map_Cloud
     def FileName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-def Request_Map_CloudStart(builder: flatbuffers.Builder):
+def Request_Get_Map_CloudStart(builder: flatbuffers.Builder):
     builder.StartObject(3)
 
 def Start(builder: flatbuffers.Builder):
-    Request_Map_CloudStart(builder)
+    Request_Get_Map_CloudStart(builder)
 
-def Request_Map_CloudAddId(builder: flatbuffers.Builder, id: int):
+def Request_Get_Map_CloudAddId(builder: flatbuffers.Builder, id: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
 
 def AddId(builder: flatbuffers.Builder, id: int):
-    Request_Map_CloudAddId(builder, id)
+    Request_Get_Map_CloudAddId(builder, id)
 
-def Request_Map_CloudAddMapName(builder: flatbuffers.Builder, mapName: int):
+def Request_Get_Map_CloudAddMapName(builder: flatbuffers.Builder, mapName: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(mapName), 0)
 
 def AddMapName(builder: flatbuffers.Builder, mapName: int):
-    Request_Map_CloudAddMapName(builder, mapName)
+    Request_Get_Map_CloudAddMapName(builder, mapName)
 
-def Request_Map_CloudAddFileName(builder: flatbuffers.Builder, fileName: int):
+def Request_Get_Map_CloudAddFileName(builder: flatbuffers.Builder, fileName: int):
     builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(fileName), 0)
 
 def AddFileName(builder: flatbuffers.Builder, fileName: int):
-    Request_Map_CloudAddFileName(builder, fileName)
+    Request_Get_Map_CloudAddFileName(builder, fileName)
 
-def Request_Map_CloudEnd(builder: flatbuffers.Builder) -> int:
+def Request_Get_Map_CloudEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Request_Map_CloudEnd(builder)
+    return Request_Get_Map_CloudEnd(builder)
 
 
-class Request_Map_CloudT(object):
+class Request_Get_Map_CloudT(object):
 
-    # Request_Map_CloudT
+    # Request_Get_Map_CloudT
     def __init__(
         self,
         id = None,
@@ -93,9 +93,9 @@ class Request_Map_CloudT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        requestMapCloud = Request_Map_Cloud()
-        requestMapCloud.Init(buf, pos)
-        return cls.InitFromObj(requestMapCloud)
+        requestGetMapCloud = Request_Get_Map_Cloud()
+        requestGetMapCloud.Init(buf, pos)
+        return cls.InitFromObj(requestGetMapCloud)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -103,20 +103,20 @@ class Request_Map_CloudT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, requestMapCloud):
-        x = Request_Map_CloudT()
-        x._UnPack(requestMapCloud)
+    def InitFromObj(cls, requestGetMapCloud):
+        x = Request_Get_Map_CloudT()
+        x._UnPack(requestGetMapCloud)
         return x
 
-    # Request_Map_CloudT
-    def _UnPack(self, requestMapCloud):
-        if requestMapCloud is None:
+    # Request_Get_Map_CloudT
+    def _UnPack(self, requestGetMapCloud):
+        if requestGetMapCloud is None:
             return
-        self.id = requestMapCloud.Id()
-        self.mapName = requestMapCloud.MapName()
-        self.fileName = requestMapCloud.FileName()
+        self.id = requestGetMapCloud.Id()
+        self.mapName = requestGetMapCloud.MapName()
+        self.fileName = requestGetMapCloud.FileName()
 
-    # Request_Map_CloudT
+    # Request_Get_Map_CloudT
     def Pack(self, builder):
         if self.id is not None:
             id = builder.CreateString(self.id)
@@ -124,12 +124,12 @@ class Request_Map_CloudT(object):
             mapName = builder.CreateString(self.mapName)
         if self.fileName is not None:
             fileName = builder.CreateString(self.fileName)
-        Request_Map_CloudStart(builder)
+        Request_Get_Map_CloudStart(builder)
         if self.id is not None:
-            Request_Map_CloudAddId(builder, id)
+            Request_Get_Map_CloudAddId(builder, id)
         if self.mapName is not None:
-            Request_Map_CloudAddMapName(builder, mapName)
+            Request_Get_Map_CloudAddMapName(builder, mapName)
         if self.fileName is not None:
-            Request_Map_CloudAddFileName(builder, fileName)
-        requestMapCloud = Request_Map_CloudEnd(builder)
-        return requestMapCloud
+            Request_Get_Map_CloudAddFileName(builder, fileName)
+        requestGetMapCloud = Request_Get_Map_CloudEnd(builder)
+        return requestGetMapCloud
