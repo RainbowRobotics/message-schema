@@ -82,6 +82,7 @@ def _execute_tree_in_process(
         state_dict["current_step_id"] = step.step_id
         state_dict["current_step_name"] = step.name
         state_dict["total_repeat"] = "infinity" if repeat_count == 0 else repeat_count
+        state_dict["sub_task_list"] = []
         state_dict["current_repeat"] = 0
         state_dict.pop("error", None)
 
@@ -96,9 +97,6 @@ def _execute_tree_in_process(
         state_dict["current_repeat"] = current_repeat
 
         try:
-            if is_sub_task and ctx is not None:
-                ctx.emit_sub_task_start(tree.step_id, "CHANGE")
-
             # 기존 정책 유지:
             # - 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
             if state_dict["current_repeat"] > 1 or target_step_id is not None:
@@ -120,17 +118,17 @@ def _execute_tree_in_process(
                 post_tree_ref["value"] = e.sub_task_post_tree
 
             try:
+                state_dict["sub_task_list"] = [{"task_id": tree.step_id, "sub_task_type": "CHANGE"}]
+                ctx.emit_sub_task_start(tree.step_id, "CHANGE")
+
                 execute_task(e.sub_task_tree, current_repeat, is_sub_task=True)
             except SubTaskHaltException:
                 pass
             finally:
+                state_dict["sub_task_list"] = []
                 ctx.emit_sub_task_done(tree.step_id, "CHANGE")
 
             return
-
-        finally:
-            if is_sub_task and ctx is not None:
-                ctx.emit_sub_task_done(tree.step_id, "CHANGE")
 
     def run_main_loop():
         if repeat_count > 0:
@@ -403,6 +401,7 @@ class ScriptExecutor:
             step_id = evt.get("step_id")
             is_wait = evt.get("is_wait", False)
             evt_gen = evt.get("generation")
+            sub_task_id = evt.get("sub_task_id")
             sub_task_type = evt.get("sub_task_type")
 
             cur_gen = self._pid_generation.get(pid)
@@ -426,17 +425,17 @@ class ScriptExecutor:
 
                 elif evt_type == "sub_task_start":
                     if self._on_sub_task_start is not None:
-                        self._on_sub_task_start(pid, sub_task_type)
+                        self._on_sub_task_start(pid, sub_task_id, sub_task_type)
 
                     if self.controller is not None:
-                        self.controller.on_sub_task_start(pid, sub_task_type)
+                        self.controller.on_sub_task_start(pid, sub_task_id, sub_task_type)
 
                 elif evt_type == "sub_task_done":
                     if self._on_sub_task_done is not None:
                         self._on_sub_task_done(pid, sub_task_type)
 
                     if self.controller is not None:
-                        self.controller.on_sub_task_done(pid, sub_task_type)
+                        self.controller.on_sub_task_done(pid, sub_task_id, sub_task_type)
 
                 elif evt_type == "done":
                     if self._on_done is not None:

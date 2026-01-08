@@ -1,145 +1,180 @@
 from __future__ import annotations
-import io, os, re, sys, tokenize
-from bisect import bisect_right
+
+import os
+import re
+import sys
 from pathlib import Path
 
-# rb_flat_buffers / rb_flat_buffers 등 선택 가능
 PREFIX = os.environ.get("FLATBUF_PREFIX", "rb_flat_buffers")
 
 
-def protect_ranges(src: str):
-    b = io.BytesIO(src.encode("utf-8"))
-    protected = []
-    for tok in tokenize.tokenize(b.readline):
-        if tok.type in (tokenize.STRING, tokenize.COMMENT):
-            s = _offset_of(src, tok.start)
-            e = _offset_of(src, tok.end)
-            protected.append((s, e))
-    protected.sort()
-    merged = []
-    for s, e in protected:
-        if not merged or merged[-1][1] < s:
-            merged.append([s, e])
-        else:
-            merged[-1][1] = max(merged[-1][1], e)
-    return [(s, e) for s, e in merged]
+def _collect_top_namespaces(root: Path) -> list[str]:
+    # rb_flat_buffers/src/rb_flat_buffers 아래의 최상위 디렉토리들: program, flow_manager, IPC ...
+    tops = []
+    for p in root.iterdir():
+        if p.is_dir() and p.name not in {"__pycache__", PREFIX}:
+            tops.append(p.name)
+    return sorted(tops)
 
 
-def _offset_of(src: str, lc):
-    line, col = lc
-    off = 0
-    for i, ln in enumerate(src.splitlines(keepends=True), start=1):
-        if i == line:
-            return off + col
-        off += len(ln)
-    return off
+def _prefix_import_lines(text: str, *, tops_alt: str) -> str:
+    """
+    import 문에서만:
+      from program.X import ...  -> from rb_flat_buffers.program.X import ...
+      import program.X          -> import rb_flat_buffers.program.X
+    """
+    lines = text.splitlines(keepends=True)
+    out = []
+    for ln in lines:
+        ln = re.sub(rf"^(from)\s+({tops_alt})\.", rf"\1 {PREFIX}.\2.", ln)
+        ln = re.sub(rf"^(import)\s+({tops_alt})\.", rf"\1 {PREFIX}.\2.", ln)
+        out.append(ln)
+    return "".join(out)
 
 
-def overlaps(protected, s, e):
-    i = bisect_right(protected, (s, float("inf"))) - 1
-    if i >= 0 and protected[i][1] > s:
-        return True
-    return bool(i + 1 < len(protected) and protected[i + 1][0] < e)
+def _drop_missing_module_imports(root: Path, text: str) -> str:
+    """
+    from rb_flat_buffers.<ns>.<MOD> import ...
+    에서 <ns>/<MOD>.py(.pyi)가 실제로 없으면 그 import 라인을 삭제한다.
+    (flatc가 가끔 import는 만들고 파일은 안 만드는 케이스 대응)
+    """
 
-
-def add_prefix_and_fix(root: Path):
-    tops = sorted(
-        p.name for p in root.iterdir() if p.is_dir() and p.name not in {"__pycache__", PREFIX}
+    patt = re.compile(
+        rf"^from\s+{re.escape(PREFIX)}\.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\s+import\s+[^\n]*\n",
+        re.M,
     )
+
+    def repl(m: re.Match[str]) -> str:
+        ns = m.group(1)
+        mod = m.group(2)
+        ns_dir = root / ns
+        if not ns_dir.is_dir():
+            return ""  # 네임스페이스 폴더 자체가 없으면 제거
+        if (ns_dir / f"{mod}.py").exists() or (ns_dir / f"{mod}.pyi").exists():
+            return m.group(0)
+        return ""  # 파일이 없으면 import 라인 제거
+
+    return patt.sub(repl, text)
+
+
+def _add_tclass_imports(root: Path, path: Path, text: str) -> str:
+    """
+    (옵션) SomethingT 타입을 쓰는데 import가 없으면 추가.
+    네 기존 로직을 최대한 유지하되, namespace는 '# namespace: X'에서 추출.
+    """
+    mod_name = path.stem
+    ns_match = re.search(r"^#\s*namespace:\s*([A-Za-z0-9_]+)\s*$", text, re.M)
+    ns = ns_match.group(1) if ns_match else None
+    if not ns:
+        return text
+
+    used_T = sorted(set(re.findall(r"\b([A-Z][A-Za-z0-9_]*?T)\b", text)))
+    for tname in used_T:
+        base = tname[:-1]
+        if base == mod_name:
+            continue
+
+        # 해당 모듈 파일이 실제 존재하는 경우만 import 삽입
+        if not ((root / ns / f"{base}.py").exists() or (root / ns / f"{base}.pyi").exists()):
+            continue
+
+        # 이미 base import 라인 있으면 T만 추가
+        m = re.search(
+            rf"^from\s+{re.escape(PREFIX)}\.{re.escape(ns)}\.{re.escape(base)}\s+import\s+([^\n]+)$",
+            text,
+            re.M,
+        )
+        if m:
+            names = [x.strip() for x in m.group(1).split(",")]
+            if tname not in names:
+                names.append(tname)
+                uniq = ", ".join(dict.fromkeys(names))
+                text = re.sub(
+                    rf"^from\s+{re.escape(PREFIX)}\.{re.escape(ns)}\.{re.escape(base)}\s+import\s+[^\n]+$",
+                    f"from {PREFIX}.{ns}.{base} import {uniq}",
+                    text,
+                    count=1,
+                    flags=re.M,
+                )
+            continue
+
+        # base import가 없으면 상단에 삽입(대충 첫 import 블록 뒤)
+        insert = f"from {PREFIX}.{ns}.{base} import {base}, {tname}\n"
+
+        first_import = re.search(r"^(from|import)\s", text, re.M)
+        if not first_import:
+            text = insert + text
+            continue
+
+        # 첫 import 이후, 다음 빈 줄(없으면 첫 import 라인 끝)에 삽입
+        start = first_import.start()
+        blank = re.search(r"\n\s*\n", text[start:])
+        if blank:
+            hdr_end = start + blank.start() + 2
+        else:
+            hdr_end = text.find("\n", start) + 1
+
+        text = text[:hdr_end] + insert + text[hdr_end:]
+
+    return text
+
+
+def _fix_pack_create_mismatch(text: str) -> str:
+    """
+    (옵션) Pack()이 return CreateX(...) 부르는데 Create 함수명이 다른 케이스를
+    같은 파일의 첫 Create*로 맞춘다.
+    """
+    creates = re.findall(r"^def\s+(Create[A-Za-z0-9_]+)\s*\(", text, re.M)
+    if not creates:
+        return text
+    preferred = creates[0]
+    return re.sub(
+        r"\breturn\s+(Create[A-Za-z0-9_]+)\s*\(",
+        lambda m: f"return {preferred}(" if m.group(1) != preferred else m.group(0),
+        text,
+        flags=re.M,
+    )
+
+
+def patch_generated_tree(root: Path) -> None:
+    tops = _collect_top_namespaces(root)
     if not tops:
         return
     tops_alt = "|".join(re.escape(t) for t in tops)
-    patt_from = re.compile(rf"(?<!{re.escape(PREFIX)}\.)\b({tops_alt})\.", re.M)
 
     for path in root.rglob("*"):
         if path.suffix not in {".py", ".pyi"}:
             continue
+
         src = path.read_text(encoding="utf-8")
-        prot = protect_ranges(src)
 
-        # A) 프리픽스 치환
-        out, last = [], 0
-        for m in patt_from.finditer(src):
-            s, e = m.span()
-            if overlaps(prot, s, e):
-                continue
-            out.append(src[last:s])
-            out.append(f"{PREFIX}.{m.group(1)}.")
-            last = e
-        out.append(src[last:])
-        new = "".join(out)
+        # 1) import 라인에서만 프리픽스 부착
+        new = _prefix_import_lines(src, tops_alt=tops_alt)
 
-        # B) T-class import 보강 (자기 자신 모듈 제외)
-        #   모듈 이름/네임스페이스 추정
-        mod_name = path.stem  # N_DIN_u 등
-        ns_match = re.search(r"^#\s*namespace:\s*([A-Za-z0-9_]+)\s*$", new, re.M)
-        ns = ns_match.group(1) if ns_match else "IPC"
+        # 2) 실제 파일 없는 모듈 import 제거 (SUB_TASK_INSER 같은 케이스 차단)
+        new = _drop_missing_module_imports(root, new)
 
-        used_T = sorted(set(re.findall(r"\b([A-Z][A-Za-z0-9_]*?T)\b", new)))
-        for tname in used_T:
-            base = tname[:-1]
-            # 자기 자신이면 건너뜀 (self import 방지)
-            if base == mod_name:
-                continue
-            # 이미 base import 라인 있으면 T 추가
-            m = re.search(
-                rf"^from\s+{re.escape(PREFIX)}\.{ns}\.{re.escape(base)}\s+import\s+([^\n]+)$",
-                new,
-                re.M,
-            )
-            if m:
-                names = [x.strip() for x in m.group(1).split(",")]
-                if tname not in names:
-                    names.append(tname)
-                    uniq = ", ".join(dict.fromkeys(names))
-                    new = re.sub(
-                        rf"^from\s+{re.escape(PREFIX)}\.{ns}\.{re.escape(base)}\s+import\s+[^\n]+$",
-                        f"from {PREFIX}.{ns}.{base} import {uniq}",
-                        new,
-                        count=1,
-                        flags=re.M,
-                    )
-                continue
-            # base import가 없으면 상단 import 블록 뒤에 삽입
-            insert = f"from {PREFIX}.{ns}.{base} import {base}, {tname}\n"
-            hdr_end = 0
-            m2 = re.search(r"(?:^|\n)(?:import\s|from\s)", new)
-            if m2:
-                m3 = re.search(r"\n\s*\n", new[m2.start() :])
-                if m3:
-                    hdr_end = m2.start() + m3.start() + 2
-            new = new[:hdr_end] + insert + new[hdr_end:]
+        # 3) (옵션) T-class import 보강
+        new = _add_tclass_imports(root, path, new)
 
-        # C) Pack() → Create* 함수명 불일치 교정
-        #    파일에 정의된 Create 함수명을 수집하고, Pack이 부르는 이름이
-        #    그중 하나와 다르면 가장 유력한(동일 파일의 첫 Create) 이름으로 교체
-        creates = re.findall(r"^def\s+(Create[A-Za-z0-9_]+)\s*\(", new, re.M)
-        if creates:
-            preferred = creates[0]  # 보통 struct 모듈은 하나뿐
-
-            def repl_call(m):
-                name = m.group(1)
-                return m.group(0).replace(name, preferred) if name != preferred else m.group(0)
-
-            new = re.sub(
-                r"\breturn\s+(Create[A-Za-z0-9_]+)\s*\(",
-                lambda m: f"return {preferred}(" if m.group(1) != preferred else m.group(0),
-                new,
-            )
+        # 4) (옵션) Pack/Create mismatch 교정
+        new = _fix_pack_create_mismatch(new)
 
         if new != src:
             path.write_text(new, encoding="utf-8")
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 2:
         print("usage: patch_imports.py <FLAT_OUT_DIR>", file=sys.stderr)
-        sys.exit(2)
+        raise SystemExit(2)
+
     root = Path(sys.argv[1]).resolve()
     if not root.is_dir():
         print(f"not a directory: {root}", file=sys.stderr)
-        sys.exit(1)
-    add_prefix_and_fix(root)
+        raise SystemExit(1)
+
+    patch_generated_tree(root)
 
 
 if __name__ == "__main__":

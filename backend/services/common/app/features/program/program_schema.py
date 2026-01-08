@@ -115,6 +115,9 @@ class TaskType(str, Enum):
     MAIN = "MAIN"
     SUB = "SUB"
 
+class SubTaskType(str, Enum):
+    INSERT = "INSERT"
+    CHANGE = "CHANGE"
 
 class TaskExtension(str, Enum):
     PYTHON = "py"
@@ -342,6 +345,7 @@ class TaskState(TypedDict):
     condition_map: dict[str, Any]
     is_alive: bool
     step: Step_Tree_Base
+    sub_task_list: list[str]
 
 class Response_Get_Current_Program_StatePD(BaseModel):
     states: dict[str, TaskState]
@@ -362,3 +366,10 @@ class Program_Variable(TypedDict):
 
 class Response_Get_Executor_VariablesPD(BaseModel):
     variables: dict[str, Program_Variable]
+
+class SubTaskItem(TypedDict):
+    taskId: str
+    subTaskType: SubTaskType
+
+class Response_Get_Sub_Task_ListPD(BaseModel):
+    subTaskList: list[SubTaskItem]

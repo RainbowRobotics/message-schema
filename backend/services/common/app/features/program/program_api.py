@@ -31,6 +31,7 @@ from .program_schema import (
     Response_Get_ProgramPD,
     Response_Get_Script_ContextPD,
     Response_Get_StepListPD,
+    Response_Get_Sub_Task_ListPD,
     Response_Get_Task_ListPD,
     Response_Get_TaskInfoPD,
     Response_Script_ExecutionPD,
@@ -115,6 +116,11 @@ async def get_task_list(db: MongoDB, robot_model: str, task_type: TaskType | Non
     res = await program_service.get_task_list(task_type=task_type, robot_model=robot_model, search_text=search_text, db=db)
     return JSONResponse(res)
 
+@program_router.get("/program/task/{task_id}/sub-task-list", response_model=Response_Get_Sub_Task_ListPD)
+async def get_ctx_sub_task_list(task_id: str):
+    res = program_service.get_ctx_sub_task_list(task_id=task_id)
+    return JSONResponse(res)
+
 @program_router.get("/program/task/{task_id}", response_model=Response_Get_TaskInfoPD)
 async def get_task_info(task_id: str, db: MongoDB):
     res = await program_service.get_task_info(task_id=task_id, db=db)
@@ -124,6 +130,7 @@ async def get_task_info(task_id: str, db: MongoDB):
 async def update_tasks(request: Request_Update_Multiple_TaskPD, db: MongoDB):
     res = await program_service.update_tasks(request=request, db=db)
     return JSONResponse(res)
+
 
 @program_router.get("/program/step/{step_id}", response_model=Step_Base)
 async def get_step(step_id: str, db: MongoDB):

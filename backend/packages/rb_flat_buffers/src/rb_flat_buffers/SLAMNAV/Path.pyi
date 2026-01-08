@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from rb_flat_buffers.IPC.PointArray import PointArray, PointArrayT
 import flatbuffers
 import numpy as np
 

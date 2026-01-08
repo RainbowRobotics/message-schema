@@ -916,16 +916,25 @@ class SubTaskStep(Step):
 
         if self.sub_task_type == "INSERT":
             try:
-                ctx.emit_sub_task_start(self.step_id, self.sub_task_type)
+                sub_task_list = ctx.state_dict.get("sub_task_list", [])
+                sub_task_list.append({"task_id": sub_task_tree.step_id, "sub_task_type": self.sub_task_type})
+                ctx.state_dict["sub_task_list"] = sub_task_list
+
+                ctx.emit_sub_task_start(sub_task_tree.step_id, self.sub_task_type)
+
                 sub_task_tree.execute_children(ctx, target_step_id=target_step_id)
             except SubTaskHaltException:
                 pass
             finally:
-                ctx.emit_sub_task_done(self.step_id, self.sub_task_type)
+                print(f"sub_task_list end: {ctx.state_dict['sub_task_list']}", flush=True)
+                if len(ctx.state_dict["sub_task_list"]) > 0:
+                    ctx.state_dict["sub_task_list"].pop()
+
+                ctx.emit_sub_task_done(sub_task_tree.step_id, self.sub_task_type)
 
         elif self.sub_task_type == "CHANGE":
             ctx.step_num = 0
-            raise ChangeSubTaskException(task_id=self.step_id, sub_task_tree=sub_task_tree, sub_task_post_tree=sub_task_post_tree)
+            raise ChangeSubTaskException(task_id=sub_task_tree.step_id, sub_task_tree=sub_task_tree, sub_task_post_tree=sub_task_post_tree)
 
         self._post_execute(ctx, ignore_step_interval=True)
 

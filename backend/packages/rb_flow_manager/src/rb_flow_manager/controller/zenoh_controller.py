@@ -13,8 +13,10 @@ from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
     Request_Update_Executor_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_flat_buffers.program.RB_Program_Sub_Task_Type import RB_Program_Sub_Task_Type
 from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
 from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
+from rb_flat_buffers.program.Request_Update_Sub_Task_State import Request_Update_Sub_Task_StateT
 from rb_flow_manager.controller.base_controller import BaseController
 from rb_zenoh.client import ZenohClient
 
@@ -79,11 +81,11 @@ class Zenoh_Controller(BaseController):
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
-    def on_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
-        self.sub_task_start_or_done()
+    def on_sub_task_start(self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type) -> None:
+        self.sub_task_start_or_done(task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.RUNNING)
 
-    def on_sub_task_done(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
-        self.sub_task_start_or_done()
+    def on_sub_task_done(self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type) -> None:
+        self.sub_task_start_or_done(task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.COMPLETED)
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
         str_error = str(error)
@@ -170,8 +172,23 @@ class Zenoh_Controller(BaseController):
             print(f"Error updating executor state: {e}")
             raise e
 
-    def sub_task_start_or_done(self):
-        pass
+    def sub_task_start_or_done(self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"], state: int) -> None:
+        try:
+            sub_task_type_enum = RB_Program_Sub_Task_Type.SUB_TASK_INSERT if sub_task_type == "INSERT" else RB_Program_Sub_Task_Type.SUB_TASK_CHANGE
+
+            if self._zenoh_client is not None:
+                req = Request_Update_Sub_Task_StateT()
+                req.subTaskId = sub_task_id
+                req.subTaskType = sub_task_type_enum
+                req.state = state
+                self._zenoh_client.publish(
+                    f"rrs/program/{task_id}/sub_task/update_state",
+                    flatbuffer_req_obj=req,
+                    flatbuffer_buf_size=32,
+                )
+        except Exception as e:
+            print(f"Error updating sub task state: {e}")
+            raise e
 
     def _proxy_to_dict(self, obj):
         if isinstance(obj, dict):

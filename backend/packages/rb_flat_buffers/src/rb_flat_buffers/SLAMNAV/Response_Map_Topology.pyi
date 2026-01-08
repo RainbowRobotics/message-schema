@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from rb_flat_buffers.IPC.Node import Node, NodeT
 import flatbuffers
 import numpy as np
 

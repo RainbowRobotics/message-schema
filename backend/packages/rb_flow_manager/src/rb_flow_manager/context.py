@@ -288,7 +288,8 @@ class ExecutionContext:
         self.result_queue.put(
             {
                 "type": "sub_task_start",
-                "process_id": task_id,
+                "process_id": self.process_id,
+                "sub_task_id": task_id,
                 "sub_task_type": sub_task_type,
                 "ts": time.time(),
                 "generation": self._generation,
@@ -301,7 +302,8 @@ class ExecutionContext:
         self.result_queue.put(
             {
                 "type": "sub_task_done",
-                "process_id": task_id,
+                "process_id": self.process_id,
+                "sub_task_id": task_id,
                 "sub_task_type": sub_task_type,
                 "ts": time.time(),
                 "generation": self._generation,

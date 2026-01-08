@@ -16,6 +16,7 @@ from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
 from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
+from rb_flat_buffers.program.Request_Update_Sub_Task_State import Request_Update_Sub_Task_StateT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
 
@@ -94,6 +95,15 @@ def convert_state_to_string(state: RB_Flow_Manager_ProgramState) -> RB_Flow_Mana
         RB_Flow_Manager_ProgramState.COMPLETED: RB_Flow_Manager_ProgramState_PB.COMPLETED,
     }[state]
 
+@zenoh_program_router.subscribe(
+    "rrs/program/*/sub_task/update_state",
+    flatbuffer_obj_t=Request_Update_Sub_Task_StateT,
+    opts=SubscribeOptions(allowed_same_sender=True),
+)
+async def on_update_sub_task_state(*, topic, mv, obj, attachment):
+    task_id = topic.split("/")[2]
+
+    program_service.update_sub_task_state(task_id=task_id)
 
 @zenoh_program_router.subscribe(
     "rrs/executor/state",

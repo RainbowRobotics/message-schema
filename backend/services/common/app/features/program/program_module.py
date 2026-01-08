@@ -685,6 +685,38 @@ class ProgramService(BaseService):
 
         return find_step_doc
 
+    def get_ctx_sub_task_list(self, task_id: str):
+        """ 특정 task의 서브 태스크 목록 조회 함수 """
+
+        all_states = self.get_executor_state()
+        sub_task_list = all_states.get(task_id, {}).get("sub_task_list", [])
+
+        res_sub_task_list = []
+
+        for sub_task in sub_task_list:
+            res_sub_task_list.append({
+                "taskId": sub_task["task_id"],
+                "subTaskType": sub_task["sub_task_type"],
+            })
+
+        return {
+            "subTaskList": res_sub_task_list,
+        }
+
+    def update_sub_task_state(self, *, task_id: str):
+        """ 서브 태스크 상태 업데이트 함수 """
+
+        res = self.get_ctx_sub_task_list(task_id)
+
+        fire_and_log(
+            socket_client.emit(
+                f"program/task/{task_id}/sub-task-list",
+                {
+                    "subTaskList": res.get("subTaskList", []),
+                },
+            ),
+        )
+
     async def delete_steps(self, *, request: Request_Delete_StepsPD, db: MongoDB):
         """
         Steps들을 삭제하는 함수.

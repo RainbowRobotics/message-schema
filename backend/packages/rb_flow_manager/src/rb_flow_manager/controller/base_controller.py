@@ -40,11 +40,11 @@ class BaseController(ABC):
         """각 Step이 다음 Step으로 이동 할때 동작을 수행"""
 
     @abstractmethod
-    def on_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+    def on_sub_task_start(self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
         """각 Step이 서브 태스크 시작 시점에 동작을 수행"""
 
     @abstractmethod
-    def on_sub_task_done(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
+    def on_sub_task_done(self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]) -> None:
         """각 Step이 서브 태스크 완료 시점에 동작을 수행"""
 
     @abstractmethod
