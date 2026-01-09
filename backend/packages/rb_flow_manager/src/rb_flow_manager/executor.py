@@ -116,6 +116,8 @@ def _execute_tree_in_process(
 
             if e.sub_task_post_tree is not None:
                 post_tree_ref["value"] = e.sub_task_post_tree
+            else:
+                post_tree_ref["value"] = None
 
             sub_task_tree = e.sub_task_tree
 
@@ -127,8 +129,9 @@ def _execute_tree_in_process(
             except SubTaskHaltException:
                 pass
             finally:
-                state_dict["sub_task_list"] = []
-                ctx.emit_sub_task_done(sub_task_tree.step_id, "CHANGE")
+                if post_tree_ref["value"] is None:
+                    state_dict["sub_task_list"] = []
+                    ctx.emit_sub_task_done(sub_task_tree.step_id, "CHANGE")
 
             return
 
@@ -154,6 +157,13 @@ def _execute_tree_in_process(
             ctx.emit_post_start()
 
         pt.execute(ctx)
+
+        if len(state_dict["sub_task_list"]) > 0:
+            sub_task_id = state_dict["sub_task_list"][-1]["task_id"]
+            sub_task_type = state_dict["sub_task_list"][-1]["sub_task_type"]
+            state_dict["sub_task_list"] = []
+
+            ctx.emit_sub_task_done(sub_task_id, sub_task_type)
 
     try:
         init_state()
