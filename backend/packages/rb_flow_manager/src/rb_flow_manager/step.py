@@ -141,6 +141,13 @@ class Step:
                     _indent(f"{k}={repr(v)},\n\n", depth + 4) if v is not None else ""
                 )
 
+        children_src = ""
+        if self.children:
+            children_src = (
+                (" " * (depth + 4))
+                + f"children={children_block},\n"
+            )
+
         return (
             (" " * depth)
             + f"{self._class_name}(\n"
@@ -162,8 +169,7 @@ class Step:
                 else ""
             )
             + other_kwargs_block
-            + (" " * (depth + 4))
-            + f"children={children_block},\n"
+            + children_src
             + (" " * depth)
             + f"){',' if depth > 0 else ''}"
         )
