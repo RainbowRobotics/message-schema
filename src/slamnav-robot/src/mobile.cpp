@@ -48,6 +48,9 @@ MOBILE::~MOBILE()
 
 void MOBILE::open()
 {
+    jog_flag = true;
+    jog_thread = std::make_unique<std::thread>(&MOBILE::jog_loop, this);
+
     // check simulation mode
     if(config->get_use_sim())
     {
@@ -65,8 +68,6 @@ void MOBILE::open()
     send_flag = true;
     send_thread = std::make_unique<std::thread>(&MOBILE::send_loop, this);
 
-    jog_flag = true;
-    jog_thread = std::make_unique<std::thread>(&MOBILE::jog_loop, this);
 }
 
 void MOBILE::sync()

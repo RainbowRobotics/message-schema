@@ -25,6 +25,7 @@
 #include "safety.h"
 #include "task.h"
 #include "error_manager.h"
+#include "aruco.h"
 
 #include "comm_msa.h"
 #include "comm_fms.h"
@@ -154,11 +155,14 @@ public:
     void plot_tractile();
     void plot_process_time();
 
+    // init localization timer (aruco)
+    QTimer* init_aruco_loc_timer;
+
     // plot timer
     QTimer* plot_timer;
 
     // QA timer
-    QTimer* qa_timer = nullptr;
+    QTimer* qa_timer;
     bool is_qa_running = false;
     int qa_interval_ms = 1000;
     QString qa_last_node = "";
@@ -272,6 +276,7 @@ public Q_SLOTS:
     void bt_QuickAnnotStop();
     void bt_QuickAddCloud();
     void bt_QuickAddCloud2();
+    void bt_QuickAddAruco();
 
     // for safety debug
     void bt_ClearMismatch();
@@ -299,6 +304,7 @@ public Q_SLOTS:
     // timer loops
     void plot_loop();
     void qa_loop();
+    void init_aruco_loc_loop();
 
     // Livox on / off
     void cb_LivoxSwitch();

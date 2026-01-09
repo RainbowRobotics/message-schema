@@ -495,7 +495,7 @@ bool UNIMAP::load_topo()
             for(size_t p = 0; p < nodes->size(); p++)
             {
                 const NODE& node = (*nodes)[p];
-                if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+                if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION" || node.type == "ARUCO")
                 {
                     node_pos.push_back(node.tf.block(0,3,3,1));
                     node_id.push_back(node.id);
@@ -742,7 +742,7 @@ bool UNIMAP::load_node()
         for(size_t p = 0; p < nodes->size(); p++)
         {
             const NODE& node = (*nodes)[p];
-            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION" || node.type == "ARUCO")
             {
                 node_pos.push_back(node.tf.block(0,3,3,1));
                 node_id.push_back(node.id);
@@ -1204,7 +1204,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
                 continue;
             }
 
-            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION")
+            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION" || node1->type == "ARUCO")
             {
                 Eigen::Vector3d pos1 = node1->tf.block(0,3,3,1);
                 double dist = calc_seg_dist(pos0, pos1, pos);
@@ -1315,7 +1315,7 @@ std::vector<QString> UNIMAP::get_edge_nodes(const Eigen::Vector3d& pos)
                 continue;
             }
 
-            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION")
+            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION" || node1->type == "ARUCO")
             {
                 Eigen::Vector3d pos1 = node1->tf.block(0,3,3,1);
                 double dist = calc_seg_dist(pos0, pos1, pos);
@@ -1860,7 +1860,7 @@ bool UNIMAP::add_node(const NODE& node)
     add_node_to_maps(node, new_index);
     
     // Update KD-tree if needed
-    if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+    if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION" || node.type == "ARUCO")
     {
         kdtree_node.pos.push_back(node.tf.block(0,3,3,1));
         kdtree_node.id.push_back(node.id);
@@ -1883,11 +1883,22 @@ bool UNIMAP::add_node(const NODE& node)
     return true;
 }
 
-bool UNIMAP::add_node(const Eigen::Matrix4d tf, const QString type)
+bool UNIMAP::add_node(const Eigen::Matrix4d& tf, const QString& type)
 {
     NODE node;
     node.id = gen_node_id();
     node.type = type;
+    node.tf = tf;
+
+    return add_node(node);
+}
+
+bool UNIMAP::add_node(const Eigen::Matrix4d& tf, const QString& type, const QString& name)
+{
+    NODE node;
+    node.id = gen_node_id();
+    node.type = type;
+    node.name = name;
     node.tf = tf;
 
     return add_node(node);
@@ -1945,7 +1956,7 @@ bool UNIMAP::remove_node(const QString& id)
     kdtree_node.id.clear();
     for(const auto& node : *nodes)
     {
-        if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+        if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION" || node.type == "ARUCO")
         {
             kdtree_node.pos.push_back(node.tf.block(0,3,3,1));
             kdtree_node.id.push_back(node.id);
@@ -2021,8 +2032,8 @@ bool UNIMAP::update_node(const QString& id, const NODE& new_node)
     update_node_in_maps(new_node, index);
     
     // Rebuild KD-tree if needed
-    bool was_kdtree_node = (old_node.type == "ROUTE" || old_node.type == "GOAL" || old_node.type == "INIT" || old_node.type == "STATION");
-    bool is_kdtree_node = (new_node.type == "ROUTE" || new_node.type == "GOAL" || new_node.type == "INIT" || new_node.type == "STATION");
+    bool was_kdtree_node = (old_node.type == "ROUTE" || old_node.type == "GOAL" || old_node.type == "INIT" || old_node.type == "STATION" || old_node.type == "ARUCO");
+    bool is_kdtree_node = (new_node.type == "ROUTE" || new_node.type == "GOAL" || new_node.type == "INIT" || new_node.type == "STATION" || new_node.type == "ARUCO");
     
     if(was_kdtree_node || is_kdtree_node)
     {
@@ -2030,7 +2041,7 @@ bool UNIMAP::update_node(const QString& id, const NODE& new_node)
         kdtree_node.id.clear();
         for(const auto& node : *nodes)
         {
-            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION" || node.type == "ARUCO")
             {
                 kdtree_node.pos.push_back(node.tf.block(0,3,3,1));
                 kdtree_node.id.push_back(node.id);

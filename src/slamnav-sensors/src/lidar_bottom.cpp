@@ -84,6 +84,11 @@ void LIDAR_BOTTOM::close()
 
 bool LIDAR_BOTTOM::get_is_connected()
 {
+    if(coin_d4 == nullptr)
+    {
+        return false;
+    }
+
     return (bool)coin_d4->is_connected.load();
 }
 

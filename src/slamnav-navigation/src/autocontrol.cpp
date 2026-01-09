@@ -557,6 +557,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     {
         if(is_rrs && config->get_use_multi())
         {
+            log_info("multi drive");
             set_multi_infomation(StateMultiReq::REQ_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
         }
         else
@@ -576,6 +577,8 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
                 drive_method = DriveMethod::METHOD_PP;
                 log_info("cmd_method: PP");
             }
+
+            log_info("single drive");
 
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
             move_single(tf, msg.preset);
@@ -604,7 +607,7 @@ void AUTOCONTROL::slot_move_backward(DATA_MOVE msg)
 
     if(msg.command == "goal")
     {
-        if(is_rrs && config->get_use_multi())
+        if(config->get_use_multi())
         {
             set_multi_infomation(StateMultiReq::REQ_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
             return;

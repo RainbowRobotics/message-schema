@@ -2909,6 +2909,7 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
             }
 
             ctrl->set_path(path, msg.preset, (long long)(msg.time));
+
             ctrl->signal_move_multi();
         }
     }

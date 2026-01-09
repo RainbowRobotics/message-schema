@@ -35,8 +35,16 @@ public:
     void start_detect_loop();
     void stop_detect_loop();
 
+    bool get_is_thread_alive();
+
+    bool get_is_found(int idx);
+
     void set_is_pause(bool flag);
     bool get_is_pause();
+
+    void detect(int cam_idx);
+
+    void clear_is_found();
 
     /***********************
      * set other modules
@@ -58,14 +66,12 @@ private:
     std::vector<cv::Point3f> make_obj_pts();
     Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec, Eigen::Matrix4d optional_tf);
 
-    std::atomic<bool> is_found = {false};
+    std::atomic<bool> is_found[max_cam_cnt] = {false};
     std::atomic<bool> is_pause = {false};
 
-    std::thread* detect_thread = nullptr;
+    std::unique_ptr<std::thread> detect_thread = nullptr;
     std::atomic<bool> detect_flag = {false};
     void detect_loop();
-
-    void detect(int cam_idx);
 
     //const double marker_size = 0.18;
     const double marker_size = 0.1; // 10cm

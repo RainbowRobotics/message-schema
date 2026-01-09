@@ -63,6 +63,8 @@ public:
     std::shared_ptr<std::vector<NODE>> get_nodes_origin();                  // get nodes (shared ptr)
     std::vector<LINK> get_links();
 
+    bool update_node(const QString& id, const NODE& new_node);
+
     // interface funcs (kdtree)
     void radius_search_kdtree_idx(double query[], double sq_radius,
                                   std::vector<nanoflann::ResultItem<unsigned int, double>>& res_idxs, nanoflann::SearchParameters params);    // try radius search kdtree_cloud_index 2D
@@ -73,7 +75,8 @@ public:
 
     // interface funcs (node & link)
     bool add_node(const NODE& node);
-    bool add_node(const Eigen::Matrix4d tf, const QString type);
+    bool add_node(const Eigen::Matrix4d& tf, const QString& type);
+    bool add_node(const Eigen::Matrix4d& tf, const QString& type, const QString& name);
     bool remove_node(const QString& id);
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
@@ -167,7 +170,6 @@ private:
     void add_node_to_maps(const NODE& node, size_t index);
     bool node_exists(const QString& id);
     bool node_exists_by_name(const QString& name);
-    bool update_node(const QString& id, const NODE& new_node);
     void update_node_in_maps(const NODE& node, size_t index);
     void remove_node_from_maps(const QString& id, const QString& name);
 

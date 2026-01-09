@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ERROR_MANAGER::instance(this);
     COMM_MSA::instance(this);
     COMM_FMS::instance(this);
+    ARUCO::instance(this);
 
     // for 3d viewer
     connect(ui->cb_ViewType,    SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -135,6 +136,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_QuickAnnotStop,  SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddCloud,   SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
     connect(ui->bt_QuickAddCloud2,  SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud2()));
+    connect(ui->bt_QuickAddAruco,   SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
     connect(ui->ckb_UseNodeSize,    SIGNAL(stateChanged(int)),    this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeX,      SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeY,      SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
@@ -199,6 +201,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // qa timer (quick annotation)
     qa_timer = new QTimer(this);
     connect(qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
+
+    init_aruco_loc_timer = new QTimer(this);
+    connect(init_aruco_loc_timer, SIGNAL(timeout()), this, SLOT(init_aruco_loc_loop()));
 }
 
 MainWindow::~MainWindow()
@@ -402,16 +407,13 @@ void MainWindow::init_modules()
     }
 
     // cam module init
+    if(CONFIG::instance()->get_use_cam())
     {
-        //if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
-        if(CONFIG::instance()->get_use_cam())
-        {
-            CAM::instance()->set_config_module(CONFIG::instance());
-            CAM::instance()->set_logger_module(LOGGER::instance());
-            CAM::instance()->set_mobile_module(MOBILE::instance());
-            CAM::instance()->init();
-            CAM::instance()->open();
-        }
+        CAM::instance()->set_config_module(CONFIG::instance());
+        CAM::instance()->set_logger_module(LOGGER::instance());
+        CAM::instance()->set_mobile_module(MOBILE::instance());
+        CAM::instance()->init();
+        CAM::instance()->open();
     }
 
     // lidar 2d module init
@@ -428,6 +430,19 @@ void MainWindow::init_modules()
 
             LIDAR_2D::instance()->open();
         }
+    }
+
+    if(CONFIG::instance()->get_use_aruco())
+    {
+        ARUCO::instance()->set_config_module(CONFIG::instance());
+        ARUCO::instance()->set_logger_module(LOGGER::instance());
+        ARUCO::instance()->set_cam_module(CAM::instance());
+        ARUCO::instance()->init();
+
+        QTimer::singleShot(5000, this, [this]()
+        {
+            init_aruco_loc_timer->start(1000);
+        });
     }
 
     // lidar 3d module init
@@ -1971,8 +1986,6 @@ void MainWindow::bt_Test()
 void MainWindow::bt_TestLed()
 {
     MOBILE::instance()->led(0, ui->spb_Led->value());
-    //printf("[MAIN] led test:%d\n", ui->spb_Led->value());
-    //spdlog::info("[MAIN] led test:{}", ui->spb_Led->value());
     log_info("led test:{}", ui->spb_Led->value());
 }
 
@@ -2471,6 +2484,74 @@ void MainWindow::bt_QuickAddCloud2()
     }
 }
 
+void MainWindow::bt_QuickAddAruco()
+{
+    if(CONFIG::instance()->get_use_aruco() == false)
+    {
+        log_warn("[QA_ARUCO] check aruco");
+        return;
+    }
+
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("[QA_Aruco] check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("[QA_Aruco] check localization");
+        return;
+    }
+
+    for(int p = 0; p < CONFIG::instance()->get_cam_num(); p++)
+    {
+        ARUCO::instance()->detect(p);
+    }
+
+    bool is_found = false;
+    for(int p = 0; p < CONFIG::instance()->get_cam_num(); p++)
+    {
+        if(ARUCO::instance()->get_is_found(p))
+        {
+            is_found = true;
+            break;
+        }
+    }
+
+    if(is_found == false)
+    {
+        log_warn("[QA_Aruco] No aruco detected");
+        return;
+    }
+
+    // global to marker
+    TIME_POSE_ID cur_tpi = ARUCO::instance()->get_cur_tpi();
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_best_tf(cur_tpi.t);
+    Eigen::Matrix4d global_to_marker = cur_tf * cur_tpi.tf;
+
+    QString aruco_id = QString::number(cur_tpi.id, 10);
+    NODE* node = UNIMAP::instance()->get_node_by_name(aruco_id);
+    if(node == nullptr)
+    {
+        log_warn("[QA_Aruco] Failed to get node by aruco id: {} add new node", aruco_id.toStdString());
+        UNIMAP::instance()->add_node(global_to_marker, "ARUCO", aruco_id);
+
+        topo_update();
+        return;
+    }
+
+    node->tf = global_to_marker;
+
+    bool is_update = UNIMAP::instance()->update_node(node->id, *node);
+    if(!is_update)
+    {
+        log_warn("[QA_Aruco] Failed to update node: {}", node->id.toStdString());
+        return;
+    }
+
+    topo_update();
+}
 
 void MainWindow::slot_local_path_updated()
 {
@@ -2771,6 +2852,7 @@ void MainWindow::watch_loop()
 
             // Led logic
             int led_state = led_handler();
+
             MOBILE::instance()->led(0, led_state);
 
             // speaker logic
@@ -2787,8 +2869,6 @@ void MainWindow::watch_loop()
                 {
                     MOBILE::instance()->sync();
                     last_sync_time = get_time();
-                    LOGGER::instance()->write_log("[WATCH] try time sync, pc and mobile");
-                    //spdlog::info("[WATCH] try time sync, pc and mobile");
                     log_info("[WATCH] try time sync, pc and mobile");
                 }
 
@@ -5284,112 +5364,154 @@ int MainWindow::led_handler()
     log_debug("led_handler");
 
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
-    double led_dist_near    = CONFIG::instance()->get_obs_distance_led_near();
-    double led_dist_far     = CONFIG::instance()->get_obs_distance_led_far();
-    double battery_soc      = MOBILE::instance()->get_battery_soc();
-    double battery_low      = CONFIG::instance()->get_robot_alarm_bat_low();
-    double battery_critical = CONFIG::instance()->get_robot_alarm_bat_critical();
 
-    int led_out = SAFETY_LED_OFF;
-    if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
+    if(CONFIG::instance()->get_robot_model() == RobotModel::S100)
     {
-        led_out = SAFETY_LED_RED;
-        return led_out;
-    }
+        // led state
+        int led_color = LED_GREEN;
 
-    if(CONFIG::instance()->get_robot_use_alarm() == true)
-    {
-        // Battery low
-        if(battery_soc < battery_low)
+        // autodrive led control
+        if(AUTOCONTROL::instance()->get_is_moving())
         {
-            // low battery auto drive led
-            led_out = SAFETY_LED_YELLOW_BLINKING;
-            return led_out;
+            if(AUTOCONTROL::instance()->get_obs_condition() == "far")
+            {
+                led_color = LED_WHITE_BLINK;
+            }
+            else if(AUTOCONTROL::instance()->get_obs_condition() == "near")
+            {
+                led_color = LED_RED;
+            }
+            else
+            {
+                led_color = LED_WHITE;
+            }
         }
-        if(battery_soc < battery_critical)
+
+        if(ms.t != 0)
         {
-            // critical battery auto drive led
+            if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
+                    ms.status_m0 == 1 && ms.status_m1 == 1 &&
+                    ms.motor_stop_state == 1 && ms.charge_state == 0)
+            {
+            }
+            else
+            {
+                led_color = LED_MAGENTA;
+            }
+        }
+
+        return led_color;
+    }
+    else
+    {
+
+        double led_dist_near    = CONFIG::instance()->get_obs_distance_led_near();
+        double led_dist_far     = CONFIG::instance()->get_obs_distance_led_far();
+        double battery_soc      = MOBILE::instance()->get_battery_soc();
+        double battery_low      = CONFIG::instance()->get_robot_alarm_bat_low();
+        double battery_critical = CONFIG::instance()->get_robot_alarm_bat_critical();
+
+        int led_out = SAFETY_LED_OFF;
+        if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
+        {
             led_out = SAFETY_LED_RED;
             return led_out;
         }
-    }
 
-    // autodrive led control
-    if(AUTOCONTROL::instance()->get_is_moving())
-    {
-        //charging
-        if(ms.charge_state == CHARGING_STATION_CHARGING)
+        if(CONFIG::instance()->get_robot_use_alarm() == true)
         {
-            //docking process sucess
-            led_out = SAFETY_LED_CONTRACTING_GREEN;
-            return led_out;
-        }
-
-        else if (ms.charge_state == CHARGING_STATION_CHARGE_FINISH)
-        {
-            led_out = SAFETY_LED_GREEN_BLINKING;
-            return led_out;
-        }
-
-        //docking
-        int dock_fsm_state_ = DOCKCONTROL::instance()->get_dock_fsm_state();
-        if(dock_fsm_state_ != DOCKING_FSM_OFF)
-        {
-            //docking process..
-            led_out = SAFETY_LED_WHITE_WAVERING;
-            return led_out;
-        }
-
-        //autocontrol
-        double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
-        if(obs_d < led_dist_far)
-        {
-            // far auto drive led
-            led_out = SAFETY_LED_PURPLE_BLINKING;
-            return led_out;
-        }
-
-        if(obs_d < led_dist_near)
-        {
-            //near auto drive led
-            led_out = SAFETY_LED_PURPLE;
-            return led_out;
-
-        }
-
-        else
-        {
-            //normal auto drive led
-            led_out = SAFETY_LED_GREEN_BLINKING;
-            return led_out;
-        }
-
-    }
-
-    // not autodrive led control
-    else
-    {
-        if(ms.om_state == SM_OM_ROBOT_POWER_OFF)
-        {
-            // Pc boot up
-            led_out = SAFETY_LED_YELLOW;
-
-            // Brkae release
-            if(ms.brake_release_sw == 1)
+            // Battery low
+            if(battery_soc < battery_low)
             {
-                led_out = SAFETY_LED_BLUE;
+                // low battery auto drive led
+                led_out = SAFETY_LED_YELLOW_BLINKING;
+                return led_out;
+            }
+            if(battery_soc < battery_critical)
+            {
+                // critical battery auto drive led
+                led_out = SAFETY_LED_RED;
                 return led_out;
             }
         }
-        else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
-        {
-            led_out = SAFETY_LED_CYAN;
-            return led_out;
-        }
-    }
 
-    return led_out;
+        // autodrive led control
+        if(AUTOCONTROL::instance()->get_is_moving())
+        {
+            //charging
+            if(ms.charge_state == CHARGING_STATION_CHARGING)
+            {
+                //docking process sucess
+                led_out = SAFETY_LED_CONTRACTING_GREEN;
+                return led_out;
+            }
+
+            else if (ms.charge_state == CHARGING_STATION_CHARGE_FINISH)
+            {
+                led_out = SAFETY_LED_GREEN_BLINKING;
+                return led_out;
+            }
+
+            //docking
+            int dock_fsm_state_ = DOCKCONTROL::instance()->get_dock_fsm_state();
+            if(dock_fsm_state_ != DOCKING_FSM_OFF)
+            {
+                //docking process..
+                led_out = SAFETY_LED_WHITE_WAVERING;
+                return led_out;
+            }
+
+            //autocontrol
+            double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+
+            if(obs_d < led_dist_far)
+            {
+                // far auto drive led
+                led_out = SAFETY_LED_PURPLE_BLINKING;
+                return led_out;
+            }
+
+            if(obs_d < led_dist_near)
+            {
+                //near auto drive led
+                led_out = SAFETY_LED_PURPLE;
+                return led_out;
+
+            }
+
+            else
+            {
+                //normal auto drive led
+                led_out = SAFETY_LED_GREEN_BLINKING;
+                return led_out;
+            }
+
+        }
+
+        // not autodrive led control
+        else
+        {
+            if(ms.om_state == SM_OM_ROBOT_POWER_OFF)
+            {
+                // Pc boot up
+                led_out = SAFETY_LED_YELLOW;
+
+                // Brkae release
+                if(ms.brake_release_sw == 1)
+                {
+                    led_out = SAFETY_LED_BLUE;
+                    return led_out;
+                }
+            }
+            else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
+            {
+                led_out = SAFETY_LED_CYAN;
+                return led_out;
+            }
+        }
+
+        return led_out;
+    }
 }
 
 void MainWindow::get_cur_ip_adddress()
@@ -5483,6 +5605,64 @@ void MainWindow::qa_loop()
             log_warn("[QA] Failed to add new node");
         }
     }
+}
+
+void MainWindow::init_aruco_loc_loop()
+{
+    if(!CONFIG::instance()->get_use_aruco())
+    {
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_cur_loc_state() == "good")
+    {
+        return;
+    }
+
+    if(UNIMAP::instance()->get_is_loaded() == MAP_LOADED && LOCALIZATION::instance()->get_is_loc() == false && !ARUCO::instance()->get_is_thread_alive())
+    {
+        ARUCO::instance()->start_detect_loop();
+    }
+
+    bool is_found = false;
+    for(int p = 0; p < CONFIG::instance()->get_cam_num(); p++)
+    {
+        if(ARUCO::instance()->get_is_found(p))
+        {
+            is_found = true;
+            break;
+        }
+    }
+
+    if(!is_found)
+    {
+        return;
+    }
+
+    Eigen::Matrix4d _cur_tf = Eigen::Matrix4d::Identity();
+    TIME_POSE_ID aruco_tpi = ARUCO::instance()->get_cur_tpi();
+    NODE* node = UNIMAP::instance()->get_node_by_name(QString::number(aruco_tpi.id, 10));
+    if(node != nullptr)
+    {
+        // parse tf
+        Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
+        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+
+        Eigen::Matrix4d T_g_r = T_g_m0*T_m_r;
+        _cur_tf = T_g_r;
+    }
+    else
+    {
+        return;
+    }
+
+    LOCALIZATION::instance()->stop();
+    LOCALIZATION::instance()->set_cur_tf(_cur_tf);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    LOCALIZATION::instance()->start();
+
+    ARUCO::instance()->stop_detect_loop();
+    ARUCO::instance()->clear_is_found();
 }
 
 double MainWindow::get_cpu_usage()

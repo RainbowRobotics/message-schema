@@ -40,8 +40,24 @@ void ARUCO::init()
         printf("[ARUCO] simulation mode\n");
         return;
     }
+}
 
-    start_detect_loop();
+bool ARUCO::get_is_thread_alive()
+{
+    return (bool)detect_flag.load();
+}
+
+bool ARUCO::get_is_found(int idx)
+{
+    return is_found[idx].load();
+}
+
+void ARUCO::clear_is_found()
+{
+    for(int i = 0; i < max_cam_cnt; i++)
+    {
+        is_found[i].store(false);
+    }
 }
 
 void ARUCO::set_is_pause(bool flag)
@@ -64,18 +80,18 @@ void ARUCO::start_detect_loop()
     if(detect_thread == nullptr)
     {
         detect_flag = true;
-        detect_thread = new std::thread(&ARUCO::detect_loop, this);
+        detect_thread = std::make_unique<std::thread>(&ARUCO::detect_loop, this);
     }
 }
 
 void ARUCO::stop_detect_loop()
 {
-    if(detect_thread != nullptr)
+    detect_flag = false;
+    if(detect_thread && detect_thread->joinable())
     {
-        detect_flag = false;
         detect_thread->join();
-        detect_thread = nullptr;
     }
+    detect_thread.reset();
 }
 
 TIME_POSE_ID ARUCO::get_cur_tpi()
@@ -152,10 +168,17 @@ void ARUCO::detect_loop()
 
 void ARUCO::detect(int cam_idx)
 {
+    if(config->get_use_aruco() == false)
+    {
+        log_warn("aruco module not used");
+        return;
+    }
+
     // get params
     if(!cam->get_is_param_loaded(cam_idx))
     {
-        log_warn("cam param not loaded");
+        printf("cam param not loaded\n");
+        //log_warn("cam param not loaded");
         return;
     }
 
@@ -164,6 +187,7 @@ void ARUCO::detect(int cam_idx)
     TIME_IMG t_img = cam->get_time_img(cam_idx);
     if(t_img.t == 0 || t_img.img.empty() || t_img.t == last_t[cam_idx])
     {
+        printf("invalid cam img\n");
         log_warn("invalid cam img");
         return;
     }
@@ -249,8 +273,8 @@ void ARUCO::detect(int cam_idx)
 
                 for(int p = 0; p < 4; p++)
                 {
-                    double u = (double)detected_uv[id][p].x + (double)j*0.2;
-                    double v = (double)detected_uv[id][p].y + (double)i*0.2;
+                    double u = static_cast<double>(detected_uv[id][p].x) + static_cast<double>(j)*0.2;
+                    double v = static_cast<double>(detected_uv[id][p].y) + static_cast<double>(i)*0.2;
                     matched_xyzs.push_back(matched_xyzs[p]);
                     matched_uvs.push_back(cv::Point2f(u,v));
                 }
@@ -288,7 +312,7 @@ void ARUCO::detect(int cam_idx)
         aruco_tpi.id = min_id;
         aruco_tpi.tf = min_tf;
 
-        // update result
+        cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
         {
             std::lock_guard<std::recursive_mutex> lock(mtx);
             if(aruco_tpi.t > cur_tpi.t)
@@ -296,12 +320,11 @@ void ARUCO::detect(int cam_idx)
                 cur_tpi = aruco_tpi;
             }
 
-            cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
             cur_plot_img[cam_idx]= plot_aruco.clone();
         }
     }
 
-    is_found.store(_is_found);
+    is_found[cam_idx].store(_is_found);
 }
 
 void ARUCO::set_config_module(CONFIG* _config)

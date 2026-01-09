@@ -136,8 +136,11 @@ void LOCALIZATION::stop()
     ekf_3d.reset();
 
     QString loc_mode = config->get_loc_mode();
-    //printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
+
     spdlog::info("[LOCALIZATION({})] stop", loc_mode.toStdString().c_str());
+
+
+    set_cur_loc_state("NONE");
 }
 
 void LOCALIZATION::set_cur_tf(Eigen::Matrix4d tf)
