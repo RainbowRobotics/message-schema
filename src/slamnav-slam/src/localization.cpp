@@ -24,6 +24,7 @@ LOCALIZATION::LOCALIZATION(QObject *parent) : QObject{parent},
     mobile(nullptr),
     lidar_2d(nullptr),
     lidar_3d(nullptr),
+    blidar(nullptr),
     cam(nullptr),
     unimap(nullptr),
     obsmap(nullptr)
@@ -1038,12 +1039,10 @@ void LOCALIZATION::ekf_loop_3d()
 
 void LOCALIZATION::obs_loop()
 {
-    //printf("[LOCALIZATION] obs_loop start\n");
-    spdlog::info("[LOCALIZATION] obs_loop start");
+    log_info("obs_loop start");
     double pre_loop_time = get_time();
 
-    //printf("[LOCALIZATION] get_obs_map_max_z: %.3f, get_obs_map_min_z: %.3f, get_obs_map_range: %.3f\n", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
-    spdlog::info("[LOCALIZATION] get_obs_map_max_z: {}, get_obs_map_min_z: {}, get_obs_map_range: {}", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
+    log_info("get_obs_map_max_z: {}, get_obs_map_min_z: {}, get_obs_map_range: {}", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
 
     if(!obsmap)
     {
@@ -1110,6 +1109,15 @@ void LOCALIZATION::obs_loop()
             }
         }
 
+        if(config->get_use_blidar())
+        {
+            std::vector<Eigen::Vector3d> scan_pts = blidar->get_cur_pts();
+            if(!scan_pts.empty())
+            {
+                temp_pts.insert(temp_pts.end(), scan_pts.begin(), scan_pts.end());
+            }
+        }
+
         if(config->get_use_cam() && config->get_use_cam_obstacle())
         {
             for(int i = 0; i < config->get_cam_num(); ++i)
@@ -1117,7 +1125,6 @@ void LOCALIZATION::obs_loop()
                 TIME_PTS scan = cam->get_scan(i);
                 if(!scan.pts.empty())
                 {
-//                    qDebug()<<"use cam!!! : "<<i;
                     Eigen::Matrix4d tf0 = _cur_tf.inverse() * get_best_tf(scan.t);
                     Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
                     Eigen::Vector3d t0 = tf0.block(0,3,3,1);
@@ -1148,8 +1155,7 @@ void LOCALIZATION::obs_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    //printf("[LOCALIZATION] obs_loop stop\n");
-    spdlog::info("[LOCALIZATION] obs_loop stop");
+    log_info("obs_loop stop");
 }
 
 // 2D
@@ -1700,6 +1706,11 @@ void LOCALIZATION::set_lidar_2d_module(LIDAR_2D *_lidar_2d)
 void LOCALIZATION::set_lidar_3d_module(LIDAR_3D *_lidar_3d)
 {
     lidar_3d = _lidar_3d;
+}
+
+void LOCALIZATION::set_blidar_module(LIDAR_BOTTOM *_blidar)
+{
+    blidar = _blidar;
 }
 
 void LOCALIZATION::set_cam_module(CAM *_cam)

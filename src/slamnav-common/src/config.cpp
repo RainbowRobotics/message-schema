@@ -170,6 +170,7 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
 
     check_and_set_bool(obj_sensors,   "USE_LIDAR_2D",   USE_LIDAR_2D,  "sensors");
     check_and_set_bool(obj_sensors,   "USE_LIDAR_3D",   USE_LIDAR_3D,  "sensors");
+    check_and_set_bool(obj_sensors,   "USE_BLIDAR",     USE_BLIDAR,    "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_RGB",    USE_CAM_RGB,   "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_DEPTH",  USE_CAM_DEPTH, "sensors");
@@ -1470,6 +1471,12 @@ int CONFIG::get_lidar_3d_num()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return LIDAR_3D_NUM;
+}
+
+bool CONFIG::get_use_blidar()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_BLIDAR;
 }
 
 bool CONFIG::get_use_cam()

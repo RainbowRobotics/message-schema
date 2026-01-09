@@ -24,11 +24,22 @@ public:
     // start coin d4 module
     void open();
 
+    void close();
+
     // sync between mobile, sick
     void sync();
 
-    std::vector<Eigen::Vector3d> get_cur_scan();
+    std::vector<Eigen::Vector3d> get_cur_pts();
     TIME_PTS get_cur_tp();
+
+    // params
+    std::atomic<bool> is_connected = {false};
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
 
 private:
     explicit COIN_D4(QObject *parent = nullptr);
@@ -42,10 +53,9 @@ private:
     CONFIG* config;
     LOGGER* logger;
 
-    std::vector<Eigen::Vector3d> cur_scan_blidar;
+    std::vector<Eigen::Vector3d> cur_pts;
     TIME_PTS cur_tp;
 
-    std::atomic<bool> is_connected = {false};
     std::atomic<double> max_dist_blidar = {0.0};
 
     LaserScan raw_scan;

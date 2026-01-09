@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CAM::instance(this);
     LIDAR_2D::instance(this);
     LIDAR_3D::instance(this);
+    LIDAR_BOTTOM::instance(this);
     LOCALIZATION::instance(this);
     MAPPING::instance(this);
     AUTOCONTROL::instance(this);
@@ -440,6 +441,18 @@ void MainWindow::init_modules()
         }
     }
 
+    // bottom lidar module init
+    {
+        if(CONFIG::instance()->get_use_blidar())
+        {
+            LIDAR_BOTTOM::instance()->set_config_module(CONFIG::instance());
+            LIDAR_BOTTOM::instance()->set_logger_module(LOGGER::instance());
+            LIDAR_BOTTOM::instance()->set_mobile_module(MOBILE::instance());
+            LIDAR_BOTTOM::instance()->init();
+            LIDAR_BOTTOM::instance()->open();
+        }
+    }
+
     // localization module init
     {
         LOCALIZATION::instance()->set_config_module(CONFIG::instance());
@@ -447,6 +460,7 @@ void MainWindow::init_modules()
         LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
         LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+        LOCALIZATION::instance()->set_blidar_module(LIDAR_BOTTOM::instance());
         LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
         LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
@@ -3949,6 +3963,57 @@ void MainWindow::plot_raw_3d()
     }
 }
 
+void MainWindow::plot_blidar()
+{
+    if(LIDAR_BOTTOM::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_2D" &&
+            !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
+    {
+        Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+        Eigen::Matrix3d cur_R = cur_tf.block(0,0,3,3);
+        Eigen::Vector3d cur_t = cur_tf.block(0,3,3,1);
+
+        std::vector<Eigen::Vector3d> cur_pts = LIDAR_BOTTOM::instance()->get_cur_pts();
+
+        const size_t point_size = cur_pts.size();
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        cloud->reserve(point_size);
+        for(size_t p = 0; p < point_size; p++)
+        {
+            Eigen::Vector3d P;
+            P[0] = cur_pts[p][0];
+            P[1] = cur_pts[p][1];
+            P[2] = cur_pts[p][2];
+            Eigen::Vector3d _P = cur_R * P + cur_t;
+
+            pcl::PointXYZRGB pt;
+            pt.x = _P[0];
+            pt.y = _P[1];
+            pt.z = _P[2];
+            pt.r = 139; pt.g = 0; pt.b = 255;
+
+            cloud->push_back(pt);
+        }
+
+        QString cloud_id = QString("blidar_cur_pts");
+        if(!pcl_viewer->updatePointCloud(cloud, cloud_id.toStdString()))
+        {
+            pcl_viewer->addPointCloud(cloud, cloud_id.toStdString());
+        }
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, cloud_id.toStdString());
+    }
+    else
+    {
+        // remove existing 2d lidar cloud
+        QString cloud_id = QString("blidar_cur_pts");
+        std::string id = cloud_id.toStdString();
+        if(pcl_viewer->contains(id))
+        {
+            pcl_viewer->removePointCloud(id);
+        }
+    }
+}
+
 void MainWindow::plot_process_time()
 {
     //spdlog::debug("[MAIN] plot_process_time");
@@ -5094,6 +5159,7 @@ void MainWindow::plot_loop()
     //    plot_safety();
     plot_raw_2d();
     plot_raw_3d();
+    plot_blidar();
     plot_mapping();
     plot_loc();
     plot_obs();

@@ -92,6 +92,7 @@ public:
     bool    get_use_lidar_3d_obstacle();            // check if the robot uses 3d lidar
     QString get_lidar_3d_type();                    // check 3d lidar type
     int     get_lidar_3d_num();                     // check 3d lidar number
+    bool    get_use_blidar();                      // check if the robot uses bottom lidar
     bool    get_use_cam();                          // check if the robot uses cam
     bool    get_use_cam_obstacle();                 // check if the robot uses 3d lidar
     bool    get_use_cam_rgb();                      // check if the robot uses cam rgb
@@ -524,6 +525,9 @@ private:
     double LIDAR_3D_MAX_RANGE = 70.0;
     QString LIDAR_3D_IP[2] = { "", "" };
     QString LIDAR_3D_TF[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
+
+    // bottom lidar
+    bool USE_BLIDAR = false;
 
     // cam
     int     CAM_NUM = 2;

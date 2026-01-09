@@ -41,17 +41,19 @@ COIN_D4::~COIN_D4()
     }
     grab_thread.reset();
 
-    if(is_connected)
+    if(is_connected.load())
     {
         logger->write_log("[COIN_D4] Destructor cleanup: turning off laser.");
         laser.turnOff();           // mottor off
         laser.disconnecting();     // lidar disconnect
-        is_connected = false;
+        is_connected.store(false);
     }
 }
 
 void COIN_D4::open()
 {
+    close();
+
     if(recv_thread == nullptr)
     {
         recv_flag = true;
@@ -63,6 +65,25 @@ void COIN_D4::open()
         grab_flag = true;
         grab_thread = make_unique<std::thread>(&COIN_D4::grab_loop, this);
     }
+}
+
+void COIN_D4::close()
+{
+    is_connected.store(false);
+
+    recv_flag = false;
+    if(recv_thread && recv_thread->joinable())
+    {
+        recv_thread->join();
+    }
+    recv_thread.reset();
+
+    grab_flag = false;
+    if(grab_thread && grab_thread->joinable())
+    {
+        grab_thread->join();
+    }
+    grab_thread.reset();
 }
 
 void COIN_D4::set_raw_scan(const LaserScan& scan)
@@ -77,10 +98,10 @@ LaserScan COIN_D4::get_raw_scan()
     return raw_scan;
 }
 
-std::vector<Eigen::Vector3d> COIN_D4::get_cur_scan()
+std::vector<Eigen::Vector3d> COIN_D4::get_cur_pts()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    return cur_scan_blidar;
+    return cur_pts;
 }
 
 TIME_PTS COIN_D4::get_cur_tp()
@@ -99,6 +120,9 @@ void COIN_D4::grab_loop()
 
     Eigen::Matrix4d tf = ZYX_to_TF(0.22, 0, 0, 0, 0, 180*D2R);
 
+    is_connected.store(true);
+
+    log_info("grab_loop start");
     while(grab_flag)
     {
         LaserScan local_scan = get_raw_scan();
@@ -171,13 +195,13 @@ void COIN_D4::grab_loop()
 
         {
             std::unique_lock<std::shared_mutex> lock(mtx);
-            cur_scan_blidar = raw_pts;
+            cur_pts = raw_pts;
             max_dist_blidar = max_dist;
         }
 
-
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    log_info("grab_loop stop");
 }
 
 void COIN_D4::recv_loop()
@@ -279,4 +303,14 @@ void COIN_D4::recv_loop()
     laser.turnOff();
     laser.disconnecting();
     logger->write_log("[COIN_D4] recv_loop terminated.");
+}
+
+void COIN_D4::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void COIN_D4::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
 }
