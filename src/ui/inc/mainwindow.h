@@ -15,6 +15,7 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "lidar_3d.h"
+#include "lidar_bottom.h"
 #include "localization.h"
 #include "mapping.h"
 #include "autocontrol.h"
@@ -144,6 +145,7 @@ public:
     void plot_safety();
     void plot_raw_2d();
     void plot_raw_3d();
+    void plot_blidar();
     void plot_loc();
     void plot_mapping();
     void plot_obs();

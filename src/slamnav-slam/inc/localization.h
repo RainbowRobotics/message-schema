@@ -11,6 +11,7 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "lidar_3d.h"
+#include "lidar_bottom.h"
 #include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
@@ -78,6 +79,7 @@ public:
     void set_mobile_module(MOBILE* _mobile);
     void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
     void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+    void set_blidar_module(LIDAR_BOTTOM* _blidar);
     void set_cam_module(CAM *_cam);
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
@@ -95,6 +97,7 @@ private:
     MOBILE* mobile;
     LIDAR_2D* lidar_2d;
     LIDAR_3D* lidar_3d;
+    LIDAR_BOTTOM* blidar;
     CAM* cam;
     UNIMAP* unimap;
     OBSMAP* obsmap;

@@ -128,7 +128,7 @@ void LIDAR_2D::open()
     {
         //printf("[LIDAR_2D] simulation mode\n");
 
-          spdlog::info("[LIDAR_2D] simulation mode open");
+        spdlog::info("[LIDAR_2D] simulation mode open");
         return;
     }
 

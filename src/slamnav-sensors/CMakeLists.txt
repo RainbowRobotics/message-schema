@@ -31,8 +31,7 @@ file(GLOB_RECURSE SENSORS_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CU
 
 # ---- Target ----
 add_library(${PROJECT_NAME} SHARED ${SENSORS_SOURCES} ${SENSORS_HEADERS}
-        inc/slamnav_sensor_types.h
-        inc/aruco.h)
+        inc/slamnav_sensor_types.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
@@ -53,9 +52,9 @@ target_link_libraries(${PROJECT_NAME}
         slamnav_sensors_sick
         slamnav_sensors_orbbec
         slamnav_sensors_livox
+        slamnav_sensors_coin_d4
     PRIVATE
         slamnav_sensors_laki
-        slamnav_sensors_coin_d4
         slamnav_sensors_gls611
 )
 
