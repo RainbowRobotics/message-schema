@@ -24,14 +24,14 @@
     },
     "cam_config": [
         {
-            "SERIAL_NUMBER": "AY4W633000L",
-            "TF": "0.2292,-0.0875,0.2,-62.0,0.0,-115.0",
+            "SERIAL_NUMBER": "AY4F632005K",
+            "TF": "0.2292,0.0875,0.2,62.0,0.0,115.0",
             "COLOR_PROFILE": "112",
             "DEPTH_PROFILE": "55"
         },
         {
-            "SERIAL_NUMBER": "AY4W633001A",
-            "TF": "0.2292,0.0875,0.2,62.0,0.0,115.0",
+            "SERIAL_NUMBER": "AY4F632011H",
+            "TF": "0.2292,-0.0875,0.2,-62.0,0.0,-115.0",
             "COLOR_PROFILE": "112",
             "DEPTH_PROFILE": "55"
         }
@@ -51,7 +51,7 @@
         "SERVER_PW": "rainbow",
         "USE_BEEP": true,
         "USE_QTUI": false,
-        "USE_SIM": true
+        "USE_SIM": false
     },
     "docking": {
         "CHARGE_TYPE": "XNERGY",
@@ -100,22 +100,22 @@
         "LOC_ICP_COST_THRESHOLD": "0.1",
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.2",
-        "LOC_ICP_MAX_FEATURE_NUM": "500",
+        "LOC_ICP_MAX_FEATURE_NUM": "1000",
         "LOC_ICP_ODO_FUSION_RATIO": "0.5",
         "LOC_ROTATION_FALLBACK_RANGE": "180",
         "LOC_ROTATION_FALLBACK_STEP": "10",
         "LOC_ROTATION_FALLBACK_USE": false,
         "LOC_SURFEL_NUM": "3",
-        "LOC_SURFEL_RANGE": "0.3"
+        "LOC_SURFEL_RANGE": "1.0"
     },
     "loc_3d": {
         "LOC_COST_THRESHOLD": "0.1",
         "LOC_ICP_ODO_FUSION_RATIO": "0.5",
         "LOC_INLIER_CHECK_DIST": "0.3",
-        "LOC_MAX_FEATURE_NUM": "3000",
+        "LOC_MAX_FEATURE_NUM": "1000",
         "LOC_SURFEL_BALANCE": "0.4",
         "LOC_SURFEL_NN_NUM": "1",
-        "LOC_SURFEL_RANGE": "0.3"
+        "LOC_SURFEL_RANGE": "1.0"
     },
     "localization": {
         "MODE": "3D",
@@ -135,19 +135,19 @@
         "LOG_LEVEL": "info"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/251208_test_map"
+        "MAP_PATH": "/data/maps/260108_unicos_test"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
         "SLAM_ICP_DO_ACCUM_NUM": "2",
         "SLAM_ICP_DO_ERASE_GAP": "10",
         "SLAM_ICP_ERROR_THRESHOLD": "0.2",
-        "SLAM_ICP_MAX_FEATURE_NUM": "1500",
+        "SLAM_ICP_MAX_FEATURE_NUM": "1000",
         "SLAM_ICP_VIEW_THRESHOLD": "170",
         "SLAM_KFRM_LC_TRY_DIST": "3.0",
         "SLAM_KFRM_LC_TRY_OVERLAP": "0.25",
         "SLAM_KFRM_UPDATE_NUM": "50",
-        "SLAM_VOXEL_SIZE": "0.01",
+        "SLAM_VOXEL_SIZE": "0.03",
         "SLAM_WINDOW_SIZE": "100"
     },
     "motor": {
@@ -155,29 +155,27 @@
         "MOTOR_GAIN_KD": "100",
         "MOTOR_GAIN_KI": "0",
         "MOTOR_GAIN_KP": "4400",
-        "MOTOR_GEAR_RATIO": "12",
+        "MOTOR_GEAR_RATIO": "3",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
-        "MOTOR_LIMIT_V": "1.0",
+        "MOTOR_LIMIT_V": "2.0",
         "MOTOR_LIMIT_V_ACC": "1.0",
-        "MOTOR_LIMIT_W": "90",
-        "MOTOR_LIMIT_W_ACC": "90",
-        "MOTOR_SAFETY_LIMIT_V": "1.5",
-        "MOTOR_SAFETY_LIMIT_W": "110"
+        "MOTOR_LIMIT_W": "180",
+        "MOTOR_LIMIT_W_ACC": "360",
+        "MOTOR_SAFETY_LIMIT_V": "2.0",
+        "MOTOR_SAFETY_LIMIT_W": "180"
     },
     "network": {
-        "USE_COOP": false,
-        "USE_FMS": true,
-        "USE_MSA": false,
+        "USE_FMS": false,
+        "USE_MSA": true,
         "USE_MULTI": true,
-        "USE_RRS": false,
         "USE_RTSP": false
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.5",
-        "OBS_DEADZONE_DYN": "0.5",
-        "OBS_DEADZONE_VIR": "0.5",
+        "OBS_DEADZONE": "0.7",
+        "OBS_DEADZONE_DYN": "0.7",
+        "OBS_DEADZONE_VIR": "0.7",
         "OBS_DISTANCE_LED_FAR": "1.0",
         "OBS_DISTANCE_LED_NEAR": "0.8",
         "OBS_LOCAL_GOAL_D": "4.0",
@@ -235,14 +233,15 @@
         "LIDAR_3D_NUM": "1",
         "LIDAR_3D_TYPE": "LIVOX",
         "USE_BQR": false,
-        "USE_CAM": false,
+        "USE_CAM": true,
         "USE_CAM_DEPTH": true,
-        "USE_CAM_FILTER": true,
+        "USE_CAM_FILTER": false,
         "CAM_FILTER_ROR_RADIUS": "0.1",
         "CAM_FILTER_ROR_MIN_NEIGHBORS": "15",
         "CAM_FILTER_CLUSTER_MIN_SIZE": "30",
         "USE_CAM_RGB": true,
         "USE_IMU": false,
+        "USE_BLIDAR" : false,
         "USE_LIDAR_2D": true,
         "USE_LIDAR_3D": true
     },

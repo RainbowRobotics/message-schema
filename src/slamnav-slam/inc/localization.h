@@ -60,7 +60,6 @@ public:
     double get_process_time_localization();
     double get_process_time_odometry();
     double get_process_time_obs();
-    double get_process_time_node();
 
     void set_cur_loc_state(QString str);                // set loc state
     void set_cur_tf(Eigen::Matrix4d tf);                // set current tf
