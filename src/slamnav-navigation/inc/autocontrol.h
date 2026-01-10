@@ -99,7 +99,7 @@ public:
     QString get_cur_move_state();                   // get the current move state (none, move, complete, fail, obstacle, cancel)
     QString get_multi_reqest_state();               // get current multi request state (none, req_path, recv_path)
     DATA_MOVE get_cur_move_info();                  // get last received move msg
-    long long get_global_path_time();
+    QString get_global_path_time();
     CTRL_PARAM get_cur_ctrl_params();
     Eigen::Vector3d get_last_cur_pos();             // get last current pos
     Eigen::Vector3d get_last_tgt_pos();             // get last target pos
@@ -107,7 +107,7 @@ public:
     std::vector<Eigen::Matrix4d> get_obs_traj();
     std::vector<int> get_global_step();
 
-    void set_path(const std::vector<QString>& _global_node_path, int _global_preset, long long _global_path_time);
+    void set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time);
     void set_is_rrs(bool flag);
     void set_is_pause(bool val);
     void set_is_debug(bool val);
@@ -226,6 +226,8 @@ private:
     // find the tf closest to the current position among the line segments formed by nodes and nodes
     Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
 
+    std::vector<Eigen::Matrix4d> get_approach_pose(std::vector<Eigen::Matrix4d> tfs, Eigen::Matrix4d cur_tf);
+
     // [single robot] calc global path
     //PATH calc_global_path(Eigen::Matrix4d goal);
 
@@ -285,7 +287,7 @@ private:
     std::vector<int> global_step;
     std::atomic<int> last_step = {0};
     std::vector<QString> global_node_path;
-    std::atomic<long long> global_path_time = {static_cast<long long>(0)};
+    QString global_path_time = {""};
 
     // flags
     std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
@@ -295,6 +297,7 @@ private:
     std::atomic<bool> is_moving              = {false};
     std::atomic<bool> is_path_overlap        = {false};
     std::atomic<bool> is_move_backward       = {false};
+    std::atomic<bool> is_set_path            = {false};
 
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};

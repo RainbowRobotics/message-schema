@@ -964,8 +964,11 @@ struct DATA_VIEW_PATH
 
 struct DATA_PATH
 {
-    long long time;
+    QString time;
     int preset;
+
+    QString time1;
+    QString time_str;
 
     QString command;
     QString goal;
@@ -981,7 +984,7 @@ struct DATA_PATH
 
     DATA_PATH()
     {
-        time = 0;
+        time = "";
         preset = 0;
         command = "";
         result = "";

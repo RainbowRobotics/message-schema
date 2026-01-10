@@ -354,8 +354,6 @@ void CAM::post_process_loop(int idx)
             try
             {
                 // use depth only
-                //if(config->get_use_cam_depth() == true && config->get_use_cam_rgb() == false || config->get_use_cam() == true)
-                //if(config->get_use_cam_depth() || config->get_use_cam())
                 if(config->get_use_cam_depth())
                 {
                     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -387,8 +385,8 @@ void CAM::post_process_loop(int idx)
                         if(robot_model == RobotModel::S100)
                         {
                             //log_debug("S100 image flip processing");
-                            // right camera
-                            if(idx == 1)
+                            // left camera
+                            if(idx == 0)
                             {
                                 cv::flip(ti.img, ti.img, -1);
                             }

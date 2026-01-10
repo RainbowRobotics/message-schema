@@ -157,7 +157,7 @@ void ARUCO::detect_loop()
             continue;
         }
 
-        for(int cam_idx = 0; cam_idx < 2; cam_idx++)
+        for(int cam_idx = 0; cam_idx < config->get_cam_num(); cam_idx++)
         {
             detect(cam_idx);
         }
@@ -187,9 +187,14 @@ void ARUCO::detect(int cam_idx)
     TIME_IMG t_img = cam->get_time_img(cam_idx);
     if(t_img.t == 0 || t_img.img.empty() || t_img.t == last_t[cam_idx])
     {
-        printf("invalid cam img\n");
-        log_warn("invalid cam img");
+        //printf("invalid cam img\n");
+        //log_warn("invalid cam img");
         return;
+    }
+
+    if(config->get_robot_model() == RobotModel::S100 && cam_idx == 0)
+    {
+        cv::flip(t_img.img, t_img.img, -1);
     }
 
     last_t[cam_idx] = t_img.t;
@@ -232,7 +237,7 @@ void ARUCO::detect(int cam_idx)
     cv::aruco::detectMarkers(img, dictionary, detected_uv, detected_id, parameters);
     if(detected_id.empty())
     {
-        log_info("no marker detected");
+        //log_info("no marker detected");
         return;
     }
 
@@ -295,6 +300,7 @@ void ARUCO::detect(int cam_idx)
 
             Eigen::Matrix4d robot_to_marker = extrinsic * cam_to_marker;
             double d = calc_dist_2d(robot_to_marker.block(0,3,3,1));
+
             if(d < min_d && d < 1.0)
             {
                 min_d = d;

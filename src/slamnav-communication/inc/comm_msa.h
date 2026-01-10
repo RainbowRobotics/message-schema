@@ -303,6 +303,10 @@ private:
     std::unique_ptr<std::thread> send_response_thread;
     std::unique_ptr<std::thread> send_status_thread;
 
+    std::mutex test_mutex;
+    QString test0;
+    QString test1;
+
     void move_loop();
     void load_loop();
     void path_loop();

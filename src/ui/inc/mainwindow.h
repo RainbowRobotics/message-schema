@@ -117,11 +117,9 @@ public:
     std::vector<QString> last_plot_tactile;
     std::vector<QString> last_obs_plot_tactile;
 
-    atomic<double> last_sync_time = {0.};
+    std::atomic<double> last_plot_aruco_t = {get_time()};
 
-    // for user led
-//    std::atomic<bool> is_user_led = {false};
-//    std::atomic<int> user_led_color = {LED_OFF};
+    atomic<double> last_sync_time = {0.};
 
     //for change map name
     std::atomic<bool> change_map_name = {false};

@@ -712,11 +712,7 @@ void LOCALIZATION::odometry_loop()
     // params
     MOBILE_POSE pre_mo = mobile->get_pose();
 
-
-    //printf("[LOCALIZATION] odometry loop start\n");
-    //qDebug()<<"odometry_flag : "<<odometry_flag;
-
-    spdlog::info("[LOCALTIZATION] odometry loop start, odometryty_flag: {}", odometry_flag.load());
+    log_info("odometry loop start, odometryty_flag: {}", odometry_flag.load());
 
     while(odometry_flag)
     {
@@ -752,8 +748,7 @@ void LOCALIZATION::odometry_loop()
                 if(std::abs(dtdr[1]) > 10.0*D2R)
                 {
                     alpha = 0;
-                    //printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
-                    spdlog::warn("[LOCALIZATION] slip detection, alpha set 0, dth: {}", dtdr[1]*R2D);
+                    log_warn("[LOCALIZATION] slip detection, alpha set 0, dth: {}", dtdr[1]*R2D);
                 }
 
                 // interpolation
@@ -768,47 +763,6 @@ void LOCALIZATION::odometry_loop()
                 // update
                 _cur_tf = odo_tf;
             }
-
-            /*
-            // aruco fusion
-            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
-            if(aruco_tpi.t > pre_aruco_t && config->USE_SIM == 0)
-            {
-                double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
-                if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
-                {
-                    NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
-                    if(node != NULL)
-                    {
-                        // parse tf
-                        Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
-                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
-
-                        // time delay compensation
-                        Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
-                        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-                        Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
-
-                        Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
-                        Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
-
-                        // interpolation
-                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 1.0 mean odometry only
-                        if(std::abs(cur_mo.vel[2]) > 10.0*D2R)
-                        {
-                            alpha = 1.0; // odometry only
-                        }
-
-                        Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
-                        Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                        // update
-                        _cur_tf = fused_tf;
-                        pre_aruco_t = aruco_tpi.t;
-                    }
-                }
-            }
-            */
 
             // update
             set_cur_tf(_cur_tf);
@@ -838,15 +792,15 @@ void LOCALIZATION::odometry_loop()
         }
         else
         {
-            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
+            log_warn("odometry loop time drift, dt:{}", delta_loop_time);
         }
 
         // update processing time
         process_time_odometry = delta_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    //printf("[LOCALIZATION] odometry loop stop\n");
-    spdlog::info("[LOCALIZATION] odometry loop stop");
+
+    log_info("[LOCALIZATION] odometry loop stop");
 }
 
 void LOCALIZATION::ekf_loop()
@@ -936,14 +890,14 @@ void LOCALIZATION::ekf_loop()
         }
         else
         {
-            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
+            log_warn("ekf_loop(2d) time drift, dt: {}", delta_loop_time);
         }
 
         process_time_localization = cur_loop_time - pre_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    //printf("[LOCALIZATION] ekf loop stop\n");
-    spdlog::info("[LOCALIZATION] ekf loop stop");
+
+    log_info("ekf_loop(2d) stop");
 }
 
 void LOCALIZATION::ekf_loop_3d()
@@ -975,9 +929,6 @@ void LOCALIZATION::ekf_loop_3d()
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
-
-            auto kdtree_index = unimap->get_kdtree_cloud_index();
-            auto kdtree_cloud = unimap->get_kdtree_cloud();
 
             // icp
             std::vector<Eigen::Vector3d> dsk = frm.pts;
@@ -1013,6 +964,9 @@ void LOCALIZATION::ekf_loop_3d()
                 }
             }
 
+            // set localization info for plot
+            cur_tf_err = err;
+
             // for speed
             lidar_3d->clear_merged_queue();
         }
@@ -1030,14 +984,14 @@ void LOCALIZATION::ekf_loop_3d()
         }
         else
         {
-            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
+            log_warn("ekf_loop(3d) time drift, dt: {}", delta_loop_time);
         }
 
         process_time_localization = cur_loop_time - pre_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    //printf("[LOCALIZATION] ekf_loop_3d stop\n");
-    spdlog::info("[LOCALIZATION] ekf_loop_3d stop");
+
+    log_info("ekf_loop(3d) stop");
 }
 
 void LOCALIZATION::obs_loop()

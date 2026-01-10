@@ -665,66 +665,42 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
     if(object == ui->qvtkWidget && UNIMAP::instance()->get_is_loaded() == MAP_LOADED)
     {
-        // touch to right mouse
-        if(ui->ckb_ViewTouchToRightButton->isChecked())
+        // touch to mouse event conversion
+        if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
         {
-            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
+            auto touch_event = static_cast<QTouchEvent *>(ev);
+            if(!touch_event->touchPoints().isEmpty())
             {
-                auto touch_event = static_cast<QTouchEvent *>(ev);
-                if(!touch_event->touchPoints().isEmpty())
+                const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
+                QPointF pos = point.pos();
+
+                // 터치 위치에 자식 위젯(버튼 등)이 있으면 이벤트 전달
+                QWidget* child = ui->qvtkWidget->childAt(pos.toPoint());
+                if(child != nullptr)
                 {
-                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
-                    QPointF pos = point.pos(); // touch point position
-
-                    QEvent::Type mouse_event_type;
-                    if(ev->type() == QEvent::TouchBegin)
-                    {
-                        mouse_event_type = QEvent::MouseButtonPress;
-                    }
-                    else if(ev->type() == QEvent::TouchUpdate)
-                    {
-                        mouse_event_type = QEvent::MouseMove;
-                    }
-                    else if(ev->type() == QEvent::TouchEnd)
-                    {
-                        mouse_event_type = QEvent::MouseButtonRelease;
-                    }
-
-                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::RightButton, Qt::RightButton, Qt::NoModifier);
-                    QApplication::postEvent(ui->qvtkWidget, mouse_event);
+                    return false;
                 }
-                return false;
-            }
-        }
-        else
-        {
-            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
-            {
-                auto touch_event = static_cast<QTouchEvent *>(ev);
-                if(!touch_event->touchPoints().isEmpty())
+
+                QEvent::Type mouse_event_type;
+                if(ev->type() == QEvent::TouchBegin)
                 {
-                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
-                    QPointF pos = point.pos(); // touch point position
-
-                    QEvent::Type mouse_event_type;
-                    if(ev->type() == QEvent::TouchBegin)
-                    {
-                        mouse_event_type = QEvent::MouseButtonPress;
-                    }
-                    else if(ev->type() == QEvent::TouchUpdate)
-                    {
-                        mouse_event_type = QEvent::MouseMove;
-                    }
-                    else if(ev->type() == QEvent::TouchEnd)
-                    {
-                        mouse_event_type = QEvent::MouseButtonRelease;
-                    }
-
-                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                    QApplication::postEvent(ui->qvtkWidget, mouse_event);
+                    mouse_event_type = QEvent::MouseButtonPress;
                 }
-                return false;
+                else if(ev->type() == QEvent::TouchUpdate)
+                {
+                    mouse_event_type = QEvent::MouseMove;
+                }
+                else if(ev->type() == QEvent::TouchEnd)
+                {
+                    mouse_event_type = QEvent::MouseButtonRelease;
+                }
+
+                // 체크박스 상태에 따라 우클릭 또는 좌클릭으로 변환
+                Qt::MouseButton btn = ui->ckb_ViewTouchToRightButton->isChecked() ? Qt::RightButton : Qt::LeftButton;
+                QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, btn, btn, Qt::NoModifier);
+                QApplication::postEvent(ui->qvtkWidget, mouse_event);
             }
+            return true;
         }
 
         if(ui->cb_ViewType->currentText() == "VIEW_2D")
@@ -5037,44 +5013,6 @@ void MainWindow::plot_cam()
         }
     }
 
-//    for (int i = 0; i < cam_num; i++)
-//    {
-//        if (!CAM::instance()->get_connection(i))
-//        {
-//            continue;
-//        }
-
-//        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
-//        if (plot.empty())
-//        {
-//            continue;
-//        }
-
-//        QString labelName = QString("lb_Screen%1").arg(i + 2);
-//        QLabel* label = this->findChild<QLabel*>(labelName);
-//        if (!label)
-//        {
-//            log_error("plot_cam, {} not found", labelName.toStdString());
-//            continue;
-//        }
-
-//        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
-//        //        qDebug()<<cam_tf;
-//        if (cam_tf.size() >= 4)
-//        {
-//            bool ok = false;
-//            double yaw_deg = cam_tf[5].toDouble(&ok);
-//            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
-//            {
-//                cv::flip(plot, plot, 0);
-//            }
-//        }
-
-//        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-//        label->setScaledContents(true);
-//        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-//    }
-
     if(CAM::instance()->get_connection(0))
     {
         QString serial_number_str = CONFIG::instance()->get_cam_serial_number(0);
@@ -5129,6 +5067,51 @@ void MainWindow::plot_cam()
             ui->lb_Screen5->setScaledContents(true);
             ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
+    }
+
+    if(CONFIG::instance()->get_use_aruco())
+    {
+        // Compute global_to_marker
+        TIME_POSE_ID cur_tpi =  ARUCO::instance()->get_cur_tpi();
+        Eigen::Matrix4d global_to_marker = LOCALIZATION::instance()->get_best_tf(cur_tpi.t) * cur_tpi.tf;
+
+        // Draw axis
+        if(pcl_viewer->contains("aruco_axis"))
+        {
+            pcl_viewer->removeCoordinateSystem("aruco_axis");
+        }
+        pcl_viewer->addCoordinateSystem(0.5, "aruco_axis");
+        pcl_viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+
+        if(CONFIG::instance()->get_cam_num() == 1 || CONFIG::instance()->get_cam_num() == 2)
+        {
+            if(cur_tpi.t > last_plot_aruco_t)
+            {
+                // Update screen for camera 0
+                cv::Mat plot0 = ARUCO::instance()->get_plot_img(0);
+                if(!plot0.empty())
+                {
+                    ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                    ui->lb_Screen4->setScaledContents(true);
+                    ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                }
+
+                if(CONFIG::instance()->get_cam_num() == 2)
+                {
+                    // Update screen for camera 1
+                    cv::Mat plot1 = ARUCO::instance()->get_plot_img(1);
+                    if(!plot1.empty())
+                    {
+                        ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                        ui->lb_Screen5->setScaledContents(true);
+                        ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                    }
+                }
+            }
+        }
+
+        // update for next
+        last_plot_aruco_t = cur_tpi.t;
     }
 }
 

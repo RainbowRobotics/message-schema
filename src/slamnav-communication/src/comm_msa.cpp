@@ -465,7 +465,15 @@ void COMM_MSA::send_move_status()
     obj_move_state->get_map()["jog_move"]   = sio::string_message::create("none");
     obj_move_state->get_map()["obs"]        = sio::string_message::create(ctrl->get_obs_condition().toStdString());
     obj_move_state->get_map()["path"]       = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
-    obj_move_state->get_map()["path_time"]  = sio::string_message::create(QString::number(ctrl->get_global_path_time()).toStdString());
+    //obj_move_state->get_map()["path_time"]  = sio::string_message::create(ctrl->get_global_path_time().toStdString());
+
+    QString _test0, _test1;
+    {
+        std::lock_guard<std::mutex> test_lock(test_mutex);
+        obj_move_state->get_map()["path_time"]  = sio::string_message::create(test0.toStdString());
+        //obj_move_state->get_map()["time1"]  = sio::string_message::create(test0.toStdString());
+    }
+
     obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
 
     // create pose object
@@ -516,11 +524,14 @@ void COMM_MSA::send_move_status()
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
     DATA_PATH msg;
-    msg.time = get_json_double(data, "time");
-    if(msg.time == 0)
+    msg.time = get_json(data, "time");
+
     {
-        msg.time = data["time"].toString().toDouble();
+        std::lock_guard<std::mutex> test_lock(test_mutex);
+        test0 = get_json(data, "time_1");
+        test1 = get_json(data, "time_str");
     }
+
     msg.preset = get_json_int(data, "preset");
     msg.command = get_json(data, "command");
 
@@ -2009,7 +2020,7 @@ void COMM_MSA::send_path_response(const DATA_PATH& msg)
     sio::object_message::ptr root_obj = sio::object_message::create();
     add_to_obj(root_obj, "result", msg.result);
     add_to_obj(root_obj, "message", msg.message);
-    add_to_obj(root_obj, "time", static_cast<long long>(msg.time*1000));
+    add_to_obj(root_obj, "time", msg.time);
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "pathResponse";
@@ -2908,7 +2919,7 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
                 path.push_back(path_str_list[p]);
             }
 
-            ctrl->set_path(path, msg.preset, (long long)(msg.time));
+            ctrl->set_path(path, msg.preset, msg.time);
 
             ctrl->signal_move_multi();
         }

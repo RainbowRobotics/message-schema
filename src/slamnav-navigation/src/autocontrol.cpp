@@ -187,11 +187,18 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
     cur_local_path = val;
 }
 
-void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _global_preset, long long _global_path_time)
+void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time)
 {
-    if(_global_path_time == global_path_time.load() || _global_node_path.empty())
+    QString global_path_time_str;
     {
-        log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time, global_path_time.load(), _global_node_path.size());
+        std::lock_guard<std::mutex> lock(path_mtx);
+        global_path_time_str = global_path_time;
+    }
+
+    if(_global_path_time == global_path_time_str || _global_node_path.empty())
+    {
+        log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time.toStdString(), global_path_time.toStdString(),
+            _global_node_path.size());
         return;
     }
 
@@ -222,7 +229,10 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
 
     set_global_preset(_global_preset);
 
-    global_path_time.store(_global_path_time);
+    std::lock_guard<std::mutex> lock(path_mtx);
+    global_path_time = (_global_path_time);
+
+    is_set_path.store(true);
 }
 
 void AUTOCONTROL::set_cur_goal_state(QString str)
@@ -367,9 +377,10 @@ void AUTOCONTROL::set_global_preset(int val)
     global_preset.store(val);
 }
 
-long long AUTOCONTROL::get_global_path_time()
+QString AUTOCONTROL::get_global_path_time()
 {
-    return static_cast<long long>(global_path_time.load());
+    std::lock_guard<std::mutex> lock(path_mtx);
+    return global_path_time;
 }
 
 CTRL_PARAM AUTOCONTROL::get_cur_ctrl_params()
@@ -1212,6 +1223,43 @@ Eigen::Matrix4d AUTOCONTROL::get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matri
     return res;
 }
 
+std::vector<Eigen::Matrix4d> AUTOCONTROL::get_approach_pose(std::vector<Eigen::Matrix4d> tfs, Eigen::Matrix4d cur_tf)
+{
+    if(tfs.size() < 2)
+    {
+        return tfs;
+    }
+
+    Eigen::Vector3d pos1 = cur_tf.block(0,3,3,1);
+
+    std::vector<std::pair<int, double>> dist_idx;
+    dist_idx.reserve(tfs.size());
+    for(int p = 0; p < (int)tfs.size(); p++)
+    {
+        Eigen::Vector3d pos0 = tfs[p].block(0,3,3,1);
+        double dist = (pos0 - pos1).norm();
+        dist_idx.emplace_back(p, dist);
+    }
+
+    std::partial_sort(dist_idx.begin(), dist_idx.begin() + 2, dist_idx.end(), [](auto &lhs, auto &rhs)
+    {
+        return lhs.second < rhs.second;
+    });
+
+    int idx1 = dist_idx[0].first;
+    int idx2 = dist_idx[1].first;
+
+    int min_idx = std::min(idx1, idx2);
+    int max_idx = std::max(idx1, idx2);
+    Eigen::Matrix4d app = get_approach_pose(tfs[min_idx], tfs[max_idx], cur_tf);
+
+    tfs.erase(tfs.begin(), tfs.begin() + min_idx + 1);
+    tfs.insert(tfs.begin(), app);
+    tfs.insert(tfs.begin(), cur_tf);
+
+    return tfs;
+}
+
 PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 {
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
@@ -1307,7 +1355,23 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
     else
     {
-        const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
+        Eigen::Vector3d pos0 = node_pose[0].block(0,3,3,1);
+        Eigen::Vector3d pos1 = node_pose[1].block(0,3,3,1);
+        Eigen::Vector3d pos = cur_tf.block(0,3,3,1);
+
+        if(check_point_on_segment(pos0, pos1, pos))
+        {
+            Eigen::Matrix4d app = get_approach_pose(node_pose[0], node_pose[1], cur_tf);
+            node_pose.erase(node_pose.begin());
+            node_pose.insert(node_pose.begin(), app);
+            node_pose.insert(node_pose.begin(), cur_tf);
+        }
+        else
+        {
+            node_pose = get_approach_pose(node_pose, cur_tf);
+        }
+
+        /*const Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
 
         size_t min_seg_idx = 0;
         bool found_inside = false;
@@ -1369,7 +1433,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         }
 
         node_pose.insert(node_pose.begin(), app);
-        node_pose.insert(node_pose.begin(), cur_tf);
+        node_pose.insert(node_pose.begin(), cur_tf);*/
     }
 
     // add goal pos
@@ -1456,7 +1520,23 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         }
         else
         {
-            Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
+            Eigen::Vector3d pos0 = node_pose[0].block(0,3,3,1);
+            Eigen::Vector3d pos1 = node_pose[1].block(0,3,3,1);
+            Eigen::Vector3d pos = cur_tf.block(0,3,3,1);
+
+            if(check_point_on_segment(pos0, pos1, pos))
+            {
+                Eigen::Matrix4d app = get_approach_pose(node_pose[0], node_pose[1], cur_tf);
+                node_pose.erase(node_pose.begin());
+                node_pose.insert(node_pose.begin(), app);
+                node_pose.insert(node_pose.begin(), cur_tf);
+            }
+            else
+            {
+                node_pose = get_approach_pose(node_pose, cur_tf);
+            }
+
+            /*Eigen::Vector3d _cur_pos = cur_tf.block(0,3,3,1);
 
             size_t min_seg_idx = 0;
             bool found_inside = false;
@@ -1518,7 +1598,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
             }
 
             node_pose.insert(node_pose.begin(), app);
-            node_pose.insert(node_pose.begin(), cur_tf);
+            node_pose.insert(node_pose.begin(), cur_tf);*/
         }
     }
 
@@ -4028,17 +4108,33 @@ void AUTOCONTROL::node_loop()
                     double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
+                        QString st_node;
+                        {
+                            std::lock_guard<std::mutex> lock(path_st_node_mtx);
+                            st_node = path_st_node_id;
+                        }
+
+                        {
+                            std::lock_guard<std::mutex> lock(path_mtx);
+                            if(is_set_path.load() && _cur_node_id == st_node)
+                            {
+                                is_set_path.store(false);
+                            }
+                        }
+
                         int _last_step = get_last_step();
                         if(pre_node_id != _cur_node_id && !cur_node_id.isEmpty())
                         {
                             pre_node_id = _cur_node_id;
 
                             std::lock_guard<std::mutex> lock(path_mtx);
-
-                            if(!global_step.empty())
+                            if(is_set_path.load() == true)
                             {
-                                last_step.store(global_step.front());
-                                global_step.erase(global_step.begin());
+                                if(!global_step.empty())
+                                {
+                                    last_step.store(global_step.front());
+                                    global_step.erase(global_step.begin());
+                                }
                             }
                         }
 

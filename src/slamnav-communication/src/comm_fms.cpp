@@ -279,7 +279,7 @@ void COMM_FMS::send_move_status()
     moveObj["step"]         = QString::number(step, 10);
     moveObj["path"]         = ctrl->get_multi_reqest_state();
     moveObj["auto_move"]    = ctrl->get_auto_state();
-    moveObj["path_time"]    = QString::number(ctrl->get_global_path_time(), 10);
+    moveObj["path_time"]    = ctrl->get_global_path_time();
     dataObj["move_state"]   = moveObj;
 
     QJsonObject processObj;
@@ -653,7 +653,7 @@ void COMM_FMS::send_path_response(DATA_PATH msg)
 
     QJsonObject dataObj;
     dataObj["command"] = "path";
-    dataObj["time"] = QString::number((long long)(msg.time), 10);
+    dataObj["time"] = msg.time;
 
     QJsonObject rootObj;
     rootObj["robot"] = robotObj;
@@ -1010,7 +1010,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
             path.push_back(path_str_list[p]);
         }
 
-        ctrl->set_path(path, msg.preset, (long long)(msg.time));
+        ctrl->set_path(path, msg.preset, msg.time);
     }
 
     send_path_response(msg);
