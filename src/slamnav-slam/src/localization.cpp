@@ -171,25 +171,48 @@ Eigen::Matrix4d LOCALIZATION::get_best_tf(double t)
         return _cur_tf;
     }
 
-    int min_idx = 0;
-    double min_dt = std::numeric_limits<double>::max();
+    int idx0 = -1, idx1 = -1;
     for(size_t p = 0; p < _tp_storage.size(); p++)
     {
-        double dt = std::abs(_tp_storage[p].t - t);
-        if(dt < min_dt)
+        if(_tp_storage[p].t <= t)
         {
-            min_dt = dt;
-            min_idx = p;
+            idx0 = p;
+        }
+
+        if(_tp_storage[p].t > t && idx1 < 0)
+        {
+            idx1 = p;
         }
     }
-
-    if(min_dt > 1.0)
+    if(idx0 >= 0 && idx1 >= 0)
     {
-        return _cur_tf;
+        double t0 = _tp_storage[idx0].t;
+        double t1 = _tp_storage[idx1].t;
+        double alpha = (t - t0) / (t1 - t0);
+        return intp_tf(alpha, _tp_storage[idx0].tf, _tp_storage[idx1].tf);
     }
     else
     {
-        return _tp_storage[min_idx].tf;
+        int min_idx = 0;
+        double min_dt = std::numeric_limits<double>::max();
+        for(size_t p = 0; p < _tp_storage.size(); p++)
+        {
+            double dt = std::abs(_tp_storage[p].t - t);
+            if(dt < min_dt)
+            {
+                min_dt = dt;
+                min_idx = p;
+            }
+        }
+
+        if(min_dt > 1.0)
+        {
+            return _cur_tf;
+        }
+        else
+        {
+            return _tp_storage[min_idx].tf;
+        }
     }
 }
 
@@ -607,7 +630,7 @@ void LOCALIZATION::localization_loop_3d()
 {
     IMU pre_imu;
     Eigen::Matrix4d _cur_tf = get_cur_tf();
-    // Eigen::Matrix4d _pre_tf = _cur_tf;
+    Eigen::Matrix4d _pre_tf = _cur_tf;
 
     double pre_loop_time = get_time();
 
@@ -628,10 +651,9 @@ void LOCALIZATION::localization_loop_3d()
             }
 
             // initial guess
-            // Eigen::Vector3d delta_xi = TF_to_se2(_pre_tf.inverse()*_cur_tf);
-            // Eigen::Matrix4d G = _cur_tf*ZYX_to_TF(delta_xi[0], delta_xi[1], 0, 0, 0, delta_xi[2]);
-            // G = _cur_tf;
-            Eigen::Matrix4d G = _cur_tf;
+            Eigen::Vector3d delta_xi = TF_to_se2(_pre_tf.inverse()*_cur_tf);
+            Eigen::Matrix4d G = _cur_tf*ZYX_to_TF(delta_xi[0], delta_xi[1], 0, 0, 0, delta_xi[2]);
+            G = _cur_tf;
 
             // imu
             IMU cur_imu = lidar_3d->get_best_imu(frm.t, 0);
@@ -792,7 +814,7 @@ void LOCALIZATION::odometry_loop()
         }
         else
         {
-            log_warn("odometry loop time drift, dt:{}", delta_loop_time);
+            //log_warn("odometry loop time drift, dt:{}", delta_loop_time);
         }
 
         // update processing time
@@ -916,16 +938,12 @@ void LOCALIZATION::ekf_loop_3d()
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
 
-
-        double st_time3 = get_time();
         if(ekf_3d.initialized.load())
         {
             ekf_3d.predict(se2_to_TF(cur_mo.pose));
         }
 
         Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
-        double ed_time3 = get_time();
-        std::cout << "duration 3: " << ed_time3 - st_time3 << std::endl;
 
         TIME_PTS frm;
         if(lidar_3d->try_pop_merged_queue(frm))
@@ -950,7 +968,6 @@ void LOCALIZATION::ekf_loop_3d()
             {
                 is_use_lidar_3d = true;
 
-                double st_time1 = get_time();
                 if(!ekf_3d.initialized.load())
                 {
                     ekf_3d.init(G);
@@ -960,9 +977,7 @@ void LOCALIZATION::ekf_loop_3d()
                     ekf_3d.estimate(G, cur_ieir);
                 }
                 G = ekf_3d.get_cur_tf();
-                double ed_time1 = get_time();
 
-                double st_time2 = get_time();
                 // local to global deskewed point
                 std::vector<Eigen::Vector3d> pts(frm.pts.size());
                 for(size_t p = 0; p < frm.pts.size(); p++)
@@ -971,7 +986,6 @@ void LOCALIZATION::ekf_loop_3d()
                     Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
                     pts[p] = _P;
                 }
-                double ed_time2 = get_time();
 
                 {
                     std::lock_guard<std::mutex> lock(mtx);

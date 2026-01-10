@@ -2408,7 +2408,8 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     double cur_vy = control_input[1];
     double cur_v = std::sqrt(cur_vx*cur_vx + cur_vy*cur_vy);
 
-    double st_v = std::max<double>(global_path.ref_v[st_idx], cur_v);
+    //double st_v = std::max<double>(global_path.ref_v[st_idx], cur_v);
+    double st_v = global_path.ref_v[st_idx];
 
     if(_path_pose.size() == 1)
     {
@@ -3359,8 +3360,8 @@ void AUTOCONTROL::control_loop()
             }
             else
             {
-                v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
                 v = saturation(v, 0.0, obs_decel_v);
+                v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
                 v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
             }
 
