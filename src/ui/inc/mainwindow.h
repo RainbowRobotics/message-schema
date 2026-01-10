@@ -101,14 +101,6 @@ public:
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};
 
-    std::atomic<double> vx_target = {0.};
-    std::atomic<double> vy_target = {0.};
-    std::atomic<double> wz_target = {0.};
-
-    std::atomic<double> vx_current = {0.};
-    std::atomic<double> vy_current = {0.};
-    std::atomic<double> wz_current = {0.};
-
     // plot object names
     std::vector<QString> last_plot_kfrms;
     std::vector<QString> last_plot_nodes;
@@ -120,9 +112,6 @@ public:
     std::atomic<double> last_plot_aruco_t = {get_time()};
 
     atomic<double> last_sync_time = {0.};
-
-    //for change map name
-    std::atomic<bool> change_map_name = {false};
 
     // for mileage
    double mileage = {0.0};
@@ -155,6 +144,7 @@ public:
 
     // init localization timer (aruco)
     QTimer* init_aruco_loc_timer;
+    std::atomic<int> found_aruco_cnt = {0};
 
     // plot timer
     QTimer* plot_timer;

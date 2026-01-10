@@ -908,18 +908,24 @@ void LOCALIZATION::ekf_loop_3d()
     const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
+    bool is_use_lidar_3d = false;
+
     //printf("[LOCALIZATION] ekf_loop_3d start\n");
     spdlog::info("[LOCALIZATION] ekf_loop_3d start");
     while(ekf_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
 
+
+        double st_time3 = get_time();
         if(ekf_3d.initialized.load())
         {
             ekf_3d.predict(se2_to_TF(cur_mo.pose));
         }
 
         Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
+        double ed_time3 = get_time();
+        std::cout << "duration 3: " << ed_time3 - st_time3 << std::endl;
 
         TIME_PTS frm;
         if(lidar_3d->try_pop_merged_queue(frm))
@@ -932,13 +938,19 @@ void LOCALIZATION::ekf_loop_3d()
 
             // icp
             std::vector<Eigen::Vector3d> dsk = frm.pts;
+
+            double st_time0 = get_time();
             double err = map_icp(dsk, G);
+            double ed_time0 = get_time();
 
             // check ieir
             cur_ieir = calc_ieir(dsk, G);
 
             if(err < config->get_loc_2d_icp_error_threshold())
             {
+                is_use_lidar_3d = true;
+
+                double st_time1 = get_time();
                 if(!ekf_3d.initialized.load())
                 {
                     ekf_3d.init(G);
@@ -948,7 +960,9 @@ void LOCALIZATION::ekf_loop_3d()
                     ekf_3d.estimate(G, cur_ieir);
                 }
                 G = ekf_3d.get_cur_tf();
+                double ed_time1 = get_time();
 
+                double st_time2 = get_time();
                 // local to global deskewed point
                 std::vector<Eigen::Vector3d> pts(frm.pts.size());
                 for(size_t p = 0; p < frm.pts.size(); p++)
@@ -957,6 +971,7 @@ void LOCALIZATION::ekf_loop_3d()
                     Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
                     pts[p] = _P;
                 }
+                double ed_time2 = get_time();
 
                 {
                     std::lock_guard<std::mutex> lock(mtx);
@@ -984,7 +999,17 @@ void LOCALIZATION::ekf_loop_3d()
         }
         else
         {
-            log_warn("ekf_loop(3d) time drift, dt: {}", delta_loop_time);
+            if(is_use_lidar_3d)
+            {
+                if(delta_loop_time > 0.1)
+                {
+                    log_warn("ekf_loop(3d) time drift, dt: {}, method: lidar", delta_loop_time);
+                }
+            }
+            else
+            {
+                log_warn("ekf_loop(3d) time drift, dt: {}, method: odometry", delta_loop_time);
+            }
         }
 
         process_time_localization = cur_loop_time - pre_loop_time;
@@ -1411,7 +1436,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
 
     const double surfel_range = config->get_loc_2d_surfel_range();
     const double surfel_balance = config->get_loc_3d_surfel_balance();
-    const double max_feature_num = config->get_loc_2d_icp_max_feature_num();
+    const double max_feature_num = config->get_loc_3d_icp_max_feature_num();
     const double cost_threshold = config->get_loc_2d_icp_cost_threshold();
 
     // loop

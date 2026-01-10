@@ -1338,8 +1338,6 @@ void MainWindow::spb_DecelWChanged(double val)
 void MainWindow::bt_MapBuild()
 {
     MAPPING::instance()->slot_map_build_start();
-
-    change_map_name =  false;
 }
 
 void MainWindow::bt_MapSave()
@@ -1645,8 +1643,6 @@ void MainWindow::bt_AutoPath()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
 
         return;
@@ -1663,19 +1659,6 @@ void MainWindow::bt_AutoPath()
     {
         direction = "backward";
     }
-
-    //DATA_PATH msg;
-    //msg.command = "goal";
-    //msg.path = path_append_id;
-    //msg.preset = 0;
-    //msg.direction = direction;
-    //msg.method = "pp";
-
-    //Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
-    //path_append_id = "";
-    //ui -> te_path -> setText(path_append_id);
-
-    return;
 }
 
 void MainWindow::bt_AutoPathAppend()
@@ -5639,13 +5622,19 @@ void MainWindow::init_aruco_loc_loop()
         return;
     }
 
-    LOCALIZATION::instance()->stop();
-    LOCALIZATION::instance()->set_cur_tf(_cur_tf);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    LOCALIZATION::instance()->start();
+    found_aruco_cnt = found_aruco_cnt + 1;
+    if(found_aruco_cnt > 3)
+    {
+        found_aruco_cnt = 0;
 
-    ARUCO::instance()->stop_detect_loop();
-    ARUCO::instance()->clear_is_found();
+        LOCALIZATION::instance()->stop();
+        LOCALIZATION::instance()->set_cur_tf(_cur_tf);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        LOCALIZATION::instance()->start();
+
+        ARUCO::instance()->stop_detect_loop();
+        ARUCO::instance()->clear_is_found();
+    }
 }
 
 double MainWindow::get_cpu_usage()
