@@ -1573,18 +1573,23 @@ std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double ra
     std::vector<int> res;
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
-        if(res_idxs[p] < kdtree_cloud_3d.pts.size())
+        if(res_sq_dists[p] < sq_radius)
         {
-            double dx = kdtree_cloud_3d.pts[res_idxs[p]][0] - kdtree_cloud_3d.pts[res_idxs[0]][0];
-            double dy = kdtree_cloud_3d.pts[res_idxs[p]][1] - kdtree_cloud_3d.pts[res_idxs[0]][1];
-            double dz = kdtree_cloud_3d.pts[res_idxs[p]][2] - kdtree_cloud_3d.pts[res_idxs[0]][2];
-            double sq_d = dx*dx + dy*dy + dz*dz;
-
-            if(sq_d < sq_radius)
-            {
-                res.push_back(res_idxs[p]);
-            }
+            res.push_back(res_idxs[p]);
         }
+
+        // if(res_idxs[p] < kdtree_cloud_3d.pts.size())
+        // {
+        //     double dx = kdtree_cloud_3d.pts[res_idxs[p]][0] - kdtree_cloud_3d.pts[res_idxs[0]][0];
+        //     double dy = kdtree_cloud_3d.pts[res_idxs[p]][1] - kdtree_cloud_3d.pts[res_idxs[0]][1];
+        //     double dz = kdtree_cloud_3d.pts[res_idxs[p]][2] - kdtree_cloud_3d.pts[res_idxs[0]][2];
+        //     double sq_d = dx*dx + dy*dy + dz*dz;
+
+        //     if(sq_d < )
+        //     {
+        //         res.push_back(res_idxs[p]);
+        //     }
+        // }
     }
     return res;
 }

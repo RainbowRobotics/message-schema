@@ -950,6 +950,9 @@ void LOCALIZATION::ekf_loop_3d()
 
         Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
 
+        // i think
+        // Need to separate into another thread.
+        // then, interpolate odom.
         TIME_PTS frm;
         if(lidar_3d->try_pop_merged_queue(frm))
         {
@@ -961,7 +964,10 @@ void LOCALIZATION::ekf_loop_3d()
 
             // icp
             std::vector<Eigen::Vector3d> dsk = frm.pts;
-            double err = map_icp(dsk, G);
+            // i think
+            // can i add "cal_ieir" in map icp???
+            // and return global pts
+            double err = map_icp(dsk, G); 
 
             // check ieir
             cur_ieir = calc_ieir(dsk, G);
@@ -1455,13 +1461,18 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
     const double max_feature_num = config->get_loc_3d_icp_max_feature_num();
     const double cost_threshold = config->get_loc_2d_icp_cost_threshold();
 
+    const int num_feature = std::min<int>(idx_list.size(), max_feature_num);
+    static std::random_device rd;
+
     // loop
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
     {
-        // shuffle
-        std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
-        const int num_feature = std::min<int>(idx_list.size(), max_feature_num);
+        // // shuffle
+        // std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
+        static std::mt19937 gen(rd());
+        std::shuffle(idx_list.begin(), idx_list.end(), gen);
+        
         std::vector<int> surfel_cnt(3,0);
 
         // calc cost jacobian
@@ -1661,7 +1672,8 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
 
         // for rmt
         tm0 = tm1;
-        tm1 = (_G.block(0,3,3,1).norm() + _G.block(0,3,3,1).norm())/2;
+        // tm1 = (_G.block(0,3,3,1).norm() + _G.block(0,3,3,1).norm())/2;
+        tm1 = _G.block(0,3,3,1).norm();
 
         // convergence check
         convergence = X.cwiseAbs().maxCoeff();
