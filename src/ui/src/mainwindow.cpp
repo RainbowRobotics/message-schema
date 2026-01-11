@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_AnnotSave,       SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_AnnotReload,     SIGNAL(clicked()), this, SLOT(bt_AnnotReload()));
     connect(ui->bt_QuickAddNode,    SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_QuickEditPos,    SIGNAL(clicked()), this, SLOT(bt_QuickEditPos()));
     connect(ui->bt_ReplaceNode,     SIGNAL(clicked()), this, SLOT(bt_ReplaceNode()));
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop,  SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
@@ -2049,24 +2050,18 @@ void MainWindow::bt_DelNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[Del_Node] check map load\n");
-        //spdlog::warn("[Del_Node] check map load");
         log_warn("check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        //printf("[Del_Node] check localization\n");
-        //spdlog::warn("[Del_Node] check localization");
         log_warn("check localization");
         return;
     }
 
     if(pick.cur_node == "")
     {
-        //printf("[Del_Node] check pick node\n");
-        //spdlog::warn("[Del_Node] check pick node");
         log_warn("check pick node");
         return;
     }
@@ -2079,8 +2074,6 @@ void MainWindow::bt_AnnotSave()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[Del_Node] check map load\n");
-        //spdlog::warn("[Del_Node] check map load");
         log_warn("check map load");
         return;
     }
@@ -2100,8 +2093,6 @@ void MainWindow::bt_AnnotReload()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[Del_Node] check map load\n");
-        //spdlog::warn("[Del_Node] check map load");
         log_warn("check map load");
         return;
     }
@@ -2121,21 +2112,59 @@ void MainWindow::bt_AnnotReload()
     topo_update();
 }
 
+void MainWindow::bt_QuickEditPos()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_cur_loc_state() != "good")
+    {
+        log_warn("check localization");
+        return;
+    }
+
+    if(pick.cur_node == "")
+    {
+        log_warn("check pick node");
+        return;
+    }
+
+    NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+    if(node == nullptr)
+    {
+        log_warn("node not found: {}", pick.cur_node.toStdString());
+        return;
+    }
+
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+
+    NODE updated_node = *node;
+    updated_node.tf = cur_tf;
+
+    if(UNIMAP::instance()->update_node(pick.cur_node, updated_node))
+    {
+        topo_update();
+        log_info("quick edit node pos: {}", pick.cur_node.toStdString());
+    }
+    else
+    {
+        log_warn("failed to update node: {}", pick.cur_node.toStdString());
+    }
+}
 
 void MainWindow::bt_QuickAddNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[QA_Node] check map load\n");
-        //spdlog::warn("[QA_Node] check map load");
         log_warn("check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        //printf("[QA_Node] check localization\n");
-        //spdlog::warn("[QA_Node] check localization");
         log_warn("check localization");
         return;
     }
@@ -2144,8 +2173,6 @@ void MainWindow::bt_QuickAddNode()
     UNIMAP::instance()->add_node(cur_tf, "GOAL");
 
     topo_update();
-    //printf("[QA_Node] quick add node\n");
-    //spdlog::info("[QA_Node] quick add node");
     log_info("quick add node");
 }
 
