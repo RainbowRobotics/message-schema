@@ -560,6 +560,7 @@ struct DATA_PROFILE_MOVE
 
 struct DATA_PDU_UPDATE
 {
+    QString id;
     double time;
     QString command; // "updatePduParam"
 
@@ -577,22 +578,24 @@ struct DATA_PDU_UPDATE
     std::vector<PARAM_ITEM> param_list; // key, type, value 배열
     QString result;
     QString message;
-    //MOBILE_SETTING setting;
+    MOBILE_SETTING setting;
 
     DATA_PDU_UPDATE()
     {
+        id = "";
         time = 0.0;
         command = "";
 
-        param_list.clear();
+        param_list = {};
 
         result = "";
         message = "";
-        //setting = MOBILE_SETTING();
+        setting = MOBILE_SETTING();
     }
 
     DATA_PDU_UPDATE(const DATA_PDU_UPDATE& p)
     {
+        id = p.id;
         time = p.time;
         command = p.command;
 
@@ -600,11 +603,12 @@ struct DATA_PDU_UPDATE
 
         result = p.result;
         message = p.message;
-        //setting = p.setting;
+        setting = p.setting;
     }
 
     DATA_PDU_UPDATE& operator=(const DATA_PDU_UPDATE& p)
     {
+        id = p.id;
         time = p.time;
         command = p.command;
 
@@ -612,7 +616,7 @@ struct DATA_PDU_UPDATE
 
         result = p.result;
         message = p.message;
-        //setting = p.setting;
+        setting = p.setting;
         return *this;
     }
 };

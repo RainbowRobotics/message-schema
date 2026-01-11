@@ -7,6 +7,7 @@
 // other modules
 #include "config.h"
 #include "logger.h"
+#include "timer_queue.h"
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "cam.h"
@@ -20,6 +21,7 @@
 #include <sio_client.h>
 #define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
 
+#include <array>
 // qt
 #include <QObject>
 #include <QTimer>
@@ -87,6 +89,7 @@ public:
     void start_path_thread();
     void start_vobs_thread();
     void start_sensor_thread();
+    void start_setting_thread();
     void start_send_status_thread();
     void start_send_response_thread();
 
@@ -100,6 +103,7 @@ public:
     void stop_path_thread();
     void stop_vobs_thread();
     void stop_sensor_thread();
+    void stop_setting_thread();
     void stop_send_status_thread();
     void stop_send_response_thread();
 
@@ -125,6 +129,10 @@ private:
     LOCALIZATION* loc;
 
     QTimer* reconnect_timer;
+
+    // delayed task runner (replaces QTimer::singleShot)
+    TimerQueue delayed_tasks_;
+    TimerQueue::TaskId dock_stop_task_id_ = TimerQueue::INVALID_TASK_ID;
 
     // vars
     std::unique_ptr<sio::client> rrs_socket;
@@ -159,7 +167,13 @@ private:
     unsigned char dio_arr_old[16] = {0};
 
     template<typename T>
-    void add_to_obj(sio::object_message::ptr obj, const std::string& key, T value);
+    struct always_false : std::false_type {};
+
+    // overload add_to_obj
+    template<typename T>
+    void add_to_obj(sio::object_message::ptr obj, const std::string& key, const T& value);
+    template<typename T>
+    void add_to_obj(sio::object_message::ptr obj, const std::string& key, const std::vector<T>& values);
 
     sio::object_message::ptr create_localization_score_obj(const Eigen::Vector2d& loc_ieir,
                                                            const Eigen::Vector2d& mapping_ieir);
@@ -210,6 +224,8 @@ Q_SIGNALS:
     void signal_undocking_start();
     void signal_docking_stop();
 
+    void signal_config_request(DATA_PDU_UPDATE msg);
+
 private Q_SLOTS:
     void connected();
     void disconnected();
@@ -235,6 +251,7 @@ private Q_SLOTS:
     void send_sensor_response(const DATA_SENSOR_INFO& msg);
     void send_control_response(const DATA_CONTROL& msg);
     void send_safetyio_response(const DATA_SAFTYIO& msg);
+    void send_config_request_response(const DATA_PDU_UPDATE& msg);
 
 private:
     std::mutex move_mtx;
@@ -246,6 +263,7 @@ private:
     std::mutex vobs_mtx;
     std::mutex sensor_mtx;
     std::mutex response_mtx;
+    std::mutex setting_mtx;
     std::mutex recv_mtx;
 
     std::mutex send_status_mtx;
@@ -261,6 +279,7 @@ private:
     std::queue<DATA_MAPPING> mapping_queue;
     std::queue<DATA_LOCALIZATION> localization_queue;
     std::queue<DATA_SENSOR_INFO> sensor_queue;
+    std::queue<DATA_PDU_UPDATE> setting_queue;
 
     std::queue<SOCKET_MESSAGE> send_response_queue;
 
@@ -273,6 +292,7 @@ private:
     std::condition_variable mapping_cv;
     std::condition_variable localization_cv;
     std::condition_variable sensor_cv;
+    std::condition_variable setting_cv;
     std::condition_variable send_response_cv;
 
     std::atomic<bool> is_recv_running = {false};
@@ -285,6 +305,7 @@ private:
     std::atomic<bool> is_vobs_running = {false};
     std::atomic<bool> is_send_status_running = {false};
     std::atomic<bool> is_sensor_running = {false};
+    std::atomic<bool> is_setting_running = {false};
     std::atomic<bool> is_send_response_running = {false};
     std::atomic<bool> is_before_given_path = {false};
 
@@ -297,6 +318,7 @@ private:
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
     std::unique_ptr<std::thread> sensor_thread;
+    std::unique_ptr<std::thread> setting_thread;
     std::unique_ptr<std::thread> recv_thread;
 
     // send
@@ -312,6 +334,7 @@ private:
     void localization_loop();
     void control_loop();
     void sensor_loop();
+    void setting_loop();
     void send_status_loop();
     void send_response_loop();
 
@@ -325,6 +348,7 @@ private:
     void handle_update_cmd(const QJsonObject& data);
     void handle_sensor_cmd(const QJsonObject& data);
     void handle_control_cmd(const QJsonObject& data);
+    void handle_setting_cmd(const QJsonObject& data);
 
     /* move handler */
     void handle_move_jog(const DATA_MOVE& msg);
@@ -384,6 +408,9 @@ private:
     void handle_get_safety_flag(DATA_CONTROL& msg);
     void handle_charge_trigger(DATA_CONTROL& msg);
 
+    /* setting handler */
+    void handle_set_pdu_param(DATA_PDU_UPDATE& msg);
+    void handle_get_drive_param(DATA_PDU_UPDATE& msg);
 };
 
 #endif // COMM_MSA_H

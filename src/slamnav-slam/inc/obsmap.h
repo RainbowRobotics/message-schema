@@ -16,6 +16,37 @@ constexpr double P_OBS = 0.6;
 constexpr double P_HIT = 0.9;
 constexpr double P_MISS = 0.45;
 
+// claude
+/**
+ * @brief Lock-Free 읽기를 위한 맵 데이터 스냅샷 구조체
+ *
+ * 모든 맵 관련 데이터를 하나의 구조체로 묶어서 atomic하게 교체 가능
+ */
+struct ObsMapSnapshot
+{
+    Eigen::Matrix4d map_tf = Eigen::Matrix4d::Identity();
+    cv::Mat wall_map;
+    cv::Mat static_map;
+    cv::Mat dynamic_map;
+    cv::Mat virtual_map;
+
+    std::vector<Eigen::Vector3d> obs_pts;
+    std::vector<Eigen::Vector3d> dyn_pts;
+    std::vector<Eigen::Vector3d> vir_pts;
+    std::vector<Eigen::Vector3d> vir_closure_pts;
+    std::vector<Eigen::Vector4d> plot_pts;
+
+    ObsMapSnapshot() = default;
+
+    ObsMapSnapshot(int h, int w)
+    {
+        wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+        static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+        dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+        virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    }
+};
+
 class OBSMAP : public QObject
 {
     Q_OBJECT
@@ -109,12 +140,18 @@ public:
     cv::Vec2i xy_uv(double x, double y);
     cv::Vec2d uv_xy(int u, int v);
 
+    // claude
+    std::shared_ptr<ObsMapSnapshot> get_snapshot();
+
 private:
     explicit OBSMAP(QObject *parent = nullptr);
     ~OBSMAP();
 
     // mutex
     std::shared_mutex mtx;
+
+    // claude
+    std::mutex octree_mtx;
 
     // other modules
     CONFIG* config;
@@ -128,22 +165,27 @@ private:
 
     // octree for obsmap
     std::unique_ptr<octomap::OcTree> octree;
-    std::vector<Eigen::Vector3d> obs_pts;
-    std::vector<Eigen::Vector3d> dyn_pts;
-    std::vector<Eigen::Vector3d> vir_pts;
-    std::vector<Eigen::Vector3d> vir_closure_pts;
-    std::vector<Eigen::Vector4d> plot_pts;
+    // claude
+    // std::vector<Eigen::Vector3d> obs_pts;
+    // std::vector<Eigen::Vector3d> dyn_pts;
+    // std::vector<Eigen::Vector3d> vir_pts;
+    // std::vector<Eigen::Vector3d> vir_closure_pts;
+    // std::vector<Eigen::Vector4d> plot_pts;
+
+    // claude
+    std::shared_ptr<ObsMapSnapshot> current_snapshot;
 
     // virtual obs for multirobot
     std::vector<Eigen::Vector3d> vobs_list_robots;
     std::vector<Eigen::Vector3d> vobs_list_closures;
 
-    // grid map
-    Eigen::Matrix4d map_tf;
-    cv::Mat wall_map;
-    cv::Mat static_map;
-    cv::Mat dynamic_map;
-    cv::Mat virtual_map;
+    // claude
+    // // grid map
+    // Eigen::Matrix4d map_tf;
+    // cv::Mat wall_map;
+    // cv::Mat static_map;
+    // cv::Mat dynamic_map;
+    // cv::Mat virtual_map;
 
     std::atomic<double> last_obs_update_time = {0.0};
     std::atomic<double> last_vobs_update_time = {0.0};

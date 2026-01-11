@@ -879,7 +879,7 @@ std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_pa
 
     std::vector<QString> res;
     res.push_back(node_path[0]);
-    for(size_t p = 1; p < node_path.size(); p++)
+    for(size_t p = 0; p < node_path.size(); p++)
     {
         if(res.back() == node_path[p])
         {

@@ -6,7 +6,7 @@ namespace
 }
 
 template<typename T>
-void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, T value)
+void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, const T& value)
 {
     if constexpr(std::is_same_v<T, double>)
     {
@@ -32,14 +32,56 @@ void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, 
     {
         obj->get_map()[key] = sio::string_message::create(value.toStdString());
     }
+    else if constexpr(std::is_same_v<T, sio::object_message::ptr>)
+    {
+        obj->get_map()[key] = value;
+    }
+    else if constexpr(std::is_convertible_v<T, const char*>)
+    {
+        obj->get_map()[key] = sio::string_message::create(value);
+    }
+    else
+    {
+        static_assert(always_false<T>::value, "Unsupported type for add_to_obj.");
+    }
 }
 
-template void COMM_MSA::add_to_obj<double>(sio::object_message::ptr, const std::string&, double);
-template void COMM_MSA::add_to_obj<int>(sio::object_message::ptr, const std::string&, int);
-template void COMM_MSA::add_to_obj<long long>(sio::object_message::ptr, const std::string&, long long);
-template void COMM_MSA::add_to_obj<bool>(sio::object_message::ptr, const std::string&, bool);
-template void COMM_MSA::add_to_obj<std::string>(sio::object_message::ptr, const std::string&, std::string);
-template void COMM_MSA::add_to_obj<QString>(sio::object_message::ptr, const std::string&, QString);
+template<typename T>
+void COMM_MSA::add_to_obj(sio::object_message::ptr obj, const std::string& key, const std::vector<T>& values)
+{
+    auto  arr = sio::array_message::create();
+    arr->get_vector().reserve(values.size());
+    for(const auto& v : values)
+    {
+        if constexpr(std::is_same_v<T, double>)
+        {
+            arr->get_vector().push_back(sio::double_message::create(v));
+        }
+        else if constexpr(std::is_same_v<T, int>)
+        {
+            arr->get_vector().push_back(sio::int_message::create(v));
+        }
+        else
+        {
+            static_assert(always_false<T>::value, "Unsupported type for add_to_obj. ");
+        }
+    }
+    obj->get_map()[key] = arr;
+}
+
+template void COMM_MSA::add_to_obj<double>(sio::object_message::ptr, const std::string&, const double&);
+template void COMM_MSA::add_to_obj<int>(sio::object_message::ptr, const std::string&, const int&);
+template void COMM_MSA::add_to_obj<long long>(sio::object_message::ptr, const std::string&, const long long&);
+template void COMM_MSA::add_to_obj<bool>(sio::object_message::ptr, const std::string&, const bool&);
+template void COMM_MSA::add_to_obj<std::string>(sio::object_message::ptr, const std::string&, const std::string&);
+template void COMM_MSA::add_to_obj<QString>(sio::object_message::ptr, const std::string&, const QString&);
+template void COMM_MSA::add_to_obj<const char*>(sio::object_message::ptr, const std::string&, const char* const&);
+// sio::object_message / sio:array_message 는 같은 형.
+// 둘다 명시적으로 선언할 경우, duplicate error 발생됨. 따라서 object_message 만 남김.
+template void COMM_MSA::add_to_obj<sio::object_message::ptr>(sio::object_message::ptr, const std::string&, const sio::object_message::ptr&);
+
+template void COMM_MSA::add_to_obj<double>(sio::object_message::ptr, const std::string&, const std::vector<double>&);
+template void COMM_MSA::add_to_obj<int>(sio::object_message::ptr, const std::string&, const std::vector<int>&);
 
 
 COMM_MSA* COMM_MSA::instance(QObject* parent)
@@ -79,6 +121,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "pathRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "sensorRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
+    BIND_EVENT(sock, "settingRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 
     BIND_EVENT(sock, "updateRequest",       std::bind(&COMM_MSA::recv_message_single_shot,       this, std::placeholders::_1));
     // status
@@ -338,6 +381,10 @@ void COMM_MSA::recv_loop()
         {
             handle_vobs_cmd(data);
         }
+        else if(topic == "settingRequest")
+        {
+            handle_setting_cmd(data);
+        }
 
         log_info("recv, command: {}, time: {}", topic.toStdString(), get_time0());
     }
@@ -458,7 +505,56 @@ void COMM_MSA::send_move_status()
         }
     }
 
-    // create move object
+    // // create move object
+    // sio::object_message::ptr obj_move_state = sio::object_message::create();
+    // add_to_obj(obj_move_state, "auto_move", ctrl->get_auto_state()); // "stop", "move", "pause", "error", "not ready", "vir"
+    // add_to_obj(obj_move_state, "dock_move", "stop");
+    // add_to_obj(obj_move_state, "jog_move", "none");
+    // add_to_obj(obj_move_state, "obs", ctrl->get_obs_condition());
+    // add_to_obj(obj_move_state, "path", ctrl->get_multi_reqest_state()); // "none", "req_path", "recv_path"
+    // add_to_obj(obj_move_state, "path_time", QString::number(ctrl->get_global_path_time()));
+    // add_to_obj(obj_move_state, "step", ctrl->get_last_step());
+
+    // // create pose object
+    // sio::object_message::ptr obj_pose = sio::object_message::create();
+    // add_to_obj(obj_pose, "x", cur_xi[0]);
+    // add_to_obj(obj_pose, "y", cur_xi[1]);
+    // add_to_obj(obj_pose, "rz", cur_xi[2] * R2D);
+
+    // // create velocity object
+    // sio::object_message::ptr obj_velocity = sio::object_message::create();
+    // add_to_obj(obj_velocity, "vx", mo.vel[0]);
+    // add_to_obj(obj_velocity, "vy", mo.vel[1]);
+    // add_to_obj(obj_velocity, "wz", mo.vel[2] * R2D);
+
+    // // create current node object
+    // sio::object_message::ptr obj_cur_node = sio::object_message::create();
+    // add_to_obj(obj_cur_node, "x", cur_xi[0]);
+    // add_to_obj(obj_cur_node, "y", cur_xi[1]);
+    // add_to_obj(obj_cur_node, "rz", cur_xi[2] * R2D);
+    // add_to_obj(obj_cur_node, "id", cur_node_id);
+    // add_to_obj(obj_cur_node, "name", cur_node_name);
+    // add_to_obj(obj_cur_node, "state", "");
+
+    // // create goal node object
+    // sio::object_message::ptr obj_goal_node = sio::object_message::create();
+    // add_to_obj(obj_goal_node, "x", goal_xi[0]);
+    // add_to_obj(obj_goal_node, "y", goal_xi[1]);
+    // add_to_obj(obj_goal_node, "rz", goal_xi[2] * R2D);
+    // add_to_obj(obj_goal_node, "id", goal_node_id);
+    // add_to_obj(obj_goal_node, "name", goal_node_name);
+    // add_to_obj(obj_goal_node, "state", ctrl->get_cur_move_state());
+
+    // // create root object
+    // sio::object_message::ptr obj_root = sio::object_message::create();
+    // add_to_obj(obj_root, "vel", obj_velocity);
+    // add_to_obj(obj_root, "pose", obj_pose);
+    // add_to_obj(obj_root, "cur_node", obj_cur_node);
+    // add_to_obj(obj_root, "goal_node", obj_goal_node);
+    // add_to_obj(obj_root, "move_state", obj_move_state);
+    // add_to_obj(obj_root, "time", QString::number(static_cast<long long>(get_time0()*1000)));
+
+// create move object
     sio::object_message::ptr obj_move_state = sio::object_message::create();
     obj_move_state->get_map()["auto_move"]  = sio::string_message::create(ctrl->get_auto_state().toStdString()); // "stop", "move", "pause", "error", "not ready", "vir"
     obj_move_state->get_map()["dock_move"]  = sio::string_message::create("stop");
@@ -518,6 +614,11 @@ void COMM_MSA::handle_path_cmd(const QJsonObject& data)
     // Todo time time_1 무조건 time 으로 변경해야함 !!!!!!!!!!!!!!!!!!!!!!!!!!!
     DATA_PATH msg;
     msg.time = get_json(data, "time_1"); // msg.time = get_json(data, "time");
+    // msg.time = get_json_double(data, "time");
+    // if(msg.time == 0)
+    // {
+    //     msg.time = data["time"].toString().toDouble();
+    // }
     msg.preset = get_json_int(data, "preset");
     msg.command = get_json(data, "command");
 
@@ -670,7 +771,7 @@ void COMM_MSA::handle_localization_cmd(const QJsonObject& data)
     }
     else if (msg.command == "stop")
     {
-        // not developed
+
     }
     else
     {
@@ -719,8 +820,6 @@ void COMM_MSA::handle_control_cmd(const QJsonObject& data)
     msg.id              = get_json(data, "id");
     msg.time            = get_json_double(data, "time")/1000;
     msg.command         = get_json(data, "command");
-
-    std::cout << "msg.command : " << msg.command.toStdString() << std::endl;
 
     if(msg.command == "setSafetyField" || msg.command == "getSafetyField")
     {
@@ -777,6 +876,262 @@ void COMM_MSA::handle_control_cmd(const QJsonObject& data)
         std::lock_guard<std::mutex> lock(control_mtx);
         control_queue.push(msg);
         control_cv.notify_one();
+    }
+}
+
+void COMM_MSA::handle_setting_cmd(const QJsonObject& data)
+{
+    DATA_PDU_UPDATE msg;
+    msg.id = get_json(data, "id");
+    msg.time = get_json_double(data, "time")/1000;
+    msg.command = get_json(data, "command");
+
+    if(msg.command ==  "setPduParam" || msg.command ==  "getPduParam")
+    {
+        QJsonArray totalArr = data["params"].toArray();
+
+        if(totalArr.isEmpty())
+        {
+            log_error("missing name or type field");
+            msg.result = "reject";
+            msg.message = "missing name or type field";
+            send_config_request_response(msg);
+            return;
+        }
+
+        QJsonObject obj = totalArr.first().toObject();
+
+        QString key  = obj.value("name").toString();
+        QString value = obj.value("value").toString();
+        QString type  = obj.value("type").toString();
+
+        msg.param_list.push_back(DATA_PDU_UPDATE::PARAM_ITEM(key, type, value));
+    }
+    else if(msg.command == "getDriveParam" )
+    {
+        // nothing to do
+    }
+    else if(msg.command == "param_set")
+    {
+        // nothing to do
+    }
+    else
+    {
+        msg.result = "reject";
+        msg.message = "undefined command";
+        send_config_request_response(msg);
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(setting_mtx);
+        setting_queue.push(msg);
+        setting_cv.notify_one();
+    }
+}
+
+void COMM_MSA::setting_loop()
+{
+    while(is_setting_running)
+    {
+        std::unique_lock<std::mutex> lock(setting_mtx);
+        setting_cv.wait(lock, [this]
+        {
+            return !setting_queue.empty() || !is_setting_running;
+        });
+
+        DATA_PDU_UPDATE msg = setting_queue.front();
+        setting_queue.pop();
+        lock.unlock();
+
+        QString command = msg.command;
+
+        if(command == "setPduParam")
+        {
+            handle_set_pdu_param(msg);
+        }
+        else if(command == "getPduParam")
+        {
+            log_info("getPduParam not developed");
+            msg.result = "reject";
+            msg.message = "not developed";
+
+            send_config_request_response(msg);
+        }
+        else if(command == "param_set")
+        {
+            log_info("param_set not developed");
+            msg.result = "reject";
+            msg.message = "not developed";
+
+            send_config_request_response(msg);
+        }
+        else if(command == "getDriveParam")
+        {
+            handle_get_drive_param(msg);
+        }
+    }
+}
+
+void COMM_MSA::handle_set_pdu_param(DATA_PDU_UPDATE& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        msg.message = "mobile not connected";
+        send_config_request_response(msg);
+        return;
+    }
+
+    if(msg.param_list.size() != 1)
+    {
+        log_error("set PDU param : msg.param_list error");
+        msg.result = "reject";
+        msg.message = "param_list size is not 1";
+        send_config_request_response(msg);
+        return;
+    }
+    log_info("set PDU Param");
+
+    auto key = msg.param_list.front().key;
+    auto val = msg.param_list.front().value;
+    auto type = msg.param_list.front().type;
+
+    if(key == "use_sf_obstacle_detect")
+    {
+        if(type != "boolean")
+        {
+            msg.result = "reject";
+            msg.message = "invalid type";
+            send_config_request_response(msg);
+            return;
+        }
+
+        bool is_true;
+        if(val == "true")
+        {
+            is_true = true;
+        }
+        else if(val == "false")
+        {
+            is_true = false;
+        }
+        else
+        {
+            msg.result = "reject";
+            msg.message = "invalid value";
+            send_config_request_response(msg);
+            return;
+        }
+        mobile->set_detect_mode(is_true);
+
+        msg.result = "success";
+        msg.message = "";
+    }
+    else
+    {
+        log_error("[MSA] slot_config_request, invalid parameter name ");
+        msg.result = "reject";
+        msg.message = "invalid parameter name";
+    }
+
+    send_config_request_response(msg);
+}
+
+void COMM_MSA::handle_get_drive_param(DATA_PDU_UPDATE& msg)
+{
+    if(!mobile)
+    {
+        msg.result = "reject";
+        msg.message = "mobile not connected";
+        send_config_request_response(msg);
+        return;
+    }
+    log_info("get Drive Param");
+
+    mobile->robot_request();
+    delayed_tasks_.schedule(std::chrono::milliseconds(1000), [this, msg]() {
+        auto ms = mobile->get_setting();
+
+        DATA_PDU_UPDATE response_msg = msg;
+        response_msg.result = "success";
+        response_msg.message = "";
+        response_msg.setting = ms;
+
+        send_config_request_response(response_msg);
+    });
+}
+
+void COMM_MSA::send_config_request_response(const DATA_PDU_UPDATE& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr root_obj = sio::object_message::create();
+    add_to_obj(root_obj, "id", msg.id);
+    add_to_obj(root_obj, "time", static_cast<long long>(msg.time*1000));
+    add_to_obj(root_obj, "command", msg.command);
+    add_to_obj(root_obj, "result",  msg.result);
+    add_to_obj(root_obj, "message", msg.message);
+
+    sio::array_message::ptr param_array = sio::array_message::create();
+
+    if(msg.command == "getDriveParam")
+    {
+        auto add_param = [&](const QString& name,
+                const QString& value,
+                const QString& type) {
+            sio::object_message::ptr obj = sio::object_message::create();
+            add_to_obj(obj, "name", name);
+            add_to_obj(obj, "value", value);
+            add_to_obj(obj, "type", type);
+            param_array->get_vector().push_back(obj);
+        };
+
+        add_param("version", QString::number(msg.setting.version),"int");
+        add_param("robot_type", QString::number(msg.setting.robot_type), "int");
+        add_param("v_limit", QString::number(msg.setting.v_limit, 'f', 3), "float");
+        add_param("w_limit", QString::number(msg.setting.w_limit * R2D, 'f', 3), "float");
+        add_param("a_limit", QString::number(msg.setting.a_limit, 'f', 3), "float");
+        add_param("b_limit", QString::number(msg.setting.b_limit * R2D, 'f', 3), "float");
+        add_param("v_limit_jog", QString::number(msg.setting.v_limit_jog, 'f', 3), "float");
+        add_param("w_limit_jog", QString::number(msg.setting.w_limit_jog * R2D, 'f', 3), "float");
+        add_param("a_limit_jog", QString::number(msg.setting.a_limit_jog, 'f', 3), "float");
+        add_param("b_limit_jog", QString::number(msg.setting.b_limit_jog * R2D, 'f', 3), "float");
+        add_param("v_limit_monitor", QString::number(msg.setting.v_limit_monitor, 'f', 3), "float");
+        add_param("w_limit_monitor", QString::number(msg.setting.w_limit_monitor * R2D, 'f', 3), "float");
+        add_param("safety_v_limit", QString::number(msg.setting.safety_v_limit, 'f', 3), "float");
+        add_param("safety_w_limit", QString::number(msg.setting.safety_w_limit * R2D, 'f', 3), "float");
+        add_param("w_s", QString::number(msg.setting.w_s, 'f', 3), "float");
+        add_param("w_r", QString::number(msg.setting.w_r, 'f', 3), "float");
+        add_param("gear", QString::number(msg.setting.gear, 'f', 3), "float");
+        add_param("dir", QString::number(msg.setting.dir, 'f', 3), "float");
+
+        add_to_obj(root_obj, "params", param_array);
+    }
+    else if(msg.command == "getPduParam" || msg.command == "setPduParam")
+    {
+        for(const auto& param : msg.param_list)
+        {
+            sio::object_message::ptr obj = sio::object_message::create();
+            add_to_obj(obj, "name", param.key);
+            add_to_obj(obj, "value", param.value);
+            add_to_obj(obj, "type", param.type);
+            param_array->get_vector().push_back(obj);
+
+            add_to_obj(root_obj, "params", param_array);
+        }
+    }
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "settingResponse";
+    socket_msg.data  = root_obj;
+    {
+        std::lock_guard<std::mutex> lock(send_response_mtx);
+        send_response_queue.push(socket_msg);
+        send_response_cv.notify_one();
     }
 }
 
@@ -1438,9 +1793,10 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
 
     add_to_obj(root_obj, "id", get_json(data, "id"));
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
-    add_to_obj(root_obj, "result", std::string("success"));
-    root_obj->get_map()["mcuDio"] = mcuDioArr;
-    root_obj->get_map()["mcuDin"] = mcuDinArr;
+    add_to_obj(root_obj, "result", "success");
+
+    add_to_obj(root_obj, "mcuDio", mcuDioArr);
+    add_to_obj(root_obj, "mcuDin", mcuDinArr);
 
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
@@ -1537,10 +1893,11 @@ void COMM_MSA::handle_dock_stop(DATA_CONTROL& msg)
     Q_EMIT (signal_docking_stop());
 
     double t = std::abs(config->get_robot_size_x_max() / 0.05) + 1.0;
-    QTimer::singleShot(t*1000, [&]()
-    {
-        ctrl->set_is_moving(false);
-    });
+    dock_stop_task_id_ = delayed_tasks_.schedule(
+        std::chrono::milliseconds(static_cast<int>(t * 1000)),
+        [this]() {
+            ctrl->set_is_moving(false);
+        });
 
     send_control_response(msg);
 }
@@ -1805,8 +2162,7 @@ void COMM_MSA::send_local_path()
             arr->get_vector().push_back(to_sio_vec(path.pos[p]));
         }
     }
-
-    root_obj->get_map()["path"] = arr;
+    add_to_obj(root_obj, "path", arr);
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
@@ -1840,8 +2196,7 @@ void COMM_MSA::send_global_path()
     {
         arr->get_vector().push_back(to_sio_vec(P));
     }
-
-    root_obj->get_map()["path"] = arr;
+    add_to_obj(root_obj, "path", arr);
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
 
     {
@@ -1866,41 +2221,59 @@ void COMM_MSA::send_lidar_2d()
     }
 
     auto root_obj = sio::object_message::create();
-    root_obj->get_map()["pose"] = create_pose_obj(cur_xi);
+    add_to_obj(root_obj, "pose", create_pose_obj(cur_xi));
 
     // points 최소거리로 배열 생성.
+    // x y r
     double max = config->get_lidar_2d_max_range();
-    std::vector<Eigen::Vector3d> bins(360, Eigen::Vector3d(max, max, 0));
+    std::array<std::array<double, 3>, 360> bins;
+    bins.fill({max, max, 0});
     for(const auto& p : pts)
     {
-        if(!std::isfinite(p.x()) || !std::isfinite(p.y()))
+        double x = p.x();
+        double y = p.y();
+
+        if(!std::isfinite(x) || !std::isfinite(y))
         {
             continue;
         }
 
-        double deg = std::atan2(p.y(), p.x()) * R2D;
-        int idx = static_cast<int>(deg < 0 ? deg + 360.0 : deg) % 360;
-        if(p.head<2>().squaredNorm() < bins[idx].head<2>().squaredNorm())
+        double deg = std::atan2(y, x) * R2D;
+        int idx = static_cast<int>(std::floor(deg));
+        if(idx < 0)
         {
-            bins[idx] = p;
+            idx += 360;
+        }
+        idx %= 360;
+
+        double& bin_x = bins[idx][0];
+        double& bin_y = bins[idx][1];
+        double& bin_range = bins[idx][2];
+        double range = x*x + y*y;
+
+        if(bin_range == 0 ||  range < bin_range)
+        {
+            bin_x = x;
+            bin_y = y;
+            bin_range = range;
         }
     }
 
     // 빈 공간 채우기 및 JSON 배열 생성
     sio::array_message::ptr arr = sio::array_message::create();
     arr->get_vector().reserve(bins.size());
-    for(const auto& p : pts)
+    for(const auto& p : bins)
     {
         sio::array_message::ptr p_arr = sio::array_message::create();
         auto& v = p_arr->get_vector();
-        v.push_back(sio::double_message::create(p.x()));
-        v.push_back(sio::double_message::create(p.y()));
-        v.push_back(sio::double_message::create(p.z()));
+        v.push_back(sio::double_message::create(p[0]));
+        v.push_back(sio::double_message::create(p[1]));
+        v.push_back(sio::double_message::create(0));
         arr->get_vector().push_back(p_arr);
     }
-
-    root_obj->get_map()["data"] = arr;
+    add_to_obj(root_obj, "data", arr);
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
+
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
         rrs_socket->socket("slamnav")->emit("lidarCloud", root_obj);
@@ -1923,9 +2296,10 @@ void COMM_MSA::send_lidar_3d()
     }
 
     sio::object_message::ptr root_obj = sio::object_message::create();
-    root_obj->get_map()["pose"] = create_pose_obj(cur_xi);
+    add_to_obj(root_obj, "pose", create_pose_obj(cur_xi));
 
     sio::array_message::ptr arr = sio::array_message::create();
+    arr->get_vector().reserve(pts.size());
     for(const auto& p : pts)
     {
         sio::array_message::ptr p_arr = sio::array_message::create();
@@ -1936,7 +2310,6 @@ void COMM_MSA::send_lidar_3d()
         v.push_back(sio::double_message::create(100.0)); // Intensity
         arr->get_vector().push_back(p_arr);
     }
-
     add_to_obj(root_obj, "data", arr);
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
 
@@ -1984,8 +2357,8 @@ void COMM_MSA::send_mapping_cloud()
         }
 
         sio::object_message::ptr root_obj = sio::object_message::create();
-        root_obj->get_map()["data"] = json_array;
-        root_obj->get_map()["time"] = sio::double_message::create(static_cast<long long>(get_time0() * 1000));
+        add_to_obj(root_obj, "data", json_array);
+        add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
 
         {
             std::lock_guard<std::mutex> sock_lock(send_mtx);
@@ -2047,8 +2420,8 @@ void COMM_MSA::send_sensor_response(const DATA_SENSOR_INFO& msg)
     add_to_obj(root_obj, "result",  msg.result);
     add_to_obj(root_obj, "message", msg.message);
     add_to_obj(root_obj, "target", msg.target);
-    add_to_obj(root_obj, "time",    static_cast<long long>(msg.time*1000));
-    root_obj->get_map()["index"] = create_index_obj(msg.index);
+    add_to_obj(root_obj, "time", static_cast<long long>(msg.time*1000));
+    add_to_obj(root_obj, "index", create_index_obj(msg.index));
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "sensorResponse";
@@ -2129,13 +2502,13 @@ void COMM_MSA::send_control_response(const DATA_CONTROL& msg)
         for(const auto& flag : msg.resetFlags)
         {
             sio::object_message::ptr flagObj = sio::object_message::create();
-            flagObj->get_map()["name"] = sio::string_message::create(flag.first.toStdString());
-            flagObj->get_map()["value"] = sio::bool_message::create(flag.second);
+            add_to_obj(flagObj, "name", flag.first);
+            add_to_obj(flagObj, "value", flag.second);
             safetyFlagsArr->get_vector().push_back(flagObj);
         }
-        root_obj->get_map()["safetyFlags"] = safetyFlagsArr;
+        add_to_obj(root_obj, "safetyFlags", safetyFlagsArr);
     }
-    else if(msg.command == "resetSafetyFlag")
+    else if(msg.command == "resetSafetyField")
     {
         add_to_obj(root_obj, "resetField", msg.resetField);
     }
@@ -2180,7 +2553,7 @@ void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
         }
         total_arr->get_vector().push_back(mcu1_arr);
     }
-    root_obj->get_map()["mcuDio"] = total_arr;
+    add_to_obj(root_obj, "mcuDio", total_arr);
 
     //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     {
@@ -2291,15 +2664,16 @@ void COMM_MSA::send_status()
     }
 
     sio::object_message::ptr root_obj = sio::object_message::create();
-    root_obj->get_map()["motor"]                 = motor_array;
-    root_obj->get_map()["condition"]             = create_localization_score_obj(loc->get_cur_ieir(), loc->get_cur_ieir());
-    root_obj->get_map()["robot_state"]           = create_robot_state_obj(ms);
-    root_obj->get_map()["robot_safety_io_state"] = create_robot_io_obj(ms);
-    root_obj->get_map()["power"]                 = create_power_obj(ms);
-    root_obj->get_map()["map"]                   = create_map_info_obj();
-    root_obj->get_map()["setting"]               = create_robot_info_obj();
+    add_to_obj(root_obj, "motor", motor_array);
+    add_to_obj(root_obj, "condition", create_localization_score_obj(loc->get_cur_ieir(), loc->get_cur_ieir()));
+    add_to_obj(root_obj, "robot_state", create_robot_state_obj(ms));
+    add_to_obj(root_obj, "robot_safety_io_state", create_robot_io_obj(ms));
+    add_to_obj(root_obj, "power", create_power_obj(ms));
+    add_to_obj(root_obj, "map", create_map_info_obj());
+    add_to_obj(root_obj, "setting", create_robot_info_obj());
 
     add_to_obj(root_obj, "time", static_cast<long long>(get_time0() * 1000));
+
     {
         std::lock_guard<std::mutex> sock_lock(send_mtx);
         rrs_socket->socket("slamnav")->emit("status", root_obj);
@@ -2904,7 +3278,6 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
         }
 
         ctrl->set_path(path, msg.preset, msg.time);
-
         ctrl->signal_move_multi();
     }
 
@@ -3314,7 +3687,6 @@ sio::object_message::ptr COMM_MSA::create_move_state_obj()
     add_to_obj(obj, "jog_move", "none");
     add_to_obj(obj, "obs", ctrl->get_obs_condition());
     add_to_obj(obj, "path", ctrl->get_multi_reqest_state());
-
     return obj;
 }
 
@@ -3420,10 +3792,10 @@ sio::object_message::ptr COMM_MSA::create_robot_io_obj(const MOBILE_STATUS& ms)
     };
 
     sio::object_message::ptr obj = sio::object_message::create();
-    obj->get_map()["mcu0_dio"] = toSioArray(ms.mcu0_dio);
-    obj->get_map()["mcu1_dio"] = toSioArray(ms.mcu1_dio);
-    obj->get_map()["mcu0_din"] = toSioArray(ms.mcu0_din);
-    obj->get_map()["mcu1_din"] = toSioArray(ms.mcu1_din);
+    add_to_obj(obj, "mcu0_dio", toSioArray(ms.mcu0_dio));
+    add_to_obj(obj, "mcu1_dio", toSioArray(ms.mcu1_dio));
+    add_to_obj(obj, "mcu0_din", toSioArray(ms.mcu0_din));
+    add_to_obj(obj, "mcu1_din", toSioArray(ms.mcu1_din));
     return obj;
 }
 
@@ -3477,7 +3849,7 @@ sio::object_message::ptr COMM_MSA::create_robot_info_obj()
 {
     sio::object_message::ptr obj = sio::object_message::create();
     add_to_obj(obj, "platform_type", config->get_robot_type_str());
-    add_to_obj(obj, "platform_name", std::string(""));
+    add_to_obj(obj, "platform_name", "");
     return obj;
 }
 
@@ -3488,8 +3860,8 @@ sio::array_message::ptr COMM_MSA::create_index_obj(const std::vector<std::pair<i
     for(const auto& v : index)
     {
         sio::object_message::ptr obj = sio::object_message::create();
-        obj->get_map()["id"]     = sio::int_message::create(v.first);
-        obj->get_map()["serial"] = sio::string_message::create(v.second.toStdString());
+        add_to_obj(obj, "id", v.first);
+        add_to_obj(obj, "serial", v.second);
         arr->get_vector().push_back(obj);
     }
     return arr;
@@ -3734,6 +4106,7 @@ void COMM_MSA::start_all_thread()
     start_path_thread();
     start_vobs_thread();
     start_sensor_thread();
+    start_setting_thread();
     start_send_status_thread();
     start_send_response_thread();
 }
@@ -3827,6 +4200,15 @@ void COMM_MSA::start_sensor_thread()
     }
 }
 
+void COMM_MSA::start_setting_thread()
+{
+    if(setting_thread == nullptr)
+    {
+        is_setting_running = true;
+        setting_thread = std::make_unique<std::thread>(&COMM_MSA::setting_loop, this);
+    }
+}
+
 void COMM_MSA::start_send_status_thread()
 {
     if(send_status_thread == nullptr)
@@ -3856,6 +4238,7 @@ void COMM_MSA::stop_all_thread()
     stop_path_thread();
     stop_vobs_thread();
     stop_sensor_thread();
+    stop_setting_thread();
     stop_send_status_thread();
     stop_send_response_thread();
 }
@@ -3957,6 +4340,17 @@ void COMM_MSA::stop_sensor_thread()
         sensor_thread->join();
     }
     sensor_thread.reset();
+}
+
+void COMM_MSA::stop_setting_thread()
+{
+    is_setting_running = false;
+    setting_cv.notify_all();
+    if(setting_thread && setting_thread->joinable())
+    {
+        setting_thread->join();
+    }
+    setting_thread.reset();
 }
 
 void COMM_MSA::stop_send_status_thread()
