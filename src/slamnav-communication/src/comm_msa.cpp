@@ -465,15 +465,7 @@ void COMM_MSA::send_move_status()
     obj_move_state->get_map()["jog_move"]   = sio::string_message::create("none");
     obj_move_state->get_map()["obs"]        = sio::string_message::create(ctrl->get_obs_condition().toStdString());
     obj_move_state->get_map()["path"]       = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
-    //obj_move_state->get_map()["path_time"]  = sio::string_message::create(ctrl->get_global_path_time().toStdString());
-
-    QString _test0, _test1;
-    {
-        std::lock_guard<std::mutex> test_lock(test_mutex);
-        obj_move_state->get_map()["path_time"]  = sio::string_message::create(test0.toStdString());
-        //obj_move_state->get_map()["time1"]  = sio::string_message::create(test0.toStdString());
-    }
-
+    obj_move_state->get_map()["path_time"]  = sio::string_message::create(ctrl->get_global_path_time().toStdString());
     obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
 
     // create pose object
@@ -523,15 +515,9 @@ void COMM_MSA::send_move_status()
 
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
+    // Todo time time_1 무조건 time 으로 변경해야함 !!!!!!!!!!!!!!!!!!!!!!!!!!!
     DATA_PATH msg;
-    msg.time = get_json(data, "time");
-
-    {
-        std::lock_guard<std::mutex> test_lock(test_mutex);
-        test0 = get_json(data, "time_1");
-        test1 = get_json(data, "time_str");
-    }
-
+    msg.time = get_json(data, "time_1"); // msg.time = get_json(data, "time");
     msg.preset = get_json_int(data, "preset");
     msg.command = get_json(data, "command");
 
@@ -2908,21 +2894,18 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
 {
     if(msg.command == "path")
     {
-        // and move path
+        QString path_str = msg.path_str;
+        QStringList path_str_list = path_str.split(",");
+
+        std::vector<QString> path;
+        for(int p = 0; p < path_str_list.size(); p++)
         {
-            QString path_str = msg.path_str;
-            QStringList path_str_list = path_str.split(",");
-
-            std::vector<QString> path;
-            for(int p = 0; p < path_str_list.size(); p++)
-            {
-                path.push_back(path_str_list[p]);
-            }
-
-            ctrl->set_path(path, msg.preset, msg.time);
-
-            ctrl->signal_move_multi();
+            path.push_back(path_str_list[p]);
         }
+
+        ctrl->set_path(path, msg.preset, msg.time);
+
+        ctrl->signal_move_multi();
     }
 
     send_path_response(msg);

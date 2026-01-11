@@ -165,13 +165,13 @@ void AUTOCONTROL::set_cur_global_path(const PATH& val)
 
 void AUTOCONTROL::set_global_step(const std::vector<int>& val)
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     global_step = val;
 }
 
 std::vector<int> AUTOCONTROL::get_global_step()
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     return global_step;
 }
 
@@ -189,16 +189,16 @@ void AUTOCONTROL::set_cur_local_path(const PATH& val)
 
 void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time)
 {
-    QString global_path_time_str;
-    {
-        std::lock_guard<std::mutex> lock(path_mtx);
-        global_path_time_str = global_path_time;
-    }
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
+
+    is_set_path_processing.store(true);
+
+    QString global_path_time_str = global_path_time;
 
     if(_global_path_time == global_path_time_str || _global_node_path.empty())
     {
-        log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time.toStdString(), global_path_time.toStdString(),
-            _global_node_path.size());
+        is_set_path_processing.store(false);
+        log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time.toStdString(), global_path_time.toStdString(), _global_node_path.size());
         return;
     }
 
@@ -207,17 +207,15 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
         std::cout << "_global_node_path: " << node_id.toStdString() << std::endl;
     }
 
-    set_global_node_path(_global_node_path);
+    global_step = remove_duplicates_step(_global_node_path);
+    global_preset.store(_global_preset);
+    global_node_path = _global_node_path;
+    global_path_time = _global_path_time;
 
-    std::vector<int> remove_duplicate_step = remove_duplicates_step(_global_node_path);
-    set_global_step(remove_duplicate_step);
-
-    set_global_preset(_global_preset);
-
-    std::lock_guard<std::mutex> lock(path_mtx);
-    global_path_time = (_global_path_time);
+    last_step.store(global_step.front());
 
     is_set_path.store(true);
+    is_set_path_processing.store(false);
 }
 
 void AUTOCONTROL::set_cur_goal_state(QString str)
@@ -353,7 +351,7 @@ void AUTOCONTROL::set_last_step(int val)
 
 void AUTOCONTROL::set_global_node_path(const std::vector<QString>& val)
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     global_node_path = val;
 }
 
@@ -364,7 +362,7 @@ void AUTOCONTROL::set_global_preset(int val)
 
 QString AUTOCONTROL::get_global_path_time()
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     return global_path_time;
 }
 
@@ -621,7 +619,10 @@ void AUTOCONTROL::slot_move_backward(DATA_MOVE msg)
 
 void AUTOCONTROL::slot_move_multi()
 {
-    move_multi();
+    QTimer::singleShot(300, [this]()
+    {
+        move_multi();
+    });
 }
 
 void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
@@ -711,7 +712,7 @@ void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_multi()
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     if(global_node_path.empty() || global_preset < 0)
     {
         log_info("node_path.size() == 0 || preset < 0");
@@ -1012,7 +1013,7 @@ void AUTOCONTROL::move_single_backward(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_multi_backward()
 {
-    std::lock_guard<std::mutex> lock(path_mtx);
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
     {
         log_info("node_path.size() == 0 || preset < 0");
@@ -4116,39 +4117,41 @@ void AUTOCONTROL::node_loop()
                         {
                             pre_node_id = _cur_node_id;
 
-                            std::lock_guard<std::mutex> lock(path_mtx);
+                            std::lock_guard<std::recursive_mutex> lock(path_mtx);
 
-                            if(is_set_path.load())
+                            if(!is_set_path_processing.load())
                             {
-                                int last_match_idx = -1;
-                                for(int i = 0; i < static_cast<int>(global_node_path.size()); i++)
+                                if(is_set_path.load())
                                 {
-                                    if(global_node_path[i] == _cur_node_id)
+                                    int last_match_idx = -1;
+                                    for(int i = 0; i < static_cast<int>(global_node_path.size()); i++)
                                     {
-                                        last_match_idx = i;
+                                        if(global_node_path[i] == _cur_node_id)
+                                        {
+                                            last_match_idx = i;
+                                        }
+                                    }
+
+                                    if(last_match_idx >= 0)
+                                    {
+                                        is_set_path.store(false);
+
+                                        int target_step = last_match_idx + 1;  // 1-indexed
+                                        last_step.store(target_step);
+
+                                        while(!global_step.empty() && global_step.front() <= target_step)
+                                        {
+                                            global_step.erase(global_step.begin());
+                                        }
                                     }
                                 }
-
-                                if(last_match_idx >= 0)
+                                else
                                 {
-                                    is_set_path.store(false);
-
-                                    int target_step = last_match_idx + 1;  // 1-indexed
-                                    last_step.store(target_step);
-
-                                    while(!global_step.empty() && global_step.front() <= target_step)
+                                    if(!global_step.empty())
                                     {
+                                        last_step.store(global_step.front());
                                         global_step.erase(global_step.begin());
                                     }
-                                }
-                            }
-                            else
-                            {
-                                // 경로 진행 중 - step 갱신
-                                if(!global_step.empty())
-                                {
-                                    last_step.store(global_step.front());
-                                    global_step.erase(global_step.begin());
                                 }
                             }
                         }

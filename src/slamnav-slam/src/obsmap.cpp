@@ -388,38 +388,37 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
     double start_time = get_time();
-    
-    Eigen::Matrix4d cur_tf = tpp.tf;
-    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
-    double step = 0.25*D2R;
-    double lidar_max_range = (config->get_loc_mode() == "2D") ? config->get_lidar_2d_max_range() : config->get_lidar_3d_max_range();
-    size_t range_data_size = (size_t)((2*M_PI)/step);
-    
-    std::vector<double> range_data(range_data_size, lidar_max_range);
-    
+    const double obs_map_min_z = config->get_obs_map_min_z();
+    const double obs_map_max_z = config->get_obs_map_max_z();
     const double robot_x_min = config->get_robot_size_x_min();
     const double robot_x_max = config->get_robot_size_x_max();
     const double robot_y_min = config->get_robot_size_y_min();
     const double robot_y_max = config->get_robot_size_y_max();
     const double robot_z_min = config->get_robot_size_z_min();
     const double robot_z_max = config->get_robot_size_z_max();
-    const double robot_add_x = config->get_robot_size_add_x();
-    const double robot_add_y = config->get_robot_size_add_y();
-    
-    const double total_x_min = robot_x_min - robot_add_x;
-    const double total_x_max = robot_x_max + robot_add_x;
-    const double total_y_min = robot_y_min - robot_add_y;
-    const double total_y_max = robot_y_max + robot_add_y;
-    
-    size_t pts_size = tpp.pts.size();
+    const double obsmap_range = config->get_obs_map_range();
+
+    Eigen::Matrix4d cur_tf = tpp.tf;
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+    const Eigen::Matrix3d R = cur_tf.block<3,3>(0,0);
+    const Eigen::Vector3d t = cur_tf.block<3,1>(0,3);
+    const Eigen::Matrix3d R_inv = cur_tf_inv.block<3,3>(0,0);
+    const Eigen::Vector3d t_inv = cur_tf_inv.block<3,1>(0,3);
+
+    constexpr double step = 0.25*D2R;
+    const double lidar_max_range = (config->get_loc_mode() == "2D") ? config->get_lidar_2d_max_range() : config->get_lidar_3d_max_range();
+    constexpr size_t range_data_size = (size_t)((2*M_PI)/(0.25*D2R));
+
+    std::vector<double> range_data(range_data_size, lidar_max_range);
+
+    const size_t pts_size = tpp.pts.size();
     for(size_t p = 0; p < pts_size; p++)
     {
-        Eigen::Vector3d pt = tpp.pts[p];
+        const Eigen::Vector3d& pt = tpp.pts[p];
         double z = pt[2];
-        if(z < config->get_obs_map_min_z() || z > config->get_obs_map_max_z())
+        if(z < obs_map_min_z || z > obs_map_max_z)
         {
             continue;
         }
@@ -432,10 +431,10 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         {
             continue;
         }
-        
+
         double th = std::atan2(y, x) + M_PI;
-        int idx = (int)(th/step);
-        if(idx >= 0 && idx < (int)range_data_size)
+        int idx = static_cast<int>(th/step);
+        if(idx >= 0 && idx < static_cast<int>(range_data_size))
         {
             double d = std::sqrt(x*x + y*y);
             if(d < range_data[idx])
@@ -445,27 +444,26 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    std::vector<Eigen::Vector3d> pts;    
+    // pts 및 cloud 생성 (락 전에 수행)
+    std::vector<Eigen::Vector3d> pts(range_data_size);
+    octomap::Pointcloud cloud;
+    cloud.reserve(range_data_size);
+
     for(size_t p = 0; p < range_data_size; p++)
     {
         double d = range_data[p];
         double th = p*step - M_PI;
         double x = d*std::cos(th);
         double y = d*std::sin(th);
-        pts.push_back(Eigen::Vector3d(x, y, 0));
-    }
+        pts[p] = Eigen::Vector3d(x, y, 0);
 
-    // update octomap
-    octomap::Pointcloud cloud;
-    for(size_t p = 0; p < pts.size(); p++)
-    {
         // local to global
-        Eigen::Vector3d P = pts[p];
-        Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
+        Eigen::Vector3d _P = R*pts[p] + t;
         cloud.push_back(_P[0], _P[1], 0);
     }
 
-    const double obsmap_range = config->get_obs_map_range();
+    // ========== 락 구간 시작 ==========
+    std::unique_lock<std::shared_mutex> lock(mtx);
 
     octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
 
@@ -484,9 +482,9 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         double z = it.getZ();
         double prob = it->getOccupancy();
 
-        // global to local
+        // global to local (캐싱된 R_inv, t_inv 사용)
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+        Eigen::Vector3d _P = R_inv*P + t_inv;
 
         // for plot
         global_obs_pts.push_back(Eigen::Vector4d(x, y, cur_tf(2,3), prob));
@@ -510,11 +508,13 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
     for(int i = 0; i < h; i++)
     {
+        double* map_row = _map.ptr<double>(i);
+        uchar* wall_row = _wall_map.ptr<uchar>(i);
         for(int j = 0; j < w; j++)
         {
-            if(_map.ptr<double>(i)[j] >= P_OBS)
+            if(map_row[j] >= P_OBS)
             {
-                _wall_map.ptr<uchar>(i)[j] = 255;
+                wall_row[j] = 255;
             }
         }
     }
@@ -528,10 +528,13 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     cv::Mat _static_map(h, w, CV_8U, cv::Scalar(0));
     std::shared_ptr<XYZR_CLOUD> kdtree_cloud = unimap->get_kdtree_cloud();
-    for(size_t p = 0; p < res_idxs.size(); p++)
+    const int res_size = static_cast<int>(res_idxs.size());
+    const int cloud_size = static_cast<int>(kdtree_cloud->pts.size());
+
+    for(int p = 0; p < res_size; p++)
     {
         int idx = res_idxs[p].first;
-        if(idx < 0 || idx >= (int)kdtree_cloud->pts.size())
+        if(idx < 0 || idx >= cloud_size)
         {
             continue;
         }
@@ -540,11 +543,11 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         double y = kdtree_cloud->pts[idx].y;
         double z = kdtree_cloud->pts[idx].z;
 
-        // global to local
+        // global to local (캐싱된 R_inv, t_inv 사용)
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-        //if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
-        if(_P[2] < config->get_obs_map_min_z() || _P[2] > config->get_obs_map_max_z())
+        Eigen::Vector3d _P = R_inv*P + t_inv;
+
+        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
         {
             continue;
         }
@@ -567,106 +570,10 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         _static_map.ptr<uchar>(v)[u] = 255;
     }
 
-    // add virtual obs nodes
-    std::vector<QString> obs_nodes = unimap->get_nodes("OBS");
-    if(obs_nodes.size() > 0)
-    {
-        for(size_t p = 0; p < obs_nodes.size(); p++)
-        {
-            QString id = obs_nodes[p];
-            NODE* node = unimap->get_node_by_id(id);
-            if(node != nullptr)
-            {
-                Eigen::Matrix4d tf = node->tf;
-
-                Eigen::Vector3d P0( node->size[0]/2,  node->size[1]/2, -node->size[2]/2);
-                Eigen::Vector3d P1( node->size[0]/2, -node->size[1]/2,  node->size[2]/2); // for z range check
-                Eigen::Vector3d P2(-node->size[0]/2, -node->size[1]/2, -node->size[2]/2);
-                Eigen::Vector3d P3(-node->size[0]/2,  node->size[1]/2, -node->size[2]/2);
-
-                Eigen::Vector3d _P0 = tf.block(0,0,3,3)*P0 + tf.block(0,3,3,1);
-                Eigen::Vector3d _P1 = tf.block(0,0,3,3)*P1 + tf.block(0,3,3,1);
-                Eigen::Vector3d _P2 = tf.block(0,0,3,3)*P2 + tf.block(0,3,3,1);
-                Eigen::Vector3d _P3 = tf.block(0,0,3,3)*P3 + tf.block(0,3,3,1);
-
-                Eigen::Vector3d l_P0 = cur_tf_inv.block(0,0,3,3)*_P0 + cur_tf_inv.block(0,3,3,1);
-                Eigen::Vector3d l_P1 = cur_tf_inv.block(0,0,3,3)*_P1 + cur_tf_inv.block(0,3,3,1);
-                Eigen::Vector3d l_P2 = cur_tf_inv.block(0,0,3,3)*_P2 + cur_tf_inv.block(0,3,3,1);
-                Eigen::Vector3d l_P3 = cur_tf_inv.block(0,0,3,3)*_P3 + cur_tf_inv.block(0,3,3,1);
-
-                // check z overlap
-                if(l_P1[2] < config->get_obs_map_min_z() || l_P0[2] > config->get_obs_map_max_z())
-                {
-                    // no overlap
-                    continue;
-                }
-
-                cv::Vec2i uv0 = xy_uv(l_P0[0], l_P0[1]);
-                cv::Vec2i uv1 = xy_uv(l_P1[0], l_P1[1]);
-                cv::Vec2i uv2 = xy_uv(l_P2[0], l_P2[1]);
-                cv::Vec2i uv3 = xy_uv(l_P3[0], l_P3[1]);
-
-                std::vector<std::vector<cv::Point>> pts(1);
-                pts[0].push_back(cv::Point(uv0[0], uv0[1]));
-                pts[0].push_back(cv::Point(uv1[0], uv1[1]));
-                pts[0].push_back(cv::Point(uv2[0], uv2[1]));
-                pts[0].push_back(cv::Point(uv3[0], uv3[1]));
-
-                cv::fillPoly(_wall_map, pts, cv::Scalar(255));
-                cv::fillPoly(_static_map, pts, cv::Scalar(255));
-
-
-                /*
-                QString info = node->info;
-                Eigen::Matrix4d tf = node->tf;
-
-                NODE_INFO res;
-                if(parse_info(info, "SIZE", res))
-                {
-                    Eigen::Vector3d P0( res.sz[0]/2,  res.sz[1]/2, -res.sz[2]/2);
-                    Eigen::Vector3d P1( res.sz[0]/2, -res.sz[1]/2,  res.sz[2]/2); // for z range check
-                    Eigen::Vector3d P2(-res.sz[0]/2, -res.sz[1]/2, -res.sz[2]/2);
-                    Eigen::Vector3d P3(-res.sz[0]/2,  res.sz[1]/2, -res.sz[2]/2);
-
-                    Eigen::Vector3d _P0 = tf.block(0,0,3,3)*P0 + tf.block(0,3,3,1);
-                    Eigen::Vector3d _P1 = tf.block(0,0,3,3)*P1 + tf.block(0,3,3,1);
-                    Eigen::Vector3d _P2 = tf.block(0,0,3,3)*P2 + tf.block(0,3,3,1);
-                    Eigen::Vector3d _P3 = tf.block(0,0,3,3)*P3 + tf.block(0,3,3,1);
-
-                    Eigen::Vector3d l_P0 = cur_tf_inv.block(0,0,3,3)*_P0 + cur_tf_inv.block(0,3,3,1);
-                    Eigen::Vector3d l_P1 = cur_tf_inv.block(0,0,3,3)*_P1 + cur_tf_inv.block(0,3,3,1);
-                    Eigen::Vector3d l_P2 = cur_tf_inv.block(0,0,3,3)*_P2 + cur_tf_inv.block(0,3,3,1);
-                    Eigen::Vector3d l_P3 = cur_tf_inv.block(0,0,3,3)*_P3 + cur_tf_inv.block(0,3,3,1);
-
-                    // check z overlap
-                    if(l_P1[2] < config->get_obs_map_min_z() || l_P0[2] > config->get_obs_map_max_z())
-                    {
-                        // no overlap
-                        continue;
-                    }
-
-                    cv::Vec2i uv0 = xy_uv(l_P0[0], l_P0[1]);
-                    cv::Vec2i uv1 = xy_uv(l_P1[0], l_P1[1]);
-                    cv::Vec2i uv2 = xy_uv(l_P2[0], l_P2[1]);
-                    cv::Vec2i uv3 = xy_uv(l_P3[0], l_P3[1]);
-
-                    std::vector<std::vector<cv::Point>> pts(1);
-                    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
-                    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
-                    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
-                    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
-
-                    cv::fillPoly(_wall_map, pts, cv::Scalar(255));
-                    cv::fillPoly(_static_map, pts, cv::Scalar(255));
-                }*/
-            }
-        }
-    }
-
     // add sensing boundary
     {
         cv::Vec2i uv = xy_uv(0, 0);
-        int r = config->get_obs_map_range()/gs;
+        int r = static_cast<int>(obsmap_range/gs);
 
         cv::Mat mask(h, w, CV_8U, cv::Scalar(255));
         cv::circle(mask, cv::Point(uv[0], uv[1]), r, cv::Scalar(0), -1);
@@ -759,13 +666,13 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
 
     // update
-    obs_pts = _obs_pts;
-    dyn_pts = _dyn_pts;
-    plot_pts = _plot_pts;
-    map_tf = cur_tf;
-    wall_map = _wall_map;
-    static_map = _static_map;
-    dynamic_map = _dynamic_map;
+    map_tf      = cur_tf;
+    obs_pts     = std::move(_obs_pts);
+    dyn_pts     = std::move(_dyn_pts);
+    plot_pts    = std::move(_plot_pts);
+    wall_map    = std::move(_wall_map);
+    static_map  = std::move(_static_map);
+    dynamic_map = std::move(_dynamic_map);
 
     // signal for redrawing
     Q_EMIT obs_updated();

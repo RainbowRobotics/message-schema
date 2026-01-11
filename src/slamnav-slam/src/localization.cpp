@@ -1121,7 +1121,7 @@ void LOCALIZATION::obs_loop()
 
         if(config->get_use_cam() && config->get_use_cam_obstacle())
         {
-            for(int i = 0; i < config->get_cam_num(); ++i)
+            for(int i = 0; i < config->get_cam_num(); i+=3)
             {
                 TIME_PTS scan = cam->get_scan(i);
                 if(!scan.pts.empty())
@@ -1153,7 +1153,7 @@ void LOCALIZATION::obs_loop()
         process_time_obs = get_time() - pre_loop_time;
         pre_loop_time = get_time();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     log_info("obs_loop stop");

@@ -279,7 +279,7 @@ private:
 
     // for multi-robot control
     std::atomic<int> global_preset = {0};
-    std::mutex path_mtx;
+    std::recursive_mutex path_mtx;
     std::vector<int> global_step;
     std::atomic<int> last_step = {0};
     std::vector<QString> global_node_path;
@@ -294,6 +294,7 @@ private:
     std::atomic<bool> is_path_overlap        = {false};
     std::atomic<bool> is_move_backward       = {false};
     std::atomic<bool> is_set_path            = {false};
+    std::atomic<bool> is_set_path_processing = {false};
 
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
