@@ -76,7 +76,7 @@ COMM_MSA::COMM_MSA(QObject *parent)
     BIND_EVENT(sock, "loadRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "localizationRequest", std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "mappingRequest",      std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
-    BIND_EVENT(sock, "pathRequest",        std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
+    BIND_EVENT(sock, "pathRequest",         std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "sensorRequest",       std::bind(&COMM_MSA::recv_message,       this, std::placeholders::_1));
     BIND_EVENT(sock, "controlRequest",      std::bind(&COMM_MSA::recv_message_array, this, std::placeholders::_1));
 

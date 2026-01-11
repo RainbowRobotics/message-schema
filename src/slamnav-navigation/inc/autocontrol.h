@@ -270,10 +270,6 @@ private:
     std::unique_ptr<std::thread> node_thread; // node thread
     void node_loop();                         // node loop
 
-    // todo 코드리펙토링 필요
-    std::mutex path_st_node_mtx;
-    QString path_st_node_id = "";
-
     QString last_node_id = "";
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);

@@ -207,25 +207,10 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
         std::cout << "_global_node_path: " << node_id.toStdString() << std::endl;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(path_st_node_mtx);
-        path_st_node_id = _global_node_path.front();
-    }
-
     set_global_node_path(_global_node_path);
 
     std::vector<int> remove_duplicate_step = remove_duplicates_step(_global_node_path);
     set_global_step(remove_duplicate_step);
-
-    if(remove_duplicate_step.size() == 1)
-    {
-        set_last_step(remove_duplicate_step.front());
-    }
-
-    if(remove_duplicate_step.size() > 1)
-    {
-        set_last_step(1);
-    }
 
     set_global_preset(_global_preset);
 
@@ -677,10 +662,10 @@ void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 
             PATH _seg = calc_global_path(seg.node, i == 0);
 
-            _seg.drive_dir = seg.drive_dir;
+            _seg.drive_dir    = seg.drive_dir;
             _seg.drive_method = seg.drive_method;
-            _seg.is_final   = seg.is_final;
-            _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
+            _seg.is_final     = seg.is_final;
+            _seg.ed_tf        = seg.is_final ? path.ed_tf : _seg.pose.back();
 
             log_info("[AUTO] Segment {} -> Method: {}, Dir: {}, Final: {}",
                          i,
@@ -727,7 +712,7 @@ void AUTOCONTROL::move_single(Eigen::Matrix4d goal_tf, int preset)
 void AUTOCONTROL::move_multi()
 {
     std::lock_guard<std::mutex> lock(path_mtx);
-    if(global_node_path.size() == 0 || global_preset < 0)
+    if(global_node_path.empty() || global_preset < 0)
     {
         log_info("node_path.size() == 0 || preset < 0");
         return;
@@ -745,16 +730,16 @@ void AUTOCONTROL::move_multi()
 
     // loop cut
     std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
+    for(const auto& p : path_list)
     {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
+        std::vector<std::vector<QString>> res = loop_cut(p);
+        for(const auto& re : res)
         {
-            path_list2.push_back(res[q]);
+            path_list2.push_back(re);
         }
     }
 
-    if(path_list2.size() == 0)
+    if(path_list2.empty())
     {
         log_info("move_pp, path_list2 empty");
         stop();
@@ -764,13 +749,16 @@ void AUTOCONTROL::move_multi()
     // set flag
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
 
+    DATA_MOVE _cur_move_info = get_cur_move_info();
+    QString goal_node_id = _cur_move_info.goal_node_id;
+
     log_info("move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
         log_info("path_{}", p);
-        for(size_t q = 0; q < path_list2[p].size(); q++)
+        for(const auto & q : path_list2[p])
         {
-            log_info("{}", qUtf8Printable(path_list2[p][q]));
+            log_info("{}", qUtf8Printable(q));
         }
     }
 
@@ -780,6 +768,21 @@ void AUTOCONTROL::move_multi()
     {
         // enque path
         PATH path = calc_global_path(path_list2[p], p == 0);
+
+        bool is_final = false;
+        for(const auto& q : path_list2)
+        {
+            for(const auto& r: q)
+            {
+                if(goal_node_id == r)
+                {
+                    is_final = true;
+                    break;
+                }
+            }
+        }
+
+        path.is_final = is_final;
 
         // check final path
         if(p == path_list2.size()-1)
@@ -802,17 +805,17 @@ void AUTOCONTROL::move_multi()
         // check path overlap or reset
         bool is_curve = false;
         std::vector<Eigen::Matrix4d> merged_tf_list;
-        for(size_t p = 0; p < tmp_storage.size(); p++)
+        for(auto & p : tmp_storage)
         {
-            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
+            for(size_t q = 0; q < p.pose.size(); q++)
             {
-                merged_tf_list.push_back(tmp_storage[p].pose[q]);
+                merged_tf_list.push_back(p.pose[q]);
             }
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        for(int p = 0; p < std::min<int>((int)merged_tf_list.size(), AUTOCONTROL_INFO::path_overlap_check_dist); p++)
+        for(int p = 0; p < std::min<int>(static_cast<int>(merged_tf_list.size()), AUTOCONTROL_INFO::path_overlap_check_dist); p++)
         {
             Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
             double th = deltaRad(xi[2], cur_xi[2]);
@@ -842,9 +845,9 @@ void AUTOCONTROL::move_multi()
 
     // set global path
     global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
+    for(const auto & p : tmp_storage)
     {
-        global_path_que.push(tmp_storage[p]);
+        global_path_que.push(p);
     }
 
     // load preset
@@ -4109,28 +4112,39 @@ void AUTOCONTROL::node_loop()
                     double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
-                        QString st_node;
-                        {
-                            std::lock_guard<std::mutex> lock(path_st_node_mtx);
-                            st_node = path_st_node_id;
-                        }
-
-                        {
-                            std::lock_guard<std::mutex> lock(path_mtx);
-                            if(is_set_path.load() && _cur_node_id == st_node)
-                            {
-                                is_set_path.store(false);
-                            }
-                        }
-
-                        int _last_step = get_last_step();
                         if(pre_node_id != _cur_node_id && !cur_node_id.isEmpty())
                         {
                             pre_node_id = _cur_node_id;
 
                             std::lock_guard<std::mutex> lock(path_mtx);
-                            if(is_set_path.load() == true)
+
+                            if(is_set_path.load())
                             {
+                                int last_match_idx = -1;
+                                for(int i = 0; i < static_cast<int>(global_node_path.size()); i++)
+                                {
+                                    if(global_node_path[i] == _cur_node_id)
+                                    {
+                                        last_match_idx = i;
+                                    }
+                                }
+
+                                if(last_match_idx >= 0)
+                                {
+                                    is_set_path.store(false);
+
+                                    int target_step = last_match_idx + 1;  // 1-indexed
+                                    last_step.store(target_step);
+
+                                    while(!global_step.empty() && global_step.front() <= target_step)
+                                    {
+                                        global_step.erase(global_step.begin());
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 경로 진행 중 - step 갱신
                                 if(!global_step.empty())
                                 {
                                     last_step.store(global_step.front());
