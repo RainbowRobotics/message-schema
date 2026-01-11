@@ -560,9 +560,15 @@ void COMM_MSA::send_move_status()
     obj_move_state->get_map()["dock_move"]  = sio::string_message::create("stop");
     obj_move_state->get_map()["jog_move"]   = sio::string_message::create("none");
     obj_move_state->get_map()["obs"]        = sio::string_message::create(ctrl->get_obs_condition().toStdString());
+
+    auto path_time_step = ctrl->get_path_time_and_step();
+
+    obj_move_state->get_map()["path_time"]  = sio::string_message::create(path_time_step.first.toStdString());
+    obj_move_state->get_map()["step"]       = sio::int_message::create(path_time_step.second);
+
     obj_move_state->get_map()["path"]       = sio::string_message::create(ctrl->get_multi_reqest_state().toStdString()); // "none", "req_path", "recv_path"
-    obj_move_state->get_map()["path_time"]  = sio::string_message::create(ctrl->get_global_path_time().toStdString());
-    obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
+    //obj_move_state->get_map()["path_time"]  = sio::string_message::create(ctrl->get_global_path_time().toStdString());
+    //obj_move_state->get_map()["step"]       = sio::int_message::create(ctrl->get_last_step());
 
     // create pose object
     sio::object_message::ptr obj_pose = sio::object_message::create();

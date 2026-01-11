@@ -5585,7 +5585,9 @@ void MainWindow::init_aruco_loc_loop()
         return;
     }
 
-    if(UNIMAP::instance()->get_is_loaded() == MAP_LOADED && LOCALIZATION::instance()->get_is_loc() == false && !ARUCO::instance()->get_is_thread_alive())
+    if(UNIMAP::instance()->get_is_loaded() == MAP_LOADED &&
+       (LOCALIZATION::instance()->get_cur_loc_state() == "none" || LOCALIZATION::instance()->get_cur_loc_state() == "fail") &&
+      !ARUCO::instance()->get_is_thread_alive())
     {
         ARUCO::instance()->start_detect_loop();
     }

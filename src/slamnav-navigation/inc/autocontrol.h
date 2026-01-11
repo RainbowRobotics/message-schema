@@ -106,6 +106,7 @@ public:
     Eigen::Vector3d get_last_local_goal();          // get last local goal
     std::vector<Eigen::Matrix4d> get_obs_traj();
     std::vector<int> get_global_step();
+    std::pair<QString, int> get_path_time_and_step();
 
     void set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time);
     void set_is_rrs(bool flag);

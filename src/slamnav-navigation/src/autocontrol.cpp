@@ -344,8 +344,15 @@ void AUTOCONTROL::set_cur_move_info(const DATA_MOVE& val)
     cur_move_info = val;
 }
 
+std::pair<QString, int> AUTOCONTROL::get_path_time_and_step()
+{
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
+    return {global_path_time, last_step};
+}
+
 void AUTOCONTROL::set_last_step(int val)
 {
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
     last_step.store(val);
 }
 
@@ -461,8 +468,8 @@ QString AUTOCONTROL::get_cur_node_id()
 
 int AUTOCONTROL::get_last_step()
 {
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    return last_step;
+    std::lock_guard<std::recursive_mutex> lock(path_mtx);
+    return last_step.load();
 }
 
 void AUTOCONTROL::set_multi_request(QString str)
@@ -906,7 +913,7 @@ std::vector<int> AUTOCONTROL::remove_duplicates_step(const std::vector<QString>&
     }
 
     std::vector<int> duplicated_step;
-    for(size_t p = 1; p < node_path.size()-1; p++)
+    for(size_t p = 0; p < node_path.size()-1; p++)
     {
         if(node_path[p] == node_path[p+1])
         {

@@ -702,7 +702,7 @@ void MOBILE::receive_data_loop()
                             cur_status.sw_reset = (io_info_raw >> 0) & 0x01;
                             cur_status.sw_stop = (io_info_raw >> 1) & 0x01;
                             cur_status.sw_start = (io_info_raw >> 2) & 0x01;
-                            
+
                             // Parse safety states from safety_state bytes if needed
                             // Safety state 1
                             cur_status.safety_state_bumper_stop_1 = (safety_state_1 >> 0) & 0x01;
@@ -742,7 +742,7 @@ void MOBILE::receive_data_loop()
                             }
 
                             QString mobile_status_str = "[MOBILE_STATUS]";
-                            
+
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
                                 // connection 정보
@@ -947,7 +947,7 @@ void MOBILE::receive_data_loop()
                             uint16_t tabos_status;
                             unsigned short tabos_ttf;
                             unsigned short tabos_tte;
-                            unsigned short  tabos_soc_raw; 
+                            unsigned short  tabos_soc_raw;
                             unsigned short tabos_soh_raw;
                             short tabos_temperature_raw;
                             unsigned short tabos_rc_raw, tabos_ae_raw;
@@ -1068,7 +1068,7 @@ void MOBILE::receive_data_loop()
                                 cur_status.bat_current = bat_cur;
                                 cur_status.tabos_soc = (uint8_t)((bat_in - 36.0f) / (42.0f - 36.0f) * 100.0f);
                                 spdlog::info("[MOBILE] voltage_in: {:.2f}, bat_percent: {}", bat_in, cur_status.bat_percent);
-                        
+
                             }
                             log_debug("[MOBILE] BMS type: {}", bms_header);
 
@@ -1766,7 +1766,7 @@ void MOBILE::receive_data_loop()
 
                             float _lx;
                             memcpy(&_lx, &_buf[index], dlc_f);     index=index+dlc_f;
-                            
+
                             float _ly;
                             memcpy(&_ly, &_buf[index], dlc_f);     index=index+dlc_f;
 
@@ -1840,12 +1840,12 @@ void MOBILE::receive_data_loop()
                                 - interlock: {}
                                 - sw_io: {}
                               )",
-                                use_safety_cross_monitor, use_safety_speed_control, use_safety_obstacle_detection, 
+                                use_safety_cross_monitor, use_safety_speed_control, use_safety_obstacle_detection,
                                 use_safety_bumper, use_safety_interlock, use_sw_io
                             );
                             mtx.unlock();
                         }
-                        
+
                         buf.erase(buf.begin(), buf.begin()+data_size+7);
                     }
                     else
@@ -1990,31 +1990,31 @@ void MOBILE::config_parameter_send()
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
-    
+
         uint16_t size = 6+8+8;
         memcpy(&send_byte[1], &size, 2); // size
         send_byte[3] = 0x00;
         send_byte[4] = 0x00;
-    
+
         send_byte[5] = 0xA0;
         send_byte[6] = 0x00; // 0~1
         send_byte[7] = 219; // cmd
-    
+
         float lx_ = (float)lx;
         float ly_ = (float)ly;
-    
+
         memcpy(&send_byte[8], &lx_, 4);
         memcpy(&send_byte[12], &ly_, 4);
-    
+
         send_byte[24] = 0x25;
-    
+
         if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
     }
 
-    // set wheel type 
+    // set wheel type
     {
         QString robot_wheel_type = config->get_robot_wheel_type();
 
@@ -2039,13 +2039,13 @@ void MOBILE::config_parameter_send()
         memcpy(&send_byte[1], &size, 2); // size
         send_byte[3] = 0x00;
         send_byte[4] = 0x00;
-        
+
         send_byte[5] = 0xA0;
         send_byte[6] = 0x00;
         send_byte[7] = 215; // cmd motor init
 
         memcpy(&send_byte[8], &wheel_param_, 4);
-        
+
         send_byte[24] = 0x25;
 
         if(is_connected && !config->get_use_sim())
@@ -2061,7 +2061,7 @@ void MOBILE::config_parameter_send()
 
         bool use_safety_speed_control = config->get_use_safety_speed_control();
         set_safety_parameter(1, use_safety_speed_control);
-        
+
         bool use_safety_obstacle_detect = config->get_use_safety_obstacle_detect();
         set_safety_parameter(2, use_safety_obstacle_detect);
 
@@ -2183,7 +2183,7 @@ void MOBILE::motor_on()
         set_lx_ly(lx, ly);
     }
 
-    // set wheel type 
+    // set wheel type
     {
         QString robot_wheel_type = config->get_robot_wheel_type();
 
@@ -2208,13 +2208,13 @@ void MOBILE::motor_on()
         memcpy(&send_byte[1], &size, 2); // size
         send_byte[3] = 0x00;
         send_byte[4] = 0x00;
-        
+
         send_byte[5] = 0xA0;
         send_byte[6] = 0x00;
         send_byte[7] = 215; // cmd motor init
 
         memcpy(&send_byte[8], &wheel_param_, 4);
-        
+
         send_byte[24] = 0x25;
 
         if(is_connected && !config->get_use_sim())
@@ -2230,7 +2230,7 @@ void MOBILE::motor_on()
 
         bool use_safety_speed_control = config->get_use_safety_speed_control();
         set_safety_parameter(1, use_safety_speed_control);
-        
+
         bool use_safety_obstacle_detect = config->get_use_safety_obstacle_detect();
         set_safety_parameter(2, use_safety_obstacle_detect);
 
@@ -2581,8 +2581,8 @@ void MOBILE::move_circular(double th, double w, int dir)
 
     send_byte[5] = 0xA0;
     send_byte[6] = static_cast<unsigned char>(dir); // dir 0: right, 1: left
-    send_byte[7] = 119; // cmd circular motion 
-    
+    send_byte[7] = 119; // cmd circular motion
+
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
@@ -2620,7 +2620,7 @@ void MOBILE::stop()
         msg_que.push(send_byte);
     }
 
-    // To do -- linear stop function add 
+    // To do -- linear stop function add
 }
 
 void MOBILE::led(int target, int mode)
@@ -3415,8 +3415,8 @@ void MOBILE::set_safety_parameter(int target, bool param)
     send_byte[4] = 0x00;
 
     send_byte[5] = 0xA2;
-    send_byte[6] = target; 
-    // 0 - safety cross monitor 1 - safety speed control 
+    send_byte[6] = target;
+    // 0 - safety cross monitor 1 - safety speed control
     // 2 - safety obstacle detect 3 - safety bumper 4 - safety interlock
     send_byte[7] = 0x03; // cmd
 

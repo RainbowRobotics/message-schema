@@ -961,10 +961,7 @@ void LOCALIZATION::ekf_loop_3d()
 
             // icp
             std::vector<Eigen::Vector3d> dsk = frm.pts;
-
-            double st_time0 = get_time();
             double err = map_icp(dsk, G);
-            double ed_time0 = get_time();
 
             // check ieir
             cur_ieir = calc_ieir(dsk, G);
