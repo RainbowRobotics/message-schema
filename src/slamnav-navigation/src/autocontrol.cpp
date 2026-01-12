@@ -861,6 +861,12 @@ void AUTOCONTROL::move_multi()
     // load preset
     params = load_preset(global_preset);
 
+    // reset obs decel velocity to prevent speed drop on thread restart
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        cur_obs_decel_v = params.LIMIT_V;
+    }
+
     // start obs loop
     if(obs_flag == false)
     {
