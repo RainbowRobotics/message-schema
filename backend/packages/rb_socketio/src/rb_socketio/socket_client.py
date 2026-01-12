@@ -1,8 +1,10 @@
 import inspect
 import itertools
 import re
+from typing import Any, get_args, get_origin
 
 import socketio
+from pydantic import BaseModel, ValidationError
 
 from .socket_client_router import (
     RbSocketIORouter,
@@ -16,14 +18,63 @@ class RBSocketIONsClient(socketio.AsyncClient):
         super().__init__(*a, **args, request_timeout=30)
 
     def _on_connect(self):
+        """
+        연결 이벤트 처리
+        """
         print("on_connect", flush=True)
 
     def _check_event_name(self, event):
+        """
+        event 이름 검증
+        """
         return (
             event
             if event.startswith(f"{self.prefix_event_name}/")
             else f"{self.prefix_event_name}/{event}"
         )
+
+    def _find_pydantic_model(self, tp: Any) -> type[BaseModel] | None:
+        """
+        data: SomeThingPD
+        data: SomeThingPD | None
+        data: Optional[SomeThingPD]
+        같은 형태에서 SomeThingPD를 탐색
+        """
+        if tp is None:
+            return None
+
+        # 이미 BaseModel 서브클래스면 바로 반환
+        try:
+            if isinstance(tp, type) and issubclass(tp, BaseModel):
+                return tp
+        except TypeError:
+            pass
+
+        origin = get_origin(tp)
+        if origin is None:
+            return None
+
+        # Union / Optional 케이스
+        for arg in get_args(tp):
+            m = self._find_pydantic_model(arg)
+            if m is not None:
+                return m
+
+        return None
+
+    def _get_data_model(self, sig: inspect.Signature) -> type[BaseModel] | None:
+        """
+        data 파라미터의 타입에서 BaseModel을 탐색
+        """
+        param = sig.parameters.get("data")
+        if not param:
+            return None
+
+        ann = param.annotation
+        if ann is inspect.Signature.empty:
+            return None
+
+        return self._find_pydantic_model(ann)
 
     def _expand_event_patterns(
         self, pattern: str, path_params: dict[str, list[str]] | None
@@ -61,7 +112,10 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
         return m.groupdict() if m else {}
 
-    async def emit(self, event, data=None, **args):
+    async def emit(self, event, data=None, namespace=None, callback=None, **args):
+        """
+        socketio.emit 메서드 오버라이드
+        """
         if not self.connected:
             print("🚫 emit not connected", flush=True)
             return
@@ -69,7 +123,10 @@ class RBSocketIONsClient(socketio.AsyncClient):
         event = self._check_event_name(event)
         return await super().emit(event, data, **args)
 
-    async def call(self, event, data=None, timeout=None, namespace=None, **args):
+    async def call(self, event, data=None, namespace=None, timeout=None, **args):
+        """
+        socketio.call 메서드 오버라이드
+        """
         return await super().call(event, data, namespace=namespace, timeout=timeout, **args)
 
     async def _trigger_event(self, event, namespace, *args):
@@ -133,6 +190,7 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
         def decorator(user_handler):
             sig = inspect.signature(user_handler)
+            data_model = self._get_data_model(sig)
             param_names = set(sig.parameters)
 
             async def wrapped(*payload):
@@ -145,6 +203,26 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
                 path_params = extra.get("__path_params__", {}) or {}
                 cleaned = {k: v for k, v in path_params.items() if k in param_names}
+
+                # data 파라미터만 Pydantic 변환
+                if data_model is not None:
+                    if not core:
+                        core = [None]
+
+                    raw = core[0]
+
+                    # 이미 모델이면 스킵
+                    try:
+                        if raw is not None and not isinstance(raw, data_model):
+                            if isinstance(raw, str | bytes | bytearray):
+                                core[0] = data_model.model_validate_json(raw)
+                            else:
+                                core[0] = data_model.model_validate(raw)
+                    except ValidationError as e:
+                        return {
+                            "error": "validation error",
+                            "message": e.errors(),
+                        }
 
                 if inspect.iscoroutinefunction(user_handler):
                     return await user_handler(*core, **cleaned)
