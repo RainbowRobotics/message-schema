@@ -56,7 +56,6 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
     spdlog::info("[EKF_3D] init ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
                  
-
 void EKF_3D::reset()
 {
     x_hat.setZero();
@@ -77,12 +76,40 @@ Eigen::Matrix4d EKF_3D::get_cur_tf()
     return res;
 }
 
-void EKF_3D::predict(const Eigen::Matrix4d& odom_tf)
+TIME_POSE EKF_3D::get_best_tp(double ref_t)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+
+    TIME_POSE res;
+    double min_dt = std::numeric_limits<double>::max();
+    for(size_t p = 0; p < tp_storage.size(); p++)
+    {
+        double dt = std::abs(tp_storage[p].t - ref_t);
+        if(dt < min_dt)
+        {
+            min_dt = dt;
+            res = tp_storage[p];
+        }
+    }
+
+    return res;
+}
+
+std::vector<TIME_POSE> EKF_3D::get_tp_storage()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<TIME_POSE> res = tp_storage;
+    return res;
+}
+
+void EKF_3D::predict(const TIME_POSE& odom_tp)
 {
     if(!initialized.load())
     {
         return;
     }
+
+    Eigen::Matrix4d odom_tf = odom_tp.tf;
 
     if(!has_pre_mo_tf)
     {
@@ -171,9 +198,18 @@ void EKF_3D::predict(const Eigen::Matrix4d& odom_tf)
 
     pre_mo_tf = odom_tf;
 
+    TIME_POSE pred_tp;
+    pred_tp.t = odom_tp.t;
+    pred_tp.tf = ZYX_to_TF(x_hat);
+    tp_storage.push_back(pred_tp);
+    if(tp_storage.size() > 300)
+    {
+        tp_storage.erase(tp_storage.begin());
+    }
+
     // printf("[EKF_3D] prediction: (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
     //        x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
-    spdlog::debug("[EKF_3D] prediction: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
+    spdlog::debug("[EKF_3D] prediction: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )", x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
 
 void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ieir*/)

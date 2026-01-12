@@ -24,8 +24,11 @@ public:
     void reset();
 
     Eigen::Matrix4d get_cur_tf();
+    TIME_POSE get_best_tp(double ref_t);
+    std::vector<TIME_POSE> get_tp_storage();
 
-    void predict(const Eigen::Matrix4d& odom_tf);
+
+    void predict(const TIME_POSE& odom_tp);
     void estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir);
 
     // flags
@@ -56,6 +59,9 @@ private:
 
     // flags
     std::atomic<bool> has_pre_mo_tf = {false};
+
+    // storage
+    std::vector<TIME_POSE> tp_storage;
 };
 
 #endif // EKF_3D_H

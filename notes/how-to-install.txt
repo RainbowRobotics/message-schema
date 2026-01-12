@@ -1,0 +1,104 @@
+ 
+sudo rm -rf /var/lib/apt/lists/* && sudo apt update && sudo apt upgrade -y
+ 
+sudo apt install \
+qtcreator \
+qtbase5-dev \
+qt5-qmake \
+cmake \
+libtbb-dev \
+libboost-all-dev \
+libopencv-dev \
+libopencv-contrib-dev \
+libeigen3-dev \
+cmake-gui \
+git \
+htop \
+build-essential \
+rapidjson-dev \
+libboost-system-dev \
+libboost-thread-dev \
+libssl-dev \
+nmap \
+qtmultimedia5-dev  \
+libqt5multimedia5-plugins \
+pdal \
+libpdal-dev \
+librdkafka-dev \
+libvtk9-qt-dev \
+libpcl-dev \
+openssh-server \
+-y
+
+sudo apt install \
+gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly \
+-y
+
+sudo apt install -y libqt5gamepad5 libqt5gamepad5-dev
+sudo apt install -y libfmt-dev
+sudo apt install -y libgl1-mesa-dev mesa-common-dev
+
+
+- Cmake upgrade
+ 	$ wget https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5.tar.gz
+ 	$ tar -xvf cmake-3.30.5.tar.gz && cd cmake-3.30.5/
+ 	$ ./bootstrap --qt-gui
+ 	$ make -j$(nproc) && sudo make install
+ 	$ cmake --version
+ 	
+ - Install gtsam from source
+ 	$ cd ~/Libs && wget https://github.com/borglab/gtsam/archive/refs/tags/4.2.0.tar.gz
+ 	$ tar -xvf 4.2.0.tar.gz && cd gtsam-4.2.0 && mkdir build && cd build
+ 	$ cmake .. -DGTSAM_USE_SYSTEM_EIGEN=ON 
+ 	$ make -j$(nproc) && sudo make install
+ 	
+ - Install rplidar SDK
+ 	$ git clone https://github.com/Slamtec/rplidar_sdk.git
+ 	$ cd rplidar_sdk
+ 	$ make
+ 	
+ - Install Livox-SDK2
+ 	# @ https://github.com/Livox-SDK/Livox-SDK2/releases/tag/v1.2.5
+ 	$ cd ~/Libs && wget https://github.com/Livox-SDK/Livox-SDK2/archive/refs/tags/v1.2.5.tar.gz
+ 	$ tar -xvf v1.2.5.tar.gz && cd Livox-SDK2-1.2.5/ && mkdir build && cd build/ && cmake .. && make -j$(nproc)
+ 	$ sudo make install
+
+ - Install linuxptp
+        # @ https://sourceforge.net/projects/linuxptp/files/v3.1/
+        $ wget https://sourceforge.net/projects/linuxptp/files/v3.1/linuxptp-3.1.1.tgz/download -O linuxptp-3.1.1.tgz
+        $ tar -xvf linuxptp-3.1.1.tgz 
+        $ cd linuxptp-3.1.1 && make && sudo make install
+        
+  - Install rs-driver (Airy)
+  	git clone https://github.com/RoboSense-LiDAR/rs_driver.git
+	sudo apt-get install libpcap-dev libeigen3-dev libboost-dev libpcl-dev
+	cd rs_driver
+	mkdir build && cd build
+	cmake .. && make -j4
+	sudo make install
+	
+  - Install CSPC SDK
+  	cd ~/libs/CSPC_LIDAR_SDK_V7.3
+  	rm -rf build
+	cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+	cmake --build build -j
+	
+  - Install ccache (fast build)
+  	sudo apt install ccache -y
+  	  | 빌드 유형       | 이전 (추정)  | ccache 적용 후  |
+  	  |----------------|-------------|----------------|
+  	  | 풀빌드          | ~20분       | 4분 12초       |
+  	  | 증분빌드 (core) | ~5분+       | 23초           |
+  	  | 증분빌드 (UI)   | ~5분+       | 33초           |
+
+
+        
+# bashrc
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/rainbow/rplidar_sdk/output/Linux/Release
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/rainbow/OrbbecSDK/lib/linux_x64
+
+

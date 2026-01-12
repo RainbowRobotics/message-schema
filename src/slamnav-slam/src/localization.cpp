@@ -942,9 +942,13 @@ void LOCALIZATION::ekf_loop_3d()
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
 
+        TIME_POSE cur_mo_tp;
+        cur_mo_tp.t = cur_mo.t;
+        cur_mo_tp.tf = se2_to_TF(cur_mo.pose);
+
         if(ekf_3d.initialized.load())
         {
-            ekf_3d.predict(se2_to_TF(cur_mo.pose));
+            ekf_3d.predict(cur_mo_tp);
         }
 
         Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
@@ -976,6 +980,7 @@ void LOCALIZATION::ekf_loop_3d()
                 else
                 {
                     // slip detection (compare EKF prediction with ICP result)
+                    // Eigen::Matrix4d ekf_tf = ekf_3d.get_best_tp(frm.t).tf;
                     Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
                     Eigen::Vector2d dtdr = dTdR(ekf_tf, G);
 
