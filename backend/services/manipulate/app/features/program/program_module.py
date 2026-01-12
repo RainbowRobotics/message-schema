@@ -26,6 +26,7 @@ from rb_flat_buffers.IPC.Request_ProgramAfter import Request_ProgramAfterT
 from rb_flat_buffers.IPC.Request_ProgramBefore import Request_ProgramBeforeT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
+from rb_sdk.manipulate import RBManipulateSDK
 from rb_zenoh.client import ZenohClient
 
 from .program_schema import (
@@ -44,9 +45,11 @@ from .program_schema import (
     Request_MoveXBRunPD,
     Request_ProgramAfterPD,
     Request_ProgramBeforePD,
+    Request_RelativeMovePD,
 )
 
 zenoh_client = ZenohClient()
+manipulate_sdk = RBManipulateSDK()
 
 
 class ProgramService(BaseService):
@@ -478,3 +481,22 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
+
+    async def call_relative_move(self, *, robot_model: str, request: Request_RelativeMovePD):
+        """
+        [Relative Move 호출]
+        - relative_value: 상대 좌표
+        - reference_value: 기준 좌표
+        - move_type: 이동 타입 (0: move J 계열, 1: move L 계열)
+        - speed: 속도
+        """
+        req_dict = request.model_dump()
+        return await manipulate_sdk.relative_move(
+            robot_model=robot_model,
+            relative_value=req_dict.get("relative_value"),
+            reference_value=req_dict.get("reference_value"),
+            move_type=req_dict.get("move_type"),
+            spd_mode=req_dict.get("speed").get("spd_mode"),
+            spd_vel_para=req_dict.get("speed").get("spd_vel_para"),
+            spd_acc_para=req_dict.get("speed").get("spd_acc_para"),
+        )

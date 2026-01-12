@@ -99,3 +99,18 @@ class Request_MoveXBAddPD(BaseModel):
 
 class Request_MoveXBRunPD(BaseModel):
     running_mode: int
+
+class Request_GetRelativeValuePD(BaseModel):
+    relative_value: MoveInputTarget
+    reference_value: MoveInputTarget
+    move_type: int
+
+class Response_GetRelativeValuePD(BaseModel):
+    calculated_result: int
+    calculated_value: MoveInputTarget
+
+class Request_RelativeMovePD(BaseModel):
+    relative_value: MoveInputTarget
+    reference_value: MoveInputTarget
+    speed: MoveInputSpeed
+    move_type: int
