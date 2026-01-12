@@ -10,7 +10,6 @@
     "packages/rb_resources/src",
     "packages/rb_flow_manager/src",
     "packages/rb_sdk/src",
-    "services/manipulate/app"
   ],
   "exclude": ["**/zenoh/**"]
 }
