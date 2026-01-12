@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Set_Robot_Type import Response_Set_Robot_Type
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,13 +24,6 @@ class Response_Set_Robot_TypeT(object):
   robotType: str | None
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    robotType: str | None = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Set_Robot_TypeT: ...
   @classmethod

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.FileAck import FileAck
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,12 +22,6 @@ class FileAckT(object):
   session: str | None
   index: int
   ok: bool
-  def __init__(
-    self,
-    session: str | None = ...,
-    index: int = ...,
-    ok: bool = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> FileAckT: ...
   @classmethod

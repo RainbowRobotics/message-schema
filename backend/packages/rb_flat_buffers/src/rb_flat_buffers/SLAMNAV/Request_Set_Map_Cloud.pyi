@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Set_Map_Cloud import Request_Set_Map_Cloud
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -27,14 +29,6 @@ class Request_Set_Map_CloudT(object):
   fileName: str | None
   size: int
   data: typing.List[float]
-  def __init__(
-    self,
-    id: str | None = ...,
-    mapName: str | None = ...,
-    fileName: str | None = ...,
-    size: int = ...,
-    data: typing.List[float] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_Map_CloudT: ...
   @classmethod

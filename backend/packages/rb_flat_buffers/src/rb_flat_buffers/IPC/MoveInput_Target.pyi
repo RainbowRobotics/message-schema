@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_f, N_INPUT_fT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -21,12 +23,6 @@ class MoveInput_TargetT(object):
   tarValues: N_INPUT_fT | None
   tarFrame: int
   tarUnit: int
-  def __init__(
-    self,
-    tarValues: 'N_INPUT_fT' | None = ...,
-    tarFrame: int = ...,
-    tarUnit: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> MoveInput_TargetT: ...
   @classmethod

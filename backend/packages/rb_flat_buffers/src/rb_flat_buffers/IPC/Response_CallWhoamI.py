@@ -94,17 +94,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_CallWhoamIT(object):
 
     # Response_CallWhoamIT
-    def __init__(
-        self,
-        category = None,
-        model = None,
-        version = None,
-        alias = None,
-    ):
-        self.category = category  # type: Optional[str]
-        self.model = model  # type: Optional[str]
-        self.version = version  # type: Optional[str]
-        self.alias = alias  # type: Optional[str]
+    def __init__(self):
+        self.category = None  # type: str
+        self.model = None  # type: str
+        self.version = None  # type: str
+        self.alias = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

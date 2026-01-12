@@ -96,13 +96,9 @@ except:
 class Request_Get_Sensor_OffT(object):
 
     # Request_Get_Sensor_OffT
-    def __init__(
-        self,
-        id = None,
-        index = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.index = index  # type: Optional[List[Sensor_InfoT]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.index = None  # type: List[Sensor_InfoT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

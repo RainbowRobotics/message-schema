@@ -55,11 +55,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_StopT(object):
 
     # Request_Move_StopT
-    def __init__(
-        self,
-        id = None,
-    ):
-        self.id = id  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

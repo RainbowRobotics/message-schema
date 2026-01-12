@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Localization_Init import Response_Localization_Init
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -30,17 +32,6 @@ class Response_Localization_InitT(object):
   rz: float
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    command: str | None = ...,
-    x: float = ...,
-    y: float = ...,
-    z: float = ...,
-    rz: float = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Localization_InitT: ...
   @classmethod

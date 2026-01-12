@@ -107,19 +107,12 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Set_Map_CloudT(object):
 
     # Response_Set_Map_CloudT
-    def __init__(
-        self,
-        id = None,
-        mapName = None,
-        fileName = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.mapName = mapName  # type: Optional[str]
-        self.fileName = fileName  # type: Optional[str]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.mapName = None  # type: str
+        self.fileName = None  # type: str
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

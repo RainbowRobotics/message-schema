@@ -120,21 +120,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Move_GoalT(object):
 
     # Response_Move_GoalT
-    def __init__(
-        self,
-        id = None,
-        goalId = None,
-        method = None,
-        preset = 0,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.goalId = goalId  # type: Optional[str]
-        self.method = method  # type: Optional[str]
-        self.preset = preset  # type: int
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.goalId = None  # type: str
+        self.method = None  # type: str
+        self.preset = 0  # type: int
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

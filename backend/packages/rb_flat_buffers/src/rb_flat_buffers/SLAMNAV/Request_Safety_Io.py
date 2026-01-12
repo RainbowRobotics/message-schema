@@ -150,17 +150,11 @@ except:
 class Request_Safety_IoT(object):
 
     # Request_Safety_IoT
-    def __init__(
-        self,
-        id = None,
-        command = None,
-        mcu0Dio = None,
-        mcu1Dio = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.command = command  # type: Optional[str]
-        self.mcu0Dio = mcu0Dio  # type: Optional[List[bool]]
-        self.mcu1Dio = mcu1Dio  # type: Optional[List[bool]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.command = None  # type: str
+        self.mcu0Dio = None  # type: List[bool]
+        self.mcu1Dio = None  # type: List[bool]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

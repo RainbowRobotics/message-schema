@@ -122,17 +122,11 @@ except:
 class Response_Get_Pdu_ParamT(object):
 
     # Response_Get_Pdu_ParamT
-    def __init__(
-        self,
-        id = None,
-        params = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.params = params  # type: Optional[List[Setting_ParamT]]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.params = None  # type: List[Setting_ParamT]
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

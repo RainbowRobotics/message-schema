@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHalt
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -14,9 +16,6 @@ class Request_MotionHalt(object):
   def GetRootAsRequest_MotionHalt(cls, buf: bytes, offset: int) -> Request_MotionHalt: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
 class Request_MotionHaltT(object):
-  def __init__(
-    self,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_MotionHaltT: ...
   @classmethod

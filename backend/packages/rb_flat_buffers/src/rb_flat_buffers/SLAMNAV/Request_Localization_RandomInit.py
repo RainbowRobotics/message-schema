@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Localization_RandomInitT(object):
 
     # Request_Localization_RandomInitT
-    def __init__(
-        self,
-        id = None,
-        randomSeed = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.randomSeed = randomSeed  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.randomSeed = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

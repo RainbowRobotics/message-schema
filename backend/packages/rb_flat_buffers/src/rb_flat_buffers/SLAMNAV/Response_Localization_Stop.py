@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Localization_StopT(object):
 
     # Response_Localization_StopT
-    def __init__(
-        self,
-        id = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

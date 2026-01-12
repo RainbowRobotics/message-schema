@@ -169,21 +169,13 @@ except:
 class NodeT(object):
 
     # NodeT
-    def __init__(
-        self,
-        id = None,
-        name = None,
-        pose = None,
-        info = None,
-        links = None,
-        type = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.name = name  # type: Optional[str]
-        self.pose = pose  # type: Optional[List[float]]
-        self.info = info  # type: Optional[str]
-        self.links = links  # type: Optional[List[Optional[str]]]
-        self.type = type  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.name = None  # type: str
+        self.pose = None  # type: List[float]
+        self.info = None  # type: str
+        self.links = None  # type: List[str]
+        self.type = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

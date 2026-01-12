@@ -117,17 +117,11 @@ except:
 class Response_Map_ListT(object):
 
     # Response_Map_ListT
-    def __init__(
-        self,
-        id = None,
-        list = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.list = list  # type: Optional[List[Optional[str]]]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.list = None  # type: List[str]
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

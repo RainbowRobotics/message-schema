@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Safety_Io import Request_Safety_Io
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -28,13 +30,6 @@ class Request_Safety_IoT(object):
   command: str | None
   mcu0Dio: typing.List[bool]
   mcu1Dio: typing.List[bool]
-  def __init__(
-    self,
-    id: str | None = ...,
-    command: str | None = ...,
-    mcu0Dio: typing.List[bool] | None = ...,
-    mcu1Dio: typing.List[bool] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Safety_IoT: ...
   @classmethod

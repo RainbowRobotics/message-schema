@@ -120,21 +120,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Deploy_ProgressT(object):
 
     # Response_Deploy_ProgressT
-    def __init__(
-        self,
-        swName = None,
-        mode = None,
-        tag = None,
-        percentage = 0,
-        serviceName = None,
-        result = None,
-    ):
-        self.swName = swName  # type: Optional[str]
-        self.mode = mode  # type: Optional[str]
-        self.tag = tag  # type: Optional[str]
-        self.percentage = percentage  # type: int
-        self.serviceName = serviceName  # type: Optional[str]
-        self.result = result  # type: Optional[str]
+    def __init__(self):
+        self.swName = None  # type: str
+        self.mode = None  # type: str
+        self.tag = None  # type: str
+        self.percentage = 0  # type: int
+        self.serviceName = None  # type: str
+        self.result = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

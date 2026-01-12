@@ -137,19 +137,12 @@ except:
 class Request_Set_Map_CloudT(object):
 
     # Request_Set_Map_CloudT
-    def __init__(
-        self,
-        id = None,
-        mapName = None,
-        fileName = None,
-        size = 0,
-        data = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.mapName = mapName  # type: Optional[str]
-        self.fileName = fileName  # type: Optional[str]
-        self.size = size  # type: int
-        self.data = data  # type: Optional[List[float]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.mapName = None  # type: str
+        self.fileName = None  # type: str
+        self.size = 0  # type: int
+        self.data = None  # type: List[float]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

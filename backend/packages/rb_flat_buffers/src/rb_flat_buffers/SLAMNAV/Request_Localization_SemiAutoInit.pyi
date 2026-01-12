@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Localization_SemiAutoInit import Request_Localization_SemiAutoInit
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,10 +18,6 @@ class Request_Localization_SemiAutoInit(object):
   def Id(self) -> str | None: ...
 class Request_Localization_SemiAutoInitT(object):
   id: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Localization_SemiAutoInitT: ...
   @classmethod

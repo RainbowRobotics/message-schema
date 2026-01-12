@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Mat3f import Mat3f
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,10 +20,6 @@ class Mat3f(object):
   def MIsNone(self) -> bool: ...
 class Mat3fT(object):
   m: typing.List[float]
-  def __init__(
-    self,
-    m: typing.List[float] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Mat3fT: ...
   @classmethod

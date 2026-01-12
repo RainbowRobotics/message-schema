@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Move_Jog import Request_Move_Jog
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,12 +22,6 @@ class Request_Move_JogT(object):
   vx: float
   vy: float
   wz: float
-  def __init__(
-    self,
-    vx: float = ...,
-    vy: float = ...,
-    wz: float = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_JogT: ...
   @classmethod

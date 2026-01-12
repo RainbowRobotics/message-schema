@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_UpdateT(object):
 
     # Request_UpdateT
-    def __init__(
-        self,
-        id = None,
-        branch = None,
-        version = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.branch = branch  # type: Optional[str]
-        self.version = version  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.branch = None  # type: str
+        self.version = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

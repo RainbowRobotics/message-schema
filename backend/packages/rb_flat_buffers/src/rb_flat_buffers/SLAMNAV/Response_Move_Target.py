@@ -150,21 +150,13 @@ except:
 class Response_Move_TargetT(object):
 
     # Response_Move_TargetT
-    def __init__(
-        self,
-        id = None,
-        method = None,
-        goalPose = None,
-        preset = 0,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.method = method  # type: Optional[str]
-        self.goalPose = goalPose  # type: Optional[List[float]]
-        self.preset = preset  # type: int
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.method = None  # type: str
+        self.goalPose = None  # type: List[float]
+        self.preset = 0  # type: int
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

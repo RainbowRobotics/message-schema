@@ -163,23 +163,14 @@ except:
 class FileMetaT(object):
 
     # FileMetaT
-    def __init__(
-        self,
-        session = None,
-        name = None,
-        size = 0,
-        mime = None,
-        chunkSize = 0,
-        totalChunks = 0,
-        sha256 = None,
-    ):
-        self.session = session  # type: Optional[str]
-        self.name = name  # type: Optional[str]
-        self.size = size  # type: int
-        self.mime = mime  # type: Optional[str]
-        self.chunkSize = chunkSize  # type: int
-        self.totalChunks = totalChunks  # type: int
-        self.sha256 = sha256  # type: Optional[List[int]]
+    def __init__(self):
+        self.session = None  # type: str
+        self.name = None  # type: str
+        self.size = 0  # type: int
+        self.mime = None  # type: str
+        self.chunkSize = 0  # type: int
+        self.totalChunks = 0  # type: int
+        self.sha256 = None  # type: List[int]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

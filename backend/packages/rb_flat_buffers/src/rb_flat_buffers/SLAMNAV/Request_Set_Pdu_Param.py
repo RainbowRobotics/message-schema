@@ -96,13 +96,9 @@ except:
 class Request_Set_Pdu_ParamT(object):
 
     # Request_Set_Pdu_ParamT
-    def __init__(
-        self,
-        id = None,
-        params = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.params = params  # type: Optional[List[Setting_ParamT]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.params = None  # type: List[Setting_ParamT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

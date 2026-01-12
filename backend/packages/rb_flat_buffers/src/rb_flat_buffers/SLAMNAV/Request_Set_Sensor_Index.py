@@ -109,15 +109,10 @@ except:
 class Request_Set_Sensor_IndexT(object):
 
     # Request_Set_Sensor_IndexT
-    def __init__(
-        self,
-        id = None,
-        target = None,
-        index = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.target = target  # type: Optional[str]
-        self.index = index  # type: Optional[List[Sensor_InfoT]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.target = None  # type: str
+        self.index = None  # type: List[Sensor_InfoT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

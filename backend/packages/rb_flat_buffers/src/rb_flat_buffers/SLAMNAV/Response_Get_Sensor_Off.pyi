@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from rb_flat_buffers.IPC.Sensor_Info import Sensor_Info, Sensor_InfoT
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Get_Sensor_Off import Response_Get_Sensor_Off
 from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_Info, Sensor_InfoT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -26,13 +27,6 @@ class Response_Get_Sensor_OffT(object):
   index: typing.List[Sensor_InfoT]
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    index: typing.List['Sensor_InfoT'] | None = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Get_Sensor_OffT: ...
   @classmethod

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Update import Request_Update
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,12 +22,6 @@ class Request_UpdateT(object):
   id: str | None
   branch: str | None
   version: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    branch: str | None = ...,
-    version: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_UpdateT: ...
   @classmethod

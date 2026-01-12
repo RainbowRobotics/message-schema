@@ -55,11 +55,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Random_SequenceT(object):
 
     # Request_Random_SequenceT
-    def __init__(
-        self,
-        id = None,
-    ):
-        self.id = id  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

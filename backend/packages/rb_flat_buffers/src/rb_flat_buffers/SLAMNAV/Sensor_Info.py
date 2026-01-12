@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Sensor_InfoT(object):
 
     # Sensor_InfoT
-    def __init__(
-        self,
-        id = 0,
-        serial = None,
-    ):
-        self.id = id  # type: int
-        self.serial = serial  # type: Optional[str]
+    def __init__(self):
+        self.id = 0  # type: int
+        self.serial = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

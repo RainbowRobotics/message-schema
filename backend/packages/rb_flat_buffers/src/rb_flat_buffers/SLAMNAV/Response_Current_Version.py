@@ -94,17 +94,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Current_VersionT(object):
 
     # Response_Current_VersionT
-    def __init__(
-        self,
-        id = None,
-        version = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.version = version  # type: Optional[str]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.version = None  # type: str
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

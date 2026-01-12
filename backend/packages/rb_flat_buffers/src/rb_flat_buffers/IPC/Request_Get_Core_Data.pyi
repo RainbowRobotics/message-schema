@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Get_Core_Data import Request_Get_Core_Data
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,11 +20,6 @@ class Request_Get_Core_Data(object):
 class Request_Get_Core_DataT(object):
   option: int
   name: str | None
-  def __init__(
-    self,
-    option: int = ...,
-    name: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Get_Core_DataT: ...
   @classmethod

@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Mapping_SaveT(object):
 
     # Request_Mapping_SaveT
-    def __init__(
-        self,
-        id = None,
-        mapName = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.mapName = mapName  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.mapName = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

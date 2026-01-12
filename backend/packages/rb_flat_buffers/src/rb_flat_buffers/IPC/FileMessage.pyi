@@ -3,9 +3,11 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.IPC.FileAck import FileAckT
 from rb_flat_buffers.IPC.FileChunk import FileChunkT
+from rb_flat_buffers.IPC.FileMessage import FileMessage
 from rb_flat_buffers.IPC.FileMeta import FileMetaT
 from rb_flat_buffers.IPC.FilePayload import FilePayload
 from rb_flat_buffers.IPC.FileRequest import FileRequestT
@@ -24,11 +26,6 @@ class FileMessage(object):
 class FileMessageT(object):
   payloadType: typing.Literal[FilePayload.NONE, FilePayload.FileMeta, FilePayload.FileChunk, FilePayload.FileAck, FilePayload.FileRequest]
   payload: typing.Union[None, FileMetaT, FileChunkT, FileAckT, FileRequestT]
-  def __init__(
-    self,
-    payloadType: typing.Literal[FilePayload.NONE, FilePayload.FileMeta, FilePayload.FileChunk, FilePayload.FileAck, FilePayload.FileRequest] = ...,
-    payload: typing.Union[None, FileMetaT, FileChunkT, FileAckT, FileRequestT] = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> FileMessageT: ...
   @classmethod

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Current_Version import Response_Current_Version
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,13 +24,6 @@ class Response_Current_VersionT(object):
   version: str | None
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    version: str | None = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Current_VersionT: ...
   @classmethod

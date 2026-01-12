@@ -130,19 +130,12 @@ except:
 class MoveStatusT(object):
 
     # MoveStatusT
-    def __init__(
-        self,
-        moveState = None,
-        pose = None,
-        vel = None,
-        goalNode = None,
-        curNode = None,
-    ):
-        self.moveState = moveState  # type: Optional[MoveStatus_Move_StateT]
-        self.pose = pose  # type: Optional[MoveStatus_PoseT]
-        self.vel = vel  # type: Optional[MoveStatus_VelT]
-        self.goalNode = goalNode  # type: Optional[MoveStatus_NodeT]
-        self.curNode = curNode  # type: Optional[MoveStatus_NodeT]
+    def __init__(self):
+        self.moveState = None  # type: Optional[MoveStatus_Move_StateT]
+        self.pose = None  # type: Optional[MoveStatus_PoseT]
+        self.vel = None  # type: Optional[MoveStatus_VelT]
+        self.goalNode = None  # type: Optional[MoveStatus_NodeT]
+        self.curNode = None  # type: Optional[MoveStatus_NodeT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

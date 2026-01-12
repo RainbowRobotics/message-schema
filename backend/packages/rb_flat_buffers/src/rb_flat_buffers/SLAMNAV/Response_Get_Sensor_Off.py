@@ -122,17 +122,11 @@ except:
 class Response_Get_Sensor_OffT(object):
 
     # Response_Get_Sensor_OffT
-    def __init__(
-        self,
-        id = None,
-        index = None,
-        result = None,
-        message = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.index = index  # type: Optional[List[Sensor_InfoT]]
-        self.result = result  # type: Optional[str]
-        self.message = message  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.index = None  # type: List[Sensor_InfoT]
+        self.result = None  # type: str
+        self.message = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

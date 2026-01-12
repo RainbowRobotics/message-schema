@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Setting_ParamT(object):
 
     # Setting_ParamT
-    def __init__(
-        self,
-        key = None,
-        type = None,
-        value = None,
-    ):
-        self.key = key  # type: Optional[str]
-        self.type = type  # type: Optional[str]
-        self.value = value  # type: Optional[str]
+    def __init__(self):
+        self.key = None  # type: str
+        self.type = None  # type: str
+        self.value = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Get_Map_Tiles import Response_Get_Map_Tiles
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -14,9 +16,6 @@ class Response_Get_Map_Tiles(object):
   def GetRootAsResponse_Get_Map_Tiles(cls, buf: bytes, offset: int) -> Response_Get_Map_Tiles: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
 class Response_Get_Map_TilesT(object):
-  def __init__(
-    self,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Get_Map_TilesT: ...
   @classmethod

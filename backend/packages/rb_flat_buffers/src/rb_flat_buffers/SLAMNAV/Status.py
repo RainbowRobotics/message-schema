@@ -198,27 +198,16 @@ except:
 class StatusT(object):
 
     # StatusT
-    def __init__(
-        self,
-        imu = None,
-        motor0 = None,
-        motor1 = None,
-        condition = None,
-        robotState = None,
-        robotSafetyIoState = None,
-        power = None,
-        setting = None,
-        map = None,
-    ):
-        self.imu = imu  # type: Optional[Status_ImuT]
-        self.motor0 = motor0  # type: Optional[Status_MotorT]
-        self.motor1 = motor1  # type: Optional[Status_MotorT]
-        self.condition = condition  # type: Optional[Status_ConditionT]
-        self.robotState = robotState  # type: Optional[Status_Robot_StateT]
-        self.robotSafetyIoState = robotSafetyIoState  # type: Optional[Status_Robot_Safety_Io_StateT]
-        self.power = power  # type: Optional[Status_PowerT]
-        self.setting = setting  # type: Optional[Status_SettingT]
-        self.map = map  # type: Optional[Status_MapT]
+    def __init__(self):
+        self.imu = None  # type: Optional[Status_ImuT]
+        self.motor0 = None  # type: Optional[Status_MotorT]
+        self.motor1 = None  # type: Optional[Status_MotorT]
+        self.condition = None  # type: Optional[Status_ConditionT]
+        self.robotState = None  # type: Optional[Status_Robot_StateT]
+        self.robotSafetyIoState = None  # type: Optional[Status_Robot_Safety_Io_StateT]
+        self.power = None  # type: Optional[Status_PowerT]
+        self.setting = None  # type: Optional[Status_SettingT]
+        self.map = None  # type: Optional[Status_MapT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

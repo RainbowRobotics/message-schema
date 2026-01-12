@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_Robot_TypeT(object):
 
     # Request_Set_Robot_TypeT
-    def __init__(
-        self,
-        id = None,
-        robotType = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.robotType = robotType  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.robotType = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

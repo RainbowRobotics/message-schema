@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Control_MotorT(object):
 
     # Request_Control_MotorT
-    def __init__(
-        self,
-        id = None,
-        onoff = False,
-    ):
-        self.id = id  # type: Optional[str]
-        self.onoff = onoff  # type: bool
+    def __init__(self):
+        self.id = None  # type: str
+        self.onoff = False  # type: bool
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

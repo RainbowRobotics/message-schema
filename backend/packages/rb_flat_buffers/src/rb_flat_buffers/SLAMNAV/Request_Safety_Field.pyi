@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Request_Safety_Field import Request_Safety_Field
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,12 +22,6 @@ class Request_Safety_FieldT(object):
   id: str | None
   command: str | None
   safetyField: int
-  def __init__(
-    self,
-    id: str | None = ...,
-    command: str | None = ...,
-    safetyField: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Safety_FieldT: ...
   @classmethod

@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Status_Condition import Status_Condition
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,13 +24,6 @@ class Status_ConditionT(object):
   inlierRatio: float
   mappingError: float
   mappingRatio: float
-  def __init__(
-    self,
-    inlierError: float = ...,
-    inlierRatio: float = ...,
-    mappingError: float = ...,
-    mappingRatio: float = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_ConditionT: ...
   @classmethod

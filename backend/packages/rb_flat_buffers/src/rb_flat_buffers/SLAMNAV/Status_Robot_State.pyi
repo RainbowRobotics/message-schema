@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Status_Robot_State import Status_Robot_State
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -24,14 +26,6 @@ class Status_Robot_StateT(object):
   emo: bool
   localization: str | None
   power: bool
-  def __init__(
-    self,
-    charge: str | None = ...,
-    dock: bool = ...,
-    emo: bool = ...,
-    localization: str | None = ...,
-    power: bool = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Status_Robot_StateT: ...
   @classmethod

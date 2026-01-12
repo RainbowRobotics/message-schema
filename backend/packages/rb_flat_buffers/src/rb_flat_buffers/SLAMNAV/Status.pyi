@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Status import Status
 from rb_flat_buffers.SLAMNAV.Status_Condition import Status_Condition, Status_ConditionT
 from rb_flat_buffers.SLAMNAV.Status_Imu import Status_Imu, Status_ImuT
 from rb_flat_buffers.SLAMNAV.Status_Map import Status_Map, Status_MapT
@@ -40,18 +42,6 @@ class StatusT(object):
   power: Status_PowerT | None
   setting: Status_SettingT | None
   map: Status_MapT | None
-  def __init__(
-    self,
-    imu: 'Status_ImuT' | None = ...,
-    motor0: 'Status_MotorT' | None = ...,
-    motor1: 'Status_MotorT' | None = ...,
-    condition: 'Status_ConditionT' | None = ...,
-    robotState: 'Status_Robot_StateT' | None = ...,
-    robotSafetyIoState: 'Status_Robot_Safety_Io_StateT' | None = ...,
-    power: 'Status_PowerT' | None = ...,
-    setting: 'Status_SettingT' | None = ...,
-    map: 'Status_MapT' | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> StatusT: ...
   @classmethod

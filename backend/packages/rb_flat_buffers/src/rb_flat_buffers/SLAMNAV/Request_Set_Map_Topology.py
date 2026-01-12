@@ -109,15 +109,10 @@ except:
 class Request_Set_Map_TopologyT(object):
 
     # Request_Set_Map_TopologyT
-    def __init__(
-        self,
-        id = None,
-        mapName = None,
-        data = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.mapName = mapName  # type: Optional[str]
-        self.data = data  # type: Optional[List[NodeT]]
+    def __init__(self):
+        self.id = None  # type: str
+        self.mapName = None  # type: str
+        self.data = None  # type: List[NodeT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Get_Map_FileT(object):
 
     # Request_Get_Map_FileT
-    def __init__(
-        self,
-        id = None,
-        mapName = None,
-        fileName = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.mapName = mapName  # type: Optional[str]
-        self.fileName = fileName  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.mapName = None  # type: str
+        self.fileName = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

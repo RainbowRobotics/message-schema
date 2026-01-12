@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_DockT(object):
 
     # Request_DockT
-    def __init__(
-        self,
-        id = None,
-        command = None,
-    ):
-        self.id = id  # type: Optional[str]
-        self.command = command  # type: Optional[str]
+    def __init__(self):
+        self.id = None  # type: str
+        self.command = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

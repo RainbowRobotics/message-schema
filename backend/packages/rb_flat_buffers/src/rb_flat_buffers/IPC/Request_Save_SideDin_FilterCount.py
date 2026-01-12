@@ -67,13 +67,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_SideDin_FilterCountT(object):
 
     # Request_Save_SideDin_FilterCountT
-    def __init__(
-        self,
-        portNum = 0,
-        desiredCount = 0,
-    ):
-        self.portNum = portNum  # type: int
-        self.desiredCount = desiredCount  # type: int
+    def __init__(self):
+        self.portNum = 0  # type: int
+        self.desiredCount = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

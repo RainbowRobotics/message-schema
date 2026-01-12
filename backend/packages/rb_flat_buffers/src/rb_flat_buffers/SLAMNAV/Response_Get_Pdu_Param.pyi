@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from rb_flat_buffers.IPC.Setting_Param import Setting_Param, Setting_ParamT
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Response_Get_Pdu_Param import Response_Get_Pdu_Param
 from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_Param, Setting_ParamT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -26,13 +27,6 @@ class Response_Get_Pdu_ParamT(object):
   params: typing.List[Setting_ParamT]
   result: str | None
   message: str | None
-  def __init__(
-    self,
-    id: str | None = ...,
-    params: typing.List['Setting_ParamT'] | None = ...,
-    result: str | None = ...,
-    message: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Get_Pdu_ParamT: ...
   @classmethod

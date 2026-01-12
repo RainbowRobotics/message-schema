@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_Info
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,11 +20,6 @@ class Sensor_Info(object):
 class Sensor_InfoT(object):
   id: int
   serial: str | None
-  def __init__(
-    self,
-    id: int = ...,
-    serial: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Sensor_InfoT: ...
   @classmethod
