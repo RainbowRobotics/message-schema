@@ -937,7 +937,6 @@ void LOCALIZATION::ekf_loop_3d()
 
     bool is_use_lidar_3d = false;
 
-    //printf("[LOCALIZATION] ekf_loop_3d start\n");
     spdlog::info("[LOCALIZATION] ekf_loop_3d start");
     while(ekf_flag)
     {
@@ -950,9 +949,6 @@ void LOCALIZATION::ekf_loop_3d()
 
         Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
 
-        // i think
-        // Need to separate into another thread.
-        // then, interpolate odom.
         TIME_PTS frm;
         if(lidar_3d->try_pop_merged_queue(frm))
         {
@@ -964,10 +960,7 @@ void LOCALIZATION::ekf_loop_3d()
 
             // icp
             std::vector<Eigen::Vector3d> dsk = frm.pts;
-            // i think
-            // can i add "cal_ieir" in map icp???
-            // and return global pts
-            double err = map_icp(dsk, G); 
+            double err = map_icp(dsk, G);
 
             // check ieir
             cur_ieir = calc_ieir(dsk, G);
@@ -982,7 +975,20 @@ void LOCALIZATION::ekf_loop_3d()
                 }
                 else
                 {
-                    ekf_3d.estimate(G, cur_ieir);
+                    // slip detection (compare EKF prediction with ICP result)
+                    Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
+                    Eigen::Vector2d dtdr = dTdR(ekf_tf, G);
+
+                    if(std::abs(dtdr[1]) > 10.0 * D2R)
+                    {
+                        // slip detected
+                        log_warn("ekf_loop(3d) slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
+                        ekf_3d.init(G);
+                    }
+                    else
+                    {
+                        ekf_3d.estimate(G, cur_ieir);
+                    }
                 }
                 G = ekf_3d.get_cur_tf();
 
@@ -1006,6 +1012,10 @@ void LOCALIZATION::ekf_loop_3d()
 
             // for speed
             lidar_3d->clear_merged_queue();
+
+            // debug
+            // log_info("frm.t: {:.3f}, cur_mo.t: {:.3f}, diff: {:.3f}", get_time()-frm.t, get_time()-cur_mo.t, frm.t - cur_mo.t);
+
         }
 
         // update
@@ -1023,7 +1033,7 @@ void LOCALIZATION::ekf_loop_3d()
         {
             if(is_use_lidar_3d)
             {
-                if(delta_loop_time > 0.1)
+                if(delta_loop_time > 0.2)
                 {
                     log_warn("ekf_loop(3d) time drift, dt: {}, method: lidar", delta_loop_time);
                 }
@@ -1461,18 +1471,13 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
     const double max_feature_num = config->get_loc_3d_icp_max_feature_num();
     const double cost_threshold = config->get_loc_2d_icp_cost_threshold();
 
-    const int num_feature = std::min<int>(idx_list.size(), max_feature_num);
-    static std::random_device rd;
-
     // loop
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
     {
-        // // shuffle
-        // std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
-        static std::mt19937 gen(rd());
-        std::shuffle(idx_list.begin(), idx_list.end(), gen);
-        
+        // shuffle
+        std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
+        const int num_feature = std::min<int>(idx_list.size(), max_feature_num);
         std::vector<int> surfel_cnt(3,0);
 
         // calc cost jacobian
@@ -1672,8 +1677,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
 
         // for rmt
         tm0 = tm1;
-        // tm1 = (_G.block(0,3,3,1).norm() + _G.block(0,3,3,1).norm())/2;
-        tm1 = _G.block(0,3,3,1).norm();
+        tm1 = (_G.block(0,3,3,1).norm() + _G.block(0,3,3,1).norm())/2;
 
         // convergence check
         convergence = X.cwiseAbs().maxCoeff();

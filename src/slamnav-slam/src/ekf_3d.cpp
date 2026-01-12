@@ -237,7 +237,6 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ie
     double d2 = llt.matrixL().solve(y_k).squaredNorm();
     if(d2 > 16.81)
     {
-        std::printf("[EKF_3D] ICP rejected, mahalanobis=%.2f\n", d2);
         spdlog::warn("[EKF_3D] ICP rejected, mahalanobis={:.2f}", d2);
         return;
     }
