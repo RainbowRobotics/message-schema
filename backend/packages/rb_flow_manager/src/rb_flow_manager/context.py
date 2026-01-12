@@ -92,7 +92,13 @@ class ExecutionContext:
             if category == "manipulate":
                 fn = self.sdk_functions.get("rb_manipulate_sdk.get_variable")
 
-                return fn(robot_model, var_name) if fn is not None else None
+                res = fn(robot_model, var_name) if fn is not None else None
+
+                self.update_global_variables({
+                    var_name: res
+                })
+
+                return res
         except Exception as e:
             print(f"[{self.process_id}] Error getting global variable: {e}", flush=True)
             return None
