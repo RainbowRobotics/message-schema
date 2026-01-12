@@ -39,3 +39,14 @@ class MultipleSideAoutArg(TypedDict):
 class ResponseCamelReturnValue(TypedDict):
     """Response Return Value"""
     returnValue: int
+
+class MoveInputTargetSchema(TypedDict):
+    """Move Input Target 딕셔너리"""
+    tar_values: list[float]
+    tar_frame: int
+    tar_unit: int
+
+class ResponseGetRelativeValueSchema(TypedDict):
+    """Response Get Relative Value 딕셔너리"""
+    calculated_result: int
+    calculated_value: MoveInputTargetSchema

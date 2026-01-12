@@ -5,6 +5,7 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.Request_Get_Core_Data import Request_Get_Core_DataT
+from rb_flat_buffers.IPC.Request_Get_Relative_Value import Request_Get_Relative_ValueT
 from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
@@ -19,13 +20,16 @@ from rb_flat_buffers.IPC.Request_SideDout_Pulse import Request_SideDout_PulseT
 from rb_flat_buffers.IPC.Request_SideDout_Toggle import Request_SideDout_ToggleT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_DataT
+from rb_flat_buffers.IPC.Response_Get_Relative_Value import Response_Get_Relative_ValueT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.parser import to_json
 
 from .base import RBBaseSDK
 from .schema.manipulate_schema import (
+    MoveInputTargetSchema,
     ResponseCamelReturnValue,
+    ResponseGetRelativeValueSchema,
     SideAoutArg,
     SideDoutArg,
     SideDoutBitcombinationArg,
@@ -187,7 +191,7 @@ class RBManipulateSDK(RBBaseSDK):
         #             print("Exception >>", e, flush=True)
         #             raise RuntimeError(e) from e
 
-    async def call_smoothjog_stop(
+    def call_smoothjog_stop(
         self,
         *,
         robot_model: str,
@@ -209,7 +213,7 @@ class RBManipulateSDK(RBBaseSDK):
 
         return res["dict_payload"]
 
-    async def move_finish_at_stop(
+    def move_finish_at_stop(
         self,
         *,
         robot_model: str,
@@ -239,7 +243,7 @@ class RBManipulateSDK(RBBaseSDK):
             if not isinstance(parsed_stop_time, float | int):
                 raise ValueError("stop_time must be a number")
 
-            await self.call_smoothjog_stop(robot_model=robot_model, stop_time=parsed_stop_time)
+            self.call_smoothjog_stop(robot_model=robot_model, stop_time=parsed_stop_time)
 
             if flow_manager_args is not None:
                 flow_manager_args.done()
@@ -339,8 +343,10 @@ class RBManipulateSDK(RBBaseSDK):
                         if is_break:
                             if variable_name is not None and obj is not None:
                                 flow_manager_args.ctx.update_local_variables({
-                                    variable_name: obj.get("jointQRef", {}).get("f", [])
+                                    variable_name: obj.get("carteXRef", {}).get("f", [])
                                 })
+                                print(f"variable_name: {variable_name}", flush=True)
+                                print(f"obj: {obj.get("carteXRef", {}).get("f", [])}", flush=True)
 
                             flow_manager_args.done()
                             break
@@ -448,6 +454,9 @@ class RBManipulateSDK(RBBaseSDK):
                                 variable_name: obj.get("carteXRef", {}).get("f", [])
                             })
 
+                            print(f"variable_name: {variable_name}", flush=True)
+                            print(f"obj: {obj.get("carteXRef", {}).get("f", [])}", flush=True)
+
                         flow_manager_args.done()
                         break
                 except asyncio.CancelledError:
@@ -496,6 +505,8 @@ class RBManipulateSDK(RBBaseSDK):
         *,
         robot_model: str,
         move_type: Literal["J", "L", "JB", "LB"],
+        input_method: int = 0,
+        tar_frame_reference_point: list[int | float] | None = None,
         pnt_para: int | None = None,
         pnt_type: int | None = None,
         tar_frame: int,
@@ -505,6 +516,7 @@ class RBManipulateSDK(RBBaseSDK):
         spd_vel_para: float,
         spd_acc_para: float,
         tcp_num: int = -1,
+        variable_name: str | None = None,
         finish_at: bool | None = None,
         stop_time: float | int | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
@@ -514,6 +526,7 @@ class RBManipulateSDK(RBBaseSDK):
         Args:
             robot_model: 로봇 모델명
             move_type: 이동 타입 (J: Joint Space, L: Linear Space, JB: Joint Block, LB: Linear Block)
+            input_method: 입력 방식 (0: 직접 입력, 1: 상대 좌표 입력)
             pnt_para: 포인트타입 (0: 직선포인트, 1: %기반 블랜드포인트, 2: 거리기반 블랜드포인트)
             pnt_type: 블랜드 파라미터 (%기반 블랜드포인트나 거리기반 블랜드포인트을 위한 파라미터)
             tar_frame: 기준 좌표계 (-1: Joint Space, 0: Global Frame, 1: Tool Frame, 2: User Frame, 3: Target Frame)
@@ -523,6 +536,7 @@ class RBManipulateSDK(RBBaseSDK):
             spd_vel_para: 속도
             spd_acc_para: 가속도
             tcp_num: TCP 번호 (-1: 기본값)
+            variable_name: 변수 이름
             finish_at: 이동 정지 여부
             stop_time: 이동 정지까지 시간
             flow_manager_args: Flow Manager 인자 (done 콜백 등)
@@ -531,7 +545,24 @@ class RBManipulateSDK(RBBaseSDK):
         if tcp_num != -1:
             self.set_toolist_num(robot_model=robot_model, tool_num=tcp_num)
 
-        if move_type == "J":
+        if input_method == 1:
+            if tar_frame_reference_point is None:
+                raise RuntimeError("tar_frame_reference_point is required for relative move")
+
+            await self.relative_move(
+                robot_model=robot_model,
+                relative_value={"tar_values": tar_values, "tar_frame": tar_frame, "tar_unit": tar_unit},
+                reference_value={"tar_values": tar_frame_reference_point, "tar_frame": 0, "tar_unit": 0},
+                move_type=1 if move_type.startswith("L") else 0,
+                spd_mode=spd_mode,
+                spd_vel_para=spd_vel_para,
+                spd_acc_para=spd_acc_para,
+                finish_at=finish_at,
+                stop_time=stop_time,
+                flow_manager_args=flow_manager_args,
+            )
+
+        elif move_type == "J":
             await self.move_j(
                 robot_model=robot_model,
                 tar_values=tar_values,
@@ -540,6 +571,7 @@ class RBManipulateSDK(RBBaseSDK):
                 spd_mode=spd_mode,
                 spd_vel_para=spd_vel_para,
                 spd_acc_para=spd_acc_para,
+                variable_name=variable_name,
                 finish_at=finish_at,
                 stop_time=stop_time,
                 flow_manager_args=flow_manager_args,
@@ -553,6 +585,7 @@ class RBManipulateSDK(RBBaseSDK):
                 spd_mode=spd_mode,
                 spd_vel_para=spd_vel_para,
                 spd_acc_para=spd_acc_para,
+                variable_name=variable_name,
                 finish_at=finish_at,
                 stop_time=stop_time,
                 flow_manager_args=flow_manager_args,
@@ -587,6 +620,140 @@ class RBManipulateSDK(RBBaseSDK):
                 spd_mode=spd_mode,
                 spd_vel_para=spd_vel_para,
                 spd_acc_para=spd_acc_para,
+                flow_manager_args=flow_manager_args,
+            )
+
+    def get_relative_value(
+        self,
+        *,
+        robot_model: str,
+        relative_value: MoveInputTargetSchema,
+        reference_value: MoveInputTargetSchema,
+        move_type: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ) -> ResponseGetRelativeValueSchema:
+        """
+        [Get Relative Value 호출]
+        - relative_value: 상대 좌표
+        - reference_value: 기준 좌표
+        - move_type: 이동 타입 (0: move J 계열, 1: move L 계열)
+        - flow_manager_args: Flow Manager 인자 (done 콜백 등)
+        - ResponseGetRelativeValueSchema dictionary 반환
+        """
+
+        print(f"relative_value: {relative_value}", flush=True)
+        print(f"reference_value: {reference_value}", flush=True)
+        print(f"move_type: {move_type}", flush=True)
+
+        req_relative_move_input_target = MoveInput_TargetT()
+        req_relative_move_input_target.tarValues = N_INPUT_fT()
+        req_relative_move_input_target.tarValues.f = relative_value["tar_values"]
+        req_relative_move_input_target.tarFrame = relative_value["tar_frame"]
+        req_relative_move_input_target.tarUnit = relative_value["tar_unit"]
+
+        req_reference_move_input_target = MoveInput_TargetT()
+        req_reference_move_input_target.tarValues = N_INPUT_fT()
+        req_reference_move_input_target.tarValues.f = reference_value["tar_values"][:7]
+        req_reference_move_input_target.tarFrame = reference_value["tar_frame"]
+        req_reference_move_input_target.tarUnit = reference_value["tar_unit"]
+
+        req_get_relative_value = Request_Get_Relative_ValueT()
+        req_get_relative_value.relativeValue = req_relative_move_input_target
+        req_get_relative_value.referenceValue = req_reference_move_input_target
+        req_get_relative_value.moveType = move_type
+
+        res_get_relative_value = self.zenoh_client.query_one(
+            f"{robot_model}/get_relative_value",
+            flatbuffer_req_obj=req_get_relative_value,
+            flatbuffer_res_T_class=Response_Get_Relative_ValueT,
+            flatbuffer_buf_size=256,
+        )
+
+        res_get_relative_value_dict = res_get_relative_value.get("dict_payload")
+
+        if res_get_relative_value_dict is None:
+            raise RuntimeError("Get Relative Value failed: dict_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+
+
+
+        return ResponseGetRelativeValueSchema(
+            calculated_result=res_get_relative_value_dict.get("calculatedResult"),
+            calculated_value=MoveInputTargetSchema(
+                tar_values=res_get_relative_value_dict.get("calculatedValue").get("tarValues").get("f"),
+                tar_frame=res_get_relative_value_dict.get("calculatedValue").get("tarFrame"),
+                tar_unit=res_get_relative_value_dict.get("calculatedValue").get("tarUnit"),
+            ),
+        )
+
+
+    async def relative_move(
+        self,
+        *,
+        robot_model: str,
+        relative_value: MoveInputTargetSchema,
+        reference_value: MoveInputTargetSchema,
+        move_type: int,
+        spd_mode: int | None = None,
+        spd_vel_para: float | None = None,
+        spd_acc_para: float | None = None,
+        finish_at: bool | None = None,
+        stop_time: float | int | None = None,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """
+        [Relative Move 호출]
+        - relative_value: 상대 좌표
+        - reference_value: 기준 좌표
+        - move_type: 이동 타입 (0: move J 계열, 1: move L 계열)
+        - spd_mode: 속도 측정 설정 방식 (0: %기반 설정, 1: 절대값(물리값))
+        - spd_vel_para: 속도
+        - spd_acc_para: 가속도
+        - finish_at: 이동 정지 여부
+        - stop_time: 이동 정지까지 시간
+        - variable_name: 변수 이름
+        - flow_manager_args: Flow Manager 인자 (done 콜백 등)
+        """
+
+        res_get_relative_value = self.get_relative_value(
+            robot_model=robot_model,
+            relative_value=relative_value,
+            reference_value=reference_value,
+            move_type=move_type,
+        )
+
+        if res_get_relative_value["calculated_result"] != 0:
+            raise RuntimeError(f"Relative move value getting failed: calculated_result={res_get_relative_value['calculated_result']}")
+
+        calculated_value = res_get_relative_value["calculated_value"]
+
+        if move_type == 0:
+            return await self.move_j(
+                robot_model=robot_model,
+                tar_values=calculated_value["tar_values"],
+                tar_frame=calculated_value["tar_frame"],
+                tar_unit=calculated_value["tar_unit"],
+                spd_mode=spd_mode,
+                spd_vel_para=spd_vel_para,
+                spd_acc_para=spd_acc_para,
+                finish_at=finish_at,
+                stop_time=stop_time,
+                flow_manager_args=flow_manager_args,
+            )
+        elif move_type == 1:
+            return await self.move_l(
+                robot_model=robot_model,
+                tar_values=calculated_value["tar_values"],
+                tar_frame=calculated_value["tar_frame"],
+                tar_unit=calculated_value["tar_unit"],
+                spd_mode=spd_mode,
+                spd_vel_para=spd_vel_para,
+                spd_acc_para=spd_acc_para,
+                finish_at=finish_at,
+                stop_time=stop_time,
                 flow_manager_args=flow_manager_args,
             )
 
