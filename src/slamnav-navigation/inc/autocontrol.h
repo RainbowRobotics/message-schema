@@ -26,312 +26,312 @@
 
 enum class CommandType
 {
-    NONE,
-    REQ_CHANGE_GOAL,
-    MOVE,
-    UPDATE_PATH,
+  NONE,
+  REQ_CHANGE_GOAL,
+  MOVE,
+  UPDATE_PATH,
 };
 
 enum class DriveMethod
 {
-    METHOD_PP,
-    METHOD_HPP,
-    METHOD_SIDE
+  METHOD_PP,
+  METHOD_HPP,
+  METHOD_SIDE
 };
 
 struct RAW_PATH_INFO
 {
-    int _global_preset;
-    long long _global_path_time;
-    std::vector<int> _global_step;
-    std::vector<QString> _global_node_path;
+  int _global_preset;
+  long long _global_path_time;
+  std::vector<int> _global_step;
+  std::vector<QString> _global_node_path;
 };
 
 struct AUTOCONTROL_INFO
 {
-    static constexpr int control_loop_cnt = 20;
-    static constexpr int path_overlap_check_dist = 20;
-    static constexpr double local_path_calc_dt = 0.1;
-    static constexpr double avoid_path_check_idx = 0.9;
-    static constexpr double path_overlap_check_deg = 30.0;
-    static constexpr double dynamic_deadzone_safety_margin = 0.0;
-    static constexpr double obstacle_near_check_dist = 2.5;
-    static constexpr double dynamic_deadzone_release_rate = 0.05;
-    static constexpr double obs_decel_recover_rate = 0.1;
+  static constexpr int control_loop_cnt = 20;
+  static constexpr int path_overlap_check_dist = 20;
+  static constexpr double local_path_calc_dt = 0.1;
+  static constexpr double avoid_path_check_idx = 0.9;
+  static constexpr double path_overlap_check_deg = 30.0;
+  static constexpr double dynamic_deadzone_safety_margin = 0.0;
+  static constexpr double obstacle_near_check_dist = 2.5;
+  static constexpr double dynamic_deadzone_release_rate = 0.05;
+  static constexpr double obs_decel_recover_rate = 0.1;
 
-    static constexpr double local_path_step = 0.01;
-    static constexpr double global_path_step = 0.1;
+  static constexpr double local_path_step = 0.01;
+  static constexpr double global_path_step = 0.1;
 };
 
 class AUTOCONTROL : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(AUTOCONTROL)
+  Q_OBJECT
+  Q_DISABLE_COPY(AUTOCONTROL)
 
 public:
-    // make singleton
-    static AUTOCONTROL* instance(QObject* parent = nullptr);
+  // make singleton
+  static AUTOCONTROL* instance(QObject* parent = nullptr);
 
-    // init control module
-    void init();
+  // init control module
+  void init();
 
-    void stop_control_thread();
-    void stop_obs_thread();
+  void stop_control_thread();
+  void stop_obs_thread();
 
-    /***********************
-     * interface funcs
-     ***********************/
-    int get_fsm_state();                            // get the current Finit State Machine state
-    int get_last_step();
-    bool get_is_debug();                            // check if debug
-    bool get_is_pause();                            // check if paused
-    bool get_is_moving();                           // check if moving
-    PATH get_cur_global_path();                     // get current global path
-    PATH get_cur_local_path();                      // get the current local path
-    double get_obs_dist();                          // get current obstacle far dist (1m, 2m)
-    double get_process_time_control();              // get control loop processing time
-    double get_process_time_node();                 // get node loop processing time
-    double get_process_time_obs();                  // get obs loop processing time
-    double get_cur_deadzone();                      // get current deadzone value
-    QString get_auto_state();                       // get the current auto request state (stop, move, pause, good, vir, not ready, error)
-    QString get_cur_node_id();                      // get current node id
-    QString get_obs_condition();                    // get current obstacle condition (none, near, far, vir)
-    QString get_cur_move_state();                   // get the current move state (none, move, complete, fail, obstacle, cancel)
-    QString get_multi_reqest_state();               // get current multi request state (none, req_path, recv_path)
-    DATA_MOVE get_cur_move_info();                  // get last received move msg
-    QString get_global_path_time();
-    CTRL_PARAM get_cur_ctrl_params();
-    Eigen::Vector3d get_last_cur_pos();             // get last current pos
-    Eigen::Vector3d get_last_tgt_pos();             // get last target pos
-    Eigen::Vector3d get_last_local_goal();          // get last local goal
-    std::vector<Eigen::Matrix4d> get_obs_traj();
-    std::vector<int> get_global_step();
-    std::pair<QString, int> get_path_time_and_step();
+  /***********************
+   * interface funcs
+   ***********************/
+  int get_fsm_state();              // get the current Finit State Machine state
+  int get_last_step();
+  bool get_is_debug();              // check if debug
+  bool get_is_pause();              // check if paused
+  bool get_is_moving();             // check if moving
+  PATH get_cur_global_path();           // get current global path
+  PATH get_cur_local_path();            // get the current local path
+  double get_obs_dist();              // get current obstacle far dist (1m, 2m)
+  double get_process_time_control();        // get control loop processing time
+  double get_process_time_node();         // get node loop processing time
+  double get_process_time_obs();          // get obs loop processing time
+  double get_cur_deadzone();            // get current deadzone value
+  QString get_auto_state();           // get the current auto request state (stop, move, pause, good, vir, not ready, error)
+  QString get_cur_node_id();            // get current node id
+  QString get_obs_condition();          // get current obstacle condition (none, near, far, vir)
+  QString get_cur_move_state();         // get the current move state (none, move, complete, fail, obstacle, cancel)
+  QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
+  DATA_MOVE get_cur_move_info();          // get last received move msg
+  QString get_global_path_time();
+  CTRL_PARAM get_cur_ctrl_params();
+  Eigen::Vector3d get_last_cur_pos();       // get last current pos
+  Eigen::Vector3d get_last_tgt_pos();       // get last target pos
+  Eigen::Vector3d get_last_local_goal();      // get last local goal
+  std::vector<Eigen::Matrix4d> get_obs_traj();
+  std::vector<int> get_global_step();
+  std::pair<QString, int> get_path_time_and_step();
 
-    void set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time);
-    void set_is_rrs(bool flag);
-    void set_is_pause(bool val);
-    void set_is_debug(bool val);
-    void set_is_moving(bool val);
-    void set_multi_request(QString str);
-    void set_obs_condition(QString str);
-    void set_cur_goal_state(QString str);
-    void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
-    void set_cur_global_path(const PATH& val);
-    void set_cur_local_path(const PATH& val);
-    void set_cur_move_info(const DATA_MOVE& val);
+  void set_path(const std::vector<QString>& _global_node_path, int _global_preset, QString _global_path_time);
+  void set_is_rrs(bool flag);
+  void set_is_pause(bool val);
+  void set_is_debug(bool val);
+  void set_is_moving(bool val);
+  void set_multi_request(QString str);
+  void set_obs_condition(QString str);
+  void set_cur_goal_state(QString str);
+  void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
+  void set_cur_global_path(const PATH& val);
+  void set_cur_local_path(const PATH& val);
+  void set_cur_move_info(const DATA_MOVE& val);
 
-    void set_last_step(int val);
-    void set_global_node_path(const std::vector<QString>& val);
-    void set_global_preset(int val);
-    void set_global_step(const std::vector<int>& val);
+  void set_last_step(int val);
+  void set_global_node_path(const std::vector<QString>& val);
+  void set_global_preset(int val);
+  void set_global_step(const std::vector<int>& val);
 
-    // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
-    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
+  // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
+  std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
 
-    // [single robot] calc global path
-    PATH calc_global_path(Eigen::Matrix4d goal);
+  // [single robot] calc global path
+  PATH calc_global_path(Eigen::Matrix4d goal);
 
-    /***********************
-     * set other modules
-     ***********************/
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-    void set_mobile_module(MOBILE* _mobile);
-    void set_unimap_module(UNIMAP* _unimap);
-    void set_obsmap_module(OBSMAP* _obsmap);
-    void set_policy_module(POLICY* _policy);
-    void set_localization_module(LOCALIZATION* _localization);
+  /***********************
+   * set other modules
+   ***********************/
+  void set_config_module(CONFIG* _config);
+  void set_logger_module(LOGGER* _logger);
+  void set_mobile_module(MOBILE* _mobile);
+  void set_unimap_module(UNIMAP* _unimap);
+  void set_obsmap_module(OBSMAP* _obsmap);
+  void set_policy_module(POLICY* _policy);
+  void set_localization_module(LOCALIZATION* _localization);
 
 public Q_SLOTS:
-    // slot func move(receive goal) (start control loop)
-    void slot_move(DATA_MOVE msg);
-    void slot_move_backward(DATA_MOVE msg);
+  // slot func move(receive goal) (start control loop)
+  void slot_move(DATA_MOVE msg);
+  void slot_move_backward(DATA_MOVE msg);
 
-    // slot func move(receive path) (start control loop)
-    void slot_move_multi();
+  // slot func move(receive path) (start control loop)
+  void slot_move_multi();
 
-    void stop();
+  void stop();
 
-    void slot_profile_move(DATA_MOVE msg);
+  void slot_profile_move(DATA_MOVE msg);
 
 private:
-    explicit AUTOCONTROL(QObject *parent = nullptr);
-    ~AUTOCONTROL();
+  explicit AUTOCONTROL(QObject *parent = nullptr);
+  ~AUTOCONTROL();
 
-    // mutex
-    std::recursive_mutex mtx;
-    DriveMethod drive_method;
-    DriveMethod initial_drive_method;
+  // mutex
+  std::recursive_mutex mtx;
+  DriveMethod drive_method;
+  DriveMethod initial_drive_method;
 
-    // other modules
-    CONFIG* config;
-    LOGGER* logger;
-    MOBILE* mobile;
-    UNIMAP* unimap;
-    OBSMAP* obsmap;
-    POLICY* policy;
-    LOCALIZATION* loc;
+  // other modules
+  CONFIG* config;
+  LOGGER* logger;
+  MOBILE* mobile;
+  UNIMAP* unimap;
+  OBSMAP* obsmap;
+  POLICY* policy;
+  LOCALIZATION* loc;
 
-    // control params
-    CTRL_PARAM params;
+  // control params
+  CTRL_PARAM params;
 
-    // get control params from /data/slamnav2/[robot_type]/config/preset.json
-    CTRL_PARAM load_preset(int preset);
+  // get control params from /data/slamnav2/[robot_type]/config/preset.json
+  CTRL_PARAM load_preset(int preset);
 
-    // [single robot] move (input param: goal transform matrix)
-    void move_single(Eigen::Matrix4d goal_tf, int preset);
+  // [single robot] move (input param: goal transform matrix)
+  void move_single(Eigen::Matrix4d goal_tf, int preset);
 
-    // [multi robot] move (input param: node path)
-    void move_multi();
+  // [multi robot] move (input param: node path)
+  void move_multi();
 
-    // [single robot] backwardmove (input param: goal transform matrix)
-    void move_single_backward(Eigen::Matrix4d goal_tf, int preset);
+  // [single robot] backwardmove (input param: goal transform matrix)
+  void move_single_backward(Eigen::Matrix4d goal_tf, int preset);
 
-    // [multi robot] backwardmove (input param: node path)
-    void move_multi_backward();
+  // [multi robot] backwardmove (input param: node path)
+  void move_multi_backward();
 
-    // flag, path, state
-    void clear_control_params();
+  // flag, path, state
+  void clear_control_params();
 
-    // global path, local path
-    void clear_path();
+  // global path, local path
+  void clear_path();
 
-    /***********************
-     * global path planning
-     ***********************/
-    // split multi robot node path, symmetric (1-2-3-2-1 -> 1-2-3, 3-2-1)
-    std::vector<std::vector<QString>> symmetric_cut(std::vector<QString> node_path);
+  /***********************
+   * global path planning
+   ***********************/
+  // split multi robot node path, symmetric (1-2-3-2-1 -> 1-2-3, 3-2-1)
+  std::vector<std::vector<QString>> symmetric_cut(std::vector<QString> node_path);
 
-    // split multi robot node path, loop (1-2-3-1-2 -> 1-2-3, 1-2)
-    std::vector<std::vector<QString>> loop_cut(std::vector<QString> node_path);
+  // split multi robot node path, loop (1-2-3-1-2 -> 1-2-3, 1-2)
+  std::vector<std::vector<QString>> loop_cut(std::vector<QString> node_path);
 
-    // path upsampling with step variables (input: pos vector)
-    std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
+  // path upsampling with step variables (input: pos vector)
+  std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
 
-    // path upsampling with step variables (input: tf vector)
-    std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);
+  // path upsampling with step variables (input: tf vector)
+  std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);
 
-    // path resampling with ccma algorithm
-    std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
+  // path resampling with ccma algorithm
+  std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
 
-    // calc node path
-    std::vector<QString> calc_node_path(QString st_node_id, QString ed_node_id);
+  // calc node path
+  std::vector<QString> calc_node_path(QString st_node_id, QString ed_node_id);
 
-    // delete duplicate nodes in the node path
-    std::vector<QString> remove_duplicates(std::vector<QString> node_path);
+  // delete duplicate nodes in the node path
+  std::vector<QString> remove_duplicates(std::vector<QString> node_path);
 
-    // delete duplicate steps in the node path
-    std::vector<int> remove_duplicates_step(const std::vector<QString>& node_path);
+  // delete duplicate steps in the node path
+  std::vector<int> remove_duplicates_step(const std::vector<QString>& node_path);
 
-    // find the tf closest to the current position among the line segments formed by nodes and nodes
-    Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
+  // find the tf closest to the current position among the line segments formed by nodes and nodes
+  Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
 
-    std::vector<Eigen::Matrix4d> get_approach_pose(std::vector<Eigen::Matrix4d> tfs, Eigen::Matrix4d cur_tf);
+  std::vector<Eigen::Matrix4d> get_approach_pose(std::vector<Eigen::Matrix4d> tfs, Eigen::Matrix4d cur_tf);
 
-    // [single robot] calc global path
-    //PATH calc_global_path(Eigen::Matrix4d goal);
+  // [single robot] calc global path
+  //PATH calc_global_path(Eigen::Matrix4d goal);
 
-    // [multi robot] calc global path (node path -> global path)
-    PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
+  // [multi robot] calc global path (node path -> global path)
+  PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
 
-    // calc reference velocity map
-    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
+  // calc reference velocity map
+  void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
 
-    // smoothing velocity input -> ref_v
-    std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
+  // smoothing velocity input -> ref_v
+  std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
-    /***********************
-     * local path planning
-     ***********************/
-    // calculate paths with higher resolution (local path)
-    PATH calc_local_path(PATH& global_path);
+  /***********************
+   * local path planning
+   ***********************/
+  // calculate paths with higher resolution (local path)
+  PATH calc_local_path(PATH& global_path);
 
-    // calculate paths with higher resolution (avoid path)
-    PATH calc_avoid_path(PATH& global_path);
+  // calculate paths with higher resolution (avoid path)
+  PATH calc_avoid_path(PATH& global_path);
 
-    // check which index of the path the current location is at
-    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+  // check which index of the path the current location is at
+  int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
 
-    // check if controllability
-    int is_everything_fine();
+  // check if controllability
+  int is_everything_fine();
 
-    // control loop
-    std::atomic<bool> control_flag = {false};
-    std::unique_ptr<std::thread> control_thread;
-    void control_loop();
+  // control loop
+  std::atomic<bool> control_flag = {false};
+  std::unique_ptr<std::thread> control_thread;
+  void control_loop();
 
-    // obs loop
-    std::atomic<bool> obs_flag = {false};
-    std::unique_ptr<std::thread> obs_thread;
-    void obs_loop();
+  // obs loop
+  std::atomic<bool> obs_flag = {false};
+  std::unique_ptr<std::thread> obs_thread;
+  void obs_loop();
 
-    // node loop
-    std::atomic<bool> node_flag = {false};    // node thread flag (calc nearest node)
-    std::unique_ptr<std::thread> node_thread; // node thread
-    void node_loop();                         // node loop
+  // node loop
+  std::atomic<bool> node_flag = {false};    // node thread flag (calc nearest node)
+  std::unique_ptr<std::thread> node_thread; // node thread
+  void node_loop();             // node loop
 
-    QString last_node_id = "";
-    Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
-    Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
-    Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
+  QString last_node_id = "";
+  Eigen::Vector3d last_cur_pos  = Eigen::Vector3d(0,0,0);
+  Eigen::Vector3d last_tgt_pos  = Eigen::Vector3d(0,0,0);
+  Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
 
-    tbb::concurrent_queue<PATH> global_path_que;
+  tbb::concurrent_queue<PATH> global_path_que;
 
-    // for multi-robot control
-    std::atomic<int> global_preset = {0};
-    std::recursive_mutex path_mtx;
-    std::vector<int> global_step;
-    std::atomic<int> last_step = {0};
-    std::vector<QString> global_node_path;
-    QString global_path_time = {""};
+  // for multi-robot control
+  std::atomic<int> global_preset = {0};
+  std::recursive_mutex path_mtx;
+  std::vector<int> global_step;
+  std::atomic<int> last_step = {0};
+  std::vector<QString> global_node_path;
+  QString global_path_time = {""};
 
-    // flags
-    std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
-    std::atomic<bool> is_rrs                 = {false};
-    std::atomic<bool> is_debug               = {false};
-    std::atomic<bool> is_pause               = {false};
-    std::atomic<bool> is_moving              = {false};
-    std::atomic<bool> is_path_overlap        = {false};
-    std::atomic<bool> is_move_backward       = {false};
-    std::atomic<bool> is_set_path            = {false};
-    std::atomic<bool> is_set_path_processing = {false};
+  // flags
+  std::atomic<int>  fsm_state        = {AUTO_FSM_COMPLETE};
+  std::atomic<bool> is_rrs         = {false};
+  std::atomic<bool> is_debug         = {false};
+  std::atomic<bool> is_pause         = {false};
+  std::atomic<bool> is_moving        = {false};
+  std::atomic<bool> is_path_overlap    = {false};
+  std::atomic<bool> is_move_backward     = {false};
+  std::atomic<bool> is_set_path      = {false};
+  std::atomic<bool> is_set_path_processing = {false};
 
-    std::atomic<double> process_time_obs     = {0.0};
-    std::atomic<double> process_time_control = {0.0};
-    std::atomic<double> process_time_node = {0.0};
+  std::atomic<double> process_time_obs   = {0.0};
+  std::atomic<double> process_time_control = {0.0};
+  std::atomic<double> process_time_node = {0.0};
 
-    // params for rrs & plot
-    PATH cur_local_path;
-    PATH cur_global_path;
-    QString cur_node_id       = "";
-    QString cur_multi_req     = "none"; // none, req_path, recv_path
-    QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
-    QString cur_obs_condition = "none"; // none, near, far, vir
-    DATA_MOVE cur_move_info;
-    std::atomic<double> cur_deadzone = {0.0};
+  // params for rrs & plot
+  PATH cur_local_path;
+  PATH cur_global_path;
+  QString cur_node_id     = "";
+  QString cur_multi_req   = "none"; // none, req_path, recv_path
+  QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
+  QString cur_obs_condition = "none"; // none, near, far, vir
+  DATA_MOVE cur_move_info;
+  std::atomic<double> cur_deadzone = {0.0};
 
-    // obs
-    int cur_obs_value = OBS_NONE;
-    double cur_obs_decel_v = 0.3;
+  // obs
+  int cur_obs_value = OBS_NONE;
+  double cur_obs_decel_v = 0.3;
 
-    // driving local ref v oscilation prevent
-    int prev_local_ref_v_index = 0;
-    bool ref_v_oscilation_end_flag = false;
-    Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
+  // driving local ref v oscilation prevent
+  int prev_local_ref_v_index = 0;
+  bool ref_v_oscilation_end_flag = false;
+  Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
 
-    // debug
-    double cur_obs_dist = std::numeric_limits<double>::max();
-    std::vector<Eigen::Matrix4d> obs_traj;
+  // debug
+  double cur_obs_dist = std::numeric_limits<double>::max();
+  std::vector<Eigen::Matrix4d> obs_traj;
 
 Q_SIGNALS:
-    void signal_move(DATA_MOVE msg);
-    void signal_move_backward(DATA_MOVE msg);
+  void signal_move(DATA_MOVE msg);
+  void signal_move_backward(DATA_MOVE msg);
 
-    void signal_move_multi();
-    void signal_move_response(DATA_MOVE msg);
-    void signal_global_path_updated();
-    void signal_local_path_updated();
+  void signal_move_multi();
+  void signal_move_response(DATA_MOVE msg);
+  void signal_global_path_updated();
+  void signal_local_path_updated();
 };
 
 #endif // AUTOCONTROL_H

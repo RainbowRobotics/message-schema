@@ -15,53 +15,53 @@ typedef Eigen::Matrix<double,6,6> Matrix6d;
 
 class EKF_3D : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    explicit EKF_3D(QObject *parent = nullptr);
-    ~EKF_3D();
+  explicit EKF_3D(QObject *parent = nullptr);
+  ~EKF_3D();
 
-    void init(const Eigen::Matrix4d& tf);
-    void reset();
+  void init(const Eigen::Matrix4d& tf);
+  void reset();
 
-    Eigen::Matrix4d get_cur_tf();
-    TIME_POSE get_best_tp(double ref_t);
-    std::vector<TIME_POSE> get_tp_storage();
+  Eigen::Matrix4d get_cur_tf();
+  TIME_POSE get_best_tp(double ref_t);
+  std::vector<TIME_POSE> get_tp_storage();
 
 
-    void predict(const TIME_POSE& odom_tp);
-    void estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir);
+  void predict(const TIME_POSE& odom_tp);
+  void estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir);
 
-    // flags
-    std::atomic<bool> initialized = {false};
+  // flags
+  std::atomic<bool> initialized = {false};
 
 private:
-    // mutex
-    std::mutex mtx;
+  // mutex
+  std::mutex mtx;
 
-    // state estimation (x, y, z, rx, ry, rz)
-    Eigen::Vector6d x_hat;
+  // state estimation (x, y, z, rx, ry, rz)
+  Eigen::Vector6d x_hat;
 
-    // covariance estimation
-    Eigen::Matrix6d P_hat = Eigen::Matrix6d::Identity();
+  // covariance estimation
+  Eigen::Matrix6d P_hat = Eigen::Matrix6d::Identity();
 
-    Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
+  Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
 
-    // process noise
-    Eigen::Matrix6d M_k = Eigen::Matrix6d::Identity();
+  // process noise
+  Eigen::Matrix6d M_k = Eigen::Matrix6d::Identity();
 
-    // measurement nois
-    double icp_err_xy = 0.01;
-    double icp_err_th = 2.0;
-    Eigen::Matrix6d R_k = Eigen::Matrix6d::Identity();
+  // measurement nois
+  double icp_err_xy = 0.01;
+  double icp_err_th = 2.0;
+  Eigen::Matrix6d R_k = Eigen::Matrix6d::Identity();
 
-    // result
-    Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
+  // result
+  Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
 
-    // flags
-    std::atomic<bool> has_pre_mo_tf = {false};
+  // flags
+  std::atomic<bool> has_pre_mo_tf = {false};
 
-    // storage
-    std::vector<TIME_POSE> tp_storage;
+  // storage
+  std::vector<TIME_POSE> tp_storage;
 };
 
 #endif // EKF_3D_H

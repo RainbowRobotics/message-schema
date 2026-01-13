@@ -16,52 +16,52 @@
 
 class SIM : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(SIM)
+  Q_OBJECT
+  Q_DISABLE_COPY(SIM)
 
 public:
-    // make singleton
-    static SIM* instance(QObject* parent = nullptr);
+  // make singleton
+  static SIM* instance(QObject* parent = nullptr);
 
-    void start();
-    void stop();
+  void start();
+  void stop();
 
-    void set_cur_tf(Eigen::Matrix4d tf);
-    Eigen::Matrix4d get_cur_tf();
+  void set_cur_tf(Eigen::Matrix4d tf);
+  Eigen::Matrix4d get_cur_tf();
 
-    /***********************
-     * set other modules
-     ***********************/
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-    void set_unimap_module(UNIMAP* _unimap);
-    void set_mobile_module(MOBILE* _mobile);
-    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
-    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
-    void set_localization_module(LOCALIZATION* _loc);
+  /***********************
+   * set other modules
+   ***********************/
+  void set_config_module(CONFIG* _config);
+  void set_logger_module(LOGGER* _logger);
+  void set_unimap_module(UNIMAP* _unimap);
+  void set_mobile_module(MOBILE* _mobile);
+  void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+  void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+  void set_localization_module(LOCALIZATION* _loc);
 
-    float distance = 0.0;
+  float distance = 0.0;
 private:
-    explicit SIM(QObject *parent = nullptr);
-    ~SIM();
-    std::mutex mtx;
+  explicit SIM(QObject *parent = nullptr);
+  ~SIM();
+  std::mutex mtx;
 
-    // other modules
-    CONFIG* config;
-    LOGGER* logger;
-    MOBILE* mobile;
-    UNIMAP* unimap;
-    LIDAR_2D* lidar_2d;
-    LIDAR_3D* lidar_3d;
-    LOCALIZATION* loc;
+  // other modules
+  CONFIG* config;
+  LOGGER* logger;
+  MOBILE* mobile;
+  UNIMAP* unimap;
+  LIDAR_2D* lidar_2d;
+  LIDAR_3D* lidar_3d;
+  LOCALIZATION* loc;
 
-    double calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol=0.0001);
+  double calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol=0.0001);
 
-    std::atomic<bool> simulation_flag;
-    std::unique_ptr<std::thread> simulation_thread;
-    void simulation_loop();
+  std::atomic<bool> simulation_flag;
+  std::unique_ptr<std::thread> simulation_thread;
+  void simulation_loop();
 
-    Eigen::Matrix4d cur_tf;
+  Eigen::Matrix4d cur_tf;
 
 };
 

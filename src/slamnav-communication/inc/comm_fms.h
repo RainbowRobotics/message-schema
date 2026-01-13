@@ -29,162 +29,162 @@
 
 struct COMM_FMS_INFO
 {
-    static constexpr int reconnect_time = 3; // second
-    static constexpr double move_status_send_time = 0.1; // second
-    static constexpr double status_send_time = 0.5; // second
-    static constexpr double mapping_cloud_send_time = 0.5; // second
-    static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
+  static constexpr int reconnect_time = 3; // second
+  static constexpr double move_status_send_time = 0.1; // second
+  static constexpr double status_send_time = 0.5; // second
+  static constexpr double mapping_cloud_send_time = 0.5; // second
+  static constexpr double rtsp_cam_rgb_send_time = 1.0; // second
 };
 
 class COMM_FMS : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(COMM_FMS)
+  Q_OBJECT
+  Q_DISABLE_COPY(COMM_FMS)
 public:
-    static COMM_FMS* instance(QObject* parent = nullptr);
+  static COMM_FMS* instance(QObject* parent = nullptr);
 
-    // interface func
-    void init();
+  // interface func
+  void init();
 
-    QString get_json(const QJsonObject& json, QString key);
-    QString get_multi_state();
+  QString get_json(const QJsonObject& json, QString key);
+  QString get_multi_state();
 
-    double get_process_time_path();
-    double get_process_time_vobs();
+  double get_process_time_path();
+  double get_process_time_vobs();
 
-    double get_max_process_time_path();
-    double get_max_process_time_vobs();
+  double get_max_process_time_path();
+  double get_max_process_time_vobs();
 
-    // setter (othre modules)
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-    void set_mobile_module(MOBILE* _mobile);
-    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
-    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
-    void set_cam_module(CAM* _cam);
-    void set_unimap_module(UNIMAP* _unimap);
-    void set_obsmap_module(OBSMAP* _obsmap);
-    void set_autocontrol_module(AUTOCONTROL* _ctrl);
-    void set_dockcontrol_module(DOCKCONTROL* _dctrl);
-    void set_localization_module(LOCALIZATION* _loc);
-    void set_simnulation_module(SIM* _sim);
-    void set_mapping_module(MAPPING* _mapping);
+  // setter (othre modules)
+  void set_config_module(CONFIG* _config);
+  void set_logger_module(LOGGER* _logger);
+  void set_mobile_module(MOBILE* _mobile);
+  void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+  void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+  void set_cam_module(CAM* _cam);
+  void set_unimap_module(UNIMAP* _unimap);
+  void set_obsmap_module(OBSMAP* _obsmap);
+  void set_autocontrol_module(AUTOCONTROL* _ctrl);
+  void set_dockcontrol_module(DOCKCONTROL* _dctrl);
+  void set_localization_module(LOCALIZATION* _loc);
+  void set_simnulation_module(SIM* _sim);
+  void set_mapping_module(MAPPING* _mapping);
 
 private:
-    explicit COMM_FMS(QObject *parent = nullptr);
-    ~COMM_FMS();
+  explicit COMM_FMS(QObject *parent = nullptr);
+  ~COMM_FMS();
 
-    std::shared_mutex mtx;
-    std::mutex send_mtx;
+  std::shared_mutex mtx;
+  std::mutex send_mtx;
 
-    // other modules
-    CAM* cam;
-    UNIMAP* unimap;
-    CONFIG* config;
-    LOGGER* logger;
-    MOBILE* mobile;
-    OBSMAP* obsmap;
-    MAPPING* mapping;
-    LIDAR_2D* lidar_2d;
-    LIDAR_3D* lidar_3d;
-    AUTOCONTROL* ctrl;
-    DOCKCONTROL* dctrl;
-    LOCALIZATION* loc;
-    SIM* sim;
+  // other modules
+  CAM* cam;
+  UNIMAP* unimap;
+  CONFIG* config;
+  LOGGER* logger;
+  MOBILE* mobile;
+  OBSMAP* obsmap;
+  MAPPING* mapping;
+  LIDAR_2D* lidar_2d;
+  LIDAR_3D* lidar_3d;
+  AUTOCONTROL* ctrl;
+  DOCKCONTROL* dctrl;
+  LOCALIZATION* loc;
+  SIM* sim;
 
-    // vars
-    QTimer* send_timer;
-    QTimer* reconnect_timer;
-    QWebSocket* client;
-    std::atomic<bool> is_connected = {false};
-    std::atomic<double> last_send_time = {0};
+  // vars
+  QTimer* send_timer;
+  QTimer* reconnect_timer;
+  QWebSocket* client;
+  std::atomic<bool> is_connected = {false};
+  std::atomic<double> last_send_time = {0};
 
-    QString robot_id = "";
-    QString multi_state = "none"; // "none", "req_path", "recv_path"
+  QString robot_id = "";
+  QString multi_state = "none"; // "none", "req_path", "recv_path"
 
-    // for semi auto init
-    std::atomic<bool> semi_auto_init_flag = {false};
-    std::unique_ptr<std::thread> semi_auto_init_thread;
+  // for semi auto init
+  std::atomic<bool> semi_auto_init_flag = {false};
+  std::unique_ptr<std::thread> semi_auto_init_thread;
 
-    tbb::concurrent_queue<QString> send_queue;
+  tbb::concurrent_queue<QString> send_queue;
 
-    std::atomic<bool> is_recv_running = {false};
-    tbb::concurrent_queue<QString> recv_queue;
-    std::unique_ptr<std::thread> recv_thread;
-    void recv_loop();
+  std::atomic<bool> is_recv_running = {false};
+  tbb::concurrent_queue<QString> recv_queue;
+  std::unique_ptr<std::thread> recv_thread;
+  void recv_loop();
 
-    void send_status_loop();
+  void send_status_loop();
 
-    std::mutex move_mtx;
-    std::mutex path_mtx;
-    std::mutex vobs_mtx;
-    std::mutex response_mtx;
+  std::mutex move_mtx;
+  std::mutex path_mtx;
+  std::mutex vobs_mtx;
+  std::mutex response_mtx;
 
-    std::queue<DATA_MOVE> move_queue;
-    std::queue<DATA_PATH> path_queue;
-    std::queue<DATA_VOBS> vobs_queue;
-    std::queue<std::function<void()>> response_queue;
+  std::queue<DATA_MOVE> move_queue;
+  std::queue<DATA_PATH> path_queue;
+  std::queue<DATA_VOBS> vobs_queue;
+  std::queue<std::function<void()>> response_queue;
 
-    std::condition_variable move_cv;
-    std::condition_variable path_cv;
-    std::condition_variable vobs_cv;
-    std::condition_variable response_cv;
+  std::condition_variable move_cv;
+  std::condition_variable path_cv;
+  std::condition_variable vobs_cv;
+  std::condition_variable response_cv;
 
-    std::atomic<bool> is_move_running = {true};
-    std::atomic<bool> is_path_running = {true};
-    std::atomic<bool> is_vobs_running = {true};
-    std::atomic<bool> is_response_running = {true};
-    std::atomic<bool> is_send_status_running = {true};
+  std::atomic<bool> is_move_running = {true};
+  std::atomic<bool> is_path_running = {true};
+  std::atomic<bool> is_vobs_running = {true};
+  std::atomic<bool> is_response_running = {true};
+  std::atomic<bool> is_send_status_running = {true};
 
-    std::unique_ptr<std::thread> move_thread;
-    std::unique_ptr<std::thread> path_thread;
-    std::unique_ptr<std::thread> vobs_thread;
-    std::unique_ptr<std::thread> response_thread;
+  std::unique_ptr<std::thread> move_thread;
+  std::unique_ptr<std::thread> path_thread;
+  std::unique_ptr<std::thread> vobs_thread;
+  std::unique_ptr<std::thread> response_thread;
 
-    std::unique_ptr<std::thread> send_status_thread;
+  std::unique_ptr<std::thread> send_status_thread;
 
-    void move_loop();
-    void path_loop();
-    void vobs_loop();
-    void response_loop();
+  void move_loop();
+  void path_loop();
+  void vobs_loop();
+  void response_loop();
 
-    void handle_move_cmd(const QJsonObject& data);
-    void handle_move_goal(DATA_MOVE& msg);
-    void handle_move_stop(DATA_MOVE& msg);
-    void handle_move_pause(DATA_MOVE& msg);
-    void handle_move_resume(DATA_MOVE& msg);
-    void handle_move_target(DATA_MOVE& msg);
-    void calc_remaining_time_distance(DATA_MOVE& msg);
+  void handle_move_cmd(const QJsonObject& data);
+  void handle_move_goal(DATA_MOVE& msg);
+  void handle_move_stop(DATA_MOVE& msg);
+  void handle_move_pause(DATA_MOVE& msg);
+  void handle_move_resume(DATA_MOVE& msg);
+  void handle_move_target(DATA_MOVE& msg);
+  void calc_remaining_time_distance(DATA_MOVE& msg);
 
-    void handle_path_cmd(const QJsonObject& data);
-    void handle_path(DATA_PATH& msg);
-    void handle_path_move(DATA_PATH& msg);
+  void handle_path_cmd(const QJsonObject& data);
+  void handle_path(DATA_PATH& msg);
+  void handle_path_move(DATA_PATH& msg);
 
-    void handle_vobs_cmd(const QJsonObject& data);
-    void handle_vobs(DATA_VOBS& msg);
+  void handle_vobs_cmd(const QJsonObject& data);
+  void handle_vobs(DATA_VOBS& msg);
 
-    std::atomic<double> end_time   = {0.0};
-    std::atomic<double> start_time = {0.0};
+  std::atomic<double> end_time   = {0.0};
+  std::atomic<double> start_time = {0.0};
 
-    std::atomic<double> process_time_path = {0.0};
-    std::atomic<double> process_time_vobs = {0.0};
+  std::atomic<double> process_time_path = {0.0};
+  std::atomic<double> process_time_vobs = {0.0};
 
-    std::atomic<double> max_process_time_path = {-9999.}; // {-std::numeric_limits<double>::max()};
-    std::atomic<double> max_process_time_vobs = {-9999.}; // {-std::numeric_limits<double>::max()};
+  std::atomic<double> max_process_time_path = {-9999.}; // {-std::numeric_limits<double>::max()};
+  std::atomic<double> max_process_time_vobs = {-9999.}; // {-std::numeric_limits<double>::max()};
 
 private Q_SLOTS:
-    void send_loop();
-    void connected();
-    void disconnected();
-    void recv_message(const QString &buf);
-    void reconnect_loop();
+  void send_loop();
+  void connected();
+  void disconnected();
+  void recv_message(const QString &buf);
+  void reconnect_loop();
 
-    void send_move_status();
-    void send_move_response(DATA_MOVE msg);
-    void send_path_response(DATA_PATH msg);
+  void send_move_status();
+  void send_move_response(DATA_MOVE msg);
+  void send_path_response(DATA_PATH msg);
 
 Q_SIGNALS:
-    void signal_send_move_status();
+  void signal_send_move_status();
 };
 
 #endif // COMM_FMS_H

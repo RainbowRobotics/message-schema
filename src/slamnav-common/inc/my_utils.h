@@ -5,8 +5,8 @@
 
 struct VoltageCapacity
 {
-    float voltage;
-    int capacity;
+  float voltage;
+  int capacity;
 };
 
 extern cv::Vec3b colors[10];
@@ -71,9 +71,9 @@ std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, 
 //std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size);
 
 bool check_self_collision(double x, double y, double z,
-                          double robot_min_x, double robot_max_x,
-                          double robot_min_y, double robot_max_y,
-                          double robot_min_z, double robot_max_z);
+              double robot_min_x, double robot_max_x,
+              double robot_min_y, double robot_max_y,
+              double robot_min_z, double robot_max_z);
 
 // bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
 

@@ -10,7 +10,7 @@
 class QImage;
 namespace cv 
 {
-	class Mat;
+  class Mat;
 }
 
 QImage mat_to_qimage_cpy(cv::Mat const &mat, bool swap = true);

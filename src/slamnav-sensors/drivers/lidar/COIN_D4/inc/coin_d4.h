@@ -16,78 +16,78 @@
 
 class COIN_D4 : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(COIN_D4)
+  Q_OBJECT
+  Q_DISABLE_COPY(COIN_D4)
 public:
-    static COIN_D4 *instance(QObject *parent = 0);
+  static COIN_D4 *instance(QObject *parent = 0);
 
-    // start coin d4 module
-    void open();
+  // start coin d4 module
+  void open();
 
-    void close();
+  void close();
 
-    // sync between mobile, sick
-    void sync();
+  // sync between mobile, sick
+  void sync();
 
-    std::vector<Eigen::Vector3d> get_cur_pts();
-    TIME_PTS get_cur_tp();
+  std::vector<Eigen::Vector3d> get_cur_pts();
+  TIME_PTS get_cur_tp();
 
-    // params
-    std::atomic<bool> is_connected = {false};
+  // params
+  std::atomic<bool> is_connected = {false};
 
-    /***********************
-     * set other modules
-     ***********************/
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-
-private:
-    explicit COIN_D4(QObject *parent = nullptr);
-    ~COIN_D4();
-    std::shared_mutex mtx;
-
-    void set_raw_scan(const LaserScan& scan);
-    LaserScan get_raw_scan();
-
-    // other modules
-    CONFIG* config;
-    LOGGER* logger;
-
-    std::vector<Eigen::Vector3d> cur_pts;
-    TIME_PTS cur_tp;
-
-    std::atomic<double> max_dist_blidar = {0.0};
-
-    LaserScan raw_scan;
-    C_CSPC_Lidar laser;
-    LidarVersion version;
-    device_health LidarHealthInfo;
-
-    std::string port = "/dev/ttyBL0";
-    int baudrate = 230400;
-
-    int failure_count = 0;
-    const int max_failures = 5;
-
-    float set_min_angle = 135;
-    float set_max_angle = 225;
-
-    float set_min_dist = 0.05;
-    float set_max_dist = 12.0;
-
-    std::atomic<float> last_time = 0;
+  /***********************
+   * set other modules
+   ***********************/
+  void set_config_module(CONFIG* _config);
+  void set_logger_module(LOGGER* _logger);
 
 private:
-    std::atomic<bool> recv_flag = {false};
-    std::unique_ptr<std::thread> recv_thread;
-    void recv_loop();
+  explicit COIN_D4(QObject *parent = nullptr);
+  ~COIN_D4();
+  std::shared_mutex mtx;
 
-    std::atomic<bool> grab_flag = {false};
-    std::unique_ptr<std::thread> grab_thread;
-    void grab_loop();
+  void set_raw_scan(const LaserScan& scan);
+  LaserScan get_raw_scan();
 
-    std::atomic<int> scan_fail_count = {0};
-    size_t FORCE_SCAN_TRIGGER = 900;
+  // other modules
+  CONFIG* config;
+  LOGGER* logger;
+
+  std::vector<Eigen::Vector3d> cur_pts;
+  TIME_PTS cur_tp;
+
+  std::atomic<double> max_dist_blidar = {0.0};
+
+  LaserScan raw_scan;
+  C_CSPC_Lidar laser;
+  LidarVersion version;
+  device_health LidarHealthInfo;
+
+  std::string port = "/dev/ttyBL0";
+  int baudrate = 230400;
+
+  int failure_count = 0;
+  const int max_failures = 5;
+
+  float set_min_angle = 135;
+  float set_max_angle = 225;
+
+  float set_min_dist = 0.05;
+  float set_max_dist = 12.0;
+
+  std::atomic<float> last_time = 0;
+
+private:
+  std::atomic<bool> recv_flag = {false};
+  std::unique_ptr<std::thread> recv_thread;
+  void recv_loop();
+
+  std::atomic<bool> grab_flag = {false};
+  std::unique_ptr<std::thread> grab_thread;
+  void grab_loop();
+
+  std::atomic<int> scan_fail_count = {0};
+  size_t FORCE_SCAN_TRIGGER = 900;
 
 };
 

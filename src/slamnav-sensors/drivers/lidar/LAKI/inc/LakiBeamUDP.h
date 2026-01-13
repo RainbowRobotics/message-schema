@@ -113,10 +113,10 @@ typedef boost::mutex mutex_t;
 #pragma pack(1)
 struct depth_t
 {
-    u16_t distance0; ///< 深度数据
-    u8_t rssi0;      ///< 回波强度
-    u16_t distance1;
-    u8_t rssi1;
+  u16_t distance0; ///< 深度数据
+  u8_t rssi0;    ///< 回波强度
+  u16_t distance1;
+  u8_t rssi1;
 };
 
 /** @struct little_pack_t UDP数据包封装最小结构单元
@@ -124,9 +124,9 @@ struct depth_t
  */
 struct little_pack_t
 {
-    u16_t head;                         ///< 数据头
-    u16_t azimuth;                      ///< 测距数据的角度值
-    depth_t depth[CONFIG_BLOCK_DEPTHS]; ///< 深度数据点位包
+  u16_t head;             ///< 数据头
+  u16_t azimuth;            ///< 测距数据的角度值
+  depth_t depth[CONFIG_BLOCK_DEPTHS]; ///< 深度数据点位包
 };
 
 /** @struct udp_pack_t UDP数据报一帧数据结构
@@ -134,9 +134,9 @@ struct little_pack_t
  */
 struct udp_pack_t
 {
-    little_pack_t depths[CONFIG_UDP_BLOCKS]; ///< 深度数据单元
-    u32_t timestamp;                         ///< 时间戳
-    u16_t factory;                           ///< 工厂信息
+  little_pack_t depths[CONFIG_UDP_BLOCKS]; ///< 深度数据单元
+  u32_t timestamp;             ///< 时间戳
+  u16_t factory;               ///< 工厂信息
 };
 
 /** @struct cicle_pack_t UDP成品数据结构
@@ -144,10 +144,10 @@ struct udp_pack_t
  */
 struct cicle_pack_t
 {
-    u32_t timestamp; ///< 时间戳
-    u16_t angle;     ///< 角度值
-    u16_t distance;  ///< 深度数据
-    u8_t rssi;       ///< 回波强度
+  u32_t timestamp; ///< 时间戳
+  u16_t angle;   ///< 角度值
+  u16_t distance;  ///< 深度数据
+  u8_t rssi;     ///< 回波强度
 };
 
 /** @struct repark_t 深度数据块，一块包含雷达一周的深度数据
@@ -155,9 +155,9 @@ struct cicle_pack_t
  */
 struct repark_t
 {
-    u32_t interval;                            ///< 间隔时间
-    u16_t maxdots;                             ///< 点位个数
-    cicle_pack_t dotcloud[CONFIG_CIRCLE_DOTS]; ///< 深度数据点云
+  u32_t interval;                ///< 间隔时间
+  u16_t maxdots;                 ///< 点位个数
+  cicle_pack_t dotcloud[CONFIG_CIRCLE_DOTS]; ///< 深度数据点云
 };
 #pragma pack(pop)
 
@@ -165,74 +165,74 @@ class LakiBeamUDP
 {
 
 public:
-    /*!
-            构造函数
-            \param local_ip     本地ip
-            \param local_port   本地端口号
-            \param laser_ip     雷达ip
-            \param laser_port   雷达端口号
-        */
-    LakiBeamUDP(string local_ip, string local_port, string laser_ip, string laser_port);
-    /*!
-            析构函数
-        */
-    ~LakiBeamUDP();
-    /*!
-            同步重新组包功能
-            \param pack   用户包裹出口
-        */
-    void sync_get_repackedpack(repark_t &pack);
-    /*!
-            取出数据包裹 返回true那么立即返回数据
-            \param pack   用户包裹出口
-        */
-    bool get_repackedpack(repark_t &pack);
+  /*!
+      构造函数
+      \param local_ip   本地ip
+      \param local_port 本地端口号
+      \param laser_ip   雷达ip
+      \param laser_port 雷达端口号
+    */
+  LakiBeamUDP(string local_ip, string local_port, string laser_ip, string laser_port);
+  /*!
+      析构函数
+    */
+  ~LakiBeamUDP();
+  /*!
+      同步重新组包功能
+      \param pack   用户包裹出口
+    */
+  void sync_get_repackedpack(repark_t &pack);
+  /*!
+      取出数据包裹 返回true那么立即返回数据
+      \param pack   用户包裹出口
+    */
+  bool get_repackedpack(repark_t &pack);
 
 private:
-    string local_ip;
-    string local_port;
-    string laser_ip;
-    string laser_port;
+  string local_ip;
+  string local_port;
+  string laser_ip;
+  string laser_port;
 
-    thread_t receive_thd;
-    thread_t udprepack_thd;
+  thread_t receive_thd;
+  thread_t udprepack_thd;
 
-    mutex_t thd_mutex;
-    bool everyThingOK;
-    volatile u32_t dbmain;
-    volatile u32_t dbmain_used;
-    udp_pack_t doublebuffer[CONFIG_FRAME_MAX];
+  mutex_t thd_mutex;
+  bool everyThingOK;
+  volatile u32_t dbmain;
+  volatile u32_t dbmain_used;
+  udp_pack_t doublebuffer[CONFIG_FRAME_MAX];
 
-    volatile u32_t urpmain;
-    volatile u32_t urpmain_used;
-    repark_t udprepack[CONFIG_MAX_REPACK];
+  volatile u32_t urpmain;
+  volatile u32_t urpmain_used;
+  repark_t udprepack[CONFIG_MAX_REPACK];
 
-    char buffff[CONFIG_FRAME];
-    udp_socket_t* socket;
-    boost::asio::io_service io_servicess;
-    udp_endpoint_t *local_ep;
-    udp_endpoint_t *laser_ep;
+  char buffff[CONFIG_FRAME];
+  udp_socket_t* socket;
+  boost::asio::io_service io_servicess;
+  udp_endpoint_t *local_ep;
+  udp_endpoint_t *laser_ep;
 
 private:
-    /*!
-            接受UDP数据包线程
-        */
-    void receive_thread(void);
-    /*!
-            UDP拆包组包线程
-        */
-    void udprepack_thread(void);
-    /*!
-            填充没有起始包的包裹（一次需要2包）
-            \param pack   包裹入口数组
-        */
-    void fill_nostart(udp_pack_t pack[2]);
-    /*!
-            填充有起始包的包裹（一次需要2包）
-            \param pack   包裹入口数组
-        */
-    void fill_havestart(udp_pack_t pack[2], u32_t start);
-    void on_read(const boost::system::error_code& err, std::size_t read_bytes);
+  /*!
+      接受UDP数据包线程
+    */
+  void receive_thread(void);
+  /*!
+      UDP拆包组包线程
+    */
+  void udprepack_thread(void);
+  /*!
+      填充没有起始包的包裹（一次需要2包）
+      \param pack   包裹入口数组
+    */
+  void fill_nostart(udp_pack_t pack[2]);
+  /*!
+      填充有起始包的包裹（一次需要2包）
+      \param pack   包裹入口数组
+    */
+  void fill_havestart(udp_pack_t pack[2], u32_t start);
+  void on_read(const boost::system::error_code& err, std::size_t read_bytes);
 };
 
 #endif // LAKIBEAMUDP_H

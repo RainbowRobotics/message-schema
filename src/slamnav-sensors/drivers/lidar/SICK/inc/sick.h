@@ -21,76 +21,76 @@
 
 class SICK : public QObject
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(SICK)
+  Q_OBJECT
+  Q_DISABLE_COPY(SICK)
 
 public:
-    // make singleton
-    static SICK* instance(QObject* parent = nullptr);
+  // make singleton
+  static SICK* instance(QObject* parent = nullptr);
 
-    // start sick module
-    void open();
+  // start sick module
+  void open();
 
-    // stop sick module
-    void close();
+  // stop sick module
+  void close();
 
-    // sync between mobile, sick
-    void sync(int idx);
+  // sync between mobile, sick
+  void sync(int idx);
 
-    /***********************
-     * interface funcs
-     ***********************/
-    QString get_info_text(int idx);
-    RAW_FRAME get_cur_raw(int idx);
-    bool get_is_connected(int idx);
-    bool get_is_sync(int idx);
-    void set_is_sync(int idx, bool val);
+  /***********************
+   * interface funcs
+   ***********************/
+  QString get_info_text(int idx);
+  RAW_FRAME get_cur_raw(int idx);
+  bool get_is_connected(int idx);
+  bool get_is_sync(int idx);
+  void set_is_sync(int idx, bool val);
 
-    bool try_pop_raw_que(int idx, RAW_FRAME& frm);
+  bool try_pop_raw_que(int idx, RAW_FRAME& frm);
 
-    /***********************
-     * set other modules
-     ***********************/
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-    void set_mobile_module(MOBILE *_mobile);
+  /***********************
+   * set other modules
+   ***********************/
+  void set_config_module(CONFIG* _config);
+  void set_logger_module(LOGGER* _logger);
+  void set_mobile_module(MOBILE *_mobile);
 
 private:
-    explicit SICK(QObject *parent = nullptr);
-    ~SICK();
+  explicit SICK(QObject *parent = nullptr);
+  ~SICK();
 
-    // mutex
-    std::shared_mutex mtx;
+  // mutex
+  std::shared_mutex mtx;
 
-    // other modules
-    CONFIG* config;
-    LOGGER* logger;
-    MOBILE* mobile;
+  // other modules
+  CONFIG* config;
+  LOGGER* logger;
+  MOBILE* mobile;
 
-    // extrinsics
-    Eigen::Matrix4d pts_tf[2];
+  // extrinsics
+  Eigen::Matrix4d pts_tf[2];
 
-    // grab loop
-    std::atomic<bool> grab_flag[2] = {false, false};
-    std::array<std::unique_ptr<std::thread>, 2> grab_thread;
-    void grab_loop(int idx);
+  // grab loop
+  std::atomic<bool> grab_flag[2] = {false, false};
+  std::array<std::unique_ptr<std::thread>, 2> grab_thread;
+  void grab_loop(int idx);
 
-    // flags
-    std::atomic<bool> is_connected[2] = {false, false};
-    std::atomic<bool> is_sync[2] = {false, false};
-    std::atomic<bool> is_synced[2] = {false, false};
+  // flags
+  std::atomic<bool> is_connected[2] = {false, false};
+  std::atomic<bool> is_sync[2] = {false, false};
+  std::atomic<bool> is_synced[2] = {false, false};
 
-    // params
-    std::atomic<double> offset_t[2] = {0, 0};
-    std::atomic<double> cur_raw_t[2] = {0, 0};
-    std::atomic<int> cur_pts_num[2] = {0, 0};
+  // params
+  std::atomic<double> offset_t[2] = {0, 0};
+  std::atomic<double> cur_raw_t[2] = {0, 0};
+  std::atomic<int> cur_pts_num[2] = {0, 0};
 
-    // storage
-    tbb::concurrent_queue<RAW_FRAME> raw_que[2];
+  // storage
+  tbb::concurrent_queue<RAW_FRAME> raw_que[2];
 
-    // vars
-    const double angle_offset = 10.0; // LAKI:8.0, SICK:10.0
-    RAW_FRAME cur_raw[2];
+  // vars
+  const double angle_offset = 10.0; // LAKI:8.0, SICK:10.0
+  RAW_FRAME cur_raw[2];
 };
 
 #endif // SICK_H

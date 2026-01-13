@@ -5,9 +5,9 @@
 
 class QR_SENSOR : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    explicit QR_SENSOR(QObject *parent = nullptr);
+  explicit QR_SENSOR(QObject *parent = nullptr);
 
 Q_SIGNALS:
 
