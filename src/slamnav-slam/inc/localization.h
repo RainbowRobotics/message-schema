@@ -103,29 +103,40 @@ private:
 
   // algorithm for localization
   double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);  // 2D icp
-  double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);          // 3D icp
+  double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);                  // 3D icp
 
   // loop
-  std::atomic<bool> localization_flag = {false};    // localization thread flag (lidar localization)
-  std::unique_ptr<std::thread> localization_thread; // localization thread
-  void localization_loop_2d();            // 2D localization loop
-  void localization_loop_3d();            // 3D localization loop
+  std::atomic<bool> localization_flag = {false};       // localization thread flag (lidar localization)
+  std::unique_ptr<std::thread> localization_thread;    // localization thread
+  void localization_loop_2d();                         // 2D localization loop
+  void localization_loop_3d();                         // 3D localization loop
 
-  std::atomic<bool> odometry_flag = {false};      // odometry thread flag (wheel odometry)
-  std::unique_ptr<std::thread> odometry_thread;   // odometry thread
-  void odometry_loop();               // odometry loop
+  std::atomic<bool> odometry_flag = {false};           // odometry thread flag (wheel odometry)
+  std::unique_ptr<std::thread> odometry_thread;        // odometry thread
+  void odometry_loop();                                // odometry loop
 
-  std::atomic<bool> ekf_flag = {false};       // ekf thread flag (for localization)
-  std::unique_ptr<std::thread> ekf_thread;      // ekf thread
-  void ekf_loop();                  // ekf loop (2D)
-  void ekf_loop_3d();                    // ekf loop (3D)
+  std::atomic<bool> ekf_flag = {false};                // ekf thread flag (for localization)
+  std::unique_ptr<std::thread> ekf_thread;             // ekf thread
+  void ekf_loop();                                     // ekf loop (2D)
+  void ekf_loop_3d();                                  // ekf loop (3D)
 
-  std::atomic<bool> obs_flag = {false};       // obstacle thread flag (obstacle map update)
-  std::unique_ptr<std::thread> obs_thread;      // obstacle thread
-  void obs_loop();                  // obstacle loop
+  // ekf thread
+  std::atomic<bool> predict_flag = {false};            // ekf predict thread flag
+  std::unique_ptr<std::thread> predict_thread;         // ekf predict thread
+  // void predict_loop();
+  void predict_loop_3d();
+
+  std::atomic<bool> estimate_flag = {false};            // ekf estimate thread flag
+  std::unique_ptr<std::thread> estimate_thread;         // ekf estimate thread
+  // void estimate_loop();
+  void estimate_loop_3d();
+
+  std::atomic<bool> obs_flag = {false};                 // obstacle thread flag (obstacle map update)
+  std::unique_ptr<std::thread> obs_thread;              // obstacle thread
+  void obs_loop();                                      // obstacle loop
 
   // for plot
-  std::vector<Eigen::Vector3d> cur_global_scan;   // cur global scan
+  std::vector<Eigen::Vector3d> cur_global_scan;        // cur global scan
 
   // flag
   std::atomic<bool> is_loc = {false};
@@ -149,6 +160,11 @@ private:
   // extended kalman filter
   EKF ekf;
   EKF_3D ekf_3d;
+
+  // storage
+  tbb::concurrent_queue<TIME_POSE> icp_res_que;
+
+
 };
 
 #endif // LOCALIZATION_H
