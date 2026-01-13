@@ -403,8 +403,8 @@ void MainWindow::init_modules()
 
     MOBILE::instance()->set_jog_limit_v_acc(ui->spb_AccV->value());
     MOBILE::instance()->set_jog_limit_v_dcc(ui->spb_DecelV->value());
-    MOBILE::instance()->set_jog_limit_w_acc(ui->spb_AccW->value());
-    MOBILE::instance()->set_jog_limit_w_dcc(ui->spb_DecelW->value());
+    MOBILE::instance()->set_jog_limit_w_acc(ui->spb_AccW->value()*D2R);
+    MOBILE::instance()->set_jog_limit_w_dcc(ui->spb_DecelW->value()*D2R);
   }
 
   // cam module init
@@ -1322,7 +1322,7 @@ void MainWindow::spb_AccWChanged(double val)
     return;
   }
 
-  MOBILE::instance()->set_jog_limit_w_acc(val);
+  MOBILE::instance()->set_jog_limit_w_acc(val*D2R);
 }
 
 void MainWindow::spb_DecelWChanged(double val)
@@ -1332,7 +1332,7 @@ void MainWindow::spb_DecelWChanged(double val)
     return;
   }
 
-  MOBILE::instance()->set_jog_limit_w_dcc(val);
+  MOBILE::instance()->set_jog_limit_w_dcc(val*D2R);
 }
 
 // mapping
