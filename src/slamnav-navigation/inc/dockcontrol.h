@@ -76,6 +76,9 @@ public:
 
   void set_cmd_id(QString id);
 
+    bool is_dock_running();
+    bool is_undock_running();
+
 private:
   explicit DOCKCONTROL(QObject *parent = nullptr);
   ~DOCKCONTROL();

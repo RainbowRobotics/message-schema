@@ -139,8 +139,7 @@ void LOCALIZATION::stop()
 
   spdlog::info("[LOCALIZATION({})] stop", loc_mode.toStdString().c_str());
 
-
-  set_cur_loc_state("NONE");
+  set_cur_loc_state("none");
 }
 
 void LOCALIZATION::set_cur_tf(Eigen::Matrix4d tf)

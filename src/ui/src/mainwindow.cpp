@@ -1828,6 +1828,11 @@ void MainWindow::bt_ChgTrig()
 {
   int non_used_int = 0;
   MOBILE::instance()->xnergy_command(0, non_used_int);
+
+  QTimer::singleShot(3000, this, [](){
+    double xnergy_set_current = CONFIG::instance()->get_xnergy_set_current();
+    MOBILE::instance()->xnergy_command(3, xnergy_set_current);
+  });
 }
 
 void MainWindow::bt_ChgStop()
