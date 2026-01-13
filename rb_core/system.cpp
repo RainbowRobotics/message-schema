@@ -2184,6 +2184,32 @@ namespace rb_system {
             }
             ret.payload_arr_length = NO_OF_CARTE;
             ret.type = GET_SYS_DATA_ARRAY;
+        }else{
+            if (data_name.rfind("RB_DIN_", 0) == 0){
+                std::string numberPart = data_name.substr(7);
+                try {
+                    int num = std::stoi(numberPart);
+                    if(num >= 0 && num < NO_OF_DIN){
+                        ret.payload_num = _gv_Handler_Side->Get_State().din_filt[num];
+                        ret.type = GET_SYS_DATA_NUMBER;
+                    }
+                }
+                catch (...) {
+                    std::cout<<"Wrong DIN Number Format"<<std::endl;
+                }
+            }else if(data_name.rfind("RB_DOUT_", 0) == 0){
+                std::string numberPart = data_name.substr(8);
+                try {
+                    int num = std::stoi(numberPart);
+                    if(num >= 0 && num < NO_OF_DOUT){
+                        ret.payload_num = _gv_Handler_Side->Get_State().dout_raw[num];
+                        ret.type = GET_SYS_DATA_NUMBER;
+                    }
+                }
+                catch (...) {
+                    std::cout<<"Wrong DIN Number Format"<<std::endl;
+                }
+            }
         }
 
         return ret;

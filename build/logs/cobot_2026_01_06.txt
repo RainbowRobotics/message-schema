@@ -1,0 +1,22 @@
+I 19:16:49.040   [MAIN]         System Version: 1.0.0
+I 19:16:50.052   [LAN2CAN]      Succeed to create socket
+I 19:16:50.554   [DAEMON]       Succeed to start read thread
+I 19:16:50.554   [DAEMON]       Succeed to start real-time thread
+I 19:16:54.067   [MAIN]         SYSTEM STARTING
+I 19:54:59.807   [SYSTEM]       PAUSE
+I 19:55:05.123   [SYSTEM]       RESUME from PAUSE
+I 19:56:15.434   [SYSTEM]       PAUSE
+I 19:56:44.353   [SYSTEM]       RESUME from PAUSE
+I 19:57:17.101   [SYSTEM]       PAUSE
+I 19:59:21.900   [SYSTEM]       PAUSE
+I 20:01:05.748   [SYSTEM]       PAUSE
+I 20:03:36.103   [SYSTEM]       PAUSE
+I 20:19:25.379   [SYSTEM]       PAUSE
+I 20:20:03.097   [SYSTEM]       PAUSE
+I 20:20:10.010   [SYSTEM]       RESUME from PAUSE
+I 20:54:34.797   [SYSTEM]       PAUSE
+I 20:55:26.592   [SYSTEM]       PAUSE
+I 20:56:27.165   [SYSTEM]       PAUSE
+I 20:57:09.627   [SYSTEM]       PAUSE
+I 20:57:14.376   [SYSTEM]       RESUME from PAUSE
+I 20:59:57.672   [SYSTEM]       PAUSE

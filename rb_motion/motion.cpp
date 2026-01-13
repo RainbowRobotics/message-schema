@@ -416,23 +416,93 @@ namespace rb_motion {
         return {MSG_OK, ret_v};
     }
     std::tuple<int,  TARGET_INPUT> Calc_Relative_Value(TARGET_INPUT delta_, TARGET_INPUT pin_, int move_type){
+        //-----------------------------------------------------------------
+        std::cout<<"Calc_Relative_Value called"<<std::endl;
+        std::cout<<"move_type: "<<move_type<<std::endl;
+        std::cout<<"delta_ frame: "<<delta_.target_frame<<std::endl;
+        std::cout<<"delta_ values: ";
+        for(int i = 0; i < NO_OF_CARTE; ++i){
+            std::cout<<delta_.target_value[i]<<" ";
+        }
+        std::cout<<std::endl;
+        std::cout<<"pin_ frame: "<<pin_.target_frame<<std::endl;
+        std::cout<<"pin_ values: ";
+        for(int i = 0; i < NO_OF_CARTE; ++i){       
+            std::cout<<pin_.target_value[i]<<" ";
+        }           
+        std::cout<<std::endl;
+        //-----------------------------------------------------------------
+        if(move_type < 0 || move_type > 1){
+            return {MSG_DESIRED_OPTION_IS_OVER_BOUND, pin_};
+        }
+
         TARGET_INPUT ret_v = pin_;
-        if(move_type == 0){
-            // J Rel
+
+        if(delta_.target_frame == FRAME_JOINT){
+            if(pin_.target_frame != FRAME_JOINT){
+                PreMotionRet pre_t = PreMotion_to_J(pin_, 0);
+                if(pre_t.ret != MSG_OK){
+                    return {pre_t.ret, ret_v};
+                }
+
+                pin_.target_frame = FRAME_JOINT;
+                for(int i = 0; i < NO_OF_JOINT; ++i){
+                    pin_.target_value[i] = pre_t.j_output(i);
+                }
+            }
+
             auto [ret_code, ret_input] = Calc_J_Relative(delta_, pin_);
             if(ret_code != MSG_OK){
                 return {ret_code, ret_v};
             }
-            ret_v = ret_input;
-        }else if(move_type == 1){
-            // L Rel
+
+            if(move_type == 0){
+                // if move type is J
+                return {MSG_OK, ret_input};
+            }else{
+                // if move type is L -> Forward Kinematics
+                PreMotionRet pre_pin = PreMotion_to_L(ret_input, 0);
+                if(pre_pin.ret != MSG_OK){
+                    return {pre_pin.ret, ret_v};
+                }
+                ret_v.target_frame = FRAME_GLOBAL;
+                for(int i = 0; i < NO_OF_CARTE; ++i){
+                    ret_v.target_value[i] = pre_pin.c_output(i);
+                }
+                return {MSG_OK, ret_v};
+            }
+        }else{
+            if(pin_.target_frame == FRAME_JOINT){
+                PreMotionRet pre_t = PreMotion_to_L(pin_, 0);
+                if(pre_t.ret != MSG_OK){
+                    return {pre_t.ret, ret_v};
+                }
+                pin_.target_frame = FRAME_GLOBAL;
+                for(int i = 0; i < NO_OF_CARTE; ++i){
+                    pin_.target_value[i] = pre_t.c_output(i);
+                }
+            }
+
             auto [ret_code, ret_input] = Calc_L_Relative(delta_, pin_);
             if(ret_code != MSG_OK){
                 return {ret_code, ret_v};
             }
-            ret_v = ret_input;
-        }else{
-            return {MSG_DESIRED_OPTION_IS_OVER_BOUND, ret_v};
+
+            if(move_type == 0){
+                // if move type is J -> Inverse Kinematics
+                PreMotionRet pre_t = PreMotion_to_J(ret_input, 0);
+                if(pre_t.ret != MSG_OK){
+                    return {pre_t.ret, ret_v};
+                }
+                ret_input.target_frame = FRAME_JOINT;
+                for(int i = 0; i < NO_OF_JOINT; ++i){
+                    ret_input.target_value[i] = pre_t.j_output(i);
+                }
+                return {MSG_OK, ret_input};
+            }else{
+                // if move type is L
+                return {MSG_OK, ret_input};
+            }
         }
         return {MSG_OK, ret_v};
     }
