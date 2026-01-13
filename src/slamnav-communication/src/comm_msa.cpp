@@ -818,6 +818,9 @@ void COMM_MSA::handle_update_cmd(const QJsonObject& data)
 //        send_update_response(msg);
         return;
     }
+
+    // it is not send response
+    // reason : ??
 }
 
 void COMM_MSA::handle_control_cmd(const QJsonObject& data)
@@ -1029,19 +1032,29 @@ void COMM_MSA::handle_set_pdu_param(DATA_PDU_UPDATE& msg)
             send_config_request_response(msg);
             return;
         }
-        mobile->set_detect_mode(is_true);
 
-        msg.result = "success";
+        msg.result = "accept";
         msg.message = "";
+        send_config_request_response(msg);
+
+        mobile->set_detect_mode(is_true);
+        delayed_tasks_.schedule(std::chrono::milliseconds(10), [this, msg]() {
+            //no way to check
+
+            DATA_PDU_UPDATE response_msg = msg;
+            response_msg.result = "success";
+            response_msg.message = "";
+            send_config_request_response(response_msg);
+        });
     }
     else
     {
         log_error("[MSA] slot_config_request, invalid parameter name ");
         msg.result = "reject";
         msg.message = "invalid parameter name";
+        send_config_request_response(msg);
+        return;
     }
-
-    send_config_request_response(msg);
 }
 
 void COMM_MSA::handle_get_drive_param(DATA_PDU_UPDATE& msg)
@@ -1563,8 +1576,23 @@ void COMM_MSA::handle_localization_semiautoinit(DATA_LOCALIZATION& msg)
         }
         semi_auto_init_thread.reset();
     }
-
     semi_auto_init_thread = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc);
+
+    // check loc state & response
+    delayed_tasks_.schedule(std::chrono::milliseconds(1000), [this, msg]() {
+        auto state = loc->get_cur_loc_state();
+
+        DATA_LOCALIZATION response_msg = msg;
+        if(state == "good")
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        send_localization_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_localization_init(DATA_LOCALIZATION& msg)
@@ -1595,6 +1623,7 @@ void COMM_MSA::handle_localization_init(DATA_LOCALIZATION& msg)
         send_localization_response(msg);
         return;
     }
+    log_info("recv, command: init, time: {}", msg.time);
 
     msg.result = "accept";
     msg.message = "";
@@ -1609,7 +1638,12 @@ void COMM_MSA::handle_localization_init(DATA_LOCALIZATION& msg)
     loc->stop();
     loc->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
 
-    log_info("recv, command: init, time: {}", msg.time);
+    delayed_tasks_.schedule(std::chrono::milliseconds(10), [this, msg]() {
+        DATA_LOCALIZATION response_msg = msg;
+        response_msg.result = "success";
+        response_msg.message = "";
+        send_localization_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_localization_start(DATA_LOCALIZATION& msg)
@@ -1625,27 +1659,56 @@ void COMM_MSA::handle_localization_start(DATA_LOCALIZATION& msg)
         send_localization_response(msg);
         return;
     }
-
     log_info("recv_loc, start localization");
-
+    
     msg.result = "accept";
+    msg.message = "";
     send_localization_response(msg);
 
     loc->stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     loc->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
     loc->start();
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(50), [this, msg]() {
+        
+        DATA_LOCALIZATION response_msg = msg;
+        if(loc->get_is_loc() == true)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        response_msg.message = "";
+        send_localization_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_localization_stop(DATA_LOCALIZATION& msg)
 {
     log_info("recv_loc, stop localization");
-
     msg.result = "accept";
     msg.message = "";
     send_localization_response(msg);
 
     loc->stop();
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(50), [this, msg]() {
+        
+        DATA_LOCALIZATION response_msg = msg;
+        if(loc->get_is_loc() == false)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        response_msg.message = "";
+        send_localization_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_localization_randominit(DATA_LOCALIZATION& msg)
@@ -1663,24 +1726,51 @@ void COMM_MSA::handle_mapping_start(DATA_MAPPING& msg)
         return;
     }
 
-    last_send_kfrm_idx = 0;
-
     msg.result = "accept";
     msg.message = "";
     send_mapping_response(msg);
 
-
+    last_send_kfrm_idx = 0;
     Q_EMIT (signal_map_build_start());
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(100), [this, msg]() {
+        
+        DATA_MAPPING response_msg = msg;
+        if(mapping->get_is_mapping() == true)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        response_msg.message = "";
+        send_mapping_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_mapping_stop(DATA_MAPPING& msg)
 {
     msg.result = "accept";
     msg.message = "";
-
     send_mapping_response(msg);
 
     Q_EMIT (signal_map_build_stop());
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(100), [this, msg]() {
+        
+        DATA_MAPPING response_msg = msg;
+        if(mapping->get_is_mapping() == true)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        response_msg.message = "";
+        send_mapping_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_mapping_save(DATA_MAPPING& msg)
@@ -1692,6 +1782,10 @@ void COMM_MSA::handle_mapping_save(DATA_MAPPING& msg)
         send_mapping_response(msg);
         return;
     }
+
+    msg.result = "accept";
+    msg.message = "";
+    send_mapping_response(msg);
 
     std::pair<bool, QString> val = mapping->sync_map_save(msg.map_name);
     if(!val.first)
@@ -1708,11 +1802,14 @@ void COMM_MSA::handle_mapping_save(DATA_MAPPING& msg)
 
 void COMM_MSA::handle_mapping_reload(DATA_MAPPING& msg)
 {
-    last_send_kfrm_idx = 0;
-
     msg.result = "accept";
     msg.message = "";
+    send_mapping_response(msg);
 
+    last_send_kfrm_idx = 0;
+
+    // no way to check state
+    msg.result = "success";
     send_mapping_response(msg);
 }
 
@@ -1826,6 +1923,10 @@ void COMM_MSA::handle_dock_start(DATA_CONTROL& msg)
         log_info("Dock Start Failed : IS_MOVING is true");
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
 
     log_info("Docking start");
     int d_field = config->get_docking_field();
@@ -1842,6 +1943,23 @@ void COMM_MSA::handle_dock_start(DATA_CONTROL& msg)
     send_control_response(msg);
 
     Q_EMIT (signal_docking_start());
+
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(1000), [this, msg]() {
+
+        auto running = dctrl->is_dock_running();
+
+        DATA_CONTROL response_msg = msg;
+        if(running == true)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        send_control_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_undock_start(DATA_CONTROL& msg)
@@ -1860,6 +1978,10 @@ void COMM_MSA::handle_undock_start(DATA_CONTROL& msg)
         log_info("UnDock Failed : DOCK_FSM_STATE is not OFF");
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
 
     log_info("UnDocking start");
     int d_field = config->get_docking_field();
@@ -1874,6 +1996,22 @@ void COMM_MSA::handle_undock_start(DATA_CONTROL& msg)
     send_control_response(msg);
 
     Q_EMIT (signal_undocking_start());
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(1000), [this, msg]() {
+
+        auto running = dctrl->is_undock_running();
+
+        DATA_CONTROL response_msg = msg;
+        if(running == true)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        send_control_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_dock_stop(DATA_CONTROL& msg)
@@ -1884,9 +2022,13 @@ void COMM_MSA::handle_dock_stop(DATA_CONTROL& msg)
         send_control_response(msg);
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
 
+
+    
     log_info("Dock stop");
-
     int d_field = config->get_docking_field();
     if(d_field == -1)
     {
@@ -1899,33 +2041,56 @@ void COMM_MSA::handle_dock_stop(DATA_CONTROL& msg)
     Q_EMIT (signal_docking_stop());
 
     double t = std::abs(config->get_robot_size_x_max() / 0.05) + 1.0;
-    dock_stop_task_id_ = delayed_tasks_.schedule(
-        std::chrono::milliseconds(static_cast<int>(t * 1000)),
-        [this]() {
-            ctrl->set_is_moving(false);
-        });
 
-    send_control_response(msg);
+
+    delayed_tasks_.schedule(std::chrono::milliseconds(static_cast<int>(t * 1000)), [this, msg]() {
+        ctrl->set_is_moving(false);
+
+        DATA_CONTROL response_msg = msg;
+        auto dock_state = dctrl->get_dock_state();
+        if(dock_state == false)
+        {
+            response_msg.result = "success";
+        }
+        else
+        {
+            response_msg.result = "fail";
+        }
+        send_control_response(response_msg);
+    });
 }
 
 void COMM_MSA::handle_motor_control(DATA_CONTROL& msg)
 {
+    if(!mobile)
+    {
+        msg.result = "reject";
+        send_control_response(msg);
+        return;
+    }
+
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
     if(msg.onoff)
     {
         log_info("Motor On");
         mobile->motor_on();
-        msg.result = "accept";
+
+        msg.result = "success";
         msg.message = "";
+        send_control_response(msg);
     }
     else
     {
         log_info("Motor Off");
         //mobile->motor_off();
+
         msg.result = "reject";
         msg.message = "";
+        send_control_response(msg);
     }
-
-    send_control_response(msg);
 }
 
 void COMM_MSA::handle_set_safety_field(DATA_CONTROL& msg)
@@ -1936,6 +2101,10 @@ void COMM_MSA::handle_set_safety_field(DATA_CONTROL& msg)
         send_control_response(msg);
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
 
     unsigned int filed = msg.safetyField.toInt();
     log_info("SetSafetyField : {}", (int)filed);
@@ -1954,6 +2123,12 @@ void COMM_MSA::handle_get_safety_field(DATA_CONTROL& msg)
         send_control_response(msg);
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
+    // here : response : accept
+    // and then send response (succ / fail)
 
     auto status = mobile->get_status();
     msg.result = "success";
@@ -1971,6 +2146,10 @@ void COMM_MSA::handle_reset_safety_field(DATA_CONTROL& msg)
         send_control_response(msg);
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
+
 
     bool allSuccess = true;
     QStringList failedFields;
@@ -2088,6 +2267,9 @@ void COMM_MSA::handle_get_safety_flag(DATA_CONTROL& msg)
         send_control_response(msg);
         return;
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_control_response(msg);
 
     auto ms = mobile->get_status();
 
@@ -2123,13 +2305,33 @@ void COMM_MSA::handle_charge_trigger(DATA_CONTROL& msg)
         return;
     }
 
-    int non_used_int = 0;
-    mobile->xnergy_command(0, non_used_int);
+    if(config->get_charge_type() == "XNERGY")
+    {
+        msg.result = "acceept";
+        msg.message = "type : XNERGY";
+        send_control_response(msg);
 
-    msg.result = "success";
-    msg.message = "";
+        int non_used_int = 0;
+        mobile->xnergy_command(0, non_used_int);
+        delayed_tasks_.schedule(std::chrono::milliseconds(3000), [this, msg]() {
+            //no way to check state
+            double xnergy_set_current = config->get_xnergy_set_current();
+            mobile->xnergy_command(3, xnergy_set_current);
 
-    send_control_response(msg);
+            DATA_CONTROL response_msg = msg;
+            response_msg.result = "success";
+            response_msg.message = "current : " + QString::number(xnergy_set_current);
+            send_control_response(response_msg);
+        });
+    }
+    else
+    {
+        msg.result = "reject";
+        msg.message = "type : Not XNERGY";
+
+        send_control_response(msg);
+        return;
+    }
 }
 
 void COMM_MSA::send_local_path()
@@ -3093,18 +3295,26 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
 
 void COMM_MSA::handle_move_pause(DATA_MOVE& msg)
 {
+    msg.result = "accept";
+    msg.message = "";
+    send_move_response(msg);
+
     ctrl->set_is_pause(true);
 
-    msg.result = "accept";
+    msg.result = "success";
     msg.message = "";
     send_move_response(msg);
 }
 
 void COMM_MSA::handle_move_resume(DATA_MOVE& msg)
 {
+    msg.result = "accept";
+    msg.message = "";
+    send_move_response(msg);
+
     ctrl->set_is_pause(false);
 
-    msg.result = "accept";
+    msg.result = "success";
     msg.message = "";
     send_move_response(msg);
 }
@@ -3430,6 +3640,9 @@ void COMM_MSA::handle_load_map(DATA_LOAD& msg)
                 return;
             }
         }
+        msg.result = "accept";
+        msg.message = "";
+        send_load_response(msg);
 
 
         loc->stop();
@@ -3467,58 +3680,104 @@ void COMM_MSA::handle_load_topo(DATA_LOAD& msg)
     if(!unimap)
     {
         msg.result = "reject";
+        msg.result = "unimap is nullptr";
         send_load_response(msg);
         return;
     }
 
-    // Check if map is loaded
-    if(unimap->get_is_loaded() != MAP_LOADED)
-    {
-        msg.result = "reject";
-        send_load_response(msg);
-        return;
-    }
+    // // Check if map is loaded
+    // if(unimap->get_is_loaded() != MAP_LOADED)
+    // {
+    //     msg.result = "reject";
+    //     send_load_response(msg);
+    //     return;
+    // }
 
     // Get current map path
     QString map_dir = unimap->get_map_path();
     if(map_dir.isEmpty())
     {
         msg.result = "reject";
+        msg.result = "cannot find map dir";
         send_load_response(msg);
         return;
     }
+
 
     // Check if topo.json exists
+    QString node_path = map_dir + "/node.json";
+    QFileInfo node_info(node_path);
     QString topo_path = map_dir + "/topo.json";
     QFileInfo topo_info(topo_path);
-    if(!topo_info.exists() || !topo_info.isFile())
-    {
-        msg.result = "reject";
-        send_load_response(msg);
-        return;
-    }
-
-    // Load topo
-    log_info("Loading topo from: {}", topo_path.toStdString());
-    bool success = unimap->load_topo();
-
-    if(success)
+    
+    if(node_info.exists() && node_info.isFile())
     {
         msg.result = "accept";
         msg.message = "";
-        log_info("Successfully loaded topo.json");
+        send_load_response(msg);
+
+        // Load node
+        log_info("Loading node from: {}", node_path.toStdString());
+        bool success = unimap->load_node();
+
+        if(success)
+        {
+            msg.result = "success";
+            msg.message = "";
+            log_info("Successfully loaded node.json");
+        }
+        else
+        {
+            msg.result = "fail";
+            log_error("Failed to load node.json");
+        }
+        send_load_response(msg);
+    }
+    else if(topo_info.exists() && topo_info.isFile())
+    {
+        msg.result = "accept";
+        msg.message = "";
+        send_load_response(msg);
+
+        // Load node
+        log_info("Loading topo from: {}", topo_path.toStdString());
+        bool success = unimap->load_topo();
+
+        if(success)
+        {
+            msg.result = "success";
+            msg.message = "";
+            log_info("Successfully loaded topo.json");
+        }
+        else
+        {
+            msg.result = "fail";
+            log_error("Failed to load topo.json");
+        }
+        send_load_response(msg);
     }
     else
     {
         msg.result = "reject";
-        log_error("Failed to load topo.json");
+        msg.result = QString("node/topo.json cannot find : ") + map_dir;
+        send_load_response(msg);
+        return;
     }
-
-    send_load_response(msg);
 }
 
 void COMM_MSA::handle_camera_get_info(DATA_SENSOR_INFO& msg)
 {
+    if(!config)
+    {
+        msg.result = "reject";
+        msg.result = "no config thread";
+        send_sensor_response(msg);
+        return;
+    }
+    msg.result = "accept";
+    msg.message = "";
+    send_sensor_response(msg);
+
     std::vector<std::pair<int, QString>> index;
 
     for(int idx = 0; idx < config->get_cam_num(); ++idx)
@@ -3536,6 +3795,14 @@ void COMM_MSA::handle_camera_get_info(DATA_SENSOR_INFO& msg)
 
 void COMM_MSA::handle_camera_set_info(DATA_SENSOR_INFO& msg)
 {
+    if(!config)
+    {
+        msg.result = "reject";
+        msg.result = "no config thread";
+        send_sensor_response(msg);
+        return;
+    }
+
     int cam_num = config->get_cam_num();
     for(const auto& v : msg.index)
     {
@@ -3548,6 +3815,10 @@ void COMM_MSA::handle_camera_set_info(DATA_SENSOR_INFO& msg)
             return;
         }
     }
+    msg.result = "accept";
+    msg.message = "";
+    send_sensor_response(msg);
+
 
     std::vector<QString> cam_serial_number;
     cam_serial_number.resize(cam_num);
@@ -3616,10 +3887,15 @@ void COMM_MSA::handle_lidar3d_set_on(DATA_SENSOR_INFO& msg)
     }
     msg.result = "accept";
     msg.message = "";
-    log_info("lidar3d set on");
     send_sensor_response(msg);
 
+    log_info("lidar3d set on");
+
     Q_EMIT (lidar_3d->signal_set_on(indexs));
+
+    msg.result = "success";
+    msg.message = "";
+    send_sensor_response(msg);
 }
 
 void COMM_MSA::handle_lidar3d_set_off(DATA_SENSOR_INFO& msg)
@@ -3654,6 +3930,10 @@ void COMM_MSA::handle_lidar3d_set_off(DATA_SENSOR_INFO& msg)
     send_sensor_response(msg);
 
     Q_EMIT (lidar_3d->signal_set_off(indexs));
+
+    msg.result = "success";
+    msg.message = "";
+    send_sensor_response(msg);
 }
 
 sio::object_message::ptr COMM_MSA::create_localization_score_obj(const Eigen::Vector2d& loc_ieir,

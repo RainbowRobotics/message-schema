@@ -132,7 +132,6 @@ private:
 
     // delayed task runner (replaces QTimer::singleShot)
     TimerQueue delayed_tasks_;
-    TimerQueue::TaskId dock_stop_task_id_ = TimerQueue::INVALID_TASK_ID;
 
     // vars
     std::unique_ptr<sio::client> rrs_socket;

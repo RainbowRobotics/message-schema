@@ -1950,3 +1950,13 @@ void DOCKCONTROL::slot_docking_stop()
 {
     watch_stop();
 }
+
+bool DOCKCONTROL::is_dock_running()
+{
+    return a_flag;
+}
+
+bool DOCKCONTROL::is_undock_running()
+{
+    return b_flag;
+}
