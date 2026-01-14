@@ -1110,18 +1110,19 @@ void LOCALIZATION::predict_loop_3d()
     {
       if(ekf_3d.initialized.load())
       {
-        Eigen::Matrix4d tf_at_icp_start = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
-        Eigen::Matrix4d tf_at_now = se2_to_TF(cur_mo.pose);
-        Eigen::Matrix4d odometry_delta = tf_at_icp_start.inverse() * tf_at_now;
-        Eigen::Matrix4d icp_tf = icp_res.tf * odometry_delta;
+        Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
+        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+        Eigen::Matrix4d mo_dtf = tf0.inverse() * tf1;
+        Eigen::Matrix4d icp_tf = icp_res.tf * mo_dtf;
 
         // slip detection
         Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
         Eigen::Vector2d dtdr = dTdR(ekf_tf, icp_tf);
         if(std::abs(dtdr[1]) > 10.0 * D2R)
         {
-          log_warn("slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
+          icp_res_que.clear();
           ekf_3d.init(icp_tf);
+          log_warn("slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
         }
         else
         {
@@ -1188,7 +1189,7 @@ void LOCALIZATION::estimate_loop_3d()
         continue;
       }
 
-      MOBILE_POSE mo_at_icp_start = mobile->get_pose();
+      double icp_st_t = mobile->get_pose().t;
       Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
 
       // icp
@@ -1198,7 +1199,7 @@ void LOCALIZATION::estimate_loop_3d()
       if(err < config->get_loc_2d_icp_error_threshold())
       {
         TIME_POSE icp_res;
-        icp_res.t = mo_at_icp_start.t;
+        icp_res.t = icp_st_t;
         icp_res.tf = G;
 
         icp_res_que.push(icp_res);
@@ -1230,6 +1231,8 @@ void LOCALIZATION::estimate_loop_3d()
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
+
+  icp_res_que.clear();
   log_info("estimate_loop_3d stop");
 }
 
