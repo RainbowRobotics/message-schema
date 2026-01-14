@@ -329,83 +329,41 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
   }
 
-  std::vector<Eigen::Vector3d> pts;  
-  for(size_t p = 0; p < range_data_size; p++)
-  {
-    double d = range_data[p];
-    double th = p*step - M_PI;
-    double x = d*std::cos(th);
-    double y = d*std::sin(th);
-    pts.push_back(Eigen::Vector3d(x, y, 0));
-  }
-
-  // update octomap
-  octomap::Pointcloud cloud;
-  for(size_t p = 0; p < pts.size(); p++)
-  {
-    // local to global
-    Eigen::Vector3d P = pts[p];
-    Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
-    cloud.push_back(_P[0], _P[1], 0);
-  }
-
+  // 2D Grid based obstacle map (replaced OctoMap for performance)
   const double obsmap_range = config->get_obs_map_range();
-  {
-    std::lock_guard<std::mutex> oct_lock(octree_mtx);
-    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
-  }
-  // octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
-
-  // calc grid map
-  octomap::point3d bbx_min(cur_tf(0,3) - obsmap_range, cur_tf(1,3) - obsmap_range, -obsmap_range);
-  octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range,  obsmap_range);
 
   std::vector<Eigen::Vector4d> global_obs_pts;
   std::vector<Eigen::Vector2d> local_obs_pts;
 
-  cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
-  {
-    std::lock_guard<std::mutex> oct_lock(octree_mtx);
-    for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
-    {
-      double x = it.getX();
-      double y = it.getY();
-      double z = it.getZ();
-      double prob = it->getOccupancy();
-
-      // global to local
-      Eigen::Vector3d P(x,y,z);
-      Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-
-      // for plot
-      global_obs_pts.push_back(Eigen::Vector4d(x, y, cur_tf(2,3), prob));
-      local_obs_pts.push_back(Eigen::Vector2d(_P[0], _P[1]));
-
-      cv::Vec2i uv = xy_uv(_P[0], _P[1]);
-      int u = uv[0];
-      int v = uv[1];
-      if(u < 0 || u >= w || v < 0 || v >= h)
-      {
-        continue;
-      }
-
-      if(_map.ptr<double>(v)[u] == 0 || prob > _map.ptr<double>(v)[u])
-      {
-        _map.ptr<double>(v)[u] = prob;
-      }
-    }
-  }
-
-  // make wall map
+  // directly write to wall_map from range data - O(N)
   cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
-  for(int i = 0; i < h; i++)
+  for(size_t p = 0; p < range_data_size; p++)
   {
-    for(int j = 0; j < w; j++)
+    double d = range_data[p];
+    if(d >= lidar_max_range)
     {
-      if(_map.ptr<double>(i)[j] >= P_OBS)
-      {
-        _wall_map.ptr<uchar>(i)[j] = 255;
-      }
+      continue;  // no obstacle detected in this direction
+    }
+
+    double th = p*step - M_PI;
+    double x = d*std::cos(th);
+    double y = d*std::sin(th);
+
+    // for plot (local coords)
+    local_obs_pts.push_back(Eigen::Vector2d(x, y));
+
+    // local to global for plot_pts
+    Eigen::Vector3d P(x, y, 0);
+    Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
+    global_obs_pts.push_back(Eigen::Vector4d(_P[0], _P[1], cur_tf(2,3), 1.0));
+
+    // write directly to grid
+    cv::Vec2i uv = xy_uv(x, y);
+    int u = uv[0];
+    int v = uv[1];
+    if(u >= 0 && u < w && v >= 0 && v < h)
+    {
+      _wall_map.ptr<uchar>(v)[u] = 255;
     }
   }
 
