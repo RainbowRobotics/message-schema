@@ -48,9 +48,7 @@ void EKF::init(const Eigen::Matrix4d& tf)
 
   initialized = true;
 
-  //printf("[EKF] init (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
-  spdlog::info("[EKF] init ({:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2]*R2D);
-  //log_info("initialized");
+  log_info("init ({:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2]*R2D);
 }
 
 void EKF::reset()

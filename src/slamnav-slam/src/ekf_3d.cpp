@@ -53,7 +53,7 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
 
   //printf("[EKF_3D] init (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
   //     x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
-  spdlog::info("[EKF_3D] init ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
+  log_info("init ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
          
 void EKF_3D::reset()
@@ -66,7 +66,7 @@ void EKF_3D::reset()
   initialized.store(false);
 
   //printf("[EKF_3D] reset\n");
-  spdlog::info("[EKF_3D] reset");
+  log_info("[EKF_3D] reset");
 }
 
 Eigen::Matrix4d EKF_3D::get_cur_tf()
@@ -127,9 +127,9 @@ void EKF_3D::predict(const TIME_POSE& odom_tp)
 
   std::lock_guard<std::mutex> lock(mtx);
 
-  double x  = x_hat(0);
-  double y  = x_hat(1);
-  double z  = x_hat(2);
+  double x = x_hat(0);
+  double y = x_hat(1);
+  double z = x_hat(2);
   double phi = x_hat(3);
   double theta = x_hat(4);
   double psi0 = x_hat(5);
@@ -212,7 +212,7 @@ void EKF_3D::predict(const TIME_POSE& odom_tp)
   spdlog::debug("[EKF_3D] prediction: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )", x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
 
-void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ieir*/)
+void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf)
 {
   if(!initialized.load())
   {
@@ -233,16 +233,16 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ie
   double sin_psi = std::sin(psi);
   Eigen::Matrix3d Rx;
   Rx << 1, 0, 0,
-      0,  cos_phi, -sin_phi,
-      0,  sin_phi,  cos_phi;
+        0,  cos_phi, -sin_phi,
+        0,  sin_phi,  cos_phi;
   Eigen::Matrix3d Ry;
   Ry <<  cos_theta, 0, sin_theta,
-       0,     1, 0,
-       -sin_theta, 0, cos_theta;
+             0,     1, 0,
+        -sin_theta, 0, cos_theta;
   Eigen::Matrix3d Rz;
   Rz <<  cos_psi, -sin_psi, 0,
-       sin_psi,  cos_psi, 0,
-       0,    0,     1;
+         sin_psi,  cos_psi, 0,
+         0,    0,     1;
   Eigen::Matrix3d R_zyx = Rz * Ry * Rx;
 
   // innovation y = [ p_meas - p_hat ; Log(R_zyx^T * R_meas) ]
@@ -273,7 +273,7 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ie
   double d2 = llt.matrixL().solve(y_k).squaredNorm();
   if(d2 > 16.81)
   {
-    spdlog::warn("[EKF_3D] ICP rejected, mahalanobis={:.2f}", d2);
+    log_warn("ICP rejected, mahalanobis={:.2f}", d2);
     return;
   }
 

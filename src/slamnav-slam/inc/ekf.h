@@ -5,6 +5,8 @@
 #include "slamnav_slam_types.h"
 #include "my_utils.h"
 
+#include "logger.h"
+
 #include <QObject>
 
 class EKF : public QObject

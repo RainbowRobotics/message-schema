@@ -41,8 +41,7 @@ void LOCALIZATION::start()
 {
   if(is_loc)
   {
-    //printf("[LOCALIZATION] already running\n");
-    spdlog::warn("[LOCALIZATION] already running");
+    log_warn("already running");
     return;
   }
 
@@ -66,8 +65,14 @@ void LOCALIZATION::start()
     }
     else if(loc_mode == "3D")
     {
-      ekf_flag = true;
-      ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop_3d, this);
+      // ekf_flag = true;
+      // ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop_3d, this);
+
+      predict_flag = true;
+      predict_thread = std::make_unique<std::thread>(&LOCALIZATION::predict_loop_3d, this);
+
+      estimate_flag = true;
+      estimate_thread = std::make_unique<std::thread>(&LOCALIZATION::estimate_loop_3d, this);
     }
   }
   else
@@ -84,8 +89,7 @@ void LOCALIZATION::start()
     }
     else
     {
-      //printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
-      spdlog::error("[LOCALIZATION] unknown LOC_MODE: {}", loc_mode.toStdString().c_str());
+      log_error("unknown LOC_MODE: {}", loc_mode.toStdString().c_str());
       is_loc = false;
     }
 
@@ -96,8 +100,7 @@ void LOCALIZATION::start()
   obs_flag = true;
   obs_thread = std::make_unique<std::thread>(&LOCALIZATION::obs_loop, this);
 
-  //printf("[LOCALIZATION(%s)] start\n", loc_mode.toStdString().c_str());
-  spdlog::info("[LOCALIZATION({})] start", loc_mode.toStdString().c_str());
+  log_info("{} start", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::stop()
@@ -118,6 +121,20 @@ void LOCALIZATION::stop()
   }
   ekf_thread.reset();
 
+  predict_flag = false;
+  if(predict_thread && predict_thread->joinable())
+  {
+    predict_thread->join();
+  }
+  predict_thread.reset();
+
+  estimate_flag = false;
+  if(estimate_thread && estimate_thread->joinable())
+  {
+    estimate_thread->join();
+  }
+  estimate_thread.reset();
+
   odometry_flag = false;
   if(odometry_thread && odometry_thread->joinable())
   {
@@ -137,9 +154,9 @@ void LOCALIZATION::stop()
 
   QString loc_mode = config->get_loc_mode();
 
-  spdlog::info("[LOCALIZATION({})] stop", loc_mode.toStdString().c_str());
+  set_cur_loc_state("NONE");
 
-  set_cur_loc_state("none");
+  log_info("{} stop", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::set_cur_tf(Eigen::Matrix4d tf)
@@ -263,20 +280,19 @@ QString LOCALIZATION::get_info_text()
   double yaw_deg = atan2(cur_tf(1,0), cur_tf(0,0)) * 180.0 / M_PI;  // rotation
 
   QString loc_state = get_cur_loc_state();
-  //    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4 %\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11")
 
   QString str = QString("[LOC]\npos:%1,%2,%3\nloc_t:%4,%5,%6,%7\nieir:(%8,%9)\nloc_state:%10")
       .arg(_cur_xi[0], 0, 'f', 2)        // %1
       .arg(_cur_xi[1], 0, 'f', 2)        // %2
       .arg(_cur_xi[2], 0, 'f', 2)        // %3
-      //        .arg(cur_tf_err * 100, 0, 'f', 2)   // %4
-      .arg(translation[0], 0, 'f', 2)     // %5
-      .arg(translation[1], 0, 'f', 2)     // %6
-      .arg(translation[2], 0, 'f', 2)     // %7
-      .arg(yaw_deg, 0, 'f', 2)        // %8
+      // .arg(cur_tf_err * 100, 0, 'f', 2)  // %4
+      .arg(translation[0], 0, 'f', 2)    // %5
+      .arg(translation[1], 0, 'f', 2)    // %6
+      .arg(translation[2], 0, 'f', 2)    // %7
+      .arg(yaw_deg, 0, 'f', 2)           // %8
       .arg(_cur_ieir[0], 0, 'f', 2)      // %9
       .arg(_cur_ieir[1], 0, 'f', 2)      // %10
-      .arg(loc_state);            // %11
+      .arg(loc_state);                   // %11
   return str;
 }
 
@@ -962,8 +978,10 @@ void LOCALIZATION::ekf_loop_3d()
       }
 
       // icp
+      double test_t = get_time();
       std::vector<Eigen::Vector3d> dsk = frm.pts;
       double err = map_icp(dsk, G);
+      printf("proc_t: %f(%f, %f, %f)\n", get_time()-test_t, get_time()-frm.t, get_time()-cur_mo.t, cur_mo.t-frm.t);
 
       // check ieir
       cur_ieir = calc_ieir(dsk, G);
@@ -991,7 +1009,7 @@ void LOCALIZATION::ekf_loop_3d()
           }
           else
           {
-            ekf_3d.estimate(G, cur_ieir);
+            ekf_3d.estimate(G);
           }
         }
         G = ekf_3d.get_cur_tf();
@@ -1055,6 +1073,166 @@ void LOCALIZATION::ekf_loop_3d()
   log_info("ekf_loop(3d) stop");
 }
 
+void LOCALIZATION::predict_loop_3d()
+{
+  // loop params
+  const double dt = 0.02; // 50hz
+  double pre_loop_time = get_time();
+
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    tp_storage.clear();
+  }
+
+  log_info("predict_loop_3d start");
+  while(predict_flag)
+  {
+    MOBILE_POSE cur_mo = mobile->get_pose();
+    TIME_POSE cur_mo_tp;
+    cur_mo_tp.t = cur_mo.t;
+    cur_mo_tp.tf = se2_to_TF(cur_mo.pose);
+
+    if(ekf_3d.initialized.load())
+    {
+      ekf_3d.predict(cur_mo_tp);
+    }
+
+    TIME_POSE tmp;
+    TIME_POSE icp_res;
+    bool has_icp_result = false;
+    while(icp_res_que.try_pop(tmp))
+    {
+      icp_res = tmp;
+      has_icp_result = true;
+    }
+
+    if(has_icp_result)
+    {
+      if(ekf_3d.initialized.load())
+      {
+        Eigen::Matrix4d tf_at_icp_start = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
+        Eigen::Matrix4d tf_at_now = se2_to_TF(cur_mo.pose);
+        Eigen::Matrix4d odometry_delta = tf_at_icp_start.inverse() * tf_at_now;
+        Eigen::Matrix4d icp_tf = icp_res.tf * odometry_delta;
+
+        // slip detection
+        Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
+        Eigen::Vector2d dtdr = dTdR(ekf_tf, icp_tf);
+        if(std::abs(dtdr[1]) > 10.0 * D2R)
+        {
+          log_warn("slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
+          ekf_3d.init(icp_tf);
+        }
+        else
+        {
+          ekf_3d.estimate(icp_tf);
+        }
+      }
+      else
+      {
+        ekf_3d.init(icp_res.tf);
+      }
+    }
+
+    Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
+    set_cur_tf(G);
+
+    // tp storage update
+    {
+      std::lock_guard<std::mutex> lock(mtx);
+      TIME_POSE tp;
+      tp.t = cur_mo.t;
+      tp.tf = G;
+      tp_storage.push_back(tp);
+      if(tp_storage.size() > 300)
+      {
+        tp_storage.erase(tp_storage.begin());
+      }
+    }
+
+    // set localization info for plot
+    double cur_loop_time = get_time();
+    double delta_loop_time = cur_loop_time - pre_loop_time;
+    if(delta_loop_time < dt)
+    {
+      int sleep_ms = (dt-delta_loop_time)*1000;
+      std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+    }
+    else
+    {
+      if(delta_loop_time > 0.1)
+      {
+        log_warn("predict_loop_3d time drift, dt: {}, method: lidar", delta_loop_time);
+      }
+    }
+
+    process_time_localization = cur_loop_time - pre_loop_time;
+    pre_loop_time = cur_loop_time;
+  }
+  log_info("predict_loop_3d stop");
+}
+
+void LOCALIZATION::estimate_loop_3d()
+{
+  lidar_3d->clear_merged_queue();
+
+  log_info("estimate_loop_3d start");
+  while(estimate_flag)
+  {
+    TIME_PTS frm;
+    if(lidar_3d->try_pop_merged_queue(frm))
+    {
+      if(unimap->get_is_loaded() != MAP_LOADED)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        continue;
+      }
+
+      MOBILE_POSE mo_at_icp_start = mobile->get_pose();
+      Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
+
+      // icp
+      std::vector<Eigen::Vector3d> dsk = frm.pts;
+      double err = map_icp(dsk, G);
+
+      if(err < config->get_loc_2d_icp_error_threshold())
+      {
+        TIME_POSE icp_res;
+        icp_res.t = mo_at_icp_start.t;
+        icp_res.tf = G;
+
+        icp_res_que.push(icp_res);
+
+        // global scan update
+        std::vector<Eigen::Vector3d> pts(frm.pts.size());
+        for(size_t p = 0; p < frm.pts.size(); p++)
+        {
+          Eigen::Vector3d P(frm.pts[p][0], frm.pts[p][1], frm.pts[p][2]);
+          Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+          pts[p] = _P;
+        }
+
+        {
+          std::lock_guard<std::mutex> lock(mtx);
+          cur_global_scan = pts;
+        }
+      }
+
+      // set localization info for plot
+      cur_tf_err = err;
+      cur_ieir = calc_ieir(dsk, G);
+
+      // for speed
+      lidar_3d->clear_merged_queue();
+    }
+    else
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
+  log_info("estimate_loop_3d stop");
+}
+
 void LOCALIZATION::obs_loop()
 {
   log_info("obs_loop start");
@@ -1068,7 +1246,7 @@ void LOCALIZATION::obs_loop()
     return;
   }
 
-  spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_min_z(),obsmap->get_obs_box_range());
+  log_info("total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_min_z(),obsmap->get_obs_box_range());
 
   std::vector<Eigen::Vector3d> temp_pts;
   temp_pts.reserve(10000);
@@ -1433,7 +1611,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
   if(last_err > first_err+0.01 || last_err > config->get_loc_2d_icp_error_threshold())
   {
     //printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-    spdlog::warn("[map_icp] i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    log_warn("[map_icp] i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     //return 9999;
   }
@@ -1587,7 +1765,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
     if(num_correspondence < 100)
     {
       //printf("[map_icp(3D)] not enough correspondences, iter: %d, num: %d!!\n", iter, num_correspondence);
-      spdlog::warn("[map_icp(3D)] not enough correspondences, iter: {}, num: {}!!", iter, num_correspondence);
+      log_warn("[map_icp(3D)] not enough correspondences, iter: {}, num: {}!!", iter, num_correspondence);
       return 9999;
     }
 
@@ -1696,7 +1874,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
 
   // for debug
   //printf("[map_icp(3D)] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-  spdlog::debug("[map_icp(3D)] map_icp, i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+  log_debug("[map_icp(3D)] map_icp, i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
   return last_err;
 }
