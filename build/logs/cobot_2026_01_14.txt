@@ -70,3 +70,39 @@ I 06:28:40.089   [SYSTEM]       RESUME from PAUSE
 I 06:28:40.664   [SYSTEM]       PAUSE
 I 06:28:41.596   [SYSTEM]       RESUME from PAUSE
 I 06:28:42.675   [SYSTEM]       PAUSE
+I 07:49:24.388   [MAIN]         System Version: 1.0.0
+I 07:49:25.399   [LAN2CAN]      Succeed to create socket
+I 07:49:25.902   [DAEMON]       Succeed to start read thread
+I 07:49:25.902   [DAEMON]       Succeed to start real-time thread
+I 07:49:26.400   [LAN2CAN]      Succeed to connect l2c
+I 07:49:29.413   [MAIN]         SYSTEM STARTING
+I 16:33:45.735   [SYSTEM]       PAUSE
+I 16:33:52.730   [SYSTEM]       RESUME from PAUSE
+I 16:33:52.739   [MOTION]       Motion Mode Changed: 0->1
+I 16:33:55.960   [MOTION]       Motion-Time Done
+I 16:33:55.960   [MOTION]       Motion Mode Changed: 1->0
+I 16:33:56.010   [MOTION]       Motion Mode Changed: 0->1
+I 16:33:56.703   [MOTION]       Motion Mode Changed: 1->0
+I 16:33:56.870   [SYSTEM]       PAUSE
+I 16:34:21.438   [SYSTEM]       PAUSE
+I 16:35:48.580   [SYSTEM]       PAUSE
+I 16:36:22.991   [SYSTEM]       PAUSE
+I 18:59:46.874   [SYSTEM]       Servo Call: 1/1
+I 18:59:46.874   [SYSTEM]       ServoState: 0
+I 18:59:46.874   [SYSTEM]       CMD Power On
+I 18:59:46.965   [TOOLFLANGE]   TFB RST 92 0 1 1 -1
+I 18:59:46.976   [SYSTEM]       STATE POWER ENGAGED
+I 18:59:47.886   [MOTOR]        BNO 0 TYP:250 MDR:0 BLM:1 SEN:1 SLE:0.003698
+I 18:59:47.886   [MOTOR]        BNO 1 TYP:250 MDR:1 BLM:1 SEN:1 SLE:-1.156936
+I 18:59:47.887   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:1 SEN:1 SLE:-0.022190
+E 18:59:47.887   [MOTOR]        BNO 3is detected in wrong channel
+I 18:59:47.887   [MOTOR]        BNO 4 TYP:140 MDR:1 BLM:1 SEN:1 SLE:0.011748
+I 18:59:47.887   [MOTOR]        BNO 2 TYP:200 MDR:1 BLM:1 SEN:1 SLE:-0.369184
+I 18:59:47.984   [SYSTEM]       ServoState: 1
+E 18:59:47.984   [SYSTEM]       MSG:1003/MSG_JOINT_NOT_DETECTED_3
+I 19:13:01.974   [MAIN]         System Version: 1.0.0
+I 19:13:02.992   [LAN2CAN]      Succeed to create socket
+I 19:13:03.495   [DAEMON]       Succeed to start read thread
+I 19:13:03.495   [DAEMON]       Succeed to start real-time thread
+I 19:13:03.993   [LAN2CAN]      Succeed to connect l2c
+I 19:13:07.007   [MAIN]         SYSTEM STARTING

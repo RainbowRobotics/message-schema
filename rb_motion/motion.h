@@ -23,6 +23,7 @@ namespace rb_motion {
     std::tuple<int,  TARGET_INPUT>      Calc_L_Relative(TARGET_INPUT delta_, TARGET_INPUT pin_);
 
     std::tuple<int,  TARGET_INPUT>      Calc_Relative_Value(TARGET_INPUT delta_, TARGET_INPUT pin_, int move_type);
+    std::tuple<int,  TARGET_INPUT>      Calc_Absoulte_Value(TARGET_INPUT pin_, int move_type);
 
     //--------------------------------------------------------------------------------------
     // Sector Motion

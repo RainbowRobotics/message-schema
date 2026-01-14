@@ -27,3 +27,13 @@ table Response_Get_Relative_Value {
     calculated_value:   MoveInput_Target;
 }
 //--------------------------------------------------------------
+table Request_Get_Absolute_Value {
+    reference_value:    MoveInput_Target;
+    move_type:          int;  
+}
+
+table Response_Get_Absolute_Value {
+    calculated_result:  int;
+    calculated_value:   MoveInput_Target;
+}
+//--------------------------------------------------------------

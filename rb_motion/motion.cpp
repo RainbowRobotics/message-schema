@@ -506,6 +506,47 @@ namespace rb_motion {
         }
         return {MSG_OK, ret_v};
     }
+
+    std::tuple<int,  TARGET_INPUT> Calc_Absoulte_Value(TARGET_INPUT pin_, int move_type){
+        //-----------------------------------------------------------------
+        std::cout<<"Calc_Absoulte_Value called"<<std::endl;
+        std::cout<<"move_type: "<<move_type<<std::endl;
+        std::cout<<"pin_ frame: "<<pin_.target_frame<<std::endl;
+        std::cout<<"pin_ values: ";
+        for(int i = 0; i < NO_OF_CARTE; ++i){       
+            std::cout<<pin_.target_value[i]<<" ";
+        }
+        std::cout<<std::endl;
+        //-----------------------------------------------------------------
+        if(move_type < 0 || move_type > 1){
+            return {MSG_DESIRED_OPTION_IS_OVER_BOUND, pin_};
+        }
+        TARGET_INPUT ret_v = pin_;
+        if(move_type == 0){
+            ;//to Joint
+            PreMotionRet pre_t = PreMotion_to_J(pin_, 0);
+            if(pre_t.ret != MSG_OK){
+                return {pre_t.ret, ret_v};
+            }
+            ret_v.target_frame = FRAME_JOINT;
+            for(int i = 0; i < NO_OF_JOINT; ++i){
+                ret_v.target_value[i] = pre_t.j_output(i);
+            }
+            return {MSG_OK, ret_v};
+        }else{
+            ;//to Linear
+            PreMotionRet pre_pin = PreMotion_to_L(pin_, 0);
+            if(pre_pin.ret != MSG_OK){
+                return {pre_pin.ret, ret_v};
+            }
+            ret_v.target_frame = FRAME_GLOBAL;
+            for(int i = 0; i < NO_OF_CARTE; ++i){
+                ret_v.target_value[i] = pre_pin.c_output(i);
+            }
+            return {MSG_OK, ret_v};
+        }
+        return {MSG_OK, ret_v};
+    }
     //--------------------------------------------------------------------------------------
     // Sector Motion
     //--------------------------------------------------------------------------------------
