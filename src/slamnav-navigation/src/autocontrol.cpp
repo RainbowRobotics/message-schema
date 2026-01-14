@@ -3267,7 +3267,7 @@ void AUTOCONTROL::control_loop()
       // obstacle stop
       {
         double cur_velocity    = mobile->get_control_input()[0];
-        double stopping_distance = 0; //(cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
+        double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
         double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
         dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
         cur_deadzone = dynamic_deadzone;
@@ -3377,8 +3377,8 @@ void AUTOCONTROL::control_loop()
       }
       else
       {
-        v = saturation(v, 0.0, obs_decel_v);
         v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+        v = saturation(v, 0.0, obs_decel_v);
         v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
       }
 
