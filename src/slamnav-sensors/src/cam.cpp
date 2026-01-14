@@ -334,6 +334,50 @@ TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_n
   return res;
 }
 
+TIME_PTS CAM::filter_simple_range(const TIME_PTS &tp)
+{
+  TIME_PTS res;
+  res.t = tp.t;
+
+  if(tp.pts.empty())
+  {
+    return res;
+  }
+
+  // get filter range
+  double min_z = config->get_obs_map_min_z();
+  double max_z = config->get_obs_map_max_z();
+  double max_range_sq = config->get_obs_map_range() * config->get_obs_map_range();
+
+  // simple range filter only
+  res.pts.reserve(tp.pts.size());
+
+  for(const auto &p : tp.pts)
+  {
+    // check nan
+    if(!std::isfinite(p[0]) || !std::isfinite(p[1]) || !std::isfinite(p[2]))
+    {
+      continue;
+    }
+
+    // z range filter
+    if(p[2] < min_z || p[2] > max_z)
+    {
+      continue;
+    }
+
+    // xy range filter
+    if(p[0]*p[0] + p[1]*p[1] > max_range_sq)
+    {
+      continue;
+    }
+
+    res.pts.push_back(p);
+  }
+
+  return res;
+}
+
 void CAM::post_process_loop(int idx)
 {
   const double dt = 0.1; // 10hz
@@ -362,7 +406,10 @@ void CAM::post_process_loop(int idx)
           {
             if(config->get_use_cam_filter())
             {
-              TIME_PTS filtered_tp = filter_radius_outlier(tp, config->get_cam_filter_ror_radius(), config->get_cam_filter_ror_min_neighbors(), true, true);
+              // use simple range filter only (for low latency)
+              TIME_PTS filtered_tp = filter_simple_range(tp);
+              // disabled: ROR and clustering cause 50-150ms delay per frame
+              // TIME_PTS filtered_tp = filter_radius_outlier(tp, config->get_cam_filter_ror_radius(), config->get_cam_filter_ror_min_neighbors(), true, true);
               std::lock_guard<std::mutex> lock(mtx);
               cur_scan[idx] = filtered_tp;
             }

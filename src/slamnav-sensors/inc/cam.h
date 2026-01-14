@@ -95,6 +95,7 @@ private:
 
   // func
   TIME_PTS filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER);
+  TIME_PTS filter_simple_range(const TIME_PTS &tp);
 
   // params
   std::atomic<double> process_time_post[max_cam_cnt];
