@@ -195,6 +195,9 @@ private:
   /* utils function */
   void calc_remaining_time_distance(DATA_MOVE& msg); // todo ---> move to autoctorl !
   QJsonObject sio_object_to_qt_json_object(const std::map<std::string, sio::message::ptr>& obj);
+
+  // Goal name finder: resolve goal_node_id from goal_node_name if goal_node_id is empty
+  bool resolve_goal_id(DATA_MOVE& msg);
   QJsonValue convert_item(sio::message::ptr item);
 
   // get json utils
