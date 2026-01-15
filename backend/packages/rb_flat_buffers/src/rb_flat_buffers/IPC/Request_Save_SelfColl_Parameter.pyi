@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Save_SelfColl_Parameter import Request_Save_SelfColl_Parameter
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class Request_Save_SelfColl_ParameterT(object):
   mode: int
   distInternal: float
   distExternal: float
+  def __init__(
+    self,
+    mode: int = ...,
+    distInternal: float = ...,
+    distExternal: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_SelfColl_ParameterT: ...
   @classmethod

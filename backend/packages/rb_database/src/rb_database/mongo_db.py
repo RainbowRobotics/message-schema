@@ -517,10 +517,7 @@ async def export_collection(
         created_cond["$lt"] = end_utc
 
     # 3) 필드 세팅(_id 제외하는 것 일괄로 추가)
-    if fields is None:
-        fields = {"_id": 0}
-    else:
-        fields = {**fields, "_id": 0}
+    fields = {"_id": 0} if fields is None else {**fields, "_id": 0}
 
     # 4) 텍스트 검색(q) -> checkDB에서 등록한 인덱스안에서 검색
     if search_text:

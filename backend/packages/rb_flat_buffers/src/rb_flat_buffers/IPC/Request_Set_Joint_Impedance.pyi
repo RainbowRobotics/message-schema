@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
-from rb_flat_buffers.IPC.Request_Set_Joint_Impedance import Request_Set_Joint_Impedance
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -23,6 +21,12 @@ class Request_Set_Joint_ImpedanceT(object):
   onoff: int
   stiffness: N_JOINT_fT | None
   torquelimit: N_JOINT_fT | None
+  def __init__(
+    self,
+    onoff: int = ...,
+    stiffness: 'N_JOINT_fT' | None = ...,
+    torquelimit: 'N_JOINT_fT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_Joint_ImpedanceT: ...
   @classmethod

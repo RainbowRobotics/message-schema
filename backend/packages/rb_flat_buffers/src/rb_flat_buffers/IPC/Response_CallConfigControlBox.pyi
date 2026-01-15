@@ -3,12 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.N_DIN_b import N_DIN_b, N_DIN_bT
 from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
-from rb_flat_buffers.IPC.N_DOUT_b import N_DOUT_b, N_DOUT_bT
-from rb_flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigControlBox
+from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
 from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
 from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 
@@ -20,8 +17,8 @@ class Response_CallConfigControlBox(object):
   @classmethod
   def GetRootAsResponse_CallConfigControlBox(cls, buf: bytes, offset: int) -> Response_CallConfigControlBox: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
-  def DoutSpecialFunc(self) -> N_DOUT_b | None: ...
-  def DinSpecialFunc(self) -> N_DIN_b | None: ...
+  def DoutSpecialFunc(self) -> N_DOUT_u | None: ...
+  def DinSpecialFunc(self) -> N_DIN_u | None: ...
   def DinFilterCount(self) -> N_DIN_u | None: ...
   def AreaConfigs0(self) -> ST_Config_Area | None: ...
   def AreaConfigs1(self) -> ST_Config_Area | None: ...
@@ -40,8 +37,8 @@ class Response_CallConfigControlBox(object):
   def UserFrame6(self) -> ST_Config_UserFrame | None: ...
   def UserFrame7(self) -> ST_Config_UserFrame | None: ...
 class Response_CallConfigControlBoxT(object):
-  doutSpecialFunc: N_DOUT_bT | None
-  dinSpecialFunc: N_DIN_bT | None
+  doutSpecialFunc: N_DOUT_uT | None
+  dinSpecialFunc: N_DIN_uT | None
   dinFilterCount: N_DIN_uT | None
   areaConfigs0: ST_Config_AreaT | None
   areaConfigs1: ST_Config_AreaT | None
@@ -59,6 +56,28 @@ class Response_CallConfigControlBoxT(object):
   userFrame5: ST_Config_UserFrameT | None
   userFrame6: ST_Config_UserFrameT | None
   userFrame7: ST_Config_UserFrameT | None
+  def __init__(
+    self,
+    doutSpecialFunc: 'N_DOUT_uT' | None = ...,
+    dinSpecialFunc: 'N_DIN_uT' | None = ...,
+    dinFilterCount: 'N_DIN_uT' | None = ...,
+    areaConfigs0: 'ST_Config_AreaT' | None = ...,
+    areaConfigs1: 'ST_Config_AreaT' | None = ...,
+    areaConfigs2: 'ST_Config_AreaT' | None = ...,
+    areaConfigs3: 'ST_Config_AreaT' | None = ...,
+    areaConfigs4: 'ST_Config_AreaT' | None = ...,
+    areaConfigs5: 'ST_Config_AreaT' | None = ...,
+    areaConfigs6: 'ST_Config_AreaT' | None = ...,
+    areaConfigs7: 'ST_Config_AreaT' | None = ...,
+    userFrame0: 'ST_Config_UserFrameT' | None = ...,
+    userFrame1: 'ST_Config_UserFrameT' | None = ...,
+    userFrame2: 'ST_Config_UserFrameT' | None = ...,
+    userFrame3: 'ST_Config_UserFrameT' | None = ...,
+    userFrame4: 'ST_Config_UserFrameT' | None = ...,
+    userFrame5: 'ST_Config_UserFrameT' | None = ...,
+    userFrame6: 'ST_Config_UserFrameT' | None = ...,
+    userFrame7: 'ST_Config_UserFrameT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_CallConfigControlBoxT: ...
   @classmethod

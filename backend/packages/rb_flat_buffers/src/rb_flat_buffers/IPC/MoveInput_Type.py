@@ -67,9 +67,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class MoveInput_TypeT(object):
 
     # MoveInput_TypeT
-    def __init__(self):
-        self.pntType = 0  # type: int
-        self.pntPara = 0.0  # type: float
+    def __init__(
+        self,
+        pntType = 0,
+        pntPara = 0.0,
+    ):
+        self.pntType = pntType  # type: int
+        self.pntPara = pntPara  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

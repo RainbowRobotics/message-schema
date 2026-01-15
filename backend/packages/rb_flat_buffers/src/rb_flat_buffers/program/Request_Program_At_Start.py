@@ -55,8 +55,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Program_At_StartT(object):
 
     # Request_Program_At_StartT
-    def __init__(self):
-        self.taskId = None  # type: str
+    def __init__(
+        self,
+        taskId = None,
+    ):
+        self.taskId = taskId  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
