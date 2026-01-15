@@ -3379,6 +3379,7 @@ void AUTOCONTROL::control_loop()
       {
         v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
         v = saturation(v, 0.0, obs_decel_v);
+        v = std::max(v, 0.0);  // 전진 모드에서 음수 방지
         v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
       }
 
