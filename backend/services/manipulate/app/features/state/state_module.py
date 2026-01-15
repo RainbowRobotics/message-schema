@@ -1,10 +1,9 @@
-from app.features.program.program_module import ProgramService
-from app.features.program.program_schema import Request_Move_SmoothJogStopPD
+"""State Module"""
 from rb_flat_buffers.IPC.Request_PowerControl import Request_PowerControlT
-from rb_flat_buffers.IPC.Request_ReferenceControl import Request_ReferenceControlT
-from rb_flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
-from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
+from rb_sdk.manipulate_sdk.manipulate_move import RBManipulateMoveSDK
+from rb_sdk.manipulate_sdk.manipulate_state import RBManipulateStateSDK
+from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 
 from .state_schema import (
@@ -12,91 +11,114 @@ from .state_schema import (
     Request_ServoControlPD,
 )
 
-program_service = ProgramService()
 zenoh_client = ZenohClient()
 
+manipulate_state_sdk = RBManipulateStateSDK()
+manipulate_move_sdk = RBManipulateMoveSDK()
 
 class StateService(BaseService):
-    def __init__(self):
-        pass
+    """State Service"""
 
-    async def call_powercontrol(
+    def call_powercontrol(
         self, *, robot_model: str, power_option: int, sync_servo: bool, stoptime: int | None = 3
     ):
+        """
+        [Power Control 호출 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            power_option: 파워 옵션
+            sync_servo: 서보 동기화 여부
+            stoptime: 정지 시간
+        """
         # 1. Power OFF 시퀀스 (Reference OFF -> SmoothJog Stop -> Servo ON)
         if power_option == 0:
-            dict_reference_res = await self.call_referencecontrol(
-                robot_model=robot_model, request=Request_ReferenceControlPD(reference_option=0)
+            dict_reference_res = manipulate_state_sdk.call_referencecontrol(
+                robot_model=robot_model, reference_option=0
             )
-            if dict_reference_res.get("returnValue") != 0:
-                dict_reference_res["target"] = "call_referencecontrol"
-                return dict_reference_res
+            if dict_reference_res.returnValue != 0:
+                return {
+                    "target": "call_referencecontrol",
+                    "returnValue": dict_reference_res.returnValue,
+                }
 
             if stoptime is not None:
-                dict_smoothjog_stop_res = await program_service.call_smoothjog_stop(
-                    robot_model=robot_model, request=Request_Move_SmoothJogStopPD(stoptime=stoptime)
+                dict_smoothjog_stop_res = manipulate_move_sdk.call_smoothjog_stop(
+                    robot_model=robot_model, stop_time=stoptime
                 )
-                if dict_smoothjog_stop_res.get("returnValue") != 0:
-                    dict_smoothjog_stop_res["target"] = "call_smoothjog_stop"
-                    return dict_smoothjog_stop_res
+                if dict_smoothjog_stop_res.returnValue != 0:
+                    return {
+                        "target": "call_smoothjog_stop",
+                        "returnValue": dict_smoothjog_stop_res.returnValue,
+                    }
 
             if sync_servo:
-                dict_servo_res = await self.call_servocontrol(
-                    robot_model=robot_model, request=Request_ServoControlPD(servo_option=1)
+                dict_servo_res = manipulate_state_sdk.call_servocontrol(
+                    robot_model=robot_model, servo_option=1
                 )
-                if dict_servo_res.get("returnValue") != 0:
-                    dict_servo_res["target"] = "call_servocontrol"
-                    return dict_servo_res
+                if dict_servo_res.returnValue != 0:
+                    return {
+                        "target": "call_servocontrol",
+                        "returnValue": dict_servo_res.returnValue,
+                    }
 
         # 2. Power Control (Main Zenoh Call)
         req = Request_PowerControlT()
         req.powerOption = power_option
 
-        power_res = zenoh_client.query_one(
-            f"{robot_model}/call_powercontrol",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        power_res = manipulate_state_sdk.call_powercontrol(
+            robot_model=robot_model, power_option=power_option
         )
 
-        dict_power_res = power_res["dict_payload"]
+        if power_res.returnValue != 0:
+            return {
+                "target": "call_powercontrol",
+                "returnValue": power_res.returnValue,
+            }
 
         # 3. Power ON 시퀀스 (Servo Control ON)
         if power_option == 1 and sync_servo:
-            dict_servo_res = await self.call_servocontrol(
-                robot_model=robot_model, request=Request_ServoControlPD(servo_option=1)
-                )
-            if dict_servo_res.get("returnValue") != 0:
-                dict_servo_res["target"] = "call_servocontrol"
-                return dict_servo_res
+            dict_servo_res = manipulate_state_sdk.call_servocontrol(
+                robot_model=robot_model, servo_option=1
+            )
 
-        dict_power_res["target"] = "call_powercontrol"
-        return dict_power_res
+            if dict_servo_res.returnValue != 0:
+                return {
+                    "target": "call_servocontrol",
+                    "returnValue": dict_servo_res.returnValue,
+                }
+
+        return {
+            "target": "call_powercontrol",
+            "returnValue": power_res.returnValue,
+        }
 
 
-    async def call_servocontrol(self, *, robot_model: str, request : Request_ServoControlPD):
-        req = Request_ServoControlT()
-        req.servoOption = request.servo_option
+    def call_servocontrol(self, *, robot_model: str, request : Request_ServoControlPD):
+        """
+        [Servo Control 호출 함수]
 
-        servo_res = zenoh_client.query_one(
-            f"{robot_model}/call_servocontrol",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        Args:
+            robot_model: 로봇 모델명
+            request: 서보 옵션
+        """
+        servo_res = manipulate_state_sdk.call_servocontrol(
+            robot_model=robot_model, servo_option=request.servo_option
         )
 
-        return servo_res["dict_payload"]
+        return t_to_dict(servo_res)
 
 
-    async def call_referencecontrol(self, *, robot_model: str, request: Request_ReferenceControlPD):
-        req = Request_ReferenceControlT()
-        req.refcontrolOption = request.reference_option
+    def call_referencecontrol(self, *, robot_model: str, request: Request_ReferenceControlPD):
+        """
+        [Reference Control 호출 함수]
 
-        reference_res = zenoh_client.query_one(
-            f"{robot_model}/call_referencecontrol",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        Args:
+            robot_model: 로봇 모델명
+            request: 참조 옵션
+        """
+        reference_res = manipulate_state_sdk.call_referencecontrol(
+            robot_model=robot_model, reference_option=request.reference_option
         )
 
-        return reference_res["dict_payload"]
+        return t_to_dict(reference_res)

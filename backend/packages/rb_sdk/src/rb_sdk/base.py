@@ -6,23 +6,17 @@ import os
 import sys
 import threading
 import time as time_module
-from abc import abstractmethod
-from typing import Any, ClassVar, Literal, TypeVar
+from typing import ClassVar, Literal, TypeVar
 
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 from rb_flow_manager.exception import FlowControlException
-from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
-from rb_utils.flow_manager import make_builtins_allow_most
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
-from .schema.base_schema import SetVariableDTO
-
 T = TypeVar("T", bound="RBBaseSDK")
-
 
 class RBBaseSDK:
     """프로세스별 싱글톤 + 공통 Zenoh/루프 관리"""
@@ -134,6 +128,16 @@ class RBBaseSDK:
         asyncio.set_event_loop(self.loop)
         self.loop.run_forever()
 
+    def _run_coro_blocking(self, coro, *, timeout: float | None = None):
+        # 다른 스레드에서 self._loop가 돌고 있으면 거기에 붙어서 기다림
+        loop = getattr(self.zenoh_client, "_loop", None)
+        if loop and loop.is_running():
+            fut = asyncio.run_coroutine_threadsafe(coro, loop)
+            return fut.result(timeout=timeout)
+
+        # 현재 스레드에 루프가 없으면 새로 만들어 실행
+        return asyncio.run(coro)
+
     def _submit(self, coro):
         """이벤트 루프에 코루틴 제출하고 future 반환"""
 
@@ -179,46 +183,6 @@ class RBBaseSDK:
             await asyncio.sleep(sleep_for)
 
         if flow_manager_args is not None:
-            flow_manager_args.done()
-
-    def set_variables(self, *, variables: list[SetVariableDTO], flow_manager_args: FlowManagerArgs | None = None):
-        """변수 설정"""
-        if flow_manager_args is not None:
-            for variable in variables:
-                flow_manager_args.ctx.update_local_variables({
-                    variable["name"]: variable["init_value"]
-                })
-            flow_manager_args.done()
-
-    def make_script(self, *, contents: str, flow_manager_args: FlowManagerArgs | None = None):
-        """스크립트 생성"""
-        code = compile(contents, "<custom_script>", "exec")
-
-
-        merged_variables = {
-            **(flow_manager_args.ctx.variables.get("global") or {}),
-            **(flow_manager_args.ctx.variables.get("local") or {}),
-        }
-
-        env = {
-            "variables": merged_variables,
-            "var": merged_variables,
-            "update_variable": flow_manager_args.ctx.update_local_variables,
-            "done": flow_manager_args.done,
-            "pause": flow_manager_args.ctx.pause,
-            "stop": flow_manager_args.ctx.stop,
-            "resume": flow_manager_args.ctx.resume,
-            "check_stop": flow_manager_args.ctx.check_stop,
-            "rb_log": rb_log,
-        }
-
-        try:
-            exec(  # pylint: disable=exec-used
-                code,
-                {"__builtins__": make_builtins_allow_most()},
-                env,
-            )
-        finally:
             flow_manager_args.done()
 
 
@@ -287,25 +251,6 @@ class RBBaseSDK:
 
         if flow_manager_args is not None:
             flow_manager_args.done()
-
-
-    # async def repeat(self, *, count: int, flow_manager_args: FlowManagerArgs | None = None):
-    #     """지정한 횟수만큼 반복하는 함수."""
-    #     for i in range(count):
-    #         if flow_manager_args is not None:
-    #             flow_manager_args.done()
-
-    @abstractmethod
-    async def set_begin(
-        self,
-        *,
-        robot_model: str,
-        position: Any,
-        is_enable: bool = True,
-        speed_ratio: float | None = None,
-        flow_manager_args: FlowManagerArgs | None = None,
-    ):
-        """메인 태스크 시작 위치 설정"""
 
 
     def close(self):
