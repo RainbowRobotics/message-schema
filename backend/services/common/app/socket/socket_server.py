@@ -159,13 +159,13 @@ class RelayNS(socketio.AsyncNamespace):
             if not svc_sid:
                 return {"ok": False, "error": f"service '{service}' unavailable"}
             try:
-                res = await self.server.call(svc_sid, event, payload, namespace="/", timeout=3)
-                return res
+                res = await self.server.call(event, payload, sid=svc_sid, namespace="/", timeout=3)
+                return { "ok": True, "data": res }
             except TimeoutError:
                 return {"ok": False, "error": "timeout"}
         else:
             await self.emit(event, payload, room=f"svc:{service}")
-            return {"ok": True}
+            return {"ok": True, "data": "If you need to return data, send request with expectAck=True in the payload"}
 
 
 sio = socketio.AsyncServer(
