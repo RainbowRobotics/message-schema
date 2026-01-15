@@ -2947,19 +2947,20 @@ void MainWindow::watch_loop()
         {
           loc_fail_cnt = 0;
           LOCALIZATION::instance()->set_cur_loc_state("none");
-          //            led_color = LED_MAGENTA;
+          // led_color = LED_MAGENTA;
         }
         else
         {
           Eigen::Vector2d ieir = LOCALIZATION::instance()->get_cur_ieir();
           if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_error() ||
-              ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_ratio())
+             ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_ratio())
           {
             loc_fail_cnt++;
             if(loc_fail_cnt > 10)
             {
               LOCALIZATION::instance()->set_cur_loc_state("fail");
-              //                led_color = LED_MAGENTA_BLINK;
+              LOCALIZATION::instance()->stop();
+              // led_color = LED_MAGENTA_BLINK;
             }
           }
           else

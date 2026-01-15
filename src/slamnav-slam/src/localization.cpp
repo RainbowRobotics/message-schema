@@ -1,5 +1,5 @@
 #include "localization.h"
-namespace 
+namespace
 {
   const char* MODULE_NAME = "LOC";
 }
@@ -1084,6 +1084,10 @@ void LOCALIZATION::predict_loop_3d()
     tp_storage.clear();
   }
 
+  // slip detection
+  TIME_POSE last_icp_tp;
+  std::atomic<int> loc_fail_cnt = {0};
+
   log_info("predict_loop_3d start");
   while(predict_flag)
   {
@@ -1118,21 +1122,33 @@ void LOCALIZATION::predict_loop_3d()
         // slip detection
         Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
         Eigen::Vector2d dtdr = dTdR(ekf_tf, icp_tf);
-        if(std::abs(dtdr[1]) > 10.0 * D2R)
+        if(std::abs(dtdr[0]) > 0.3 || std::abs(dtdr[1]) > 10.0 * D2R)
         {
           icp_res_que.clear();
           ekf_3d.init(icp_tf);
-          log_warn("slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
+          log_warn("slip detection, reset EKF, dt: {:.3f}m, dth: {:.1f}deg", dtdr[0], dtdr[1]*R2D);
         }
         else
         {
           ekf_3d.estimate(icp_tf);
         }
+
+        last_icp_tp = icp_res;
       }
       else
       {
         ekf_3d.init(icp_res.tf);
+        last_icp_tp = icp_res;
       }
+    }
+
+    // slip detection (loc fail)
+    if(ekf_3d.initialized.load() && icp_fail_cnt.load() >= 1)
+    {
+      icp_res_que.clear();
+      icp_fail_cnt = 0;
+      ekf_3d.init(last_icp_tp.tf);
+      log_warn("slip detection(icp fail), reset EKF to last position");
     }
 
     Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
@@ -1203,8 +1219,15 @@ void LOCALIZATION::estimate_loop_3d()
         icp_res.tf = G;
 
         icp_res_que.push(icp_res);
+        icp_fail_cnt = 0;
+      }
+      else
+      {
+        icp_fail_cnt++;
+      }
 
-        // global scan update
+      // global scan update
+      {
         std::vector<Eigen::Vector3d> pts(frm.pts.size());
         for(size_t p = 0; p < frm.pts.size(); p++)
         {
@@ -1233,6 +1256,7 @@ void LOCALIZATION::estimate_loop_3d()
   }
 
   icp_res_que.clear();
+  icp_fail_cnt = 0;
   log_info("estimate_loop_3d stop");
 }
 
