@@ -165,8 +165,11 @@ private:
   tbb::concurrent_queue<TIME_POSE> icp_res_que;
 
   // slip detection
-  std::atomic<bool> has_valid_icp_res = {false};
-  std::atomic<int> icp_fail_cnt = {0};
+  TIME_POSE last_icp_tp;
+
+  // jump detection
+  TIME_POSE pre_jump_tp;
+  bool check_jump(const Eigen::Matrix4d& cur_tf, double cur_t);
 };
 
 #endif // LOCALIZATION_H

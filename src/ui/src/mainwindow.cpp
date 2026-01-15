@@ -2943,7 +2943,16 @@ void MainWindow::watch_loop()
       }
       else
       {
-        if(!LOCALIZATION::instance()->get_is_loc())
+        if(LOCALIZATION::instance()->get_cur_loc_state() == "fail")
+        {
+          if(LOCALIZATION::instance()->get_is_loc())
+          {
+            log_warn("[WATCH] loc_state is fail, stopping localization");
+            LOCALIZATION::instance()->stop();
+          }
+          loc_fail_cnt = 0;
+        }
+        else if(!LOCALIZATION::instance()->get_is_loc())
         {
           loc_fail_cnt = 0;
           LOCALIZATION::instance()->set_cur_loc_state("none");

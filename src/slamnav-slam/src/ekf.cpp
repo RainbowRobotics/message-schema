@@ -34,8 +34,8 @@ void EKF::init(const Eigen::Matrix4d& tf)
 
   // set process noise, Q_k (odom)
   M_k = Eigen::Matrix3d::Zero();
-  M_k(0,0) = 0.07 * 0.07;
-  M_k(1,1) = 0.07 * 0.07;
+  M_k(0,0) = 0.05 * 0.05;
+  M_k(1,1) = 0.05 * 0.05;
   M_k(2,2) = (3.0 * D2R) * (3.0 * D2R);
 
   // set measurement noise, R_k (icp)
