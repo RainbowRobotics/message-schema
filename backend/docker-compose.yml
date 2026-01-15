@@ -1,4 +1,3 @@
-
 services:
   amr:
     build:
@@ -42,7 +41,7 @@ services:
     volumes:
       - ./services/common/common.arm64.bin:/common.arm64.bin
       - ./services/common/common.amd64.bin:/common.amd64.bin
-      - /data:/data
+      - ./data:/data
 
   deploy:
     build:
@@ -64,7 +63,7 @@ services:
     volumes:
       - ./services/deploy/deploy.arm64.bin:/deploy.arm64.bin
       - ./services/deploy/deploy.amd64.bin:/deploy.amd64.bin
-      - /data:/data
+      - ./data:/data
 
   log:
     build:
@@ -86,7 +85,7 @@ services:
     volumes:
       - ./services/log/log.arm64.bin:/log.arm64.bin
       - ./services/log/log.amd64.bin:/log.amd64.bin
-      - /data:/data
+      - ./data:/data
 
   manipulate:
     build:
@@ -108,7 +107,7 @@ services:
     volumes:
       - ./services/manipulate/manipulate.arm64.bin:/manipulate.arm64.bin
       - ./services/manipulate/manipulate.amd64.bin:/manipulate.amd64.bin
-      - /data:/data
+      - ./data:/data
 
   api-gateway:
     build:

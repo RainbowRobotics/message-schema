@@ -504,6 +504,7 @@ async def export_collection(
         - file_name : 파일 이름. 입력 시 사용
         - filters : 검색 필터. 각 컬럼의 검색어라던가 날짜시간 등
     """
+    print("========================================")
     # 1) 필터 파싱
     filters = _normalize_filter(filters)
     tz_name = "Asia/Seoul"
@@ -516,7 +517,10 @@ async def export_collection(
         created_cond["$lt"] = end_utc
 
     # 3) 필드 세팅(_id 제외하는 것 일괄로 추가)
-    fields = {**fields, "_id": 0}
+    if fields is None:
+        fields = {"_id": 0}
+    else:
+        fields = {**fields, "_id": 0}
 
     # 4) 텍스트 검색(q) -> checkDB에서 등록한 인덱스안에서 검색
     if search_text:
@@ -546,6 +550,9 @@ async def export_collection(
     # results: list[dict] = []
     archived_count = 0
     gz_bytes = 0
+
+
+    print("filters: ", filters)
     count_est = await col.count_documents(filters)
     print(f"[export_collection] count_est: {count_est}")
     if count_est == 0:

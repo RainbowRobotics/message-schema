@@ -13,14 +13,11 @@ from typing import (
 
 
 @runtime_checkable
-class MoveDatabasePort(Protocol):
+class ControlDatabasePort(Protocol):
     """
     [AMR 이동 데이터베이스 아웃풋 포트]
     """
     async def save(self, command: dict) -> None: ...
-    """
-    [AMR 이동 데이터베이스 저장]
-    """
     async def update(self, command: dict) -> None: ...
     async def upsert(self, command: dict) -> None: ...
     async def get_log_by_id(self, id_: str) -> dict: ...

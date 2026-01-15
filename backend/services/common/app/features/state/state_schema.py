@@ -53,6 +53,5 @@ class PowerControlRequestPD(BaseModel):
     sync_servo: bool | None = None
     stoptime: float | None = 0.5
 
-
 class ServoControlRequestPD(BaseModel):
     servo_option: int

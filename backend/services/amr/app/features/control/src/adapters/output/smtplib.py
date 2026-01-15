@@ -2,12 +2,10 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from app.features.move.src.port.email_output import (
-    MoveEmailPort,
-)
+from app.features.control.src.port.email_output import ControlEmailPort
 
 
-class MoveSmtpLibEmailAdapter(MoveEmailPort):
+class ControlSmtpLibEmailAdapter(ControlEmailPort):
     """
     [AMR 이동 이메일 아웃풋 포트]
     """
@@ -15,8 +13,8 @@ class MoveSmtpLibEmailAdapter(MoveEmailPort):
         msg = EmailMessage()
         msg["From"] = "rainbow.mobilerobot@gmail.com"
         msg["To"] = email
-        msg["Subject"] = "[RRS] Move 로그 내보내기 결과"
-        msg.set_content(f"요청하신 Move 로그 파일을 첨부합니다.\n\n- 파일: {file_name}")
+        msg["Subject"] = "[RRS] Control 로그 내보내기 결과"
+        msg.set_content(f"요청하신 Control 로그 파일을 첨부합니다.\n\n- 파일: {file_name}")
 
         with open(file_path, "rb") as f:
             msg.add_attachment(

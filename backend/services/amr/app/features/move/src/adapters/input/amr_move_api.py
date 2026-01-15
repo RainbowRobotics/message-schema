@@ -3,7 +3,6 @@
 """
 
 from fastapi import APIRouter, BackgroundTasks
-from rb_modules.log import rb_log
 
 from app.features.move.schema.move_api import (
     Request_Move_CircularPD,
@@ -25,9 +24,6 @@ from app.features.move.schema.move_api import (
     Response_Move_XLinearPD,
 )
 from app.features.move.src.application.amr_move_service import AmrMoveService
-from app.socket.socket_client import (
-    socket_client,
-)
 
 # from app.main import amr_move_service
 amr_move_router = APIRouter(
@@ -384,15 +380,29 @@ async def slamnav_move_rotate(request: Request_Move_RotatePD) -> Response_Move_R
     "/logs",
     summary="이동 로그 조회",
     description="""
-    이동 로그를 조회합니다.
+이동 로그를 조회합니다.
 
-    - limit: 페이지 당 로그 수
-    - page: 페이지 번호
-    - search_text: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
-    - sort: 정렬 기준 필드
-    - order: 정렬 순서 "asc" 또는 "desc"
-    - filter: 검색 필터. JSON 문자열로 입력합니다. MongoDB 조건식에 맞춰 입력해주세요. 예) {'result': 'success'}
-    - fields: 반환 필드. 입력이 없으면 저장된 모든 필드가 반환되며 입력한 필드의 값에 따라 특정 필드만 반환받거나 특정 필드를 제외하고 반환받고 싶을때 사용하세요. 예) id필드만 제외하고 반환 {'id': 0}, id와 status필드만 반환 {'id': 1, 'status': 1}
+## 📌 기능 설명
+- 로봇의 이동 기록을 조회합니다.
+- 페이지네이션 기능을 제공합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| limit | number | - | - | 페이지 당 로그 수 | 10 |
+| page | number | - | - | 페이지 번호 | 1 |
+| searchText | string | - | - | 검색어 | 'test' |
+| sort | string | - | - | 정렬 기준 필드. 기본값은 createdAt 입니다. | 'createdAt' |
+| order | string | - | - | 정렬 순서 | 'desc', 'asc' |
+| filter | dict | - | - | 검색 필터. MongoDB 조건식에 맞춰 입력해주세요.  | {'result': 'success'} |
+| fields | dict | - | - | 반환 필드. 입력이 없으면 저장된 모든 필드가 반환되며 입력한 필드의 값에 따라 특정 필드만 반환받거나 특정 필드를 제외하고 반환받고 싶을때 사용하세요. 예) id필드만 제외하고 반환 {'id': 0}, id와 status필드만 반환 {'id': 1, 'status': 1} | {'id': 0} |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
     """,
     response_description="이동 로그 조회 결과 반환"
 )
@@ -408,9 +418,28 @@ async def slamnav_move_logs(
 
 @amr_move_router.delete(
     "/logs",
-    summary="이동 로그 아카이브(디버그)",
-    description="이동 로그를 삭제합니다. 입력된 기간동안의 로그를 삭제하며 옵션으로는 삭제할 로그를 압축보관할 지 여부를 결정할 수 있습니다",
-    response_description="이동 로그 삭제 결과 반환"
+    summary="이동 로그 삭제",
+    description="""
+이동 로그를 삭제합니다.
+
+## 📌 기능 설명
+- 로봇의 이동 기록을 삭제합니다.
+- 입력된 날짜 이전의 로그를 삭제하며 옵션으로는 삭제할 로그를 압축보관할 지 여부를 결정할 수 있습니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| cutOffDate | string | - | - | 삭제 기준 날짜 | 2025-11-04 |
+| isDryRun | bool | - | - | 값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다 | False |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+    """,
+    response_description="이동 로그 조회 결과 반환"
 )
 async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
     """
@@ -448,8 +477,5 @@ async def export_move_logs(dto: RequestAmrMoveExportLogPD, background_tasks: Bac
 
 
 
-
-@amr_move_router.get("/test")
-async def test_move():
-    rb_log.info("============== 테스트 =================")
-    await socket_client.emit("test/v1/move/test", "test")
+# To Do Someday..
+# - pathRequest

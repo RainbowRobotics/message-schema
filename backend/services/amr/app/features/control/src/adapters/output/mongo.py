@@ -7,50 +7,34 @@ from datetime import (
     date,
     datetime,
 )
-from typing import (
-    Any,
-)
+from typing import Any
 
 import rb_database.mongo_db as mongo_db
-from motor.motor_asyncio import (
-    AsyncIOMotorCollection,
-)
+from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo import (
     ASCENDING,
     DESCENDING,
 )
-from rb_modules.log import (
-    rb_log,
-)
-from rb_utils.date import (
-    convert_dt,
-)
-from rb_utils.pagination import (
-    LogsResponse,
-)
-from rb_utils.service_exception import (
-    ServiceException,
-)
+from rb_modules.log import rb_log
+from rb_utils.date import convert_dt
+from rb_utils.pagination import LogsResponse
+from rb_utils.service_exception import ServiceException
 
-from app.features.move.src.port.database_output import (
-    MoveDatabasePort,
-)
+from app.features.control.src.port.database_output import ControlDatabasePort
 
 
-class MoveMongoDatabaseAdapter(MoveDatabasePort):
+class ControlMongoDatabaseAdapter(ControlDatabasePort):
     """
-    [Move MongoDB 어댑터 초기화]
+    [Control MongoDB 어댑터 초기화]
     """
     def __init__(self):
-        self.name = "command_move"
+        self.name = "amr_control"
 
     async def check_db(self):
         try:
             # 0) 인덱스 삭제용..(필요할때만..주석해제..)
             # await mongo_db.db[self.name].drop_index("move_index")
             # await mongo_db.db[self.name].drop_index("created_at_1")
-
-
 
             # 1) 컬렉션 생성(이미 존재하면 패스)
             await mongo_db.add_collection(mongo_db.db, self.name)

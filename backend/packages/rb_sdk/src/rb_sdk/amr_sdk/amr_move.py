@@ -66,6 +66,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.preset = preset
 
         # 2) 요청 전송
+        print(f"=> send_move_goal: {robot_model}/move/goal")
         result = self.client.query_one(
             f"{robot_model}/move/goal",
             flatbuffer_req_obj=req,

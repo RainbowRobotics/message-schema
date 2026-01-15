@@ -22,6 +22,7 @@ table Response_Localization_Init {
 table Request_Localization_SemiAutoInit {
     id: string;
 }
+
 table Response_Localization_SemiAutoInit {
     id: string;
     result: string;
