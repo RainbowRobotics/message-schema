@@ -3083,7 +3083,13 @@ void AUTOCONTROL::control_loop()
 
       if(max_idx - goal_idx < 2)
       {
-        Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+        // deprecated final align
+        // Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+        
+        // z축 차이로 인한 변환 오차 방지 (goal_pos의 z를 현재 z로 맞춤)
+        Eigen::Vector3d goal_pos_2d(goal_pos[0], goal_pos[1], cur_pos[2]);
+        Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos_2d + cur_tf_inv.block(0,3,3,1);
+   
         double v0 = cur_vel[0];
         double v;
         double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
