@@ -9,13 +9,9 @@ import sys
 import threading
 import time
 import uuid
-from collections.abc import (
-    Callable,
-)
+from collections.abc import Callable, Iterator
 from functools import partial
-
-# import flatbuffers
-from typing import Any, Protocol, cast
+from typing import Any, Generic, NotRequired, Protocol, TypedDict, TypeVar, cast, overload
 
 import flatbuffers
 import psutil
@@ -56,14 +52,23 @@ IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)  # pyright: ignore[reportAttributeAccessIssue]
 
+T = TypeVar("T")
 
 class FBPackable(Protocol):
     def Pack(self, builder: Any) -> Any: ...
 
 
-class FBRootReadable(Protocol):
+class FBRootReadable(Protocol[T]):
     @staticmethod
-    def InitFromPackedBuf(buf: bytes, pos: int = 0) -> Any: ...
+    def InitFromPackedBuf(buf: bytes, pos: int = 0) -> T: ...
+
+class QueryResult(TypedDict, Generic[T]):
+    key: str | None
+    payload: bytes
+    attachment: dict[str, str]
+    dict_payload: NotRequired[dict[str, Any] | None]
+    obj_payload: NotRequired[T | None]
+    err: NotRequired[str | None]
 
 def can_bind_7447() -> bool:
     s = socket.socket()
@@ -459,17 +464,43 @@ class ZenohClient:
                 qbl.undeclare()
             print(f"🧹 queryable undeclared: {keyexpr}")
 
+    @overload
+    def query(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 2,
+        flatbuffer_req_obj: FBPackable,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> Iterator[QueryResult[T]]: ...
+
+    @overload
+    def query(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 2,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: None = None,
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> Iterator[QueryResult[None]]: ...
+
     def query(
         self,
         keyexpr: str,
         *,
         timeout: int = 2,
         flatbuffer_req_obj: FBPackable | None = None,
-        flatbuffer_res_T_class: FBRootReadable | None = None,
+        flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
-    ):
+    ) -> Iterator[QueryResult[T] | QueryResult[None]]:
         if self.session is None:
             self.connect()
 
@@ -478,7 +509,7 @@ class ZenohClient:
                 raise ValueError(
                     "flatbuffer_buf_size is required when flatbuffer_obj_t is provided"
                 )
-            elif flatbuffer_res_T_class is None:
+            if flatbuffer_res_T_class is None:
                 raise ValueError(
                     "flatbuffer_res_T_class is required when flatbuffer_obj_t is provided"
                 )
@@ -494,9 +525,6 @@ class ZenohClient:
                 "ALL_COMPLETE": QueryTarget.ALL_COMPLETE,
             }.get(target.upper(), QueryTarget.BEST_MATCHING)
 
-        # dict_params = dict(params or {})
-        # sel = Selector(keyexpr, dict_params)
-
         try:
             get_result = cast(Session, self.session).get(
                 keyexpr, payload=payload, target=target, timeout=timeout
@@ -509,18 +537,19 @@ class ZenohClient:
 
                 if rep.ok is not None:
                     samp = rep.ok
+
                     res_payload = (
                         bytes(samp.payload)
                         if isinstance(samp.payload, ZBytes)
                         else bytes(samp.payload)
                     )
+
                     att_raw = samp.attachment
-                    # enc = str(samp.encoding or "flatbuffer").lower()
 
                     att: str | None = None
-                    if isinstance(att_raw, bytes | bytearray):
-                        att = att_raw.decode("utf-8", "ignore")
-                    elif hasattr(att_raw, "to_bytes") and att_raw is not None:
+                    if isinstance(att_raw, (bytes, bytearray)):
+                        att = bytes(att_raw).decode("utf-8", "ignore")
+                    elif att_raw is not None and hasattr(att_raw, "to_bytes"):
                         att = att_raw.to_bytes().decode("utf-8", "ignore")
 
                     att_dict = dict(
@@ -530,23 +559,34 @@ class ZenohClient:
                         for k, v in [seg.split("=", 1)]
                     )
 
-                    ok_result = {
-                        "key": samp.key_expr,
-                        "payload": res_payload,
-                        "attachment": att_dict,
-                        "dict_payload": None,
-                        "err": None,
-                    }
-
+                    # ✅ FlatBuffer 응답: obj_payload 타입이 T로 따라옴
                     if flatbuffer_req_obj is not None and flatbuffer_res_T_class is not None:
-                        ok_result["dict_payload"] = t_to_dict(
-                            flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)
-                        )
+                        obj_payload = flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)  # T
+                        dict_payload = t_to_dict(obj_payload)
 
-                        if ok_result["dict_payload"] is None:
+                        if dict_payload is None:
                             raise ValueError("dict_payload is not a dict")
 
-                    yield ok_result
+                        ok_result_fb: QueryResult[T] = {
+                            "key": samp.key_expr,
+                            "payload": res_payload,
+                            "attachment": att_dict,
+                            "dict_payload": dict_payload,
+                            "obj_payload": obj_payload,
+                            "err": None,
+                        }
+                        yield ok_result_fb
+
+                    # ✅ Raw 응답
+                    else:
+                        ok_result_raw: QueryResult[None] = {
+                            "key": samp.key_expr,
+                            "payload": res_payload,
+                            "attachment": att_dict,
+                            "dict_payload": None,
+                            "err": None,
+                        }
+                        yield ok_result_raw
 
                 elif rep.err is not None:
                     perr = rep.err
@@ -563,7 +603,7 @@ class ZenohClient:
                     except Exception:
                         msg = res_payload.decode("utf-8", "ignore")
 
-                    err_result: dict[str, Any] = {
+                    err_result: QueryResult[None] = {
                         "key": key_expr,
                         "payload": res_payload,
                         "attachment": {},
@@ -577,8 +617,32 @@ class ZenohClient:
 
         except ZError as ze:
             raise ZenohTransportError(str(ze)) from ze
-        except Exception as e:
-            raise e
+
+    @overload
+    def query_one(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 3,
+        flatbuffer_req_obj: FBPackable,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> QueryResult[T]: ...
+
+    @overload
+    def query_one(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 3,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: None = None,
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> QueryResult[None]: ...
 
     def query_one(
         self,
@@ -586,7 +650,7 @@ class ZenohClient:
         *,
         timeout: int = 3,
         flatbuffer_req_obj: FBPackable | None = None,
-        flatbuffer_res_T_class: FBRootReadable | None = None,
+        flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,

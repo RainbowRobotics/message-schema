@@ -196,10 +196,10 @@ class RBSocketIONsClient(socketio.AsyncClient):
             async def wrapped(*payload):
                 if len(payload) >= 2:
                     extra = payload[-1]
-                    core = payload[:-1]
+                    core = list(payload[:-1])
                 else:
                     extra = {}
-                    core = payload
+                    core = list(payload)
 
                 path_params = extra.get("__path_params__", {}) or {}
                 cleaned = {k: v for k, v in path_params.items() if k in param_names}

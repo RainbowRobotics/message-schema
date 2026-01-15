@@ -143,10 +143,7 @@ class Step:
 
         children_src = ""
         if self.children:
-            children_src = (
-                (" " * (depth + 4))
-                + f"children={children_block},\n"
-            )
+            children_src = (" " * (depth + 4)) + f"children={children_block},\n"
 
         return (
             (" " * depth)
@@ -174,7 +171,9 @@ class Step:
             + f"){',' if depth > 0 else ''}"
         )
 
-    def _pre_execute(self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False):
+    def _pre_execute(
+        self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False
+    ):
         if reset_condition_result:
             condition_map: dict[str, bool] = ctx.data.get("condition_map", {})
 
@@ -205,7 +204,6 @@ class Step:
 
         ctx.step_num += 1
 
-
     def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
         if len(self.children) > 0:
@@ -216,7 +214,10 @@ class Step:
         for child in self.children:
             try:
                 child_target_step_id = getattr(child, "target_step_id", None)
-                if child_target_step_id is not None and child_target_step_id == current_target_step_id:
+                if (
+                    child_target_step_id is not None
+                    and child_target_step_id == current_target_step_id
+                ):
                     continue
 
                 if current_target_step_id is not None and child.step_id == current_target_step_id:
@@ -243,11 +244,9 @@ class Step:
 
         done_called = False
 
-
         fn = self.func
         func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
         args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
-
 
         if fn is None and func_name and not self.disabled and not is_skip:
             fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
@@ -277,7 +276,7 @@ class Step:
 
                 done_event.set()
 
-            flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args, done=done)
+            flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args or {}, done=done)
 
             eval_args = {}
 
@@ -355,7 +354,6 @@ class Step:
         self.execute_children(ctx, target_step_id=target_step_id)
 
 
-
 class FolderStep(Step):
     """폴더 Step"""
 
@@ -419,6 +417,7 @@ class FolderStep(Step):
             return
         finally:
             ctx.leave_folder()
+
 
 class RepeatStep(Step):
     """반복 Step"""
@@ -603,7 +602,6 @@ class RepeatStep(Step):
                         break
 
 
-
 class ConditionStep(Step):
     """조건 Step"""
 
@@ -695,7 +693,11 @@ class ConditionStep(Step):
 
         condition_result = condition_map.get(key)
 
-        if self.condition_type == "Case" and condition_result is None or self.condition_type == "If":
+        if (
+            self.condition_type == "Case"
+            and condition_result is None
+            or self.condition_type == "If"
+        ):
             condition_map[key] = False
             condition_result = False
         else:
@@ -752,6 +754,7 @@ class ConditionStep(Step):
 
 class BreakStep(Step):
     """가장 가까운 RepeatStep 실행을 중단"""
+
     _class_name = "BreakStep"
 
     def __init__(self, *, step_id: str, name: str, break_type: str, disabled: bool | None = None):
@@ -801,10 +804,20 @@ class BreakStep(Step):
 
 class JumpToStep(Step):
     """특정 step_id로 점프"""
+
     _class_name = "JumpToStep"
 
-    def __init__(self, *, step_id: str, name: str, target_step_id: str | None = None, disabled: bool | None = None):
-        super().__init__(step_id=step_id, name=name, target_step_id=target_step_id, disabled=disabled)
+    def __init__(
+        self,
+        *,
+        step_id: str,
+        name: str,
+        target_step_id: str | None = None,
+        disabled: bool | None = None,
+    ):
+        super().__init__(
+            step_id=step_id, name=name, target_step_id=target_step_id, disabled=disabled
+        )
         self.target_step_id = target_step_id
 
     @staticmethod
@@ -841,12 +854,29 @@ class JumpToStep(Step):
         if self.target_step_id is not None:
             raise JumpToStepException(target_step_id=self.target_step_id)
 
+
 class SubTaskStep(Step):
     """서브 태스크 Step"""
+
     _class_name = "SubTaskStep"
 
-    def __init__(self, *, step_id: str, name: str, sub_task_type: Literal["INSERT", "CHANGE"], sub_task_script_path: str, disabled: bool | None = None, children: list | None = None):
-        super().__init__(step_id=step_id, name=name, sub_task_type=sub_task_type, sub_task_script_path=sub_task_script_path, disabled=disabled)
+    def __init__(
+        self,
+        *,
+        step_id: str,
+        name: str,
+        sub_task_type: Literal["INSERT", "CHANGE"],
+        sub_task_script_path: str,
+        disabled: bool | None = None,
+        children: list | None = None,
+    ):
+        super().__init__(
+            step_id=step_id,
+            name=name,
+            sub_task_type=sub_task_type,
+            sub_task_script_path=sub_task_script_path,
+            disabled=disabled,
+        )
         self.sub_task_type = sub_task_type
         self.sub_task_script_path = sub_task_script_path
 
@@ -923,7 +953,9 @@ class SubTaskStep(Step):
         if self.sub_task_type == "INSERT":
             try:
                 sub_task_list = ctx.state_dict.get("sub_task_list", [])
-                sub_task_list.append({"task_id": sub_task_tree.step_id, "sub_task_type": self.sub_task_type})
+                sub_task_list.append(
+                    {"task_id": sub_task_tree.step_id, "sub_task_type": self.sub_task_type}
+                )
                 ctx.state_dict["sub_task_list"] = sub_task_list
 
                 ctx.emit_sub_task_start(sub_task_tree.step_id, self.sub_task_type)
@@ -942,7 +974,11 @@ class SubTaskStep(Step):
 
         elif self.sub_task_type == "CHANGE":
             ctx.step_num = 0
-            raise ChangeSubTaskException(task_id=sub_task_tree.step_id, sub_task_tree=sub_task_tree, sub_task_post_tree=sub_task_post_tree)
+            raise ChangeSubTaskException(
+                task_id=sub_task_tree.step_id,
+                sub_task_tree=sub_task_tree,
+                sub_task_post_tree=sub_task_post_tree,
+            )
 
         self._post_execute(ctx, ignore_step_interval=True)
 
