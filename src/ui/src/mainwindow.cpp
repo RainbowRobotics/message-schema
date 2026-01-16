@@ -307,14 +307,23 @@ void MainWindow::setup_vtk()
 
 void MainWindow::init_modules()
 {
+  // Determine base path (check if config exists in bin/ or parent directory)
+  QString config_base = QCoreApplication::applicationDirPath();
+  QString common_config_path = config_base + "/config/common.json";
+  if(!QFile::exists(common_config_path))
+  {
+    common_config_path = config_base + "/../config/common.json";
+    config_base = config_base + "/..";
+  }
+
   // log module init
   {
-    LOGGER::instance()->set_log_path(QCoreApplication::applicationDirPath() + "/snlog/");
+    LOGGER::instance()->set_log_path(config_base + "/snlog/");
     LOGGER::instance()->init();
   }
 
   // load config
-  if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
+  if(CONFIG::instance()->load_common(common_config_path))
   {
     QString robot_type_str = CONFIG::instance()->get_robot_type_str();
     //      qDebug()<<"robot_type_str : "<<robot_type_str;
@@ -328,7 +337,7 @@ void MainWindow::init_modules()
     }
     else
     {
-      QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
+      QString path = config_base + "/config/" + robot_type_str + "/config.json";
       CONFIG::instance()->set_config_path(path);
       CONFIG::instance()->load();
 
@@ -339,11 +348,11 @@ void MainWindow::init_modules()
       }
 
 
-      QString path_version = QCoreApplication::applicationDirPath() + "/version.json";
+      QString path_version = config_base + "/version.json";
       CONFIG::instance()->set_version_path(path_version);
       CONFIG::instance()->load_version();
 
-      QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config_sn.json";
+      QString path_cam_serial_number = config_base + "/config/" + robot_type_str + "/config_sn.json";
       CONFIG::instance()->set_serial_number_path(path_cam_serial_number);
       CONFIG::instance()->load_cam_serial_number();
     }

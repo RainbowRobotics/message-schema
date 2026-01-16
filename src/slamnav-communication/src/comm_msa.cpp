@@ -3442,7 +3442,7 @@ bool COMM_MSA::resolve_goal_id(DATA_MOVE& msg)
   }
 
   // If goal_node_id is empty but goal_node_name exists, find the ID by name
-  if(!msg.goal_node_name.isEmpty())
+  if(!msg.goal_node_name.isEmpty() && unimap)
   {
     NODE* node = unimap->get_node_by_name(msg.goal_node_name);
     if(node)
