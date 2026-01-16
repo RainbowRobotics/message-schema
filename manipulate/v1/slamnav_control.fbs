@@ -1,0 +1,132 @@
+namespace SLAMNAV;
+
+table Request_Safety_Field {
+    id: string;
+    command: string;
+    safety_field: int;
+}
+table Response_Safety_Field {
+    id: string;
+    command: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+table Request_Reset_Safety_Flag {
+    id: string;
+    reset_flag: string;
+}
+table Response_Reset_Safety_Flag {
+    id: string;
+    reset_flag: string;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Dock {
+    id: string;
+    command: string;
+}
+table Response_Dock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Obs_Box {
+    id: string;
+    command: string;
+    min_z: float;
+    max_z: float;
+    map_range: float;
+}
+table Response_Obs_Box {
+    id: string;
+    command: string;
+    min_z: float;
+    max_z: float;
+    map_range: float;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Safety_Io {
+    id: string;
+    command: string;
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+}
+table Response_Safety_Io {
+    id: string;
+    command: string;
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Control_LED {
+    id: string;
+    onoff: bool;
+    color: string;
+}
+table Response_Control_LED {
+    id: string;
+    onoff: bool;
+    color: string;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Control_Motor {
+    id: string;
+    onoff: bool;
+}
+table Response_Control_Motor {
+    id: string;
+    onoff: bool;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Random_Sequence {
+    id: string;
+}
+table Response_Random_Sequence {
+    id: string;
+    result: string;
+    message: string;
+}
+
+//---------------------------------------------
+
+table Request_Control_Frequency {
+    id: string;
+    target: string; //lidar, path
+    onoff: bool;
+    frequency: int;
+}
+table Response_Control_Frequency {
+    id: string;
+    target: string;
+    onoff: bool;
+    frequency: int;
+    result: string;
+    message: string;
+}

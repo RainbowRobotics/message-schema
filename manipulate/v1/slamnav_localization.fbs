@@ -1,0 +1,65 @@
+namespace SLAMNAV;
+
+table Request_Localization_Init {
+    id: string;
+    command: string;
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+table Response_Localization_Init {
+    id: string;
+    command: string;
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+    result: string;
+    message: string;
+}
+
+table Request_Localization_SemiAutoInit {
+    id: string;
+}
+table Response_Localization_SemiAutoInit {
+    id: string;
+    result: string;
+    message: string;
+}
+table Request_Localization_AutoInit {
+    id: string;
+}
+table Response_Localization_AutoInit {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Localization_Start {
+    id: string;
+}
+table Response_Localization_Start {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Localization_Stop {
+    id: string;
+}
+table Response_Localization_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+table Request_Localization_RandomInit {
+    id: string;
+    random_seed: string;
+}
+table Response_Localization_RandomInit {
+    id: string;
+    random_seed: string;
+    result: string;
+    message: string;
+}
