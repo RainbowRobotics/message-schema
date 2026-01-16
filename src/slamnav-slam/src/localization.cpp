@@ -1,5 +1,5 @@
 #include "localization.h"
-namespace 
+namespace
 {
   const char* MODULE_NAME = "LOC";
 }
@@ -151,6 +151,9 @@ void LOCALIZATION::stop()
 
   ekf.reset();
   ekf_3d.reset();
+
+  // reset jump detection
+  pre_jump_tp = TIME_POSE();
 
   QString loc_mode = config->get_loc_mode();
 
@@ -570,6 +573,64 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, FRAME& frm, Eigen::M
     res[1] = (double)err_num/frm.pts.size(); // inlier ratio
     return res;
   }
+}
+
+bool LOCALIZATION::check_jump(const Eigen::Matrix4d& cur_tf, double cur_t)
+{
+  // skip
+  if(pre_jump_tp.t == 0.0 || !ekf_3d.initialized.load())
+  {
+    pre_jump_tp.tf = cur_tf;
+    pre_jump_tp.t = cur_t;
+    return false;
+  }
+
+  double dt = cur_t - pre_jump_tp.t;
+  if(dt <= 0.0)
+  {
+    return false;
+  }
+
+  // calculate displacement
+  Eigen::Vector3d pre_pos = pre_jump_tp.tf.block(0,3,3,1);
+  Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+  double d = (cur_pos - pre_pos).norm();
+
+  // calculate rotation difference (yaw)
+  double pre_th = atan2(pre_jump_tp.tf(1,0), pre_jump_tp.tf(0,0));
+  double cur_th = atan2(cur_tf(1,0), cur_tf(0,0));
+  double dth = std::abs(cur_th - pre_th);
+  if(dth > M_PI)
+  {
+    dth = 2*M_PI - dth;
+  }
+
+  // physical limits
+  double max_linear_vel = config->get_motor_limit_v();
+  double max_angular_vel = config->get_motor_limit_w()*D2R;
+  double safety_factor = 2.0;     // allow some margin
+
+  double max_d = max_linear_vel * dt * safety_factor;
+  double max_dth = max_angular_vel * dt * safety_factor;
+
+  bool is_jump = false;
+  if(d > max_d)
+  {
+    log_warn("[JUMP DETECTION] position jump detected: dist={:.3f}m, max={:.3f}m, dt={:.3f}s", d, max_d, dt);
+    is_jump = true;
+  }
+
+  if(dth > max_dth)
+  {
+    log_warn("[JUMP DETECTION] rotation jump detected: dyaw={:.1f}deg, max={:.1f}deg, dt={:.3f}s", dth*R2D, max_dth*R2D, dt);
+    is_jump = true;
+  }
+
+  // update previous values
+  pre_jump_tp.tf = cur_tf;
+  pre_jump_tp.t = cur_t;
+
+  return is_jump;
 }
 
 void LOCALIZATION::localization_loop_2d()
@@ -1084,6 +1145,12 @@ void LOCALIZATION::predict_loop_3d()
     tp_storage.clear();
   }
 
+  TIME_POSE pre_tp;
+
+  // for slip detection (IMU vs wheel odom)
+  MOBILE_POSE pre_mo = mobile->get_pose();
+  IMU pre_imu = lidar_3d->get_best_imu(pre_mo.t, 0);
+
   log_info("predict_loop_3d start");
   while(predict_flag)
   {
@@ -1092,7 +1159,51 @@ void LOCALIZATION::predict_loop_3d()
     cur_mo_tp.t = cur_mo.t;
     cur_mo_tp.tf = se2_to_TF(cur_mo.pose);
 
-    if(ekf_3d.initialized.load())
+    // slip detection: compare IMU delta vs wheel odom delta
+    bool is_slip = false;
+    IMU cur_imu = lidar_3d->get_best_imu(cur_mo.t, 0);
+    if(pre_imu.t > 0 && cur_imu.t > pre_imu.t && cur_mo.t - pre_mo.t > 0)
+    {
+      Eigen::Matrix4d odom_delta_tf = se2_to_TF(pre_mo.pose).inverse()*se2_to_TF(cur_mo.pose);
+      Eigen::Vector3d odom_delta_xi = TF_to_se2(odom_delta_tf);
+      double odom_delta_dist = std::sqrt(odom_delta_xi[0]*odom_delta_xi[0] + odom_delta_xi[1]*odom_delta_xi[1]);
+      double odom_delta_yaw = odom_delta_xi[2];
+
+      // yaw comparison (IMU rz is yaw in so3 representation)
+      double imu_delta_yaw = cur_imu.rz - pre_imu.rz;
+      if(imu_delta_yaw > M_PI)
+      {
+        imu_delta_yaw -= 2*M_PI;
+      }
+      else if(imu_delta_yaw < -M_PI)
+      {
+        imu_delta_yaw += 2*M_PI;
+      }
+
+      double yaw_diff = std::abs(imu_delta_yaw - odom_delta_yaw);
+      if(yaw_diff > M_PI)
+      {
+        yaw_diff = 2*M_PI - yaw_diff;
+      }
+
+      // distance comparison (integrate IMU acceleration)
+      double imu_dt = cur_imu.t - pre_imu.t;
+      double odom_dt = cur_mo.t - pre_mo.t;
+
+      double odom_vel = odom_delta_dist / odom_dt;
+      double imu_delta_dist = odom_vel * imu_dt + 0.5 * cur_imu.acc_x * imu_dt * imu_dt;
+      double dist_diff = std::abs(imu_delta_dist - odom_delta_dist);
+      if(yaw_diff > 3.0*D2R || dist_diff > 0.05)
+      {
+        is_slip = true;
+        log_warn("slip detection: diff({:.1f}deg, diff={:.3f}m), yaw(imu={:.1f}, odom={:.1f}), dist(imu={:.3f}, odom={:.3f})",
+                  yaw_diff*R2D, dist_diff, imu_delta_yaw*R2D, odom_delta_yaw*R2D, imu_delta_dist, odom_delta_dist);
+      }
+    }
+    pre_imu = cur_imu;
+
+    // predict only if no slip detected
+    if(ekf_3d.initialized.load() && !is_slip)
     {
       ekf_3d.predict(cur_mo_tp);
     }
@@ -1108,30 +1219,46 @@ void LOCALIZATION::predict_loop_3d()
 
     if(has_icp_result)
     {
+      // compensate time delay
+      Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
+      Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+      Eigen::Matrix4d mo_dtf = tf0.inverse() * tf1;
+      Eigen::Matrix4d icp_tf = icp_res.tf * mo_dtf;
+
+      if(is_slip)
+      {
+        icp_tf = icp_res.tf;
+      }
+
       if(ekf_3d.initialized.load())
       {
-        Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
-        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-        Eigen::Matrix4d mo_dtf = tf0.inverse() * tf1;
-        Eigen::Matrix4d icp_tf = icp_res.tf * mo_dtf;
-
-        // slip detection
-        Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
-        Eigen::Vector2d dtdr = dTdR(ekf_tf, icp_tf);
-        if(std::abs(dtdr[1]) > 10.0 * D2R)
+        // jump detection
+        if(check_jump(icp_tf, cur_mo.t))
         {
-          icp_res_que.clear();
-          ekf_3d.init(icp_tf);
-          log_warn("slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
+          log_warn("ICP result jump detected, skip estimate");
         }
         else
         {
           ekf_3d.estimate(icp_tf);
+
+          // save last icp (only when not jump)
+          {
+            std::lock_guard<std::mutex> lock(mtx);
+            last_icp_tp.t = icp_res.t;
+            last_icp_tp.tf = icp_tf;
+          }
         }
       }
       else
       {
         ekf_3d.init(icp_res.tf);
+
+        // save last icp
+        {
+          std::lock_guard<std::mutex> lock(mtx);
+          last_icp_tp.t = icp_res.t;
+          last_icp_tp.tf = icp_tf;
+        }
       }
     }
 
@@ -1142,7 +1269,7 @@ void LOCALIZATION::predict_loop_3d()
     {
       std::lock_guard<std::mutex> lock(mtx);
       TIME_POSE tp;
-      tp.t = cur_mo.t;
+      tp.t = icp_res.t;
       tp.tf = G;
       tp_storage.push_back(tp);
       if(tp_storage.size() > 300)
@@ -1150,6 +1277,9 @@ void LOCALIZATION::predict_loop_3d()
         tp_storage.erase(tp_storage.begin());
       }
     }
+
+    // for next operation
+    pre_mo = cur_mo;
 
     // set localization info for plot
     double cur_loop_time = get_time();
@@ -1177,6 +1307,8 @@ void LOCALIZATION::estimate_loop_3d()
 {
   lidar_3d->clear_merged_queue();
 
+  int icp_fail_cnt = 0;
+
   log_info("estimate_loop_3d start");
   while(estimate_flag)
   {
@@ -1189,10 +1321,10 @@ void LOCALIZATION::estimate_loop_3d()
         continue;
       }
 
-      double icp_st_t = mobile->get_pose().t;
       Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
 
       // icp
+      double icp_st_t = mobile->get_pose().t;
       std::vector<Eigen::Vector3d> dsk = frm.pts;
       double err = map_icp(dsk, G);
 
@@ -1203,8 +1335,38 @@ void LOCALIZATION::estimate_loop_3d()
         icp_res.tf = G;
 
         icp_res_que.push(icp_res);
+        icp_fail_cnt = 0;
+      }
+      else
+      {
+        icp_fail_cnt++;
 
-        // global scan update
+        // Eigen::Matrix4d retry_G = G;
+        // {
+        //   std::lock_guard<std::mutex> lock(mtx);
+        //   retry_G =last_icp_tp.tf;
+        // }
+
+        // if(map_icp(dsk, retry_G) < config->get_loc_2d_icp_error_threshold())
+        // {
+        //   TIME_POSE icp_res;
+        //   icp_res.t = icp_st_t;
+        //   icp_res.tf = retry_G;
+
+        //   icp_res_que.push(icp_res);
+        //   icp_fail_cnt = 0;
+        // }
+
+        // if(icp_fail_cnt >= 5)
+        // {
+        //   set_cur_loc_state("fail");
+        //   log_error("ICP continuous fail: {}", icp_fail_cnt);
+        // }
+      }
+
+
+      // global scan update
+      {
         std::vector<Eigen::Vector3d> pts(frm.pts.size());
         for(size_t p = 0; p < frm.pts.size(); p++)
         {

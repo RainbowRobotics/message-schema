@@ -136,7 +136,7 @@ private:
   void obs_loop();                                      // obstacle loop
 
   // for plot
-  std::vector<Eigen::Vector3d> cur_global_scan;        // cur global scan
+  std::vector<Eigen::Vector3d> cur_global_scan;         // cur global scan
 
   // flag
   std::atomic<bool> is_loc = {false};
@@ -164,7 +164,12 @@ private:
   // storage
   tbb::concurrent_queue<TIME_POSE> icp_res_que;
 
+  // slip detection
+  TIME_POSE last_icp_tp;
 
+  // jump detection
+  TIME_POSE pre_jump_tp;
+  bool check_jump(const Eigen::Matrix4d& cur_tf, double cur_t);
 };
 
 #endif // LOCALIZATION_H
