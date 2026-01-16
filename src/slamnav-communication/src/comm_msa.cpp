@@ -3137,29 +3137,27 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         return;
       }
 
-      QString goal_id = msg.goal_node_id;
-      if(goal_id.isEmpty())
+      // Resolve goal_node_id from goal_node_name if goal_node_id is empty
+      if(!resolve_goal_id(msg))
       {
         msg.result = "reject";
+        msg.message = "goal not found";
         send_move_response(msg);
         return;
       }
 
-      NODE* node = unimap->get_node_by_id(goal_id);
+      // Get the node using resolved goal_node_id
+      NODE* node = unimap->get_node_by_id(msg.goal_node_id);
       if(!node)
       {
-        node = unimap->get_node_by_name(goal_id);
-        if(!node)
-        {
-          msg.result = "reject";
-          send_move_response(msg);
-          return;
-        }
-        // convert name to id
-        msg.goal_node_id = node->id;
-        msg.goal_node_name = node->name;
+        msg.result = "reject";
+        msg.message = "node not found";
+        send_move_response(msg);
+        return;
       }
-      else
+
+      // Fill goal_node_name if not set
+      if(msg.goal_node_name.isEmpty())
       {
         msg.goal_node_name = node->name;
       }
@@ -3217,30 +3215,27 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
       return;
     }
 
-    QString goal_id = msg.goal_node_id;
-    if(goal_id.isEmpty())
+    // Resolve goal_node_id from goal_node_name if goal_node_id is empty
+    if(!resolve_goal_id(msg))
     {
       msg.result = "reject";
+      msg.message = "goal not found";
       send_move_response(msg);
       return;
     }
 
-    NODE* node = unimap->get_node_by_id(goal_id);
+    // Get the node using resolved goal_node_id
+    NODE* node = unimap->get_node_by_id(msg.goal_node_id);
     if(!node)
     {
-      node = unimap->get_node_by_name(goal_id);
-      if(!node)
-      {
-        msg.result = "reject";
-        send_move_response(msg);
-        return;
-      }
-
-      // convert name to id
-      msg.goal_node_id   = node->id;
-      msg.goal_node_name = node->name;
+      msg.result = "reject";
+      msg.message = "node not found";
+      send_move_response(msg);
+      return;
     }
-    else
+
+    // Fill goal_node_name if not set
+    if(msg.goal_node_name.isEmpty())
     {
       msg.goal_node_name = node->name;
     }
@@ -3436,6 +3431,35 @@ void COMM_MSA::handle_move_stop(DATA_MOVE &msg)
   send_move_response(msg);
 
   Q_EMIT (signal_auto_move_stop());
+}
+
+bool COMM_MSA::resolve_goal_id(DATA_MOVE& msg)
+{
+  // If goal_node_id is already set, use it directly
+  if(!msg.goal_node_id.isEmpty())
+  {
+    return true;
+  }
+
+  // If goal_node_id is empty but goal_node_name exists, find the ID by name
+  if(!msg.goal_node_name.isEmpty())
+  {
+    NODE* node = unimap->get_node_by_name(msg.goal_node_name);
+    if(node)
+    {
+      msg.goal_node_id = node->id;
+      log_info("[resolve_goal_id] Found goal_node_id: {} from goal_node_name: {}",
+               msg.goal_node_id.toStdString(), msg.goal_node_name.toStdString());
+      return true;
+    }
+    else
+    {
+      log_warn("[resolve_goal_id] Could not find node with name: {}", msg.goal_node_name.toStdString());
+    }
+  }
+
+  // Both goal_node_id and goal_node_name are empty or node not found
+  return false;
 }
 
 void COMM_MSA::calc_remaining_time_distance(DATA_MOVE &msg)
