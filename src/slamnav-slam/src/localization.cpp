@@ -240,6 +240,25 @@ Eigen::Matrix4d LOCALIZATION::get_best_tf(double t)
   }
 }
 
+TIME_POSE LOCALIZATION::get_best_tp(double ref_t)
+{
+  std::lock_guard<std::mutex> lock(mtx);
+
+  TIME_POSE res;
+  double min_dt = std::numeric_limits<double>::max();
+  for(size_t p = 0; p < tp_storage.size(); p++)
+  {
+    double dt = std::abs(tp_storage[p].t - ref_t);
+    if(dt < min_dt)
+    {
+      min_dt = dt;
+      res = tp_storage[p];
+    }
+  }
+
+  return res;
+}
+
 std::vector<Eigen::Vector3d> LOCALIZATION::get_cur_global_scan()
 {
   std::lock_guard<std::mutex> lock(mtx);
@@ -1053,25 +1072,18 @@ void LOCALIZATION::ekf_loop_3d()
 
         if(!ekf_3d.initialized.load())
         {
-          ekf_3d.init(G);
+          TIME_POSE tp;
+          tp.t = frm.t;
+          tp.tf = G;
+          ekf_3d.init(tp);
         }
         else
         {
-          // slip detection (compare EKF prediction with ICP result)
-          // Eigen::Matrix4d ekf_tf = ekf_3d.get_best_tp(frm.t).tf;
-          Eigen::Matrix4d ekf_tf = ekf_3d.get_cur_tf();
-          Eigen::Vector2d dtdr = dTdR(ekf_tf, G);
+          TIME_POSE tp;
+          tp.t = frm.t;
+          tp.tf = G;
+          ekf_3d.estimate(tp);
 
-          if(std::abs(dtdr[1]) > 10.0 * D2R)
-          {
-            // slip detected
-            log_warn("ekf_loop(3d) slip detection, reset EKF, dth: {}", dtdr[1] * R2D);
-            ekf_3d.init(G);
-          }
-          else
-          {
-            ekf_3d.estimate(G);
-          }
         }
         G = ekf_3d.get_cur_tf();
 
@@ -1147,7 +1159,7 @@ void LOCALIZATION::predict_loop_3d()
 
   TIME_POSE pre_tp;
 
-  // for slip detection (IMU vs wheel odom)
+  // for slip detection
   MOBILE_POSE pre_mo = mobile->get_pose();
   IMU pre_imu = lidar_3d->get_best_imu(pre_mo.t, 0);
 
@@ -1159,7 +1171,7 @@ void LOCALIZATION::predict_loop_3d()
     cur_mo_tp.t = cur_mo.t;
     cur_mo_tp.tf = se2_to_TF(cur_mo.pose);
 
-    // slip detection: compare IMU delta vs wheel odom delta
+    // slip detection
     bool is_slip = false;
     IMU cur_imu = lidar_3d->get_best_imu(cur_mo.t, 0);
     if(pre_imu.t > 0 && cur_imu.t > pre_imu.t && cur_mo.t - pre_mo.t > 0)
@@ -1193,7 +1205,7 @@ void LOCALIZATION::predict_loop_3d()
       double odom_vel = odom_delta_dist / odom_dt;
       double imu_delta_dist = odom_vel * imu_dt + 0.5 * cur_imu.acc_x * imu_dt * imu_dt;
       double dist_diff = std::abs(imu_delta_dist - odom_delta_dist);
-      if(yaw_diff > 3.0*D2R || dist_diff > 0.05)
+      if(yaw_diff > 0.7*D2R || dist_diff > 0.01)
       {
         is_slip = true;
         log_warn("slip detection: diff({:.1f}deg, diff={:.3f}m), yaw(imu={:.1f}, odom={:.1f}), dist(imu={:.3f}, odom={:.3f})",
@@ -1203,8 +1215,17 @@ void LOCALIZATION::predict_loop_3d()
     pre_imu = cur_imu;
 
     // predict only if no slip detected
-    if(ekf_3d.initialized.load() && !is_slip)
+    if(ekf_3d.initialized.load())
     {
+      if(is_slip)
+      {
+        ekf_3d.set_process_noise_scale(20.0);
+      }
+      else
+      {
+        ekf_3d.set_process_noise_scale(1.0);
+      }
+
       ekf_3d.predict(cur_mo_tp);
     }
 
@@ -1222,56 +1243,51 @@ void LOCALIZATION::predict_loop_3d()
       // compensate time delay
       Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
       Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-      Eigen::Matrix4d mo_dtf = tf0.inverse() * tf1;
-      Eigen::Matrix4d icp_tf = icp_res.tf * mo_dtf;
+      Eigen::Vector3d delta_xi = TF_to_se2(tf0.inverse() * tf1);
+      icp_res.tf = icp_res.tf * ZYX_to_TF(delta_xi[0], delta_xi[1], 0, 0, 0, delta_xi[2]);
 
-      if(is_slip)
-      {
-        icp_tf = icp_res.tf;
-      }
+      IMU imu0 = lidar_3d->get_best_imu(icp_res.t, 0);
+      IMU imu1 = cur_imu;
+
+      Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
+      Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
+      icp_res.tf.block(0,0,3,3) = icp_res.tf.block(0,0,3,3)*(R0.inverse() * R1);
 
       if(ekf_3d.initialized.load())
       {
         // jump detection
-        if(check_jump(icp_tf, cur_mo.t))
+        if(check_jump(icp_res.tf, cur_mo.t))
         {
           log_warn("ICP result jump detected, skip estimate");
         }
         else
         {
-          ekf_3d.estimate(icp_tf);
-
-          // save last icp (only when not jump)
-          {
-            std::lock_guard<std::mutex> lock(mtx);
-            last_icp_tp.t = icp_res.t;
-            last_icp_tp.tf = icp_tf;
-          }
+          ekf_3d.estimate(icp_res);
         }
       }
       else
       {
-        ekf_3d.init(icp_res.tf);
-
-        // save last icp
-        {
-          std::lock_guard<std::mutex> lock(mtx);
-          last_icp_tp.t = icp_res.t;
-          last_icp_tp.tf = icp_tf;
-        }
+        ekf_3d.init(icp_res);
       }
     }
 
-    Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
-    set_cur_tf(G);
+    // get result
+    TIME_POSE cur_tp;
+    if(ekf_3d.initialized.load())
+    {
+      cur_tp = ekf_3d.get_cur_tp();
+    }
+    else
+    {
+      cur_tp.t = cur_mo.t;
+      cur_tp.tf = get_cur_tf();
+    }
+    set_cur_tf(cur_tp.tf);
 
     // tp storage update
     {
       std::lock_guard<std::mutex> lock(mtx);
-      TIME_POSE tp;
-      tp.t = icp_res.t;
-      tp.tf = G;
-      tp_storage.push_back(tp);
+      tp_storage.push_back(cur_tp);
       if(tp_storage.size() > 300)
       {
         tp_storage.erase(tp_storage.begin());
@@ -1321,10 +1337,32 @@ void LOCALIZATION::estimate_loop_3d()
         continue;
       }
 
-      Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
+      // get result
+      TIME_POSE cur_tp;
+      if(ekf_3d.initialized.load())
+      {
+        cur_tp = ekf_3d.get_cur_tp();
+      }
+      else
+      {
+        cur_tp.t = frm.t;
+        cur_tp.tf = get_cur_tf();
+      }
+
+      // double icp_st_t = mobile->get_pose().t;
+      double icp_st_t = cur_tp.t;
+      Eigen::Matrix4d G = cur_tp.tf;
+      // printf("diff:%f\n", icp_st_t - cur_tp.t);
+
+      // compensate time delay
+      // IMU imu0 = lidar_3d->get_best_imu(cur_tp.t, 0);
+      // IMU imu1 = lidar_3d->get_best_imu(icp_st_t, 0);
+
+      // Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
+      // Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
+      // G.block(0,0,3,3) = G.block(0,0,3,3)*(R0.inverse() * R1);
 
       // icp
-      double icp_st_t = mobile->get_pose().t;
       std::vector<Eigen::Vector3d> dsk = frm.pts;
       double err = map_icp(dsk, G);
 
@@ -1340,30 +1378,7 @@ void LOCALIZATION::estimate_loop_3d()
       else
       {
         icp_fail_cnt++;
-
-        // Eigen::Matrix4d retry_G = G;
-        // {
-        //   std::lock_guard<std::mutex> lock(mtx);
-        //   retry_G =last_icp_tp.tf;
-        // }
-
-        // if(map_icp(dsk, retry_G) < config->get_loc_2d_icp_error_threshold())
-        // {
-        //   TIME_POSE icp_res;
-        //   icp_res.t = icp_st_t;
-        //   icp_res.tf = retry_G;
-
-        //   icp_res_que.push(icp_res);
-        //   icp_fail_cnt = 0;
-        // }
-
-        // if(icp_fail_cnt >= 5)
-        // {
-        //   set_cur_loc_state("fail");
-        //   log_error("ICP continuous fail: {}", icp_fail_cnt);
-        // }
       }
-
 
       // global scan update
       {

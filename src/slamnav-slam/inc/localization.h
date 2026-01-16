@@ -21,14 +21,14 @@
 
 #include <QObject>
 
-constexpr double lambda0  = 0.1;   // 0.1
+constexpr double lambda0  = 0.1;     // 0.1
 constexpr double lambda_dec = 0.1;   // 0.01 ~ 0.1
 constexpr double lambda_inc = 150;   // 100 ~ 300
-constexpr double t_dist_v0  = 15;  // 5~30
+constexpr double t_dist_v0  = 15;    // 5~30
 constexpr double rmt_sigma  = 0.01;  // 0.01 good
 constexpr double sigma_eps  = 1e-6;
-constexpr int near_pt_num = 10;  // 5~10
-constexpr int maginal_cnt = 300;   // 100~300
+constexpr int near_pt_num = 10;      // 5~10
+constexpr int maginal_cnt = 300;     // 100~300
 constexpr int max_iter0   = 50;
 
 class LOCALIZATION : public QObject
@@ -48,24 +48,25 @@ public:
   /***********************
    * interface funcs
    ***********************/
-  bool get_is_loc();                  // check if connected lidar
-  bool get_is_busy();                 // check if semiauto init busy
-  QString get_cur_loc_state();            // get localization state (none, fail, good)
-  QString get_info_text();              // get all localization info
-  Eigen::Matrix4d get_cur_tf();           // get current tf (4x4 matrix)
-  Eigen::Matrix4d get_best_tf(double t);        // get nearest time tf (4x4 matrix)
-  Eigen::Vector2d get_cur_ieir();           // get cur inlier error, inlier ratio
-  std::vector<Eigen::Vector3d> get_cur_global_scan(); // get cur global scan
+  bool get_is_loc();                                    // check if connected lidar
+  bool get_is_busy();                                   // check if semiauto init busy
+  QString get_cur_loc_state();                          // get localization state (none, fail, good)
+  QString get_info_text();                              // get all localization info
+  Eigen::Matrix4d get_cur_tf();                         // get current tf (4x4 matrix)
+  Eigen::Matrix4d get_best_tf(double t);                // get nearest time tf (4x4 matrix)
+  TIME_POSE get_best_tp(double ref_t);                  // get nearest time tp (t, 4x4 matrix)
+  Eigen::Vector2d get_cur_ieir();                       // get cur inlier error, inlier ratio
+  std::vector<Eigen::Vector3d> get_cur_global_scan();   // get cur global scan
 
   double get_process_time_localization();
   double get_process_time_odometry();
   double get_process_time_obs();
 
-  void set_cur_loc_state(QString str);        // set loc state
-  void set_cur_tf(Eigen::Matrix4d tf);        // set current tf
+  void set_cur_loc_state(QString str);          // set loc state
+  void set_cur_tf(Eigen::Matrix4d tf);          // set current tf
   void set_cur_ieir(Eigen::Vector2d ieir);      // set current inlier error, inlier ratio (only use simulation)
 
-  Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, FRAME& frm, Eigen::Matrix4d& G);   // 2D calc ieir
+  Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, FRAME& frm, Eigen::Matrix4d& G);                   // 2D calc ieir
   Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G);    // 3D calc ieir
 
   void start_semiauto_init();   // start semi-auto init
@@ -163,9 +164,6 @@ private:
 
   // storage
   tbb::concurrent_queue<TIME_POSE> icp_res_que;
-
-  // slip detection
-  TIME_POSE last_icp_tp;
 
   // jump detection
   TIME_POSE pre_jump_tp;

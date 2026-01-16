@@ -22,15 +22,15 @@ public:
   explicit EKF_3D(QObject *parent = nullptr);
   ~EKF_3D();
 
-  void init(const Eigen::Matrix4d& tf);
+  void init(const TIME_POSE& tp);
   void reset();
 
   Eigen::Matrix4d get_cur_tf();
-  TIME_POSE get_best_tp(double ref_t);
-  std::vector<TIME_POSE> get_tp_storage();
+  TIME_POSE get_cur_tp();
+  void set_process_noise_scale(double scale);
 
   void predict(const TIME_POSE& odom_tp);
-  void estimate(const Eigen::Matrix4d& icp_tf);
+  void estimate(const TIME_POSE& icp_tp);
 
   // flags
   std::atomic<bool> initialized = {false};
@@ -48,6 +48,7 @@ private:
   Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
 
   // process noise
+  double q_scale = 1.0;
   Eigen::Matrix6d M_k = Eigen::Matrix6d::Identity();
 
   // measurement nois
@@ -57,12 +58,10 @@ private:
 
   // result
   Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
+  TIME_POSE cur_tp;
 
   // flags
   std::atomic<bool> has_pre_mo_tf = {false};
-
-  // storage
-  std::vector<TIME_POSE> tp_storage;
 };
 
 #endif // EKF_3D_H
