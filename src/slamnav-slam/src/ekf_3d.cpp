@@ -18,7 +18,7 @@ EKF_3D::~EKF_3D()
 }
 
 
-void EKF_3D::init(const Eigen::Matrix4d& tf)
+void EKF_3D::init(const TIME_POSE& tp)
 {
   // clear first
   reset();
@@ -26,7 +26,7 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
   std::lock_guard<std::mutex> lock(mtx);
 
   // set state, covariance
-  x_hat = TF_to_ZYX(tf);
+  x_hat = TF_to_ZYX(tp.tf);
   P_hat = Eigen::Matrix6d::Identity() * 1e-3;
 
   // set process noise, Q_k (odom)
@@ -46,6 +46,8 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
   R_k(3,3) = (0.05*D2R) * (0.05*D2R);
   R_k(4,4) = (0.05*D2R) * (0.05*D2R);
   R_k(5,5) = (1.0*D2R)  * (1.0*D2R);
+
+  cur_tp = tp;
 
   has_pre_mo_tf = false;
 
@@ -76,30 +78,17 @@ Eigen::Matrix4d EKF_3D::get_cur_tf()
   return res;
 }
 
-TIME_POSE EKF_3D::get_best_tp(double ref_t)
+TIME_POSE EKF_3D::get_cur_tp()
 {
   std::lock_guard<std::mutex> lock(mtx);
-
-  TIME_POSE res;
-  double min_dt = std::numeric_limits<double>::max();
-  for(size_t p = 0; p < tp_storage.size(); p++)
-  {
-    double dt = std::abs(tp_storage[p].t - ref_t);
-    if(dt < min_dt)
-    {
-      min_dt = dt;
-      res = tp_storage[p];
-    }
-  }
-
+  TIME_POSE res = cur_tp;
   return res;
 }
 
-std::vector<TIME_POSE> EKF_3D::get_tp_storage()
+void EKF_3D::set_process_noise_scale(double scale)
 {
   std::lock_guard<std::mutex> lock(mtx);
-  std::vector<TIME_POSE> res = tp_storage;
-  return res;
+  q_scale = scale;
 }
 
 void EKF_3D::predict(const TIME_POSE& odom_tp)
@@ -186,7 +175,7 @@ void EKF_3D::predict(const TIME_POSE& odom_tp)
   L_k(5,5) = 1.0;
 
   // Q_k
-  Eigen::Matrix6d Q_k = L_k * M_k * L_k.transpose();
+  Eigen::Matrix6d Q_k = q_scale * (L_k * M_k * L_k.transpose());
 
   // covariance prediction
   Eigen::Matrix6d P_bar = F_k * P_hat * F_k.transpose() + Q_k;
@@ -198,26 +187,25 @@ void EKF_3D::predict(const TIME_POSE& odom_tp)
 
   pre_mo_tf = odom_tf;
 
-  TIME_POSE pred_tp;
-  pred_tp.t = odom_tp.t;
-  pred_tp.tf = ZYX_to_TF(x_hat);
-  tp_storage.push_back(pred_tp);
-  if(tp_storage.size() > 300)
-  {
-    tp_storage.erase(tp_storage.begin());
-  }
+  TIME_POSE tp;
+  tp.t = odom_tp.t;
+  tp.tf = ZYX_to_TF(x_hat);
+
+  cur_tp = tp;
 
   // printf("[EKF_3D] prediction: (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
   //      x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
   spdlog::debug("[EKF_3D] prediction: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )", x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
 
-void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf)
+void EKF_3D::estimate(const TIME_POSE& icp_tp)
 {
   if(!initialized.load())
   {
     return;
   }
+
+  Eigen::Matrix4d icp_tf = icp_tp.tf;
 
   std::lock_guard<std::mutex> lock(mtx);
 
@@ -295,6 +283,12 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf)
   // commit
   x_hat = x_new;
   P_hat = 0.5 * (P_new + P_new.transpose());
+
+  TIME_POSE tp;
+  tp.t = icp_tp.t;
+  tp.tf = ZYX_to_TF(x_hat);
+
+  cur_tp = tp;
 
   // debug
   spdlog::debug("[EKF_3D] estimation: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}), innovation: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}), "
