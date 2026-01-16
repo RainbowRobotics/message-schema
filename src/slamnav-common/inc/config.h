@@ -16,6 +16,7 @@
 #include <QMutexLocker>
 #include <QObject>
 #include <QStringList>
+#include <QCoreApplication>
 
 #include "error_manager.h"
 #include "slamnav_common_types.h"
@@ -32,6 +33,9 @@ public:
 
   // make singleton
   static CONFIG* instance(QObject* parent = nullptr);
+
+  // Get base path that works whether binary is in root or bin/ directory
+  static QString getBasePath();
 
   // load robot type
   bool load_common(QString path);

@@ -73,7 +73,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
   CTRL_PARAM res;
 
   // read
-  QString preset_path = QCoreApplication::applicationDirPath() + "/config/" +
+  QString preset_path = CONFIG::getBasePath() + "/config/" +
     config->get_robot_type_str() + "/preset_" + QString::number(preset) + ".json";
 
   QFileInfo info(preset_path);

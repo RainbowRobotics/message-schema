@@ -1,4 +1,5 @@
 #include "task.h"
+#include "config.h"
 
 namespace
 {
@@ -210,7 +211,7 @@ void TASK::a_loop()
   if (accuracy_save_enabled)
   {
     spdlog::info("[TASK] Accuracy save enabled.");
-    QString logFolder = QCoreApplication::applicationDirPath() + "/snlog";
+    QString logFolder = CONFIG::getBasePath() + "/snlog";
     QDir dir(logFolder);
     if (!dir.exists())
     {

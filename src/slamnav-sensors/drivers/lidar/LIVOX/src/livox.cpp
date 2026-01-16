@@ -1,5 +1,7 @@
 #include "livox.h"
-namespace 
+#include "config.h"
+
+namespace
 {
   const char* MODULE_NAME = "LIVOX";
 }
@@ -166,7 +168,7 @@ void LIVOX::grab_loop()
   spdlog::info("[LIVOX] Disable debug message");
 
   // Init Livox SDK2
-  QString path = QCoreApplication::applicationDirPath() + "/config/" + config->get_robot_type_str() + "/mid360_config.json";
+  QString path = CONFIG::getBasePath() + "/config/" + config->get_robot_type_str() + "/mid360_config.json";
   //printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
   spdlog::info("[LIVOX] load, {}", path.toStdString());
 

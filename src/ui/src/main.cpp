@@ -30,6 +30,21 @@ std::string getExecutableDir()
   return (std::string::npos == pos) ? "" : fullPath.substr(0, pos);
 }
 
+std::string getBaseDir()
+{
+  std::string exe_dir = getExecutableDir();
+  // Check if config exists in exe_dir or parent directory
+  std::string config_path = exe_dir + "/config/common.json";
+  std::ifstream f(config_path);
+  if(f.good())
+  {
+    f.close();
+    return exe_dir;
+  }
+  // Binary is in bin/ subdirectory
+  return exe_dir + "/..";
+}
+
 std::string getCurrentDate()
 {
   auto now = std::chrono::system_clock::now();
@@ -51,7 +66,7 @@ void signalHandler(int signal)
   }
 
   std::string date_and_time = getCurrentDate();
-  std::string full_path = getExecutableDir() + "/snlog/fault_log/" + date_and_time + "-fault_log.txt";
+  std::string full_path = getBaseDir() + "/snlog/fault_log/" + date_and_time + "-fault_log.txt";
 
   std::ofstream logFile(full_path, std::ios::app);
   logFile << "Signal (" << signal << ") received." << std::endl;

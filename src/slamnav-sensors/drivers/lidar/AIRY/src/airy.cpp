@@ -1,5 +1,7 @@
 ﻿#include "airy.h"
-namespace 
+#include "config.h"
+
+namespace
 {
   const char* MODULE_NAME = "AIRY";
 }
@@ -281,7 +283,7 @@ void AIRY::open()
 
   read_common_param();
 
-  QString path = QCoreApplication::applicationDirPath() + "/config/" + "airy.json";
+  QString path = CONFIG::getBasePath() + "/config/" + "airy.json";
   QFile file(path);
 
   if(!file.open(QIODevice::ReadOnly | QIODevice::Text))

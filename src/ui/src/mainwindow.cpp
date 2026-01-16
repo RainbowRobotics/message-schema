@@ -307,14 +307,8 @@ void MainWindow::setup_vtk()
 
 void MainWindow::init_modules()
 {
-  // Determine base path (check if config exists in bin/ or parent directory)
-  QString config_base = QCoreApplication::applicationDirPath();
-  QString common_config_path = config_base + "/config/common.json";
-  if(!QFile::exists(common_config_path))
-  {
-    common_config_path = config_base + "/../config/common.json";
-    config_base = config_base + "/..";
-  }
+  // Get base path (works for both root and bin/ directory structures)
+  QString config_base = CONFIG::getBasePath();
 
   // log module init
   {
@@ -323,6 +317,7 @@ void MainWindow::init_modules()
   }
 
   // load config
+  QString common_config_path = config_base + "/config/common.json";
   if(CONFIG::instance()->load_common(common_config_path))
   {
     QString robot_type_str = CONFIG::instance()->get_robot_type_str();

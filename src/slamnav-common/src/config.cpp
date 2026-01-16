@@ -26,6 +26,31 @@ CONFIG::~CONFIG()
 
 }
 
+QString CONFIG::getBasePath()
+{
+  static QString cached_base_path;
+  if(!cached_base_path.isEmpty())
+  {
+    return cached_base_path;
+  }
+
+  QString app_dir = QCoreApplication::applicationDirPath();
+  QString config_path = app_dir + "/config/common.json";
+
+  if(QFile::exists(config_path))
+  {
+    // Binary is in root directory (e.g., app_slamnav2/SLAMNAV2)
+    cached_base_path = app_dir;
+  }
+  else
+  {
+    // Binary is in bin/ subdirectory (e.g., app_slamnav2/bin/SLAMNAV2)
+    cached_base_path = app_dir + "/..";
+  }
+
+  return cached_base_path;
+}
+
 void CONFIG::load_version()
 {
   QFileInfo version_info(path_version);
@@ -639,7 +664,7 @@ void CONFIG::show_missing_variables_dialog()
 
 QStringList CONFIG::load_folder_list()
 {
-  QString version_path = QCoreApplication::applicationDirPath() + "/config";
+  QString version_path = getBasePath() + "/config";
   QStringList fileList;
 
   QDir dir(version_path);
