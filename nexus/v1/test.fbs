@@ -1,7 +1,6 @@
 table Test {
   test: float;
-  test2: string;
-  test3: int;
+  test2: [float: 6];
 }
 
 root_type Test;
