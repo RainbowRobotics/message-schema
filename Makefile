@@ -14,8 +14,9 @@ SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema
 .PHONY: help
 help: ## 가능한 타겟 설명 출력
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z0-9_.-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
 .PHONY: schema-update
-schema-update: ## schema 변경 사항을 message-schema 레포로 pushdd
+schema-update: ## schema 변경 사항을 message-schema 레포로 push
 	@set -euo pipefail; \
 	BR="schema/from-$$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"; \
 	if [ -z "$$BR" ] || [ "$$BR" = "schema/from-" ]; then \
@@ -24,12 +25,15 @@ schema-update: ## schema 변경 사항을 message-schema 레포로 pushdd
 	fi; \
 	echo "schema branch => $$BR"; \
 	\
+	# remote 설정 및 fetch
 	git remote get-url "$(SCHEMA_REMOTE)" >/dev/null 2>&1 || git remote add "$(SCHEMA_REMOTE)" "$(SCHEMA_REMOTE_URL)"; \
 	git fetch "$(SCHEMA_REMOTE)" || true; \
 	\
+	# 로컬 schemas 디렉토리 트리 해시
 	LOCAL_TREE=$$(git rev-parse "HEAD:$(SCHEMA_DIR)"); \
 	echo "local  tree => $$LOCAL_TREE"; \
 	\
+	# 원격 브랜치 존재 여부 확인
 	REMOTE_REF="refs/remotes/$(SCHEMA_REMOTE)/$$BR"; \
 	if git show-ref --verify --quiet "$$REMOTE_REF"; then \
 		REMOTE_TREE=$$(git rev-parse "$(SCHEMA_REMOTE)/$$BR:"); \
@@ -38,27 +42,20 @@ schema-update: ## schema 변경 사항을 message-schema 레포로 pushdd
 			echo "No diff vs message-schema $$BR. Skip."; \
 			exit 0; \
 		fi; \
-		echo "Branch exists. Using worktree for incremental commit..."; \
-		WORK_DIR=$$(mktemp -d -t schema-update-XXXXXX); \
-		cleanup() { \
-			echo "Cleaning up worktree..."; \
-			git worktree remove --force "$$WORK_DIR" 2>/dev/null || true; \
-		}; \
-		trap cleanup EXIT INT TERM; \
-		git worktree add --detach "$$WORK_DIR" "$(SCHEMA_REMOTE)/$$BR" || exit 1; \
+		# 기존 브랜치가 있으면 worktree로 증분 커밋
+		WORK_DIR=$$(mktemp -d); \
+		trap "git worktree remove --force '$$WORK_DIR' 2>/dev/null || true" EXIT; \
+		git worktree add --detach "$$WORK_DIR" "$(SCHEMA_REMOTE)/$$BR"; \
 		(cd "$$WORK_DIR" && \
-			find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + && \
-			git --work-tree=. read-tree "$$LOCAL_TREE" && \
+			rm -rf * && \
+			git read-tree "$$LOCAL_TREE" && \
 			git checkout-index -af && \
 			git add -A && \
-			if git diff --cached --quiet; then \
-				echo "No changes to commit"; \
-				exit 0; \
-			fi; \
 			git commit -m "Update schemas from main repo @ $$(git -C .. rev-parse --short HEAD)" && \
-			git push "$(SCHEMA_REMOTE)" "HEAD:refs/heads/$$BR") || (cleanup && exit 1); \
+			git push "$(SCHEMA_REMOTE)" "HEAD:refs/heads/$$BR"); \
 	else \
-		echo "No remote branch. Creating with subtree split..."; \
+		# 브랜치가 없으면 subtree split으로 새로 생성
+		echo "No remote branch. Creating: $$BR"; \
 		TMP="$$BR-tmp"; \
 		git branch -D "$$TMP" 2>/dev/null || true; \
 		git subtree split --prefix="$(SCHEMA_DIR)" -b "$$TMP"; \
