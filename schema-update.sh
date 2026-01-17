@@ -1,37 +1,41 @@
 #!/bin/bash
 set -euo pipefail
 
-# 기본값 (필요하면 옵션으로 덮어씀)
+# 기본값
 SCHEMA_DIR="schemas"
 REMOTE_NAME="message-schema"
 
 # 옵션 처리
 while [[ $# -gt 0 ]]; do
-  case $1 in
-    --dir) SCHEMA_DIR="$2"; shift 2 ;;
-    --remote) REMOTE_NAME="$2"; shift 2 ;;
-    *) echo "알 수 없는 옵션: $1"; exit 1 ;;
-  esac
+    case $1 in
+        --dir) SCHEMA_DIR="$2"; shift 2 ;;
+        --remote) REMOTE_NAME="$2"; shift 2 ;;
+        *) echo "알 수 없는 옵션: $1"; exit 1 ;;
+    esac
 done
 
-# 항상 메인 레포 루트 기준으로 동작
+# 메인 레포 루트
 MAIN_REPO="$(git rev-parse --show-toplevel)"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 현재 서브트리 환경에서 실행되는지 확인
-if [ -d "$SCRIPT_DIR/.git" ]; then
-  echo "Error: 이 스크립트는 부모 레포지토리(서브트리 컨텍스트)에서 실행해야 합니다."
-  echo "message-schema 레포지토리 내에서 직접 실행하지 마세요."
-  exit 1
+# 서브트리로 포함되었는지 확인: 스크립트가 메인 레포 루트 아래에 있어야 함
+if [ "$MAIN_REPO" != "$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo '')" ]; then
+    echo "Error: 이 스크립트는 서브트리로 포함된 상태에서만 실행해야 합니다."
+    echo "message-schema 레포지토리를 독립적으로 클론해서 실행하지 마세요."
+    exit 1
 fi
 
+# schemas 디렉토리 존재 확인
+if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
+    echo "Error: '$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
+    exit 1
+fi
 
 # 개인 작업용 schema 브랜치
 BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
-  echo "Error: 브랜치 이름을 결정할 수 없습니다. git user.email를 확인하세요."
-  exit 1
+    echo "Error: 브랜치 이름을 결정할 수 없습니다. git user.email를 확인하세요."
+    exit 1
 fi
 echo "schema branch => $BR"
 
@@ -44,21 +48,21 @@ echo "메인 커밋 => $MAIN_COMMIT"
 
 # remote 존재 여부 확인
 git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
-  echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
-  exit 1
+    echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
+    exit 1
 }
 
-# 원격 개인 브랜치 fetch (없을 수도 있음)
+# 원격 개인 브랜치 fetch
 git -C "$MAIN_REPO" fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
 
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
-# ===== 기존 브랜치가 있는 경우 =====
+# 기존 브랜치가 있는 경우
 if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
     REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
     echo "원격 트리 => $REMOTE_TREE"
 
-        # schema 내용이 같으면 스킵
+    # schema 내용이 같으면 스킵
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
         echo "변경이 없습니다. 스킵합니다."
         exit 0
@@ -79,10 +83,10 @@ if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
 
 else
     # 기존 브랜치가 없으면 새로 생성
-    echo " 새로운 브랜치 생성: $BR"
+    echo "새로운 브랜치 생성: $BR"
     TMP="$BR-tmp"
 
-    # schema 디렉토리만 분리해서 브랜치 생성
+    git -C "$MAIN_REPO" branch -D "$TMP" 2>/dev/null || true
     git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
     git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
     git -C "$MAIN_REPO" branch -D "$TMP"
