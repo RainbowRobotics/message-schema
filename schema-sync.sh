@@ -68,14 +68,23 @@ git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main"
 
 # stash 만든게 있으면 적용
+
 if (( STASH_CREATED == 1 )); then
-  # stash 적용
-  if git stash apply "$STASH_OID" >/dev/null; then
-    # stash 삭제
-    git stash drop "$STASH_OID" >/dev/null
+  # stash@{n} 중에서 방금 저장한 OID와 매칭되는 엔트리를 찾는다
+  STASH_REF="$(git stash list --format='%gd %H' | awk -v oid="$STASH_OID" '$2==oid {print $1; exit}')"
+
+  if [[ -z "$STASH_REF" ]]; then
+    echo "Error: cannot find stash entry for $STASH_OID"
+    echo "현재 stash 목록:"
+    git stash list | head -n 5
+    exit 1
+  fi
+
+  if git stash apply "$STASH_REF" >/dev/null; then
+    git stash drop "$STASH_REF" >/dev/null
   else
     echo "stash 적용 중 충돌이 발생했습니다. 'message-schema' 레포지토리에서 충돌을 해결한 후!! 메인 레포지토리에서 아래 명령어를 실행하세요."
-    echo "  git stash drop $STASH_OID && make schema-sync"
+    echo "  git stash drop $STASH_REF && make schema-sync"
     exit 1
   fi
 fi
