@@ -7,36 +7,62 @@ include backend/backend.mk
 
 .DEFAULT_GOAL := help
 
-SCHEMA_DIR=schemas
+SCHEMA_DIR := schemas
+SCHEMA_REMOTE := rb_schemas
+SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema
 
 .PHONY: help
 help: ## 가능한 타겟 설명 출력
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z0-9_.-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
-
-.PHONY: schema-sync
-schema-sync: ## message-schema 레포의 최신상태를 가져오기
-	git remote add rb_schemas https://github.com/RainbowRobotics/message-schema || true
-	git fetch rb_schemas main
-	git subtree pull --prefix=$(SCHEMA_DIR) rb_schemas main --squash
-
 .PHONY: schema-update
-schema-update: ## schema 변경 사항을 message-schema 레포로 push
-	@set -e; \
-	# SCHEMA_DIR/ 변경 확인
-	if git diff --quiet -- $(SCHEMA_DIR) && git diff --cached --quiet -- $(SCHEMA_DIR); then \
-		echo "schemas/ 변경이 없습니다."; \
+schema-update: ## schema 변경 사항을 message-schema 레포로 pushdd
+	@set -euo pipefail; \
+	BR="schema/from-$$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"; \
+	if [ -z "$$BR" ] || [ "$$BR" = "schema/from-" ]; then \
+		echo "Error: Cannot determine branch name. Check git user.email"; \
 		exit 1; \
 	fi; \
+	echo "schema branch => $$BR"; \
 	\
-	# SCHEMA_DIR/만 커밋
-	git add $(SCHEMA_DIR); \
-	git commit -m "chore(schema): update (from team repo)" || true; \
+	git remote get-url "$(SCHEMA_REMOTE)" >/dev/null 2>&1 || git remote add "$(SCHEMA_REMOTE)" "$(SCHEMA_REMOTE_URL)"; \
+	git fetch "$(SCHEMA_REMOTE)" || true; \
 	\
-	# SCHEMA_DIR/만 분리 브랜치 생성
-	BR="schema/from-$$(git config user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"; \
-	git subtree split --prefix=$(SCHEMA_DIR) -b "$$BR"; \
+	LOCAL_TREE=$$(git rev-parse "HEAD:$(SCHEMA_DIR)"); \
+	echo "local  tree => $$LOCAL_TREE"; \
 	\
-	# message-schema 레포로 push (PR 생성은 message-schema Actions가 담당)
-	git remote add rb_schemas https://github.com/RainbowRobotics/message-schema || true; \
-	git push rb_schemas "$$BR":refs/heads/"$$BR"; \
-	echo "Pushed to message-schema branch: $$BR"
+	REMOTE_REF="refs/remotes/$(SCHEMA_REMOTE)/$$BR"; \
+	if git show-ref --verify --quiet "$$REMOTE_REF"; then \
+		REMOTE_TREE=$$(git rev-parse "$(SCHEMA_REMOTE)/$$BR:"); \
+		echo "remote tree => $$REMOTE_TREE"; \
+		if [ "$$LOCAL_TREE" = "$$REMOTE_TREE" ]; then \
+			echo "No diff vs message-schema $$BR. Skip."; \
+			exit 0; \
+		fi; \
+		echo "Branch exists. Using worktree for incremental commit..."; \
+		WORK_DIR=$$(mktemp -d -t schema-update-XXXXXX); \
+		cleanup() { \
+			echo "Cleaning up worktree..."; \
+			git worktree remove --force "$$WORK_DIR" 2>/dev/null || true; \
+		}; \
+		trap cleanup EXIT INT TERM; \
+		git worktree add --detach "$$WORK_DIR" "$(SCHEMA_REMOTE)/$$BR" || exit 1; \
+		(cd "$$WORK_DIR" && \
+			find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + && \
+			git --work-tree=. read-tree "$$LOCAL_TREE" && \
+			git checkout-index -af && \
+			git add -A && \
+			if git diff --cached --quiet; then \
+				echo "No changes to commit"; \
+				exit 0; \
+			fi; \
+			git commit -m "Update schemas from main repo @ $$(git -C .. rev-parse --short HEAD)" && \
+			git push "$(SCHEMA_REMOTE)" "HEAD:refs/heads/$$BR") || (cleanup && exit 1); \
+	else \
+		echo "No remote branch. Creating with subtree split..."; \
+		TMP="$$BR-tmp"; \
+		git branch -D "$$TMP" 2>/dev/null || true; \
+		git subtree split --prefix="$(SCHEMA_DIR)" -b "$$TMP"; \
+		git push "$(SCHEMA_REMOTE)" "$$TMP:refs/heads/$$BR"; \
+		git branch -D "$$TMP"; \
+	fi; \
+	echo "Pushed to message-schema: $$BR"
