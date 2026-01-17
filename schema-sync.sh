@@ -67,18 +67,7 @@ git fetch "$REMOTE_NAME" main
 SUBTREE_OUT="$(git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main" 2>&1 | tee /dev/stderr)"
 
-# 변경이 없으면(이미 최신) → 정상 종료
-if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
-    if [[ -n "$STASH_REF" ]]; then
-        if git stash apply "$STASH_REF" >/dev/null; then
-            git stash drop "$STASH_REF" >/dev/null
-        fi
-    fi
-    exit 0
-fi
-
 # stash 만든게 있으면 적용
-
 if (( STASH_CREATED == 1 )); then
     # stash@{n} 중에서 방금 저장한 OID와 매칭되는 엔트리를 찾는다
     STASH_REF="$(git stash list --format='%gd %H' | awk -v oid="$STASH_OID" '$2==oid {print $1; exit}')"
@@ -90,7 +79,15 @@ if (( STASH_CREATED == 1 )); then
         exit 1
     fi
 
-    if git stash apply "$STASH_REF" >/dev/null; then
+    # 변경이 없으면(이미 최신) → 정상 종료
+    if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
+        if git stash apply "$STASH_REF" >/dev/null; then
+            git stash drop "$STASH_REF" >/dev/null
+        fi
+        exit 0
+    fi
+
+    if  git stash apply "$STASH_REF" >/dev/null; then
         git stash drop "$STASH_REF" >/dev/null
     else
         echo "stash 적용 중 충돌이 발생했습니다. 'message-schema' 레포지토리에서 충돌을 해결한 후!! 메인 레포지토리에서 아래 명령어를 실행하세요."
