@@ -9,7 +9,6 @@ include backend/backend.mk
 
 SCHEMA_DIR := schemas
 SCHEMA_REMOTE := rb_schemas
-SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema
 
 .PHONY: help
 help: ## 가능한 타겟 설명 출력
@@ -17,49 +16,7 @@ help: ## 가능한 타겟 설명 출력
 
 .PHONY: schema-update
 schema-update: ## schema 변경 사항을 message-schema 레포로 push
-	@set -euo pipefail; \
-	BR="schema/from-$$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"; \
-	if [ -z "$$BR" ] || [ "$$BR" = "schema/from-" ]; then \
-		echo "Error: Cannot determine branch name. Check git user.email"; \
-		exit 1; \
-	fi; \
-	echo "schema branch => $$BR"; \
-	\
-	# remote 설정 및 fetch
-	git remote get-url "$(SCHEMA_REMOTE)" >/dev/null 2>&1 || git remote add "$(SCHEMA_REMOTE)" "$(SCHEMA_REMOTE_URL)"; \
-	git fetch "$(SCHEMA_REMOTE)" || true; \
-	\
-	# 로컬 schemas 디렉토리 트리 해시
-	LOCAL_TREE=$$(git rev-parse "HEAD:$(SCHEMA_DIR)"); \
-	echo "local  tree => $$LOCAL_TREE"; \
-	\
-	# 원격 브랜치 존재 여부 확인
-	REMOTE_REF="refs/remotes/$(SCHEMA_REMOTE)/$$BR"; \
-	if git show-ref --verify --quiet "$$REMOTE_REF"; then \
-		REMOTE_TREE=$$(git rev-parse "$(SCHEMA_REMOTE)/$$BR:"); \
-		echo "remote tree => $$REMOTE_TREE"; \
-		if [ "$$LOCAL_TREE" = "$$REMOTE_TREE" ]; then \
-			echo "No diff vs message-schema $$BR. Skip."; \
-			exit 0; \
-		fi; \
-		# 기존 브랜치가 있으면 worktree로 증분 커밋
-		WORK_DIR=$$(mktemp -d); \
-		trap "git worktree remove --force '$$WORK_DIR' 2>/dev/null || true" EXIT; \
-		git worktree add --detach "$$WORK_DIR" "$(SCHEMA_REMOTE)/$$BR"; \
-		(cd "$$WORK_DIR" && \
-			rm -rf * && \
-			git read-tree "$$LOCAL_TREE" && \
-			git checkout-index -af && \
-			git add -A && \
-			git commit -m "Update schemas from main repo @ $$(git -C .. rev-parse --short HEAD)" && \
-			git push "$(SCHEMA_REMOTE)" "HEAD:refs/heads/$$BR"); \
-	else \
-		# 브랜치가 없으면 subtree split으로 새로 생성
-		echo "No remote branch. Creating: $$BR"; \
-		TMP="$$BR-tmp"; \
-		git branch -D "$$TMP" 2>/dev/null || true; \
-		git subtree split --prefix="$(SCHEMA_DIR)" -b "$$TMP"; \
-		git push "$(SCHEMA_REMOTE)" "$$TMP:refs/heads/$$BR"; \
-		git branch -D "$$TMP"; \
-	fi; \
-	echo "Pushed to message-schema: $$BR"
+	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+.PHONY: schema-sync
+schema-sync: ## $(SCHEMA_DIR) 레포의 최신상태를 가져오기
+	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
