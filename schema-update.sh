@@ -7,89 +7,81 @@ REMOTE_NAME="message-schema"
 
 # 옵션 처리
 while [[ $# -gt 0 ]]; do
-    case $1 in
-        --dir) SCHEMA_DIR="$2"; shift 2 ;;
-        --remote) REMOTE_NAME="$2"; shift 2 ;;
-        *) echo "알 수 없는 옵션: $1"; exit 1 ;;
-    esac
+  case $1 in
+    --dir) SCHEMA_DIR="$2"; shift 2 ;;
+    --remote) REMOTE_NAME="$2"; shift 2 ;;
+    *) echo "알 수 없는 옵션: $1"; exit 1 ;;
+  esac
 done
 
 # 메인 레포 루트
 MAIN_REPO="$(git rev-parse --show-toplevel)"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 서브트리로 포함되었는지 확인: 스크립트가 메인 레포 루트 아래에 있어야 함
-if [ "$MAIN_REPO" != "$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo '')" ]; then
-    echo "Error: 이 스크립트는 서브트리로 포함된 상태에서만 실행해야 합니다."
-    echo "message-schema 레포지토리를 독립적으로 클론해서 실행하지 마세요."
-    exit 1
-fi
-
-# schemas 디렉토리 존재 확인
+# schemas 디렉토리 확인
 if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
-    echo "Error: '$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
-    exit 1
+  echo "Error: '$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
+  exit 1
 fi
 
-# 개인 작업용 schema 브랜치
+# 개인 브랜치명 생성
 BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
-    echo "Error: 브랜치 이름을 결정할 수 없습니다. git user.email를 확인하세요."
-    exit 1
+  echo "Error: 브랜치 이름을 결정할 수 없습니다. git user.email를 확인하세요."
+  exit 1
 fi
 echo "schema branch => $BR"
 
-# 현재 메인 레포의 schema 상태
+# 현재 상태
 LOCAL_TREE=$(git -C "$MAIN_REPO" rev-parse "HEAD:$SCHEMA_DIR")
 MAIN_COMMIT=$(git -C "$MAIN_REPO" rev-parse --short HEAD)
 
-echo "로컬 트리 => $LOCAL_TREE"
-echo "메인 커밋 => $MAIN_COMMIT"
+echo "local  tree => $LOCAL_TREE"
+echo "main commit => $MAIN_COMMIT"
 
-# remote 존재 여부 확인
+# remote 확인
 git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
-    echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
-    exit 1
+  echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
+  exit 1
 }
 
-# 원격 개인 브랜치 fetch
+# 원격 브랜치 fetch
 git -C "$MAIN_REPO" fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
 
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 # 기존 브랜치가 있는 경우
 if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
-    REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
-    echo "원격 트리 => $REMOTE_TREE"
+  REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
+  echo "remote tree => $REMOTE_TREE"
 
-    # schema 내용이 같으면 스킵
-    if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
-        echo "변경이 없습니다. 스킵합니다."
-        exit 0
-    fi
+  # 변경사항 없으면 스킵
+  if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
+    echo "변경사항 없음. 스킵합니다."
+    exit 0
+  fi
 
-    # 원격 브랜치 기준 worktree에서 schema만 갱신
-    WORK_DIR=$(mktemp -d)
-    trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+  # worktree에서 증분 커밋
+  WORK_DIR=$(mktemp -d)
+  trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
 
-    git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
+  git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
 
-    (cd "$WORK_DIR" && \
-        rm -rf -- ./* ./.??* 2>/dev/null || true && \
-        git read-tree --reset -u "$LOCAL_TREE" && \
-        git add -A && \
-        git commit -m "Update schemas from main repo @ $MAIN_COMMIT" && \
-        git push "$REMOTE_NAME" "HEAD:refs/heads/$BR")
+  (cd "$WORK_DIR" && \
+    rm -rf -- ./* ./.??* 2>/dev/null || true && \
+    git read-tree --reset -u "$LOCAL_TREE" && \
+    git add -A && \
+    git commit -m "Update schemas from main repo @ $MAIN_COMMIT" && \
+    git push "$REMOTE_NAME" "HEAD:refs/heads/$BR")
 
 else
-    # 기존 브랜치가 없으면 새로 생성
-    echo "새로운 브랜치 생성: $BR"
-    TMP="$BR-tmp"
+  # 새 브랜치 생성
+  echo "새 브랜치 생성: $BR"
+  TMP="$BR-tmp"
 
-    git -C "$MAIN_REPO" branch -D "$TMP" 2>/dev/null || true
-    git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
-    git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
-    git -C "$MAIN_REPO" branch -D "$TMP"
+  git -C "$MAIN_REPO" branch -D "$TMP" 2>/dev/null || true
+  git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
+  git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
+  git -C "$MAIN_REPO" branch -D "$TMP"
 fi
 
-echo "성공: message-schema에 푸시됨: $BR"
+echo "성공: message-schema/$BR 에 푸시 완료"
