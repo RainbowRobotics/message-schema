@@ -1,7 +1,7 @@
 table Test {
   test: float;
   test2: string;
-  test3: bool;
+  test3: int;
 }
 
 root_type Test;
