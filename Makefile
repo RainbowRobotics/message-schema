@@ -18,5 +18,5 @@ help: ## 가능한 타겟 설명 출력
 schema-update: ## schema 변경 사항을 message-schema 레포로 push
 	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
 .PHONY: schema-sync
-schema-sync: ## $(SCHEMA_DIR) 레포의 최신상태를 가져오기
-	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+schema-sync: ## $(SCHEMA_DIR) 레포의 최신상태를 가져오기ㄷㄷ
+	@bash -x "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
