@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT="$(git rev-parse --show-toplevel)"
+
 # 기본값 (필요하면 옵션으로 덮어씀)
 SCHEMA_DIR="schemas"
 REMOTE_NAME="message-schema"
@@ -22,6 +24,8 @@ if [ -d "$SCRIPT_DIR/.git" ]; then
     echo "message-schema 레포지토리 내에서 직접 실행하지 마세요."
     exit 1
 fi
+
+cd "$ROOT"
 
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
   git remote add "$REMOTE_NAME" "https://github.com/RainbowRobotics/message-schema.git"
