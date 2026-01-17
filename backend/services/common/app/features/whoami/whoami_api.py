@@ -19,7 +19,4 @@ whoami_router = APIRouter(tags=["Whoami"])
 async def whoami(robot_model: str):
     res = await whoami_service.get_whoami(robot_model)
 
-    if res["err"]:
-        return JSONResponse(status_code=400, content=res["err"])
-
-    return JSONResponse(res["dict_payload"])
+    return JSONResponse(res.get("dict_payload", {}))

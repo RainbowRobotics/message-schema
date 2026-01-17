@@ -182,6 +182,7 @@ class Response_Delete_TasksPD(BaseModel):
 
 class Program_Base(BaseModel):
     programId: PyObjectId = Field(alias="_id")
+    robotModel: str | None = Field(default=None)
     name: str | None = Field(default=None)
     repeatCnt: int = Field(default=1)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)

@@ -59,13 +59,13 @@ async def call_halt(robot_model: str, request: Request_MotionHaltPD):
 
 
 @program_router.post("/{robot_model}/call_program_before", response_model=Response_ReturnValuePD)
-async def call_program_before(robot_model: str, request: Request_ProgramBeforePD):
-    return JSONResponse(await program_service.call_program_before(robot_model=robot_model, request=request))
+def call_program_before(robot_model: str, request: Request_ProgramBeforePD):
+    return JSONResponse(program_service.call_program_before(robot_model=robot_model, request=request))
 
 
 @program_router.post("/{robot_model}/call_program_after", response_model=Response_ReturnValuePD)
-async def call_program_after(robot_model: str, request: Request_ProgramAfterPD):
-    return JSONResponse(await program_service.call_program_after(robot_model=robot_model, request=request))
+def call_program_after(robot_model: str, request: Request_ProgramAfterPD):
+    return JSONResponse(program_service.call_program_after(robot_model=robot_model, request=request))
 
 
 # ==============================================================================
@@ -73,37 +73,37 @@ async def call_program_after(robot_model: str, request: Request_ProgramAfterPD):
 # ==============================================================================
 
 @program_router.post("/{robot_model}/call_speedbar", response_model=Response_ReturnValuePD)
-async def call_speedbar(robot_model: str, request: Request_MotionSpeedBarPD):
-    return JSONResponse(await program_service.call_speedbar(robot_model=robot_model, request=request))
+def call_speedbar(robot_model: str, request: Request_MotionSpeedBarPD):
+    return JSONResponse(program_service.call_speedbar(robot_model=robot_model, request=request))
 
 
 @program_router.post("/{robot_model}/call_smoothjog_j", response_model=Response_ReturnValuePD)
-async def call_smoothjog_j(robot_model: str, request: Request_Move_SmoothJogJPD):
-    res = await program_service.call_smoothjog_j(robot_model=robot_model, request=request)
+def call_smoothjog_j(robot_model: str, request: Request_Move_SmoothJogJPD):
+    res = program_service.call_smoothjog_j(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_l", response_model=Response_ReturnValuePD)
-async def call_smoothjog_l(robot_model: str, request: Request_Move_SmoothJogLPD):
-    res = await program_service.call_smoothjog_l(robot_model=robot_model, request=request)
+def call_smoothjog_l(robot_model: str, request: Request_Move_SmoothJogLPD):
+    res = program_service.call_smoothjog_l(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_stop", response_model=Response_ReturnValuePD)
-async def call_smoothjog_stop(robot_model: str, request: Request_Move_SmoothJogStopPD):
-    res = await program_service.call_smoothjog_stop(robot_model=robot_model, request=request)
+def call_smoothjog_stop(robot_model: str, request: Request_Move_SmoothJogStopPD):
+    res = program_service.call_smoothjog_stop(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_tickjog_j", response_model=Response_ReturnValuePD)
-async def call_tickjog_j(robot_model: str, request: Request_MoveTickJogJPD):
-    res = await program_service.call_tickjog_j(robot_model=robot_model, request=request)
+def call_tickjog_j(robot_model: str, request: Request_MoveTickJogJPD):
+    res = program_service.call_tickjog_j(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_tickjog_l", response_model=Response_ReturnValuePD)
-async def call_tickjog_l(robot_model: str, request: Request_MoveTickJogLPD):
-    res = await program_service.call_tickjog_l(robot_model=robot_model, request=request)
+def call_tickjog_l(robot_model: str, request: Request_MoveTickJogLPD):
+    res = program_service.call_tickjog_l(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 # ==============================================================================
@@ -111,14 +111,14 @@ async def call_tickjog_l(robot_model: str, request: Request_MoveTickJogLPD):
 # ==============================================================================
 
 @program_router.post("/{robot_model}/call_move_j", response_model=Response_ReturnValuePD)
-async def call_move_j(robot_model: str, request: Request_MoveJPD):
-    res = await program_service.call_move_j(robot_model=robot_model, request=request)
+def call_move_j(robot_model: str, request: Request_MoveJPD):
+    res = program_service.call_move_j(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_move_l", response_model=Response_ReturnValuePD)
-async def call_move_l(robot_model: str, request: Request_MoveLPD):
-    res = await program_service.call_move_l(robot_model=robot_model, request=request)
+def call_move_l(robot_model: str, request: Request_MoveLPD):
+    res = program_service.call_move_l(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 # ==============================================================================

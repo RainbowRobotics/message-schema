@@ -709,13 +709,10 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_resume(process_id, step_id)
 
-        print(f"Resumed process: {process_id}", flush=True)
-
         return True
 
     def stop(self, process_id: str) -> bool:
         """스크립트 중지"""
-        self.pause_events[process_id].clear()
         if process_id not in self.processes:
             print(f"Process {process_id} not found")
             return False
@@ -726,6 +723,8 @@ class ScriptExecutor:
 
         if self.stop_events[process_id].is_set():
             return False
+
+        self.pause_events[process_id].clear()
 
         step_id = self.state_dicts[process_id]["current_step_id"]
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.STOPPED

@@ -75,12 +75,15 @@ class RBManipulateMoveSDK(RBBaseSDK):
                             break
 
                     if obj is not None and obj.get("motionMode") == 0:
+                        flow_manager_args.done()
                         break
 
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
                     raise RuntimeError(str(e)) from e
+
+        return None
 
     def call_move_j(
         self,
@@ -137,6 +140,8 @@ class RBManipulateMoveSDK(RBBaseSDK):
 
         if res["obj_payload"] is None:
             raise RuntimeError("Move J failed: obj_payload is None")
+
+        print("flow_manager_args", flow_manager_args, flush=True)
 
         self._run_coro_blocking(
             self._move_flow_manager_solver(

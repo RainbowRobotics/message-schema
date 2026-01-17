@@ -35,7 +35,7 @@ class InfoService:
         """
 
         robot_models = read_json_file("data", "robot_models.json")
-        all_components = set()
+        all_components = []
 
         for model_details in robot_models.values():
             model_service = model_details.get("be_service")
@@ -43,8 +43,7 @@ class InfoService:
             if be_service is None or (
                 model_service and be_service.casefold() in model_service.casefold()
             ):
-                components = model_details.get("components", [])
-                all_components.update(components)
+                all_components.append(model_details.get("model"))
 
         return list(all_components)
 
@@ -112,6 +111,9 @@ class InfoService:
                     raise HTTPException(400, "Invalid robotModel")
 
                 patch_doc["components"] = model_info["components"]
+
+                if existing["robotModel"] != patch_doc["robotModel"]:
+                    patch_doc["programId"] = None
 
             # patch_doc 에 들어있는 필드만 업데이트됨
             # 기존 DB 값은 손대지 않는다.

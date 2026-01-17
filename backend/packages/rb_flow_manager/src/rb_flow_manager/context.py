@@ -1,5 +1,6 @@
 import builtins
 import contextlib
+import inspect
 import sys
 import time
 from collections.abc import (
@@ -15,6 +16,7 @@ from typing import Any, Literal
 
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
+from rb_utils.parser import t_to_dict
 
 from .exception import BreakFolder, StopExecution, SubTaskHaltException
 from .schema import RB_Flow_Manager_ProgramState
@@ -71,7 +73,7 @@ class ExecutionContext:
         self.state_dict["variables"] = current
 
     def update_local_variables(self, variables: dict[str, Any]):
-        self.variables["local"].update(variables)
+        self.variables["local"].update(t_to_dict(variables))
         self.update_vars_to_state_dict()
 
     def update_global_variables(self, variables: dict[str, Any]):
@@ -90,9 +92,14 @@ class ExecutionContext:
 
         try:
             if category == "manipulate":
-                fn = self.sdk_functions.get("rb_manipulate_sdk.get_variable")
+                fn = self.sdk_functions.get("rb_manipulate_sdk.get_data.get_variable")
 
                 res = fn(robot_model, var_name) if fn is not None else None
+
+                print(f"res: {res}", flush=True)
+
+                if res is None:
+                    raise RuntimeError(f"Failed to get global variable: {var_name}")
 
                 self.update_global_variables({
                     var_name: res
@@ -101,7 +108,56 @@ class ExecutionContext:
                 return res
         except Exception as e:
             print(f"[{self.process_id}] Error getting global variable: {e}", flush=True)
-            return None
+            raise e
+
+    def _collect_public_methods(
+        self,
+        obj,
+        prefix: str,
+        out: dict,
+        *,
+        max_depth: int = 5,
+        _depth: int = 0,
+        _seen=None,
+    ):
+        if _seen is None:
+            _seen = set()
+
+        if _depth > max_depth:
+            return
+
+        key = (id(obj), prefix)
+        if key in _seen:
+            return
+        _seen.add(key)
+
+        # 1) obj의 public "메서드"만 수집
+        for name in dir(obj):
+            if name.startswith("_"):
+                continue
+            try:
+                attr = getattr(obj, name)
+            except Exception:
+                continue
+
+            # callable() 대신 "메서드/함수"만
+            if inspect.ismethod(attr) or inspect.isfunction(attr):
+                out[f"{prefix}.{name}"] = attr
+
+        # 2) 하위 SDK 객체 재귀 탐색
+        for name, value in vars(obj).items():
+            if name.startswith("_"):
+                continue
+
+            if isinstance(value, RBBaseSDK):
+                self._collect_public_methods(
+                    value,
+                    prefix=f"{prefix}.{name}",
+                    out=out,
+                    max_depth=max_depth,
+                    _depth=_depth + 1,
+                    _seen=_seen,
+                )
 
     def _make_rb_sdk_method_key_value_map(self):
         sdk_list = [
@@ -109,17 +165,15 @@ class ExecutionContext:
             {"name": "rb_manipulate_sdk", "class": RBManipulateSDK},
         ]
 
+        all_methods: dict[str, callable] = {}
+
         for item in sdk_list:
-            sdk = item["class"]()
+            sdk = item["class"]()  # 여기서 RBManipulateSDK()가 내부에 program/move/...를 생성해둠
+            self._collect_public_methods(sdk, prefix=item["name"], out=all_methods)
 
-            public_methods = {
-                f"{item['name']}.{name}": getattr(sdk, name)
-                for name in dir(sdk)
-                if callable(getattr(sdk, name)) and not name.startswith("_")
-            }
+        if self.sdk_functions is not None:
+            self.sdk_functions.update(all_methods)
 
-            if self.sdk_functions is not None:
-                self.sdk_functions.update(public_methods)
 
     def initialize_sdk_functions(self):
         if self.sdk_functions is not None:

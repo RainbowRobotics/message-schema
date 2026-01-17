@@ -806,7 +806,7 @@ class ProgramService(BaseService):
         root_args: dict[str, Any] = {}
 
         if begin is not None and robot_model is not None:
-            root_func_name = f"rb_{category}_sdk.set_begin"
+            root_func_name = f"rb_{category}_sdk.program.set_begin"
             root_args = {
                 "robot_model": robot_model,
                 "position": begin.get("position", None),
@@ -870,7 +870,7 @@ class ProgramService(BaseService):
         begin_dict = t_to_dict(begin) if begin is not None else None
 
         if begin_dict is not None and robot_model is not None:
-            func_part = f"    func_name='rb_{category}_sdk.set_begin',\n"
+            func_part = f"    func_name='rb_{category}_sdk.program.set_begin',\n"
             args_part = (
                 f"    args={{\n"
                 f"        'robot_model': '{robot_model}',\n"
@@ -1240,7 +1240,7 @@ class ProgramService(BaseService):
         """
         Program 목록을 조회하는 함수.
         """
-
+        robot_info = await info_service.get_robot_info(db=db)
         program_col = db["programs"]
 
         query: dict[str, Any] = {}
@@ -1250,6 +1250,8 @@ class ProgramService(BaseService):
                 raise ValueError("search_name must be less than 100 characters")
 
             query = make_check_search_text_query("name", search_name, query=query)
+
+        query = make_check_include_query("robotModel", robot_info["info"]["robotModel"], query=query)
 
         sort_spec = [("createdAt", 1 if order == "ASC" else -1)]
 
@@ -1277,6 +1279,8 @@ class ProgramService(BaseService):
         program_doc["updatedAt"] = now
 
         robot_info = await info_service.get_robot_info(db=db)
+
+        program_doc["robotModel"] = robot_info["info"]["robotModel"]
 
         components = robot_info["info"]["components"]
 
@@ -2156,7 +2160,7 @@ class ProgramService(BaseService):
         be_service = self._robot_models[robot_model].get("be_service", None)
 
         if be_service == "manipulate":
-            rb_manipulate_sdk.call_program_before(robot_model=robot_model, option=0)
+            rb_manipulate_sdk.program.call_program_before(robot_model=robot_model, option=0)
 
     async def at_program_end(self, task_id: str, db: MongoDB):
         """
@@ -2173,4 +2177,4 @@ class ProgramService(BaseService):
         be_service = self._robot_models[robot_model].get("be_service", None)
 
         if be_service == "manipulate":
-            rb_manipulate_sdk.call_program_after(robot_model=robot_model, option=0)
+            rb_manipulate_sdk.program.call_program_after(robot_model=robot_model, option=0)

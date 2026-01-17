@@ -8,32 +8,32 @@
       "C500920"
     ]
   },
-  "500880": {
-    "model": "500880",
+  "C500880": {
+    "model": "C500880",
     "be_service":"manipulate",
-    "alias": "500880",
+    "alias": "C500880",
     "useCharge": false,
     "components": [
-      "500880"
+      "C500880"
     ]
   },
-  "501880": {
-    "model": "501880",
+  "C501880": {
+    "model": "C501880",
     "be_service":"manipulate",
-    "alias": "501880",
+    "alias": "C501880",
     "useCharge": false,
     "components": [
-      "501880"
+      "C501880"
     ]
   },
-  "RBY-2": {
-    "model": "RB_Y2",
+  "RBY2": {
+    "model": "RBY2",
     "be_service":"manipulate",
     "alias": "RBY-2",
     "useCharge": false,
     "components": [
-      "500880",
-      "501880"
+      "C500880",
+      "C501880"
     ]
   }
 }

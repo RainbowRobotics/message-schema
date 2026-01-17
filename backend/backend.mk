@@ -95,3 +95,8 @@ backend.mypy: ## mypy로 type check
 			--config-file ${WORKDIR}/pyproject.toml || true; \
 	done
 	@echo "✅ Type check completed"
+
+backend.docs-sdk: ## SDK 문서 생성
+	@cd ${WORKDIR}
+	@sphinx-apidoc -o documents/sdk/docs/source/api packages/rb_sdk/src/rb_sdk
+	@sphinx-build -b html -E -a documents/sdk/docs/source documents/sdk/docs/build/html

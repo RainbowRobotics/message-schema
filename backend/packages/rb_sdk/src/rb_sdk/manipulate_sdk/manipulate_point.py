@@ -22,7 +22,7 @@ class RBManipulatePointSDK(RBBaseSDK):
         self.manipulate_move_sdk = RBManipulateMoveSDK()
         self.manipulate_config_sdk = RBManipulateConfigSDK()
 
-    async def set_point(
+    def set_point(
         self,
         *,
         robot_model: str,
@@ -93,7 +93,7 @@ class RBManipulatePointSDK(RBBaseSDK):
                 spd_acc_para=spd_acc_para,
             )
 
-            return await self.manipulate_move_sdk.call_relative_move(
+            return self.manipulate_move_sdk.call_relative_move(
                 robot_model=robot_model,
                 relative_value=relative_value,
                 reference_value=reference_value,
@@ -103,14 +103,14 @@ class RBManipulatePointSDK(RBBaseSDK):
             )
 
         elif move_type == "J":
-            return await self.manipulate_move_sdk.call_move_j(
+            return self.manipulate_move_sdk.call_move_j(
                 robot_model=robot_model,
                 target=target,
                 speed=speed,
                 flow_manager_args=flow_manager_args,
             )
         elif move_type == "L":
-            return await self.manipulate_move_sdk.call_move_l(
+            return self.manipulate_move_sdk.call_move_l(
                 robot_model=robot_model,
                 target=target,
                 speed=speed,
@@ -120,7 +120,7 @@ class RBManipulatePointSDK(RBBaseSDK):
             if pnt_para is None or pnt_type is None:
                 raise ValueError("pnt_para and pnt_type are required for JB move")
 
-            return await self.manipulate_move_sdk.call_move_jb(
+            return self.manipulate_move_sdk.call_move_jb(
                 robot_model=robot_model,
                 pnt_para=pnt_para,
                 pnt_type=pnt_type,
@@ -136,7 +136,7 @@ class RBManipulatePointSDK(RBBaseSDK):
             if pnt_para is None or pnt_type is None:
                 raise ValueError("pnt_para and pnt_type are required for LB move")
 
-            return await self.manipulate_move_sdk.call_move_lb(
+            return self.manipulate_move_sdk.call_move_lb(
                 robot_model=robot_model,
                 pnt_para=pnt_para,
                 pnt_type=pnt_type,

@@ -107,50 +107,90 @@ class RBBaseSDK:
         self._initialized = True
         self._pid = os.getpid()
 
-        # 이벤트 루프 & task set
-        self.loop = asyncio.new_event_loop()
+        # # 이벤트 루프 & task set
+        # self.loop = asyncio.new_event_loop()
         self._tasks: set[asyncio.Task] = set()
 
-        # 루프를 돌릴 백그라운드 스레드
-        self._loop_thread = threading.Thread(
-            target=self._run_loop, name=f"rb-sdk-loop-{self._pid}", daemon=True
-        )
-        self._loop_thread.start()
+        # # 루프를 돌릴 백그라운드 스레드
+        # self._loop_thread = threading.Thread(
+        #     target=self._run_loop, name=f"rb-sdk-loop-{self._pid}", daemon=True
+        # )
+        # self._loop_thread.start()
 
         # zenoh client 생성 + 루프 설정
         # self.zenoh_client = ZenohManager.get_client(self.loop)
         self.zenoh_client = ZenohClient()
-        self.zenoh_client.set_loop(self.loop)
+
+        # self.zenoh_client.set_loop(self.loop)
 
         print(f"[SDK Base] Initialized for PID {self._pid} ({self.__class__.__name__})")
 
-    def _run_loop(self):
-        asyncio.set_event_loop(self.loop)
-        self.loop.run_forever()
+    # def _run_loop(self):
+        # asyncio.set_event_loop(self.loop)
+        # self.loop.run_forever()
+
+    # def _target_loop(self) -> asyncio.AbstractEventLoop:
+    #     # ZenohClient가 붙어있는 loop를 최우선으로 사용
+    #     loop = getattr(self.zenoh_client, "_loop", None)
+    #     if loop is None:
+    #         loop = self.loop
+    #     if loop is None:
+    #         raise RuntimeError("target loop is not set")
+    #     return loop
 
     def _run_coro_blocking(self, coro, *, timeout: float | None = None):
-        # 다른 스레드에서 self._loop가 돌고 있으면 거기에 붙어서 기다림
-        loop = getattr(self.zenoh_client, "_loop", None)
-        if loop and loop.is_running():
-            fut = asyncio.run_coroutine_threadsafe(coro, loop)
-            return fut.result(timeout=timeout)
+        try:
+            loop = asyncio.get_running_loop()
+            # running loop가 있으면 blocking하면 안 됨
+            loop.create_task(coro)
+            return None
+        except RuntimeError:
+            # 루프가 없으면 새 루프에서 실행
+            if timeout is None:
+                return asyncio.run(coro)
 
-        # 현재 스레드에 루프가 없으면 새로 만들어 실행
-        return asyncio.run(coro)
+            async def _with_timeout():
+                return await asyncio.wait_for(coro, timeout=timeout)
 
-    def _submit(self, coro):
-        """이벤트 루프에 코루틴 제출하고 future 반환"""
+            return asyncio.run(_with_timeout())
 
-        async def _wrap():
-            task = asyncio.current_task()
-            if task is not None:
-                self._tasks.add(task)
-                try:
-                    return await coro
-                finally:
-                    self._tasks.discard(task)
+    # async def _run_on_sdk_loop(self, coro, *, timeout: float | None = None):
+    #     """
+    #     ✅ 절대 `await coro`로 fallback 하지 않는다.
+    #     ✅ 항상 target loop(zenoh loop)로 run_coroutine_threadsafe
+    #     """
+    #     loop = self._target_loop()
 
-        return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
+    #     # 현재 running loop가 target loop면 그냥 await
+    #     try:
+    #         running = asyncio.get_running_loop()
+    #         if running is loop:
+    #             if timeout is None:
+    #                 return await coro
+    #             return await asyncio.wait_for(coro, timeout=timeout)
+    #     except RuntimeError:
+    #         pass
+
+    #     # 다른 loop면 thread-safe로 던지고 현재 loop에서 await
+    #     cfut = asyncio.run_coroutine_threadsafe(coro, loop)
+    #     afut = asyncio.wrap_future(cfut)
+    #     if timeout is not None:
+    #         return await asyncio.wait_for(afut, timeout=timeout)
+    #     return await afut
+
+    # def _submit(self, coro):
+    #     """이벤트 루프에 코루틴 제출하고 future 반환"""
+
+    #     async def _wrap():
+    #         task = asyncio.current_task()
+    #         if task is not None:
+    #             self._tasks.add(task)
+    #             try:
+    #                 return await coro
+    #             finally:
+    #                 self._tasks.discard(task)
+
+    #     return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
 
     async def wait(self, *, second: float, flow_manager_args: FlowManagerArgs | None = None):
         """지정한 시간만큼 기다리는 함수."""
@@ -262,38 +302,37 @@ class RBBaseSDK:
                     self.zenoh_client.close()
             # ZenohManager.close_local()
 
-            # 루프 위에서 돌고 있는 task 취소
-            if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
+            # # 루프 위에서 돌고 있는 task 취소
+            # if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
 
-                async def _cancel_all():
-                    tasks = list(self._tasks)
-                    for t in tasks:
-                        t.cancel()
-                    if tasks:
-                        await asyncio.gather(*tasks, return_exceptions=True)
+            #     async def _cancel_all():
+            #         tasks = list(self._tasks)
+            #         for t in tasks:
+            #             t.cancel()
+            #         if tasks:
+            #             await asyncio.gather(*tasks, return_exceptions=True)
 
-                fut = asyncio.run_coroutine_threadsafe(_cancel_all(), self.loop)
-                with contextlib.suppress(Exception):
-                    fut.result(timeout=2)
+            #     fut = asyncio.run_coroutine_threadsafe(_cancel_all(), self.loop)
+            #     with contextlib.suppress(Exception):
+            #         fut.result(timeout=2)
 
-                # 루프 정지
-                self.loop.call_soon_threadsafe(self.loop.stop)
+            #     # 루프 정지
+            #     self.loop.call_soon_threadsafe(self.loop.stop)
 
-            # 스레드 join
-            if getattr(self, "_loop_thread", None) and self._loop_thread.is_alive():
-                self._loop_thread.join(timeout=2)
+            # # 스레드 join
+            # if getattr(self, "_loop_thread", None) and self._loop_thread.is_alive():
+            #     self._loop_thread.join(timeout=2)
 
-            # 루프 close
-            if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
-                self.loop.close()
-
-            self._is_alive = False
-
-            print(f"[SDK Base] Closed for PID {self._pid} ({self.__class__.__name__})")
+            # # 루프 close
+            # if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
+            #     self.loop.close()
 
         except Exception as e:
             print(f"[SDK Base] Close error: {e}", flush=True)
         finally:
+            print(f"[SDK Base] Closed for PID {self._pid} ({self.__class__.__name__})", flush=True)
+
+            self._is_alive = False
             cls = self.__class__
             key = (self._pid, cls)
             with cls._lock:

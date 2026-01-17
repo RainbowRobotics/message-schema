@@ -234,7 +234,7 @@ class ProgramService(BaseService):
     # 3. Direct Move Control (MoveJ, MoveL)
     # ==========================================================================
 
-    async def call_move_j(self, *, robot_model: str, request: Request_MoveJPD):
+    def call_move_j(self, *, robot_model: str, request: Request_MoveJPD):
         """
         [Move J 호출]
         - target: 이동 좌표 및 프레임 정보
@@ -257,7 +257,7 @@ class ProgramService(BaseService):
 
         return t_to_dict(res)
 
-    async def call_move_l(self, *, robot_model: str, request: Request_MoveLPD):
+    def call_move_l(self, *, robot_model: str, request: Request_MoveLPD):
         """
         [Move L 호출]
         - target: 이동 좌표 및 프레임 정보

@@ -11,7 +11,7 @@ import time
 import uuid
 from collections.abc import Callable, Iterator
 from functools import partial
-from typing import Any, Generic, NotRequired, Protocol, TypedDict, TypeVar, cast, overload
+from typing import Any, NotRequired, Protocol, TypedDict, TypeVar, cast, overload
 
 import flatbuffers
 import psutil
@@ -62,7 +62,7 @@ class FBRootReadable(Protocol[T]):
     @staticmethod
     def InitFromPackedBuf(buf: bytes, pos: int = 0) -> T: ...
 
-class QueryResult(TypedDict, Generic[T]):
+class QueryResult[T](TypedDict):
     key: str | None
     payload: bytes
     attachment: dict[str, str]
@@ -547,7 +547,7 @@ class ZenohClient:
                     att_raw = samp.attachment
 
                     att: str | None = None
-                    if isinstance(att_raw, (bytes, bytearray)):
+                    if isinstance(att_raw, bytes | bytearray):
                         att = bytes(att_raw).decode("utf-8", "ignore")
                     elif att_raw is not None and hasattr(att_raw, "to_bytes"):
                         att = att_raw.to_bytes().decode("utf-8", "ignore")

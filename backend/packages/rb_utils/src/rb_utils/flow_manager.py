@@ -226,6 +226,8 @@ def safe_eval_expr(
             return val
     except SyntaxError:
         pass  # 표현식일 수 있으니 아래로 진행
+    except Exception as e:
+        raise e
 
     # --- 일반 표현식 ------------------------------------------------------------
     try:
