@@ -69,8 +69,10 @@ SUBTREE_OUT="$(git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squ
 
 # 변경이 없으면(이미 최신) → 정상 종료
 if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
-    if (( STASH_CREATED == 1 )); then
-        git stash drop "$STASH_OID" >/dev/null
+    if [[ -n "$STASH_REF" ]]; then
+        if git stash apply "$STASH_REF" >/dev/null; then
+            git stash drop "$STASH_REF" >/dev/null
+        fi
     fi
     exit 0
 fi
