@@ -14,4 +14,4 @@ table Response_Deploy_Progress {
   percentage: int;
   service_name: string;
   result: string;
-}
+}ㅁㅈㅇㅁㅈㅇ
