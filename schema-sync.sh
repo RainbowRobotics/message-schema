@@ -27,28 +27,32 @@ fi
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
   git remote add "$REMOTE_NAME" "https://github.com/RainbowRobotics/message-schema.git"
 
-STASH_REF=""
+# stash 생성 여부 확인
+STASH_CREATED=0
+
+STASH_OID=""
 
 # 작업 트리가 clean하지 않으면 stash 생성
 if [[ -n "$(git status --porcelain)" ]]; then
-  TOKEN="$(date +%s%N)"
-  MSG="schema-sync auto-stash ${TOKEN}"
+  before_cnt="$(git stash list | wc -l | tr -d ' ')"
 
-  git stash push -u -m "$MSG" >/dev/null 2>&1 || true
+  # stash 생성
+  git stash push -u -m "schema-sync auto-stash" >/dev/null 2>&1 || true
+  after_cnt="$(git stash list | wc -l | tr -d ' ')"
 
-  # 내가 만든 stash 엔트리의 stash@{n}을 메시지로 찾아 고정
-  STASH_REF="$(
-    git stash list --format='%gd %s' | awk -v msg="$MSG" '$0 ~ msg {print $1; exit}'
-  )"
+  # stash 생성 여부 확인
+  if (( after_cnt > before_cnt )); then
+    STASH_CREATED=1
 
-  if [[ -z "$STASH_REF" ]]; then
-    echo "Error: stash entry를 찾을 수 없습니다. (stash 생성 실패)"
-    echo "git status:"
-    git status -sb
-    exit 1
+    # 지금 시점의 stash top(방금 만든 stash)을 해시로 고정
+    STASH_OID="$(git rev-parse -q --verify stash@{0} 2>/dev/null || true)"
+
+    if [[ -z "$STASH_OID" ]]; then
+      echo "Error:  stash 생성은 성공했지만, 스태시 OID를 읽을 수 없습니다."
+      exit 1
+    fi
   fi
 
-  # stash로 치운 뒤에도 dirty면 subtree 실패 -> 중단
   if [[ -n "$(git status --porcelain)" ]]; then
     echo "작업 트리가 clean하지 않습니다. git subtree pull를 실행할 수 없습니다."
     git status -sb
@@ -56,18 +60,31 @@ if [[ -n "$(git status --porcelain)" ]]; then
   fi
 fi
 
+# remote 브랜치 fetch
 git fetch "$REMOTE_NAME" main
 
+# schema 동기화
 git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main"
 
-# stash 복원 (stash@{n}만 apply/drop)
-if [[ -n "$STASH_REF" ]]; then
+# stash 만든게 있으면 적용
+
+if (( STASH_CREATED == 1 )); then
+  # stash@{n} 중에서 방금 저장한 OID와 매칭되는 엔트리를 찾는다
+  STASH_REF="$(git stash list --format='%gd %H' | awk -v oid="$STASH_OID" '$2==oid {print $1; exit}')"
+
+  if [[ -z "$STASH_REF" ]]; then
+    echo "Error: cannot find stash entry for $STASH_OID"
+    echo "현재 stash 목록:"
+    git stash list | head -n 5
+    exit 1
+  fi
+
   if git stash apply "$STASH_REF" >/dev/null; then
     git stash drop "$STASH_REF" >/dev/null
   else
-    echo "stash 적용 중 충돌이 발생했습니다. 충돌 해결 후 아래 실행:"
-    echo "  git stash drop $STASH_REF"
+    echo "stash 적용 중 충돌이 발생했습니다. 'message-schema' 레포지토리에서 충돌을 해결한 후!! 메인 레포지토리에서 아래 명령어를 실행하세요."
+    echo "  git stash drop $STASH_REF && make schema-sync"
     exit 1
   fi
 fi
