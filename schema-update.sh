@@ -10,7 +10,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --dir) SCHEMA_DIR="$2"; shift 2 ;;
     --remote) REMOTE_NAME="$2"; shift 2 ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    *) echo "알 수 없는 옵션: $1"; exit 1 ;;
   esac
 done
 
@@ -30,7 +30,7 @@ fi
 # 개인 작업용 schema 브랜치
 BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
-  echo "Error: Cannot determine branch name. Check git user.email"
+  echo "Error: 브랜치 이름을 결정할 수 없습니다. git user.email를 확인하세요."
   exit 1
 fi
 echo "schema branch => $BR"
@@ -39,12 +39,12 @@ echo "schema branch => $BR"
 LOCAL_TREE=$(git -C "$MAIN_REPO" rev-parse "HEAD:$SCHEMA_DIR")
 MAIN_COMMIT=$(git -C "$MAIN_REPO" rev-parse --short HEAD)
 
-echo "local  tree => $LOCAL_TREE"
-echo "main commit => $MAIN_COMMIT"
+echo "로컬 트리 => $LOCAL_TREE"
+echo "메인 커밋 => $MAIN_COMMIT"
 
 # remote 존재 여부 확인
 git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
-  echo "Error: Remote '$REMOTE_NAME' not found in main repo"
+  echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
   exit 1
 }
 
@@ -55,37 +55,37 @@ REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 # ===== 기존 브랜치가 있는 경우 =====
 if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
-  REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
-  echo "remote tree => $REMOTE_TREE"
+    REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
+    echo "원격 트리 => $REMOTE_TREE"
 
-    # schema 내용이 같으면 스킵
-  if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
-    echo "No diff. Skip."
-    exit 0
-  fi
+        # schema 내용이 같으면 스킵
+    if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
+        echo "변경이 없습니다. 스킵합니다."
+        exit 0
+    fi
 
-  # 원격 브랜치 기준 worktree에서 schema만 갱신
-  WORK_DIR=$(mktemp -d)
-  trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+    # 원격 브랜치 기준 worktree에서 schema만 갱신
+    WORK_DIR=$(mktemp -d)
+    trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
 
-  git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
+    git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
 
-  (cd "$WORK_DIR" && \
-    rm -rf -- ./* ./.??* 2>/dev/null || true && \
-    git read-tree --reset -u "$LOCAL_TREE" && \
-    git add -A && \
-    git commit -m "Update schemas from main repo @ $MAIN_COMMIT" && \
-    git push "$REMOTE_NAME" "HEAD:refs/heads/$BR")
+    (cd "$WORK_DIR" && \
+        rm -rf -- ./* ./.??* 2>/dev/null || true && \
+        git read-tree --reset -u "$LOCAL_TREE" && \
+        git add -A && \
+        git commit -m "Update schemas from main repo @ $MAIN_COMMIT" && \
+        git push "$REMOTE_NAME" "HEAD:refs/heads/$BR")
 
 else
-  # 기존 브랜치가 없으면 새로 생성
-  echo "Creating new branch: $BR"
-  TMP="$BR-tmp"
+    # 기존 브랜치가 없으면 새로 생성
+    echo " 새로운 브랜치 생성: $BR"
+    TMP="$BR-tmp"
 
-  # schema 디렉토리만 분리해서 브랜치 생성
-  git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
-  git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
-  git -C "$MAIN_REPO" branch -D "$TMP"
+    # schema 디렉토리만 분리해서 브랜치 생성
+    git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
+    git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
+    git -C "$MAIN_REPO" branch -D "$TMP"
 fi
 
-echo "Pushed to message-schema: $BR"
+echo "성공: message-schema에 푸시됨: $BR"
