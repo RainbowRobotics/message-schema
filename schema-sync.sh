@@ -59,7 +59,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
 
   STASH_REF="$(git stash list --format='%gd %s' | awk -v msg="$MSG" '$0 ~ msg {print $1; exit}')"
   
-  if [[ -z "$STASH_REF" ]]; then
+  if [ -z "$STASH_REF" ]; then
     echo "Error: stash가 생성되지 않았습니다"
     exit 1
   fi
