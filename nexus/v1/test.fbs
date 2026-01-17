@@ -1,0 +1,5 @@
+table Test {
+  test: float;
+}
+
+root_type Test;
