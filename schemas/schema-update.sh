@@ -17,11 +17,15 @@ done
 # 항상 메인 레포 루트 기준으로 동작
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 
-# subtree prefix 확인
-if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
-  echo "Error: Directory '$SCHEMA_DIR' not found in $MAIN_REPO"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 현재 서브트리 환경에서 실행되는지 확인
+if [ -d "$SCRIPT_DIR/.git" ]; then
+  echo "Error: 이 스크립트는 부모 레포지토리(서브트리 컨텍스트)에서 실행해야 합니다."
+  echo "message-schema 레포지토리 내에서 직접 실행하지 마세요."
   exit 1
 fi
+
 
 # 개인 작업용 schema 브랜치
 BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
