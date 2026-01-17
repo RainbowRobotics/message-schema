@@ -23,75 +23,68 @@ if [ -d "$SCRIPT_DIR/.git" ]; then
     exit 1
 fi
 
-# remote 없으면 추가
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
   git remote add "$REMOTE_NAME" "https://github.com/RainbowRobotics/message-schema.git"
 
-# stash 생성 여부 확인
-STASH_CREATED=0
+STASH_REF=""
+RESTORE_OK=0
 
-STASH_OID=""
+restore_stash() {
+  # stash를 만들었으면 무조건 원복 시도
+  if [[ -n "$STASH_REF" ]]; then
+    # apply 성공하면 drop
+    if git stash apply "$STASH_REF" >/dev/null 2>&1; then
+      git stash drop "$STASH_REF" >/dev/null 2>&1 || true
+      RESTORE_OK=1
+    else
+      # 여기서는 exit 하지 말고, 메시지만 남긴다 (원인 파악용)
+      echo "Warning: failed to apply $STASH_REF. Resolve manually."
+      echo "  git stash list | head"
+      echo "  git stash show -p $STASH_REF | less"
+      echo "  (resolve) then: git stash drop $STASH_REF"
+    fi
+  fi
+}
 
-# 작업 트리가 clean하지 않으면 stash 생성
+# 어떤 이유로든 스크립트가 끝나면 원복을 시도
+trap restore_stash EXIT
+
+# subtree pull은 clean 요구 → 더러우면 우리 stash를 하나 만든다
 if [[ -n "$(git status --porcelain)" ]]; then
-    before_cnt="$(git stash list | wc -l | tr -d ' ')"
+  TOKEN="$(date +%s%N)"
+  MSG="schema-sync auto-stash ${TOKEN}"
+  git stash push -u -m "$MSG" >/dev/null 2>&1 || true
 
-    # stash 생성
-    git stash push -u -m "schema-sync auto-stash" >/dev/null 2>&1 || true
-    after_cnt="$(git stash list | wc -l | tr -d ' ')"
+  STASH_REF="$(git stash list --format='%gd %s' | awk -v msg="$MSG" '$0 ~ msg {print $1; exit}')"
+  if [[ -z "$STASH_REF" ]]; then
+    echo "Error: working tree dirty but stash was not created"
+    git status -sb
+    exit 1
+  fi
 
-    # stash 생성 여부 확인
-    if (( after_cnt > before_cnt )); then
-        STASH_CREATED=1
-
-        # 지금 시점의 stash top(방금 만든 stash)을 해시로 고정
-        STASH_OID="$(git rev-parse -q --verify stash@{0} 2>/dev/null || true)"
-
-        if [[ -z "$STASH_OID" ]]; then
-        echo "Error:  stash 생성은 성공했지만, 스태시 OID를 읽을 수 없습니다."
-        exit 1
-        fi
-    fi
-
-    if [[ -n "$(git status --porcelain)" ]]; then
-        echo "작업 트리가 clean하지 않습니다. git subtree pull를 실행할 수 없습니다."
-        git status -sb
-        exit 1
-    fi
+  # stash 후에도 dirty면 subtree는 어차피 못 함
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "Error: still dirty after stash; cannot run subtree pull"
+    git status -sb
+    exit 1
+  fi
 fi
 
-# remote 브랜치 fetch
 git fetch "$REMOTE_NAME" main
 
-# schema 동기화
+# 여기서부터는 'already at commit'인데 RC=1 나와도 죽지 않게 처리
+set +e
 SUBTREE_OUT="$(git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
-  -m "Sync schemas from ${REMOTE_NAME}/main" 2>&1 | tee /dev/stderr)"
+  -m "Sync schemas from ${REMOTE_NAME}/main" 2>&1)"
+RC=$?
+set -e
 
-# stash 만든게 있으면 적용
-if (( STASH_CREATED == 1 )); then
-    # stash@{n} 중에서 방금 저장한 OID와 매칭되는 엔트리를 찾는다
-    STASH_REF="$(git stash list --format='%gd %H' | awk -v oid="$STASH_OID" '$2==oid {print $1; exit}')"
+printf "%s\n" "$SUBTREE_OUT"
 
-    if [[ -z "$STASH_REF" ]]; then
-        echo "Error: cannot find stash entry for $STASH_OID"
-        echo "현재 stash 목록:"
-        git stash list | head -n 5
-        exit 1
-    fi
-
-    # 변경이 없으면(이미 최신) → 정상 종료
-    if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
-        if git stash apply "$STASH_REF" >/dev/null; then
-            git stash drop "$STASH_REF" >/dev/null
-        fi
-        exit 0
-    fi
-
-    if  git stash apply "$STASH_REF" >/dev/null; then
-        git stash drop "$STASH_REF" >/dev/null
-    else
-        echo "stash 적용 중 충돌이 발생했습니다. 'message-schema' 레포지토리에서 충돌을 해결한 후!! 메인 레포지토리에서 아래 명령어를 실행하세요."
-        echo "  git stash drop $STASH_REF && make schema-sync"
-        exit 1
-    fi
+# 이미 최신이면 성공 처리
+if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
+  RC=0
 fi
+
+# 진짜 실패면 종료 (EXIT trap이 stash 원복은 수행함)
+exit "$RC"
