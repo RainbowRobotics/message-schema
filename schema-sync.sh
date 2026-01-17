@@ -14,50 +14,68 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# 항상 메인 레포 루트 기준으로 동작
-MAIN_REPO="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# subtree prefix 확인
-if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
-  echo "Error: Directory '$SCHEMA_DIR' not found in $MAIN_REPO"
+# 현재 서브트리 환경에서 실행되는지 확인
+if [ -d "$SCRIPT_DIR/.git" ]; then
+  echo "Error: 이 스크립트는 부모 레포지토리(서브트리 컨텍스트)에서 실행해야 합니다."
+  echo "message-schema 레포지토리 내에서 직접 실행하지 마세요."
   exit 1
 fi
-
 
 # remote 없으면 추가
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
   git remote add "$REMOTE_NAME" "https://github.com/RainbowRobotics/message-schema.git"
 
+# stash 생성 여부 확인
 STASH_CREATED=0
 
+STASH_OID=""
+
+# 작업 트리가 clean하지 않으면 stash 생성
 if [[ -n "$(git status --porcelain)" ]]; then
   before_cnt="$(git stash list | wc -l | tr -d ' ')"
 
+  # stash 생성
   git stash push -u -m "schema-sync auto-stash" >/dev/null 2>&1 || true
   after_cnt="$(git stash list | wc -l | tr -d ' ')"
 
+  # stash 생성 여부 확인
   if (( after_cnt > before_cnt )); then
     STASH_CREATED=1
+
+    # 지금 시점의 stash top(방금 만든 stash)을 해시로 고정
+    STASH_OID="$(git rev-parse -q --verify refs/stash || true)"
+
+    if [[ -z "$STASH_OID" ]]; then
+      echo "Error: stash was created but could not read refs/stash"
+      exit 1
+    fi
   fi
 
   if [[ -n "$(git status --porcelain)" ]]; then
-    echo "Working tree is still dirty; cannot run git subtree pull."
+    echo "작업 트리가 clean하지 않습니다. git subtree pull를 실행할 수 없습니다."
     git status -sb
     exit 1
   fi
 fi
 
+# remote 브랜치 fetch
 git fetch "$REMOTE_NAME" main
 
+# schema 동기화
 git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main"
 
+# stash 만든게 있으면 적용
 if (( STASH_CREATED == 1 )); then
-  if git stash apply "stash@{0}" >/dev/null; then
-    git stash drop "stash@{0}" >/dev/null
+  # stash 적용
+  if git stash apply "$STASH_OID" >/dev/null; then
+    # stash 삭제
+    git stash drop "$STASH_OID" >/dev/null
   else
-    echo "Conflict while applying stash@{0}. Resolve conflicts, then drop manually:"
-    echo "  git stash drop stash@{0}"
+    echo "stash 적용 중 충돌이 발생했습니다. 'message-schema' 레포지토리에서 충돌을 해결한 후!! 메인 레포지토리에서 아래 명령어를 실행하세요."
+    echo "  git stash drop $STASH_OID && make schema-sync"
     exit 1
   fi
 fi
