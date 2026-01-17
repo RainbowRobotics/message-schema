@@ -1,0 +1,5 @@
+table Test {
+  test: string;
+}
+
+root_type Test;
