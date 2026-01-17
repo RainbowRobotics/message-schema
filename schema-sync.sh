@@ -28,42 +28,36 @@ fi
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
   git remote add "$REMOTE_NAME" "https://github.com/RainbowRobotics/message-schema.git"
 
-# subtree는 워킹트리가 더러우면 막힘 → 필요 시 내 stash만 만들어 치움 (충돌 방지)
-STASH_REF=""
+STASH_CREATED=0
 
-dirty=0
-git diff --quiet || dirty=1
-git diff --cached --quiet || dirty=1
-if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then dirty=1; fi
+if [[ -n "$(git status --porcelain)" ]]; then
+  before_cnt="$(git stash list | wc -l | tr -d ' ')"
 
-if [[ "$dirty" -eq 1 ]]; then
-  before_top="$(git stash list -n 1 | sed -n 's/^\(stash@{[0-9]\+}\).*/\1/p')"
-  git stash push -u -m "schema-sync auto-stash" >/dev/null
-  after_top="$(git stash list -n 1 | sed -n 's/^\(stash@{[0-9]\+}\).*/\1/p')"
+  git stash push -u -m "schema-sync auto-stash" >/dev/null 2>&1 || true
+  after_cnt="$(git stash list | wc -l | tr -d ' ')"
 
-  # 방금 만든 stash ref를 확실히 잡는다 (pop 금지)
-  if [[ -n "$after_top" && "$after_top" != "$before_top" ]]; then
-    STASH_REF="$after_top"
-  else
-    echo "Error: failed to identify created stash entry"
+  if (( after_cnt > before_cnt )); then
+    STASH_CREATED=1
+  fi
+
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "Working tree is still dirty; cannot run git subtree pull."
+    git status -sb
     exit 1
   fi
 fi
 
-# remote 브랜치 fetch
 git fetch "$REMOTE_NAME" main
 
-# schema 동기화
 git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main"
 
-# 내가 만든 stash만 복원 (apply 성공 시에만 drop)
-if [[ -n "$STASH_REF" ]]; then
-  if git stash apply "$STASH_REF" >/dev/null; then
-    git stash drop "$STASH_REF" >/dev/null
+if (( STASH_CREATED == 1 )); then
+  if git stash apply "stash@{0}" >/dev/null; then
+    git stash drop "stash@{0}" >/dev/null
   else
-    echo "Conflict while applying $STASH_REF. Resolve conflicts, then drop manually:"
-    echo "  git stash drop $STASH_REF"
+    echo "Conflict while applying stash@{0}. Resolve conflicts, then drop manually:"
+    echo "  git stash drop stash@{0}"
     exit 1
   fi
 fi
