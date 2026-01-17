@@ -1,0 +1,28 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+table Request_MotionSpeedBar {
+  alpha: float;
+}
+
+table Request_MotionPause {
+}
+
+table Request_MotionResume {
+}
+
+table Request_MotionResetOutColl {
+}
+
+table Request_MotionHalt {
+}
+
+table Request_ProgramBefore {
+  option: int;
+}
+
+table Request_ProgramAfter {
+  option: int;
+}
