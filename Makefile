@@ -7,6 +7,36 @@ include backend/backend.mk
 
 .DEFAULT_GOAL := help
 
+SCHEMA_DIR=schemas
+
 .PHONY: help
 help: ## 가능한 타겟 설명 출력
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z0-9_.-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+.PHONY: schema-sync
+schema-sync: ## message-schema 레포의 최신상태를 가져오기
+	git remote add rb_schemas https://github.com/RainbowRobotics/message-schema || true
+	git fetch rb_schemas main
+	git subtree pull --prefix=$(SCHEMA_DIR) rb_schemas main --squash
+
+.PHONY: schema-update
+schema-update: ## schema 변경 사항을 message-schema 레포로 push
+	@set -e; \
+	# SCHEMA_DIR/ 변경 확인
+	if git diff --quiet -- $(SCHEMA_DIR) && git diff --cached --quiet -- $(SCHEMA_DIR); then \
+		echo "schemas/ 변경이 없습니다."; \
+		exit 1; \
+	fi; \
+	\
+	# SCHEMA_DIR/만 커밋
+	git add $(SCHEMA_DIR); \
+	git commit -m "chore(schema): update (from team repo)" || true; \
+	\
+	# SCHEMA_DIR/만 분리 브랜치 생성
+	BR="schema/from-$$(git config user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"; \
+	git subtree split --prefix=$(SCHEMA_DIR) -b "$$BR"; \
+	\
+	# message-schema 레포로 push (PR 생성은 message-schema Actions가 담당)
+	git remote add rb_schemas https://github.com/RainbowRobotics/message-schema || true; \
+	git push rb_schemas "$$BR":refs/heads/"$$BR"; \
+	echo "Pushed to message-schema branch: $$BR"
