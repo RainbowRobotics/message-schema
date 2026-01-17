@@ -64,8 +64,13 @@ fi
 git fetch "$REMOTE_NAME" main
 
 # schema 동기화
-git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
-  -m "Sync schemas from ${REMOTE_NAME}/main"
+SUBTREE_OUT="$(git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
+  -m "Sync schemas from ${REMOTE_NAME}/main" 2>&1 | tee /dev/stderr)"
+
+# 변경이 없으면(이미 최신) → 정상 종료
+if echo "$SUBTREE_OUT" | grep -q "Subtree is already at commit"; then
+  exit 0
+fi
 
 # stash 만든게 있으면 적용
 
