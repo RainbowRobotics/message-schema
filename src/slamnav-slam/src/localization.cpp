@@ -157,7 +157,7 @@ void LOCALIZATION::stop()
 
   QString loc_mode = config->get_loc_mode();
 
-  set_cur_loc_state("NONE");
+  set_cur_loc_state("none");
 
   log_info("{} stop", loc_mode.toStdString().c_str());
 }
