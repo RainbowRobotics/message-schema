@@ -107,30 +107,35 @@ jobs:
 
           MENTION_BLOCK=""
           if [ -n "$MENTIONS" ]; then
-            MENTION_BLOCK=",
+            MENTION_BLOCK="
             {
                 \"type\": \"section\",
                 \"text\": {
-                \"type\": \"mrkdwn\",
-                \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
                 }
             }"
           fi
+          
           curl -X POST -H 'Content-type: application/json' --data "{
             \"text\": \":white_check_mark: [#${PR_NUMBER}] Schema PR 머지 완료${MENTION_TEXT}\",
             \"blocks\": [
-              {
+                {
                 \"type\": \"header\",
-                \"text\": { \"type\": \"plain_text\", \"text\": \":white_check_mark: Schema PR 머지 완료\", \"emoji\": true }
-              },
-              {
+                \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \":white_check_mark: Schema PR 머지 완료\",
+                    \"emoji\": true
+                }
+                },
+                {
                 \"type\": \"section\",
                 \"fields\": [
-                  { \"type\": \"mrkdwn\", \"text\": \"*PR:*\n<${PR_URL}|#${PR_NUMBER}>\" },
-                  { \"type\": \"mrkdwn\", \"text\": \"*Title:*\n${TITLE}\" },
-                  { \"type\": \"mrkdwn\", \"text\": \"*Merged by:*\n${MERGED_BY}\" }
+                    { \"type\": \"mrkdwn\", \"text\": \"*PR:*\\n<${PR_URL}|#${PR_NUMBER}>\" },
+                    { \"type\": \"mrkdwn\", \"text\": \"*Title:*\\n${TITLE}\" },
+                    { \"type\": \"mrkdwn\", \"text\": \"*Merged by:*\\n${MERGED_BY}\" }
                 ]
-              },
-              $MENTION_BLOCK,
+                }$( [ -n \"$MENTION_BLOCK\" ] && echo \",\" )
+                $MENTION_BLOCK
             ]
-          }" "$SLACK_WEBHOOK_URL"
+           }" "$SLACK_WEBHOOK_URL"
