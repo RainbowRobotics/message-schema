@@ -9,6 +9,8 @@
 #include "types/move_lb.h"
 #include "types/move_xb.h"
 #include "types/move_cir.h"
+#include "types/move_servo_j.h"
+#include "types/move_servo_l.h"
 #include "types/move_speed_j.h"
 #include "types/move_speed_l.h"
 
@@ -28,7 +30,7 @@ namespace rb_motion {
             VectorCd c_output;
             int ret;
         };
-        enum class MoveTerminate        {DONE, IK_ERR, TRAJ_ERR};
+        enum class MoveTerminate        {DONE, IK_ERR, TRAJ_ERR, INPUT_ERR};
 
         
         //--------------------------------------------------------------
@@ -53,6 +55,8 @@ namespace rb_motion {
         move_lb         _motion_move_lb;
         move_xb         _motion_move_xb;
         move_cir        _motion_move_cir;
+        move_servo_j    _motion_move_servo_j;
+        move_servo_l    _motion_move_servo_l;
         move_speed_j    _motion_move_speed_j;
         move_speed_l    _motion_move_speed_l;
 
@@ -80,6 +84,8 @@ namespace rb_motion {
             }else if(type == MoveTerminate::TRAJ_ERR){
                 MESSAGE(MSG_LEVEL_ERRR, MSG_MOVE_RUNTIME_TERMINATE_TRAJ_ERR);
                 LOG_ERROR("Motion-Traj Problem");
+            }else if(type == MoveTerminate::INPUT_ERR){
+                LOG_ERROR("Motion-Input Wrong");
             }else{
                 LOG_INFO("Motion-Time Done");
             }
@@ -506,7 +512,6 @@ namespace rb_motion {
         }
         return {MSG_OK, ret_v};
     }
-
     std::tuple<int,  TARGET_INPUT> Calc_Absoulte_Value(TARGET_INPUT pin_, int move_type){
         //-----------------------------------------------------------------
         std::cout<<"Calc_Absoulte_Value called"<<std::endl;
@@ -550,12 +555,14 @@ namespace rb_motion {
     //--------------------------------------------------------------------------------------
     // Sector Motion
     //--------------------------------------------------------------------------------------
-    std::tuple<VectorJd, VectorCd> Task_Motion_Handler(double System_DT, double External_Alpha, bool is_motion_break, double break_alpha){
+    std::tuple<VectorJd, VectorCd, double> Task_Motion_Handler(double System_DT, double External_Alpha, bool is_motion_break, double break_alpha){
         // -------------------------------------------------------------------
         VectorJd temp_q_ang = _motion_q_ang;
         VectorJd temp_q_vel = _motion_q_vel;
         // -------------------------------------------------------------------
         double temp_time_scaler = External_Alpha;
+
+        double temp_lpf_alpha = 0.1;
 
         switch(_motion_mode){
             case MotionMode::MOVE_NONE:
@@ -685,6 +692,54 @@ namespace rb_motion {
                 }
                 break;
             }
+            case MotionMode::MOVE_SERVO_J:
+            {
+                move_servo_j_control_ret ret = _motion_move_servo_j.Control(temp_time_scaler);
+                temp_lpf_alpha = _motion_move_servo_j.Get_Filter_Value();
+                if(ret.is_thereErr != 0){
+                    Terminate_Motion(MoveTerminate::TRAJ_ERR);
+                }else{
+                    temp_q_ang = ret.J_output;
+                    if(ret.is_finished){
+                        Terminate_Motion(MoveTerminate::DONE);
+                    }   
+                }
+                break;
+            }
+            case MotionMode::MOVE_SERVO_L:
+            {
+                move_servo_l_control_ret ret = _motion_move_servo_l.Control(temp_time_scaler);
+                temp_lpf_alpha = _motion_move_servo_l.Get_Filter_Value();
+                if(ret.is_thereErr != 0){
+                    Terminate_Motion(MoveTerminate::TRAJ_ERR);
+                }else{
+                    VectorJd temp_q_min = rb_system::Get_Motor_Limit_Ang_Low();
+                    VectorJd temp_q_max = rb_system::Get_Motor_Limit_Ang_Up();
+                    VectorJd temp_dq_max = rb_system::Get_Motor_Limit_Vel();
+                    VectorJd temp_ddq_max = rb_system::Get_Motor_HwMax_Acc();
+
+                    double max_deviatioin_pos = rb_system::Get_CurrentRobotParameter().arm_max_pos_vel * RT_PERIOD_SEC * ret.ratio;
+                    double max_deviatioin_ori = rb_system::Get_CurrentRobotParameter().arm_max_rot_vel * RT_PERIOD_SEC * ret.ratio;
+                    double max_deviation_redun = temp_dq_max(rb_system::Get_CurrentRobotParameter().redundancy_type) * RT_PERIOD_SEC * ret.ratio;
+
+                    VectorCd temp_c_target = rb_math::Saturation_Carte(_motion_x_pos, ret.C_output, max_deviatioin_pos, max_deviatioin_ori, max_deviation_redun);
+
+                    IkResult ik_ret = _motion_Robot.Calc_InverseKinematics_Loop(IkMode::IK_GENERAL, System_DT, temp_c_target, _motion_x_pos
+                    , temp_q_ang, temp_q_min, temp_q_max, temp_dq_max, temp_ddq_max, _motion_q_vel, 5.0, 1.0, ret.is_First);
+
+                    if(ik_ret.result == IkRet::IK_OK){
+                        temp_q_ang = ik_ret.q_out_deg;
+                    }else{
+                        // LOG_ERROR("IK ERR ... !!! " + std::to_string((int)ik_ret.result));
+                        // Terminate_Motion(MoveTerminate::IK_ERR);
+                    }
+
+                    if(ret.is_finished){
+                        Terminate_Motion(MoveTerminate::DONE);
+                    }
+                }
+                break;
+            }
             case MotionMode::MOVE_SPD_J:
             {
                 move_speed_j_control_ret ret = _motion_move_speed_j.Control(RT_PERIOD_SEC * temp_time_scaler);
@@ -739,7 +794,7 @@ namespace rb_motion {
         _motion_x_vel_3 = (rb_math::get_P_3x1(_motion_x_pos) - rb_math::get_P_3x1(_motion_x_pos_old)) / RT_PERIOD_SEC;
         _motion_x_vel_rcv = rb_math::R_to_RCV(rb_math::get_R_3x3(_motion_x_pos) * rb_math::get_R_3x3(_motion_x_pos_old).transpose()) / RT_PERIOD_SEC;
 
-        return {_motion_q_ang, _motion_x_pos};
+        return {_motion_q_ang, _motion_x_pos, temp_lpf_alpha};
     }
 
     void Set_Motion_Mode(MotionMode t_mode){
@@ -791,7 +846,7 @@ namespace rb_motion {
         if(mode == 0){
             vel_para = rb_math::saturation_Up(vel_para, 1.0);
             acc_para = rb_math::saturation_Up(acc_para, 1.0);
-            j_vel = rb_system::Get_Motor_HwMax_Vel() * vel_para;
+            j_vel = rb_system::Get_Motor_Limit_Vel() * vel_para;
             j_acc = rb_system::Get_Motor_HwMax_Acc() * acc_para;
         }else{
             for(int k = 0; k < NO_OF_JOINT; ++k){
@@ -812,19 +867,17 @@ namespace rb_motion {
         VectorJd j_tar = pre_t.j_output;
         VectorJd j_sta = _motion_q_ang;
 
-        std::cout<<"j_vel: "<<j_vel.transpose()<<std::endl;
-
         for(int k = 0; k < NO_OF_JOINT; ++k){
             if(j_vel(k) < 0.){
                 j_vel(k) = rb_system::Get_Motor_Reco_Vel()(k);
             }else{
-                j_vel(k) = rb_math::saturation_Up(j_vel(k), rb_system::Get_Motor_Limit_Vel()(k) * 0.95);
+                j_vel(k) = rb_math::saturation_Up(j_vel(k), rb_system::Get_Motor_Limit_Vel()(k));
             }
 
             if(j_acc(k) < 0.){
                 j_acc(k) = rb_system::Get_Motor_Reco_Acc()(k);
             }else{
-                j_acc(k) = rb_math::saturation_Up(j_acc(k), rb_system::Get_Motor_HwMax_Acc()(k) * 0.95);
+                j_acc(k) = rb_math::saturation_Up(j_acc(k), rb_system::Get_Motor_HwMax_Acc()(k));
             }
         }
 
@@ -901,7 +954,7 @@ namespace rb_motion {
         if(mode == 0){
             vel_para = rb_math::saturation_Up(vel_para, 1.0);
             acc_para = rb_math::saturation_Up(acc_para, 1.0);
-            j_vel = rb_system::Get_Motor_HwMax_Vel() * vel_para;
+            j_vel = rb_system::Get_Motor_Limit_Vel() * vel_para;
             j_acc = rb_system::Get_Motor_HwMax_Acc() * acc_para;
         }else{
             for(int k = 0; k < NO_OF_JOINT; ++k){
@@ -1045,7 +1098,7 @@ namespace rb_motion {
         if(mode == 0){
             j_vel_para = rb_math::saturation_Up(j_vel_para, 1.0);
             j_acc_para = rb_math::saturation_Up(j_acc_para, 1.0);
-            j_vel = rb_system::Get_Motor_HwMax_Vel() * j_vel_para;
+            j_vel = rb_system::Get_Motor_Limit_Vel() * j_vel_para;
             j_acc = rb_system::Get_Motor_HwMax_Acc() * j_acc_para;
         }else{
             for(int k = 0; k < NO_OF_JOINT; ++k){
@@ -1207,6 +1260,72 @@ namespace rb_motion {
         return Start_Motion_CIR_AXIS(temp_cent_input, temp_axis_input, cir_fit.angle13, rot_mode, p_vel, p_acc, o_vel, o_acc, radi_mode, radi_para);
     }
 
+    int Start_Motion_SERVO_J(TARGET_INPUT tar, double t1, double t2, double gain, double filter){
+        if(_motion_mode != MotionMode::MOVE_NONE && _motion_mode != MotionMode::MOVE_SERVO_J){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
+        }
+
+        PreMotionRet pre_t = PreMotion_to_J(tar, 0);
+        if(pre_t.ret != MSG_OK) return MESSAGE(MSG_LEVEL_WARN, pre_t.ret);
+
+        if(_motion_mode == MotionMode::MOVE_SERVO_J){
+            int que_ret = _motion_move_servo_j.Queue_Target(pre_t.j_output, t1, t2, gain, filter);
+            if(que_ret != MSG_OK){
+                Terminate_Motion(MoveTerminate::INPUT_ERR);
+                return MESSAGE(MSG_LEVEL_WARN, que_ret);
+            }
+        }else{
+            VectorJd j_ang_lim_up = rb_system::Get_Motor_Limit_Ang_Up();
+            VectorJd j_ang_lim_dw = rb_system::Get_Motor_Limit_Ang_Low();
+            VectorJd j_vel_lim = rb_system::Get_Motor_Limit_Vel();
+
+            int run_ret = _motion_move_servo_j.Init(_motion_q_ang, j_ang_lim_up, j_ang_lim_dw, j_vel_lim);
+            if(run_ret != MSG_OK){
+                return MESSAGE(MSG_LEVEL_WARN, run_ret);
+            }
+
+            int que_ret = _motion_move_servo_j.Queue_Target(pre_t.j_output, t1, t2, gain, filter);
+            if(que_ret != MSG_OK){
+                return MESSAGE(MSG_LEVEL_WARN, que_ret);
+            }
+
+            Set_Motion_Mode(MotionMode::MOVE_SERVO_J);
+        }
+
+        return MSG_OK;
+    }
+
+    int Start_Motion_SERVO_L(TARGET_INPUT tar, double t1, double t2, double gain, double filter){
+        if(_motion_mode != MotionMode::MOVE_NONE && _motion_mode != MotionMode::MOVE_SERVO_L){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
+        }
+
+        PreMotionRet pre_t = PreMotion_to_L(tar, 0);
+        if(pre_t.ret != MSG_OK) return MESSAGE(MSG_LEVEL_WARN, pre_t.ret);
+
+        if(_motion_mode == MotionMode::MOVE_SERVO_L){
+            int que_ret = _motion_move_servo_l.Queue_Target(pre_t.c_output, t1, t2, gain, filter);
+            if(que_ret != MSG_OK){
+                Terminate_Motion(MoveTerminate::INPUT_ERR);
+                return MESSAGE(MSG_LEVEL_WARN, que_ret);
+            }
+        }else{
+            int run_ret = _motion_move_servo_l.Init(_motion_x_pos);
+            if(run_ret != MSG_OK){
+                return MESSAGE(MSG_LEVEL_WARN, run_ret);
+            }
+
+            int que_ret = _motion_move_servo_l.Queue_Target(pre_t.c_output, t1, t2, gain, filter);
+            if(que_ret != MSG_OK){
+                return MESSAGE(MSG_LEVEL_WARN, que_ret);
+            }
+
+            Set_Motion_Mode(MotionMode::MOVE_SERVO_L);
+        }
+
+        return MSG_OK;
+    }
+    
     int Start_Motion_SPEED_J(TARGET_INPUT tar, double j_acc_alpha){
         if(!Get_Is_Motion_Idle()){
             if(_motion_mode != MotionMode::MOVE_SPD_J){
@@ -1225,7 +1344,7 @@ namespace rb_motion {
         }else{
             VectorJd j_ang_lim_up = rb_system::Get_Motor_Limit_Ang_Up();
             VectorJd j_ang_lim_dw = rb_system::Get_Motor_Limit_Ang_Low();
-            VectorJd j_vel_lim = rb_system::Get_Motor_HwMax_Vel();
+            VectorJd j_vel_lim = rb_system::Get_Motor_Limit_Vel();
             VectorJd j_acc_lim = rb_system::Get_Motor_HwMax_Acc() * j_acc_alpha;
             int run_ret = _motion_move_speed_j.Init(_motion_q_ang, j_ang_lim_up, j_ang_lim_dw, j_vel_lim, j_acc_lim);
             if(run_ret != MSG_OK){
@@ -1308,9 +1427,11 @@ namespace rb_motion {
     //--------------------------------------------------------------------------------------
     // Sector Wrapper
     //--------------------------------------------------------------------------------------
-    std::tuple<VectorJd, VectorJd, VectorJd> Task_Wrapper_Handler(double System_DT, double External_Alpha, VectorJd pre_motion_q, VectorCd pre_motion_x){
+    std::tuple<VectorJd, VectorJd, VectorJd, double> Task_Wrapper_Handler(double System_DT, double External_Alpha, VectorJd pre_motion_q, VectorCd pre_motion_x){
         VectorJd temp_q_ang = _wrapper_q_ang;
         VectorJd temp_q_vel = _wrapper_q_vel;
+
+        double temp_lpf_alpha = 1.0;
 
         double temp_time_scaler = External_Alpha;
 
@@ -1358,7 +1479,7 @@ namespace rb_motion {
         _wrapper_x_pos = _wrapper_Robot.Calc_ForwardKinematics(temp_q_ang);
         _wrapper_x_jacobdet = _wrapper_Robot.Calc_Jacobian_Det(temp_q_ang);
 
-        return {_wrapper_q_ang, _wrapper_q_vel, _wrapper_q_acc};
+        return {_wrapper_q_ang, _wrapper_q_vel, _wrapper_q_acc, temp_lpf_alpha};
     }
 
     void Set_Wrapper_q(unsigned int idx, double angle){

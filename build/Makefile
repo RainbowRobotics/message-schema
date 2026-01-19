@@ -742,6 +742,54 @@ rb_motion/types/move_lb.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_lb.cpp.s
 .PHONY : rb_motion/types/move_lb.cpp.s
 
+rb_motion/types/move_servo_j.o: rb_motion/types/move_servo_j.cpp.o
+.PHONY : rb_motion/types/move_servo_j.o
+
+# target to build an object file
+rb_motion/types/move_servo_j.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_j.cpp.o
+.PHONY : rb_motion/types/move_servo_j.cpp.o
+
+rb_motion/types/move_servo_j.i: rb_motion/types/move_servo_j.cpp.i
+.PHONY : rb_motion/types/move_servo_j.i
+
+# target to preprocess a source file
+rb_motion/types/move_servo_j.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_j.cpp.i
+.PHONY : rb_motion/types/move_servo_j.cpp.i
+
+rb_motion/types/move_servo_j.s: rb_motion/types/move_servo_j.cpp.s
+.PHONY : rb_motion/types/move_servo_j.s
+
+# target to generate assembly for a file
+rb_motion/types/move_servo_j.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_j.cpp.s
+.PHONY : rb_motion/types/move_servo_j.cpp.s
+
+rb_motion/types/move_servo_l.o: rb_motion/types/move_servo_l.cpp.o
+.PHONY : rb_motion/types/move_servo_l.o
+
+# target to build an object file
+rb_motion/types/move_servo_l.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_l.cpp.o
+.PHONY : rb_motion/types/move_servo_l.cpp.o
+
+rb_motion/types/move_servo_l.i: rb_motion/types/move_servo_l.cpp.i
+.PHONY : rb_motion/types/move_servo_l.i
+
+# target to preprocess a source file
+rb_motion/types/move_servo_l.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_l.cpp.i
+.PHONY : rb_motion/types/move_servo_l.cpp.i
+
+rb_motion/types/move_servo_l.s: rb_motion/types/move_servo_l.cpp.s
+.PHONY : rb_motion/types/move_servo_l.s
+
+# target to generate assembly for a file
+rb_motion/types/move_servo_l.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_motion/types/move_servo_l.cpp.s
+.PHONY : rb_motion/types/move_servo_l.cpp.s
+
 rb_motion/types/move_speed_j.o: rb_motion/types/move_speed_j.cpp.o
 .PHONY : rb_motion/types/move_speed_j.o
 
@@ -1067,6 +1115,12 @@ help:
 	@echo "... rb_motion/types/move_lb.o"
 	@echo "... rb_motion/types/move_lb.i"
 	@echo "... rb_motion/types/move_lb.s"
+	@echo "... rb_motion/types/move_servo_j.o"
+	@echo "... rb_motion/types/move_servo_j.i"
+	@echo "... rb_motion/types/move_servo_j.s"
+	@echo "... rb_motion/types/move_servo_l.o"
+	@echo "... rb_motion/types/move_servo_l.i"
+	@echo "... rb_motion/types/move_servo_l.s"
 	@echo "... rb_motion/types/move_speed_j.o"
 	@echo "... rb_motion/types/move_speed_j.i"
 	@echo "... rb_motion/types/move_speed_j.s"

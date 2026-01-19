@@ -33,6 +33,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/root/Desktop/test_project/rb_motion/types/move_jb.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_jb.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_jb.cpp.o.d"
   "/root/Desktop/test_project/rb_motion/types/move_l.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_l.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_l.cpp.o.d"
   "/root/Desktop/test_project/rb_motion/types/move_lb.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_lb.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_lb.cpp.o.d"
+  "/root/Desktop/test_project/rb_motion/types/move_servo_j.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_servo_j.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_servo_j.cpp.o.d"
+  "/root/Desktop/test_project/rb_motion/types/move_servo_l.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_servo_l.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_servo_l.cpp.o.d"
   "/root/Desktop/test_project/rb_motion/types/move_speed_j.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_j.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_j.cpp.o.d"
   "/root/Desktop/test_project/rb_motion/types/move_speed_l.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.o.d"
   "/root/Desktop/test_project/rb_motion/types/move_xb.cpp" "CMakeFiles/rb_program.dir/rb_motion/types/move_xb.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_motion/types/move_xb.cpp.o.d"

@@ -186,6 +186,25 @@ namespace rb_math {
         #endif
     }
 
+    VectorCd Saturation_Carte(VectorCd from, VectorCd to, double max_pos_change, double max_rot_change, double max_redun_change){
+        VectorCd ret = from;
+        double target[3] = {0., 0., 0.};
+        target[0] = (get_P_3x1(to) - get_P_3x1(from)).norm();
+        target[1] = R_to_RCV(get_R_3x3(to) * get_R_3x3(from).transpose()).norm() * MATH_R2D;
+        target[2] = fabs(get_REDUN_1x1(to) - get_REDUN_1x1(from));
+        double limit[3] = {max_pos_change, max_rot_change, max_redun_change};
+
+        double progress_rate = 1.;
+        for(int i = 0; i < 3; ++i){
+            if(target[i] > limit[i] && target[i] > 1e-6){
+                double temp_rate = limit[i] / target[i];
+                progress_rate = return_small(temp_rate, progress_rate);
+            }
+        }
+        ret = Blend_Carte(from, to, progress_rate);
+        return ret;
+    }
+
     Eigen::Vector3d get_P_3x1(VectorCd posture){
         return Eigen::Vector3d(posture(0), posture(1), posture(2));
     }

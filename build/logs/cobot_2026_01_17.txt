@@ -1,0 +1,227 @@
+W 16:51:34.722   [LAN2CAN]      Header footer not match
+W 16:56:27.033   [LAN2CAN]      Header footer not match
+W 16:56:27.124   [LAN2CAN]      Header footer not match
+I 17:30:43.046   [MAIN]         System Version: 1.0.0
+I 17:30:44.058   [LAN2CAN]      Succeed to create socket: 
+I 17:30:44.561   [DAEMON]       Succeed to start real-time thread
+I 17:30:44.561   [DAEMON]       Succeed to start read thread
+I 17:30:45.059   [LAN2CAN]      Succeed to connect l2c
+I 17:30:48.072   [MAIN]         SYSTEM STARTING
+I 17:30:49.819   [MOTION]       Motion Mode Changed: 0->1
+I 17:30:49.823   [MOTION]       Motion-Time Done
+I 17:30:49.823   [MOTION]       Motion Mode Changed: 1->0
+I 17:30:50.926   [MOTION]       Motion Mode Changed: 0->1
+I 17:30:52.927   [MOTION]       Motion-Time Done
+I 17:30:52.927   [MOTION]       Motion Mode Changed: 1->0
+I 17:30:55.316   [MOTION]       Motion Mode Changed: 0->1
+I 17:30:57.317   [MOTION]       Motion-Time Done
+I 17:30:57.317   [MOTION]       Motion Mode Changed: 1->0
+I 17:31:04.520   [MOTION]       Motion Mode Changed: 0->8
+I 17:31:06.529   [MOTION]       Motion-Time Done
+I 17:31:06.529   [MOTION]       Motion Mode Changed: 8->0
+I 17:31:08.519   [MOTION]       Motion Mode Changed: 0->8
+E 17:31:08.925   [SYSTEM]       JNT OVR SPD REF: 3 / 181.000000
+I 17:31:08.925   [MOTION]       Motion Mode Changed: 8->0
+E 17:31:08.925   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 17:31:13.541   [MOTION]       Motion Mode Changed: 0->8
+E 17:31:13.967   [SYSTEM]       JNT OVR SPD REF: 3 / 181.000000
+I 17:31:13.967   [MOTION]       Motion Mode Changed: 8->0
+E 17:31:13.967   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 17:32:19.587   [MAIN]         System Version: 1.0.0
+I 17:32:20.598   [LAN2CAN]      Succeed to create socket: 
+I 17:32:21.100   [DAEMON]       Succeed to start read thread
+I 17:32:21.100   [DAEMON]       Succeed to start real-time thread
+I 17:32:21.598   [LAN2CAN]      Succeed to connect l2c
+W 17:32:23.586   [SYSTEM]       System General Thread Jitter High: 264190 ns
+I 17:32:24.612   [MAIN]         SYSTEM STARTING
+I 17:32:29.768   [MOTION]       Motion Mode Changed: 0->1
+I 17:32:31.770   [MOTION]       Motion-Time Done
+I 17:32:31.770   [MOTION]       Motion Mode Changed: 1->0
+I 17:32:34.318   [MOTION]       Motion Mode Changed: 0->1
+I 17:32:36.318   [MOTION]       Motion-Time Done
+I 17:32:36.318   [MOTION]       Motion Mode Changed: 1->0
+I 17:32:44.243   [MOTION]       Motion Mode Changed: 0->8
+I 17:32:45.252   [MOTION]       Motion-Time Done
+I 17:32:45.252   [MOTION]       Motion Mode Changed: 8->0
+I 17:32:47.316   [MOTION]       Motion Mode Changed: 0->8
+I 17:32:49.326   [MOTION]       Motion-Time Done
+I 17:32:49.326   [MOTION]       Motion Mode Changed: 8->0
+I 17:32:56.697   [MOTION]       Motion Mode Changed: 0->8
+I 17:32:57.706   [MOTION]       Motion-Time Done
+I 17:32:57.706   [MOTION]       Motion Mode Changed: 8->0
+I 17:32:59.335   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:01.344   [MOTION]       Motion-Time Done
+I 17:33:01.344   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:08.576   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:09.586   [MOTION]       Motion-Time Done
+I 17:33:09.586   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:11.292   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:13.300   [MOTION]       Motion-Time Done
+I 17:33:13.300   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:14.996   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:16.004   [MOTION]       Motion-Time Done
+I 17:33:16.004   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:17.993   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:20.002   [MOTION]       Motion-Time Done
+I 17:33:20.002   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:48.359   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:49.376   [MOTION]       Motion-Time Done
+I 17:33:49.376   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:51.055   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:53.064   [MOTION]       Motion-Time Done
+I 17:33:53.064   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:54.288   [MOTION]       Motion Mode Changed: 0->8
+I 17:33:55.298   [MOTION]       Motion-Time Done
+I 17:33:55.298   [MOTION]       Motion Mode Changed: 8->0
+I 17:33:59.922   [MOTION]       Motion Mode Changed: 0->8
+I 17:34:01.930   [MOTION]       Motion-Time Done
+I 17:34:01.930   [MOTION]       Motion Mode Changed: 8->0
+I 17:34:02.488   [MOTION]       Motion Mode Changed: 0->8
+I 17:34:03.496   [MOTION]       Motion-Time Done
+I 17:34:03.496   [MOTION]       Motion Mode Changed: 8->0
+I 17:34:04.615   [MOTION]       Motion Mode Changed: 0->8
+I 17:34:06.624   [MOTION]       Motion-Time Done
+I 17:34:06.624   [MOTION]       Motion Mode Changed: 8->0
+I 17:34:06.994   [MOTION]       Motion Mode Changed: 0->8
+I 17:34:08.004   [MOTION]       Motion-Time Done
+I 17:34:08.004   [MOTION]       Motion Mode Changed: 8->0
+I 17:34:09.150   [MOTION]       Motion Mode Changed: 0->8
+I 17:34:11.160   [MOTION]       Motion-Time Done
+I 17:34:11.160   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:08.509   [MAIN]         System Version: 1.0.0
+I 17:51:09.520   [LAN2CAN]      Succeed to create socket: 
+I 17:51:10.023   [DAEMON]       Succeed to start read thread
+I 17:51:10.023   [DAEMON]       Succeed to start real-time thread
+I 17:51:10.521   [LAN2CAN]      Succeed to connect l2c
+W 17:51:12.509   [SYSTEM]       System General Thread Jitter High: 124152 ns
+I 17:51:13.534   [MAIN]         SYSTEM STARTING
+I 17:51:19.887   [MOTION]       Motion Mode Changed: 0->1
+I 17:51:21.889   [MOTION]       Motion-Time Done
+I 17:51:21.889   [MOTION]       Motion Mode Changed: 1->0
+I 17:51:24.571   [MOTION]       Motion Mode Changed: 0->1
+I 17:51:26.573   [MOTION]       Motion-Time Done
+I 17:51:26.573   [MOTION]       Motion Mode Changed: 1->0
+I 17:51:29.790   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:30.799   [MOTION]       Motion-Time Done
+I 17:51:30.799   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:32.111   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:34.121   [MOTION]       Motion-Time Done
+I 17:51:34.121   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:35.303   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:36.313   [MOTION]       Motion-Time Done
+I 17:51:36.313   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:46.163   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:48.173   [MOTION]       Motion-Time Done
+I 17:51:48.173   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:53.997   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:55.007   [MOTION]       Motion-Time Done
+I 17:51:55.007   [MOTION]       Motion Mode Changed: 8->0
+I 17:51:57.564   [MOTION]       Motion Mode Changed: 0->8
+I 17:51:58.573   [MOTION]       Motion-Time Done
+I 17:51:58.573   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:18.230   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:20.239   [MOTION]       Motion-Time Done
+I 17:52:20.239   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:27.392   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:28.401   [MOTION]       Motion-Time Done
+I 17:52:28.401   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:31.230   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:32.239   [MOTION]       Motion-Time Done
+I 17:52:32.239   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:35.838   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:36.847   [MOTION]       Motion-Time Done
+I 17:52:36.847   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:40.301   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:45.573   [MOTION]       Motion-Time Done
+I 17:52:45.573   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:45.589   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:47.991   [MOTION]       Motion-Time Done
+I 17:52:47.991   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:49.235   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:51.245   [MOTION]       Motion-Time Done
+I 17:52:51.245   [MOTION]       Motion Mode Changed: 8->0
+I 17:52:52.012   [MOTION]       Motion Mode Changed: 0->8
+I 17:52:54.021   [MOTION]       Motion-Time Done
+I 17:52:54.021   [MOTION]       Motion Mode Changed: 8->0
+I 18:00:54.527   [MOTION]       Motion Mode Changed: 0->10
+I 18:00:57.338   [SYSTEM]       Break Called
+I 18:00:57.639   [SYSTEM]       Break Finished
+I 18:00:57.639   [MOTION]       Motion Mode Changed: 10->0
+I 18:01:01.994   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:03.003   [MOTION]       Motion-Time Done
+I 18:01:03.003   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:24.612   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:25.621   [MOTION]       Motion-Time Done
+I 18:01:25.621   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:27.058   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:28.067   [MOTION]       Motion-Time Done
+I 18:01:28.067   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:28.841   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:29.851   [MOTION]       Motion-Time Done
+I 18:01:29.851   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:30.506   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:31.515   [MOTION]       Motion-Time Done
+I 18:01:31.515   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:32.134   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:33.907   [MOTION]       Motion-Time Done
+I 18:01:33.907   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:34.583   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:35.593   [MOTION]       Motion-Time Done
+I 18:01:35.593   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:36.106   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:37.115   [MOTION]       Motion-Time Done
+I 18:01:37.115   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:41.363   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:42.373   [MOTION]       Motion-Time Done
+I 18:01:42.373   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:43.700   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:44.709   [MOTION]       Motion-Time Done
+I 18:01:44.709   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:46.689   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:47.699   [MOTION]       Motion-Time Done
+I 18:01:47.699   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:48.451   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:49.459   [MOTION]       Motion-Time Done
+I 18:01:49.459   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:49.840   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:50.849   [MOTION]       Motion-Time Done
+I 18:01:50.849   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:51.526   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:52.535   [MOTION]       Motion-Time Done
+I 18:01:52.535   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:53.388   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:54.397   [MOTION]       Motion-Time Done
+I 18:01:54.397   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:55.274   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:56.283   [MOTION]       Motion-Time Done
+I 18:01:56.283   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:56.989   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:57.999   [MOTION]       Motion-Time Done
+I 18:01:57.999   [MOTION]       Motion Mode Changed: 8->0
+I 18:01:58.666   [MOTION]       Motion Mode Changed: 0->8
+I 18:01:59.675   [MOTION]       Motion-Time Done
+I 18:01:59.675   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:00.402   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:03.029   [MOTION]       Motion-Time Done
+I 18:02:03.029   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:03.071   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:04.915   [MOTION]       Motion-Time Done
+I 18:02:04.915   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:05.830   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:06.839   [MOTION]       Motion-Time Done
+I 18:02:06.839   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:08.141   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:09.151   [MOTION]       Motion-Time Done
+I 18:02:09.151   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:11.351   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:12.361   [MOTION]       Motion-Time Done
+I 18:02:12.361   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:13.832   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:14.841   [MOTION]       Motion-Time Done
+I 18:02:14.841   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:15.665   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:16.675   [MOTION]       Motion-Time Done
+I 18:02:16.675   [MOTION]       Motion Mode Changed: 8->0
+I 18:02:17.069   [MOTION]       Motion Mode Changed: 0->8
+I 18:02:18.079   [MOTION]       Motion-Time Done
+I 18:02:18.079   [MOTION]       Motion Mode Changed: 8->0

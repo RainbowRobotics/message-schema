@@ -42,6 +42,22 @@ struct Response_Get_Absolute_Value;
 struct Response_Get_Absolute_ValueBuilder;
 struct Response_Get_Absolute_ValueT;
 
+struct Request_Get_Tcp_Value;
+struct Request_Get_Tcp_ValueBuilder;
+struct Request_Get_Tcp_ValueT;
+
+struct Response_Get_Tcp_Value;
+struct Response_Get_Tcp_ValueBuilder;
+struct Response_Get_Tcp_ValueT;
+
+struct Request_Get_Joint_Value;
+struct Request_Get_Joint_ValueBuilder;
+struct Request_Get_Joint_ValueT;
+
+struct Response_Get_Joint_Value;
+struct Response_Get_Joint_ValueBuilder;
+struct Response_Get_Joint_ValueT;
+
 struct Request_Get_Core_DataT : public ::flatbuffers::NativeTable {
   typedef Request_Get_Core_Data TableType;
   int32_t option = 0;
@@ -519,6 +535,222 @@ inline ::flatbuffers::Offset<Response_Get_Absolute_Value> CreateResponse_Get_Abs
 
 ::flatbuffers::Offset<Response_Get_Absolute_Value> CreateResponse_Get_Absolute_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Absolute_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Get_Tcp_ValueT : public ::flatbuffers::NativeTable {
+  typedef Request_Get_Tcp_Value TableType;
+  int32_t option = 0;
+};
+
+struct Request_Get_Tcp_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Get_Tcp_ValueT NativeTableType;
+  typedef Request_Get_Tcp_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OPTION = 4
+  };
+  int32_t option() const {
+    return GetField<int32_t>(VT_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_Get_Tcp_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Get_Tcp_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Get_Tcp_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Tcp_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Get_Tcp_ValueBuilder {
+  typedef Request_Get_Tcp_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_option(int32_t option) {
+    fbb_.AddElement<int32_t>(Request_Get_Tcp_Value::VT_OPTION, option, 0);
+  }
+  explicit Request_Get_Tcp_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Get_Tcp_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Get_Tcp_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Get_Tcp_Value> CreateRequest_Get_Tcp_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t option = 0) {
+  Request_Get_Tcp_ValueBuilder builder_(_fbb);
+  builder_.add_option(option);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Get_Tcp_Value> CreateRequest_Get_Tcp_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Tcp_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Response_Get_Tcp_ValueT : public ::flatbuffers::NativeTable {
+  typedef Response_Get_Tcp_Value TableType;
+  std::unique_ptr<IPC::N_CARTE_f> carte_info{};
+  Response_Get_Tcp_ValueT() = default;
+  Response_Get_Tcp_ValueT(const Response_Get_Tcp_ValueT &o);
+  Response_Get_Tcp_ValueT(Response_Get_Tcp_ValueT&&) FLATBUFFERS_NOEXCEPT = default;
+  Response_Get_Tcp_ValueT &operator=(Response_Get_Tcp_ValueT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Response_Get_Tcp_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Response_Get_Tcp_ValueT NativeTableType;
+  typedef Response_Get_Tcp_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CARTE_INFO = 4
+  };
+  const IPC::N_CARTE_f *carte_info() const {
+    return GetStruct<const IPC::N_CARTE_f *>(VT_CARTE_INFO);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<IPC::N_CARTE_f>(verifier, VT_CARTE_INFO, 4) &&
+           verifier.EndTable();
+  }
+  Response_Get_Tcp_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Response_Get_Tcp_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Response_Get_Tcp_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Tcp_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Response_Get_Tcp_ValueBuilder {
+  typedef Response_Get_Tcp_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_carte_info(const IPC::N_CARTE_f *carte_info) {
+    fbb_.AddStruct(Response_Get_Tcp_Value::VT_CARTE_INFO, carte_info);
+  }
+  explicit Response_Get_Tcp_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Response_Get_Tcp_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Response_Get_Tcp_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Response_Get_Tcp_Value> CreateResponse_Get_Tcp_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const IPC::N_CARTE_f *carte_info = nullptr) {
+  Response_Get_Tcp_ValueBuilder builder_(_fbb);
+  builder_.add_carte_info(carte_info);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Response_Get_Tcp_Value> CreateResponse_Get_Tcp_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Tcp_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Get_Joint_ValueT : public ::flatbuffers::NativeTable {
+  typedef Request_Get_Joint_Value TableType;
+  int32_t option = 0;
+};
+
+struct Request_Get_Joint_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Get_Joint_ValueT NativeTableType;
+  typedef Request_Get_Joint_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OPTION = 4
+  };
+  int32_t option() const {
+    return GetField<int32_t>(VT_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_Get_Joint_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Get_Joint_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Get_Joint_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Joint_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Get_Joint_ValueBuilder {
+  typedef Request_Get_Joint_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_option(int32_t option) {
+    fbb_.AddElement<int32_t>(Request_Get_Joint_Value::VT_OPTION, option, 0);
+  }
+  explicit Request_Get_Joint_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Get_Joint_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Get_Joint_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Get_Joint_Value> CreateRequest_Get_Joint_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t option = 0) {
+  Request_Get_Joint_ValueBuilder builder_(_fbb);
+  builder_.add_option(option);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Get_Joint_Value> CreateRequest_Get_Joint_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Joint_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Response_Get_Joint_ValueT : public ::flatbuffers::NativeTable {
+  typedef Response_Get_Joint_Value TableType;
+  std::unique_ptr<IPC::N_JOINT_f> joint_info{};
+  Response_Get_Joint_ValueT() = default;
+  Response_Get_Joint_ValueT(const Response_Get_Joint_ValueT &o);
+  Response_Get_Joint_ValueT(Response_Get_Joint_ValueT&&) FLATBUFFERS_NOEXCEPT = default;
+  Response_Get_Joint_ValueT &operator=(Response_Get_Joint_ValueT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Response_Get_Joint_Value FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Response_Get_Joint_ValueT NativeTableType;
+  typedef Response_Get_Joint_ValueBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_JOINT_INFO = 4
+  };
+  const IPC::N_JOINT_f *joint_info() const {
+    return GetStruct<const IPC::N_JOINT_f *>(VT_JOINT_INFO);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<IPC::N_JOINT_f>(verifier, VT_JOINT_INFO, 4) &&
+           verifier.EndTable();
+  }
+  Response_Get_Joint_ValueT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Response_Get_Joint_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Response_Get_Joint_Value> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Joint_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Response_Get_Joint_ValueBuilder {
+  typedef Response_Get_Joint_Value Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_joint_info(const IPC::N_JOINT_f *joint_info) {
+    fbb_.AddStruct(Response_Get_Joint_Value::VT_JOINT_INFO, joint_info);
+  }
+  explicit Response_Get_Joint_ValueBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Response_Get_Joint_Value> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Response_Get_Joint_Value>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Response_Get_Joint_Value> CreateResponse_Get_Joint_Value(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const IPC::N_JOINT_f *joint_info = nullptr) {
+  Response_Get_Joint_ValueBuilder builder_(_fbb);
+  builder_.add_joint_info(joint_info);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Response_Get_Joint_Value> CreateResponse_Get_Joint_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Joint_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Get_Core_DataT *Request_Get_Core_Data::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Get_Core_DataT>(new Request_Get_Core_DataT());
   UnPackTo(_o.get(), _resolver);
@@ -766,6 +998,128 @@ inline ::flatbuffers::Offset<Response_Get_Absolute_Value> CreateResponse_Get_Abs
       _fbb,
       _calculated_result,
       _calculated_value);
+}
+
+inline Request_Get_Tcp_ValueT *Request_Get_Tcp_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Get_Tcp_ValueT>(new Request_Get_Tcp_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Get_Tcp_Value::UnPackTo(Request_Get_Tcp_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = option(); _o->option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Get_Tcp_Value> Request_Get_Tcp_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Tcp_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Get_Tcp_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Get_Tcp_Value> CreateRequest_Get_Tcp_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Tcp_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Get_Tcp_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _option = _o->option;
+  return IPC::CreateRequest_Get_Tcp_Value(
+      _fbb,
+      _option);
+}
+
+inline Response_Get_Tcp_ValueT::Response_Get_Tcp_ValueT(const Response_Get_Tcp_ValueT &o)
+      : carte_info((o.carte_info) ? new IPC::N_CARTE_f(*o.carte_info) : nullptr) {
+}
+
+inline Response_Get_Tcp_ValueT &Response_Get_Tcp_ValueT::operator=(Response_Get_Tcp_ValueT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(carte_info, o.carte_info);
+  return *this;
+}
+
+inline Response_Get_Tcp_ValueT *Response_Get_Tcp_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Response_Get_Tcp_ValueT>(new Response_Get_Tcp_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Response_Get_Tcp_Value::UnPackTo(Response_Get_Tcp_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = carte_info(); if (_e) _o->carte_info = std::unique_ptr<IPC::N_CARTE_f>(new IPC::N_CARTE_f(*_e)); }
+}
+
+inline ::flatbuffers::Offset<Response_Get_Tcp_Value> Response_Get_Tcp_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Tcp_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateResponse_Get_Tcp_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Response_Get_Tcp_Value> CreateResponse_Get_Tcp_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Tcp_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Response_Get_Tcp_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _carte_info = _o->carte_info ? _o->carte_info.get() : nullptr;
+  return IPC::CreateResponse_Get_Tcp_Value(
+      _fbb,
+      _carte_info);
+}
+
+inline Request_Get_Joint_ValueT *Request_Get_Joint_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Get_Joint_ValueT>(new Request_Get_Joint_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Get_Joint_Value::UnPackTo(Request_Get_Joint_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = option(); _o->option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Get_Joint_Value> Request_Get_Joint_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Joint_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Get_Joint_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Get_Joint_Value> CreateRequest_Get_Joint_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Get_Joint_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Get_Joint_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _option = _o->option;
+  return IPC::CreateRequest_Get_Joint_Value(
+      _fbb,
+      _option);
+}
+
+inline Response_Get_Joint_ValueT::Response_Get_Joint_ValueT(const Response_Get_Joint_ValueT &o)
+      : joint_info((o.joint_info) ? new IPC::N_JOINT_f(*o.joint_info) : nullptr) {
+}
+
+inline Response_Get_Joint_ValueT &Response_Get_Joint_ValueT::operator=(Response_Get_Joint_ValueT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(joint_info, o.joint_info);
+  return *this;
+}
+
+inline Response_Get_Joint_ValueT *Response_Get_Joint_Value::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Response_Get_Joint_ValueT>(new Response_Get_Joint_ValueT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Response_Get_Joint_Value::UnPackTo(Response_Get_Joint_ValueT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = joint_info(); if (_e) _o->joint_info = std::unique_ptr<IPC::N_JOINT_f>(new IPC::N_JOINT_f(*_e)); }
+}
+
+inline ::flatbuffers::Offset<Response_Get_Joint_Value> Response_Get_Joint_Value::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Joint_ValueT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateResponse_Get_Joint_Value(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Response_Get_Joint_Value> CreateResponse_Get_Joint_Value(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Joint_ValueT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Response_Get_Joint_ValueT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _joint_info = _o->joint_info ? _o->joint_info.get() : nullptr;
+  return IPC::CreateResponse_Get_Joint_Value(
+      _fbb,
+      _joint_info);
 }
 
 }  // namespace IPC

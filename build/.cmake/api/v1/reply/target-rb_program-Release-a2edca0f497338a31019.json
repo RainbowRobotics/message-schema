@@ -44,7 +44,7 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 142,
+				"line" : 144,
 				"parent" : 0
 			},
 			{
@@ -75,7 +75,7 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 133,
+				"line" : 135,
 				"parent" : 0
 			},
 			{
@@ -238,7 +238,9 @@
 				31,
 				32,
 				33,
-				34
+				34,
+				35,
+				36
 			]
 		}
 	],
@@ -941,7 +943,9 @@
 				31,
 				32,
 				33,
-				34
+				34,
+				35,
+				36
 			]
 		}
 	],
@@ -1095,6 +1099,18 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "rb_motion/types/move_cir.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "rb_motion/types/move_servo_j.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "rb_motion/types/move_servo_l.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{

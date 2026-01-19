@@ -94,6 +94,7 @@ namespace rb_math {
 
     VectorJd Blend_Joint(VectorJd j1, VectorJd j2, double alpha);
     VectorCd Blend_Carte(VectorCd c1, VectorCd c2, double alpha);
+    VectorCd Saturation_Carte(VectorCd from, VectorCd to, double max_pos_change, double max_rot_change, double max_redun_change);
 
 
     Eigen::Vector3d get_P_3x1(VectorCd posture);

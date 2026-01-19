@@ -17,6 +17,8 @@ namespace rb_daemon {
     namespace {
         static RT_TASK  rtTaskCon;
 
+        
+
         void *thread_readLan(void *){
             rb_common::log_push(LogLevel::Info, "Succeed to start read thread", P_NAME);
             while(1){
@@ -30,13 +32,38 @@ namespace rb_daemon {
 
         void thread_realtime(void *arg){
             (void)arg;
-            rt_task_set_periodic(NULL, TM_NOW, RT_PERIOD_MS * 1000000);
+            RTIME prev_time = 0;
+            RTIME max_abs_jitter = 0;
+            RTIME period_ns = RT_PERIOD_MS * 1000000LL;
+            bool first = true;
+            static int cnt = 0;
+
+            rt_task_set_periodic(NULL, TM_NOW, period_ns);
 
             pthread_t hThread;
             rb_common::thread_create(thread_readLan, 1, "RB_READ", hThread, NULL);
 
             while(1){
                 rt_task_wait_period(NULL);
+
+                RTIME now = rt_timer_read();
+                if(first){
+                    prev_time = now - period_ns;
+                    first = false;
+                }
+                RTIME jitter = now - prev_time - period_ns;      // 지터 = 실제 - 목표
+                prev_time = now;
+
+                RTIME abs_jitter = llabs(jitter);
+                if(abs_jitter > max_abs_jitter)
+                    max_abs_jitter = abs_jitter;
+
+                if(cnt % 1000 == 0){
+                    // 전역 변수에 복사만!
+                    rb_system::Update_Zitter_Measurement((int64_t)max_abs_jitter);
+                    max_abs_jitter = 0;
+                }
+                cnt++;
 
                 rb_system::Task_RealTime();
             }

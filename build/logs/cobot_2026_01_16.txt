@@ -1,0 +1,1513 @@
+I 00:03:40.254   [MOTION]       Motion Mode Changed: 0->1
+I 00:03:41.898   [MOTION]       Motion-Time Done
+I 00:03:41.898   [MOTION]       Motion Mode Changed: 1->0
+I 00:03:41.922   [MOTION]       Motion Mode Changed: 0->1
+I 00:03:42.582   [MOTION]       Motion-Time Done
+I 00:03:42.582   [MOTION]       Motion Mode Changed: 1->0
+I 00:09:58.033   [MOTION]       Motion Mode Changed: 0->1
+I 00:09:59.668   [MOTION]       Motion-Time Done
+I 00:09:59.668   [MOTION]       Motion Mode Changed: 1->0
+I 00:09:59.726   [MOTION]       Motion Mode Changed: 0->1
+I 00:10:00.388   [MOTION]       Motion-Time Done
+I 00:10:00.388   [MOTION]       Motion Mode Changed: 1->0
+I 01:19:18.250   [SYSTEM]       PAUSE
+I 06:23:05.369   [MAIN]         System Version: 1.0.0
+I 06:23:06.379   [LAN2CAN]      Succeed to create socket: 
+I 06:23:06.882   [DAEMON]       Succeed to start read thread
+I 06:23:06.882   [DAEMON]       Succeed to start real-time thread
+I 06:23:07.380   [LAN2CAN]      Succeed to connect l2c
+I 06:23:10.395   [MAIN]         SYSTEM STARTING
+I 06:26:33.776   [MAIN]         System Version: 1.0.0
+I 06:26:34.786   [LAN2CAN]      Succeed to create socket: 
+I 06:26:35.289   [DAEMON]       Succeed to start read thread
+I 06:26:35.289   [DAEMON]       Succeed to start real-time thread
+I 06:26:35.787   [LAN2CAN]      Succeed to connect l2c
+W 06:26:35.787   [LAN2CAN]      LAN disconnected (size 0)
+I 06:26:36.787   [LAN2CAN]      Succeed to create socket: 
+W 06:26:37.774   [SYSTEM]       System General Thread Jitter High: 449088 ns
+I 06:26:37.787   [LAN2CAN]      Succeed to connect l2c
+I 06:26:38.800   [MAIN]         SYSTEM STARTING
+I 06:28:00.520   [SYSTEM]       CMD Power On
+I 06:28:00.606   [TOOLFLANGE]   TFB RST 92 0 1 1 -1
+I 06:28:00.619   [SYSTEM]       STATE POWER ENGAGED
+E 06:28:01.529   [MOTOR]        BNO 3is detected in wrong channel
+I 06:28:01.529   [MOTOR]        BNO 0 TYP:250 MDR:0 BLM:1 SEN:1 SLE:0.003698
+I 06:28:01.529   [MOTOR]        BNO 1 TYP:250 MDR:1 BLM:1 SEN:1 SLE:-1.156936
+I 06:28:01.529   [MOTOR]        BNO 2 TYP:200 MDR:1 BLM:1 SEN:1 SLE:-0.369184
+I 06:28:01.530   [MOTOR]        BNO 4 TYP:140 MDR:1 BLM:1 SEN:1 SLE:0.011748
+I 06:28:01.530   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:1 SEN:1 SLE:-0.022190
+I 06:28:01.627   [SYSTEM]       Servo Call: 1/1
+I 06:28:01.627   [SYSTEM]       ServoState: 0
+I 06:28:01.627   [SYSTEM]       ServoState: 1
+E 06:28:01.627   [SYSTEM]       MSG:1003/MSG_JOINT_NOT_DETECTED_3
+I 06:32:51.320   [MAIN]         System Version: 1.0.0
+I 06:32:52.331   [LAN2CAN]      Succeed to create socket: 
+I 06:32:52.834   [DAEMON]       Succeed to start read thread
+I 06:32:52.834   [DAEMON]       Succeed to start real-time thread
+I 06:32:53.332   [LAN2CAN]      Succeed to connect l2c
+W 06:32:55.320   [SYSTEM]       System General Thread Jitter High: 333134 ns
+I 06:32:56.345   [MAIN]         SYSTEM STARTING
+I 06:33:28.495   [SYSTEM]       CMD Power On
+I 06:33:28.729   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 06:33:28.739   [SYSTEM]       STATE POWER ENGAGED
+I 06:33:29.258   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-5.840376
+I 06:33:29.258   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.212547
+I 06:33:29.258   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:33.222656
+I 06:33:29.258   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:-35.335295
+I 06:33:29.258   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.627852
+I 06:33:29.259   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.008702
+I 06:33:29.259   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-6.443862
+I 06:33:29.768   [SYSTEM]       Servo Call: 1/1
+I 06:33:29.768   [SYSTEM]       ServoState: 0
+I 06:33:29.768   [SYSTEM]       ServoState: 1
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 06:33:29.862   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 06:33:29.862   [SYSTEM]       Side Firmware : 29
+I 06:33:29.862   [SYSTEM]       ToolFlange Firmware : 92
+I 06:33:29.862   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 06:33:29.862   [SYSTEM]       Motor PGain: 1 : 360/34/400
+E 06:33:29.862   [SYSTEM]       Motor Type Not Math: 2[250/200]
+E 06:33:29.862   [SYSTEM]       MSG:1052/MSG_JOINT_TYPE_NOT_MATCH_2
+W 07:22:50.036   [LAN2CAN]      Header footer not match
+I 09:49:58.325   [MAIN]         System Version: 1.0.0
+I 09:49:59.335   [LAN2CAN]      Succeed to create socket: 
+I 09:49:59.837   [DAEMON]       Succeed to start real-time thread
+I 09:49:59.837   [DAEMON]       Succeed to start read thread
+I 09:50:00.336   [LAN2CAN]      Succeed to connect l2c
+I 09:50:03.347   [MAIN]         SYSTEM STARTING
+I 09:50:56.929   [MAIN]         System Version: 1.0.0
+I 09:50:57.939   [LAN2CAN]      Succeed to create socket: 
+I 09:50:58.441   [DAEMON]       Succeed to start read thread
+I 09:50:58.441   [DAEMON]       Succeed to start real-time thread
+I 09:50:58.939   [LAN2CAN]      Succeed to connect l2c
+I 09:51:01.952   [MAIN]         SYSTEM STARTING
+I 09:51:06.149   [SYSTEM]       CMD Power On
+I 09:51:06.382   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 09:51:06.393   [SYSTEM]       STATE POWER ENGAGED
+I 09:51:06.911   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.212547
+I 09:51:06.911   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-5.840376
+I 09:51:06.911   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.008702
+I 09:51:06.911   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:33.222656
+I 09:51:06.911   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:-35.335295
+I 09:51:06.911   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.627852
+I 09:51:06.911   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-6.443862
+I 09:51:07.425   [SYSTEM]       Servo Call: 1/1
+I 09:51:07.425   [SYSTEM]       ServoState: 0
+I 09:51:07.425   [SYSTEM]       ServoState: 1
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 09:51:07.519   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 09:51:07.519   [SYSTEM]       Side Firmware : 29
+I 09:51:07.519   [SYSTEM]       ToolFlange Firmware : 92
+I 09:51:07.519   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 09:51:07.519   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 09:51:07.519   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 09:51:07.519   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 09:51:07.519   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 09:51:07.519   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 09:51:07.519   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 09:51:07.519   [SYSTEM]       ServoState: 2
+I 09:51:07.519   [SYSTEM]       ServoState: 3
+I 09:51:09.081   [SYSTEM]       Motor Acts: 0[-0.172083,0.171648/0.174041]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 1[-0.172300,0.172300/0.174041]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 2[-0.170995,0.170342/0.174041]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 3[-0.171213,0.172083/0.174041]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 4[-0.119871,0.121829/0.130531]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 5[-0.117042,0.119653/0.130531]
+I 09:51:09.081   [SYSTEM]       Motor Acts: 6[-0.119871,0.121611/0.130531]
+I 09:51:09.081   [SYSTEM]       ServoState: 4
+I 09:51:09.081   [SYSTEM]       ServoState: 5
+I 09:51:09.081   [SYSTEM]       ServoState: 6
+I 09:51:09.081   [SYSTEM]       Reference On
+I 09:51:15.730   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:16.797   [MOTION]       Motion-Time Done
+I 09:51:16.797   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:18.294   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:18.653   [MOTION]       Motion-Time Done
+I 09:51:18.653   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:20.084   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:20.175   [MOTION]       Motion-Time Done
+I 09:51:20.175   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:33.972   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:34.469   [MOTION]       Motion-Time Done
+I 09:51:34.469   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:36.665   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:37.659   [MOTION]       Motion-Time Done
+I 09:51:37.659   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:39.057   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:39.499   [MOTION]       Motion-Time Done
+I 09:51:39.499   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:40.733   [MOTION]       Motion Mode Changed: 0->1
+I 09:51:40.823   [MOTION]       Motion-Time Done
+I 09:51:40.823   [MOTION]       Motion Mode Changed: 1->0
+I 09:51:51.205   [SYSTEM]       Reference Off
+I 09:51:51.206   [SYSTEM]       Servo Call: 1/1
+W 09:51:51.206   [SYSTEM]       CMD Power Off
+I 09:51:51.206   [SYSTEM]       ServoState: 0
+W 09:51:51.641   [TOOLFLANGE]   TFB DISCON
+W 09:51:51.649   [MOTOR]        MOTOR DISCON 6
+W 09:51:51.651   [MOTOR]        MOTOR DISCON 1
+W 09:51:51.651   [MOTOR]        MOTOR DISCON 2
+W 09:51:51.651   [MOTOR]        MOTOR DISCON 3
+W 09:51:51.651   [MOTOR]        MOTOR DISCON 5
+W 09:51:51.655   [MOTOR]        MOTOR DISCON 0
+W 09:51:51.655   [MOTOR]        MOTOR DISCON 4
+W 09:51:51.655   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 09:51:51.655   [SYSTEM]       STATE POWER DIS-ENGAGED
+W 10:42:28.178   [LAN2CAN]      Header footer not match
+I 11:28:55.047   [MAIN]         System Version: 1.0.0
+I 11:28:56.057   [LAN2CAN]      Succeed to create socket: 
+I 11:28:56.559   [DAEMON]       Succeed to start real-time thread
+I 11:28:56.559   [DAEMON]       Succeed to start read thread
+I 11:28:57.058   [LAN2CAN]      Succeed to connect l2c
+I 11:29:00.071   [MAIN]         SYSTEM STARTING
+I 11:46:46.644   [SYSTEM]       CMD Power On
+I 11:46:46.874   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 11:46:46.886   [SYSTEM]       STATE POWER ENGAGED
+I 11:46:47.403   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:-0.000218
+I 11:46:47.403   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.000218
+I 11:46:47.403   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.000218
+I 11:46:47.403   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 11:46:47.403   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 11:46:47.403   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 11:46:47.403   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.006962
+I 11:46:47.916   [SYSTEM]       Servo Call: 1/1
+I 11:46:47.916   [SYSTEM]       ServoState: 0
+I 11:46:47.916   [SYSTEM]       ServoState: 1
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 11:46:48.011   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 11:46:48.011   [SYSTEM]       Side Firmware : 29
+I 11:46:48.011   [SYSTEM]       ToolFlange Firmware : 92
+I 11:46:48.011   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 11:46:48.011   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 11:46:48.011   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 11:46:48.011   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 11:46:48.011   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 11:46:48.011   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 11:46:48.011   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 11:46:48.011   [SYSTEM]       ServoState: 2
+I 11:46:48.011   [SYSTEM]       ServoState: 3
+I 11:46:49.572   [SYSTEM]       Motor Acts: 0[-0.172083,0.171648/0.174041]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 1[-0.172518,0.172083/0.174041]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 2[-0.170560,0.170995/0.174041]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 3[-0.172083,0.171865/0.174041]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 4[-0.119000,0.121829/0.130531]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 5[-0.115737,0.120741/0.130531]
+I 11:46:49.573   [SYSTEM]       Motor Acts: 6[-0.119653,0.122046/0.130531]
+I 11:46:49.573   [SYSTEM]       ServoState: 4
+I 11:46:49.573   [SYSTEM]       ServoState: 5
+I 11:46:49.573   [SYSTEM]       ServoState: 6
+I 11:46:49.573   [SYSTEM]       Reference On
+I 11:49:41.504   [SYSTEM]       Servo Call: 0/1
+W 11:49:41.504   [SYSTEM]       CMD Power Off
+I 11:49:41.505   [SYSTEM]       Reference Off
+I 11:49:41.505   [SYSTEM]       ServoState: 0
+W 11:49:41.946   [TOOLFLANGE]   TFB DISCON
+W 11:49:41.954   [MOTOR]        MOTOR DISCON 0
+W 11:49:41.954   [MOTOR]        MOTOR DISCON 6
+W 11:49:41.956   [MOTOR]        MOTOR DISCON 1
+W 11:49:41.956   [MOTOR]        MOTOR DISCON 2
+W 11:49:41.956   [MOTOR]        MOTOR DISCON 3
+W 11:49:41.956   [MOTOR]        MOTOR DISCON 5
+W 11:49:41.958   [MOTOR]        MOTOR DISCON 4
+W 11:49:41.958   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 11:49:41.958   [SYSTEM]       STATE POWER DIS-ENGAGED
+I 12:16:22.023   [MOTION]       Motion Mode Changed: 0->7
+E 12:16:22.028   [MOTION]       Motion-Input Wrong
+I 12:16:22.028   [MOTION]       Motion Mode Changed: 7->0
+W 12:16:22.028   [MOTION]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+W 12:17:15.692   [LAN2CAN]      Header footer not match
+I 12:19:07.104   [MAIN]         System Version: 1.0.0
+I 12:19:08.115   [LAN2CAN]      Succeed to create socket: 
+I 12:19:08.618   [DAEMON]       Succeed to start read thread
+I 12:19:08.618   [DAEMON]       Succeed to start real-time thread
+I 12:19:09.116   [LAN2CAN]      Succeed to connect l2c
+W 12:19:11.104   [SYSTEM]       System General Thread Jitter High: 310069 ns
+I 12:19:12.130   [MAIN]         SYSTEM STARTING
+I 12:20:19.878   [MOTION]       Motion Mode Changed: 0->7
+E 12:20:19.888   [MOTION]       Motion-Input Wrong
+I 12:20:19.888   [MOTION]       Motion Mode Changed: 7->0
+W 12:20:19.888   [MOTION]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+I 12:23:29.550   [MAIN]         System Version: 1.0.0
+I 12:23:30.562   [LAN2CAN]      Succeed to create socket: 
+I 12:23:31.064   [DAEMON]       Succeed to start read thread
+I 12:23:31.064   [DAEMON]       Succeed to start real-time thread
+I 12:23:31.562   [LAN2CAN]      Succeed to connect l2c
+W 12:23:31.562   [LAN2CAN]      LAN disconnected (size 0)
+I 12:23:32.562   [LAN2CAN]      Succeed to create socket: 
+W 12:23:33.550   [SYSTEM]       System General Thread Jitter High: 309635 ns
+I 12:23:33.563   [LAN2CAN]      Succeed to connect l2c
+I 12:23:34.576   [MAIN]         SYSTEM STARTING
+I 12:23:41.578   [MOTION]       Motion Mode Changed: 0->7
+E 12:23:41.587   [MOTION]       Motion-Input Wrong
+I 12:23:41.587   [MOTION]       Motion Mode Changed: 7->0
+W 12:23:41.587   [MOTION]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+W 12:36:58.094   [LAN2CAN]      Header footer not match
+I 12:41:36.458   [MAIN]         System Version: 1.0.0
+I 12:41:37.477   [LAN2CAN]      Succeed to create socket: 
+I 12:41:37.979   [DAEMON]       Succeed to start read thread
+I 12:41:37.979   [DAEMON]       Succeed to start real-time thread
+I 12:41:38.477   [LAN2CAN]      Succeed to connect l2c
+W 12:41:40.465   [SYSTEM]       System General Thread Jitter High: 153648 ns
+I 12:41:41.492   [MAIN]         SYSTEM STARTING
+I 12:41:53.535   [MOTION]       Motion Mode Changed: 0->7
+I 12:42:01.805   [MOTION]       Motion-Time Done
+I 12:42:01.805   [MOTION]       Motion Mode Changed: 7->0
+I 12:42:07.785   [MOTION]       Motion Mode Changed: 0->7
+I 12:42:14.267   [MOTION]       Motion-Time Done
+I 12:42:14.267   [MOTION]       Motion Mode Changed: 7->0
+I 12:53:34.715   [SYSTEM]       CMD Power On
+I 12:53:34.951   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 12:53:34.961   [SYSTEM]       STATE POWER ENGAGED
+I 12:53:35.480   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.011313
+I 12:53:35.480   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.004133
+I 12:53:35.480   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.006527
+I 12:53:35.480   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.000435
+I 12:53:35.480   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.002176
+I 12:53:35.480   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.002611
+I 12:53:35.480   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.003916
+I 12:53:35.993   [SYSTEM]       Servo Call: 1/1
+I 12:53:35.993   [SYSTEM]       ServoState: 0
+I 12:53:35.993   [SYSTEM]       ServoState: 1
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 12:53:36.087   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 12:53:36.087   [SYSTEM]       Side Firmware : 29
+I 12:53:36.087   [SYSTEM]       ToolFlange Firmware : 92
+I 12:53:36.087   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 12:53:36.087   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 12:53:36.087   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 12:53:36.087   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 12:53:36.087   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 12:53:36.087   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 12:53:36.087   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 12:53:36.087   [SYSTEM]       ServoState: 2
+I 12:53:36.087   [SYSTEM]       ServoState: 3
+I 12:53:37.649   [SYSTEM]       Motor Acts: 0[-0.171865,0.172300/0.174041]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 1[-0.172518,0.172518/0.174041]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 2[-0.170560,0.170995/0.174041]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 3[-0.171430,0.172083/0.174041]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 4[-0.119871,0.121611/0.130531]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 5[-0.120088,0.118348/0.130531]
+I 12:53:37.649   [SYSTEM]       Motor Acts: 6[-0.119218,0.122481/0.130531]
+I 12:53:37.649   [SYSTEM]       ServoState: 4
+I 12:53:37.649   [SYSTEM]       ServoState: 5
+I 12:53:37.649   [SYSTEM]       ServoState: 6
+I 12:53:37.649   [SYSTEM]       Reference On
+I 12:53:42.780   [MOTION]       Motion Mode Changed: 0->7
+I 12:53:55.951   [MOTION]       Motion-Time Done
+I 12:53:55.951   [MOTION]       Motion Mode Changed: 7->0
+I 12:54:11.120   [MOTION]       Motion Mode Changed: 0->7
+I 12:54:23.581   [MOTION]       Motion-Time Done
+I 12:54:23.581   [MOTION]       Motion Mode Changed: 7->0
+I 12:54:26.946   [SYSTEM]       Servo Call: 0/1
+W 12:54:26.947   [SYSTEM]       CMD Power Off
+I 12:54:26.947   [SYSTEM]       Reference Off
+I 12:54:26.947   [SYSTEM]       ServoState: 0
+W 12:54:27.379   [TOOLFLANGE]   TFB DISCON
+W 12:54:27.393   [MOTOR]        MOTOR DISCON 1
+W 12:54:27.395   [MOTOR]        MOTOR DISCON 0
+W 12:54:27.395   [MOTOR]        MOTOR DISCON 3
+W 12:54:27.395   [MOTOR]        MOTOR DISCON 5
+W 12:54:27.395   [MOTOR]        MOTOR DISCON 6
+W 12:54:27.397   [MOTOR]        MOTOR DISCON 2
+W 12:54:27.397   [MOTOR]        MOTOR DISCON 4
+W 12:54:27.397   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 12:54:27.397   [SYSTEM]       STATE POWER DIS-ENGAGED
+I 12:54:34.848   [SYSTEM]       CMD Power On
+I 12:54:35.078   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 12:54:35.089   [SYSTEM]       STATE POWER ENGAGED
+I 12:54:35.607   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:-0.000870
+I 12:54:35.607   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.000653
+I 12:54:35.607   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.000435
+I 12:54:35.607   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.007397
+I 12:54:35.607   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.009137
+I 12:54:35.608   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 12:54:35.608   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000218
+I 12:54:36.119   [SYSTEM]       Servo Call: 1/1
+I 12:54:36.119   [SYSTEM]       ServoState: 0
+I 12:54:36.119   [SYSTEM]       ServoState: 1
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 12:54:36.214   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 12:54:36.214   [SYSTEM]       Side Firmware : 29
+I 12:54:36.214   [SYSTEM]       ToolFlange Firmware : 92
+I 12:54:36.214   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 12:54:36.214   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 12:54:36.214   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 12:54:36.214   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 12:54:36.214   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 12:54:36.214   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 12:54:36.214   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 12:54:36.214   [SYSTEM]       ServoState: 2
+I 12:54:36.214   [SYSTEM]       ServoState: 3
+I 12:54:37.775   [SYSTEM]       Motor Acts: 0[-0.172083,0.171430/0.174041]
+I 12:54:37.775   [SYSTEM]       Motor Acts: 1[-0.172736,0.172083/0.174041]
+I 12:54:37.775   [SYSTEM]       Motor Acts: 2[-0.170560,0.171213/0.174041]
+I 12:54:37.775   [SYSTEM]       Motor Acts: 3[-0.172300,0.172083/0.174041]
+I 12:54:37.775   [SYSTEM]       Motor Acts: 4[-0.120088,0.120306/0.130531]
+I 12:54:37.776   [SYSTEM]       Motor Acts: 5[-0.117478,0.121393/0.130531]
+I 12:54:37.776   [SYSTEM]       Motor Acts: 6[-0.119653,0.121829/0.130531]
+I 12:54:37.776   [SYSTEM]       ServoState: 4
+I 12:54:37.776   [SYSTEM]       ServoState: 5
+I 12:54:37.776   [SYSTEM]       ServoState: 6
+I 12:54:37.776   [SYSTEM]       Reference On
+W 12:55:10.012   [LAN2CAN]      Header footer not match
+I 12:55:43.188   [MOTION]       Motion Mode Changed: 0->7
+I 12:57:03.561   [MOTION]       Motion-Time Done
+I 12:57:03.561   [MOTION]       Motion Mode Changed: 7->0
+I 14:47:44.570   [MAIN]         System Version: 1.0.0
+I 14:47:45.581   [LAN2CAN]      Succeed to create socket: 
+I 14:47:46.084   [DAEMON]       Succeed to start read thread
+I 14:47:46.084   [DAEMON]       Succeed to start real-time thread
+I 14:47:46.582   [LAN2CAN]      Succeed to connect l2c
+W 14:47:48.570   [SYSTEM]       System General Thread Jitter High: 172526 ns
+I 14:47:49.597   [MAIN]         SYSTEM STARTING
+I 14:48:03.141   [SYSTEM]       CMD Power On
+I 14:48:03.372   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 14:48:03.384   [SYSTEM]       STATE POWER ENGAGED
+I 14:48:03.900   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 14:48:03.901   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 14:48:03.901   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 14:48:03.901   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:38.654471
+I 14:48:03.901   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 14:48:03.901   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.000218
+I 14:48:03.901   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.009790
+I 14:48:04.412   [SYSTEM]       Servo Call: 1/1
+I 14:48:04.412   [SYSTEM]       ServoState: 0
+I 14:48:04.412   [SYSTEM]       ServoState: 1
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 14:48:04.506   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 14:48:04.506   [SYSTEM]       Side Firmware : 29
+I 14:48:04.506   [SYSTEM]       ToolFlange Firmware : 92
+I 14:48:04.506   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 14:48:04.506   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 14:48:04.506   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 14:48:04.506   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 14:48:04.506   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 14:48:04.506   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 14:48:04.506   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 14:48:04.506   [SYSTEM]       ServoState: 2
+I 14:48:04.506   [SYSTEM]       ServoState: 3
+I 14:48:06.068   [SYSTEM]       Motor Acts: 0[-0.171865,0.171865/0.174041]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 1[-0.172518,0.172518/0.174041]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 2[-0.170560,0.171213/0.174041]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 3[-0.171430,0.172083/0.174041]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 4[-0.119653,0.120306/0.130531]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 5[-0.119218,0.118130/0.130531]
+I 14:48:06.068   [SYSTEM]       Motor Acts: 6[-0.119653,0.122046/0.130531]
+I 14:48:06.068   [SYSTEM]       ServoState: 4
+I 14:48:06.068   [SYSTEM]       ServoState: 5
+I 14:48:06.068   [SYSTEM]       ServoState: 6
+I 14:48:06.068   [SYSTEM]       Reference On
+I 14:48:20.687   [MOTION]       Motion Mode Changed: 0->1
+I 14:48:21.832   [MOTION]       Motion-Time Done
+I 14:48:21.832   [MOTION]       Motion Mode Changed: 1->0
+I 14:50:12.846   [MOTION]       Motion Mode Changed: 0->8
+I 14:50:13.049   [SYSTEM]       Break Called
+I 14:50:13.350   [SYSTEM]       Break Finished
+I 14:50:13.350   [MOTION]       Motion Mode Changed: 8->0
+I 14:54:53.018   [SYSTEM]       Reference Off
+I 14:54:53.019   [SYSTEM]       Servo Call: 1/1
+W 14:54:53.019   [SYSTEM]       CMD Power Off
+I 14:54:53.019   [SYSTEM]       ServoState: 0
+W 14:54:53.464   [TOOLFLANGE]   TFB DISCON
+W 14:54:53.470   [MOTOR]        MOTOR DISCON 6
+W 14:54:53.472   [MOTOR]        MOTOR DISCON 3
+W 14:54:53.472   [MOTOR]        MOTOR DISCON 5
+W 14:54:53.474   [MOTOR]        MOTOR DISCON 0
+W 14:54:53.474   [MOTOR]        MOTOR DISCON 1
+W 14:54:53.474   [MOTOR]        MOTOR DISCON 2
+W 14:54:53.474   [MOTOR]        MOTOR DISCON 4
+W 14:54:53.474   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 14:54:53.474   [SYSTEM]       STATE POWER DIS-ENGAGED
+I 14:55:05.132   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.134   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.134   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.134   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.142   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.144   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.144   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.144   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.152   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.154   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.154   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.154   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.162   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.164   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.164   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.164   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.172   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.174   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.174   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.174   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.182   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.184   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.184   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.184   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.192   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.194   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.194   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.194   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.202   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.204   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.204   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.204   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.212   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.212   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.212   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.212   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.221   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.222   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.222   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.222   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.232   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.234   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.234   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.234   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.242   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.244   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.244   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.244   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.251   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.252   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.252   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.252   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.262   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.262   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.262   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.262   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.272   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.274   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.274   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.274   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.282   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.284   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.284   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.284   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.292   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.294   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.294   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.294   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.302   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.304   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.304   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.304   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.312   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.314   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.314   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.314   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.323   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.324   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.324   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.324   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.332   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.334   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.334   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.334   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.342   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.344   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.344   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.344   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.353   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.354   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.354   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.354   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.362   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.364   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.364   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.364   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.372   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.374   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.374   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.374   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.382   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.384   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.384   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.384   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.393   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.394   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.394   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.394   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.403   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.404   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.404   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.404   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.412   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.414   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.414   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.414   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.423   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.424   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.424   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.424   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.433   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.434   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.434   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.434   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.442   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.444   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.444   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.444   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.452   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.454   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.454   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.454   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.465   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.466   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.466   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.466   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.472   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.472   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.472   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.472   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.483   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.484   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.484   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.484   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.492   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.492   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.492   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.492   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.502   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.504   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.504   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.504   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.511   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.512   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.512   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.512   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.521   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:05.522   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:05.522   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:05.522   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:05.532   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.424   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.424   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.424   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.432   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.434   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.434   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.434   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.442   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.444   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.444   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.444   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.452   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.454   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.454   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.454   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.462   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.464   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.464   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.464   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.472   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.474   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.474   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.474   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.481   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.482   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.482   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.482   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.491   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.492   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.492   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.492   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.502   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.502   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.502   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.502   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.511   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.512   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.512   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.512   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.521   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.522   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.522   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.522   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.532   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.534   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.534   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.534   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.542   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.544   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.544   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.544   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.552   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.554   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.554   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.554   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.562   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.564   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.564   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.564   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.573   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.574   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.574   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.574   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.583   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.584   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.584   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.584   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.592   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.594   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.594   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.594   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.601   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.602   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.602   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.602   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.613   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.614   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.614   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.614   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.622   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.624   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.624   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.624   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.632   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.634   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.634   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.634   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.641   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.642   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.642   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.642   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.651   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.652   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.652   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.652   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.662   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.664   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.664   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.664   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.672   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.674   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.674   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.674   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.682   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.684   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.684   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.684   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.691   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.692   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.692   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.692   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.701   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.702   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.702   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.702   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.711   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.712   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.712   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.712   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.721   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.722   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.722   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.722   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.732   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.734   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.734   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.734   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.742   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.742   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.742   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.742   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.752   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.754   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.754   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.754   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.762   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.764   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.764   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.764   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.772   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.772   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.772   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.772   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.782   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.784   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.784   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.784   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.792   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.794   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.794   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.794   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.801   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.802   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.802   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.802   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.812   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.814   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.814   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.814   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.822   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.822   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.822   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.822   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.832   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.834   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.834   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.834   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.842   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.844   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.844   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.844   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.852   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.854   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.854   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.854   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.862   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.862   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.862   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.862   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.871   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.872   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.872   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.872   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.882   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.884   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.884   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.884   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.892   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.894   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.894   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.894   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.901   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.902   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.902   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.902   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.911   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.912   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.912   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.912   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.921   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.922   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.922   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.922   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.931   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.932   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.932   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.932   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.942   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.944   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.944   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.944   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.951   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.952   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.952   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.952   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.962   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.964   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.964   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.964   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.971   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.972   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.972   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.972   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.982   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.984   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.984   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.984   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:27.991   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:27.992   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:27.992   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:27.992   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.001   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.002   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.002   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.002   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.011   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.012   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.012   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.012   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.021   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.022   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.022   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.022   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.033   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.034   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.034   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.034   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.041   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.042   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.042   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.042   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.051   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.052   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.052   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.052   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.062   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.062   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.062   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.062   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.072   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.072   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.072   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.072   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.082   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.084   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.084   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.084   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.092   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.094   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.094   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.094   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.101   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.102   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.102   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.102   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.113   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.114   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.114   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.114   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.123   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.124   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.124   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.124   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.132   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.134   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.134   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.134   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.143   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:28.144   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:28.144   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:28.144   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:28.152   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.152   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.152   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.152   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.152   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.154   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.154   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.154   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.162   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.164   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.164   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.164   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.172   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.172   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.172   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.172   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.182   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.184   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.184   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.184   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.191   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.192   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.192   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.192   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.201   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.202   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.202   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.202   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.212   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.214   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.214   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.214   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.222   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.222   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.222   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.222   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.232   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.234   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.234   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.234   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.242   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.244   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.244   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.244   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.252   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.254   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.254   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.254   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.262   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.264   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.264   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.264   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.272   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.272   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.272   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.272   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.282   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.284   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.284   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.284   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.292   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.294   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.294   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.294   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.302   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.304   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.304   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.304   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.311   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.312   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.312   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.312   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.322   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.324   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.330   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.330   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.332   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.334   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.334   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.334   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.342   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.344   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.344   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.344   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.352   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.354   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.354   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.354   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.362   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.364   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.364   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.364   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.372   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.374   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.374   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.374   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.382   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.384   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.384   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.384   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.392   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.394   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.394   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.394   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.402   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.404   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.404   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.404   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.412   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.414   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.414   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.414   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.422   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.424   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.424   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.424   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.433   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.434   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.434   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.434   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.442   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.444   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.444   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.444   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.453   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.454   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.454   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.454   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.462   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.464   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.464   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.464   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.473   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.474   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.474   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.474   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.482   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.484   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.484   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.484   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.492   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.494   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.494   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.494   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.503   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.504   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.504   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.504   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.512   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.514   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.514   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.514   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.522   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.524   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.524   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.524   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.533   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.534   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.534   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.534   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.542   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.544   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.544   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.544   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.552   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.554   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.554   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.554   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.562   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.564   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.564   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.564   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.572   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.574   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.574   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.574   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.583   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.584   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.584   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.584   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.593   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.594   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.594   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.594   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.602   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.604   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.604   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.604   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.612   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.614   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.614   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.614   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.623   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.624   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.624   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.624   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.631   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.632   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.632   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.632   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.642   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.642   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.642   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.642   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.652   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.652   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.652   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.652   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.662   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.662   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.662   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.662   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.672   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.674   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.674   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.674   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.682   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.684   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.684   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.684   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.691   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.692   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.692   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.692   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.701   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.702   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.702   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.702   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.711   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.712   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.712   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.712   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.722   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.722   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.722   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.722   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.732   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.734   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.734   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.734   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.743   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.744   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.744   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.744   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.751   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.752   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.752   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.752   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.761   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.762   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.762   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.762   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.772   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.774   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.774   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.774   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.785   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.786   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.786   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.786   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.794   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.796   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.796   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.796   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.801   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.802   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.802   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.802   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.811   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.812   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.812   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.812   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.821   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.822   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.822   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.822   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.831   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.832   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.832   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.832   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.842   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.844   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.844   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.844   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.852   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.852   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.852   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.852   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.862   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.864   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.864   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.864   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.873   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.874   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.874   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.874   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.881   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.882   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.882   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.882   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.892   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.894   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.894   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.894   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.902   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.902   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.902   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.902   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.912   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.914   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.914   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.914   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.922   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.924   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.924   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.924   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.931   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.932   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.932   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.932   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.942   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.944   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.944   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.944   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.952   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.954   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.954   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.954   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.962   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.962   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.962   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.962   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.972   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.974   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.974   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.974   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.982   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.984   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.984   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.984   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:45.992   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:45.994   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:45.994   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:45.994   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.001   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:46.002   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:46.002   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:46.002   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.011   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:46.012   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:46.012   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:46.012   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.021   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:46.022   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:46.022   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:46.022   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.032   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:46.032   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:46.032   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:46.032   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.042   [MOTION]       Motion Mode Changed: 0->7
+E 14:55:46.044   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 14:55:46.044   [MOTION]       Motion Mode Changed: 7->0
+E 14:55:46.044   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 14:55:46.051   [MOTION]       Motion Mode Changed: 0->7
+W 14:55:46.896   [SYSTEM]       System General Thread Jitter High: 4126477 ns
+I 15:01:24.219   [MOTION]       Motion Mode Changed: 7->0
+I 15:01:24.223   [MOTION]       Motion Mode Changed: 0->7
+I 15:01:37.378   [MOTION]       Motion Mode Changed: 7->0
+I 15:01:37.383   [MOTION]       Motion Mode Changed: 0->7
+I 15:02:23.354   [MOTION]       Motion Mode Changed: 7->0
+I 15:02:23.364   [MOTION]       Motion Mode Changed: 0->7
+I 15:03:06.516   [MOTION]       Motion-Time Done
+I 15:03:06.516   [MOTION]       Motion Mode Changed: 7->0
+I 15:03:07.706   [MOTION]       Motion Mode Changed: 0->7
+I 15:03:07.986   [MOTION]       Motion-Time Done
+I 15:03:07.986   [MOTION]       Motion Mode Changed: 7->0
+I 15:03:08.017   [MOTION]       Motion Mode Changed: 0->7
+I 15:03:08.944   [MOTION]       Motion-Time Done
+I 15:03:08.944   [MOTION]       Motion Mode Changed: 7->0
+I 15:05:00.725   [SYSTEM]       PAUSE
+I 15:05:25.409   [SYSTEM]       PAUSE
+I 15:15:30.242   [MAIN]         System Version: 1.0.0
+I 15:15:31.253   [LAN2CAN]      Succeed to create socket: 
+I 15:15:31.755   [DAEMON]       Succeed to start read thread
+I 15:15:31.755   [DAEMON]       Succeed to start real-time thread
+I 15:15:32.253   [LAN2CAN]      Succeed to connect l2c
+W 15:15:32.254   [LAN2CAN]      LAN disconnected (size 0)
+I 15:15:33.253   [LAN2CAN]      Succeed to create socket: 
+W 15:15:34.241   [SYSTEM]       System General Thread Jitter High: 90344 ns
+I 15:15:34.254   [LAN2CAN]      Succeed to connect l2c
+I 15:15:35.266   [MAIN]         SYSTEM STARTING
+I 15:16:09.663   [MOTION]       Motion Mode Changed: 0->7
+I 15:16:52.447   [MOTION]       Motion Mode Changed: 7->0
+I 15:16:52.449   [MOTION]       Motion Mode Changed: 0->7
+I 15:19:10.643   [MOTION]       Motion Mode Changed: 7->0
+I 15:19:10.649   [MOTION]       Motion Mode Changed: 0->7
+I 15:19:14.221   [MOTION]       Motion Mode Changed: 7->0
+I 15:19:14.230   [MOTION]       Motion Mode Changed: 0->7
+I 15:21:39.510   [MOTION]       Motion Mode Changed: 7->0
+I 15:21:39.512   [MOTION]       Motion Mode Changed: 0->7
+I 15:21:44.884   [MOTION]       Motion Mode Changed: 7->0
+I 15:21:44.891   [MOTION]       Motion Mode Changed: 0->7
+I 15:21:54.827   [MOTION]       Motion Mode Changed: 7->0
+I 15:21:54.831   [MOTION]       Motion Mode Changed: 0->7
+I 15:23:11.803   [MOTION]       Motion-Time Done
+I 15:23:11.803   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:13.444   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:14.545   [MOTION]       Motion-Time Done
+I 15:24:14.545   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:16.370   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:17.471   [MOTION]       Motion-Time Done
+I 15:24:17.471   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:47.163   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:48.171   [MOTION]       Motion-Time Done
+I 15:24:48.171   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:49.453   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:50.461   [MOTION]       Motion-Time Done
+I 15:24:50.461   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:52.320   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:53.797   [MOTION]       Motion-Time Done
+I 15:24:53.797   [MOTION]       Motion Mode Changed: 7->0
+I 15:24:58.432   [MOTION]       Motion Mode Changed: 0->7
+I 15:24:59.441   [MOTION]       Motion-Time Done
+I 15:24:59.441   [MOTION]       Motion Mode Changed: 7->0
+I 15:25:01.452   [MOTION]       Motion Mode Changed: 0->7
+I 15:25:03.111   [MOTION]       Motion-Time Done
+I 15:25:03.111   [MOTION]       Motion Mode Changed: 7->0
+I 15:25:07.432   [MOTION]       Motion Mode Changed: 0->7
+I 15:25:08.911   [MOTION]       Motion-Time Done
+I 15:25:08.911   [MOTION]       Motion Mode Changed: 7->0
+I 15:25:10.620   [MOTION]       Motion Mode Changed: 0->7
+I 15:25:11.629   [MOTION]       Motion-Time Done
+I 15:25:11.629   [MOTION]       Motion Mode Changed: 7->0
+I 15:25:13.222   [MOTION]       Motion Mode Changed: 0->7
+I 15:25:14.889   [MOTION]       Motion-Time Done
+I 15:25:14.889   [MOTION]       Motion Mode Changed: 7->0
+I 15:31:20.195   [SYSTEM]       PAUSE
+I 15:31:22.696   [SYSTEM]       RESUME from PAUSE
+I 15:42:03.263   [SYSTEM]       PAUSE
+I 15:42:09.329   [SYSTEM]       PAUSE
+I 15:42:14.908   [SYSTEM]       PAUSE
+I 15:42:15.933   [SYSTEM]       RESUME from PAUSE
+I 15:44:01.863   [SYSTEM]       PAUSE
+I 15:44:03.484   [SYSTEM]       RESUME from PAUSE
+I 15:53:44.105   [MAIN]         System Version: 1.0.0
+I 15:53:45.116   [LAN2CAN]      Succeed to create socket: 
+I 15:53:45.618   [DAEMON]       Succeed to start read thread
+I 15:53:45.618   [DAEMON]       Succeed to start real-time thread
+I 15:53:46.116   [LAN2CAN]      Succeed to connect l2c
+W 15:53:48.104   [SYSTEM]       System General Thread Jitter High: 184690 ns
+I 15:53:49.130   [MAIN]         SYSTEM STARTING
+I 15:55:32.719   [MOTION]       Motion Mode Changed: 0->7
+I 15:55:33.728   [MOTION]       Motion-Time Done
+I 15:55:33.728   [MOTION]       Motion Mode Changed: 7->0
+I 15:55:35.942   [MOTION]       Motion Mode Changed: 0->7
+I 15:55:36.950   [MOTION]       Motion-Time Done
+I 15:55:36.950   [MOTION]       Motion Mode Changed: 7->0
+I 15:55:38.507   [MOTION]       Motion Mode Changed: 0->7
+I 15:55:40.264   [MOTION]       Motion-Time Done
+I 15:55:40.264   [MOTION]       Motion Mode Changed: 7->0
+I 15:55:42.219   [MOTION]       Motion Mode Changed: 0->7
+E 15:55:42.754   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 15:55:42.754   [MOTION]       Motion Mode Changed: 7->0
+E 15:55:42.754   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 15:55:50.410   [MOTION]       Motion Mode Changed: 0->7
+I 15:55:51.420   [MOTION]       Motion-Time Done
+I 15:55:51.420   [MOTION]       Motion Mode Changed: 7->0
+I 15:55:52.729   [MOTION]       Motion Mode Changed: 0->7
+I 15:55:53.738   [MOTION]       Motion-Time Done
+I 15:55:53.738   [MOTION]       Motion Mode Changed: 7->0
+I 15:55:54.877   [MOTION]       Motion Mode Changed: 0->7
+E 15:55:55.350   [SYSTEM]       JNT OVR SPD REF: 0 / 181.000000
+I 15:55:55.350   [MOTION]       Motion Mode Changed: 7->0
+E 15:55:55.350   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 15:57:20.190   [MAIN]         System Version: 1.0.0
+I 15:57:21.201   [LAN2CAN]      Succeed to create socket: 
+I 15:57:21.704   [DAEMON]       Succeed to start read thread
+I 15:57:21.704   [DAEMON]       Succeed to start real-time thread
+I 15:57:22.202   [LAN2CAN]      Succeed to connect l2c
+W 15:57:24.190   [SYSTEM]       System General Thread Jitter High: 142070 ns
+I 15:57:25.216   [MAIN]         SYSTEM STARTING
+I 15:57:31.368   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:33.149   [MOTION]       Motion-Time Done
+I 15:57:33.150   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:33.884   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:35.237   [MOTION]       Motion-Time Done
+I 15:57:35.238   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:36.006   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:37.757   [MOTION]       Motion-Time Done
+I 15:57:37.758   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:38.468   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:39.477   [MOTION]       Motion-Time Done
+I 15:57:39.478   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:39.519   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:40.527   [MOTION]       Motion-Time Done
+I 15:57:40.528   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:41.023   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:42.031   [MOTION]       Motion-Time Done
+I 15:57:42.032   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:42.059   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:43.067   [MOTION]       Motion-Time Done
+I 15:57:43.068   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:43.354   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:45.533   [MOTION]       Motion-Time Done
+I 15:57:45.534   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:46.499   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:47.507   [MOTION]       Motion-Time Done
+I 15:57:47.508   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:47.757   [MOTION]       Motion Mode Changed: 0->7
+I 15:57:53.587   [MOTION]       Motion-Time Done
+I 15:57:53.588   [MOTION]       Motion Mode Changed: 7->0
+I 15:57:54.517   [MOTION]       Motion Mode Changed: 0->7
+I 15:58:01.611   [MOTION]       Motion-Time Done
+I 15:58:01.612   [MOTION]       Motion Mode Changed: 7->0
+I 15:58:01.697   [MOTION]       Motion Mode Changed: 0->7
+I 15:58:03.089   [MOTION]       Motion-Time Done
+I 15:58:03.090   [MOTION]       Motion Mode Changed: 7->0
+I 16:52:50.593   [MAIN]         System Version: 1.0.0
+I 16:52:51.604   [LAN2CAN]      Succeed to create socket: 
+I 16:52:52.106   [DAEMON]       Succeed to start read thread
+I 16:52:52.106   [DAEMON]       Succeed to start real-time thread
+I 16:52:52.605   [LAN2CAN]      Succeed to connect l2c
+W 16:52:54.592   [SYSTEM]       System General Thread Jitter High: 98905 ns
+I 16:52:55.618   [MAIN]         SYSTEM STARTING
+I 16:54:28.721   [MAIN]         System Version: 1.0.0
+I 16:54:29.731   [LAN2CAN]      Succeed to create socket: 
+I 16:54:30.234   [DAEMON]       Succeed to start read thread
+I 16:54:30.234   [DAEMON]       Succeed to start real-time thread
+I 16:54:30.732   [LAN2CAN]      Succeed to connect l2c
+W 16:54:32.719   [SYSTEM]       System General Thread Jitter High: 252124 ns
+I 16:54:33.745   [MAIN]         SYSTEM STARTING
+I 16:54:48.467   [MOTION]       Motion Mode Changed: 0->1
+I 16:54:48.469   [MOTION]       Motion-Time Done
+I 16:54:48.469   [MOTION]       Motion Mode Changed: 1->0
+I 16:54:49.044   [MOTION]       Motion Mode Changed: 0->1
+I 16:54:49.047   [MOTION]       Motion-Time Done
+I 16:54:49.047   [MOTION]       Motion Mode Changed: 1->0
+I 16:54:49.683   [MOTION]       Motion Mode Changed: 0->1
+I 16:54:49.685   [MOTION]       Motion-Time Done
+I 16:54:49.685   [MOTION]       Motion Mode Changed: 1->0
+I 16:54:50.851   [MOTION]       Motion Mode Changed: 0->1
+I 16:54:52.851   [MOTION]       Motion-Time Done
+I 16:54:52.851   [MOTION]       Motion Mode Changed: 1->0
+I 16:54:54.435   [MOTION]       Motion Mode Changed: 0->1
+I 16:54:56.435   [MOTION]       Motion-Time Done
+I 16:54:56.435   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:00.290   [MOTION]       Motion Mode Changed: 0->2
+I 16:56:02.131   [MOTION]       Motion-Time Done
+I 16:56:02.131   [MOTION]       Motion Mode Changed: 2->0
+I 16:56:03.250   [MOTION]       Motion Mode Changed: 0->2
+I 16:56:03.945   [MOTION]       Motion-Time Done
+I 16:56:03.945   [MOTION]       Motion Mode Changed: 2->0
+I 16:56:07.028   [MOTION]       Motion Mode Changed: 0->10
+I 16:56:07.865   [SYSTEM]       Break Called
+I 16:56:08.167   [SYSTEM]       Break Finished
+I 16:56:08.167   [MOTION]       Motion Mode Changed: 10->0
+I 16:56:12.218   [MOTION]       Motion Mode Changed: 0->2
+I 16:56:14.495   [MOTION]       Motion-Time Done
+I 16:56:14.495   [MOTION]       Motion Mode Changed: 2->0
+I 16:56:39.042   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:40.051   [MOTION]       Motion-Time Done
+I 16:56:40.051   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:41.321   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:42.329   [MOTION]       Motion-Time Done
+I 16:56:42.329   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:43.548   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:44.557   [MOTION]       Motion-Time Done
+I 16:56:44.557   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:45.510   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:46.519   [MOTION]       Motion-Time Done
+I 16:56:46.519   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:48.030   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:49.039   [MOTION]       Motion-Time Done
+I 16:56:49.039   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:53.270   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:54.279   [MOTION]       Motion-Time Done
+I 16:56:54.279   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:54.507   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:55.515   [MOTION]       Motion-Time Done
+I 16:56:55.515   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:57.089   [MOTION]       Motion Mode Changed: 0->8
+I 16:56:58.097   [MOTION]       Motion-Time Done
+I 16:56:58.098   [MOTION]       Motion Mode Changed: 8->0
+I 16:56:58.992   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:00.001   [MOTION]       Motion-Time Done
+I 16:57:00.001   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:01.925   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:03.755   [MOTION]       Motion-Time Done
+I 16:57:03.755   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:14.869   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:15.877   [MOTION]       Motion-Time Done
+I 16:57:15.877   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:38.440   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:39.449   [MOTION]       Motion-Time Done
+I 16:57:39.450   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:44.695   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:46.703   [MOTION]       Motion-Time Done
+I 16:57:46.703   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:48.063   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:49.071   [MOTION]       Motion-Time Done
+I 16:57:49.071   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:50.070   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:51.079   [MOTION]       Motion-Time Done
+I 16:57:51.079   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:51.688   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:52.697   [MOTION]       Motion-Time Done
+I 16:57:52.697   [MOTION]       Motion Mode Changed: 8->0
+I 16:57:53.349   [MOTION]       Motion Mode Changed: 0->8
+I 16:57:54.357   [MOTION]       Motion-Time Done
+I 16:57:54.357   [MOTION]       Motion Mode Changed: 8->0

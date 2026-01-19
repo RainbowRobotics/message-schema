@@ -28,8 +28,8 @@ namespace rb_motion {
     //--------------------------------------------------------------------------------------
     // Sector Motion
     //--------------------------------------------------------------------------------------
-    enum class MotionMode           {MOVE_NONE, MOVE_J, MOVE_L, MOVE_JB, MOVE_LB, MOVE_XB, MOVE_CIR, MOVE_SPD_J, MOVE_SPD_L};
-    std::tuple<VectorJd, VectorCd> Task_Motion_Handler(double System_DT, double External_Alpha, bool is_motion_break, double break_alpha);
+    enum class MotionMode           {MOVE_NONE, MOVE_J, MOVE_L, MOVE_JB, MOVE_LB, MOVE_XB, MOVE_CIR, MOVE_SERVO_J, MOVE_SERVO_L, MOVE_SPD_J, MOVE_SPD_L};
+    std::tuple<VectorJd, VectorCd, double> Task_Motion_Handler(double System_DT, double External_Alpha, bool is_motion_break, double break_alpha);
 
     void        Set_Motion_Mode(MotionMode t_mode);
     MotionMode  Get_Motion_Mode();
@@ -70,6 +70,9 @@ namespace rb_motion {
     int         Start_Motion_CIR_3PNTS(TARGET_INPUT via, TARGET_INPUT tar, int rot_mode, double l_vel_alpha, double l_acc_alpha, int radi_mode, double radi_para);
     int         Start_Motion_CIR_3PNTS(TARGET_INPUT via, TARGET_INPUT tar, int rot_mode, double p_vel, double p_acc, double o_vel, double o_acc, int radi_mode, double radi_para);
 
+    int         Start_Motion_SERVO_J(TARGET_INPUT tar, double t1, double t2, double gain, double filter);
+    int         Start_Motion_SERVO_L(TARGET_INPUT tar, double t1, double t2, double gain, double filter);
+
     int         Start_Motion_SPEED_J(TARGET_INPUT tar, double j_acc_alpha);
     int         Start_Motion_SPEED_L(TARGET_INPUT tar, double l_acc_alpha);
 
@@ -80,7 +83,7 @@ namespace rb_motion {
     // Sector Wrapper
     //--------------------------------------------------------------------------------------
 
-    std::tuple<VectorJd, VectorJd, VectorJd> Task_Wrapper_Handler(double System_DT, double External_Alpha, VectorJd pre_motion_q, VectorCd pre_motion_x);
+    std::tuple<VectorJd, VectorJd, VectorJd, double> Task_Wrapper_Handler(double System_DT, double External_Alpha, VectorJd pre_motion_q, VectorCd pre_motion_x);
     void        Set_Wrapper_q(unsigned int idx, double angle);
     std::array<float, NO_OF_CARTE>    Get_Wrapper_X();
     std::array<float, NO_OF_CARTE>    Get_Wrapper_X_User();

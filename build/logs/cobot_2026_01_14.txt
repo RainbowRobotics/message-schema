@@ -106,3 +106,50 @@ I 19:13:03.495   [DAEMON]       Succeed to start read thread
 I 19:13:03.495   [DAEMON]       Succeed to start real-time thread
 I 19:13:03.993   [LAN2CAN]      Succeed to connect l2c
 I 19:13:07.007   [MAIN]         SYSTEM STARTING
+W 19:15:19.087   [SYSTEM]       CMD Power Off
+I 19:15:19.087   [SYSTEM]       ServoState: 0
+W 19:15:30.026   [SYSTEM]       CMD Power Off
+I 19:15:30.026   [SYSTEM]       ServoState: 0
+I 19:18:07.123   [MAIN]         System Version: 1.0.0
+I 19:18:08.139   [LAN2CAN]      Succeed to create socket
+I 19:18:08.641   [DAEMON]       Succeed to start read thread
+I 19:18:08.641   [DAEMON]       Succeed to start real-time thread
+I 19:18:09.140   [LAN2CAN]      Succeed to connect l2c
+I 19:18:12.151   [MAIN]         SYSTEM STARTING
+I 19:18:28.466   [SYSTEM]       CMD Power On
+I 19:18:28.556   [TOOLFLANGE]   TFB RST 92 0 1 1 -1
+I 19:18:28.567   [SYSTEM]       STATE POWER ENGAGED
+E 19:18:29.479   [MOTOR]        BNO 3is detected in wrong channel
+I 19:18:29.479   [MOTOR]        BNO 4 TYP:140 MDR:1 BLM:1 SEN:1 SLE:0.011748
+I 19:18:29.479   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:1 SEN:1 SLE:-0.022190
+I 19:18:29.479   [MOTOR]        BNO 0 TYP:250 MDR:0 BLM:1 SEN:1 SLE:0.003698
+I 19:18:29.479   [MOTOR]        BNO 2 TYP:200 MDR:1 BLM:1 SEN:1 SLE:-0.369184
+I 19:18:29.479   [MOTOR]        BNO 1 TYP:250 MDR:1 BLM:1 SEN:1 SLE:-1.156936
+I 19:18:29.582   [SYSTEM]       Servo Call: 1/1
+I 19:18:29.582   [SYSTEM]       ServoState: 0
+I 19:18:29.582   [SYSTEM]       ServoState: 1
+E 19:18:29.582   [SYSTEM]       MSG:1003/MSG_JOINT_NOT_DETECTED_3
+I 19:21:30.208   [SYSTEM]       Servo Call: 0/1
+I 19:21:30.208   [SYSTEM]       ServoState: 0
+I 19:21:30.208   [SYSTEM]       ServoState: 1
+E 19:21:30.208   [SYSTEM]       MSG:1003/MSG_JOINT_NOT_DETECTED_3
+W 19:23:49.004   [SYSTEM]       CMD Power Off
+I 19:23:49.004   [SYSTEM]       ServoState: 0
+W 19:23:49.517   [TOOLFLANGE]   TFB DISCON
+W 19:23:49.723   [MOTOR]        MOTOR DISCON 4
+W 19:23:49.735   [MOTOR]        MOTOR DISCON 0
+W 19:23:49.735   [MOTOR]        MOTOR DISCON 1
+W 19:23:49.735   [MOTOR]        MOTOR DISCON 2
+W 19:23:49.735   [MOTOR]        MOTOR DISCON 5
+W 19:23:49.735   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 19:23:49.735   [SYSTEM]       STATE POWER DIS-ENGAGED
+W 19:23:58.178   [SYSTEM]       CMD Power Off
+I 19:23:58.178   [SYSTEM]       ServoState: 0
+W 19:26:21.731   [SYSTEM]       CMD Power Off
+I 19:26:21.731   [SYSTEM]       ServoState: 0
+W 19:26:24.534   [SYSTEM]       CMD Power Off
+I 19:26:24.534   [SYSTEM]       ServoState: 0
+W 19:34:33.301   [SYSTEM]       CMD Power Off
+I 19:34:33.301   [SYSTEM]       ServoState: 0
+W 19:34:36.423   [SYSTEM]       CMD Power Off
+I 19:34:36.423   [SYSTEM]       ServoState: 0

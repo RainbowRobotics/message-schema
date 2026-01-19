@@ -4,10 +4,13 @@
 
 #define P_NAME  "LAN2CAN"
 
-lan2can::lan2can()
+lan2can::lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3)
 {
+    L2C_IP = std::to_string(ip_0)+"."+std::to_string(ip_1)+"."+std::to_string(ip_2)+"."+std::to_string(ip_3);
+    L2C_PORT = port;
+
     LAN_connectionStatus = false;
-    LAN_fd_client = 0;
+    LAN_fd_client = -1;
 
     CAN_TXring_totalIndex = 0;
     CAN_TXring_headIndex = 0;
@@ -29,9 +32,13 @@ void *lan2can::LAN_connectionThread(void *arg){
 
     while(1){
         if(lan->LAN_connectionStatus == false){
-            if(lan->LAN_fd_client == 0){
-                if(lan->LAN_createSocket(SYSTEM_L2C_IP, SYSTEM_L2C_PORT) == true){
-                    rb_common::log_push(LogLevel::Info, "Succeed to create socket", P_NAME);
+            if(lan->LAN_fd_client < 0){
+
+                lan->totalLanData.clear();
+
+                if(lan->LAN_createSocket(lan->L2C_IP.c_str(), lan->L2C_PORT) == true){
+                    std::cout<<"Target L2C IP: "<<lan->L2C_IP<<", PORT: "<<lan->L2C_PORT<<std::endl;
+                    rb_common::log_push(LogLevel::Info, "Succeed to create socket: ", P_NAME);
                 }
             }else{
                 if(lan->LAN_connectServer() == true){
@@ -46,19 +53,51 @@ void *lan2can::LAN_connectionThread(void *arg){
 }
 
 void lan2can::LAN_writeData(const void *buf, size_t len){
-    write(LAN_fd_client, buf, len);
+    if(LAN_fd_client < 0){
+        return;
+    }   
+    // write(LAN_fd_client, buf, len);
+    ssize_t sent = 0;
+    while (sent < (ssize_t)len) {
+        ssize_t n = write(LAN_fd_client, (char*)buf + sent, (ssize_t)len - sent);
+        if (n <= 0) {
+            std::cout<<"LAN write error"<<std::endl;
+            break;
+        }
+        sent += n;
+    }
 }
 
 void lan2can::LAN_readData(){
-
-    static std::vector<unsigned char> totalLanData;
-
     static unsigned char rdata[RX_DATA_SIZE];
     static unsigned char pdata[RX_DATA_SIZE];
     int tcp_size = 0;
 
     if(LAN_connectionStatus == true){
         tcp_size = recv(LAN_fd_client, rdata, RX_DATA_SIZE, 0);
+
+        if(tcp_size < 0){
+            if(errno == EAGAIN || errno == EWOULDBLOCK){
+                return;
+            }else{
+                rb_common::log_push(LogLevel::Error, "LAN recv error", P_NAME);
+                totalLanData.clear();
+                LAN_connectionStatus = false;
+                shutdown(LAN_fd_client, 2);
+                close(LAN_fd_client);
+                LAN_fd_client = -1;
+                return;
+            }
+        }else if(tcp_size == 0){
+            rb_common::log_push(LogLevel::Warning, "LAN disconnected (size 0)", P_NAME);
+            totalLanData.clear();
+            LAN_connectionStatus = false;
+            shutdown(LAN_fd_client, 2);
+            close(LAN_fd_client);
+            LAN_fd_client = -1;
+            return;
+        }
+
         totalLanData.insert(totalLanData.end(), &rdata[0], &rdata[tcp_size]);
         tcp_size = totalLanData.size();
 
@@ -92,8 +131,11 @@ void lan2can::LAN_readData(){
                     }
 
                     if(tcp_size >= packet_length+3){
-                        memcpy(pdata, &totalLanData[0], packet_length+3);
-                        totalLanData.erase(totalLanData.begin(), totalLanData.begin()+(packet_length+3));
+                        for(int i = 0; i < packet_length+3; i++){
+                            pdata[i] = totalLanData.front();
+                            totalLanData.pop_front();
+                        }
+
                         if(pdata[0] == 0x24 && pdata[packet_length+3-1] == 0x25){
                             int data_type = pdata[5];
                             switch(data_type){
@@ -150,12 +192,20 @@ void lan2can::LAN_readData(){
                             }
                         }else{
                             rb_common::log_push(LogLevel::Warning, "Header footer not match", P_NAME);
-                            for(std::vector<unsigned char>::iterator i  = totalLanData.begin() ; i < totalLanData.end(); i++ ){
-                                if(*i == '$'){
+                            // for(std::vector<unsigned char>::iterator i  = totalLanData.begin() ; i < totalLanData.end(); i++ ){
+                            //     if(*i == '$'){
+                            //         break;
+                            //     }else{
+                            //         //printf("0x%x ",0xff&*i);
+                            //         totalLanData.erase(i);
+                            //     }
+                            // }
+                            auto it = totalLanData.begin();;
+                            while(it != totalLanData.end()){
+                                if(*it == 0x24){
                                     break;
                                 }else{
-                                    //printf("0x%x ",0xff&*i);
-                                    totalLanData.erase(i);
+                                    it = totalLanData.erase(it);;
                                 }
                             }
                             //printf("\n");
@@ -171,7 +221,8 @@ void lan2can::LAN_readData(){
 
 int lan2can::LAN_createSocket(const char *addr, int port){
     LAN_fd_client = socket(AF_INET, SOCK_STREAM, 0);
-    if(LAN_fd_client == -1){
+    if(LAN_fd_client < 0){
+        rb_common::log_push(LogLevel::Error, "LAN socket creation failed", P_NAME);
         return false;
     }
 

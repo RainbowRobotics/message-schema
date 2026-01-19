@@ -33,6 +33,49 @@ toolflange      *_gv_Handler_Toolflange;
 
 namespace rb_system {
     namespace {
+        // IO Def
+        std::atomic<unsigned char>           request_PowerControl{0};       // 1=PowerOn, 2=PowerOff
+        std::atomic<unsigned char>           request_ServoControl{0};       // 1=ServoOn
+        std::atomic<unsigned char>           request_ReferenceControl{0};   // 1=toReal 2=toSimul
+        enum IO_DEF_DIN{
+            DIN_DEF_NONE = 0,
+            DIN_DEF_R_PowerOn,
+            DIN_DEF_R_PowerOff,
+            DIN_DEF_R_ServoOn,
+            DIN_DEF_R_ServoOn_F_PowerOff,
+            DIN_DEF_R_RealMode,
+            DIN_DEF_R_SimulMode,
+            DIN_DEF_R_StopMove,
+            DIN_DEF_R_PauseMove,
+            DIN_DEF_R_ResumeMove,
+            DIN_DEF_R_PauseMove_F_ResumeMove,
+            DIN_DEF_R_ResumeColl,
+            DIN_DEF_R_FreeDriveOn_F_FreeDriveOff,
+            DIN_DEF_R_ProgramLoad,
+            DIN_DEF_R_ProgramStart,
+        };
+        enum IO_DEF_DOUT{
+            DOUT_DEF_NONE = 0,
+            DOUT_DEF_H_SystemReady,
+            DOUT_DEF_H_HeartBeat1Sec,
+            DOUT_DEF_H_ByPassDin,            
+            DOUT_DEF_H_PowerOn,
+            DOUT_DEF_H_ServoOn,
+            DOUT_DEF_H_RealMode,
+            DOUT_DEF_H_RealMode_and_Idle,
+            DOUT_DEF_H_Idle,
+            DOUT_DEF_H_Pause,
+            DOUT_DEF_H_OutColl,
+            DOUT_DEF_H_SelfColl,
+            DOUT_DEF_H_OutColl_or_SelfColl,
+            DOUT_DEF_H_FreeDrive,
+            DOUT_DEF_H_PorgramLoaded,
+            DOUT_DEF_H_ProgramRunning,
+        };
+
+        // RT
+        volatile int64_t            g_max_jitter_ns = 0;
+
         // reuqest flag
         std::atomic<PowerOption>    request_powerControl{PowerOption::NONE};
         std::atomic<unsigned char>           request_ModelChange{0};
@@ -597,34 +640,139 @@ namespace rb_system {
 
         void RT_IO_Handler(){
             _gv_Handler_Side->Update_Dout_Pulse(RT_PERIOD_SEC);
-            std::array<int, NO_OF_DIN> din_mode;
-            std::array<int, NO_OF_DOUT> dout_mode;
-            din_mode.fill(0);
-            dout_mode.fill(0);
             
-            // din_mode.at(0) = 1;
-            // din_mode.at(1) = 2;
-
-            // dout_mode.at(0) = 1;
-            // dout_mode.at(1) = 2;
-            // dout_mode.at(2) = 3;
-            // dout_mode.at(3) = 4;
-            // dout_mode.at(4) = 5;
-            // dout_mode.at(5) = 6;
-
             //---------------------------------------------
             // Special Input
             //---------------------------------------------
             static sSTAT old_state = _gv_Handler_Side->Get_State();
             sSTAT cur_state = _gv_Handler_Side->Get_State();
             for(int i = 0; i < NO_OF_DIN; ++i){
-                bool rising_edge = static_cast<bool>((old_state.din_filt[i]== 0) && (cur_state.din_filt[i] == 1));
-                bool falling_edge = static_cast<bool>((old_state.din_filt[i]== 1) && (cur_state.din_filt[i] == 0));
-                bool din = cur_state.din_filt[i];
-                switch(din_mode.at(i)){
-                    case 1:
-                    {//Jog Robot
-                        ;
+                bool nor_edge = false;
+                bool rev_edge = false;
+                bool din = false;
+                int sp_mode = parameter_special_din_box[i];
+                if(sp_mode < 0){
+                    sp_mode = abs(sp_mode);
+
+                    nor_edge = static_cast<bool>((old_state.din_filt[i]== 1) && (cur_state.din_filt[i] == 0));
+                    rev_edge = static_cast<bool>((old_state.din_filt[i]== 0) && (cur_state.din_filt[i] == 1));
+                    din = !cur_state.din_filt[i];
+                }else{
+                    nor_edge = static_cast<bool>((old_state.din_filt[i]== 0) && (cur_state.din_filt[i] == 1));
+                    rev_edge = static_cast<bool>((old_state.din_filt[i]== 1) && (cur_state.din_filt[i] == 0));
+                    din = cur_state.din_filt[i];
+                }
+                switch(sp_mode){
+                    case DIN_DEF_R_PowerOn:
+                    {
+                        if(nor_edge){
+                            if(request_PowerControl.load(std::memory_order_relaxed) == 0){
+                                request_PowerControl.store(1, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_PowerOff:
+                    {
+                        if(nor_edge){
+                            if(request_PowerControl.load(std::memory_order_relaxed) == 0){
+                                request_PowerControl.store(2, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ServoOn:
+                    {
+                        if(nor_edge){
+                            if(request_ServoControl.load(std::memory_order_relaxed) == 0){
+                                request_ServoControl.store(1, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ServoOn_F_PowerOff:
+                    {
+                        if(nor_edge){
+                            if(request_ServoControl.load(std::memory_order_relaxed) == 0){
+                                request_ServoControl.store(1, std::memory_order_relaxed);
+                            }
+                        }else if(rev_edge){
+                            if(request_PowerControl.load(std::memory_order_relaxed) == 0){
+                                request_PowerControl.store(2, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_RealMode:
+                    {
+                        if(nor_edge){
+                            if(request_ReferenceControl.load(std::memory_order_relaxed) == 0){
+                                request_ReferenceControl.store(1, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_SimulMode:
+                    {
+                        if(nor_edge){
+                            if(request_ReferenceControl.load(std::memory_order_relaxed) == 0){
+                                request_ReferenceControl.store(2, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_StopMove:
+                    {
+                        if(nor_edge){
+                            rb_system::Call_Halt();
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_PauseMove:
+                    {
+                        if(nor_edge){
+                            rb_system::Call_MovePause();
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ResumeMove:
+                    {
+                        if(nor_edge){
+                            rb_system::Call_MoveResume();
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_PauseMove_F_ResumeMove:
+                    {
+                        if(nor_edge){
+                            rb_system::Call_MovePause();
+                        }else if(rev_edge){
+                            rb_system::Call_MoveResume();
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ResumeColl:
+                    {
+                        if(nor_edge){
+                            rb_system::Call_Reset_Out_Coll();
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_FreeDriveOn_F_FreeDriveOff:
+                    {
+                        if(nor_edge){
+                            Set_Free_Drive_Mode(true, 1);
+                        }else if(rev_edge){
+                            Set_Free_Drive_Mode(true, 0);
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ProgramLoad:
+                    {
+                        break;
+                    }
+                    case DIN_DEF_R_ProgramStart:
+                    {
                         break;
                     }
                     default:
@@ -637,36 +785,87 @@ namespace rb_system {
             // Special Output
             //---------------------------------------------
             for(int i = 0; i< NO_OF_DOUT; ++i){
+                bool is_reverse = false;
                 int temp_out = -1;
-                switch(dout_mode.at(i)){
-                    case 1:
+                int sp_mode = parameter_special_dout_box[i];
+                if(sp_mode < 0){
+                    is_reverse = true;
+                    sp_mode = abs(sp_mode);
+                }
+                switch(sp_mode){
+                    case DOUT_DEF_H_SystemReady:
+                    {
+                        temp_out = 1;
+                        break;
+                    }
+                    case DOUT_DEF_H_HeartBeat1Sec:
+                    {
+                        temp_out = static_cast<int>(flag_heart_beat == 1);
+                        break;
+                    }
+                    case DOUT_DEF_H_ByPassDin:
+                    {
+                        temp_out = static_cast<int>(cur_state.din_filt[i] == 1);
+                        break;
+                    }
+                    case DOUT_DEF_H_PowerOn:
                     {
                         temp_out = static_cast<int>(flag_connection_is_one == true);
                         break;
                     }
-                    case 2:
+                    case DOUT_DEF_H_ServoOn:
                     {
                         temp_out = static_cast<int>(Get_Servo() == ServoState::DONE);
                         break;
                     }
-                    case 3:
+                    case DOUT_DEF_H_RealMode:
                     {
                         temp_out = static_cast<int>(flag_reference_onoff == true);
                         break;
                     }
-                    case 4:
+                    case DOUT_DEF_H_RealMode_and_Idle:
+                    {
+                        temp_out = static_cast<int>(flag_reference_onoff == true);
+                        temp_out &= static_cast<int>(rb_motion::Get_Is_Motion_Idle() != true);
+                        break;
+                    }
+                    case DOUT_DEF_H_Idle:
                     {
                         temp_out = static_cast<int>(rb_motion::Get_Is_Motion_Idle() != true);
                         break;
                     }
-                    case 5:
+                    case DOUT_DEF_H_Pause:
+                    {
+                        temp_out = static_cast<int>(flag_is_pause == true);
+                        break;
+                    }
+                    case DOUT_DEF_H_OutColl:
                     {
                         temp_out = static_cast<int>(flag_collision_out_occur == true);
                         break;
                     }
-                    case 6:
+                    case DOUT_DEF_H_SelfColl:
                     {
                         temp_out = static_cast<int>(flag_collision_self_occur == true);
+                        break;
+                    }
+                    case DOUT_DEF_H_OutColl_or_SelfColl:
+                    {
+                        temp_out = static_cast<int>(flag_collision_out_occur == true);
+                        temp_out |= static_cast<int>(flag_collision_self_occur == true);
+                        break;
+                    }
+                    case DOUT_DEF_H_FreeDrive:
+                    {
+                        temp_out = static_cast<int>(flag_direct_teaching == true);
+                        break;
+                    }
+                    case DOUT_DEF_H_PorgramLoaded:
+                    {
+                        break;
+                    }
+                    case DOUT_DEF_H_ProgramRunning:
+                    {
                         break;
                     }
                     default:
@@ -674,6 +873,9 @@ namespace rb_system {
                 }
 
                 if(temp_out >= 0){
+                    if(is_reverse){
+                        temp_out = !temp_out;
+                    }
                     Set_Box_Digital_Output(i, temp_out);
                 }
             }
@@ -693,6 +895,7 @@ namespace rb_system {
 
         pthread_t hThread_sys_gen;
         void *thread_system_general(void *) {
+            int non_rt_counter = 0;
             while(1){
                 auto state_powerControl = request_powerControl.load(std::memory_order_relaxed);
                 if (state_powerControl == PowerOption::Off) {
@@ -701,14 +904,39 @@ namespace rb_system {
                     break;
                 }
 
-                int cur_din = _gv_Handler_Side->Get_State().din_filt[0];
-                static int old_din = cur_din;
-                if(old_din == 0 && cur_din == 1){
-                    Change_Tool_Number(1);
-                }else if(old_din == 1 && cur_din == 0){
-                    Change_Tool_Number(0);
+                non_rt_counter++;
+                if(non_rt_counter%50 == 0){
+                    // origianl = 2msec = 2000us = 2000000ns
+                    // 2% jitter = 40us = 40000ns
+                    if(g_max_jitter_ns > 40000){
+                        LOG_WARNING("System General Thread Jitter High: " + std::to_string(g_max_jitter_ns) + " ns");
+                        g_max_jitter_ns = 0;
+                    }
                 }
-                old_din = cur_din;
+
+                unsigned char request_trigger = 0;
+                if((request_trigger = request_PowerControl.load(std::memory_order_relaxed)) != 0){
+                    if(request_trigger == 1){
+                        rb_system::Set_Power(rb_system::PowerOption::On, false);
+                    }else if(request_trigger == 2){
+                        rb_system::Set_Power(rb_system::PowerOption::Off, false);
+                    }
+                    request_PowerControl.store(0, std::memory_order_relaxed);
+                }
+                if((request_trigger = request_ServoControl.load(std::memory_order_relaxed)) != 0){
+                    if(request_trigger == 1){
+                        rb_system::Set_Servo(1, 1);
+                    }
+                    request_ServoControl.store(0, std::memory_order_relaxed);
+                }
+                if((request_trigger = request_ReferenceControl.load(std::memory_order_relaxed)) != 0){
+                    if(request_trigger == 1){
+                        rb_system::Set_ReferenceOnOff(true);
+                    }else if(request_trigger == 2){
+                        rb_system::Set_ReferenceOnOff(false);
+                    }
+                    request_ReferenceControl.store(0, std::memory_order_relaxed);
+                }
                 
                 std::this_thread::sleep_for(20ms);
             }
@@ -741,7 +969,7 @@ namespace rb_system {
         // Make Instances
         // ------------------------------------------------------
 
-        _gv_Handler_Lan = new lan2can();
+        _gv_Handler_Lan = new lan2can(rb_config::READ_System_Gate_Port(), rb_config::READ_System_Gate_IP(0), rb_config::READ_System_Gate_IP(1), rb_config::READ_System_Gate_IP(2), rb_config::READ_System_Gate_IP(3));
         _gv_Handler_SCB = new scb_v1();
         _gv_Handler_Side = new side_io(1);
         for(int i = 0; i < NO_OF_JOINT; ++i){
@@ -868,7 +1096,7 @@ namespace rb_system {
     VectorJd Get_Motor_Limit_Vel(){
         VectorJd ret;
         for(int i = 0; i < NO_OF_JOINT; i++){
-            ret(i) = _gv_Handler_Motor[i]->Get_Parameters().para_limit_speedDeg;
+            ret(i) = _gv_Handler_Motor[i]->Get_Parameters().para_limit_speedDeg * 0.99;
         }
         return ret;
     }
@@ -1172,7 +1400,7 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // Collision 
     // ---------------------------------------------------------------
-    int Call_Reset_Out_Coll(){
+    int Call_Reset_Out_Coll(){//nonblock
         flag_collision_out_occur = false;
         return MSG_OK;
     }
@@ -1379,7 +1607,7 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
-    int Call_Halt(){
+    int Call_Halt(){//nonblock
         rb_motion::Set_Motion_Mode(rb_motion::MotionMode::MOVE_NONE);
         flag_collision_out_occur = false;
         flag_collision_self_occur = false;
@@ -1407,7 +1635,7 @@ namespace rb_system {
         return _sys_timescale[(int)SystemTimeScaler::USER].output;
     }
 
-    int Call_MovePause(){
+    int Call_MovePause(){//nonblock
         if(!flag_is_pause){
             LOG_INFO("PAUSE");
         }
@@ -1415,7 +1643,7 @@ namespace rb_system {
         return MSG_OK;
     }
 
-    int Call_MoveResume(){
+    int Call_MoveResume(){//nonblock
         if(flag_is_pause){
             LOG_INFO("RESUME from PAUSE");
         }
@@ -1533,6 +1761,44 @@ namespace rb_system {
         return ret;
     }
 
+    std::array<uint8_t, NO_OF_DOUT> Get_Tool_Dout(){
+        std::array<uint8_t, NO_OF_DOUT> ret;
+        for(int i = 0; i < NO_OF_DOUT; ++i){
+            ret[i] = 0;
+        }
+        for(int i = 0; i  < TFB_NUM_DOUT; ++i){
+            ret[i] = _gv_Handler_Toolflange->Get_State().dout[i];
+        }
+        return ret;
+    }
+    std::array<uint8_t, NO_OF_DIN> Get_Tool_Din(){
+        std::array<uint8_t, NO_OF_DIN> ret;
+        for(int i = 0; i < NO_OF_DIN; ++i){
+            ret[i] = 0;
+        }
+        for(int i = 0; i  < TFB_NUM_DIN; ++i){
+            ret[i] = _gv_Handler_Toolflange->Get_State().din[i];
+        }
+        return ret;
+    }
+    std::array<float, NO_OF_AOUT> Get_Tool_Aout(){
+        std::array<float, NO_OF_AOUT> ret;
+        for(int i = 0; i < NO_OF_AOUT; ++i){
+            ret[i] = 0;
+        }
+        return ret;
+    }
+    std::array<float, NO_OF_AIN> Get_Tool_Ain(){
+        std::array<float, NO_OF_AIN> ret;
+        for(int i = 0; i < NO_OF_AIN; ++i){
+            ret[i] = 0;
+        }
+        return ret;
+    }
+    int Get_Tool_Voltage(){
+        return _gv_Handler_Toolflange->Get_State().voltage;
+    }
+
     std::array<uint8_t, NO_OF_DOUT> Get_Box_Special_Dout(){
         std::array<uint8_t, NO_OF_DOUT> ret;
         for(int i = 0; i < NO_OF_DOUT; ++i){
@@ -1540,7 +1806,7 @@ namespace rb_system {
         }
         return ret;
     }
-    int Save_Box_Special_Dout(unsigned int p_num, unsigned int func_no){
+    int Save_Box_Special_Dout(unsigned int p_num, int func_no){
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
@@ -1574,7 +1840,7 @@ namespace rb_system {
         }
         return ret;
     }
-    int Save_Box_Special_Din(unsigned int p_num, unsigned int func_no){
+    int Save_Box_Special_Din(unsigned int p_num, int func_no){
         if(p_num >= NO_OF_DIN){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
@@ -2238,6 +2504,10 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // RT
     // ---------------------------------------------------------------
+    void Update_Zitter_Measurement(int64_t max_ns){
+        g_max_jitter_ns = max_ns;
+    }
+
     void Task_RealTime(){
         // -------------------------------------------------------------------------
         // SHM 
@@ -2264,8 +2534,11 @@ namespace rb_system {
         // Do motion
         // -------------------------------------------------------------------------
         double timer_scaler                         = RT_SysSpeed_Handler();
-        auto [mot_q_ang,  mot_x_pos]                = rb_motion::Task_Motion_Handler(RT_PERIOD_SEC, timer_scaler, flag_is_break, _sys_timescale[(int)SystemTimeScaler::BREAK].output);
-        auto [wrap_q_ang, wrap_q_vel, wrap_q_acc]   = rb_motion::Task_Wrapper_Handler(RT_PERIOD_SEC, timer_scaler, mot_q_ang, mot_x_pos);
+        auto [mot_q_ang,  mot_x_pos, mot_lpf_alpha] = rb_motion::Task_Motion_Handler(RT_PERIOD_SEC, timer_scaler, flag_is_break, _sys_timescale[(int)SystemTimeScaler::BREAK].output);
+        auto [wrap_q_ang, wrap_q_vel, wrap_q_acc, wrap_lpf_alpha]   = rb_motion::Task_Wrapper_Handler(RT_PERIOD_SEC, timer_scaler, mot_q_ang, mot_x_pos);
+
+        Set_Output_LPF(rb_math::return_small(mot_lpf_alpha, wrap_lpf_alpha));
+
         float fb_gain = 1.0;
         float ff_gain = 1.0;//1.0;//1.0;
         

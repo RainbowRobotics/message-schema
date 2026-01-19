@@ -45,6 +45,7 @@ table State_Core {
   tool_digital_output: N_DOUT_u;
   tool_analog_input: N_AIN_f;
   tool_analog_output: N_AOUT_f;
+  tool_voltage_output: float;
 
   motion_mode: ubyte;
   motion_speed_bar: float;

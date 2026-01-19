@@ -4,10 +4,10 @@
 #define NO_OF_JOINT         7
 #define NO_OF_CARTE         7
 
-#define NO_OF_AIN       4
-#define NO_OF_AOUT      4
-#define NO_OF_DIN       16
-#define NO_OF_DOUT      16
+#define NO_OF_AIN           4
+#define NO_OF_AOUT          4
+#define NO_OF_DIN           16
+#define NO_OF_DOUT          16
 
 #define RT_PERIOD_MS        2
 #define RT_PERIOD_SEC       0.002
@@ -16,8 +16,6 @@
 #define SYSTEM_VERSION      "1.0.0"
 #define SYSTEM_CATEGORY     "manipulate"
 #define SYSTEM_NAME         "cobot"
-#define SYSTEM_L2C_IP       "10.0.1.1"
-#define SYSTEM_L2C_PORT     1977
 
 #define NO_OF_TOOL          8
 #define NO_OF_USERF         8

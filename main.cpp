@@ -56,16 +56,16 @@ int main() {
         return 0;
     }std::this_thread::sleep_for(0.5s);
 
-    if(!rb_mbus_server::initialize(SYSTEM_NAME, 3, 502)){
+    if(!rb_mbus_server::initialize(SYSTEM_NAME, 3, rb_config::READ_System_Port_Number(0))){
         LOG_ERROR("FAIL to initialize rb_mbus_server");
         return 0;
     }std::this_thread::sleep_for(0.5s);
 
-    if(!rb_socket_command_server::initialize(SYSTEM_NAME, 3, 5000)){
+    if(!rb_socket_command_server::initialize(SYSTEM_NAME, 3, rb_config::READ_System_Port_Number(1))){
         LOG_ERROR("FAIL to initialize rb_scs_server");
         return 0;
     }std::this_thread::sleep_for(0.5s);
-    if(!rb_socket_data_server::initialize(SYSTEM_NAME, 3, 5001)){
+    if(!rb_socket_data_server::initialize(SYSTEM_NAME, 3, rb_config::READ_System_Port_Number(2))){
         LOG_ERROR("FAIL to initialize rb_sds_server");
         return 0;
     }std::this_thread::sleep_for(0.5s);

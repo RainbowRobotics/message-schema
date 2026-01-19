@@ -10,6 +10,7 @@
 #include <netinet/tcp.h>
 #include <mutex>
 #include <vector>
+#include <deque>
 #include <functional>
 
 #include "canobserver.h"
@@ -32,7 +33,7 @@ struct CAN_MSG{
 class lan2can
 {
 public:
-    lan2can();
+    lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3);
     ~lan2can();
 
     bool                    LAN_connectionStatus;
@@ -66,6 +67,8 @@ public:
     void                    Power_register_state_callback(std::function<void()> cb);
     
 private:
+    std::deque<unsigned char> totalLanData;
+
     unsigned long           LAN_connectionThreadHandler;
     struct sockaddr_in      LAN_clientAddr;
     int                     LAN_fd_client;
@@ -92,6 +95,9 @@ private:
     bool                    power_command_flag;
     int                     power_command_payload;
     std::function<void()>   power_state_callback;
+
+    std::string             L2C_IP;
+    int                     L2C_PORT;
 };
 
 #endif // LAN2CAN_H

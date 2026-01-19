@@ -81,6 +81,8 @@ namespace rb_ipc {
 
             auto [s_category, s_model, s_version, s_alias] = rb_system::Get_System_Basic_Info();
 
+            // std::cout<<"s_model: "<<s_model<<std::endl;
+
             rb::io::SessionOptions options;
             options.backend = rb::io::SessionBackendType::kZenoh;
             options.ns = s_model;
@@ -261,6 +263,8 @@ namespace rb_ipc {
             // -----------------------------------------------------------------------
             ADD_SERVE_BLANK("call_whoami", IPC::Request_CallWhoAmI, IPC::Response_CallWhoamI, {
                 auto [ts_category, ts_model, ts_version, ts_alias] = rb_system::Get_System_Basic_Info();
+
+                std::cout<<"IPC WHOAMI: "<<ts_category<<" / "<<ts_model<<" / "<<ts_version<<" / "<<ts_alias<<std::endl;
 
                 IPC::Response_CallWhoamIT who_am_i_T;
                 who_am_i_T.category = ts_category;
@@ -588,6 +592,25 @@ namespace rb_ipc {
                 get_return_T.calculated_value = std::move(ret_T);
                 get_return_T.calculated_result = ret_result;
                 return IPC::Response_Get_Absolute_Value::Pack(fbb, &get_return_T);
+            });
+            ADD_SERVE_BLANK("get_tcp", IPC::Request_Get_Tcp_Value, IPC::Response_Get_Tcp_Value, {
+                int option = req->option();
+                (void)option;
+
+                IPC::Response_Get_Tcp_ValueT get_return_T;
+                get_return_T.carte_info = std::make_unique<IPC::N_CARTE_f>(rb_motion::Get_Wrapper_X());
+                return IPC::Response_Get_Tcp_Value::Pack(fbb, &get_return_T);
+            });
+            ADD_SERVE_BLANK("get_joint", IPC::Request_Get_Joint_Value, IPC::Response_Get_Joint_Value, {
+                int option = req->option();
+                
+                IPC::Response_Get_Joint_ValueT get_return_T;
+                if(option == 1){
+                    get_return_T.joint_info = std::make_unique<IPC::N_JOINT_f>(rb_system::Get_Motor_Encoder());
+                }else{
+                    get_return_T.joint_info = std::make_unique<IPC::N_JOINT_f>(rb_motion::Get_Wrapper_J());
+                }
+                return IPC::Response_Get_Joint_Value::Pack(fbb, &get_return_T);
             });            
 
             // -----------------------------------------------------------------------
@@ -747,6 +770,35 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_move_xb_run", IPC::Request_Move_XB_RUN, IPC::Response_Functions, {
                 return_int = rb_motion::Start_Motion_XB(req->running_mode());
             });
+
+            ADD_SERVE_SIMPLE("call_servo_j", IPC::Request_Servo_J, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+
+                float t1 = req->t1();
+                float t2 = req->t2();
+                float gain = req->gain();
+                float filter = req->filter();
+                return_int = rb_motion::Start_Motion_SERVO_J(input, t1, t2, gain, filter);
+            });
+            ADD_SERVE_SIMPLE("call_servo_l", IPC::Request_Servo_L, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+
+                float t1 = req->t1();
+                float t2 = req->t2();
+                float gain = req->gain();
+                float filter = req->filter();
+                return_int = rb_motion::Start_Motion_SERVO_L(input, t1, t2, gain, filter);
+            });
             
             while (true) {
                 std::this_thread::sleep_for(1s);
@@ -847,10 +899,11 @@ namespace rb_ipc {
                     state_coreT.ex_analog_input = std::make_unique<IPC::N_AIN_f>(rb_system::Get_EX_Ain());
                     state_coreT.ex_analog_output = std::make_unique<IPC::N_AOUT_f>(rb_system::Get_EX_Aout());
 
-                    // state_coreT.tool_digital_input = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Tool_Din());
-                    // state_coreT.tool_digital_output = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Tool_Dout());
-                    // state_coreT.tool_analog_input = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Tool_Din());
-                    // state_coreT.tool_analog_output = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Tool_Dout());
+                    state_coreT.tool_digital_input = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Tool_Din());
+                    state_coreT.tool_digital_output = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Tool_Dout());
+                    state_coreT.tool_analog_input = std::make_unique<IPC::N_AIN_f>(rb_system::Get_Tool_Ain());
+                    state_coreT.tool_analog_output = std::make_unique<IPC::N_AOUT_f>(rb_system::Get_Tool_Aout());
+                    state_coreT.tool_voltage_output = static_cast<float>(rb_system::Get_Tool_Voltage());
 
                     state_coreT.motion_mode = static_cast<uint8_t>(rb_motion::Get_Motion_Mode());
                     state_coreT.motion_speed_bar = static_cast<float>(rb_system::Get_MoveSpeedBar());

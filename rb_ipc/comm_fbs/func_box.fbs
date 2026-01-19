@@ -37,12 +37,12 @@ table Request_Save_User_Frame {
 }
 
 table Request_Save_SideDin_SpecialFunc {
-  port_num: int;
+  port_num:         int;
   desired_function: int;
 }
 
 table Request_Save_SideDout_SpecialFunc {
-  port_num: int;
+  port_num:         int;
   desired_function: int;
 }
 

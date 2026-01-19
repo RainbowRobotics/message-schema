@@ -4,7 +4,17 @@
 #include "system.h"
 
 enum class DB_ADDR_LIST{
-    ARM_CODE = 0,
+    SYS_PORT_NO_MBUS = 0,
+    SYS_PORT_NO_SOCKCMD,
+    SYS_PORT_NO_SOCKDATA,
+
+    SYS_GATE_PORT,
+    SYS_GATE_IP_0,
+    SYS_GATE_IP_1,
+    SYS_GATE_IP_2,
+    SYS_GATE_IP_3,
+
+    ARM_CODE,
 
     ARM_OUT_COLL_ONOFF,
     ARM_OUT_COLL_REACT,
@@ -474,6 +484,16 @@ struct DB_ADDR_MAP{
 };
 
 const DB_ADDR_MAP DB_MAP[(int)DB_ADDR_LIST::NUM_OF_LIST] = {
+    {"SYS_PORT_NO_MBUS", 0},
+    {"SYS_PORT_NO_SOCKCMD", 0},
+    {"SYS_PORT_NO_SOCKDATA", 0},
+
+    {"SYS_GATE_PORT", 0},
+    {"SYS_GATE_IP_0", 0},
+    {"SYS_GATE_IP_1", 0},
+    {"SYS_GATE_IP_2", 0},
+    {"SYS_GATE_IP_3", 0},
+
     {"ARM_CODE", 0},
 
     {"ARM_OUT_COLL_ONOFF", 0},
@@ -935,6 +955,11 @@ const DB_ADDR_MAP DB_MAP[(int)DB_ADDR_LIST::NUM_OF_LIST] = {
 
 namespace rb_config {
     bool initialize(std::string db_name);
+
+    int                             READ_System_Gate_IP(int octet);
+    int                             READ_System_Gate_Port(); 
+
+    int                             READ_System_Port_Number(int port_type);
 
     ROBOT_CONFIG                    READ_Robot_Parameter(int r_code);
     int                             READ_Robot_Model();

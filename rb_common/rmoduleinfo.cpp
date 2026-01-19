@@ -26,6 +26,28 @@ namespace rb_module {
                 ret.resi_R_q = 0.165;
                 break;
             }
+            case MCODE::M200:
+            {
+                ret.code_num = (int)t_mcdoe;
+                ret.encoder_resolution = 16384.;
+                ret.gear_ratio = 101.;
+                ret.gear_stiffness = 1./(2.50 * 10000.) * 57.;
+                ret.torque_Constant = 0.1;
+                ret.torque_Max_Rept = 107.;
+                ret.torque_Max_Moment = 191.;
+                ret.max_Vel = 181.;
+                ret.max_ACC = 450.;
+                ret.max_Cur_mA = 18000.;
+                ret.rotor_i = 130.;
+                ret.rotor_a = 850.;
+                ret.rotor_b = 500.;
+                ret.shake_pulse = 1000;
+                ret.shake_count = 140;
+                ret.temperature_esti[0] = 1.5655;
+                ret.temperature_esti[1] = 81.3997;
+                ret.resi_R_q = 0.240;
+                break;
+            }
             case MCODE::M140:
             {
                 ret.code_num = (int)t_mcdoe;

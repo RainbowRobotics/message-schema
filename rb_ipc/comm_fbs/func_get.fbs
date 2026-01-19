@@ -37,3 +37,19 @@ table Response_Get_Absolute_Value {
     calculated_value:   MoveInput_Target;
 }
 //--------------------------------------------------------------
+table Request_Get_Tcp_Value {
+    option: int;
+}
+
+table Response_Get_Tcp_Value {
+    carte_info: N_CARTE_f;
+}
+
+table Request_Get_Joint_Value {
+    option: int;
+}
+
+table Response_Get_Joint_Value {
+    joint_info: N_JOINT_f;
+}
+//--------------------------------------------------------------

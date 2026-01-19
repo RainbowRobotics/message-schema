@@ -6,6 +6,7 @@ namespace rb_module {
     enum class MCODE
     {
         M250 = 250,
+        M200 = 200,
         M140 = 140,
     };
 

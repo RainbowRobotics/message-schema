@@ -82,6 +82,14 @@ struct Request_Move_XB_RUN;
 struct Request_Move_XB_RUNBuilder;
 struct Request_Move_XB_RUNT;
 
+struct Request_Servo_J;
+struct Request_Servo_JBuilder;
+struct Request_Servo_JT;
+
+struct Request_Servo_L;
+struct Request_Servo_LBuilder;
+struct Request_Servo_LT;
+
 struct Request_Move_SmoothJogJT : public ::flatbuffers::NativeTable {
   typedef Request_Move_SmoothJogJ TableType;
   std::unique_ptr<IPC::MoveInput_TargetT> target{};
@@ -1038,6 +1046,208 @@ inline ::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(
 
 ::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_RUNT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Servo_JT : public ::flatbuffers::NativeTable {
+  typedef Request_Servo_J TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> target{};
+  float t1 = 0.0f;
+  float t2 = 0.0f;
+  float gain = 0.0f;
+  float filter = 0.0f;
+  Request_Servo_JT() = default;
+  Request_Servo_JT(const Request_Servo_JT &o);
+  Request_Servo_JT(Request_Servo_JT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Servo_JT &operator=(Request_Servo_JT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Servo_J FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Servo_JT NativeTableType;
+  typedef Request_Servo_JBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_T1 = 6,
+    VT_T2 = 8,
+    VT_GAIN = 10,
+    VT_FILTER = 12
+  };
+  const IPC::MoveInput_Target *target() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_TARGET);
+  }
+  float t1() const {
+    return GetField<float>(VT_T1, 0.0f);
+  }
+  float t2() const {
+    return GetField<float>(VT_T2, 0.0f);
+  }
+  float gain() const {
+    return GetField<float>(VT_GAIN, 0.0f);
+  }
+  float filter() const {
+    return GetField<float>(VT_FILTER, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyField<float>(verifier, VT_T1, 4) &&
+           VerifyField<float>(verifier, VT_T2, 4) &&
+           VerifyField<float>(verifier, VT_GAIN, 4) &&
+           VerifyField<float>(verifier, VT_FILTER, 4) &&
+           verifier.EndTable();
+  }
+  Request_Servo_JT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Servo_JT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Servo_J> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_JT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Servo_JBuilder {
+  typedef Request_Servo_J Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<IPC::MoveInput_Target> target) {
+    fbb_.AddOffset(Request_Servo_J::VT_TARGET, target);
+  }
+  void add_t1(float t1) {
+    fbb_.AddElement<float>(Request_Servo_J::VT_T1, t1, 0.0f);
+  }
+  void add_t2(float t2) {
+    fbb_.AddElement<float>(Request_Servo_J::VT_T2, t2, 0.0f);
+  }
+  void add_gain(float gain) {
+    fbb_.AddElement<float>(Request_Servo_J::VT_GAIN, gain, 0.0f);
+  }
+  void add_filter(float filter) {
+    fbb_.AddElement<float>(Request_Servo_J::VT_FILTER, filter, 0.0f);
+  }
+  explicit Request_Servo_JBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Servo_J> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Servo_J>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Servo_J> CreateRequest_Servo_J(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> target = 0,
+    float t1 = 0.0f,
+    float t2 = 0.0f,
+    float gain = 0.0f,
+    float filter = 0.0f) {
+  Request_Servo_JBuilder builder_(_fbb);
+  builder_.add_filter(filter);
+  builder_.add_gain(gain);
+  builder_.add_t2(t2);
+  builder_.add_t1(t1);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Servo_J> CreateRequest_Servo_J(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_JT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Servo_LT : public ::flatbuffers::NativeTable {
+  typedef Request_Servo_L TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> target{};
+  float t1 = 0.0f;
+  float t2 = 0.0f;
+  float gain = 0.0f;
+  float filter = 0.0f;
+  Request_Servo_LT() = default;
+  Request_Servo_LT(const Request_Servo_LT &o);
+  Request_Servo_LT(Request_Servo_LT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Servo_LT &operator=(Request_Servo_LT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Servo_L FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Servo_LT NativeTableType;
+  typedef Request_Servo_LBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_T1 = 6,
+    VT_T2 = 8,
+    VT_GAIN = 10,
+    VT_FILTER = 12
+  };
+  const IPC::MoveInput_Target *target() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_TARGET);
+  }
+  float t1() const {
+    return GetField<float>(VT_T1, 0.0f);
+  }
+  float t2() const {
+    return GetField<float>(VT_T2, 0.0f);
+  }
+  float gain() const {
+    return GetField<float>(VT_GAIN, 0.0f);
+  }
+  float filter() const {
+    return GetField<float>(VT_FILTER, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyField<float>(verifier, VT_T1, 4) &&
+           VerifyField<float>(verifier, VT_T2, 4) &&
+           VerifyField<float>(verifier, VT_GAIN, 4) &&
+           VerifyField<float>(verifier, VT_FILTER, 4) &&
+           verifier.EndTable();
+  }
+  Request_Servo_LT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Servo_LT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Servo_L> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_LT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Servo_LBuilder {
+  typedef Request_Servo_L Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<IPC::MoveInput_Target> target) {
+    fbb_.AddOffset(Request_Servo_L::VT_TARGET, target);
+  }
+  void add_t1(float t1) {
+    fbb_.AddElement<float>(Request_Servo_L::VT_T1, t1, 0.0f);
+  }
+  void add_t2(float t2) {
+    fbb_.AddElement<float>(Request_Servo_L::VT_T2, t2, 0.0f);
+  }
+  void add_gain(float gain) {
+    fbb_.AddElement<float>(Request_Servo_L::VT_GAIN, gain, 0.0f);
+  }
+  void add_filter(float filter) {
+    fbb_.AddElement<float>(Request_Servo_L::VT_FILTER, filter, 0.0f);
+  }
+  explicit Request_Servo_LBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Servo_L> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Servo_L>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Servo_L> CreateRequest_Servo_L(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> target = 0,
+    float t1 = 0.0f,
+    float t2 = 0.0f,
+    float gain = 0.0f,
+    float filter = 0.0f) {
+  Request_Servo_LBuilder builder_(_fbb);
+  builder_.add_filter(filter);
+  builder_.add_gain(gain);
+  builder_.add_t2(t2);
+  builder_.add_t1(t1);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Servo_L> CreateRequest_Servo_L(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_LT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Move_SmoothJogJT::Request_Move_SmoothJogJT(const Request_Move_SmoothJogJT &o)
       : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr) {
 }
@@ -1576,6 +1786,116 @@ inline ::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(::fl
   return IPC::CreateRequest_Move_XB_RUN(
       _fbb,
       _running_mode);
+}
+
+inline Request_Servo_JT::Request_Servo_JT(const Request_Servo_JT &o)
+      : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr),
+        t1(o.t1),
+        t2(o.t2),
+        gain(o.gain),
+        filter(o.filter) {
+}
+
+inline Request_Servo_JT &Request_Servo_JT::operator=(Request_Servo_JT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(target, o.target);
+  std::swap(t1, o.t1);
+  std::swap(t2, o.t2);
+  std::swap(gain, o.gain);
+  std::swap(filter, o.filter);
+  return *this;
+}
+
+inline Request_Servo_JT *Request_Servo_J::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Servo_JT>(new Request_Servo_JT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Servo_J::UnPackTo(Request_Servo_JT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = target(); if (_e) { if(_o->target) { _e->UnPackTo(_o->target.get(), _resolver); } else { _o->target = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->target) { _o->target.reset(); } }
+  { auto _e = t1(); _o->t1 = _e; }
+  { auto _e = t2(); _o->t2 = _e; }
+  { auto _e = gain(); _o->gain = _e; }
+  { auto _e = filter(); _o->filter = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Servo_J> Request_Servo_J::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_JT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Servo_J(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Servo_J> CreateRequest_Servo_J(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_JT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Servo_JT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _target = _o->target ? CreateMoveInput_Target(_fbb, _o->target.get(), _rehasher) : 0;
+  auto _t1 = _o->t1;
+  auto _t2 = _o->t2;
+  auto _gain = _o->gain;
+  auto _filter = _o->filter;
+  return IPC::CreateRequest_Servo_J(
+      _fbb,
+      _target,
+      _t1,
+      _t2,
+      _gain,
+      _filter);
+}
+
+inline Request_Servo_LT::Request_Servo_LT(const Request_Servo_LT &o)
+      : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr),
+        t1(o.t1),
+        t2(o.t2),
+        gain(o.gain),
+        filter(o.filter) {
+}
+
+inline Request_Servo_LT &Request_Servo_LT::operator=(Request_Servo_LT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(target, o.target);
+  std::swap(t1, o.t1);
+  std::swap(t2, o.t2);
+  std::swap(gain, o.gain);
+  std::swap(filter, o.filter);
+  return *this;
+}
+
+inline Request_Servo_LT *Request_Servo_L::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Servo_LT>(new Request_Servo_LT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Servo_L::UnPackTo(Request_Servo_LT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = target(); if (_e) { if(_o->target) { _e->UnPackTo(_o->target.get(), _resolver); } else { _o->target = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->target) { _o->target.reset(); } }
+  { auto _e = t1(); _o->t1 = _e; }
+  { auto _e = t2(); _o->t2 = _e; }
+  { auto _e = gain(); _o->gain = _e; }
+  { auto _e = filter(); _o->filter = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Servo_L> Request_Servo_L::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_LT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Servo_L(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Servo_L> CreateRequest_Servo_L(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Servo_LT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Servo_LT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _target = _o->target ? CreateMoveInput_Target(_fbb, _o->target.get(), _rehasher) : 0;
+  auto _t1 = _o->t1;
+  auto _t2 = _o->t2;
+  auto _gain = _o->gain;
+  auto _filter = _o->filter;
+  return IPC::CreateRequest_Servo_L(
+      _fbb,
+      _target,
+      _t1,
+      _t2,
+      _gain,
+      _filter);
 }
 
 }  // namespace IPC

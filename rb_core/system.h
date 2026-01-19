@@ -38,6 +38,7 @@ struct ROBOT_CONFIG{
     Eigen::Matrix3d     link_inerti[NO_OF_JOINT];
     
     Eigen::Vector3d     link_offset[NO_OF_JOINT];
+    Eigen::Matrix3d     link_rotation[NO_OF_JOINT];
 
     Eigen::Vector3d     link_capsule_dw[NO_OF_JOINT];
     Eigen::Vector3d     link_capsule_up[NO_OF_JOINT];
@@ -235,13 +236,19 @@ namespace rb_system {
     std::array<uint8_t, NO_OF_DIN>      Get_EX_Din();
     std::array<float, NO_OF_AOUT>       Get_EX_Aout();
     std::array<float, NO_OF_AIN>        Get_EX_Ain();
+
+    std::array<uint8_t, NO_OF_DOUT>     Get_Tool_Dout();
+    std::array<uint8_t, NO_OF_DIN>      Get_Tool_Din();
+    std::array<float, NO_OF_AOUT>       Get_Tool_Aout();
+    std::array<float, NO_OF_AIN>        Get_Tool_Ain();
+    int                                 Get_Tool_Voltage();
     
     std::array<uint8_t, NO_OF_DOUT>     Get_Box_Special_Dout();
-    int                                 Save_Box_Special_Dout(unsigned int p_num, unsigned int func_no);
+    int                                 Save_Box_Special_Dout(unsigned int p_num, int func_no);
     int                                 Recover_Box_Special_Dout(int p_num);
 
     std::array<uint8_t, NO_OF_DIN>      Get_Box_Special_Din();
-    int                                 Save_Box_Special_Din(unsigned int p_num, unsigned int func_no);
+    int                                 Save_Box_Special_Din(unsigned int p_num, int func_no);
     int                                 Recover_Box_Special_Din(int p_num);
 
     std::array<uint8_t, NO_OF_DIN>      Get_Box_FilterCount_Din();
@@ -291,6 +298,7 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // RT
     // ---------------------------------------------------------------
+    void            Update_Zitter_Measurement(int64_t max_ns);
     void            Task_RealTime();
     int             TestTestTest();
 }

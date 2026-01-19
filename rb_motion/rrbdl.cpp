@@ -71,7 +71,7 @@ int RBDLrobot::Init_Robot(ROBOT_CONFIG rConfig, TCP_CONFIG tConfig, Vector3d tGr
             prev_body = r_nums[k - 1];
         }
 
-        Matrix3d temp_Rotation = Matrix3d::Identity(3, 3);
+        Matrix3d temp_Rotation = rConfig.link_rotation[k];
         SpatialTransform tempTransform(temp_Rotation, rConfig.link_offset[k]);
         std::string tempName = "myBody_" + std::to_string(k);
         r_nums[k] = model_->AddBody(prev_body, tempTransform, r_joints[k], r_bodys[k], tempName);
@@ -141,7 +141,7 @@ int RBDLrobot::Update_Robot(ROBOT_CONFIG rConfig, TCP_CONFIG tConfig, Vector3d t
             prev_body = r_nums[k - 1];
         }
 
-        Matrix3d temp_Rotation = Matrix3d::Identity(3, 3);
+        Matrix3d temp_Rotation = rConfig.link_rotation[k];
         SpatialTransform tempTransform(temp_Rotation, rConfig.link_offset[k]);
         std::string tempName = "myBody_" + std::to_string(k);
         r_nums[k] = temp_model_->AddBody(prev_body, tempTransform, r_joints[k], r_bodys[k], tempName);

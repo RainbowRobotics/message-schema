@@ -114,6 +114,8 @@ add_executable(rb_program
     rb_motion/types/move_lb.cpp
     rb_motion/types/move_xb.cpp
     rb_motion/types/move_cir.cpp
+    rb_motion/types/move_servo_j.cpp
+    rb_motion/types/move_servo_l.cpp
     rb_motion/types/move_speed_j.cpp
     rb_motion/types/move_speed_l.cpp
 
@@ -163,3 +165,14 @@ if(STRIP_EXECUTABLE)
         COMMENT "Stripping binary to reduce size"
     )
 endif()
+
+# ===== 빌드 후 다른 프로젝트로 실행 파일 복사 =====
+set(SECOND_BUILD_DIR "/root/Desktop/test_project_2/build")
+
+add_custom_command(TARGET rb_program POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${SECOND_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:rb_program>
+            ${SECOND_BUILD_DIR}/rb_program
+    COMMENT "Copying rb_program to test_project_2 build directory"
+)

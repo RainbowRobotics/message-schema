@@ -18,6 +18,7 @@
 #include <iostream>
 #include <algorithm>
 #include <chrono>
+#include <charconv>
 
 #include "common.h"
 #include "command_server.h"
@@ -42,6 +43,27 @@ struct Command_Return{
 
 namespace rb_socket_command_server {
     namespace {
+
+        template<typename IntT>
+        bool parse_int(const std::string& s, IntT& out){
+            static_assert(std::is_integral_v<IntT>, "parse_int requires integral type");
+
+            const char* begin = s.data();
+            const char* end   = s.data() + s.size();
+
+            auto [ptr, ec] = std::from_chars(begin, end, out);
+
+            return ec == std::errc() && ptr == end;
+        }
+        bool parse_float(const std::string& s, float& out)
+        {
+            const char* begin = s.data();
+            const char* end   = s.data() + s.size();
+
+            auto [ptr, ec] = std::from_chars(begin, end, out);
+
+            return ec == std::errc() && ptr == end;
+        }
         
 
         std::atomic<bool> running(false);
@@ -476,6 +498,50 @@ namespace rb_socket_command_server {
                         float vel_para = std::stof(a[NO_OF_CARTE]);
                         float acc_para = std::stof(a[NO_OF_CARTE + 1]);
                         return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_servo_j", {
+                    if (a.size() == (NO_OF_JOINT + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                // std:::cout<<"Invalid joint value at index " + std::to_string(i)<<std:::endl;
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        input.target_frame  = FRAME_JOINT;
+                        input.target_unit   = 0;
+                        float t1, t2, gain, filter;
+                        if (!parse_float(a[NO_OF_JOINT + 0], t1) ||
+                            !parse_float(a[NO_OF_JOINT + 1], t2) ||
+                            !parse_float(a[NO_OF_JOINT + 2], gain) ||
+                            !parse_float(a[NO_OF_JOINT + 3], filter)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_SERVO_J(input, t1, t2, gain, filter), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_servo_l", {
+                    if (a.size() == (NO_OF_CARTE + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                // std:::cout<<"Invalid joint value at index " + std::to_string(i)<<std:::endl;
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        input.target_frame  = FRAME_GLOBAL;
+                        input.target_unit   = 0;
+                        float t1, t2, gain, filter;
+                        if (!parse_float(a[NO_OF_JOINT + 0], t1) ||
+                            !parse_float(a[NO_OF_JOINT + 1], t2) ||
+                            !parse_float(a[NO_OF_JOINT + 2], gain) ||
+                            !parse_float(a[NO_OF_JOINT + 3], filter)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_SERVO_L(input, t1, t2, gain, filter), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
