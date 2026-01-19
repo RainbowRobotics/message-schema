@@ -20,15 +20,18 @@ function print_string() {
 
 # y/n 확인 유틸 (function 키워드 없이)
 function confirm_or_exit() {
-    local message="$1"
-    echo ""
-    print_string "warning" "${message}"
-    echo ""
-    read -r -p "계속 진행하시겠습니까? (y/N): " ANS
-    case "${ANS,,}" in
-        y|yes) return 0 ;;
-        *) echo "취소되었습니다."; exit 0 ;;
-    esac
+  local message="$1"
+  echo ""
+  print_string "warning" "${message}"
+  echo ""
+  read -r -p "계속 진행하시겠습니까? (y/N): " ANS
+
+  ANS="$(printf '%s' "$ANS" | tr -d '\r' | sed 's/^ *//; s/ *$//' | tr '[:upper:]' '[:lower:]')"
+
+  case "$ANS" in
+    y|yes) return 0 ;;
+    *) print_string "info" "취소되었습니다."; exit 0 ;;
+  esac
 }
 
 # 기본값
@@ -101,7 +104,7 @@ if [ "$HAS_CHANGES" -eq 0 ] && [ "$TREE_DIFF" -eq 0 ]; then
 fi
 
 confirm_or_exit \
-"'$SCHEMA_DIR'을(를) '$REMOTE_NAME/main'과 동일하게 강제 동기화합니다.
+"message-schema 레포의 main 브랜치 내용과 현재 ${SCHEMA_DIR}에 작성하신 내용이 다릅니다. ${SCHEMA_DIR}을(를) ${REMOTE_NAME}/main과 동일하게 강제 동기화합니다.
  - '$SCHEMA_DIR' 아래의 로컬 수정/추가 파일은 모두 삭제됩니다. (untracked 포함)
  - staged 변경도 모두 폐기됩니다.
  - 원하지 않으신다면 취소 후 make schema-update를 통해 main 브랜치로 업데이트 후 다시 시도하세요.(PR이 팀원들에게 Apply 되어야 main 브랜치로 반영됩니다.)
