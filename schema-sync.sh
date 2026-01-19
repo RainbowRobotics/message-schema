@@ -103,8 +103,6 @@ if [ "$TREE_DIFF" -eq 0 ] && [ "$HAS_CHANGES" -eq 0 ]; then
   exit 0
 fi
 
-# 동기화는 해야 함. (README.md가 원격에만 있는 케이스 포함)
-# 단, 파괴적일 수 있으니 기본은 확인 받고 진행. (--yes면 스킵)
 if [ "$HAS_CHANGES" -eq 1 ]; then
   confirm_or_exit \
 "'$SCHEMA_DIR' 아래에 로컬 변경이 있습니다. 동기화하면 '$SCHEMA_DIR'의 로컬 변경(수정/추가/untracked/staged)이 삭제됩니다."
