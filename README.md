@@ -75,13 +75,19 @@ make schema-sync
 
 #### 동작 요약
 
-1. 현재 작업 중 변경사항이 있으면 자동 stash
-2. `message-schema` 레포의 `main` 브랜치 최신 상태만 pull
-3. **PR이 이미 main에 머지된 schema만** `schemas/` subtree에 반영
-4. stash 자동 복원
+1. `message-schema` 레포의 `main` **브랜치 최신 상태를 fetch/pull**
+2. 로컬 `schemas/`가 `message-schema/main`과 다르면 **경고 후 y/N 확인**
+3. `y`를 선택하면 `schemas/` 아래 로컬 변경을 **전부 삭제**한 뒤
+`message-schema/main`과 **완전히 동일한 상태로 강제 동기화**
+    - 수정/추가 파일 삭제 (untracked 포함)
+    - staged 변경 폐기
+4. 동기화 후 `schemas/`가 `message-schema/main`과 동일한지 검증
 
-📌 아직 PR이 머지되지 않은
-`schema/from-*` 브랜치의 변경사항은 **절대 포함되지 않습니다.**
+📌 `schema-sync`는 `schema/from-* `**브랜치를 가져오지 않으며,
+PR이 `main`에 머지된 내용만** 반영됩니다.
+
+📌 `schemas/`에서 작업 중인 내용이 있다면, 동기화 시 **사라질 수 있습니다.**
+필요하면 먼저 `make schema-update`로 PR을 올리거나, 별도 백업 후 진행하세요.
 <br />
 
 ## 3️⃣ 디렉토리 구조
@@ -127,6 +133,7 @@ git push origin <branch>
 - `schemas/`를 직접 커밋하지 말 것
 - `git add .` 상태에서 `schema-update` 실행 금지
 - `message-schema`를 별도로 클론해서 작업 금지
+- `make schema-sync`를 하지 않고 빌드 후 배포 금지
 
 ```sh
 # ❌ 잘못된 방법
@@ -139,7 +146,7 @@ make schema-update
 
 ### ✅ 권장
 
-- 작업 시작 전 항상 동기화
+- 배포를 위한 빌드 전 항상 동기화
     ```sh
     make schema-sync
     ```
