@@ -107,7 +107,7 @@ if [ "$HAS_CHANGES" -eq 1 ]; then
   confirm_or_exit \
 "'$SCHEMA_DIR' 아래에 로컬 변경이 있습니다. 동기화하면 '$SCHEMA_DIR'의 로컬 변경(수정/추가/untracked/staged)이 삭제됩니다."
 else
-  # 로컬 작업은 없지만, 커밋된 상태(워킹트리 clean)라도 현재 schemas 상태가 덮일 수 있음
+  # 로컬 작업은 없지만, 커밋된 상태(워킹트리 clean)라도 현재 schemas 상태가 덮일 수 있음ㅇ
   confirm_or_exit \
 "'$SCHEMA_DIR'의 현재 커밋 상태가 '$REMOTE_NAME/main'과 다릅니다. 최신 main을 반영하기 위해 동기화합니다.
 (참고: 로컬 변경은 없지만, 현재 schemas 상태는 동기화 커밋으로 덮일 수 있습니다.)"
