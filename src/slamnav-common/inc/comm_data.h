@@ -970,6 +970,7 @@ struct DATA_PATH
 {
   QString time;
   int preset;
+  QString id;
 
   QString time1;
   QString time_str;
@@ -988,6 +989,7 @@ struct DATA_PATH
 
   DATA_PATH()
   {
+    id = "";
     time = "";
     preset = 0;
     command = "";
@@ -1000,6 +1002,7 @@ struct DATA_PATH
 
   DATA_PATH(const DATA_PATH& p)
   {
+    id = p.id;
     time = p.time;
     command = p.command;
     vobs_closures = p.vobs_closures;
@@ -1017,6 +1020,7 @@ struct DATA_PATH
 
   DATA_PATH& operator=(const DATA_PATH& p)
   {
+    id = p.id;
     time = p.time;
     command = p.command;
     vobs_closures = p.vobs_closures;
