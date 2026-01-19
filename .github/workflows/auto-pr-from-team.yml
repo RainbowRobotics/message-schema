@@ -201,6 +201,19 @@ jobs:
           if [ -n "$MENTIONS" ]; then
             MENTION_TEXT="\n:bell: 리뷰어: $MENTIONS"
           fi
+
+          MENTION_BLOCK=""
+
+          if [ -n "$MENTIONS" ]; then
+            MENTION_BLOCK=",
+            {
+                \"type\": \"section\",
+                \"text\": {
+                \"type\": \"mrkdwn\",
+                \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
+                }
+            }"
+          fi
           
           # Slack 메시지 전송
           curl -X POST -H 'Content-type: application/json' --data "{
@@ -249,6 +262,7 @@ jobs:
                   \"text\": \"*Commit Message:*\n_${COMMIT_MESSAGE}_\"
                 }
               },
+              $MENTION_BLOCK,
               {
                 \"type\": \"context\",
                 \"elements\": [
