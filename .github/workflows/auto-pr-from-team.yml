@@ -14,39 +14,259 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # CODEOWNERS 파일 접근 및 변경 파일 확인용
+
       - name: Check PR exists
         id: check_pr
         env:
-          GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
           set -e
           EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
           if [ "$EXIST" -gt 0 ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT" 
-            echo "PR already exists for $BRANCH"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq '.[0].number')
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "PR already exists for $BRANCH (#$PR_NUMBER)"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "No PR for $BRANCH"
           fi
 
+      - name: Get changed files
+        id: changed_files
+        run: |
+          set -e
+          git fetch origin main:refs/remotes/origin/main
+
+          # main과 비교하여 변경된 파일 목록
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD || echo "")
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # 변경된 디렉토리 추출
+          CHANGED_DIRS="$(printf "%s\n" "$CHANGED_FILES" \
+            | grep -oE '^[^/]+/' \
+            | sort -u \
+            | sed 's|/$||' \
+            | tr '\n' ' ' \
+            | sed 's/  */ /g; s/^ *//; s/ *$//' \
+            || true)"
+
+          echo "dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
+
+          
+          # 파일 목록을 임시 파일로 저장
+          echo "$CHANGED_FILES" > /tmp/changed_files.txt
+
+      - name: Parse CODEOWNERS and get mentions
+        id: get_mentions
+        run: |
+          set -e
+
+          CODEOWNERS_FILE=".github/CODEOWNERS"
+          MAPPING_FILE=".github/slack-mentions.json"
+
+          if [ ! -f "$CODEOWNERS_FILE" ]; then
+            echo "CODEOWNERS file not found"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ ! -f "$MAPPING_FILE" ]; then
+            echo "Slack mapping file not found: $MAPPING_FILE"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CHANGED_FILES="$(cat /tmp/changed_files.txt || true)"
+
+          if [ -z "${CHANGED_FILES// }" ]; then
+            echo "No changed files"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # jq 필요 (self-hosted에 없으면 설치하거나 python으로 대체해야 함)
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "jq not found on runner"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 중복 제거를 위한 임시 파일
+          : > /tmp/mentions.txt
+
+          # CODEOWNERS 파싱
+          while IFS= read -r line; do
+            # 주석/빈줄 제외
+            [[ "$line" =~ ^#.*$ ]] && continue
+            [[ -z "${line// }" ]] && continue
+
+            PATTERN="$(echo "$line" | awk '{print $1}')"
+            OWNERS="$(echo "$line" | cut -d' ' -f2-)"
+
+            # CODEOWNERS pattern -> bash glob
+            # 예) /nexus/** -> /nexus/*
+            GLOB_PATTERN="${PATTERN//\*\*/\*}"
+
+            # 변경 파일들과 매칭 검사
+            while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+
+              # CODEOWNERS는 보통 "/nexus/..." 형태라 leading "/" 처리
+              file_slash="/$file"
+
+              if [[ "$file_slash" == $GLOB_PATTERN ]]; then
+                for owner in $OWNERS; do
+                  # 매핑 파일에서 owner 키의 멘션 배열을 꺼내서 한 줄씩 저장
+                  jq -r --arg key "$owner" '.[$key] // empty | .[]' "$MAPPING_FILE" >> /tmp/mentions.txt
+                done
+              fi
+            done <<< "$CHANGED_FILES"
+          done < "$CODEOWNERS_FILE"
+
+          # 중복 제거 + 공백 정리
+          MENTIONS="$(sort -u /tmp/mentions.txt | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//; s/ *$//')"
+
+          echo "Mentions: $MENTIONS"
+          echo "mentions=$MENTIONS" >> "$GITHUB_OUTPUT"
+
+
       - name: Create PR
+        id: create_pr
         if: steps.check_pr.outputs.exists == 'false'
         env:
-          GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
           set -e
-          gh pr create \
+          PR_URL=$(gh pr create \
             --repo "$REPO" \
             --base main \
             --head "$BRANCH" \
-            --title "schema: update from ($BRANCH)" \
+            --title "schema: update from $BRANCH" \
             --body "Auto-created PR from team repo push: $BRANCH" \
-          || {
+            2>&1) || {
             echo "PR create failed; checking if PR now exists..."
             EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
-            [ "$EXIST" -gt 0 ]
+            if [ "$EXIST" -gt 0 ]; then
+              PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq '.[0].number')
+              PR_URL="https://github.com/$REPO/pull/$PR_NUMBER"
+              echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+              echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+              exit 0
+            else
+              exit 1
+            fi
           }
+          
+          # PR 번호 추출
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "Created PR #$PR_NUMBER"
+
+      - name: Send Slack Notification
+        if: steps.create_pr.outputs.pr_number != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
+          PR_URL: ${{ steps.create_pr.outputs.pr_url }}
+          MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
+          CHANGED_DIRS: ${{ steps.changed_files.outputs.dirs }}
+        run: |
+          set -e
+          
+          # 변경된 디렉토리 목록 포맷팅
+          DIR_LIST=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sed '/^$/d' | awk '{print "• `" $0 "`"}' | paste -sd '\n' -)
+          
+          # 디렉토리 목록이 비어있으면 기본 메시지
+          if [ -z "$DIR_LIST" ]; then
+            DIR_LIST="• (변경사항 확인 중)"
+          fi
+          
+          STATUS="${{ job.status }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          
+          # 멘션 메시지 구성
+          MENTION_TEXT=""
+          if [ -n "$MENTIONS" ]; then
+            MENTION_TEXT="\n:bell: 리뷰어: $MENTIONS"
+          fi
+          
+          # Slack 메시지 전송
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"text\": \":rocket: [#${PR_NUMBER}] Schema PR 생성 완료${MENTION_TEXT}\",
+            \"blocks\": [
+              {
+                \"type\": \"header\",
+                \"text\": {
+                  \"type\": \"plain_text\",
+                  \"text\": \":rocket: Schema PR 생성 완료\",
+                  \"emoji\": true
+                }
+              },
+              {
+                \"type\": \"section\",
+                \"fields\": [
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Repository:*\n${{ github.repository }}\"
+                  },
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Branch:*\n\`${{ github.ref_name }}\`\"
+                  },
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Status:*\n\`${STATUS}\`\"
+                  },
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*PR:*\n<${PR_URL}|#${PR_NUMBER}>\"
+                  }
+                ]
+              },
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*변경된 디렉토리:*\n${DIR_LIST}\"
+                }
+              },
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*Commit Message:*\n_${COMMIT_MESSAGE}_\"
+                }
+              },
+              {
+                \"type\": \"context\",
+                \"elements\": [
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"Author: *${{ github.actor }}* | <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|Commit>\"
+                  }
+                ]
+              }
+            ]
+          }" "$SLACK_WEBHOOK_URL"
+
+      - name: Update existing PR with comment
+        if: steps.check_pr.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.check_pr.outputs.pr_number }}
+        run: |
+          gh pr comment "$PR_NUMBER" \
+            --repo "$REPO" \
+            --body ":arrows_counterclockwise: 새로운 커밋이 푸시되었습니다: ${{ github.sha }}"
