@@ -77,6 +77,7 @@
         "DOCKING_WAITING_TIME": "10.0",
         "DOCKING_X_OFFSET": "0.0",
         "DOCKING_Y_OFFSET": "0.0",
+        "DOCKING_RETRY_COUNT": "3",
         "LIDAR_TYPE": "SICK",
         "XNERGY_SET_CURRENT": "8"
     },
@@ -257,8 +258,12 @@
         "USE_CAM_FILTER": false,
         "USE_CAM_RGB": true,
         "USE_IMU": false,
+        "USE_BLIDAR": false,
         "USE_LIDAR_2D": true,
-        "USE_LIDAR_3D": false
+        "USE_LIDAR_3D": false,
+        "USE_CAM_OBSTACLE": true,
+        "USE_LIDAR_2D_OBSTACLE": true,
+        "USE_LIDAR_3D_OBSTACLE": false
     },
     "update": {
         "CONFIG": false
