@@ -105,6 +105,17 @@ jobs:
             MENTION_TEXT="\n:bell: 관련자: $MENTIONS"
           fi
 
+          MENTION_BLOCK=""
+          if [ -n "$MENTIONS" ]; then
+            MENTION_BLOCK=",
+            {
+                \"type\": \"section\",
+                \"text\": {
+                \"type\": \"mrkdwn\",
+                \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
+                }
+            }"
+          fi
           curl -X POST -H 'Content-type: application/json' --data "{
             \"text\": \":white_check_mark: [#${PR_NUMBER}] Schema PR 머지 완료${MENTION_TEXT}\",
             \"blocks\": [
@@ -119,6 +130,7 @@ jobs:
                   { \"type\": \"mrkdwn\", \"text\": \"*Title:*\n${TITLE}\" },
                   { \"type\": \"mrkdwn\", \"text\": \"*Merged by:*\n${MERGED_BY}\" }
                 ]
-              }
+              },
+              $MENTION_BLOCK,
             ]
           }" "$SLACK_WEBHOOK_URL"
