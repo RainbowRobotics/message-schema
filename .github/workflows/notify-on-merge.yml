@@ -1,0 +1,124 @@
+name: Notify Slack on schema PR merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: >
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'schema/from-')
+    runs-on: self-hosted
+
+    steps:
+      - name: Build mentions from mapping + CODEOWNERS
+        id: mentions
+        run: |
+          set -e
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          GH_TOKEN="${{ secrets.RB_MSG_SCHEMA_TOKEN }}"
+          export GH_TOKEN
+
+          # PR에서 변경된 파일 목록
+          gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path' > /tmp/changed_files.txt || true
+
+          echo "mentions=" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repo (for CODEOWNERS + mapping)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Parse CODEOWNERS and mapping
+        id: get_mentions
+        run: |
+          set -e
+
+          CODEOWNERS_FILE=".github/CODEOWNERS"
+          MAPPING_FILE=".github/slack-mentions.json"
+
+          if [ ! -f "$CODEOWNERS_FILE" ] || [ ! -f "$MAPPING_FILE" ]; then
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          : > /tmp/mentions.txt
+          CHANGED_FILES="$(cat /tmp/changed_files.txt || true)"
+
+          while IFS= read -r line; do
+            [[ "$line" =~ ^#.*$ ]] && continue
+            [[ -z "${line// }" ]] && continue
+
+            PATTERN="$(echo "$line" | awk '{print $1}')"
+            OWNERS="$(echo "$line" | cut -d' ' -f2-)"
+
+            GLOB_PATTERN="${PATTERN//\*\*/\*}"
+
+            while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+              file_slash="/$file"
+
+              if [[ "$file_slash" == $GLOB_PATTERN ]]; then
+                for owner in $OWNERS; do
+                  jq -r --arg key "$owner" '.[$key] // empty | .[]' "$MAPPING_FILE" >> /tmp/mentions.txt
+                done
+              fi
+            done <<< "$CHANGED_FILES"
+          done < "$CODEOWNERS_FILE"
+
+          MENTIONS="$(sort -u /tmp/mentions.txt | tr '\n' ' ' | sed 's/  */ /g; s/^ *//; s/ *$//')"
+          echo "mentions=$MENTIONS" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack Notification (Merged)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+          MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
+        run: |
+          set -e
+
+          MENTION_TEXT=""
+          if [ -n "$MENTIONS" ]; then
+            MENTION_TEXT="\n:bell: 관련자: $MENTIONS"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"text\": \":white_check_mark: [#${PR_NUMBER}] Schema PR 머지 완료${MENTION_TEXT}\",
+            \"blocks\": [
+              {
+                \"type\": \"header\",
+                \"text\": { \"type\": \"plain_text\", \"text\": \":white_check_mark: Schema PR 머지 완료\", \"emoji\": true }
+              },
+              {
+                \"type\": \"section\",
+                \"fields\": [
+                  { \"type\": \"mrkdwn\", \"text\": \"*PR:*\n<${PR_URL}|#${PR_NUMBER}>\" },
+                  { \"type\": \"mrkdwn\", \"text\": \"*Title:*\n${TITLE}\" },
+                  { \"type\": \"mrkdwn\", \"text\": \"*Merged by:*\n${MERGED_BY}\" }
+                ]
+              }
+            ]
+          }" "$SLACK_WEBHOOK_URL"
