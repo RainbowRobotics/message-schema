@@ -177,103 +177,71 @@ jobs:
       - name: Send Slack Notification
         if: steps.create_pr.outputs.pr_number != ''
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
-          PR_URL: ${{ steps.create_pr.outputs.pr_url }}
-          MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
-          CHANGED_DIRS: ${{ steps.changed_files.outputs.dirs }}
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
+            PR_URL: ${{ steps.create_pr.outputs.pr_url }}
+            MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
+            CHANGED_DIRS: ${{ steps.changed_files.outputs.dirs }}
         run: |
-          set -e
-          
-          # 변경된 디렉토리 목록 포맷팅
-          DIR_LIST=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sed '/^$/d' | awk '{print "• `" $0 "`"}' | paste -sd '\n' -)
-          
-          # 디렉토리 목록이 비어있으면 기본 메시지
-          if [ -z "$DIR_LIST" ]; then
-            DIR_LIST="• (변경사항 확인 중)"
-          fi
-          
-          STATUS="${{ job.status }}"
-          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          
-          # 멘션 메시지 구성
-          MENTION_TEXT=""
-          if [ -n "$MENTIONS" ]; then
-            MENTION_TEXT="\n:bell: 리뷰어: $MENTIONS"
-          fi
-
-          MENTION_BLOCK=""
-
-          if [ -n "$MENTIONS" ]; then
-            MENTION_BLOCK=",
-            {
-                \"type\": \"section\",
-                \"text\": {
-                \"type\": \"mrkdwn\",
-                \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
-                }
-            }"
-          fi
-          
-          # Slack 메시지 전송
-          curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \":rocket: [#${PR_NUMBER}] Schema PR 생성 완료${MENTION_TEXT}\",
-            \"blocks\": [
-              {
-                \"type\": \"header\",
-                \"text\": {
-                  \"type\": \"plain_text\",
-                  \"text\": \":rocket: Schema PR 생성 완료\",
-                  \"emoji\": true
-                }
-              },
-              {
-                \"type\": \"section\",
-                \"fields\": [
-                  {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"*Repository:*\n${{ github.repository }}\"
-                  },
-                  {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"*Branch:*\n\`${{ github.ref_name }}\`\"
-                  },
-                  {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"*Status:*\n\`${STATUS}\`\"
-                  },
-                  {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"*PR:*\n<${PR_URL}|#${PR_NUMBER}>\"
-                  }
+            set -e
+            
+            # 변수 정리 및 JSON 안전하게 이스케이프 (따옴표 등 처리)
+            DIR_LIST=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sed '/^$/d' | awk '{print "• `" $0 "`"}' | paste -sd '\n' -)
+            [ -z "$DIR_LIST" ] && DIR_LIST="• (변경사항 확인 중)"
+            
+            STATUS="${{ job.status }}"
+            # 커밋 메시지의 따옴표/줄바꿈이 JSON을 깨뜨리지 않도록 변환
+            COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | jq -Ra .)
+            
+            # 기본 블록 구성 (리뷰어 제외)
+            BLOCKS='[
+                {
+                "type": "header",
+                "text": { "type": "plain_text", "text": ":rocket: Schema PR 생성 완료", "emoji": true }
+                },
+                {
+                "type": "section",
+                "fields": [
+                    { "type": "mrkdwn", "text": "*Repository:*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Status:*\n`'"${STATUS}"'`" },
+                    { "type": "mrkdwn", "text": "*PR:*\n<'"${PR_URL}"'|#'"${PR_NUMBER}"'>" }
                 ]
-              },
-              {
+                },
+                {
+                "type": "section",
+                "text": { "type": "mrkdwn", "text": "*변경된 디렉토리:*\n'"${DIR_LIST}"'" }
+                },
+                {
+                "type": "section",
+                "text": { "type": "mrkdwn", "text": "*Commit Message:*\n_" + '"${COMMIT_MSG}"' + "_"
+                }'
+
+            # 리뷰어 블록 (있을 때만 추가)
+            if [ -n "$MENTIONS" ]; then
+                MENTION_TEXT="\\n:bell: 리뷰어: $MENTIONS"
+                BLOCKS="${BLOCKS}, {
                 \"type\": \"section\",
-                \"text\": {
-                  \"type\": \"mrkdwn\",
-                  \"text\": \"*변경된 디렉토리:*\n${DIR_LIST}\"
-                }
-              },
-              {
-                \"type\": \"section\",
-                \"text\": {
-                  \"type\": \"mrkdwn\",
-                  \"text\": \"*Commit Message:*\n_${COMMIT_MESSAGE}_\"
-                }
-              },
-              $MENTION_BLOCK,
-              {
+                \"text\": { \"type\": \"mrkdwn\", \"text\": \"*:bell: 리뷰어:*\\n${MENTIONS}\" }
+                }"
+            else
+                MENTION_TEXT=""
+            fi
+
+            # Context 블록 마감
+            BLOCKS="${BLOCKS}, {
                 \"type\": \"context\",
                 \"elements\": [
-                  {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"Author: *${{ github.actor }}* | <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|Commit>\"
-                  }
+                    { \"type\": \"mrkdwn\", \"text\": \"Author: *${{ github.actor }}* | <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|Commit>\" }
                 ]
-              }
-            ]
-          }" "$SLACK_WEBHOOK_URL"
+                }]"
+
+            # 최종 전송
+            curl -X POST -H 'Content-type: application/json' \
+                --data "{
+                \"text\": \":rocket: [#${PR_NUMBER}] Schema PR 생성 완료${MENTION_TEXT}\",
+                \"blocks\": $BLOCKS
+                }" "$SLACK_WEBHOOK_URL"
 
       - name: Update existing PR with comment
         if: steps.check_pr.outputs.exists == 'true'
