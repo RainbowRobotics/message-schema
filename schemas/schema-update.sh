@@ -6,13 +6,14 @@ function print_string(){
   local RED='\033[0;31m'
   local GREEN='\033[0;32m'
   local YELLOW='\033[1;33m'
+  local BLUE='\033[0;34m'
   local NC='\033[0m'
 
   case "$1" in
     "error") echo -e "${RED}${2}${NC}" ;;
     "success") echo -e "${GREEN}${2}${NC}" ;;
     "warning") echo -e "${YELLOW}${2}${NC}" ;;
-    "info") echo -e "${NC}${2}${NC}" ;;
+    "info") echo -e "${BLUE}${2}${NC}" ;;
   esac
 }
 
