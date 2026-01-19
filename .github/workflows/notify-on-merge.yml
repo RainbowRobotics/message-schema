@@ -91,51 +91,49 @@ jobs:
 
       - name: Send Slack Notification (Merged)
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          TITLE: ${{ github.event.pull_request.title }}
-          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
-          MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            PR_URL: ${{ github.event.pull_request.html_url }}
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            PR_TITLE: ${{ github.event.pull_request.title }}
+            MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+            MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
         run: |
-          set -e
+            set -e
 
-          MENTION_TEXT=""
-          if [ -n "$MENTIONS" ]; then
-            MENTION_TEXT="\n:bell: 관련자: $MENTIONS"
-          fi
+            # 제목 JSON 이스케이프 (따옴표 처리)
+            SAFE_TITLE=$(echo "${PR_TITLE}" | jq -Ra .)
 
-          MENTION_BLOCK=""
-          if [ -n "$MENTIONS" ]; then
-            MENTION_BLOCK="
-            {
-                \"type\": \"section\",
-                \"text\": {
-                    \"type\": \"mrkdwn\",
-                    \"text\": \"*:bell: 리뷰어:*\\n$MENTIONS\"
-                }
-            }"
-          fi
-          
-          curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \":white_check_mark: [#${PR_NUMBER}] Schema PR 머지 완료${MENTION_TEXT}\",
-            \"blocks\": [
+            # 기본 블록 구성 (리뷰어 제외)
+            BLOCKS='[
                 {
-                \"type\": \"header\",
-                \"text\": {
-                    \"type\": \"plain_text\",
-                    \"text\": \":white_check_mark: Schema PR 머지 완료\",
-                    \"emoji\": true
-                }
+                "type": "header",
+                "text": { "type": "plain_text", "text": ":white_check_mark: Schema PR 머지 완료", "emoji": true }
                 },
                 {
-                \"type\": \"section\",
-                \"fields\": [
-                    { \"type\": \"mrkdwn\", \"text\": \"*PR:*\\n<${PR_URL}|#${PR_NUMBER}>\" },
-                    { \"type\": \"mrkdwn\", \"text\": \"*Title:*\\n${TITLE}\" },
-                    { \"type\": \"mrkdwn\", \"text\": \"*Merged by:*\\n${MERGED_BY}\" }
+                "type": "section",
+                "fields": [
+                    { "type": "mrkdwn", "text": "*PR:*\n<'"${PR_URL}"'|#'"${PR_NUMBER}"'>" },
+                    { "type": "mrkdwn", "text": "*Title:*\n'${SAFE_TITLE}'" },
+                    { "type": "mrkdwn", "text": "*Merged by:*\n'"${MERGED_BY}"'" }
                 ]
-                }$( [ -n \"$MENTION_BLOCK\" ] && echo \",\" )
-                $MENTION_BLOCK
-            ]
-           }" "$SLACK_WEBHOOK_URL"
+                }'
+
+            # 멘션이 있으면 블록 추가
+            MENTION_TEXT=""
+            if [ -n "$MENTIONS" ]; then
+                MENTION_TEXT="\\n:bell: 관련자: $MENTIONS"
+                BLOCKS="${BLOCKS}, {
+                \"type\": \"section\",
+                \"text\": { \"type\": \"mrkdwn\", \"text\": \"*:bell: 관련자:*\\n${MENTIONS}\" }
+                }"
+            fi
+
+            # JSON 닫기
+            BLOCKS="${BLOCKS}]"
+
+            # 최종 전송
+            curl -X POST -H 'Content-type: application/json' \
+                --data "{
+                \"text\": \":white_check_mark: [#${PR_NUMBER}] Schema PR 머지 완료${MENTION_TEXT}\",
+                \"blocks\": $BLOCKS
+                }" "$SLACK_WEBHOOK_URL"
