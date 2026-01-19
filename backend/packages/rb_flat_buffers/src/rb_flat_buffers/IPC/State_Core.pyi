@@ -148,6 +148,7 @@ class State_CoreT(object):
     toolDigitalOutput: 'N_DOUT_uT' | None = ...,
     toolAnalogInput: 'N_AIN_fT' | None = ...,
     toolAnalogOutput: 'N_AOUT_fT' | None = ...,
+    toolVoltageOutput: float = ...,
     motionMode: int = ...,
     motionSpeedBar: float = ...,
     motionIsPause: int = ...,
