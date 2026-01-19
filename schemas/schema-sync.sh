@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel)"
+MAIN_REPO="$(git rev-parse --show-toplevel)"
 
 # 기본값
 SCHEMA_DIR="schemas"
@@ -24,7 +24,13 @@ if [ -d "$SCRIPT_DIR/.git" ]; then
     exit 1
 fi
 
-cd "$ROOT"
+cd "$MAIN_REPO"
+
+# SCHEMA_DIR 존재 여부 확인
+if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
+    echo "Error: '$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
+    exit 1
+fi
 
 # remote 확인/추가
 git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || \
@@ -34,18 +40,16 @@ STASH_REF=""
 
 # EXIT 시 stash 원복
 restore_stash() {
-if [[ -n "$STASH_REF" ]]; then
-    echo "DEBUG: Restoring stash $STASH_REF"
-    
-    if git stash apply "$STASH_REF" >/dev/null 2>&1; then
-        git stash drop "$STASH_REF" >/dev/null 2>&1 || true
-        echo "작업 디렉토리가 복원되었습니다."
-    else
-        echo "Warning: stash 복원 실패. 수동 처리 필요:"
-        echo "  git stash apply $STASH_REF"
-        echo "  git stash drop $STASH_REF"
+    if [[ -n "$STASH_REF" ]]; then
+        if git stash apply "$STASH_REF" >/dev/null 2>&1; then
+            git stash drop "$STASH_REF" >/dev/null 2>&1 || true
+            echo "작업 디렉토리가 복원되었습니다."
+        else
+            echo "Warning: stash 복원 실패. 수동 처리 필요:"
+            echo "  git stash apply $STASH_REF"
+            echo "  git stash drop $STASH_REF"
+        fi
     fi
-fi
 }
 
 trap restore_stash EXIT
@@ -54,18 +58,19 @@ trap restore_stash EXIT
 if [[ -n "$(git status --porcelain)" ]]; then
     TOKEN="$(date +%s)-$$"
     MSG="schema-sync auto-stash ${TOKEN}"
-    
-    echo "DEBUG: Creating stash with message: $MSG"
+
     git stash push -u -m "$MSG"
 
-    STASH_REF="$(git stash list --format='%gd %s' | awk -v msg="$MSG" '$0 ~ msg {print $1; exit}')"
-    
+    # set -e 영향 받지 않도록
+    set +e
+    STASH_REF="$(git stash list --format='%gd %s' | grep -F "$MSG" | head -1 | cut -d' ' -f1)"
+    set -e
+
     if [ -z "$STASH_REF" ]; then
         echo "Error: stash가 생성되지 않았습니다"
         exit 1
     fi
 
-    echo "DEBUG: Created stash: $STASH_REF"
     echo "작업 중인 변경사항을 임시 저장: $STASH_REF"
 
     # stash 후에도 더러우면 실패
@@ -75,11 +80,9 @@ if [[ -n "$(git status --porcelain)" ]]; then
     fi
 fi
 
-echo "DEBUG: About to fetch"
 # subtree pull 실행
 git fetch "$REMOTE_NAME" main
 
-echo "DEBUG: About to subtree pull"
 set +e
 SUBTREE_OUT="$(git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
   -m "Sync schemas from ${REMOTE_NAME}/main" 2>&1)"
