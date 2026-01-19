@@ -50,14 +50,16 @@ fi
 cd "$MAIN_REPO"
 
 # SCHEMA_DIR 디렉토리에 변경사항이 있으면 자동 커밋
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR"; then
+if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
+  || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
+  || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
     print_string "info" "schemas 디렉토리에 변경사항 감지. 메인 레포에 커밋합니다..."
 
     # schemas만 커밋 (다른 staged 파일 제외)
     git add "$SCHEMA_DIR"
 
     # 다른 staged 파일이 있으면 경고
-    if ! git diff --cached --quiet --diff-filter=d -- . ":!$SCHEMA_DIR"; then
+    if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
         print_string "warning" "$SCHEMA_DIR 외 다른 staged 파일도 있습니다. 커밋을 취소합니다."
         git reset HEAD "$SCHEMA_DIR"
         exit 1
