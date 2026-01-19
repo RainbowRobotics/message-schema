@@ -65,14 +65,11 @@ void LOCALIZATION::start()
     }
     else if(loc_mode == "3D")
     {
-      // ekf_flag = true;
-      // ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop_3d, this);
+      ekf_flag = true;
+      ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop_3d, this);
 
-      predict_flag = true;
-      predict_thread = std::make_unique<std::thread>(&LOCALIZATION::predict_loop_3d, this);
-
-      estimate_flag = true;
-      estimate_thread = std::make_unique<std::thread>(&LOCALIZATION::estimate_loop_3d, this);
+      icp_flag = true;
+      icp_thread = std::make_unique<std::thread>(&LOCALIZATION::icp_loop_3d, this);
     }
   }
   else
@@ -121,19 +118,12 @@ void LOCALIZATION::stop()
   }
   ekf_thread.reset();
 
-  predict_flag = false;
-  if(predict_thread && predict_thread->joinable())
+  icp_flag = false;
+  if(icp_thread && icp_thread->joinable())
   {
-    predict_thread->join();
+    icp_thread->join();
   }
-  predict_thread.reset();
-
-  estimate_flag = false;
-  if(estimate_thread && estimate_thread->joinable())
-  {
-    estimate_thread->join();
-  }
-  estimate_thread.reset();
+  icp_thread.reset();
 
   odometry_flag = false;
   if(odometry_thread && odometry_thread->joinable())
@@ -1024,130 +1014,6 @@ void LOCALIZATION::ekf_loop()
 
 void LOCALIZATION::ekf_loop_3d()
 {
-  lidar_3d->clear_merged_queue();
-
-  // loop params
-  const double dt = 0.02; // 50hz
-  double pre_loop_time = get_time();
-
-  bool is_use_lidar_3d = false;
-
-  spdlog::info("[LOCALIZATION] ekf_loop_3d start");
-  while(ekf_flag)
-  {
-    MOBILE_POSE cur_mo = mobile->get_pose();
-
-    TIME_POSE cur_mo_tp;
-    cur_mo_tp.t = cur_mo.t;
-    cur_mo_tp.tf = se2_to_TF(cur_mo.pose);
-
-    if(ekf_3d.initialized.load())
-    {
-      ekf_3d.predict(cur_mo_tp);
-    }
-
-    Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
-
-    TIME_PTS frm;
-    if(lidar_3d->try_pop_merged_queue(frm))
-    {
-      if(unimap->get_is_loaded() != MAP_LOADED)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        continue;
-      }
-
-      // icp
-      double test_t = get_time();
-      std::vector<Eigen::Vector3d> dsk = frm.pts;
-      double err = map_icp(dsk, G);
-      printf("proc_t: %f(%f, %f, %f)\n", get_time()-test_t, get_time()-frm.t, get_time()-cur_mo.t, cur_mo.t-frm.t);
-
-      // check ieir
-      cur_ieir = calc_ieir(dsk, G);
-
-      if(err < config->get_loc_2d_icp_error_threshold())
-      {
-        is_use_lidar_3d = true;
-
-        if(!ekf_3d.initialized.load())
-        {
-          TIME_POSE tp;
-          tp.t = frm.t;
-          tp.tf = G;
-          ekf_3d.init(tp);
-        }
-        else
-        {
-          TIME_POSE tp;
-          tp.t = frm.t;
-          tp.tf = G;
-          ekf_3d.estimate(tp);
-
-        }
-        G = ekf_3d.get_cur_tf();
-
-        // local to global deskewed point
-        std::vector<Eigen::Vector3d> pts(frm.pts.size());
-        for(size_t p = 0; p < frm.pts.size(); p++)
-        {
-          Eigen::Vector3d P(frm.pts[p][0], frm.pts[p][1], frm.pts[p][2]);
-          Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
-          pts[p] = _P;
-        }
-
-        {
-          std::lock_guard<std::mutex> lock(mtx);
-          cur_global_scan = pts;
-        }
-      }
-
-      // set localization info for plot
-      cur_tf_err = err;
-
-      // for speed
-      lidar_3d->clear_merged_queue();
-
-      // debug
-      // log_info("frm.t: {:.3f}, cur_mo.t: {:.3f}, diff: {:.3f}", get_time()-frm.t, get_time()-cur_mo.t, frm.t - cur_mo.t);
-
-    }
-
-    // update
-    set_cur_tf(G);
-
-    // set localization info for plot
-    double cur_loop_time = get_time();
-    double delta_loop_time = cur_loop_time - pre_loop_time;
-    if(delta_loop_time < dt)
-    {
-      int sleep_ms = (dt-delta_loop_time)*1000;
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-    }
-    else
-    {
-      if(is_use_lidar_3d)
-      {
-        if(delta_loop_time > 0.2)
-        {
-          log_warn("ekf_loop(3d) time drift, dt: {}, method: lidar", delta_loop_time);
-        }
-      }
-      else
-      {
-        log_warn("ekf_loop(3d) time drift, dt: {}, method: odometry", delta_loop_time);
-      }
-    }
-
-    process_time_localization = cur_loop_time - pre_loop_time;
-    pre_loop_time = cur_loop_time;
-  }
-
-  log_info("ekf_loop(3d) stop");
-}
-
-void LOCALIZATION::predict_loop_3d()
-{
   // loop params
   const double dt = 0.02; // 50hz
   double pre_loop_time = get_time();
@@ -1163,8 +1029,8 @@ void LOCALIZATION::predict_loop_3d()
   MOBILE_POSE pre_mo = mobile->get_pose();
   IMU pre_imu = lidar_3d->get_best_imu(pre_mo.t, 0);
 
-  log_info("predict_loop_3d start");
-  while(predict_flag)
+  log_info("ekf_loop_3d start");
+  while(ekf_flag)
   {
     bool emo_trig = true;
     if(config->get_robot_model() == RobotModel::S100)
@@ -1256,18 +1122,12 @@ void LOCALIZATION::predict_loop_3d()
     if(has_icp_result)
     {
       // compensate time delay
-      Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(icp_res.t).pose);
-      Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-      Eigen::Vector3d delta_xi = TF_to_se2(tf0.inverse() * tf1);
-      icp_res.tf = icp_res.tf * ZYX_to_TF(0, 0, 0, 0, 0, delta_xi[2]);
-
-      // IMU imu0 = lidar_3d->get_best_imu(icp_res.t, 0);
-      // IMU imu1 = cur_imu;
-      // Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
-      // Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
-      // icp_res.tf.block(0,0,3,3) = icp_res.tf.block(0,0,3,3)*(R0.inverse() * R1);
-
-      // printf("cur_imu(%.2f)-cur_mo.t(%.2f)=%.2f (%.2f)\n", cur_imu.t, cur_mo.t, cur_imu.t - cur_mo.t, get_time()-cur_mo.t);
+      IMU imu0 = lidar_3d->get_best_imu(icp_res.t + (get_time()-cur_mo.t), 0);
+      IMU imu1 = cur_imu;
+      Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
+      Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
+      icp_res.tf.block(0,0,3,3) = icp_res.tf.block(0,0,3,3)*(R0.inverse() * R1);
+      // printf("cur_imu(%.2f)-cur_mo.t(%.2f)=%.2f-> %.2f (%.2f)\n", cur_imu.t, cur_mo.t, cur_imu.t - cur_mo.t, icp_res.t + (get_time()-cur_mo.t) - cur_mo.t, get_time()-cur_mo.t);
 
       if(ekf_3d.initialized.load())
       {
@@ -1325,24 +1185,22 @@ void LOCALIZATION::predict_loop_3d()
     {
       if(delta_loop_time > 0.1)
       {
-        log_warn("predict_loop_3d time drift, dt: {}, method: lidar", delta_loop_time);
+        log_warn("ekf_loop_3d time drift, dt: {}, method: lidar", delta_loop_time);
       }
     }
 
     process_time_localization = cur_loop_time - pre_loop_time;
     pre_loop_time = cur_loop_time;
   }
-  log_info("predict_loop_3d stop");
+  log_info("ekf_loop_3d stop");
 }
 
-void LOCALIZATION::estimate_loop_3d()
+void LOCALIZATION::icp_loop_3d()
 {
   lidar_3d->clear_merged_queue();
 
-  int icp_fail_cnt = 0;
-
-  log_info("estimate_loop_3d start");
-  while(estimate_flag)
+  log_info("icp_loop_3d start");
+  while(icp_flag)
   {
     TIME_PTS frm;
     if(lidar_3d->try_pop_merged_queue(frm))
@@ -1380,11 +1238,6 @@ void LOCALIZATION::estimate_loop_3d()
         icp_res.tf = G;
 
         icp_res_que.push(icp_res);
-        icp_fail_cnt = 0;
-      }
-      else
-      {
-        icp_fail_cnt++;
       }
 
       // global scan update
@@ -1417,7 +1270,7 @@ void LOCALIZATION::estimate_loop_3d()
   }
 
   icp_res_que.clear();
-  log_info("estimate_loop_3d stop");
+  log_info("icp_loop_3d stop");
 }
 
 void LOCALIZATION::obs_loop()
