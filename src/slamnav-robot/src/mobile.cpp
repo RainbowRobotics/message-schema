@@ -1368,15 +1368,15 @@ void MOBILE::receive_data_loop()
               if(is_first_receive)
               {
                 is_first_receive = false;
-                input_voltage = bat_out;
+                input_voltage = bat_in;
               }
               if(bat_out < input_voltage && charge_state == 0)
               {
-                input_voltage = bat_out;
+                input_voltage = bat_in;
               }
               if(bat_out >= input_voltage && charge_state != 0)
               {
-                input_voltage = bat_out;
+                input_voltage = bat_in;
               }
               int bat_percent = calc_battery_percentage(input_voltage);
 
@@ -1721,7 +1721,7 @@ void MOBILE::receive_data_loop()
               cur_status.contact_voltage = contact_voltage;
               cur_status.charge_current = charge_current;
               cur_status.power = main_power;
-              cur_status.bat_percent = calc_battery_percentage(bat_out);
+              cur_status.bat_percent = calc_battery_percentage(bat_in);
 
               log_debug("[MOBILE] Power info - bat_in: {:.2f}, bat_out: {:.2f}, bat_cur: {:.2f}, power: {:.2f}, bat_percent: {} %",
                      bat_in, bat_out, bat_cur, main_power, cur_status.bat_percent);
