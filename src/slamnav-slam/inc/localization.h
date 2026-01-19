@@ -116,21 +116,16 @@ private:
   std::unique_ptr<std::thread> odometry_thread;        // odometry thread
   void odometry_loop();                                // odometry loop
 
+  // ekf thread
   std::atomic<bool> ekf_flag = {false};                // ekf thread flag (for localization)
   std::unique_ptr<std::thread> ekf_thread;             // ekf thread
   void ekf_loop();                                     // ekf loop (2D)
   void ekf_loop_3d();                                  // ekf loop (3D)
 
-  // ekf thread
-  std::atomic<bool> predict_flag = {false};            // ekf predict thread flag
-  std::unique_ptr<std::thread> predict_thread;         // ekf predict thread
-  // void predict_loop();
-  void predict_loop_3d();
-
-  std::atomic<bool> estimate_flag = {false};            // ekf estimate thread flag
-  std::unique_ptr<std::thread> estimate_thread;         // ekf estimate thread
-  // void estimate_loop();
-  void estimate_loop_3d();
+  std::atomic<bool> icp_flag = {false};
+  std::unique_ptr<std::thread> icp_thread;
+  // void icp_loop();
+  void icp_loop_3d();
 
   std::atomic<bool> obs_flag = {false};                 // obstacle thread flag (obstacle map update)
   std::unique_ptr<std::thread> obs_thread;              // obstacle thread

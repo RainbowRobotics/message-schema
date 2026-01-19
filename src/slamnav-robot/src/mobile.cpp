@@ -562,7 +562,7 @@ void MOBILE::receive_data_loop()
                 is_sync = false;
 
                 double _mobile_t = recv_tick * MOBILE_INFO::pdu_tick_resolution;
-                double _offset_t = pc_t - _mobile_t;
+                double _offset_t = (double)pc_time_received - _mobile_t;
                 offset_t = _offset_t;
 
                 is_synced = true;
@@ -1356,7 +1356,7 @@ void MOBILE::receive_data_loop()
                 is_sync = false;
 
                 double _mobile_t = recv_tick * MOBILE_INFO::pdu_tick_resolution;
-                double _offset_t = pc_t - _mobile_t;
+                double _offset_t = (double)return_time - _mobile_t;
                 offset_t = _offset_t;
 
                 is_synced = true;
