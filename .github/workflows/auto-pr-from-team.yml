@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Check PR exists
         id: check_pr
@@ -41,29 +41,26 @@ jobs:
       - name: Get changed files
         id: changed_files
         run: |
-          set -e
+            set -e
+            
+            # origin/main의 최신 상태를 강제로 가져옴
+            git fetch origin main --prune --unshallow || git fetch origin main --prune
 
-          git fetch origin main:refs/remotes/origin/main --depth=1
+            # main과 현재 HEAD 사이의 모든 변경된 파일 추출
+            CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+            
+            if [ -z "$CHANGED_FILES" ]; then
+                echo "Warning: No changed files detected. Checking against common ancestor..."
+                CHANGED_FILES=$(git diff --name-only $(git merge-base origin/main HEAD) HEAD)
+            fi
 
-          # main과 비교하여 변경된 파일 목록
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD || echo "")
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-          
-          # 변경된 디렉토리 추출
-          CHANGED_DIRS="$(printf "%s\n" "$CHANGED_FILES" \
-            | grep -oE '^[^/]+/' \
-            | sort -u \
-            | sed 's|/$||' \
-            | tr '\n' ' ' \
-            | sed 's/  */ /g; s/^ *//; s/ *$//' \
-            || true)"
-
-          echo "dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
-
-          
-          # 파일 목록을 임시 파일로 저장
-          echo "$CHANGED_FILES" > /tmp/changed_files.txt
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+            echo "$CHANGED_FILES" > /tmp/changed_files.txt
+            
+            # 디렉토리 추출
+            CHANGED_DIRS=$(echo "$CHANGED_FILES" | grep -oE '^[^/]+/' | sort -u | sed 's|/$||' | tr '\n' ' ')
+            echo "dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
 
       - name: Parse CODEOWNERS and get mentions
         id: get_mentions
