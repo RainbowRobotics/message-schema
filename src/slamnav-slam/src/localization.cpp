@@ -1122,12 +1122,11 @@ void LOCALIZATION::ekf_loop_3d()
     if(has_icp_result)
     {
       // compensate time delay
-      IMU imu0 = lidar_3d->get_best_imu(icp_res.t + (get_time()-cur_mo.t), 0);
+      IMU imu0 = lidar_3d->get_best_imu(icp_res.t, 0);
       IMU imu1 = cur_imu;
       Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
       Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
       icp_res.tf.block(0,0,3,3) = icp_res.tf.block(0,0,3,3)*(R0.inverse() * R1);
-      // printf("cur_imu(%.2f)-cur_mo.t(%.2f)=%.2f-> %.2f (%.2f)\n", cur_imu.t, cur_mo.t, cur_imu.t - cur_mo.t, icp_res.t + (get_time()-cur_mo.t) - cur_mo.t, get_time()-cur_mo.t);
 
       if(ekf_3d.initialized.load())
       {
