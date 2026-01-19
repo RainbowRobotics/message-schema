@@ -1,6 +1,6 @@
 {
-    "@RainbowRobotics/zenoh-zenoh-zenoh": ["<@U01234ABCD>", "<@U04567EFGH>"],
-    "@RainbowRobotics/rby2": ["<@U11111AAAA>"],
-    "@rainbow-mobile/app_slamnav2": ["<@U22222BBBB>", "<@U33333CCCC>"]
+    "@RainbowRobotics/zenoh-zenoh-zenoh": [],
+    "@RainbowRobotics/rby2": ["<@U08RZLRRFGA>", "<@U08RTQCSS21>"],
+    "@rainbow-mobile/app_slamnav2": ["<@U0A0KMTFP9T>"]
   }
   
