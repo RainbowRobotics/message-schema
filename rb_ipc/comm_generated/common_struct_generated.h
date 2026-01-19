@@ -25,6 +25,10 @@ struct N_DIN_u;
 
 struct N_DOUT_u;
 
+struct N_DIN_b;
+
+struct N_DOUT_b;
+
 struct N_AIN_f;
 
 struct N_AOUT_f;
@@ -131,6 +135,40 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) N_DOUT_u FLATBUFFERS_FINAL_CLASS {
   }
 };
 FLATBUFFERS_STRUCT_END(N_DOUT_u, 16);
+
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) N_DIN_b FLATBUFFERS_FINAL_CLASS {
+ private:
+  int8_t b_[16];
+
+ public:
+  N_DIN_b()
+      : b_() {
+  }
+  N_DIN_b(::flatbuffers::span<const int8_t, 16> _b) {
+    ::flatbuffers::CastToArray(b_).CopyFromSpan(_b);
+  }
+  const ::flatbuffers::Array<int8_t, 16> *b() const {
+    return &::flatbuffers::CastToArray(b_);
+  }
+};
+FLATBUFFERS_STRUCT_END(N_DIN_b, 16);
+
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) N_DOUT_b FLATBUFFERS_FINAL_CLASS {
+ private:
+  int8_t b_[16];
+
+ public:
+  N_DOUT_b()
+      : b_() {
+  }
+  N_DOUT_b(::flatbuffers::span<const int8_t, 16> _b) {
+    ::flatbuffers::CastToArray(b_).CopyFromSpan(_b);
+  }
+  const ::flatbuffers::Array<int8_t, 16> *b() const {
+    return &::flatbuffers::CastToArray(b_);
+  }
+};
+FLATBUFFERS_STRUCT_END(N_DOUT_b, 16);
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) N_AIN_f FLATBUFFERS_FINAL_CLASS {
  private:

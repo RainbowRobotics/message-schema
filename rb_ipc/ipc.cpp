@@ -275,8 +275,8 @@ namespace rb_ipc {
             });
             ADD_SERVE_BLANK("call_config_controlbox", IPC::Request_CallConfigControlBox, IPC::Response_CallConfigControlBox, {
                 IPC::Response_CallConfigControlBoxT cbox_T; 
-                cbox_T.dout_special_func = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Box_Special_Dout());
-                cbox_T.din_special_func = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_Special_Din());
+                cbox_T.dout_special_func = std::make_unique<IPC::N_DOUT_b>(rb_system::Get_Box_Special_Dout());
+                cbox_T.din_special_func = std::make_unique<IPC::N_DIN_b>(rb_system::Get_Box_Special_Din());
                 cbox_T.din_filter_count = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_FilterCount_Din());         
 
                 for (int i = 0; i < NO_OF_AREA; ++i) {

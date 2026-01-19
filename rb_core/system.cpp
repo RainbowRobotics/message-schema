@@ -1799,8 +1799,8 @@ namespace rb_system {
         return _gv_Handler_Toolflange->Get_State().voltage;
     }
 
-    std::array<uint8_t, NO_OF_DOUT> Get_Box_Special_Dout(){
-        std::array<uint8_t, NO_OF_DOUT> ret;
+    std::array<int8_t, NO_OF_DOUT> Get_Box_Special_Dout(){
+        std::array<int8_t, NO_OF_DOUT> ret;
         for(int i = 0; i < NO_OF_DOUT; ++i){
             ret[i] = parameter_special_dout_box[i];
         }
@@ -1833,8 +1833,8 @@ namespace rb_system {
         return MSG_OK;
     }
 
-    std::array<uint8_t, NO_OF_DIN> Get_Box_Special_Din(){
-        std::array<uint8_t, NO_OF_DIN> ret;
+    std::array<int8_t, NO_OF_DIN> Get_Box_Special_Din(){
+        std::array<int8_t, NO_OF_DIN> ret;
         for(int i = 0; i < NO_OF_DIN; ++i){
             ret[i] = parameter_special_din_box[i];
         }

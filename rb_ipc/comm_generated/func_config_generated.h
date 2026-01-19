@@ -556,8 +556,8 @@ inline ::flatbuffers::Offset<ST_Config_UserFrame> CreateST_Config_UserFrameDirec
 
 struct Response_CallConfigControlBoxT : public ::flatbuffers::NativeTable {
   typedef Response_CallConfigControlBox TableType;
-  std::unique_ptr<IPC::N_DOUT_u> dout_special_func{};
-  std::unique_ptr<IPC::N_DIN_u> din_special_func{};
+  std::unique_ptr<IPC::N_DOUT_b> dout_special_func{};
+  std::unique_ptr<IPC::N_DIN_b> din_special_func{};
   std::unique_ptr<IPC::N_DIN_u> din_filter_count{};
   std::unique_ptr<IPC::ST_Config_AreaT> area_configs_0{};
   std::unique_ptr<IPC::ST_Config_AreaT> area_configs_1{};
@@ -605,11 +605,11 @@ struct Response_CallConfigControlBox FLATBUFFERS_FINAL_CLASS : private ::flatbuf
     VT_USER_FRAME_6 = 38,
     VT_USER_FRAME_7 = 40
   };
-  const IPC::N_DOUT_u *dout_special_func() const {
-    return GetStruct<const IPC::N_DOUT_u *>(VT_DOUT_SPECIAL_FUNC);
+  const IPC::N_DOUT_b *dout_special_func() const {
+    return GetStruct<const IPC::N_DOUT_b *>(VT_DOUT_SPECIAL_FUNC);
   }
-  const IPC::N_DIN_u *din_special_func() const {
-    return GetStruct<const IPC::N_DIN_u *>(VT_DIN_SPECIAL_FUNC);
+  const IPC::N_DIN_b *din_special_func() const {
+    return GetStruct<const IPC::N_DIN_b *>(VT_DIN_SPECIAL_FUNC);
   }
   const IPC::N_DIN_u *din_filter_count() const {
     return GetStruct<const IPC::N_DIN_u *>(VT_DIN_FILTER_COUNT);
@@ -664,8 +664,8 @@ struct Response_CallConfigControlBox FLATBUFFERS_FINAL_CLASS : private ::flatbuf
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<IPC::N_DOUT_u>(verifier, VT_DOUT_SPECIAL_FUNC, 1) &&
-           VerifyField<IPC::N_DIN_u>(verifier, VT_DIN_SPECIAL_FUNC, 1) &&
+           VerifyField<IPC::N_DOUT_b>(verifier, VT_DOUT_SPECIAL_FUNC, 1) &&
+           VerifyField<IPC::N_DIN_b>(verifier, VT_DIN_SPECIAL_FUNC, 1) &&
            VerifyField<IPC::N_DIN_u>(verifier, VT_DIN_FILTER_COUNT, 1) &&
            VerifyOffset(verifier, VT_AREA_CONFIGS_0) &&
            verifier.VerifyTable(area_configs_0()) &&
@@ -710,10 +710,10 @@ struct Response_CallConfigControlBoxBuilder {
   typedef Response_CallConfigControlBox Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_dout_special_func(const IPC::N_DOUT_u *dout_special_func) {
+  void add_dout_special_func(const IPC::N_DOUT_b *dout_special_func) {
     fbb_.AddStruct(Response_CallConfigControlBox::VT_DOUT_SPECIAL_FUNC, dout_special_func);
   }
-  void add_din_special_func(const IPC::N_DIN_u *din_special_func) {
+  void add_din_special_func(const IPC::N_DIN_b *din_special_func) {
     fbb_.AddStruct(Response_CallConfigControlBox::VT_DIN_SPECIAL_FUNC, din_special_func);
   }
   void add_din_filter_count(const IPC::N_DIN_u *din_filter_count) {
@@ -780,8 +780,8 @@ struct Response_CallConfigControlBoxBuilder {
 
 inline ::flatbuffers::Offset<Response_CallConfigControlBox> CreateResponse_CallConfigControlBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const IPC::N_DOUT_u *dout_special_func = nullptr,
-    const IPC::N_DIN_u *din_special_func = nullptr,
+    const IPC::N_DOUT_b *dout_special_func = nullptr,
+    const IPC::N_DIN_b *din_special_func = nullptr,
     const IPC::N_DIN_u *din_filter_count = nullptr,
     ::flatbuffers::Offset<IPC::ST_Config_Area> area_configs_0 = 0,
     ::flatbuffers::Offset<IPC::ST_Config_Area> area_configs_1 = 0,
@@ -1503,8 +1503,8 @@ inline ::flatbuffers::Offset<ST_Config_UserFrame> CreateST_Config_UserFrame(::fl
 }
 
 inline Response_CallConfigControlBoxT::Response_CallConfigControlBoxT(const Response_CallConfigControlBoxT &o)
-      : dout_special_func((o.dout_special_func) ? new IPC::N_DOUT_u(*o.dout_special_func) : nullptr),
-        din_special_func((o.din_special_func) ? new IPC::N_DIN_u(*o.din_special_func) : nullptr),
+      : dout_special_func((o.dout_special_func) ? new IPC::N_DOUT_b(*o.dout_special_func) : nullptr),
+        din_special_func((o.din_special_func) ? new IPC::N_DIN_b(*o.din_special_func) : nullptr),
         din_filter_count((o.din_filter_count) ? new IPC::N_DIN_u(*o.din_filter_count) : nullptr),
         area_configs_0((o.area_configs_0) ? new IPC::ST_Config_AreaT(*o.area_configs_0) : nullptr),
         area_configs_1((o.area_configs_1) ? new IPC::ST_Config_AreaT(*o.area_configs_1) : nullptr),
@@ -1556,8 +1556,8 @@ inline Response_CallConfigControlBoxT *Response_CallConfigControlBox::UnPack(con
 inline void Response_CallConfigControlBox::UnPackTo(Response_CallConfigControlBoxT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = dout_special_func(); if (_e) _o->dout_special_func = std::unique_ptr<IPC::N_DOUT_u>(new IPC::N_DOUT_u(*_e)); }
-  { auto _e = din_special_func(); if (_e) _o->din_special_func = std::unique_ptr<IPC::N_DIN_u>(new IPC::N_DIN_u(*_e)); }
+  { auto _e = dout_special_func(); if (_e) _o->dout_special_func = std::unique_ptr<IPC::N_DOUT_b>(new IPC::N_DOUT_b(*_e)); }
+  { auto _e = din_special_func(); if (_e) _o->din_special_func = std::unique_ptr<IPC::N_DIN_b>(new IPC::N_DIN_b(*_e)); }
   { auto _e = din_filter_count(); if (_e) _o->din_filter_count = std::unique_ptr<IPC::N_DIN_u>(new IPC::N_DIN_u(*_e)); }
   { auto _e = area_configs_0(); if (_e) { if(_o->area_configs_0) { _e->UnPackTo(_o->area_configs_0.get(), _resolver); } else { _o->area_configs_0 = std::unique_ptr<IPC::ST_Config_AreaT>(_e->UnPack(_resolver)); } } else if (_o->area_configs_0) { _o->area_configs_0.reset(); } }
   { auto _e = area_configs_1(); if (_e) { if(_o->area_configs_1) { _e->UnPackTo(_o->area_configs_1.get(), _resolver); } else { _o->area_configs_1 = std::unique_ptr<IPC::ST_Config_AreaT>(_e->UnPack(_resolver)); } } else if (_o->area_configs_1) { _o->area_configs_1.reset(); } }

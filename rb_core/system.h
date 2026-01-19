@@ -243,11 +243,11 @@ namespace rb_system {
     std::array<float, NO_OF_AIN>        Get_Tool_Ain();
     int                                 Get_Tool_Voltage();
     
-    std::array<uint8_t, NO_OF_DOUT>     Get_Box_Special_Dout();
+    std::array<int8_t, NO_OF_DOUT>      Get_Box_Special_Dout();
     int                                 Save_Box_Special_Dout(unsigned int p_num, int func_no);
     int                                 Recover_Box_Special_Dout(int p_num);
 
-    std::array<uint8_t, NO_OF_DIN>      Get_Box_Special_Din();
+    std::array<int8_t, NO_OF_DIN>       Get_Box_Special_Din();
     int                                 Save_Box_Special_Din(unsigned int p_num, int func_no);
     int                                 Recover_Box_Special_Din(int p_num);
 
