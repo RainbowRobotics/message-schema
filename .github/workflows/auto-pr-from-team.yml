@@ -1,0 +1,52 @@
+name: Auto PR from team push (schema/from-*)
+
+on:
+  push:
+    branches:
+      - "schema/from-*"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pull-request-to-main:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check PR exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+          if [ "$EXIST" -gt 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT" 
+            echo "PR already exists for $BRANCH"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No PR for $BRANCH"
+          fi
+
+      - name: Create PR
+        if: steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          gh pr create \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH" \
+            --title "schema: update from ($BRANCH)" \
+            --body "Auto-created PR from team repo push: $BRANCH" \
+          || {
+            echo "PR create failed; checking if PR now exists..."
+            EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+            [ "$EXIST" -gt 0 ]
+          }
