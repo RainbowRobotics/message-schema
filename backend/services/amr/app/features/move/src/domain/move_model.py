@@ -58,6 +58,7 @@ class MoveModel:
     [AMR 이동 모델]
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    robot_model: str | None = None
     command: AmrMoveCommandEnum | None = None
     status: AmrResponseStatusEnum = field(default=AmrResponseStatusEnum.PENDING)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -90,6 +91,13 @@ class MoveModel:
     goal_name: str | None = None
     bat_percent: int | None = None
     map_name: str | None = None
+
+    def set_robot_model(self, robot_model: str):
+        """
+        - robot_model: str
+        - return: None
+        """
+        self.robot_model = robot_model
 
     def set_move_goal(self, req: Request_Move_GoalPD):
         """
@@ -210,6 +218,8 @@ class MoveModel:
         """
         - return: None
         """
+        if self.robot_model is None:
+            raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
         if self.command == AmrMoveCommandEnum.MOVE_GOAL:
             if self.goal_id == "":
                 raise ServiceException("goal_id 값이 없습니다", status_code=400)

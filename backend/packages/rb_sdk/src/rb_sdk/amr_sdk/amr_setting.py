@@ -17,16 +17,13 @@ from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_Index import Response_Set_Senso
 from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_On import Response_Set_Sensor_OnT
 from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_InfoT
 from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_ParamT
-from rb_zenoh.client import ZenohClient
+from ..base import RBBaseSDK
 
 from .schema.amr_setting_schema import SlamnavSettingPort
 
 
-class RBAmrSettingSDK(SlamnavSettingPort):
+class RBAmrSettingSDK(RBBaseSDK,SlamnavSettingPort):
     """Rainbow Robotics AMR Setting SDK"""
-    client: ZenohClient
-    def __init__(self, client: ZenohClient):
-        self.client = client
 
     async def get_robot_type(self, robot_model: str, req_id: str) -> Response_Get_Robot_TypeT:
         """
@@ -38,14 +35,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req = Request_Get_Robot_TypeT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/get_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Robot_TypeT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Get Robot Type failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_robot_type(self, robot_model: str, req_id: str, robot_type: str) -> Response_Set_Robot_TypeT:
         """
@@ -58,14 +58,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.id = req_id
         req.robot_type = robot_type
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/set_robot_type",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Robot_TypeT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Set Robot Type failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def get_sensor_index(self, robot_model: str, req_id: str, target: str) -> Response_Get_Sensor_IndexT:
         """
@@ -78,14 +81,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.id = req_id
         req.target = target
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/get_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_IndexT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Get Sensor Index failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_sensor_index(self, robot_model: str, req_id: str, target: str, index: list[Sensor_InfoT]) -> Response_Set_Sensor_IndexT:
         """
@@ -99,14 +105,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.target = target
         req.index = index
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/set_sensor_index",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_IndexT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Set Sensor Index failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_sensor_on(self, robot_model: str, req_id: str, index: list[Sensor_InfoT]) -> Response_Set_Sensor_OnT:
         """
@@ -119,14 +128,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.id = req_id
         req.index = index
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/set_sensor_on",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Sensor_OnT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Set Sensor On failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def get_sensor_off(self, robot_model: str, req_id: str, index: list[Sensor_InfoT]) -> Response_Get_Sensor_OffT:
         """
@@ -139,14 +151,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.id = req_id
         req.index = index
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/get_sensor_off",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Sensor_OffT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Get Sensor Off failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def get_pdu_param(self, robot_model: str, req_id: str) -> Response_Get_Pdu_ParamT:
         """
@@ -158,14 +173,17 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req = Request_Get_Pdu_ParamT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/get_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Pdu_ParamT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Get PDU Param failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_pdu_param(self, robot_model: str, req_id: str, params: list[Setting_ParamT]) -> Response_Set_Pdu_ParamT:
         """
@@ -178,11 +196,14 @@ class RBAmrSettingSDK(SlamnavSettingPort):
         req.id = req_id
         req.params = params
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/setting/set_pdu_param",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Pdu_ParamT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Set PDU Param failed: obj_payload is None")
+
+        return result["obj_payload"]

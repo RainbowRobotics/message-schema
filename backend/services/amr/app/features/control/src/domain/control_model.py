@@ -70,6 +70,7 @@ class ControlModel:
     [AMR 이동 모델]
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    robot_model: str | None = None
     command: AmrControlCommandEnum | None = None
     status: AmrResponseStatusEnum = field(default=AmrResponseStatusEnum.PENDING)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -106,6 +107,12 @@ class ControlModel:
 
     # ExternalAccessory
     foot_position: str | None = None
+
+    def set_robot_model(self, robot_model: str):
+        """
+        """
+        self.robot_model = robot_model
+        self.update_at = datetime.now(UTC)
 
     def control_frequency(self, req: Request_Control_FrequencyPD):
         """
@@ -239,6 +246,8 @@ class ControlModel:
     def check_variables(self) -> None:
         """
         """
+        if self.robot_model is None:
+            raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
         if self.command == AmrControlCommandEnum.CONTROL_FREQUENCY:
             if self.target is None:
                 raise ServiceException("target 값이 비어있습니다", status_code=400)

@@ -23,23 +23,29 @@ from rb_flat_buffers.SLAMNAV.Response_Safety_Field import Response_Safety_FieldT
 from rb_flat_buffers.SLAMNAV.Response_Safety_Io import Response_Safety_IoT
 from rb_flat_buffers.SLAMNAV.Response_Undock import Response_UndockT
 from rb_flat_buffers.SLAMNAV.Safety_Flag import Safety_FlagT
-from rb_zenoh.client import ZenohClient
+from ..base import RBBaseSDK
 
 from .schema.amr_control_schema import SlamnavControlPort
 
 
-class RBAmrControlSDK(SlamnavControlPort):
+class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
     """Rainbow Robotics AMR Control SDK"""
-    client: ZenohClient
-    def __init__(self, client: ZenohClient):
-        self.client = client
 
     async def control_frequency(self, robot_model: str, req_id: str, target: str, onoff: bool, frequency: int) -> Response_FrequencyT:
         """
-        [Control Frequency 전송]
-        - model: ControlRequestModel
-        - Response_FrequencyT 객체 반환
+        Control Frequency 전송]
+
+        Args:
+            robot_model: 로봇 모델명
+            req_id: 요청 ID
+            target: 대상
+            onoff: 켜기/끄기
+            frequency: 주기
+
+        Returns:
+            Response_FrequencyT: 응답 객체
         """
+
         # 1) Request_FrequencyT 객체 생성
         req = Request_FrequencyT()
         req.id = req_id
@@ -48,7 +54,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.frequency = frequency
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/frequency",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FrequencyT,
@@ -56,7 +62,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Frequency failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_led(self, robot_model: str, req_id: str, onoff: bool, color: str) -> Response_LedT:
         """
@@ -64,6 +73,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         - model: ControlRequestModel
         - Response_Control_LEDT 객체 반환
         """
+
         # 1) Request_Control_LEDT 객체 생성
         req = Request_LedT()
         req.id = req_id
@@ -71,7 +81,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.color = color
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/led",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_LedT,
@@ -79,7 +89,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control LED failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_motor(self, robot_model: str, req_id: str, onoff: bool) -> Response_MotorT:
         """
@@ -93,7 +106,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.onoff = onoff
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/motor",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_MotorT,
@@ -101,7 +114,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_dock(self, robot_model: str, req_id: str) -> Response_DockT:
         """
@@ -114,7 +130,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/dock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_DockT,
@@ -124,7 +140,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         print(result)
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Undock failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_undock(self, robot_model: str, req_id: str) -> Response_UndockT:
         """
@@ -137,7 +156,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/dock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_UndockT,
@@ -145,7 +164,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Undock failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_dock_stop(self, robot_model: str, req_id: str) -> Response_DockStopT:
         """
@@ -158,7 +180,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/dockStop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_DockStopT,
@@ -166,7 +188,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Dock Stop failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_obs_box(self, robot_model: str, req_id: str, command: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> Response_Obs_BoxT:
         """
@@ -187,7 +212,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.mapRange = map_range
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/obs_box",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Obs_BoxT,
@@ -195,7 +220,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Obs Box failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_safety_field(self, robot_model: str, req_id: str, command: str, safety_field: int) -> Response_Safety_FieldT:
         """
@@ -209,7 +237,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.command = command
         req.safety_field = safety_field
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/safety_field",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_FieldT,
@@ -217,7 +245,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Safety Field failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_reset_safety_flag(self, robot_model: str, req_id: str, reset_flag: list[Safety_FlagT]) -> Response_Reset_Safety_FlagT:
         """
@@ -225,13 +256,14 @@ class RBAmrControlSDK(SlamnavControlPort):
         - model: ControlRequestModel
         - Response_Reset_Safety_FlagT 객체 반환
         """
+
         # 1) Request_Reset_Safety_FlagT 객체 생성
         req = Request_Reset_Safety_FlagT()
         req.id = req_id
         req.reset_flag = reset_flag
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/reset_safety_flag",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Reset_Safety_FlagT,
@@ -239,7 +271,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Reset Safety Flag failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_safety_io(self, robot_model: str, req_id: str, command: str, mcu0_dio: list[bool], mcu1_dio: list[bool]) -> Response_Safety_IoT:
         """
@@ -247,6 +282,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         - model: ControlRequestModel
         - Response_Safety_IoT 객체 반환
         """
+
         # 1) Request_Safety_IoT 객체 생성
         req = Request_Safety_IoT()
         req.id = req_id
@@ -254,7 +290,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         req.mcu0_dio = mcu0_dio
         req.mcu1_dio = mcu1_dio
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/safety_io",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Safety_IoT,
@@ -262,7 +298,10 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Safety IO failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def control_random_sequence(self, robot_model: str, req_id: str) -> Response_Random_SequenceT:
         """
@@ -270,11 +309,12 @@ class RBAmrControlSDK(SlamnavControlPort):
         - model: ControlRequestModel
         - Response_Random_SequenceT 객체 반환
         """
+
         # 1) Request_Random_SequenceT 객체 생성
         req = Request_Random_SequenceT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/control/random_sequence",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Random_SequenceT,
@@ -282,4 +322,7 @@ class RBAmrControlSDK(SlamnavControlPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Random Sequence failed: obj_payload is None")
+
+        return result["obj_payload"]

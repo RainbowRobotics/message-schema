@@ -6,11 +6,13 @@ from pydantic import (
 
 
 class Request_Control_FrequencyPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     target: str = Field(None, example="lidar")
     onoff: bool = Field(None, example=True)
     frequency: int = Field(None, example=10)
 
 class Request_Control_OnOffPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     onoff: bool = Field(..., description="LED 켜기/끄기", example=True)
     frequency: int = Field(..., description="주기", example=10)
@@ -23,6 +25,7 @@ class Response_Control_OnOffPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_WorkPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     work: str = Field(..., description="작업", example="lidarOn")
 
@@ -49,6 +52,7 @@ class Response_Control_ChargeTriggerPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_SafetyFieldPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     safetyField: int = Field(..., description="안전 필드", example=1)
 
 class Response_Control_SafetyFieldPD(BaseModel):
@@ -67,10 +71,12 @@ class Response_Control_SafetyFlagPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_LEDPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     led: str = Field(..., description="LED", example="lidarOn")
 
 class Request_Control_MotorPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     onoff: bool = Field(..., description="모터", example=True)
 class Response_Control_LEDPD(BaseModel):
     command: str = Field(..., description="명령", example="lidarOnOff")
@@ -79,6 +85,7 @@ class Response_Control_LEDPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_SafetyIOPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     mcu0_dio: list[bool] = Field(..., description="MCU0 DIO", example=[True, False, True])
     mcu1_dio: list[bool] = Field(..., description="MCU1 DIO", example=[True, False, True])
@@ -93,6 +100,7 @@ class Response_Control_SafetyIOPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_ObsBoxPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     obsBox: str = Field(..., description="관측 박스", example="lidarOn")
 
@@ -103,6 +111,7 @@ class Response_Control_ObsBoxPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_DetectPD(BaseModel):
+    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     detect: str = Field(..., description="검출", example="lidarOn")
 

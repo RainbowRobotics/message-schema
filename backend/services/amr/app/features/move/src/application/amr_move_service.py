@@ -64,20 +64,20 @@ class AmrMoveService:
     [AMR 이동 서비스 초기화]
     """
     def __init__(self):
-        self.robot_model = "test"
         self.database_port = MoveMongoDatabaseAdapter()
-        # self.slamnav_port = SlamnavZenohAdapter()
         self.email_port = MoveSmtpLibEmailAdapter()
         self._locks = defaultdict(asyncio.Lock)
 
-    async def move_goal(self, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
+    async def move_goal(self, robot_model: str, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
         """
         [AMR 목표 지점으로 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveGoal : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveGoal : {robot_model} {req.model_dump()}")
+
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_goal(req)
 
             # 2) DB 저장
@@ -91,16 +91,16 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_goal(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id,
                 goal_id=model.goal_id,
                 method=model.method,
                 preset=model.preset
             )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -117,6 +117,7 @@ class AmrMoveService:
 
 
     async def move_target(self,
+    robot_model: str,
     req: Request_Move_TargetPD,
     model:MoveModel | None = None) -> Response_Move_TargetPD:
         """
@@ -124,8 +125,9 @@ class AmrMoveService:
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveTarget : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveTarget : {robot_model} {req.model_dump()}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_target(req)
 
             # 2) DB 저장
@@ -139,16 +141,16 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_target(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id,
                 goal_pose=model.goal_pose,
                 method=model.method,
                 preset=model.preset
             )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -163,15 +165,16 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_jog(self, req: Request_Move_JogPD, model:MoveModel | None = None):
+    async def move_jog(self, robot_model: str, req: Request_Move_JogPD, model:MoveModel | None = None):
         """
         [AMR 조이스틱 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveJog : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveJog : {robot_model} {req.model_dump()}")
 
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_jog(req)
 
             # 2) DB 저장 (패스)
@@ -181,7 +184,7 @@ class AmrMoveService:
 
             # 4) 요청 전송
             await rb_amr_sdk.move.send_move_jog(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 vx=model.vx,
                 vy=model.vy,
                 wz=model.wz
@@ -195,14 +198,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_stop(self) -> Response_Move_StopPD:
+    async def move_stop(self, robot_model: str) -> Response_Move_StopPD:
         """
         [AMR 이동 중지]
         """
         model = MoveModel()
         try:
-            rb_log.info("[amr_move_service] moveStop")
+            rb_log.info(f"[amr_move_service] moveStop : {robot_model}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_stop()
 
             # 2) DB 저장
@@ -217,13 +221,13 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_stop(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id
             )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
             try:
                 await self.database_port.upsert(model.to_dict())
             except Exception as e:  # pylint: disable=broad-exception-caught
@@ -237,14 +241,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_pause(self, model: MoveModel | None = None) -> Response_Move_PausePD:
+    async def move_pause(self, robot_model: str, model: MoveModel | None = None) -> Response_Move_PausePD:
         """
         [AMR 이동 일시정지]
         """
         model = MoveModel()
         try:
-            rb_log.info("[amr_move_service] movePause")
+            rb_log.info(f"[amr_move_service] movePause : {robot_model}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_pause()
 
             # 2) DB 저장
@@ -258,13 +263,13 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_pause(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id
                 )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -279,14 +284,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()} ))
 
-    async def move_resume(self, model: MoveModel | None = None) -> Response_Move_ResumePD:
+    async def move_resume(self, robot_model: str, model: MoveModel | None = None) -> Response_Move_ResumePD:
         """
         [AMR 이동 재개]
         """
         model = MoveModel()
         try:
-            rb_log.info("[amr_move_service] moveResume")
+            rb_log.info(f"[amr_move_service] moveResume : {robot_model}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_resume()
 
             # 2) DB 저장
@@ -300,13 +306,13 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_resume(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id
                 )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -321,14 +327,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_linear(self, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
+    async def move_linear(self, robot_model: str, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
         """
         [AMR 선형 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveLinear : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveLinear : {robot_model} {req.model_dump()}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_x_linear(req)
 
             # 2) DB 저장
@@ -342,15 +349,15 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_linear(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id,
                 target=model.target,
                 speed=model.speed
                 )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -365,14 +372,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_circular(self, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
+    async def move_circular(self, robot_model: str, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
         """
         [AMR 원형 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveCircular : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveCircular : {robot_model} {req.model_dump()}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_circular(req)
 
             # 2) DB 저장
@@ -386,16 +394,16 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_circular(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id,
                 target=model.target,
                 speed=model.speed,
                 direction=model.direction
                 )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
@@ -410,14 +418,15 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_rotate(self, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
+    async def move_rotate(self, robot_model: str, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
         """
         [AMR 원형 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveRotate : {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] moveRotate : {robot_model} {req.model_dump()}")
             # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
             model.set_move_rotate(req)
 
             # 2) DB 저장
@@ -431,15 +440,15 @@ class AmrMoveService:
 
             # 4) 요청 전송
             result = await rb_amr_sdk.move.send_move_rotate(
-                robot_model=self.robot_model,
+                robot_model=model.robot_model,
                 req_id=model.id,
                 target=model.target,
                 speed=model.speed
                 )
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
 
             try:
                 await self.database_port.upsert(model.to_dict())
