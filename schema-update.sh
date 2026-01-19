@@ -17,11 +17,25 @@ done
 # 메인 레포 루트
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 
-# schemas 디렉토리 확인
+# SCHEMA_DIR 디렉토리 확인
 if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
   echo "Error: '$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
   exit 1
 fi
+
+# SCHEMA_DIR 디렉토리에 변경사항이 있으면 자동 커밋
+cd "$MAIN_REPO"
+if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR"; then
+  echo "schemas 디렉토리에 변경사항 감지. 메인 레포에 커밋합니다..."
+  git add "$SCHEMA_DIR"
+  git commit -m "Update schemas"
+
+  # 현재 브랜치 이름 가져오기
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  echo "메인 레포 푸시: $CURRENT_BRANCH"
+  git push origin "$CURRENT_BRANCH"
+fi
+
 
 # 개인 브랜치명 생성
 BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
@@ -41,6 +55,7 @@ echo "main commit => $MAIN_COMMIT"
 # remote 확인
 git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
   echo "Error: '$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
+  echo "message-schema 레포지토리에서 README.md에 초기 1회 세팅을 참고하세요."
   exit 1
 }
 
