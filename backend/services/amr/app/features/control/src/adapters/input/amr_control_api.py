@@ -592,6 +592,7 @@ async def slamnav_control_get_safetyIo() -> Response_Control_SafetyIOPD:
 장애물감지 영역을 조회합니다.
 
 ## 📌 기능 설명
+
 - 장애물감지 영역을 지원하는 모델만 사용가능합니다.
 - 장애물감지 영역은 AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.
 
@@ -610,6 +611,7 @@ async def slamnav_control_get_safetyIo() -> Response_Control_SafetyIOPD:
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
 ## ⚠️ 에러 케이스
+
 ### **409** CONFLICT
   - 요청한 명령을 수행할 수 없을 때
   - SLAMNAV에서 거절했을 때
