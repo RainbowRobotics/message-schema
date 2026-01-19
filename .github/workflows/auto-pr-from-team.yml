@@ -31,22 +31,22 @@ jobs:
             echo "No PR for $BRANCH"
           fi
 
-          - name: Create PR
-          if: steps.check_pr.outputs.exists == 'false'
-          env:
-            GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
-            REPO: ${{ github.repository }}
-            BRANCH: ${{ github.ref_name }}
-          run: |
-            set -e
-            gh pr create \
-              --repo "$REPO" \
-              --base main \
-              --head "$BRANCH" \
-              --title "schema: update from ($BRANCH)" \
-              --body "Auto-created PR from team repo push: $BRANCH" \
-            || {
-              echo "PR create failed; checking if PR now exists..."
-              EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
-              [ "$EXIST" -gt 0 ]
-            }
+      - name: Create PR
+        if: steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.SCHEMA_SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          gh pr create \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH" \
+            --title "schema: update from ($BRANCH)" \
+            --body "Auto-created PR from team repo push: $BRANCH" \
+          || {
+            echo "PR create failed; checking if PR now exists..."
+            EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+            [ "$EXIST" -gt 0 ]
+          }
