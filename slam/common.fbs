@@ -1,0 +1,86 @@
+// ============================================================================
+// SLAM Common Types
+//
+// Zenoh Topic: N/A (Common type definitions)
+// ============================================================================
+
+namespace slam;
+
+// ============================================================================
+// Geometry Types
+// ============================================================================
+
+/// 2D vector
+struct Vec2 {
+  x: float64;
+  y: float64;
+}
+
+/// 3D vector
+struct Vec3 {
+  x: float64;
+  y: float64;
+  z: float64;
+}
+
+/// 2D pose (position + orientation)
+struct Pose2D {
+  x: float64;       // m
+  y: float64;       // m
+  theta: float64;   // rad
+}
+
+/// Velocity
+struct Velocity {
+  vx: float64;      // m/s
+  vy: float64;      // m/s
+  wz: float64;      // rad/s
+}
+
+// ============================================================================
+// Common Message Types
+// ============================================================================
+
+/// Message header
+table Header {
+  id: string;                 // Unique message ID (UUID)
+  timestamp: float64;         // Unix timestamp (seconds)
+}
+
+/// Response result code
+enum ResultCode : byte {
+  Accept = 0,
+  Success = 1,
+  Fail = 2,
+  Reject = 3,
+  Error = 4
+}
+
+/// Response footer
+table ResponseFooter {
+  result: ResultCode;
+  message: string;
+}
+
+// ============================================================================
+// I/O Types
+// ============================================================================
+
+/// Digital I/O (2 MCUs, 8 channels each)
+table DigitalIO {
+  mcu0_dio: [uint8];          // 8 bytes
+  mcu1_dio: [uint8];          // 8 bytes
+  mcu0_din: [uint8];          // 8 bytes (input)
+  mcu1_din: [uint8];          // 8 bytes (input)
+}
+
+/// Obstacle detection box
+table ObsBox {
+  min_x: float64;
+  max_x: float64;
+  min_y: float64;
+  max_y: float64;
+  min_z: float64;
+  max_z: float64;
+  map_range: float64;
+}
