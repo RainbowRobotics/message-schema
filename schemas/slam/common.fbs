@@ -1,10 +1,11 @@
 // ============================================================================
-// SLAM Common Types
+// Common Types
 //
 // Zenoh Topic: N/A (Common type definitions)
+// Usage: {model}/move/*, {model}/status/*, {model}/sensor/*
 // ============================================================================
 
-namespace slam;
+namespace rainbow;
 
 // ============================================================================
 // Geometry Types
@@ -47,13 +48,31 @@ table Header {
   timestamp: float64;         // Unix timestamp (seconds)
 }
 
+// ============================================================================
+// Move Types
+// ============================================================================
+
+/// Move method
+enum MoveMethod : byte {
+  PP = 0,
+  HPP,
+  TNG
+}
+
+/// Move direction
+enum MoveDirection : byte {
+  Forward = 0,
+  Backward
+}
+
 /// Response result code
 enum ResultCode : byte {
   Accept = 0,
   Success = 1,
   Fail = 2,
   Reject = 3,
-  Error = 4
+  Error = 4,
+  Timeout = 5
 }
 
 /// Response footer
@@ -83,4 +102,14 @@ table ObsBox {
   min_z: float64;
   max_z: float64;
   map_range: float64;
+}
+
+// ============================================================================
+// Sensor Types
+// ============================================================================
+
+/// Sensor index item (camera, lidar, etc.)
+table SensorIndex {
+  id: int32;
+  serial: string;
 }

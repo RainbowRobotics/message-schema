@@ -1,257 +1,396 @@
 // ============================================================================
-// SLAM Command Messages (Request)
+// RPC Request Messages
 //
-// Zenoh Topic: slam/cmd/{command}
-// Direction: Subscribe (SLAM receives)
+// Zenoh RPC (Queryable): {model}/{service}/{action}
+// Direction: Client -> Server (Request/Response)
 // ============================================================================
 
 include "common.fbs";
 
-namespace slam.cmd;
+// namespace rainbow.rpc;
+namespace rainbow;
 
 // ============================================================================
-// Move Command (slam/cmd/move)
+// Move RPC - {model}/move/*
 // ============================================================================
 
-enum MoveCommand : byte {
-  Goal = 0,         
-  Jog,              
-  Target,           
-  Pause,            
-  Resume,           
-  Stop              
-}
-
-enum MoveMethod : byte {
-  PP = 0,           
-  HPP,              
-  TNG               
-}
-
-enum MoveDirection : byte {
-  Forward = 0,
-  Backward
-}
-
-table MoveRequest {
-  header: slam.Header;
-  command: MoveCommand;
-  method: MoveMethod;
-  direction: MoveDirection;
+/// {model}/move/goal
+table MoveGoalRequest {
+  header: rainbow.Header;
+  method: rainbow.MoveMethod;
+  direction: rainbow.MoveDirection;
   preset: int32;
-
-  // Goal move
   goal_node_id: string;
   goal_node_name: string;
-  target_pose: slam.Pose2D;
-
-  // Jog move
-  jog_velocity: slam.Vec3;
-
-  // Target move (linear/rotation)
-  target_distance: float64;   // m or rad
-  target_speed: float64;      // m/s or rad/s
+  cur_pos: rainbow.Vec2;          // current position (x, y)
+  target_pose: rainbow.Pose2D;
 }
 
-root_type MoveRequest;
-
-// ============================================================================
-// Localization Command (slam/cmd/localization)
-// ============================================================================
-
-enum LocalizationCommand : byte {
-  Init = 0,             
-  SemiAutoInit,         
-  RandomInit,           
-  Start,                
-  Stop                  
+/// {model}/move/target
+table MoveTargetRequest {
+  header: rainbow.Header;
+  direction: rainbow.MoveDirection;
+  distance: float64;            // m or rad
+  speed: float64;               // m/s or rad/s
 }
 
-table LocalizationRequest {
-  header: slam.Header;
-  command: LocalizationCommand;
+/// {model}/move/xLinear
+table MoveXLinearRequest {
+  header: rainbow.Header;
+  direction: rainbow.MoveDirection;
+  distance: float64;            // m
+  speed: float64;               // m/s
+}
+
+/// {model}/move/yLinear
+table MoveYLinearRequest {
+  header: rainbow.Header;
+  direction: rainbow.MoveDirection;
+  distance: float64;            // m
+  speed: float64;               // m/s
+}
+
+/// {model}/move/circular
+table MoveCircularRequest {
+  header: rainbow.Header;
+  direction: rainbow.MoveDirection;
+  radius: float64;              // m
+  angle: float64;               // rad
+  speed: float64;               // m/s
+}
+
+/// {model}/move/rotate
+table MoveRotationRequest {
+  header: rainbow.Header;
+  angle: float64;               // rad
+  speed: float64;               // rad/s
+}
+
+/// {model}/move/stop 
+table MoveStopRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/move/pause
+table MovePauseRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/move/resume
+table MoveResumeRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/move/jog
+table MoveJogCommand {
+  header: rainbow.Header;
+  velocity: rainbow.Vec3;       // vx, vy, wz
+}
+
+// ============================================================================
+// Localization RPC - {model}/localization/*
+// ============================================================================
+
+/// {model}/localization/init
+table LocalizationInitRequest {
+  header: rainbow.Header;
+  pose: rainbow.Pose2D;
+}
+
+/// {model}/localization/autoinit
+table LocalizationAutoInitRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/localization/semiautoinit
+table LocalizationSemiAutoInitRequest {
+  header: rainbow.Header;
   seed: string;
-  init_pose: slam.Pose2D;
+  init_pose: rainbow.Pose2D;
 }
 
-root_type LocalizationRequest;
-
-// ============================================================================
-// Mapping Command (slam/cmd/mapping)
-// ============================================================================
-
-enum MappingCommand : byte {
-  Start = 0,
-  Stop,
-  Save,
-  Reload
+/// {model}/localization/randomautoinit
+table LocalizationRandomAutoInitRequest {
+  header: rainbow.Header;
 }
 
-table MappingRequest {
-  header: slam.Header;
-  command: MappingCommand;
-  map_name: string;
+/// {model}/localization/start
+table LocalizationStartRequest {
+  header: rainbow.Header;
 }
 
-root_type MappingRequest;
-
-// ============================================================================
-// Load Command (slam/cmd/load)
-// ============================================================================
-
-enum LoadCommand : byte {
-  MapLoad = 0,
-  TopoLoad
+/// {model}/localization/stop
+table LocalizationStopRequest {
+  header: rainbow.Header;
 }
 
-table LoadRequest {
-  header: slam.Header;
-  command: LoadCommand;
-  map_name: string;
-}
-
-root_type LoadRequest;
-
 // ============================================================================
-// Control Command (slam/cmd/control)
+// Control RPC - {model}/control/*
 // ============================================================================
 
-enum ControlCommand : byte {
-  Dock = 0,
-  Undock,
-  DockStop,
-  MotorOn,
-  MotorOff,
-  SetSafetyField,
-  GetSafetyField,
-  ResetSafetyField,
-  GetSafetyFlag,
-  ChargeTrigger,
-  SetDigitalIO,
-  GetDigitalIO,
-  SetObsBox,
-  GetObsBox
+/// {model}/control/dock
+table ControlDockRequest {
+  header: rainbow.Header;
 }
 
+/// {model}/control/undock
+table ControlUndockRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/control/dockStop
+table ControlDockStopRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/control/motor
+table ControlMotorRequest {
+  header: rainbow.Header;
+  enable: bool;
+}
+
+/// {model}/control/led
+table ControlLedRequest {
+  header: rainbow.Header;
+  color: string;
+  frequency: int32;
+}
+
+/// {model}/control/obsbox
+table ControlObsBoxRequest {
+  header: rainbow.Header;
+  action: string;               // get, set
+  obs_box: rainbow.ObsBox;
+}
+
+/// {model}/control/getSafetyField
+table GetSafetyFieldRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/control/setSafetyField
+table SetSafetyFieldRequest {
+  header: rainbow.Header;
+  safety_field: string;
+}
+
+/// {model}/control/resetSafetyFlag
 table ResetFlag {
   name: string;
   value: bool;
 }
 
-table ControlRequest {
-  header: slam.Header;
-  command: ControlCommand;
-  onoff: bool;
-  color: string;
-  frequency: int32;
-  safety_field: string;
-  reset_field: string;
+table ResetSafetyFlagRequest {
+  header: rainbow.Header;
   reset_flags: [ResetFlag];
-  digital_io: slam.DigitalIO;
-  obs_box: slam.ObsBox;
 }
 
-root_type ControlRequest;
+/// {model}/control/getSafetyIo
+table GetSafetyIoRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/control/setSafetyIo
+table SetSafetyIoRequest {
+  header: rainbow.Header;
+  digital_io: rainbow.DigitalIO;
+}
+
+/// {model}/control/sequence
+table ControlSequenceRequest {
+  header: rainbow.Header;
+  sequence: string;
+}
+
+/// {model}/control/setLidar
+table ControlSetLidarRequest {
+  header: rainbow.Header;
+  onoff: bool;
+  frequency: int32;             // Hz
+}
+
+/// {model}/control/setPath
+table ControlSetPathRequest {
+  header: rainbow.Header;
+  onoff: bool;
+  frequency: int32;             // Hz
+}
+
+/// {model}/control/setStatus
+table ControlSetStatusRequest {
+  header: rainbow.Header;
+  onoff: bool;
+  frequency: int32;             // Hz
+}
+
+/// {model}/control/setMoveStatus
+table ControlSetMoveStatusRequest {
+  header: rainbow.Header;
+  onoff: bool;
+  frequency: int32;             // Hz
+}
 
 // ============================================================================
-// Path Command (slam/cmd/path)
+// Map RPC - {model}/map/*
 // ============================================================================
 
+/// {model}/map/load
+table MapLoadRequest {
+  header: rainbow.Header;
+  map_name: string;
+}
+
+/// {model}/map/getList
+table MapGetListRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/map/getFile
+table MapGetFileRequest {
+  header: rainbow.Header;
+  map_name: string;
+  file_type: string;            // yaml, pgm, etc.
+}
+
+/// {model}/map/getCloud
+table MapGetCloudRequest {
+  header: rainbow.Header;
+  map_name: string;
+}
+
+/// {model}/map/getTopology
+table MapGetTopologyRequest {
+  header: rainbow.Header;
+  map_name: string;
+}
+
+/// {model}/map/getTile
+table MapGetTileRequest {
+  header: rainbow.Header;
+  map_name: string;
+  tile_x: int32;
+  tile_y: int32;
+  zoom: int32;
+}
+
+/// {model}/map/mapping/start
+table MappingStartRequest {
+  header: rainbow.Header;
+  map_name: string;
+}
+
+/// {model}/map/mapping/stop
+table MappingStopRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/map/mapping/save
+table MappingSaveRequest {
+  header: rainbow.Header;
+  map_name: string;
+}
+
+// ============================================================================
+// Path RPC - {model}/path/*
+// ============================================================================
+
+/// Path node with position
+table PathNode {
+  node_id: string;
+  x: float64;
+  y: float64;
+  rz: float64;                    // rad
+}
+
+/// {model}/path/request
+table PathRequest {
+  header: rainbow.Header;
+  method: rainbow.MoveMethod;
+  preset: int32;
+  goal: string;                   // goal node id
+  path: [string];                 // path node ids
+  step: [int32];                  // step indices
+}
+
+// ============================================================================
+// VOBS RPC - {model}/vobs/*
+// ============================================================================
+
+/// Virtual obstacle closure
 table VobsClosure {
   x: float64;
   y: float64;
   z: float64;
 }
 
-table PathRequest {
-  header: slam.Header;
-  command: string;
-  method: string;
-  preset: int32;
-  goal: string;
-  path: [string];
-  step: [int32];
-  vobs_closures: [VobsClosure];
+/// {model}/vobs/update
+table VobsUpdateRequest {
+  header: rainbow.Header;
+  vobs_robots: string;            // virtual obstacle robots (JSON string)
+  vobs_closures: [VobsClosure];   // closure positions
+  is_closures_changed: bool;      // whether closures changed
 }
 
-root_type PathRequest;
-
 // ============================================================================
-// VOBS Command (slam/cmd/vobs)
+// Software RPC - {model}/software/*
 // ============================================================================
 
-table VobsRequest {
-  header: slam.Header;
-  command: string;
-  vobs_robots: string;
-  vobs_closures: string;
-  is_vobs_closures_change: string;
+/// {model}/software/update
+table SoftwareUpdateRequest {
+  header: rainbow.Header;
+  branch: string;
 }
 
-root_type VobsRequest;
-
-// ============================================================================
-// Sensor Command (slam/cmd/sensor)
-// ============================================================================
-
-enum SensorCommand : byte {
-  GetCamInfo = 0,
-  SetCamInfo,
-  Lidar3DOn,
-  Lidar3DOff
+/// {model}/software/getVersion
+table SoftwareGetVersionRequest {
+  header: rainbow.Header;
 }
 
-table SensorIndex {
-  id: int32;
-  serial: string;
-}
-
-table SensorRequest {
-  header: slam.Header;
-  command: SensorCommand;
-  target: string;             // cam, lidar2d, lidar3d
-  index: [SensorIndex];
-}
-
-root_type SensorRequest;
-
 // ============================================================================
-// Setting Command (slam/cmd/setting)
+// Config RPC - {model}/config/*
 // ============================================================================
 
-enum SettingCommand : byte {
-  SetPduParam = 0,
-  GetDriveParam
-}
-
+/// PDU parameter item
 table ParamItem {
   key: string;
-  type: string;
+  type: string;                   // int, float, string, bool
   value: string;
 }
 
-table SettingRequest {
-  header: slam.Header;
-  command: SettingCommand;
+/// {model}/config/setPduParam
+table SetPduParamRequest {
+  header: rainbow.Header;
   param_list: [ParamItem];
 }
 
-root_type SettingRequest;
-
-// ============================================================================
-// Software Update Command (slam/cmd/update)
-// ============================================================================
-
-enum UpdateCommand : byte {
-  Update = 0,
-  GetVersion
+/// {model}/config/getDriveParam
+table GetDriveParamRequest {
+  header: rainbow.Header;
 }
 
-table UpdateRequest {
-  header: slam.Header;
-  command: UpdateCommand;
-  branch: string;
-  version: string;
+// ============================================================================
+// Sensor RPC - {model}/sensor/*
+// ============================================================================
+
+/// {model}/sensor/getInfo
+table SensorGetInfoRequest {
+  header: rainbow.Header;
+  target: string;                 // cam, lidar2d, lidar3d
 }
 
-root_type UpdateRequest;
+/// {model}/sensor/setInfo
+table SensorSetInfoRequest {
+  header: rainbow.Header;
+  target: string;                 // cam, lidar2d, lidar3d
+  index: [rainbow.SensorIndex];
+}
+
+/// {model}/sensor/lidar3d/on
+table Lidar3dOnRequest {
+  header: rainbow.Header;
+}
+
+/// {model}/sensor/lidar3d/off
+table Lidar3dOffRequest {
+  header: rainbow.Header;
+}

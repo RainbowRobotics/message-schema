@@ -1,66 +1,47 @@
 // ============================================================================
-// SLAM Sensor Data Messages
+// Sensor Data Messages (Pub/Sub)
 //
-// Zenoh Topic: slam/sensor/{type}
+// Zenoh Topic: {model}/lidar2d, {model}/lidar3d, {model}/mappingCloud
 // Direction: Publish (SLAM publishes)
+// Pattern: Pub/Sub
+// Status: 미구현 (Reserved for future use)
 // ============================================================================
 
 include "common.fbs";
 
-namespace slam.sensor;
+// namespace rainbow.sensor;
+namespace rainbow;
 
 // ============================================================================
-// 2D LiDAR (slam/sensor/lidar2d)
+// 2D LiDAR - {model}/lidar2d
 // ============================================================================
 
 table Lidar2DData {
-  header: slam.Header;
-  points: [slam.Vec2];        
+  header: rainbow.Header;
+  points: [rainbow.Vec2];
 }
 
 root_type Lidar2DData;
 
 // ============================================================================
-// 3D LiDAR (slam/sensor/lidar3d)
+// 3D LiDAR - {model}/lidar3d
 // ============================================================================
 
 table Lidar3DData {
-  header: slam.Header;
-  points: [slam.Vec3];
+  header: rainbow.Header;
+  points: [rainbow.Vec3];
 }
 
 root_type Lidar3DData;
 
 // ============================================================================
-// Global Path (slam/sensor/global_path)
-// ============================================================================
-
-table GlobalPathData {
-  header: slam.Header;
-  poses: [slam.Pose2D];
-  node_ids: [string];
-}
-
-root_type GlobalPathData;
-
-// ============================================================================
-// Local Path (slam/sensor/local_path)
-// ============================================================================
-
-table LocalPathData {
-  header: slam.Header;
-  poses: [slam.Pose2D];
-}
-
-root_type LocalPathData;
-
-// ============================================================================
-// Mapping Cloud (slam/sensor/mapping_cloud) - Point cloud during mapping
+// Mapping Cloud - {model}/mappingCloud
+// Point cloud during mapping
 // ============================================================================
 
 table MappingCloudData {
-  header: slam.Header;
-  points: [slam.Vec3];
+  header: rainbow.Header;
+  points: [rainbow.Vec3];
   keyframe_index: int32;
 }
 

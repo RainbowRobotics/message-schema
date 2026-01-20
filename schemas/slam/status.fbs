@@ -1,85 +1,64 @@
 // ============================================================================
-// SLAM Status Messages
+// Status Messages (Pub/Sub)
 //
-// Zenoh Topic: slam/status/{type}
+// Zenoh Topic: {model}/status, {model}/moveStatus
 // Direction: Publish (SLAM publishes periodically)
+// Pattern: Pub/Sub
 // ============================================================================
 
 include "common.fbs";
 
-namespace slam.status;
+// namespace rainbow.status;
+namespace rainbow;
 
 // ============================================================================
-// Move Status (slam/status/move) - 100ms period
+// Robot Status - {model}/status - 100ms period
 // ============================================================================
 
-table MoveState {
-  auto_move: string;        // none, moving, pause, goal, fail, ...
-  dock_move: string;        // none, docking, undocking, done, fail, ...
-  jog_move: string;         // none, moving
-  obs: string;              // Obstacle status
-  path: string;             // Path status
+/// IMU
+table ImuStatus {
+  acc_x: float64;
+  acc_y: float64;
+  acc_z: float64;
+  gyr_x: float64;               // deg/s
+  gyr_y: float64;               // deg/s
+  gyr_z: float64;               // deg/s
+  imu_rx: float64;              // deg
+  imu_ry: float64;              // deg
+  imu_rz: float64;              // deg
 }
 
-table MoveStatus {
-  header: slam.Header;
-
-  // Current position/velocity
-  pose: slam.Pose2D;
-  velocity: slam.Velocity;
-
-  // Node info
-  current_node_id: string;
-  current_node_name: string;
-  goal_node_id: string;
-  goal_node_name: string;
-  goal_pose: slam.Pose2D;
-
-  // Progress
-  remaining_distance: float64;    // m
-  remaining_time: float64;        // sec
-  battery_percent: int32;
-
-  // Move state
-  move_state: MoveState;
+/// Motor
+table MotorStatus {
+  connection: bool;
+  status: float64;
+  temp: float64;                // celsius
+  current: float64;             // A
 }
-
-root_type MoveStatus;
-
-// ============================================================================
-// Robot Status (slam/status/robot) - 500ms period
-// ============================================================================
 
 /// Localization quality score
-table LocalizationScore {
+table ConditionStatus {
   inlier_error: float64;
   inlier_ratio: float64;
   mapping_error: float64;
   mapping_ratio: float64;
 }
 
-/// Motor status
-table MotorStatus {
-  connection: bool;
-  status: float64;
-  temp: float64;              // celsius
-  current: float64;           // A
-}
-
 /// Robot state
 table RobotState {
-  emo: bool;                  // Emergency stop state
-  charge: string;             // none, ready, battery_on, charging, finish, reject
-  dock: string;               // Docking state
-  localization: string;       // Localization state
-  power: int32;
-  sss_recovery: bool;
-  sw_reset: bool;
-  sw_stop: bool;
-  sw_start: bool;
-  sf_obs_detect: bool;        // Safety sensor obstacle detection
-  sf_bumper_detect: bool;     // Bumper detection
-  sf_operational_stop: bool;  // Operational stop state
+  emo: bool;                    // Emergency stop state
+  charge: string;               // none, ready, battery_on, charging, finish, fail
+  dock: bool;                   // Docking state
+  localization: string;         // Localization state
+  power: bool;                  // Power state
+}
+
+/// Safety I/O state
+table SafetyIoState {
+  mcu0_din: [uint8];            // 8 bytes
+  mcu1_din: [uint8];            // 8 bytes
+  mcu0_dio: [uint8];            // 8 bytes
+  mcu1_dio: [uint8];            // 8 bytes
 }
 
 /// Power status
@@ -94,33 +73,112 @@ table PowerStatus {
   contact_voltage: float64;
   tabos_voltage: float64;
   tabos_current: float64;
+  tabos_status: int32;
+  tabos_ttf: float64;
+  tabos_tte: float64;
   tabos_soc: float64;
   tabos_soh: float64;
   tabos_temp: float64;
+  tabos_rc: float64;
+  tabos_ae: float64;
 }
 
 /// Map info
-table MapInfo {
+table MapStatus {
   map_name: string;
-  map_status: string;         // none, loading, loaded
+  map_status: string;           // none, loading, loaded
 }
 
 /// Robot settings info
-table RobotInfo {
+table SettingStatus {
   platform_type: string;
   platform_name: string;
 }
 
-/// Robot full status
+/// Robot full status - {model}/status
 table RobotStatus {
-  header: slam.Header;
-  condition: LocalizationScore;
-  motors: [MotorStatus];      // Up to 4 motors
+  header: rainbow.Header;
+  imu: ImuStatus;
+  motor0: MotorStatus;
+  motor1: MotorStatus;
+  condition: ConditionStatus;
   robot_state: RobotState;
-  robot_io: slam.DigitalIO;
+  robot_safety_io_state: SafetyIoState;
   power: PowerStatus;
-  map: MapInfo;
-  setting: RobotInfo;
+  map: MapStatus;
+  setting: SettingStatus;
 }
 
 root_type RobotStatus;
+
+// ============================================================================
+// Move Status - {model}/moveStatus - 500ms period
+// ============================================================================
+
+/// Move state
+table MoveState {
+  auto_move: string;            // stop, move, pause, not ready, error, vir
+  dock_move: string;            // stop, docking, undocking, done, fail
+  jog_move: string;             // none, moving
+  obs: string;                  // Obstacle condition
+  path: string;                 // Path request state
+}
+
+/// Node info
+table NodeStatus {
+  node_id: string;
+  name: string;
+  state: string;
+  x: float64;
+  y: float64;
+  rz: float64;                  // deg
+}
+
+/// Move full status - {model}/moveStatus
+table MoveStatus {
+  header: rainbow.Header;
+
+  // Current position/velocity
+  pose: rainbow.Pose2D;
+  vel: rainbow.Velocity;
+
+  // Node info
+  cur_node: NodeStatus;
+  goal_node: NodeStatus;
+
+  // Move state
+  move_state: MoveState;
+}
+
+root_type MoveStatus;
+
+// ============================================================================
+// Path Data - {model}/globalPath, {model}/localPath
+// ============================================================================
+
+struct PathPoint {
+  x: float64;
+  y: float64;
+  rz: float64;
+}
+
+table PathData {
+  header: rainbow.Header;
+  points: [PathPoint];
+}
+
+root_type PathData;
+
+// ============================================================================
+// Result - {model}/result
+// RPC
+// ============================================================================
+
+table Result {
+  header: rainbow.Header;
+  topic: string; 
+  result: rainbow.ResultCode;
+  message: string;
+}
+
+root_type Result;

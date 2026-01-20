@@ -1,161 +1,237 @@
 // ============================================================================
-// SLAM Response Messages
+// RPC Response Messages
 //
-// Zenoh Topic: slam/res/{command}
-// Direction: Publish (SLAM publishes)
+// Zenoh RPC (Queryable): {model}/{service}/{action}
+// Direction: Server -> Client (Request/Response)
 // ============================================================================
 
 include "common.fbs";
-include "commands.fbs";
 
-namespace slam.res;
+// namespace rainbow.rpc;
+namespace rainbow;
 
 // ============================================================================
-// Move Response (slam/res/move)
+// Move Response - {model}/move/*
 // ============================================================================
 
+/// Move RPC
 table MoveResponse {
-  header: slam.Header;
-  command: slam.cmd.MoveCommand;
-  footer: slam.ResponseFooter;
-
-  // Progress (when command is Goal/Target)
-  current_pose: slam.Pose2D;
-  target_pose: slam.Pose2D;
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  current_pose: rainbow.Pose2D;
+  target_pose: rainbow.Pose2D;
   remaining_distance: float64;    // m
   remaining_time: float64;        // sec
-  measured_distance: float64;     // m
-  battery_percent: int32;
+  battery_percent: int32;         // battery percentage (0-100)
 }
 
-root_type MoveResponse;
-
 // ============================================================================
-// Localization Response (slam/res/localization)
+// Localization Response - {model}/localization/*
 // ============================================================================
 
+/// Localization RPC
 table LocalizationResponse {
-  header: slam.Header;
-  command: slam.cmd.LocalizationCommand;
-  footer: slam.ResponseFooter;
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  current_pose: rainbow.Pose2D;
 }
 
-root_type LocalizationResponse;
-
 // ============================================================================
-// Mapping Response (slam/res/mapping)
+// Control Response - {model}/control/*
 // ============================================================================
 
-table MappingResponse {
-  header: slam.Header;
-  command: slam.cmd.MappingCommand;
-  footer: slam.ResponseFooter;
-}
-
-root_type MappingResponse;
-
-// ============================================================================
-// Load Response (slam/res/load)
-// ============================================================================
-
-table LoadResponse {
-  header: slam.Header;
-  command: slam.cmd.LoadCommand;
-  footer: slam.ResponseFooter;
-}
-
-root_type LoadResponse;
-
-// ============================================================================
-// Control Response (slam/res/control)
-// ============================================================================
-
+/// Control RPC
 table ControlResponse {
-  header: slam.Header;
-  command: slam.cmd.ControlCommand;
-  footer: slam.ResponseFooter;
-  digital_io: slam.DigitalIO;
-  obs_box: slam.ObsBox;
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+}
+
+/// {model}/control/obsbox
+table ControlObsBoxResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  obs_box: rainbow.ObsBox;
+}
+
+/// {model}/control/getSafetyField
+table GetSafetyFieldResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
   safety_field: string;
 }
 
-root_type ControlResponse;
-
-// ============================================================================
-// Dock Response (slam/res/dock)
-// ============================================================================
-
-table DockResponse {
-  header: slam.Header;
-  command: string;                // dock, undock, dockStop
-  footer: slam.ResponseFooter;
+/// {model}/control/getSafetyIo
+table GetSafetyIoResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  digital_io: rainbow.DigitalIO;
 }
 
-root_type DockResponse;
+/// {model}/control/set* (setLidar, setPath, setStatus, setMoveStatus)
+table ControlSetResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  onoff: bool;
+  frequency: int32;
+}
 
 // ============================================================================
-// Path Response (slam/res/path)
+// Map Response - {model}/map/*
 // ============================================================================
 
+/// {model}/map/load
+table MapLoadResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  map_name: string;
+}
+
+/// {model}/map/getList
+table MapGetListResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  map_names: [string];
+}
+
+/// {model}/map/getFile
+table MapGetFileResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  file_type: string;
+  file_data: [uint8];
+}
+
+/// {model}/map/getCloud
+table MapGetCloudResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  points: [rainbow.Vec3];
+}
+
+table TopologyNode {
+  id: string;
+  name: string;
+  x: float64;
+  y: float64;
+  rz: float64;
+  type: string;
+}
+
+table TopologyEdge {
+  from_id: string;
+  to_id: string;
+  weight: float64;
+}
+
+/// {model}/map/getTopology
+table MapGetTopologyResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  nodes: [TopologyNode];
+  edges: [TopologyEdge];
+}
+
+/// {model}/map/getTile
+table MapGetTileResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  tile_x: int32;
+  tile_y: int32;
+  zoom: int32;
+  tile_data: [uint8];
+}
+
+/// {model}/map/mapping/*
+table MappingResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  map_name: string;
+}
+
+// ============================================================================
+// Path Response - {model}/path/*
+// ============================================================================
+
+/// {model}/path/request
 table PathResponse {
-  header: slam.Header;
-  footer: slam.ResponseFooter;
-  method: string;
-  path_str: string;
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  method: rainbow.MoveMethod;     // PP, HPP, TNG
+  path: [string];                 // path node ids
 }
 
-root_type PathResponse;
-
 // ============================================================================
-// Sensor Response (slam/res/sensor)
+// VOBS Response - {model}/vobs/*
 // ============================================================================
 
-table SensorResponse {
-  header: slam.Header;
-  command: slam.cmd.SensorCommand;
-  footer: slam.ResponseFooter;
-  target: string;
-  index: [slam.cmd.SensorIndex];
+/// {model}/vobs/update
+table VobsResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
 }
 
-root_type SensorResponse;
-
 // ============================================================================
-// Setting Response (slam/res/setting)
+// Software Response - {model}/software/*
 // ============================================================================
 
-table SettingResponse {
-  header: slam.Header;
-  command: slam.cmd.SettingCommand;
-  footer: slam.ResponseFooter;
-  param_list: [slam.cmd.ParamItem];
+/// {model}/software/update
+table SoftwareUpdateResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
 }
 
-root_type SettingResponse;
-
-// ============================================================================
-// SafetyIO Response (slam/res/safetyio)
-// ============================================================================
-
-table SafetyIOResponse {
-  header: slam.Header;
-  command: string;
-  footer: slam.ResponseFooter;
-  digital_io: slam.DigitalIO;
-}
-
-root_type SafetyIOResponse;
-
-// ============================================================================
-// Update Response (slam/res/update)
-// ============================================================================
-
-table UpdateResponse {
-  header: slam.Header;
-  command: slam.cmd.UpdateCommand;
-  footer: slam.ResponseFooter;
+/// {model}/software/getVersion
+table SoftwareGetVersionResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
   branch: string;
   version: string;
 }
 
-root_type UpdateResponse;
+// ============================================================================
+// Config Response - {model}/config/*
+// ============================================================================
+
+/// {model}/config/setPduParam
+table SetPduParamResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+}
+
+/// Drive parameter response item
+table DriveParamItem {
+  key: string;
+  type: string;
+  value: string;
+}
+
+/// {model}/config/getDriveParam
+table GetDriveParamResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  param_list: [DriveParamItem];
+}
+
+// ============================================================================
+// Sensor Response - {model}/sensor/*
+// ============================================================================
+
+/// {model}/sensor/getInfo
+table SensorGetInfoResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+  target: string;
+  index: [rainbow.SensorIndex];
+}
+
+/// {model}/sensor/setInfo
+table SensorSetInfoResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+}
+
+/// {model}/sensor/lidar3d/*
+table Lidar3dResponse {
+  header: rainbow.Header;
+  footer: rainbow.ResponseFooter;
+}
