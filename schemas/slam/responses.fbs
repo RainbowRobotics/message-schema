@@ -1,0 +1,161 @@
+// ============================================================================
+// SLAM Response Messages
+//
+// Zenoh Topic: slam/res/{command}
+// Direction: Publish (SLAM publishes)
+// ============================================================================
+
+include "common.fbs";
+include "commands.fbs";
+
+namespace slam.res;
+
+// ============================================================================
+// Move Response (slam/res/move)
+// ============================================================================
+
+table MoveResponse {
+  header: slam.Header;
+  command: slam.cmd.MoveCommand;
+  footer: slam.ResponseFooter;
+
+  // Progress (when command is Goal/Target)
+  current_pose: slam.Pose2D;
+  target_pose: slam.Pose2D;
+  remaining_distance: float64;    // m
+  remaining_time: float64;        // sec
+  measured_distance: float64;     // m
+  battery_percent: int32;
+}
+
+root_type MoveResponse;
+
+// ============================================================================
+// Localization Response (slam/res/localization)
+// ============================================================================
+
+table LocalizationResponse {
+  header: slam.Header;
+  command: slam.cmd.LocalizationCommand;
+  footer: slam.ResponseFooter;
+}
+
+root_type LocalizationResponse;
+
+// ============================================================================
+// Mapping Response (slam/res/mapping)
+// ============================================================================
+
+table MappingResponse {
+  header: slam.Header;
+  command: slam.cmd.MappingCommand;
+  footer: slam.ResponseFooter;
+}
+
+root_type MappingResponse;
+
+// ============================================================================
+// Load Response (slam/res/load)
+// ============================================================================
+
+table LoadResponse {
+  header: slam.Header;
+  command: slam.cmd.LoadCommand;
+  footer: slam.ResponseFooter;
+}
+
+root_type LoadResponse;
+
+// ============================================================================
+// Control Response (slam/res/control)
+// ============================================================================
+
+table ControlResponse {
+  header: slam.Header;
+  command: slam.cmd.ControlCommand;
+  footer: slam.ResponseFooter;
+  digital_io: slam.DigitalIO;
+  obs_box: slam.ObsBox;
+  safety_field: string;
+}
+
+root_type ControlResponse;
+
+// ============================================================================
+// Dock Response (slam/res/dock)
+// ============================================================================
+
+table DockResponse {
+  header: slam.Header;
+  command: string;                // dock, undock, dockStop
+  footer: slam.ResponseFooter;
+}
+
+root_type DockResponse;
+
+// ============================================================================
+// Path Response (slam/res/path)
+// ============================================================================
+
+table PathResponse {
+  header: slam.Header;
+  footer: slam.ResponseFooter;
+  method: string;
+  path_str: string;
+}
+
+root_type PathResponse;
+
+// ============================================================================
+// Sensor Response (slam/res/sensor)
+// ============================================================================
+
+table SensorResponse {
+  header: slam.Header;
+  command: slam.cmd.SensorCommand;
+  footer: slam.ResponseFooter;
+  target: string;
+  index: [slam.cmd.SensorIndex];
+}
+
+root_type SensorResponse;
+
+// ============================================================================
+// Setting Response (slam/res/setting)
+// ============================================================================
+
+table SettingResponse {
+  header: slam.Header;
+  command: slam.cmd.SettingCommand;
+  footer: slam.ResponseFooter;
+  param_list: [slam.cmd.ParamItem];
+}
+
+root_type SettingResponse;
+
+// ============================================================================
+// SafetyIO Response (slam/res/safetyio)
+// ============================================================================
+
+table SafetyIOResponse {
+  header: slam.Header;
+  command: string;
+  footer: slam.ResponseFooter;
+  digital_io: slam.DigitalIO;
+}
+
+root_type SafetyIOResponse;
+
+// ============================================================================
+// Update Response (slam/res/update)
+// ============================================================================
+
+table UpdateResponse {
+  header: slam.Header;
+  command: slam.cmd.UpdateCommand;
+  footer: slam.ResponseFooter;
+  branch: string;
+  version: string;
+}
+
+root_type UpdateResponse;

@@ -1,0 +1,126 @@
+// ============================================================================
+// SLAM Status Messages
+//
+// Zenoh Topic: slam/status/{type}
+// Direction: Publish (SLAM publishes periodically)
+// ============================================================================
+
+include "common.fbs";
+
+namespace slam.status;
+
+// ============================================================================
+// Move Status (slam/status/move) - 100ms period
+// ============================================================================
+
+table MoveState {
+  auto_move: string;        // none, moving, pause, goal, fail, ...
+  dock_move: string;        // none, docking, undocking, done, fail, ...
+  jog_move: string;         // none, moving
+  obs: string;              // Obstacle status
+  path: string;             // Path status
+}
+
+table MoveStatus {
+  header: slam.Header;
+
+  // Current position/velocity
+  pose: slam.Pose2D;
+  velocity: slam.Velocity;
+
+  // Node info
+  current_node_id: string;
+  current_node_name: string;
+  goal_node_id: string;
+  goal_node_name: string;
+  goal_pose: slam.Pose2D;
+
+  // Progress
+  remaining_distance: float64;    // m
+  remaining_time: float64;        // sec
+  battery_percent: int32;
+
+  // Move state
+  move_state: MoveState;
+}
+
+root_type MoveStatus;
+
+// ============================================================================
+// Robot Status (slam/status/robot) - 500ms period
+// ============================================================================
+
+/// Localization quality score
+table LocalizationScore {
+  inlier_error: float64;
+  inlier_ratio: float64;
+  mapping_error: float64;
+  mapping_ratio: float64;
+}
+
+/// Motor status
+table MotorStatus {
+  connection: bool;
+  status: float64;
+  temp: float64;              // celsius
+  current: float64;           // A
+}
+
+/// Robot state
+table RobotState {
+  emo: bool;                  // Emergency stop state
+  charge: string;             // none, ready, battery_on, charging, finish, reject
+  dock: string;               // Docking state
+  localization: string;       // Localization state
+  power: int32;
+  sss_recovery: bool;
+  sw_reset: bool;
+  sw_stop: bool;
+  sw_start: bool;
+  sf_obs_detect: bool;        // Safety sensor obstacle detection
+  sf_bumper_detect: bool;     // Bumper detection
+  sf_operational_stop: bool;  // Operational stop state
+}
+
+/// Power status
+table PowerStatus {
+  bat_in: float64;
+  bat_out: float64;
+  bat_current: float64;
+  bat_percent: float64;
+  total_power: float64;
+  power: float64;
+  charge_current: float64;
+  contact_voltage: float64;
+  tabos_voltage: float64;
+  tabos_current: float64;
+  tabos_soc: float64;
+  tabos_soh: float64;
+  tabos_temp: float64;
+}
+
+/// Map info
+table MapInfo {
+  map_name: string;
+  map_status: string;         // none, loading, loaded
+}
+
+/// Robot settings info
+table RobotInfo {
+  platform_type: string;
+  platform_name: string;
+}
+
+/// Robot full status
+table RobotStatus {
+  header: slam.Header;
+  condition: LocalizationScore;
+  motors: [MotorStatus];      // Up to 4 motors
+  robot_state: RobotState;
+  robot_io: slam.DigitalIO;
+  power: PowerStatus;
+  map: MapInfo;
+  setting: RobotInfo;
+}
+
+root_type RobotStatus;
