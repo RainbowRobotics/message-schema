@@ -15,8 +15,8 @@ from rb_flat_buffers.SLAMNAV.Response_Move_Rotate import Response_Move_RotateT
 from rb_flat_buffers.SLAMNAV.Response_Move_Stop import Response_Move_StopT
 from rb_flat_buffers.SLAMNAV.Response_Move_Target import Response_Move_TargetT
 from rb_flat_buffers.SLAMNAV.Response_Move_XLinear import Response_Move_XLinearT
-from ..base import RBBaseSDK
 
+from ..base import RBBaseSDK
 from .schema.amr_move_schema import SlamnavMovePort
 
 
@@ -147,6 +147,7 @@ class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Move Stop failed: obj_payload is None")
 
+        print(f"=> send_move_stop: {robot_model}/move/stop: {result['obj_payload']}")
         return result["obj_payload"]
 
     async def send_move_pause(self, robot_model: str, req_id: str) -> Response_Move_PauseT:

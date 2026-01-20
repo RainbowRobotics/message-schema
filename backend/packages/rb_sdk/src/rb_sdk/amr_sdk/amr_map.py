@@ -19,8 +19,8 @@ from rb_flat_buffers.SLAMNAV.Response_Mapping_Start import Response_Mapping_Star
 from rb_flat_buffers.SLAMNAV.Response_Mapping_Stop import Response_Mapping_StopT
 from rb_flat_buffers.SLAMNAV.Response_Set_Map_Cloud import Response_Set_Map_CloudT
 from rb_flat_buffers.SLAMNAV.Response_Set_Map_Topology import Response_Set_Map_TopologyT
-from ..base import RBBaseSDK
 
+from ..base import RBBaseSDK
 from .schema.amr_map_schema import SlamnavMapPort
 
 

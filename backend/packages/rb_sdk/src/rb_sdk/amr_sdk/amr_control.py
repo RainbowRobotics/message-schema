@@ -23,8 +23,8 @@ from rb_flat_buffers.SLAMNAV.Response_Safety_Field import Response_Safety_FieldT
 from rb_flat_buffers.SLAMNAV.Response_Safety_Io import Response_Safety_IoT
 from rb_flat_buffers.SLAMNAV.Response_Undock import Response_UndockT
 from rb_flat_buffers.SLAMNAV.Safety_Flag import Safety_FlagT
-from ..base import RBBaseSDK
 
+from ..base import RBBaseSDK
 from .schema.amr_control_schema import SlamnavControlPort
 
 

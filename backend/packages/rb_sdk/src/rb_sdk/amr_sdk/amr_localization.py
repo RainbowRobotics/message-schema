@@ -16,8 +16,8 @@ from rb_flat_buffers.SLAMNAV.Response_Localization_SemiAutoInit import (
 )
 from rb_flat_buffers.SLAMNAV.Response_Localization_Start import Response_Localization_StartT
 from rb_flat_buffers.SLAMNAV.Response_Localization_Stop import Response_Localization_StopT
-from ..base import RBBaseSDK
 
+from ..base import RBBaseSDK
 from .schema.amr_localization_schema import SlamnavLocalizationPort
 
 

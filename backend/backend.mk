@@ -46,6 +46,20 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 		  exec $${compose} up --no-build; \
 		fi'
 
+.PHONY: backend.dev-test
+backend.dev-test: backend.lint ## docker를 쓰고 개발 환경 실행
+	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh --dev
+	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
+	@bash -euo pipefail -c '\
+		set -Eeuo pipefail; \
+		compose="docker compose -f ${WORKDIR}/docker-compose.dev.yml"; \
+		$${compose} pull --ignore-buildable || true; \
+		if $${compose} build; then \
+		  exec $${compose} up; \
+		else \
+		  exec $${compose} up --no-build; \
+		fi'
+
 .PHONY: backend.build
 backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh

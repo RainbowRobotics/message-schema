@@ -117,7 +117,7 @@ class RBSocketIONsClient(socketio.AsyncClient):
         socketio.emit 메서드 오버라이드
         """
         if not self.connected:
-            print("🚫 emit not connected", flush=True)
+            # print("🚫 emit not connected", flush=True)
             return
 
         event = self._check_event_name(event)

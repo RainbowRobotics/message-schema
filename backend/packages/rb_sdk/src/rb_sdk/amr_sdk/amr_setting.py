@@ -17,8 +17,8 @@ from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_Index import Response_Set_Senso
 from rb_flat_buffers.SLAMNAV.Response_Set_Sensor_On import Response_Set_Sensor_OnT
 from rb_flat_buffers.SLAMNAV.Sensor_Info import Sensor_InfoT
 from rb_flat_buffers.SLAMNAV.Setting_Param import Setting_ParamT
-from ..base import RBBaseSDK
 
+from ..base import RBBaseSDK
 from .schema.amr_setting_schema import SlamnavSettingPort
 
 

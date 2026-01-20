@@ -215,7 +215,6 @@ class AmrMoveService:
             except ServiceException as e:
                 print("[moveGoal] DB Exception : ", e)
 
-
             # 3) 요청 검사
             model.check_variables()
 
@@ -225,6 +224,7 @@ class AmrMoveService:
                 req_id=model.id
             )
 
+            print(f"=> move_stop result: {result}")
             model.result_change(result.result)
             model.message = result.message
             model.status_change(result.result)
