@@ -276,10 +276,15 @@ void COMM_FMS::send_move_status()
   int step = ctrl->get_last_step();
 
   QJsonObject moveObj;
-  moveObj["step"]     = QString::number(step, 10);
+  //moveObj["step"]     = QString::number(step, 10);
   moveObj["path"]     = ctrl->get_multi_reqest_state();
   moveObj["auto_move"]  = ctrl->get_auto_state();
-  moveObj["path_time"]  = ctrl->get_global_path_time();
+  //moveObj["path_time"]  = ctrl->get_global_path_time();
+
+  auto path_time_step = ctrl->get_path_time_and_step();
+  moveObj["path_time"]  = path_time_step.first;
+  moveObj["step"]       = QString::number(path_time_step.second, 10);
+
   dataObj["move_state"] = moveObj;
 
   QJsonObject processObj;
