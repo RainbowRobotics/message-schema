@@ -15,6 +15,12 @@ struct N_DIN_u {
 struct N_DOUT_u {
   u: [ubyte: 16];
 }
+struct N_DIN_b {
+  b: [byte: 16];
+}
+struct N_DOUT_b {
+  b: [byte: 16];
+}
 struct N_AIN_f {
   f: [float: 4];
 }
