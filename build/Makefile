@@ -1167,7 +1167,7 @@ cmake_check_build_system:
 
 
 SCHEMA_DIR := rb_ipc/comm_fbs # 본인이 원하는 스키마 디렉토리명 (기본값: schemas)
-SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)
+SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)ㄴㄴ
 
 .PHONY schema-subtree-init
 schema-subtree-init:
