@@ -1,6 +1,10 @@
-table Test {
+table Test_General {
   test: float;
-  test2: [float: 11];
 }
 
-root_type Test;
+table Test_Advanced {
+  test: float;
+}
+
+root_type Test_General;
+root_type Test_Advanced;

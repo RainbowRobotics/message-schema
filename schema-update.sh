@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # 컬러 출력 함수
@@ -32,6 +32,14 @@ done
 
 # 메인 레포 루트
 MAIN_REPO="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 서브트리로 포함되었는지 확인 (스크립트가 메인 레포 내부에 있어야 함)
+if [ "$MAIN_REPO" != "$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo '')" ]; then
+    print_string "error" "이 스크립트는 서브트리로 포함된 상태에서만 실행해야 합니다."
+    print_string "info" "message-schema 레포지토리를 독립적으로 클론해서 실행하지 마세요."
+    exit 1
+fi
 
 # SCHEMA_DIR 디렉토리 확인
 if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
@@ -39,16 +47,19 @@ if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
     exit 1
 fi
 
-# SCHEMA_DIR 디렉토리에 변경사항이 있으면 자동 커밋
 cd "$MAIN_REPO"
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR"; then
+
+# SCHEMA_DIR 디렉토리에 변경사항이 있으면 자동 커밋
+if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
+  || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
+  || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
     print_string "info" "schemas 디렉토리에 변경사항 감지. 메인 레포에 커밋합니다..."
 
     # schemas만 커밋 (다른 staged 파일 제외)
     git add "$SCHEMA_DIR"
 
     # 다른 staged 파일이 있으면 경고
-    if ! git diff --cached --quiet --diff-filter=d -- . ":!$SCHEMA_DIR"; then
+    if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
         print_string "warning" "$SCHEMA_DIR 외 다른 staged 파일도 있습니다. 커밋을 취소합니다."
         git reset HEAD "$SCHEMA_DIR"
         exit 1
@@ -109,16 +120,35 @@ if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
 
     git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
 
-    if !(cd "$WORK_DIR" && \
-        find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + && \
-        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x && \
-        git add -A && \
-        git commit -m "Update schemas from main repo @ $MAIN_COMMIT" && \
-        git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"); then
+    # 작업 디렉토리로 이동하여 처리
+    (
+        cd "$WORK_DIR"
+
+        # [수정 포인트 1] 삭제 대상에서 제외할 목록 정의
+        # .git은 당연히 제외, README와 .github도 명시적으로 제외함
+        print_string "info" "스키마 파일 갱신 중 (메타 파일 보존)..."
+        find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name 'README.md' \
+            ! -name '.gitignore' \
+            -exec rm -rf {} +
+
+        # [수정 포인트 2] 메인 레포의 SCHEMA_DIR 내용물만 가져오기
+        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x
+
+        # 변경사항이 있는지 확인 후 커밋
+        git add -A
+        if git diff --staged --quiet; then
+            print_string "info" "실질적인 변경사항이 없습니다."
+        else
+            git commit -m "Update schemas from main repo @ $MAIN_COMMIT"
+            git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
+        fi
+    ) || {
         print_string "error" "message-schema 푸시 실패"
         exit 1
-    fi
-
+    }
 else
     print_string "info" "새 브랜치 생성: $BR"
     TMP="$BR-tmp"

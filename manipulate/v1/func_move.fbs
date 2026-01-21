@@ -80,3 +80,21 @@ table Request_Move_XB_RUN {
     running_mode:   int;
 }
 //---------------------------------------------------------------
+// Servo
+//---------------------------------------------------------------
+table Request_Servo_J {
+    target:         MoveInput_Target;
+    t1:             float;
+    t2:             float;
+    gain:           float;
+    filter:         float;
+}
+
+table Request_Servo_L {
+    target:         MoveInput_Target;
+    t1:             float;
+    t2:             float;
+    gain:           float;
+    filter:         float;
+}
+//---------------------------------------------------------------
