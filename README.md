@@ -72,7 +72,7 @@ message-schema 레포에서 **리뷰 후 수동 Apply** 되어야 main에 반영
 
 <br />
 
-### 📥 message-schema 최신 변경사항 가져오기
+### 📥 message-schema에 main 브랜치 내용으로 가져오기
 
 ```sh
 make schema-sync
@@ -108,36 +108,38 @@ main-repo/
 ```
 
 ## 4️⃣ 대표 시나리오
-### 새로운 schema 추가 / 수정
+### 1. 새로운 schema 추가 / 수정
 
 ```sh
 vim schemas/nexus/v1/new_message.fbs
 make schema-update
 ```
 
-### 다른 팀원의 변경사항 받기
+### 2. message-schema에 올라온 PR을 다른 팀원 최소 1명이 Apply
+
+- `Slack` 사용자는 **메시지로 PR이 있다는 Notify를 받을 수 있음**
+- 최소 팀원 1명이 Apply 하면 Merge 가능
+
+### 3. 변경된 스키마와 관련 있는 동료가 본인의 레포지토리에 변경사항을 적용하고 PR 승인
+
+### 4. 수정한 사람이 PR을 Merge
+
+### 5. main 브랜치로 Merge를 진행하면 main 브랜치에 변경된 내용이 병합됨
+
+`Slack` 사용자는 **메시지로 PR이 병합 되었다는 Notify를 받을 수 있음**
+
+### 6. message-schema에 main 브랜치(허용을 받고 병합된 내용만 있는) 내용을 가져오기
 ```sh
 make schema-sync
 ```
 
-### 충돌 발생 시
-
-```sh
-make schema-sync
-# 충돌 발생
-
-# 수동 해결 후
-git add schemas/
-git commit -m "Resolve schema conflicts"
-git push origin <branch>
-```
+📌 `schemas/`에서 작업 중인 내용이 있다면, 동기화 시 **사라질 수 있습니다.**
+필요하면 먼저 `make schema-update`로 PR을 올리거나, 별도 백업 후 진행하세요.
 
 ## 5️⃣ 반드시 지켜야 할 규칙 ⚠️
 ### ❌ 금지
 
-- `schemas/`를 직접 커밋하지 말 것
 - `git add .` 상태에서 `schema-update` 실행 금지
-- `message-schema`를 별도로 클론해서 작업 금지
 - `make schema-sync`를 하지 않고 빌드 후 배포 금지
 
 ```sh
