@@ -195,7 +195,8 @@ void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, int _g
 
   QString global_path_time_str = global_path_time;
 
-  if(_global_path_time == global_path_time_str || _global_node_path.empty())
+  //if(_global_path_time == global_path_time_str || _global_node_path.empty())
+  if(_global_node_path.empty())
   {
     is_set_path_processing.store(false);
     log_warn("_global_path_time: {}, global_path_time: {}, _global_node_path: {}", _global_path_time.toStdString(), global_path_time.toStdString(), _global_node_path.size());
