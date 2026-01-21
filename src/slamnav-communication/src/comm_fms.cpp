@@ -423,7 +423,7 @@ void COMM_FMS::handle_path_cmd(const QJsonObject& data)
 {
   DATA_PATH msg;
   msg.path_str      = get_json(data, "path");
-  msg.time        = get_json(data, "time").toLongLong();
+  msg.time        = get_json(data, "time");
   msg.preset        = get_json(data, "preset").toInt();
   msg.command       = get_json(data, "command");
   msg.vobs_closures_str = get_json(data, "vobs_c");
