@@ -1011,6 +1011,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
     }
 
     ctrl->set_path(path, msg.preset, msg.time);
+    ctrl->signal_move_multi();
   }
 
   send_path_response(msg);
