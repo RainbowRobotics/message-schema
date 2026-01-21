@@ -9,7 +9,7 @@
 
 #define ENCODER_RCV_HZ  250
 
-motor::motor(int bno, int ch)
+motor::motor(int bno, int ch, int mdr, float cscale)
     : mA_filter(ENCODER_RCV_HZ, ENCODER_RCV_HZ * 60)
 {
     cans.CAN_BNO = bno;
@@ -23,6 +23,11 @@ motor::motor(int bno, int ch)
 
     infos.connection_timer = 200;
     infos.connection_flag = 0;
+
+    current_scaler = cscale;
+    mdr_derised = mdr;
+    mdr_flip = false;
+
 
     Clear_States();
     Clear_Infos(0);
@@ -83,12 +88,17 @@ void motor::onCANMessage(int ch, int id, const unsigned char* data, int dlc) {
                 infos.type_blm = 0;
             }
 
+            mdr_flip = false;
             if(dlc == 8){
                 if(((data[6]>>5) & 0b01) == 1){
                     int d6 = data[6];
                     int d7 = data[7];
                     infos.type_num = (((d6>>7) & 0b01) << 8) | (d7 & 0xFF);
                     infos.type_mdr = (d6>>6) & 0b01;
+
+                    if(infos.type_mdr != mdr_derised){
+                        mdr_flip = true;
+                    }
                 }else{
                     infos.type_num = -1;
                     infos.type_mdr = -1;
@@ -96,6 +106,10 @@ void motor::onCANMessage(int ch, int id, const unsigned char* data, int dlc) {
             }else{
                 infos.type_num = -1;
                 infos.type_mdr = -1;
+            }
+
+            if(mdr_flip){
+                infos.stat_last_enc = -infos.stat_last_enc;
             }
 
             std::string msg = "BNO "  + std::to_string(cans.CAN_BNO) 
@@ -114,6 +128,11 @@ void motor::onCANMessage(int ch, int id, const unsigned char* data, int dlc) {
                 temp_enc |= 0xFF000000;
             }
             int temp_cur = (int)((short)(data[3] | (data[4]<<8)));
+            if(mdr_flip){
+                temp_enc = -temp_enc;
+                temp_cur = -temp_cur;
+            }
+            temp_cur = (int)(((float)temp_cur) * current_scaler);
             infos.encoder_pulse = temp_enc;
             infos.encoder_deg = ((double)temp_enc) * parameters.para_pulse_to_deg;
 
@@ -129,7 +148,7 @@ void motor::onCANMessage(int ch, int id, const unsigned char* data, int dlc) {
             Activation_Process_Update(infos.encoder_deg);
 
             infos.torque_mA = temp_cur;
-            infos.torque_Nm = temp_cur * 0.001 * parameters.para_torque_const * parameters.para_reduction_rate;
+            infos.torque_Nm = ((double)temp_cur) * 0.001 * parameters.para_torque_const * parameters.para_reduction_rate;
 
             rb_math::MovingAverage::Result t_filt = mA_filter.filter(infos.torque_mA);
             infos.torque_mA_movingFiltered = t_filt.avg_full;
@@ -273,7 +292,7 @@ void motor::Set_Last_Reference(double angle_deg, double torque_Nm, double fb_gai
     infos.encoder_deg_error = last_ref_angle_deg - infos.encoder_deg;
 }
 
-CAN_MSG motor::CmdAdminMode(unsigned int onoff){
+CAN_MSG motor::Cmd_AdminMode(unsigned int onoff){
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
     can_m.channel = cans.CAN_CH;
@@ -286,7 +305,7 @@ CAN_MSG motor::CmdAdminMode(unsigned int onoff){
     return can_m;
 }
 
-CAN_MSG motor::CmdBlindError(unsigned char blind_big, unsigned char blind_inp){
+CAN_MSG motor::Cmd_BlindError(unsigned char blind_big, unsigned char blind_inp){
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
     can_m.channel = cans.CAN_CH;
@@ -376,15 +395,15 @@ CAN_MSG motor::Cmd_Save_Gain_Posision(unsigned int gain_P, unsigned int gain_I, 
     return can_m;
 }
 
-CAN_MSG motor::CmdServoOn(double esti_torque_Nm){
+CAN_MSG motor::Cmd_ServoOn(double esti_torque_Nm){
 
     int esti_mA = (esti_torque_Nm / parameters.para_reduction_rate / parameters.para_torque_const * 1000.);
-
-    if(esti_mA > 32767){
-        esti_mA = +32767;
-    }else if(esti_mA < -32767){
-        esti_mA = -32767;
+    
+    if(mdr_flip){
+        esti_mA = -esti_mA;
     }
+    esti_mA = (int)(((float)esti_mA) / current_scaler);
+    esti_mA = rb_math::saturation_L_and_U(esti_mA, -32767., +32767);
 
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
@@ -398,7 +417,7 @@ CAN_MSG motor::CmdServoOn(double esti_torque_Nm){
     return can_m;
 }
 
-CAN_MSG motor::CmdRequestVersion(){
+CAN_MSG motor::Cmd_RequestVersion(){
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
     can_m.channel = cans.CAN_CH;
@@ -407,7 +426,7 @@ CAN_MSG motor::CmdRequestVersion(){
     return can_m;
 }
 
-CAN_MSG motor::CmdRequestStatus(){
+CAN_MSG motor::Cmd_RequestStatus(){
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
     can_m.channel = cans.CAN_CH;
@@ -416,11 +435,11 @@ CAN_MSG motor::CmdRequestStatus(){
     return can_m;
 }
 
-CAN_MSG motor::CmdControl(){
-    return CmdControl(last_ref_angle_deg, last_ref_torque_Nm, last_ref_fb_gain, last_ref_ff_gain, last_ref_tq_limit_A);
+CAN_MSG motor::Cmd_Control(){
+    return Cmd_Control(last_ref_angle_deg, last_ref_torque_Nm, last_ref_fb_gain, last_ref_ff_gain, last_ref_tq_limit_A);
 }
 
-CAN_MSG motor::CmdControl(double position_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A){
+CAN_MSG motor::Cmd_Control(double position_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A){
     position_deg = rb_math::saturation_Low(position_deg, parameters.para_limit_angleDeg_Low);
     position_deg = rb_math::saturation_Up(position_deg, parameters.para_limit_angleDeg_Up);
     torque_Nm = rb_math::saturation_Up(torque_Nm, parameters.para_limit_torqueNm);
@@ -432,16 +451,20 @@ CAN_MSG motor::CmdControl(double position_deg, double torque_Nm, double fb_gain,
     Set_Last_Reference(position_deg, torque_Nm, fb_gain, ff_gain, tq_limit_A);
 
     int t_position_pulse = position_deg / parameters.para_pulse_to_deg;
+    if(mdr_flip){
+        t_position_pulse = -t_position_pulse;
+    }
     int t_send_pos_digit = t_position_pulse & 0x007FFFFF;
     if(t_position_pulse < 0){
         t_send_pos_digit |= 0x00800000;
     }
     int t_current_mA = (torque_Nm / parameters.para_reduction_rate / parameters.para_torque_const * 1000.);
-    if(t_current_mA > +32767){
-        t_current_mA = +32767;
-    }else if(t_current_mA < -32767){
-        t_current_mA = -32767;
+    if(mdr_flip){
+        t_current_mA = -t_current_mA;
     }
+    t_current_mA = (int)(((float)t_current_mA) / current_scaler);
+    t_current_mA = rb_math::saturation_L_and_U(t_current_mA, -32767., +32767);
+
     short t_send_cur_digit = t_current_mA;
 
     int t_fb_gain = round(10.0 * fb_gain);
@@ -471,7 +494,7 @@ CAN_MSG motor::CmdControl(double position_deg, double torque_Nm, double fb_gain,
     return can_m;
 }
 
-CAN_MSG motor::CmdMakeErrorSumZero(unsigned char mode){
+CAN_MSG motor::Cmd_MakeErrorSumZero(unsigned char mode){
     CAN_MSG can_m;
     can_m.id = cans.CAN_ID_CMD;
     can_m.channel = cans.CAN_CH;
@@ -481,5 +504,29 @@ CAN_MSG motor::CmdMakeErrorSumZero(unsigned char mode){
         can_m.data[1] = 48;
     }
     can_m.dlc = 2;
+    return can_m;
+}
+
+CAN_MSG motor::Cmd_Brake(int opmode, int nonslave_flag){
+    if(nonslave_flag != 1)          nonslave_flag = 0;
+    if(opmode < 0 || opmode > 3)    opmode = 0;
+    // opmode
+    // 0 : Off
+    // 1 : Hard Push
+    // 2 : Weak
+    // 3 : Just Close Brake
+
+    CAN_MSG can_m;
+    can_m.id = cans.CAN_ID_CMD;
+    can_m.channel = cans.CAN_CH;
+    can_m.data[0] = 0xC0;
+    can_m.data[1] = opmode;
+    can_m.data[2] = 1;
+    if(nonslave_flag){
+        can_m.data[3] = 0x44;
+        can_m.dlc = 4;
+    }else{
+        can_m.dlc = 3;
+    }
     return can_m;
 }

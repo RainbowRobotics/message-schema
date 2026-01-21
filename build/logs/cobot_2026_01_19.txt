@@ -33372,3 +33372,264 @@ I 19:16:43.390   [SYSTEM]       PAUSE
 I 19:16:43.979   [SYSTEM]       RESUME from PAUSE
 I 19:16:44.038   [SYSTEM]       PAUSE
 I 19:16:44.728   [SYSTEM]       RESUME from PAUSE
+I 19:24:00.777   [MAIN]         System Version: 1.0.0
+I 19:24:01.786   [LAN2CAN]      Succeed to create socket: 
+I 19:24:02.289   [DAEMON]       Succeed to start read thread
+I 19:24:02.289   [DAEMON]       Succeed to start real-time thread
+I 19:24:02.787   [LAN2CAN]      Succeed to connect l2c
+W 19:24:04.775   [SYSTEM]       System General Thread Jitter High: 89850 ns
+I 19:24:05.800   [MAIN]         SYSTEM STARTING
+I 19:39:11.115   [SYSTEM]       PAUSE
+I 19:41:03.997   [SYSTEM]       PAUSE
+I 19:42:14.571   [SYSTEM]       PAUSE
+I 19:42:24.131   [SYSTEM]       PAUSE
+I 19:42:41.308   [SYSTEM]       PAUSE
+I 19:45:45.538   [SYSTEM]       PAUSE
+M 19:46:05.700   [SYSTEM]       MSG:0/MSG_OK
+I 19:46:18.527   [SYSTEM]       PAUSE
+M 19:47:59.139   [SYSTEM]       MSG:0/MSG_OK
+M 19:48:26.883   [SYSTEM]       MSG:0/MSG_OK
+M 19:49:05.717   [SYSTEM]       MSG:0/MSG_OK
+M 19:49:24.147   [SYSTEM]       MSG:0/MSG_OK
+M 19:49:32.756   [SYSTEM]       MSG:0/MSG_OK
+M 19:49:41.736   [SYSTEM]       MSG:0/MSG_OK
+M 19:49:43.774   [SYSTEM]       MSG:0/MSG_OK
+I 19:51:29.833   [MAIN]         System Version: 1.0.0
+I 19:51:30.845   [LAN2CAN]      Succeed to create socket: 
+I 19:51:31.347   [DAEMON]       Succeed to start read thread
+I 19:51:31.347   [DAEMON]       Succeed to start real-time thread
+I 19:51:31.845   [LAN2CAN]      Succeed to connect l2c
+W 19:51:33.833   [SYSTEM]       System General Thread Jitter High: 175755 ns
+I 19:51:34.859   [MAIN]         SYSTEM STARTING
+I 19:51:59.324   [MAIN]         System Version: 1.0.0
+I 19:52:00.336   [LAN2CAN]      Succeed to create socket: 
+I 19:52:00.838   [DAEMON]       Succeed to start read thread
+I 19:52:00.838   [DAEMON]       Succeed to start real-time thread
+I 19:52:01.336   [LAN2CAN]      Succeed to connect l2c
+W 19:52:03.324   [SYSTEM]       System General Thread Jitter High: 161148 ns
+I 19:52:04.350   [MAIN]         SYSTEM STARTING
+M 19:52:17.658   [SYSTEM]       MSG:0/MSG_OK
+M 19:52:54.091   [SYSTEM]       MSG:0/MSG_OK
+I 19:53:28.260   [MAIN]         System Version: 1.0.0
+I 19:53:29.271   [LAN2CAN]      Succeed to create socket: 
+I 19:53:29.774   [DAEMON]       Succeed to start read thread
+I 19:53:29.774   [DAEMON]       Succeed to start real-time thread
+I 19:53:30.272   [LAN2CAN]      Succeed to connect l2c
+I 19:53:33.285   [MAIN]         SYSTEM STARTING
+M 19:53:52.733   [SYSTEM]       MSG:0/MSG_OK
+M 19:54:03.191   [SYSTEM]       MSG:0/MSG_OK
+I 19:54:43.676   [MAIN]         System Version: 1.0.0
+I 19:54:44.687   [LAN2CAN]      Succeed to create socket: 
+I 19:54:45.189   [DAEMON]       Succeed to start read thread
+I 19:54:45.189   [DAEMON]       Succeed to start real-time thread
+I 19:54:45.687   [LAN2CAN]      Succeed to connect l2c
+I 19:54:48.700   [MAIN]         SYSTEM STARTING
+I 19:56:59.358   [MAIN]         System Version: 1.0.0
+I 19:57:00.369   [LAN2CAN]      Succeed to create socket: 
+I 19:57:00.872   [DAEMON]       Succeed to start read thread
+I 19:57:00.872   [DAEMON]       Succeed to start real-time thread
+I 19:57:01.370   [LAN2CAN]      Succeed to connect l2c
+W 19:57:03.358   [SYSTEM]       System General Thread Jitter High: 65772 ns
+I 19:57:04.384   [MAIN]         SYSTEM STARTING
+W 19:57:10.968   [LAN2CAN]      Header footer not match
+M 19:59:56.750   [SYSTEM]       MSG:0/MSG_OK
+M 20:00:31.770   [SYSTEM]       MSG:0/MSG_OK
+M 20:05:40.290   [SYSTEM]       MSG:0/MSG_OK
+M 20:05:50.353   [SYSTEM]       MSG:0/MSG_OK
+M 20:05:56.142   [SYSTEM]       MSG:0/MSG_OK
+M 20:06:25.893   [SYSTEM]       MSG:0/MSG_OK
+M 20:06:34.930   [SYSTEM]       MSG:0/MSG_OK
+M 20:06:41.863   [SYSTEM]       MSG:0/MSG_OK
+M 20:06:46.166   [SYSTEM]       MSG:0/MSG_OK
+M 20:06:56.824   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:15.221   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:23.185   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:27.427   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:38.652   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:43.047   [SYSTEM]       MSG:0/MSG_OK
+M 20:07:46.541   [SYSTEM]       MSG:0/MSG_OK
+M 20:16:53.533   [SYSTEM]       MSG:0/MSG_OK
+M 20:17:10.704   [SYSTEM]       MSG:0/MSG_OK
+M 20:19:01.400   [SYSTEM]       MSG:0/MSG_OK
+M 20:19:46.945   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:02.899   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:06.652   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:09.942   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:12.894   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:16.220   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:20.677   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:24.137   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:28.690   [SYSTEM]       MSG:0/MSG_OK
+M 20:20:32.768   [SYSTEM]       MSG:0/MSG_OK
+W 20:21:15.515   [LAN2CAN]      Header footer not match
+W 20:21:25.309   [LAN2CAN]      Header footer not match
+M 20:21:26.881   [SYSTEM]       MSG:0/MSG_OK
+M 20:21:36.977   [SYSTEM]       MSG:0/MSG_OK
+I 20:22:04.558   [MAIN]         System Version: 1.0.0
+I 20:22:05.578   [LAN2CAN]      Succeed to create socket: 
+I 20:22:06.080   [DAEMON]       Succeed to start read thread
+I 20:22:06.080   [DAEMON]       Succeed to start real-time thread
+I 20:22:06.578   [LAN2CAN]      Succeed to connect l2c
+W 20:22:08.566   [SYSTEM]       System General Thread Jitter High: 442007 ns
+I 20:22:09.591   [MAIN]         SYSTEM STARTING
+M 20:22:17.091   [SYSTEM]       MSG:0/MSG_OK
+M 20:23:09.574   [SYSTEM]       MSG:0/MSG_OK
+I 20:24:04.892   [MAIN]         System Version: 1.0.0
+I 20:24:05.903   [LAN2CAN]      Succeed to create socket: 
+I 20:24:06.405   [DAEMON]       Succeed to start read thread
+I 20:24:06.405   [DAEMON]       Succeed to start real-time thread
+I 20:24:06.903   [LAN2CAN]      Succeed to connect l2c
+W 20:24:08.906   [SYSTEM]       System General Thread Jitter High: 391154 ns
+I 20:24:09.917   [MAIN]         SYSTEM STARTING
+M 20:24:16.523   [SYSTEM]       MSG:0/MSG_OK
+I 20:26:37.016   [MOTION]       Motion Mode Changed: 0->10
+E 20:26:37.059   [SYSTEM]       JNT OVR SPD REF: 3 / 318.952955
+I 20:26:37.059   [MOTION]       Motion Mode Changed: 10->0
+E 20:26:37.059   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 20:28:19.558   [MOTION]       Motion Mode Changed: 0->10
+I 20:28:19.563   [SYSTEM]       Break Called
+I 20:28:19.863   [SYSTEM]       Break Finished
+I 20:28:19.863   [MOTION]       Motion Mode Changed: 10->0
+M 20:37:43.300   [SYSTEM]       MSG:0/MSG_OK
+M 20:40:56.065   [SYSTEM]       MSG:0/MSG_OK
+I 20:43:10.931   [MOTION]       Motion Mode Changed: 0->10
+E 20:43:10.987   [SYSTEM]       JNT OVR SPD REF: 1 / 279.382063
+E 20:43:10.987   [SYSTEM]       JNT OVR SPD REF: 3 / 553.359907
+I 20:43:10.987   [MOTION]       Motion Mode Changed: 10->0
+E 20:43:10.987   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 20:43:36.686   [MOTION]       Motion Mode Changed: 0->10
+I 20:43:36.769   [SYSTEM]       Break Called
+E 20:43:36.779   [SYSTEM]       JNT OVR SPD REF: 3 / 197.555089
+I 20:43:36.779   [MOTION]       Motion Mode Changed: 10->0
+E 20:43:36.779   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 20:43:38.750   [MOTION]       Motion Mode Changed: 0->10
+E 20:43:38.863   [SYSTEM]       JNT OVR SPD REF: 1 / 569.273541
+E 20:43:38.863   [SYSTEM]       JNT OVR SPD REF: 3 / 1208.519682
+E 20:43:38.863   [SYSTEM]       JNT OVR SPD REF: 4 / 561.388765
+I 20:43:38.863   [MOTION]       Motion Mode Changed: 10->0
+E 20:43:38.863   [SYSTEM]       MSG:316/MSG_MOVE_RUNTIME_TERMINATE_OVER_SPD
+I 20:53:28.585   [MAIN]         System Version: 1.0.0
+I 20:53:29.604   [LAN2CAN]      Succeed to create socket: 
+I 20:53:30.106   [DAEMON]       Succeed to start read thread
+I 20:53:30.106   [DAEMON]       Succeed to start real-time thread
+I 20:53:30.605   [LAN2CAN]      Succeed to connect l2c
+W 20:53:32.592   [SYSTEM]       System General Thread Jitter High: 123002 ns
+I 20:53:33.617   [MAIN]         SYSTEM STARTING
+M 20:53:46.782   [SYSTEM]       MSG:0/MSG_OK
+M 20:53:55.883   [SYSTEM]       MSG:0/MSG_OK
+I 20:53:59.265   [SYSTEM]       Servo Call: 1/1
+I 20:53:59.265   [SYSTEM]       ServoState: 0
+I 20:53:59.265   [SYSTEM]       CMD Power On
+I 20:53:59.498   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 20:53:59.510   [SYSTEM]       STATE POWER ENGAGED
+I 20:54:00.028   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:-0.038724
+I 20:54:00.028   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-1.983413
+I 20:54:00.028   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.958965
+I 20:54:00.028   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:9.795019
+I 20:54:00.028   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:-0.246703
+I 20:54:00.028   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.032633
+I 20:54:00.028   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.205368
+I 20:54:00.536   [SYSTEM]       ServoState: 1
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 20:54:00.630   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 20:54:00.630   [SYSTEM]       Side Firmware : 29
+I 20:54:00.631   [SYSTEM]       ToolFlange Firmware : 92
+I 20:54:00.631   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 20:54:00.631   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 20:54:00.631   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 20:54:00.631   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 20:54:00.631   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 20:54:00.631   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 20:54:00.631   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 20:54:00.631   [SYSTEM]       ServoState: 2
+I 20:54:00.631   [SYSTEM]       ServoState: 3
+I 20:54:02.192   [SYSTEM]       Motor Acts: 0[-0.172083,0.172083/0.174041]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 1[-0.172300,0.172518/0.174041]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 2[-0.170778,0.170778/0.174041]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 3[-0.171430,0.172083/0.174041]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 4[-0.120088,0.121393/0.130531]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 5[-0.116172,0.119436/0.130531]
+I 20:54:02.192   [SYSTEM]       Motor Acts: 6[-0.119218,0.122916/0.130531]
+I 20:54:02.192   [SYSTEM]       ServoState: 4
+I 20:54:02.192   [SYSTEM]       ServoState: 5
+I 20:54:02.192   [SYSTEM]       ServoState: 6
+I 20:54:02.192   [SYSTEM]       Reference On
+M 20:54:33.744   [SYSTEM]       MSG:0/MSG_OK
+M 20:54:40.207   [SYSTEM]       MSG:0/MSG_OK
+M 20:54:44.727   [SYSTEM]       MSG:0/MSG_OK
+W 20:54:49.903   [SYSTEM]       CMD Power Off
+I 20:54:49.903   [SYSTEM]       Reference Off
+I 20:54:49.903   [SYSTEM]       ServoState: 0
+W 20:54:50.338   [TOOLFLANGE]   TFB DISCON
+W 20:54:50.352   [MOTOR]        MOTOR DISCON 1
+W 20:54:50.352   [MOTOR]        MOTOR DISCON 2
+W 20:54:50.352   [MOTOR]        MOTOR DISCON 3
+W 20:54:50.352   [MOTOR]        MOTOR DISCON 5
+W 20:54:50.352   [MOTOR]        MOTOR DISCON 6
+W 20:54:50.354   [MOTOR]        MOTOR DISCON 0
+W 20:54:50.354   [MOTOR]        MOTOR DISCON 4
+W 20:54:50.354   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 20:54:50.354   [SYSTEM]       STATE POWER DIS-ENGAGED
+I 20:54:51.789   [SYSTEM]       Servo Call: 1/1
+I 20:54:51.789   [SYSTEM]       ServoState: 0
+I 20:54:51.789   [SYSTEM]       CMD Power On
+I 20:54:52.019   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 20:54:52.030   [SYSTEM]       STATE POWER ENGAGED
+I 20:54:52.547   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:-0.032633
+I 20:54:52.547   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-1.012483
+I 20:54:52.547   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:9.786534
+I 20:54:52.547   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:-0.265195
+I 20:54:52.547   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.037636
+I 20:54:52.548   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-1.985588
+I 20:54:52.548   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.220814
+I 20:54:53.057   [SYSTEM]       ServoState: 1
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 20:54:53.151   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 20:54:53.151   [SYSTEM]       Side Firmware : 29
+I 20:54:53.151   [SYSTEM]       ToolFlange Firmware : 92
+I 20:54:53.151   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 20:54:53.151   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 20:54:53.151   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 20:54:53.151   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 20:54:53.151   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 20:54:53.151   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 20:54:53.151   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 20:54:53.151   [SYSTEM]       ServoState: 2
+I 20:54:53.151   [SYSTEM]       ServoState: 3
+I 20:54:54.713   [SYSTEM]       Motor Acts: 0[-0.172083,0.172083/0.174041]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 1[-0.172300,0.172518/0.174041]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 2[-0.170778,0.170778/0.174041]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 3[-0.171648,0.172083/0.174041]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 4[-0.120306,0.121611/0.130531]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 5[-0.116607,0.119653/0.130531]
+I 20:54:54.713   [SYSTEM]       Motor Acts: 6[-0.118783,0.122481/0.130531]
+I 20:54:54.713   [SYSTEM]       ServoState: 4
+I 20:54:54.713   [SYSTEM]       ServoState: 5
+I 20:54:54.713   [SYSTEM]       ServoState: 6
+I 20:54:54.713   [SYSTEM]       Reference On
+W 20:54:57.561   [SYSTEM]       CMD Power Off
+I 20:54:57.561   [SYSTEM]       Reference Off
+I 20:54:57.561   [SYSTEM]       ServoState: 0
+W 20:54:57.998   [TOOLFLANGE]   TFB DISCON
+W 20:54:58.008   [MOTOR]        MOTOR DISCON 6
+W 20:54:58.010   [MOTOR]        MOTOR DISCON 0
+W 20:54:58.010   [MOTOR]        MOTOR DISCON 2
+W 20:54:58.010   [MOTOR]        MOTOR DISCON 3
+W 20:54:58.010   [MOTOR]        MOTOR DISCON 5
+W 20:54:58.012   [MOTOR]        MOTOR DISCON 1
+W 20:54:58.012   [MOTOR]        MOTOR DISCON 4
+W 20:54:58.012   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
+I 20:54:58.012   [SYSTEM]       STATE POWER DIS-ENGAGED
+M 20:58:00.803   [SYSTEM]       MSG:0/MSG_OK
+M 20:58:03.133   [SYSTEM]       MSG:0/MSG_OK
+M 20:58:05.910   [SYSTEM]       MSG:0/MSG_OK

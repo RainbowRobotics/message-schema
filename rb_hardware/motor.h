@@ -128,7 +128,7 @@ struct mCANS{
 class motor : public ICANObserver
 {
 public:
-    motor(int bno, int ch);
+    motor(int bno, int ch, int mdr, float cscale);
     ~motor();
 
     void    onCANMessage(int ch, int id, const unsigned char* data, int dlc) override;
@@ -153,8 +153,8 @@ public:
 
     void Set_Last_Reference(double angle_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A);
 
-    CAN_MSG CmdAdminMode(unsigned int onoff);
-    CAN_MSG CmdBlindError(unsigned char blind_big, unsigned char blind_inp);
+    CAN_MSG Cmd_AdminMode(unsigned int onoff);
+    CAN_MSG Cmd_BlindError(unsigned char blind_big, unsigned char blind_inp);
 
     void    Clear_Gain_Current();
     CAN_MSG Cmd_Ask_Gain_Current();
@@ -165,13 +165,14 @@ public:
     CAN_MSG Cmd_Ask_Gain_Position();
     CAN_MSG Cmd_Save_Gain_Posision(unsigned int gain_P, unsigned int gain_I, unsigned int gain_D);
 
-    CAN_MSG CmdServoOn(double esti_torque_Nm);
-    CAN_MSG CmdRequestVersion();
-    CAN_MSG CmdRequestStatus();
-    CAN_MSG CmdControl();
-    CAN_MSG CmdControl(double position_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A);
+    CAN_MSG Cmd_ServoOn(double esti_torque_Nm);
+    CAN_MSG Cmd_RequestVersion();
+    CAN_MSG Cmd_RequestStatus();
+    CAN_MSG Cmd_Control();
+    CAN_MSG Cmd_Control(double position_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A);
 
-    CAN_MSG CmdMakeErrorSumZero(unsigned char mode);
+    CAN_MSG Cmd_MakeErrorSumZero(unsigned char mode);
+    CAN_MSG Cmd_Brake(int opmode, int nonslave_flag);
 
     
 
@@ -181,6 +182,10 @@ private:
     mSTAT           states;
     mINFO           infos;
     mCANS           cans;
+
+    float           current_scaler;         // 1digit = current_scaler (mA) 1,10, ...
+    int             mdr_derised;
+    bool            mdr_flip;
 
     double          last_ref_angle_deg;
     double          last_ref_torque_Nm;

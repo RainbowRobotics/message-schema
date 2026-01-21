@@ -16,6 +16,7 @@ struct SELF_COLL_CHECK_COMBI{
 
 struct ROBOT_CONFIG{
     int                 can_Ch[NO_OF_JOINT + 1];
+    int                 mdr_target[NO_OF_JOINT];
     int                 redundancy_type;
 
     float               arm_coll_min;

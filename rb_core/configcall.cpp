@@ -270,6 +270,14 @@ namespace rb_config {
             ret.can_Ch[0] = ret.can_Ch[1] = ret.can_Ch[2] = ret.can_Ch[3] = 1;
             ret.can_Ch[4] = ret.can_Ch[5] = ret.can_Ch[6] = ret.can_Ch[7] = 0;
 
+            ret.mdr_target[0] = 1;
+            ret.mdr_target[1] = 0;
+            ret.mdr_target[2] = 1;
+            ret.mdr_target[3] = 1;
+            ret.mdr_target[4] = 0;
+            ret.mdr_target[5] = 1;
+            ret.mdr_target[6] = 0;
+
             ret.modules_axis[0] = 2;
             ret.modules_axis[1] = 1;
             ret.modules_axis[2] = 2;
@@ -436,6 +444,14 @@ namespace rb_config {
 
             ret.can_Ch[0] = ret.can_Ch[1] = ret.can_Ch[2] = ret.can_Ch[3] = 1;
             ret.can_Ch[4] = ret.can_Ch[5] = ret.can_Ch[6] = ret.can_Ch[7] = 0;
+
+            ret.mdr_target[0] = 0;
+            ret.mdr_target[1] = 0;
+            ret.mdr_target[2] = 0;
+            ret.mdr_target[3] = 0;
+            ret.mdr_target[4] = 0;
+            ret.mdr_target[5] = 0;
+            ret.mdr_target[6] = 0;
 
             ret.modules_axis[0] = 1;
             ret.modules_axis[1] = 0;

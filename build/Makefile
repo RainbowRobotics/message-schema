@@ -1169,10 +1169,13 @@ cmake_check_build_system:
 SCHEMA_DIR := rb_ipc/comm_fbs # 본인이 원하는 스키마 디렉토리명 (기본값: schemas)
 SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)ㄴㄴ
 
-.PHONY schema-subtree-init
+.PHONY: schema-subtree-init
 schema-subtree-init:
-	@git remote add message-schema https://github.com/RainbowRobotics/message-schema.git
-	@git subtree add --prefix=schemas message-schema main --squash
+	cd .. && \
+	git remote get-url $(SCHEMA_REMOTE) >/dev/null 2>&1 || \
+	git remote add $(SCHEMA_REMOTE) https://github.com/RainbowRobotics/message-schema.git && \
+	git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
+
 
 .PHONY: schema-update
 schema-update:

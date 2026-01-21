@@ -53,6 +53,7 @@ namespace rb_system {
             DIN_DEF_R_FreeDriveOn_F_FreeDriveOff,
             DIN_DEF_R_ProgramLoad,
             DIN_DEF_R_ProgramStart,
+            DIN_DEF_NUM
         };
         enum IO_DEF_DOUT{
             DOUT_DEF_NONE = 0,
@@ -71,6 +72,7 @@ namespace rb_system {
             DOUT_DEF_H_FreeDrive,
             DOUT_DEF_H_PorgramLoaded,
             DOUT_DEF_H_ProgramRunning,
+            DOUT_DEF_NUM
         };
 
         // RT
@@ -85,6 +87,7 @@ namespace rb_system {
         int                         heart_beat_counter = 0;
 
         // system flag
+        bool                        flag_soft_power_cutoff = false;
         bool                        flag_reference_onoff = false;
         bool                        flag_direct_teaching = false;
         bool                        flag_sw_switch_free_drive = false;   
@@ -411,7 +414,7 @@ namespace rb_system {
             }else{
                 if(flag_direct_teaching != t_flag){
                     for(int i = 0; i < NO_OF_JOINT; i++){
-                        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdMakeErrorSumZero(0));
+                        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_MakeErrorSumZero(0));
                     }
                     LOG_INFO("STOP DT Mode");
                 }
@@ -973,7 +976,7 @@ namespace rb_system {
         _gv_Handler_SCB = new scb_v1();
         _gv_Handler_Side = new side_io(1);
         for(int i = 0; i < NO_OF_JOINT; ++i){
-            _gv_Handler_Motor[i] = new motor(i, parameter_robot.can_Ch[i]);
+            _gv_Handler_Motor[i] = new motor(i, parameter_robot.can_Ch[i], parameter_robot.mdr_target[i], rb_module::Get_Module_Info(parameter_robot.modules_type[i]).current_scaler);
         }
         _gv_Handler_Ledlight = new ledlight(parameter_robot.can_Ch[2]);
         _gv_Handler_Toolflange = new toolflange(parameter_robot.can_Ch[NO_OF_JOINT]);
@@ -1548,7 +1551,7 @@ namespace rb_system {
 
         // Step1: Blind Error
         for(int i = 0; i < NO_OF_JOINT; ++i){
-            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdBlindError(true, true));
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_BlindError(true, true));
             std::this_thread::sleep_for(2ms);
         }
         // Step2: Set Temporary PID and torque limit
@@ -1577,7 +1580,7 @@ namespace rb_system {
 
             //----------------------------
 
-            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdMakeErrorSumZero(0));
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_MakeErrorSumZero(0));
             std::this_thread::sleep_for(2ms);
         }
         
@@ -1590,7 +1593,7 @@ namespace rb_system {
 
         // Reocver Blind Mode
         for(int i = 0; i < NO_OF_JOINT; ++i){
-            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdBlindError(false, false));
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_BlindError(false, false));
             std::this_thread::sleep_for(2ms);
         }
         flag_joint_impedance_mode = false;
@@ -1803,6 +1806,7 @@ namespace rb_system {
         std::array<int8_t, NO_OF_DOUT> ret;
         for(int i = 0; i < NO_OF_DOUT; ++i){
             ret[i] = parameter_special_dout_box[i];
+            //std::cout<<"dout ret[i]"<<(int)ret[i]<<std::endl;
         }
         return ret;
     }
@@ -1810,7 +1814,7 @@ namespace rb_system {
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
-        if(func_no > 200){
+        if(func_no >= DOUT_DEF_NUM){
             return MSG_DESIRED_VALUE_IS_OVER_BOUND;
         }
         if(!rb_config::WRITE_IO_Special_BOX(0, p_num, func_no)){
@@ -1837,6 +1841,7 @@ namespace rb_system {
         std::array<int8_t, NO_OF_DIN> ret;
         for(int i = 0; i < NO_OF_DIN; ++i){
             ret[i] = parameter_special_din_box[i];
+            //std::cout<<"din ret[i]"<<(int)ret[i]<<std::endl;
         }
         return ret;
     }
@@ -1844,7 +1849,7 @@ namespace rb_system {
         if(p_num >= NO_OF_DIN){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
-        if(func_no > 200){
+        if(func_no >= DIN_DEF_NUM){
             return MSG_DESIRED_VALUE_IS_OVER_BOUND;
         }
         if(!rb_config::WRITE_IO_Special_BOX(1, p_num, func_no)){
@@ -1907,7 +1912,7 @@ namespace rb_system {
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
 
-        std::cout<<"Set_Box_Digital_Output: "<<p_num<<", "<<value<<std::endl;
+        //std::cout<<"Set_Box_Digital_Output: "<<p_num<<", "<<value<<std::endl;
 
         if(p_num < 0){
             for(unsigned int i = 0; i < NO_OF_DOUT; ++i){
@@ -2098,7 +2103,7 @@ namespace rb_system {
             for(int i = 0; i < NO_OF_JOINT; ++i){
                 std::this_thread::sleep_for(3ms);
                 _gv_Handler_Motor[i]->Set_Version(-1);
-                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdRequestVersion());
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_RequestVersion());
             }
             _gv_Handler_Side->Set_Version(-1);
             _gv_Handler_Lan->CAN_writeData(_gv_Handler_Side->CmdRequestVersion());
@@ -2115,7 +2120,7 @@ namespace rb_system {
             std::this_thread::sleep_for(15ms);
             for(int i = 0; i < NO_OF_JOINT; ++i){
                 std::this_thread::sleep_for(3ms);
-                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdAdminMode(true));
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_AdminMode(true));
             }
 
             for(int i = 0; i < NO_OF_JOINT; ++i){
@@ -2187,7 +2192,7 @@ namespace rb_system {
         for(int i = 0; i < NO_OF_JOINT; ++i){
             _gv_Handler_Motor[i]->Activation_Process_Start();
             _gv_Handler_Motor[i]->Clear_States();
-            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdServoOn(t_torque_ID(i)));            ;
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_ServoOn(t_torque_ID(i)));            ;
             std::this_thread::sleep_for(80ms);
         }
         bool is_success_to_servoOn = false;
@@ -2276,13 +2281,21 @@ namespace rb_system {
             return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_INTERFACE);
         }
         if(opt == PowerOption::Off){
-            LOG_WARNING("CMD Power Off");
-            Set_ReferenceOnOff(false);
             Set_Servo_State(ServoState::NONE);
-
             if(is_call_from_RT){
                 request_powerControl.store(PowerOption::Off, std::memory_order_relaxed);
             }else{
+                LOG_WARNING("CMD Power Off");
+                for(int i = 0; i < NO_OF_JOINT; ++i){
+                    _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Brake(3, 0));
+                }
+                if(flag_reference_onoff){
+                    std::cout<<"Soft Off Mode"<<std::endl;
+                    flag_soft_power_cutoff = true;
+                    usleep(500*1000);
+                    flag_soft_power_cutoff = false;
+                }
+                Set_ReferenceOnOff(false);                
                 _gv_Handler_Lan->Power_Command(0);//Off anyway
             }
         }else if(opt == PowerOption::On){
@@ -2649,7 +2662,7 @@ namespace rb_system {
             Set_Direct_Teaching_Flag(false);
         }
 
-        if(flag_direct_teaching){
+        if(flag_direct_teaching || flag_soft_power_cutoff){
             fb_gain = 0.0;
             ff_gain = 1.0;
 
@@ -2706,7 +2719,7 @@ namespace rb_system {
             double m_b = joint_para.para_friction_b;
 
             double ff_mA = 0.;
-            if(flag_direct_teaching){
+            if(flag_direct_teaching || flag_soft_power_cutoff){
                 ff_mA  = m_i * joint_info.encoder_deg_acc_LPF * MATH_D2R 
                         + m_a * joint_info.encoder_deg_vel_LPF * MATH_D2R 
                         + m_b * rb_math::filt_Zero(joint_info.encoder_deg_vel_LPF * MATH_D2R, -0.1, 0.1, -1.0, 1.0);
@@ -2715,6 +2728,9 @@ namespace rb_system {
 
                 ff_mA *= (0.7);
                 ff_mA *= tfb_slope;
+                if(flag_soft_power_cutoff){
+                    ff_mA = 0.;
+                }
                 // Velocity Limiter
                 ff_mA -= rb_math::sign(joint_info.encoder_deg_vel_LPF) * rb_math::filt_Line(fabs(joint_info.encoder_deg_vel_LPF), (0.2 * joint_para.para_hwmax_vel), (0.6 * joint_para.para_hwmax_vel), 0., m_b * 5.);
                 // Brake
@@ -2738,7 +2754,7 @@ namespace rb_system {
         }
         VectorJd t_torque_Esti = t_torque_ID + t_torque_FF;
 
-        if(flag_direct_teaching){//<----------------------------
+        if(flag_direct_teaching || flag_soft_power_cutoff){//<----------------------------
             for(int i = 0; i < NO_OF_JOINT; ++i){
                 if(std::isnan(t_torque_Esti(i)) || std::isinf(t_torque_Esti(i))){
                     t_torque_Esti(i) = 0.;
@@ -2754,7 +2770,12 @@ namespace rb_system {
         // Collision Detection
         // -------------------------------------------------------------------------
         bool is_over_torque = RT_Collision_Checker(t_torque_Esti, t_torque_Meas, t_torque_Limit);
-        if(flag_reference_onoff && flag_direct_teaching == false && parameter_out_coll_onoff && flag_joint_impedance_mode == false){
+        if(flag_reference_onoff 
+            && flag_direct_teaching == false
+            && flag_soft_power_cutoff == false 
+            && parameter_out_coll_onoff 
+            && flag_joint_impedance_mode == false){
+
             flag_collision_out_occur |= is_over_torque;
         }else{
             torque_delta_lpf = VectorJd::Zero(NO_OF_JOINT, 1);
@@ -2786,7 +2807,7 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         if(flag_reference_onoff){
             for(int i = 0; i < NO_OF_JOINT; ++i){
-                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdControl(output_lpf_q_ang(i), t_torque_Esti(i), fb_gain, ff_gain, torque_limit_A[i]));
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Control(output_lpf_q_ang(i), t_torque_Esti(i), fb_gain, ff_gain, torque_limit_A[i]));
             }
         }
         // -------------------------------------------------------------------------

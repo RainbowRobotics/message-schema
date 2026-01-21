@@ -24,6 +24,7 @@ namespace rb_module {
                 ret.temperature_esti[0] = 2.0791;
                 ret.temperature_esti[1] = 165.4974;
                 ret.resi_R_q = 0.165;
+                ret.current_scaler = 1.;
                 break;
             }
             case MCODE::M200:
@@ -46,6 +47,7 @@ namespace rb_module {
                 ret.temperature_esti[0] = 1.5655;
                 ret.temperature_esti[1] = 81.3997;
                 ret.resi_R_q = 0.240;
+                ret.current_scaler = 1.;
                 break;
             }
             case MCODE::M140:
@@ -68,6 +70,7 @@ namespace rb_module {
                 ret.temperature_esti[0] = 0.2193;
                 ret.temperature_esti[1] = 13.2591;
                 ret.resi_R_q = 0.825;
+                ret.current_scaler = 1.;
                 break;
             }
         }

@@ -35,6 +35,8 @@ namespace rb_module {
         float resi_R_q;
         
         float temperature_esti[2];
+
+        float current_scaler;//1 digit = ? mA
     };
 
     Module_Info Get_Module_Info(MCODE t_mcdoe);
