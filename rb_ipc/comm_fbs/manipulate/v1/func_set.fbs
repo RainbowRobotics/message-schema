@@ -1,0 +1,72 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+table Request_Set_Tool_List {
+  target_tool_num: int;
+}
+
+table Request_Set_User_Frame {
+  user_frame_num: int;
+}
+
+table Request_Set_Shift {
+  shift_no:       int;
+  shift_mode:     int;
+  target:         MoveInput_Target;
+}
+
+table Request_Set_Out_Collision_Para {
+  onoff:        int;
+  react_mode:   int;
+  threshold:    float;
+}
+
+table Request_Set_Self_Collision_Para {
+  mode:         int;
+  dist_int:     float;
+  dist_ext:     float;
+}
+
+table Request_Set_Joint_Impedance {
+  onoff:        int;
+  stiffness:    N_JOINT_f;
+  torquelimit:  N_JOINT_f;
+}
+
+table Request_Set_Free_Drive {
+  onoff:        int;
+  sensitivity:  float;
+}
+
+table Request_Set_User_Frame_6Dof {
+  user_frame_num: int;
+  setting_option: int;
+  target_x: float;
+  target_y: float;
+  target_z: float;
+  target_rx: float;
+  target_ry: float;
+  target_rz: float;
+}
+
+table Request_Set_User_Frame_TCP {
+  user_frame_num: int;
+  setting_option: int;
+}
+
+table Request_Set_User_Frame_3Points {
+  user_frame_num: int;
+  setting_option: int;
+  order_option: int;
+  point_1_x: float;
+  point_1_y: float;
+  point_1_z: float;
+  point_2_x: float;
+  point_2_y: float;
+  point_2_z: float;
+  point_3_x: float;
+  point_3_y: float;
+  point_3_z: float;
+}
