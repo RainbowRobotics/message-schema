@@ -26,6 +26,10 @@ schema-update: ## schemas 변경사항을 현재 레포와 서브레포로 push 
 .PHONY: schema-sync
 schema-sync: ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
 	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+
+.PHONY: schema-sync-force
+schema-sync-force: ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 강제 덮어씌우기)
+	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE) -y
 ```
 
 ### 2. message-schema를 Subtree로 추가
@@ -75,7 +79,11 @@ message-schema 레포에서 **리뷰 후 수동 Apply** 되어야 main에 반영
 ### 📥 message-schema에 main 브랜치 내용으로 가져오기
 
 ```sh
-make schema-sync
+make schema-sync 
+
+#or
+
+make schema-sync-force # main 브랜치와 달라도 덮어씌울건지 안물어보고 강제로 main 브랜치 내용으로 덮어버림
 ```
 
 #### 동작 요약
@@ -90,6 +98,9 @@ make schema-sync
 
 📌 `schema-sync`는 `schema/from-* `**브랜치를 가져오지 않으며,
 PR이 `main`에 머지된 내용만** 반영됩니다.
+
+📌 `message-schema/main`에 이제까지 제대로 위 시나리오대로 `make schema-update`를 하고 Merge 하는 방식을 잘 따라줬더라면,
+작업이 끝나고 배포할때 무조건 `message-schema/main`꺼를 가져다가 쓰는 것이 더욱 안전하고 확실합니다.
 
 📌 `schemas/`에서 작업 중인 내용이 있다면, 동기화 시 **사라질 수 있습니다.**
 필요하면 먼저 `make schema-update`로 PR을 올리거나, 별도 백업 후 진행하세요.
