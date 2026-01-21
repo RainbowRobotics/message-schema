@@ -5,29 +5,34 @@
 
 ___
 
-## 1️⃣ Subtree를 프로젝트에 최초 1회 설정
-### 1. message-schema를 Subtree로 추가
-```sh
-# 자신의 팀 프로젝트(repository) main 또는 develop 브랜치에서
-
-git remote add message-schema https://github.com/RainbowRobotics/message-schema.git
-git subtree add --prefix=schemas message-schema main --squash
-
-git push origin <your-branch>
-```
-
-### 2. Makefile 설정
+## 1️⃣ Subtree를 프로젝트에 적용 방법
+### 1. Makefile 설정
 ```Makefile
-SCHEMA_DIR := schemas # 본인이 원하는 스키마 디렉토리명 (기본값: schemas)
-SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)
+SCHEMA_DIR := schemas            # subtree가 위치할 디렉토리
+SCHEMA_REMOTE := message-schema  # subtree remote 이름
+SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema.git
+
+.PHONY: schema-subtree-init
+schema-subtree-init: ## schema subtree 최초 1회 초기화
+    @[ ! -d "$(SCHEMA_DIR)" ] || (echo "❌ $(SCHEMA_DIR) 이라는 디렉토리가 이미 존재합니다. 지워주시고 커밋/푸시 후 진행해주세요!"; exit 1)
+	@git remote get-url $(SCHEMA_REMOTE) >/dev/null 2>&1 \
+	  || git remote add $(SCHEMA_REMOTE) $(SCHEMA_REMOTE_URL)
+	@git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
 
 .PHONY: schema-update
-schema-update:
+schema-update: ## schemas 변경사항을 현재 레포와 서브레포로 push 그리고 자동 PR 진행
 	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
 
 .PHONY: schema-sync
-schema-sync:
+schema-sync: ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
 	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+```
+
+### 2. message-schema를 Subtree로 추가
+```sh
+# 자신의 팀 프로젝트(repository) main 또는 develop 브랜치에서
+
+make schema-subtree-init ## 이미 전에 진행했다면 안하셔도 됩니다.
 ```
 
 ### 3. Git 사용자 이메일 확인
