@@ -1165,3 +1165,19 @@ cmake_check_build_system:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
+
+SCHEMA_DIR := rb_ipc/comm_fbs # 본인이 원하는 스키마 디렉토리명 (기본값: schemas)
+SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)
+
+.PHONY schema-subtree-init
+schema-subtree-init:
+	@git remote add message-schema https://github.com/RainbowRobotics/message-schema.git
+	@git subtree add --prefix=schemas message-schema main --squash
+
+.PHONY: schema-update
+schema-update:
+	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+
+.PHONY: schema-sync
+schema-sync:
+	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
