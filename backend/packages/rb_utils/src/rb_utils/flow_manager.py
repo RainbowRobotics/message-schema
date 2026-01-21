@@ -217,13 +217,44 @@ def safe_eval_expr(
     # --- 단순 대입: a = <expr> (한 문장만 허용) ---------------------------------
     try:
         mod = ast.parse(s, mode="exec")
-        if len(mod.body) == 1 and isinstance(mod.body[0], ast.Assign):
-            tgt = mod.body[0].targets[0]
-            if not isinstance(tgt, ast.Name):
-                raise ValueError("only simple assignment like `a = <expr>` is allowed")
-            val = _eval(mod.body[0].value)
-            vars_.setdefault("local", {})[tgt.id] = val
-            return val
+        if len(mod.body) == 1:
+            stmt = mod.body[0]
+
+            # 1) 단순 대입: a = <expr>
+            if isinstance(stmt, ast.Assign):
+                tgt = stmt.targets[0]
+                if not isinstance(tgt, ast.Name):
+                    raise ValueError("only simple assignment like `a = <expr>` is allowed")
+                val = _eval(stmt.value)
+                vars_.setdefault("local", {})[tgt.id] = val
+                return val
+
+            # 2) 복합 대입: a *= <expr>  (+=, -=, /= ... 포함)
+            if isinstance(stmt, ast.AugAssign):
+                if not isinstance(stmt.target, ast.Name):
+                    raise ValueError("only simple aug assignment like `a *= <expr>` is allowed")
+
+                name = stmt.target.id
+
+                # 현재값 가져오기 (local 우선, 없으면 global, 그래도 없으면 0)
+                if name in vars_.get("local", {}):
+                    cur = vars_["local"][name]
+                elif name in vars_.get("global", {}):
+                    cur = vars_["global"][name]
+                else:
+                    cur = 0
+
+                try:
+                    bin_fn = BIN_OPS[type(stmt.op)]
+                except KeyError:
+                    raise ValueError(f"unsupported operator in aug-assign: {type(stmt.op)}") from None
+
+                rhs = _eval(stmt.value)
+                new_val = bin_fn(cur, rhs)
+
+                # 로컬에 기록(네 증감 로직이랑 일관되게)
+                vars_.setdefault("local", {})[name] = new_val
+                return new_val
     except SyntaxError:
         pass  # 표현식일 수 있으니 아래로 진행
     except Exception as e:

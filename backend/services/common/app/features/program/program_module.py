@@ -111,7 +111,7 @@ class ProgramService(BaseService):
         self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
-    async def call_resume_or_pause(
+    def call_resume_or_pause(
         self,
         *,
         is_pause: bool,
@@ -138,6 +138,8 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
+
+            self.script_executor.pause_all()
         else:
             res_manipulate_resume_or_pause = zenoh_client.query_one(
                 "*/call_resume",
@@ -145,6 +147,8 @@ class ProgramService(BaseService):
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
+
+            self.script_executor.resume_all()
 
         # if program_id:
         #     await self.update_program_state(program_id=program_id, state=state, db=db)
@@ -171,6 +175,9 @@ class ProgramService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=2,
         )
+
+        self.script_executor.stop_all()
+
         return {
             "manipulateReturnValue": (
                 res_manipulate_halt["dict_payload"]["returnValue"]

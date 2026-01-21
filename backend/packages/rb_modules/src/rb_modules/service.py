@@ -2,7 +2,7 @@ import asyncio
 import functools
 
 from rb_sdk.manipulate import RBManipulateSDK
-from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
+from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
 from .log import rb_log
 
@@ -40,7 +40,7 @@ class BaseService:
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
                 raise Exception(e) from e
-            except (ZenohNoReply, ZenohTransportError) as e:
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
                 raise Exception(e) from e
             except Exception as e:
@@ -54,7 +54,7 @@ class BaseService:
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
                 raise Exception(e) from e
-            except (ZenohNoReply, ZenohTransportError) as e:
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
                 raise Exception(e) from e
             except Exception as e:

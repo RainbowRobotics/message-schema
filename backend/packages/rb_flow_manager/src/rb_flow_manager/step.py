@@ -274,6 +274,8 @@ class Step:
                     else:
                         self.done_script()
 
+                ctx.update_vars_to_state_dict()
+
                 done_event.set()
 
             flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args or {}, done=done)

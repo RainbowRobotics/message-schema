@@ -13,7 +13,7 @@ from rb_flat_buffers.IPC.Response_Get_Absolute_Value import Response_Get_Absolut
 from rb_flat_buffers.IPC.Response_Get_Relative_Value import Response_Get_Relative_ValueT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
-from rb_utils.flow_manager import eval_value
+from rb_utils.flow_manager import safe_eval_expr
 from rb_utils.parser import to_json
 
 from rb_sdk.manipulate_sdk.manipulate_get_data import RBManipulateGetDataSDK
@@ -345,6 +345,10 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
         now = time_module.monotonic()
         condition = flow_manager_args.args.get("condition", None)
+        logic_operator = (
+            (digital_input.get("logical_operator") if digital_input is not None else None)
+            or "AND"
+        )
         is_break = False
 
         if wait_type == "TIME":
@@ -352,10 +356,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
         elif wait_type == "HOLDING":
             if mode == "GENERAL":
                 while True:
-                    if flow_manager_args.ctx.stop_event.is_set():
-                        break
+                    flow_manager_args.ctx.check_stop()
 
-                    if not eval_value(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
+                    if not safe_eval_expr(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
                         break
 
                     if time_out is not None and time_module.monotonic() - now >= time_out:
@@ -366,22 +369,20 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 while True:
                     flow_manager_args.ctx.check_stop()
 
-                    print(f"is_alive: {self._is_alive}, time_out: {time_out}, now: {now}, time_module.monotonic(): {time_module.monotonic()}")
-
                     _, _, obj, _ = await self.zenoh_client.receive_one(f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT)
 
-                    if digital_input["logical_operator"] == "AND":
+                    if logic_operator == "AND":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
                             elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] != signal:
                                 is_break = True
 
-                    elif digital_input["logical_operator"] == "OR":
+                    elif logic_operator == "OR":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cbox_digital_input", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
+                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
                                 is_break = False
                                 break
                             else:
@@ -399,10 +400,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
         elif wait_type == "EXIT":
             if mode == "GENERAL":
                 while True:
-                    if flow_manager_args.ctx.stop_event.is_set():
-                        break
+                    flow_manager_args.ctx.check_stop()
 
-                    if eval_value(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
+                    if safe_eval_expr(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
                         break
 
                     if time_out is not None and time_module.monotonic() - now >= time_out:
@@ -411,12 +411,11 @@ class RBManipulateProgramSDK(RBBaseSDK):
                     await asyncio.sleep(0.01)
             elif mode == "DIGITAL_INPUT":
                 while True:
-                    if not self._is_alive:
-                        break
+                    flow_manager_args.ctx.check_stop()
+
                     _, _, obj, _ = await self.zenoh_client.receive_one(f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT)
 
-                    print(f"obj: {obj}", flush=True)
-                    if digital_input["logical_operator"] == "AND":
+                    if logic_operator == "AND":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
@@ -426,11 +425,11 @@ class RBManipulateProgramSDK(RBBaseSDK):
                             else:
                                 is_break = True
 
-                    elif digital_input["logical_operator"] == "OR":
+                    elif logic_operator == "OR":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cbox_digital_input", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
+                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
                                 is_break = True
 
                     if is_break:
@@ -438,6 +437,8 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
                     if time_out is not None and time_module.monotonic() - now >= time_out:
                         break
+
+                    await asyncio.sleep(0.01)
 
         if flow_manager_args is not None:
             flow_manager_args.done()

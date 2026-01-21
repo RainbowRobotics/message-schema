@@ -96,8 +96,6 @@ class ExecutionContext:
 
                 res = fn(robot_model, var_name) if fn is not None else None
 
-                print(f"res: {res}", flush=True)
-
                 if res is None:
                     raise RuntimeError(f"Failed to get global variable: {var_name}")
 

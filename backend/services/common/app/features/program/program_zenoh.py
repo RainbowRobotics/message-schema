@@ -39,17 +39,20 @@ async def on_program_at_end(*, topic, mv, obj, attachment):
     return await program_service.at_program_end(task_id=obj["taskId"], db=db)
 
 @zenoh_program_router.subscribe("rrs/pause", opts=SubscribeOptions(allowed_same_sender=True))
-async def on_pause(*, topic, mv, obj, attachment):
-    return await program_service.call_resume_or_pause(is_pause=True)
+def on_pause(*, topic, mv, obj, attachment):
+    """ 전체 로봇 프로그램 일시정지 """
+    return program_service.call_resume_or_pause(is_pause=True)
 
 
 @zenoh_program_router.subscribe("rrs/resume", opts=SubscribeOptions(allowed_same_sender=True))
-async def on_resume(*, topic, mv, obj, attachment):
-    return await program_service.call_resume_or_pause(is_pause=False)
+def on_resume(*, topic, mv, obj, attachment):
+    """ 전체 로봇 프로그램 재개 """
+    return program_service.call_resume_or_pause(is_pause=False)
 
 
 @zenoh_program_router.subscribe("rrs/stop", opts=SubscribeOptions(allowed_same_sender=True))
 async def on_stop(*, topic, mv, obj, attachment):
+    """ 전체 로봇 프로그램 중지 """
     return program_service.call_stop()
 
 

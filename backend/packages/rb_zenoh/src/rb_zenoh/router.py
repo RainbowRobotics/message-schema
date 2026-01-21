@@ -1,15 +1,9 @@
-from __future__ import (
-    annotations,
-)
+from __future__ import annotations
 
 import asyncio
 import contextlib
-from collections.abc import (
-    Callable,
-)
-from dataclasses import (
-    dataclass,
-)
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from .client import FBRootReadable, ZenohClient
@@ -28,7 +22,7 @@ class _Reg:
 @dataclass(slots=True)
 class _QueryableReg:
     topic: str
-    cb: Callable
+    cb: Callable[[dict[str, str]], Any]  # params -> payload
     handle: Any | None = None
 
 
@@ -86,16 +80,17 @@ class ZenohRouter:
 
         return deco
 
+    # 데코레이터: @router.queryable("file/get")
     def queryable(self, topic: str):
         full_topic = self._join_topic(self.prefix, topic)
 
-        def deco(func: Callable):
-            queryables = _QueryableReg(full_topic, func)
-            self._queryables.append(queryables)
+        def deco(func: Callable[[dict[str, str]], Any]):
+            reg = _QueryableReg(full_topic, func)
+            self._queryables.append(reg)
 
             if self._started and not self._closed:
-                handle = self.client.queryable(queryables.topic, queryables.cb)
-                queryables.handle = handle
+                # 이미 시작된 상태면 즉시 declare
+                reg.handle = self.client.queryable(reg.topic, reg.cb)
             return func
 
         return deco
@@ -104,15 +99,12 @@ class ZenohRouter:
         ext_prefix = self._join_topic(self.prefix, (prefix or "").rstrip("/"))
 
         for other in others:
+            # subscribe 복제
             for src in other._regs:
-                new_topic = self._join_topic(
-                    ext_prefix, src.topic if other.prefix == "" else src.topic
-                )
+                new_topic = self._join_topic(ext_prefix, src.topic)
 
-                exists_idx = next(
-                    (i for i, r in enumerate(self._regs) if r.topic == new_topic), None
-                )
-                if exists_idx is not None:
+                exists = any(r.topic == new_topic for r in self._regs)
+                if exists:
                     raise ZenohRouterError(f"🚫 Duplicate topic: {new_topic}")
 
                 reg = _Reg(
@@ -124,17 +116,29 @@ class ZenohRouter:
                 self._regs.append(reg)
 
                 if self._started and not self._closed:
-                    handle = self.client.subscribe(
+                    reg.handle = self.client.subscribe(
                         reg.topic, reg.cb, flatbuffer_obj_t=reg.flatbuffer_obj_t, options=reg.opts
                     )
-                    reg.handle = handle
+
+            # queryable 복제
+            for src in other._queryables:
+                new_topic = self._join_topic(ext_prefix, src.topic)
+
+                exists = any(q.topic == new_topic for q in self._queryables)
+                if exists:
+                    raise ZenohRouterError(f"🚫 Duplicate queryable: {new_topic}")
+
+                qreg = _QueryableReg(topic=new_topic, cb=src.cb)
+                self._queryables.append(qreg)
+
+                if self._started and not self._closed:
+                    qreg.handle = self.client.queryable(qreg.topic, qreg.cb)
 
     async def startup(self):
         async with self._lock:
-            # 이미 시작되어 있고, 닫힌 상태가 아니면 무시
             if self._started and not self._closed:
                 return
-            # 재시작 경로: 닫힘 플래그 해제
+
             self._closed = False
             self._started = True
 
@@ -145,13 +149,19 @@ class ZenohRouter:
 
             self.client.set_loop(asyncio.get_running_loop())
 
+            # subscribe 등록
             for r in self._regs:
-                if r.handle:  # 이미 동적으로 구독됐을 수 있음
+                if r.handle:
                     continue
-                h = self.client.subscribe(
+                r.handle = self.client.subscribe(
                     r.topic, r.cb, flatbuffer_obj_t=r.flatbuffer_obj_t, options=r.opts
                 )
-                r.handle = h
+
+            # ✅ queryable 등록
+            for q in self._queryables:
+                if q.handle:
+                    continue
+                q.handle = self.client.queryable(q.topic, q.cb)
 
     async def shutdown(self):
         async with self._lock:
@@ -166,11 +176,20 @@ class ZenohRouter:
                         r.handle.close()
                     r.handle = None
 
+            # ✅ queryable은 undeclare로 내리기
             for q in self._queryables:
                 if q.handle:
+                    # zenoh-python 핸들은 보통 .undeclare()
                     with contextlib.suppress(Exception):
-                        q.handle.close()
+                        if hasattr(q.handle, "undeclare"):
+                            q.handle.undeclare()
+                        elif hasattr(q.handle, "close"):
+                            q.handle.close()
                     q.handle = None
+
+                # 안전망: client 쪽 맵에서도 제거(등록되어 있으면)
+                with contextlib.suppress(Exception):
+                    self.client.undeclare_queryable(q.topic)
 
             # 세션 닫기
             with contextlib.suppress(Exception):

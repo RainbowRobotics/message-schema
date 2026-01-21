@@ -6,15 +6,50 @@ import os
 import sys
 import threading
 import time as time_module
-from typing import ClassVar, Literal, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar
 
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 from rb_flow_manager.exception import FlowControlException
+from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
+from rb_utils.flow_manager import make_builtins_allow_most, safe_eval_expr
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
+
+from .schema.base_schema import SetVariableDTO
+
+
+class VariablesProxy:
+    """변수 프록시"""
+
+    def __init__(self, ctx: Any):
+        self._ctx = ctx
+
+    def __getitem__(self, key: str):
+        local = self._ctx.variables.get("local", {})
+        if key in local:
+            return local[key]
+
+        global_vars = self._ctx.variables.get("global", {})
+        if key in global_vars:
+            return global_vars[key]
+
+        if key.startswith("RB_"):
+            value = self._ctx.get_global_variable(key)
+            if value is None:
+                raise KeyError(key)
+            return value
+
+        raise KeyError(key)
+
+    def get(self, key: str, default: Any | None = None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
 
 T = TypeVar("T", bound="RBBaseSDK")
 
@@ -191,6 +226,68 @@ class RBBaseSDK:
     #                 self._tasks.discard(task)
 
     #     return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
+
+    def set_variables(self, *, variables: list[SetVariableDTO], flow_manager_args: FlowManagerArgs | None = None):
+        """변수 설정"""
+        if flow_manager_args is not None:
+            for variable in variables:
+                flow_manager_args.ctx.update_local_variables({
+                    variable["name"]: variable["init_value"]
+                })
+            flow_manager_args.done()
+
+    def make_script(self, *, mode: Literal["GENERAL", "ADVANCED"] = "ADVANCED", contents: str | None = None, flow_manager_args: FlowManagerArgs | None = None):
+        """스크립트 생성"""
+
+        general_contents = flow_manager_args.args.get("general_contents", None)
+
+        if mode == "GENERAL":
+            if general_contents is None:
+                raise RuntimeError("general_contents is required")
+
+            vars_ = flow_manager_args.ctx.variables
+
+            # ctx.variables가 {"c": ...} 같은 평평한 dict면 local로 감싸기
+            if vars_ is not None and "local" not in vars_ and "global" not in vars_:
+                vars_ = {"local": vars_}
+
+            for content in general_contents:
+                safe_eval_expr(
+                    content,
+                    variables=vars_,
+                    get_global_variable=flow_manager_args.ctx.get_global_variable,
+                )
+
+            flow_manager_args.done()
+        elif mode == "ADVANCED":
+            if contents is None:
+                raise RuntimeError("contents is required")
+
+            code = compile(contents, "<custom_script>", "exec")
+
+
+            merged_variables = VariablesProxy(flow_manager_args.ctx)
+
+            env = {
+                "variables": merged_variables,
+                "var": merged_variables,
+                "update_variable": flow_manager_args.ctx.update_local_variables,
+                "done": flow_manager_args.done,
+                "pause": flow_manager_args.ctx.pause,
+                "stop": flow_manager_args.ctx.stop,
+                "resume": flow_manager_args.ctx.resume,
+                "check_stop": flow_manager_args.ctx.check_stop,
+                "rb_log": rb_log,
+            }
+
+            try:
+                exec(  # pylint: disable=exec-used
+                    code,
+                    {"__builtins__": make_builtins_allow_most()},
+                    env,
+                )
+            finally:
+                flow_manager_args.done()
 
     async def wait(self, *, second: float, flow_manager_args: FlowManagerArgs | None = None):
         """지정한 시간만큼 기다리는 함수."""

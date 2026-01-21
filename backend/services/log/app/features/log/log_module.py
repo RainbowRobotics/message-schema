@@ -151,7 +151,7 @@ class LogService:
             obj["level"] if isinstance(obj["level"], int) else (obj["level"] or "unknown").lower()
         )
         obj["createdAt"] = now_utc.isoformat()
-        obj["createdAtDt"] = now_utc - timedelta(hours=24)
+        # obj["createdAtDt"] = now_utc - timedelta(hours=24)
 
 
         await socket_client.emit("state_log", obj)
