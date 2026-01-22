@@ -450,11 +450,15 @@ class ZenohClient:
         def _to_bytes(x):
             if x is None:
                 return None
-            if isinstance(x, bytes | bytearray | memoryview):
+            if isinstance(x, (bytes, bytearray, memoryview)):
                 return bytes(x)
             if isinstance(x, str):
                 return x.encode("utf-8")
-            return json.dumps(x, ensure_ascii=False).encode("utf-8")
+
+            def _json_default(o):
+                return str(o)
+
+            return json.dumps(x, ensure_ascii=False, default=_json_default).encode("utf-8")
 
         def _auto_check_encoding(original):
             if isinstance(original, bytes | bytearray | memoryview):
