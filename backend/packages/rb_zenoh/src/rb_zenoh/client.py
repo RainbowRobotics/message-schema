@@ -483,9 +483,7 @@ class ZenohClient:
         # async/sync 모두 실행
         def _call_handler(cb, kwargs):
             if inspect.iscoroutinefunction(cb):
-                loop = self._ensure_loop()
-                fut = asyncio.run_coroutine_threadsafe(cb(**kwargs), loop)
-                return fut.result(timeout=10)  # 필요하면 값 조정
+                return asyncio.run(cb(**kwargs))
             return cb(**kwargs)
 
         def _handler(q):
@@ -508,7 +506,7 @@ class ZenohClient:
                     q.reply_del(q.key_expr)
                     return
 
-                att = f"sender={self.sender};sender_id={self.sender_id}"
+                att = ZBytes(f"sender={self.sender};sender_id={self.sender_id}".encode())
 
                 # FlatBuffer 응답
                 if hasattr(result, "Pack"):
@@ -523,7 +521,30 @@ class ZenohClient:
                     )
                     return
 
-                # JSON/bytes 응답
+                # FlatBuffer 응답 (dict 내부의 obj_payload)
+                if isinstance(result, dict) and "obj_payload" in result:
+                    fb_obj = result["obj_payload"]
+                    if fb_obj is not None and hasattr(fb_obj, "Pack"):
+                        if flatbuffer_res_buf_size is None:
+                            raise ValueError("flatbuffer_res_buf_size is required")
+
+                        data = _pack_fb(fb_obj, flatbuffer_res_buf_size)
+                        q.reply(key_expr=str(q.key_expr), payload=ZBytes(data), encoding=Encoding.APPLICATION_OCTET_STREAM, attachment=att)
+
+                        return
+
+                # JSON dict 응답
+                if isinstance(result, dict):
+                    data = _to_bytes(result)
+                    q.reply(
+                        key_expr=q.key_expr,
+                        payload=ZBytes(data),
+                        encoding=Encoding.APPLICATION_JSON,
+                        attachment=att,
+                    )
+                    return
+
+                # 일반 bytes/string 응답
                 data = _to_bytes(result)
                 q.reply(
                     key_expr=q.key_expr,
@@ -533,9 +554,8 @@ class ZenohClient:
                 )
 
             except Exception as e:
-                # reply_err가 버전에 따라 시그니처가 다를 수 있어서 최소 인자로 보냄
                 q.reply_err(payload=ZBytes(str(e).encode("utf-8")))
-                raise e
+                raise
 
         qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl
@@ -619,6 +639,8 @@ class ZenohClient:
             )
 
             seen_any = False
+
+            print("get_result >>", get_result, flush=True)
 
             for rep in get_result:
                 seen_any = True
@@ -736,7 +758,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 3,
+        timeout: int = 10,
         flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
