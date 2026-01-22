@@ -1,8 +1,0 @@
-table Test {
-  test: float;
-  // origin : test2: [float: 11];
-  //[ERROR] home/rainbow/new_rby2/rby2/schemas/nexus/v1/test.fbs:3: 21: error: fixed-length array in table must be wrapped in struct
-  test2: [float];
-}
-
-root_type Test;
