@@ -90,19 +90,22 @@ class RBBaseSDK:
             except FlowControlException as e:
                 raise e
             except (TypeError, ValueError, AttributeError, KeyError) as e:
+                print(f"[{fn.__name__}] invalid param: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
+                print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
+                print(f"[{fn.__name__}] cancelled error: {e}", flush=True)
                 raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
+                print(f"[{fn.__name__}] {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
 
         def _sync_wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
             except FlowControlException as e:
-                print(f"[{fn.__name__}] flow control exception: {e}", flush=True)
                 raise e
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
@@ -111,7 +114,6 @@ class RBBaseSDK:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
-                print(f"[{fn.__name__}] cancelled error: {e}", flush=True)
                 raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
                 print(f"[{fn.__name__}] {e}", flush=True)
