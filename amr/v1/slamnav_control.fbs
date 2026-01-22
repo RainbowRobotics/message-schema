@@ -13,13 +13,17 @@ table Response_Safety_Field {
     message: string;
 }
 
+table Safety_Flag {
+    name: string;
+    value: bool;
+}
 table Request_Reset_Safety_Flag {
     id: string;
-    reset_flag: string;
+    reset_flag: [Safety_Flag];
 }
 table Response_Reset_Safety_Flag {
     id: string;
-    reset_flag: string;
+    reset_flag: [Safety_Flag];
     result: string;
     message: string;
 }
@@ -28,9 +32,30 @@ table Response_Reset_Safety_Flag {
 
 table Request_Dock {
     id: string;
-    command: string;
 }
 table Response_Dock {
+    id: string;
+    result: string;
+    message: string;
+}
+table Request_Undock {
+    id: string;
+}
+table Response_Undock {
+    id: string;
+    result: string;
+    message: string;
+}
+table Request_DockStop {
+    id: string;
+}
+table Response_DockStop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table State_Change_Dock {
     id: string;
     command: string;
     result: string;
@@ -77,12 +102,12 @@ table Response_Safety_Io {
 
 //--------------------------------------------
 
-table Request_Control_LED {
+table Request_Led {
     id: string;
     onoff: bool;
     color: string;
 }
-table Response_Control_LED {
+table Response_Led {
     id: string;
     onoff: bool;
     color: string;
@@ -92,11 +117,11 @@ table Response_Control_LED {
 
 //--------------------------------------------
 
-table Request_Control_Motor {
+table Request_Motor {
     id: string;
     onoff: bool;
 }
-table Response_Control_Motor {
+table Response_Motor {
     id: string;
     onoff: bool;
     result: string;
@@ -116,13 +141,13 @@ table Response_Random_Sequence {
 
 //---------------------------------------------
 
-table Request_Control_Frequency {
+table Request_Frequency {
     id: string;
     target: string; //lidar, path
     onoff: bool;
     frequency: int;
 }
-table Response_Control_Frequency {
+table Response_Frequency {
     id: string;
     target: string;
     onoff: bool;
