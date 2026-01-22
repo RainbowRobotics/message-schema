@@ -491,6 +491,8 @@ class ZenohClient:
                 # FlatBuffer req 파싱
                 req_obj = None
                 if flatbuffer_req_T_class is not None:
+                    if q.payload is None:
+                        raise ValueError(f"{q.key_expr}: payload is required for flatbuffer request")
                     raw = bytes(q.payload)
                     req_obj = flatbuffer_req_T_class.InitFromPackedBuf(raw, 0)
 
@@ -529,6 +531,7 @@ class ZenohClient:
             except Exception as e:
                 # reply_err가 버전에 따라 시그니처가 다를 수 있어서 최소 인자로 보냄
                 q.reply_err(payload=ZBytes(str(e).encode("utf-8")))
+                raise e
 
         qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl

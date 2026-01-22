@@ -211,11 +211,11 @@ class ZenohRouter:
                     r.topic, r.cb, flatbuffer_obj_t=r.flatbuffer_obj_t, options=r.opts
                 )
 
-            # ✅ queryable 등록
+            # queryable 등록
             for q in self._queryables:
                 if q.handle:
                     continue
-                q.handle = self.client.queryable(q.topic, q.cb)
+                q.handle = self.client.queryable(q.topic, q.cb, flatbuffer_req_T_class=q.flatbuffer_req_t, flatbuffer_res_buf_size=q.flatbuffer_res_buf_size)
 
     async def shutdown(self):
         async with self._lock:
