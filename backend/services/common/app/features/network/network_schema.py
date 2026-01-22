@@ -3,11 +3,8 @@
 """
 
 
-from dataclasses import (
-    dataclass,
-    field
-)
-from typing import Optional
+from dataclasses import dataclass
+
 from pydantic import BaseModel, Field
 
 
@@ -25,11 +22,11 @@ class Network:
     device: str
     dhcp: bool
     dns: list[str]             # IPv4 dns list
-    ssid: Optional[str]        # wifi만
-    address: Optional[str]          # IPv4
-    netmask: Optional[str]     # IPv4 netmask
-    gateway: Optional[str]     # IPv4 gateway
-    signal: Optional[int]      # wifi만
+    ssid: str | None        # wifi만
+    address: str | None          # IPv4
+    netmask: str | None     # IPv4 netmask
+    gateway: str | None     # IPv4 gateway
+    signal: int | None      # wifi만
 
 
 ### ======================= Network Get Network ============================

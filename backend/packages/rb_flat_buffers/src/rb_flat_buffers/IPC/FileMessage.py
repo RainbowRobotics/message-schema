@@ -79,9 +79,13 @@ except:
 class FileMessageT(object):
 
     # FileMessageT
-    def __init__(self):
-        self.payloadType = 0  # type: int
-        self.payload = None  # type: Union[None, FileMetaT, FileChunkT, FileAckT, FileRequestT]
+    def __init__(
+        self,
+        payloadType = 0,
+        payload = None,
+    ):
+        self.payloadType = payloadType  # type: int
+        self.payload = payload  # type: Union[None, 'FileMetaT', 'FileChunkT', 'FileAckT', 'FileRequestT']
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

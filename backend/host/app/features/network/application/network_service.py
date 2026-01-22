@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from rb_database import mongo_db
 from rb_flat_buffers.IPC import Response_Network_GetNetwork
+from rb_flat_buffers.IPC.Response_Network_GetNetwork import Response_Network_GetNetworkT
 from rb_modules.log import rb_log
 from rb_utils.service_exception import ServiceException
 from app.features.network.domain.network import NetworkCommandEnum, NetworkModel
@@ -28,11 +29,16 @@ class NetworkService:
         """
         try:
             result = await self.network_port.get_network()
-            return Response_Network_GetNetwork.Response_Network_GetNetworkT(
-                ethernet=result.ethernet,
-                wifi=result.wifi,
-                bluetooth=result.bluetooth,
+
+            print("RESULT: ", result)
+            resp_table = Response_Network_GetNetworkT(
+                ethernet=result.get("ethernet"),
+                wifi=result.get("wifi"),
+                bluetooth=result.get("bluetooth"),
             )
+            print("RESPT: ", resp_table)
+            return resp_table
+
         except ServiceException as e:
             rb_log.error(f"[network_service] getNetwork ServiceException : {e.message} {e.status_code}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))

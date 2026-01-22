@@ -11,20 +11,11 @@ from app.features.network.application.network_service import (
 from rb_flat_buffers.IPC.Request_Network_GetNetwork import (
     Request_Network_GetNetworkT,
 )
+from rb_flat_buffers.IPC.Response_Network_GetNetwork import Response_Network_GetNetworkT
 
 network_zenoh_router = ZenohRouter()
 network_service = NetworkService()
 
-
-# @network_zenoh_router.subscribe(
-#     "network",
-#     flatbuffer_obj_t=Request_Network_GetNetworkT,
-#     opts=SubscribeOptions(allowed_same_sender=True),
-# )
-# async def on_sub_network(*, topic, mv, obj: Request_Network_GetNetworkT, attachment):
-#     print(f"HOST NETWORK ZENOH SUBSCRIBE topic={topic}")
-#     return await get_network_service().get_network()
-
-@network_zenoh_router.queryable("network")
-async def on_query_network(params: dict[str, str]):
+@network_zenoh_router.queryable("network", flatbuffer_res_buf_size=2048)
+async def on_query_network() -> Response_Network_GetNetworkT:
     return await network_service.get_network()

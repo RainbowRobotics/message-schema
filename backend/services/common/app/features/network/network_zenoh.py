@@ -1,8 +1,8 @@
 from rb_flat_buffers.IPC.Request_Network_GetNetwork import Request_Network_GetNetworkT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
-from .network_module import NetworkService
 
+from .network_module import NetworkService
 
 zenoh_network_router = ZenohRouter()
 network_service = NetworkService()

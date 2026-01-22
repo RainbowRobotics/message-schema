@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from Test_Advanced import Test_Advanced
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,6 +16,10 @@ class Test_Advanced(object):
   def Test(self) -> float: ...
 class Test_AdvancedT(object):
   test: float
+  def __init__(
+    self,
+    test: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Test_AdvancedT: ...
   @classmethod
