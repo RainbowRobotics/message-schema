@@ -13,6 +13,7 @@ table Response_Safety_Field {
     message: string;
 }
 
+
 table Safety_Flag {
     name: string;
     value: bool;
