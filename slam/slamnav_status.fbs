@@ -1,0 +1,131 @@
+namespace SLAMNAV;
+
+table Status_Imu {
+    acc_x: double;
+    acc_y: double;
+    acc_z: double;
+    gyr_x: double;
+    gyr_y: double;
+    gyr_z: double;
+    imu_rx: double;
+    imu_ry: double;
+    imu_rz: double;
+}
+
+table Status_Motor {
+    connection: bool;
+    status: int;
+    temp: double;
+    current: double;
+}
+
+table Status_Condition {
+    inlier_error: double;
+    inlier_ratio: double;
+    mapping_error: double;
+    mapping_ratio: double;
+}
+
+table Status_Robot_State {
+    charge: string;
+    dock: bool;
+    emo: bool;
+    localization: string;
+    power: bool;
+    sss_recovery: bool;
+    sw_reset: bool;
+    sw_stop: bool;
+    sw_start: bool;
+    sf_bumper_detect: bool;
+    sf_obs_detect: bool;
+    sf_operational_stop: bool;
+}
+
+table Status_Robot_Safety_Io_State {
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+}
+
+table Status_Power {
+    bat_in: double;
+    bat_out: double;
+    bat_current: double;
+    total_power: double;
+    power: double;
+    bat_percent: double;
+    tabos_voltage: double;
+    tabos_current: double;
+    tabos_status: double;
+    tabos_ttf: double;
+    tabos_tte: double;
+    tabos_soc: double;
+    tabos_soh: double;
+    tabos_temp: double;
+    tabos_rc: double;
+    tabos_ae: double;
+    charge_current: double;
+    contact_voltage: double;
+}
+
+table Status_Setting {
+    platform_type: string;
+    platform_name: string;
+}
+
+table Status_Map {
+    map_name: string;
+    map_status: string;
+}
+
+table Status {
+    condition: Status_Condition;
+    imu: Status_Imu;
+    motor0: Status_Motor;
+    motor1: Status_Motor;
+    power: Status_Power;
+    robot_state: Status_Robot_State;
+    robot_safety_io_state: Status_Robot_Safety_Io_State;
+    setting: Status_Setting;
+    map: Status_Map;
+}
+
+//--------------------------------------------
+
+table MoveStatus_Move_State {
+    auto_move: string;
+    dock_move: string;
+    jog_move: string;
+    obs: string;
+    path: string;
+}
+
+table MoveStatus_Pose {
+    x: double;
+    y: double;
+    rz: double;
+}
+
+table MoveStatus_Vel {
+    vx: double;
+    vy: double;
+    wz: double;
+}
+
+table MoveStatus_Node {
+    node_id: string;
+    name: string;
+    state: string;
+    x: double;
+    y: double;
+    rz: double;
+}
+
+table MoveStatus {
+    cur_node: MoveStatus_Node;
+    goal_node: MoveStatus_Node;
+    move_state: MoveStatus_Move_State;
+    pose: MoveStatus_Pose;
+    vel: MoveStatus_Vel;
+}

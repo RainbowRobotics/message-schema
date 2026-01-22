@@ -1,0 +1,32 @@
+namespace SLAMNAV;
+
+struct Point2D {
+    x: double;
+    y: double;
+}
+
+table Lidar2D {
+    timestamp: double;
+    points: [Point2D];
+}
+
+//--------------------------------------------
+// 3D Lidar Data
+
+struct Point3D {
+    x: double;
+    y: double;
+    z: double;
+}
+table Lidar3D {
+    timestamp: double;
+    points: [Point3D];
+}
+
+//--------------------------------------------
+// Mapping Cloud Data
+
+table MappingCloud {
+    timestamp: double;
+    points: [Point3D];
+}
