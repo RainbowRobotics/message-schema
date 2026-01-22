@@ -5,8 +5,9 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
+from rb_flat_buffers.IPC.N_DIN_b import N_DIN_b, N_DIN_bT
 from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
-from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
+from rb_flat_buffers.IPC.N_DOUT_b import N_DOUT_b, N_DOUT_bT
 from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
 from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 from typing import Optional
@@ -31,21 +32,21 @@ class Response_CallConfigControlBox(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Response_CallConfigControlBox
-    def DoutSpecialFunc(self) -> Optional[N_DOUT_u]:
+    def DoutSpecialFunc(self) -> Optional[N_DOUT_b]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             x = o + self._tab.Pos
-            obj = N_DOUT_u()
+            obj = N_DOUT_b()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # Response_CallConfigControlBox
-    def DinSpecialFunc(self) -> Optional[N_DIN_u]:
+    def DinSpecialFunc(self) -> Optional[N_DIN_b]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             x = o + self._tab.Pos
-            obj = N_DIN_u()
+            obj = N_DIN_b()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -376,8 +377,8 @@ class Response_CallConfigControlBoxT(object):
         userFrame6 = None,
         userFrame7 = None,
     ):
-        self.doutSpecialFunc = doutSpecialFunc  # type: Optional[N_DOUT_uT]
-        self.dinSpecialFunc = dinSpecialFunc  # type: Optional[N_DIN_uT]
+        self.doutSpecialFunc = doutSpecialFunc  # type: Optional[N_DOUT_bT]
+        self.dinSpecialFunc = dinSpecialFunc  # type: Optional[N_DIN_bT]
         self.dinFilterCount = dinFilterCount  # type: Optional[N_DIN_uT]
         self.areaConfigs0 = areaConfigs0  # type: Optional[ST_Config_AreaT]
         self.areaConfigs1 = areaConfigs1  # type: Optional[ST_Config_AreaT]
@@ -418,9 +419,9 @@ class Response_CallConfigControlBoxT(object):
         if responseCallConfigControlBox is None:
             return
         if responseCallConfigControlBox.DoutSpecialFunc() is not None:
-            self.doutSpecialFunc = N_DOUT_uT.InitFromObj(responseCallConfigControlBox.DoutSpecialFunc())
+            self.doutSpecialFunc = N_DOUT_bT.InitFromObj(responseCallConfigControlBox.DoutSpecialFunc())
         if responseCallConfigControlBox.DinSpecialFunc() is not None:
-            self.dinSpecialFunc = N_DIN_uT.InitFromObj(responseCallConfigControlBox.DinSpecialFunc())
+            self.dinSpecialFunc = N_DIN_bT.InitFromObj(responseCallConfigControlBox.DinSpecialFunc())
         if responseCallConfigControlBox.DinFilterCount() is not None:
             self.dinFilterCount = N_DIN_uT.InitFromObj(responseCallConfigControlBox.DinFilterCount())
         if responseCallConfigControlBox.AreaConfigs0() is not None:

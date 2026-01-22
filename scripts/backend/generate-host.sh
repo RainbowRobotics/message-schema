@@ -3,7 +3,7 @@
 # host 서비스 경로 설정
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-HOST_DIR="$ROOT/backend/services/host"
+HOST_DIR="$ROOT/backend/host"
 
 # config.env 파일 읽고 포트 추출
 CONF="$HOST_DIR/config.env"
@@ -19,6 +19,6 @@ fi
 
 # host 서비스 실행
 cd $HOST_DIR
-exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload --reload-dir "../../" --reload-include '**/*.py'
+exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload --reload-dir "../" --reload-include '**/*.py'
 
 # exec uv run --project . uvicorn run:app --host 0.0.0.0 --port $PORT

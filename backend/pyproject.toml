@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.uv.workspace]
-members = ["services/*", "packages/*"]
+members = ["services/*", "packages/*", "host"]
 
 
 [tool.black]

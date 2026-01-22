@@ -458,7 +458,7 @@ wheels = [
 [[package]]
 name = "host"
 version = "0.1.0"
-source = { virtual = "services/host" }
+source = { virtual = "host" }
 dependencies = [
     { name = "eclipse-zenoh" },
     { name = "email-validator" },

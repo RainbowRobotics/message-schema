@@ -4,8 +4,9 @@ import flatbuffers
 import numpy as np
 
 import typing
+from rb_flat_buffers.IPC.N_DIN_b import N_DIN_b, N_DIN_bT
 from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
-from rb_flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
+from rb_flat_buffers.IPC.N_DOUT_b import N_DOUT_b, N_DOUT_bT
 from rb_flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
 from rb_flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 
@@ -17,8 +18,8 @@ class Response_CallConfigControlBox(object):
   @classmethod
   def GetRootAsResponse_CallConfigControlBox(cls, buf: bytes, offset: int) -> Response_CallConfigControlBox: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
-  def DoutSpecialFunc(self) -> N_DOUT_u | None: ...
-  def DinSpecialFunc(self) -> N_DIN_u | None: ...
+  def DoutSpecialFunc(self) -> N_DOUT_b | None: ...
+  def DinSpecialFunc(self) -> N_DIN_b | None: ...
   def DinFilterCount(self) -> N_DIN_u | None: ...
   def AreaConfigs0(self) -> ST_Config_Area | None: ...
   def AreaConfigs1(self) -> ST_Config_Area | None: ...
@@ -37,8 +38,8 @@ class Response_CallConfigControlBox(object):
   def UserFrame6(self) -> ST_Config_UserFrame | None: ...
   def UserFrame7(self) -> ST_Config_UserFrame | None: ...
 class Response_CallConfigControlBoxT(object):
-  doutSpecialFunc: N_DOUT_uT | None
-  dinSpecialFunc: N_DIN_uT | None
+  doutSpecialFunc: N_DOUT_bT | None
+  dinSpecialFunc: N_DIN_bT | None
   dinFilterCount: N_DIN_uT | None
   areaConfigs0: ST_Config_AreaT | None
   areaConfigs1: ST_Config_AreaT | None
@@ -58,8 +59,8 @@ class Response_CallConfigControlBoxT(object):
   userFrame7: ST_Config_UserFrameT | None
   def __init__(
     self,
-    doutSpecialFunc: 'N_DOUT_uT' | None = ...,
-    dinSpecialFunc: 'N_DIN_uT' | None = ...,
+    doutSpecialFunc: 'N_DOUT_bT' | None = ...,
+    dinSpecialFunc: 'N_DIN_bT' | None = ...,
     dinFilterCount: 'N_DIN_uT' | None = ...,
     areaConfigs0: 'ST_Config_AreaT' | None = ...,
     areaConfigs1: 'ST_Config_AreaT' | None = ...,
