@@ -25,40 +25,18 @@ from app.features.move.schema.move_api import (
     Request_Move_TargetPD,
     Request_Move_XLinearPD,
 )
+from app.schema.amr import AmrResponseStatusEnum
 
 
 # === Enums ==========================================================
-class MoveStatus(str, Enum):
-    """
-    [AMR 이동 상태]
-    """
-    PENDING = "pending" # 대기(accept, reject와는 별개)
-    ACCEPT  = "accept"
-    REJECT  = "reject"
-    MOVING  = "moving"
-    PAUSE   = "pause"
-    CANCEL  = "cancel"
-    FAIL    = "fail"
-    DONE    = "done"
-    UNKNOWN = "unknown"
-
-class MoveResult(str, Enum):
-    """
-    [AMR 이동 결과]
-    """
-    ACCEPT = "accept"
-    REJECT = "reject"
-    SUCCESS = "success"
-    FAIL = "fail"
-
-class MoveMethod(str, Enum):
+class AmrMoveMethodEnum(str, Enum):
     """
     [AMR 이동 방법]
     """
     PP = "pp"
     HPP = "hpp"
 
-class MoveCommand(str, Enum):
+class AmrMoveCommandEnum(str, Enum):
     """
     [AMR 이동 명령]
     """
@@ -80,11 +58,12 @@ class MoveModel:
     [AMR 이동 모델]
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    command: MoveCommand | None = None
-    status: MoveStatus = field(default=MoveStatus.PENDING)
+    robot_model: str | None = None
+    command: AmrMoveCommandEnum | None = None
+    status: AmrResponseStatusEnum = field(default=AmrResponseStatusEnum.PENDING)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     update_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    method: MoveMethod | None = None
+    method: AmrMoveMethodEnum | None = None
     preset: int | None = None
     result: str = None
     message: str | None = None
@@ -113,12 +92,19 @@ class MoveModel:
     bat_percent: int | None = None
     map_name: str | None = None
 
+    def set_robot_model(self, robot_model: str):
+        """
+        - robot_model: str
+        - return: None
+        """
+        self.robot_model = robot_model
+
     def set_move_goal(self, req: Request_Move_GoalPD):
         """
         [AMR 이동 모델 설정]
         """
-        self.command = MoveCommand.MOVE_GOAL
-        self.method = req.method if req.method is not None else MoveMethod.PP.value
+        self.command = AmrMoveCommandEnum.MOVE_GOAL
+        self.method = req.method if req.method is not None else AmrMoveMethodEnum.PP.value
         self.preset = req.preset if req.preset is not None else 0
         self.goal_id = req.goalId
         self.update_at = datetime.now(UTC)
@@ -128,8 +114,8 @@ class MoveModel:
         - req: Request_Move_TargetPD
         - return: None
         """
-        self.command = MoveCommand.MOVE_TARGET
-        self.method = req.method if req.method is not None else MoveMethod.PP.value
+        self.command = AmrMoveCommandEnum.MOVE_TARGET
+        self.method = req.method if req.method is not None else AmrMoveMethodEnum.PP.value
         self.preset = req.preset if req.preset is not None else 0
         self.goal_pose = req.goalPose
         self.update_at = datetime.now(UTC)
@@ -139,7 +125,7 @@ class MoveModel:
         - req: Request_Move_JogPD
         - return: None
         """
-        self.command = MoveCommand.MOVE_JOG
+        self.command = AmrMoveCommandEnum.MOVE_JOG
         self.vx = req.vx if req.vx is not None else 0
         self.vy = req.vy if req.vy is not None else 0
         self.wz = req.wz if req.wz is not None else 0
@@ -150,7 +136,7 @@ class MoveModel:
         - req: Request_Move_XLinearPD
         - return: None
         """
-        self.command = MoveCommand.MOVE_X_LINEAR
+        self.command = AmrMoveCommandEnum.MOVE_X_LINEAR
         self.target = req.target
         self.speed = req.speed
         self.update_at = datetime.now(UTC)
@@ -160,7 +146,7 @@ class MoveModel:
         - req: Request_Move_CircularPD
         - return: None
         """
-        self.command = MoveCommand.MOVE_CIRCULAR
+        self.command = AmrMoveCommandEnum.MOVE_CIRCULAR
         self.direction = req.direction
         self.target = req.target
         self.speed = req.speed
@@ -171,7 +157,7 @@ class MoveModel:
         - req: Request_Move_RotatePD
         - return: None
         """
-        self.command = MoveCommand.MOVE_ROTATE
+        self.command = AmrMoveCommandEnum.MOVE_ROTATE
         self.target = req.target
         self.speed = req.speed
         self.update_at = datetime.now(UTC)
@@ -180,21 +166,21 @@ class MoveModel:
         """
         - return: None
         """
-        self.command = MoveCommand.MOVE_STOP
+        self.command = AmrMoveCommandEnum.MOVE_STOP
         self.update_at = datetime.now(UTC)
 
     def set_move_pause(self):
         """
         - return: None
         """
-        self.command = MoveCommand.MOVE_PAUSE
+        self.command = AmrMoveCommandEnum.MOVE_PAUSE
         self.update_at = datetime.now(UTC)
 
     def set_move_resume(self):
         """
         - return: None
         """
-        self.command = MoveCommand.MOVE_RESUME
+        self.command = AmrMoveCommandEnum.MOVE_RESUME
         self.update_at = datetime.now(UTC)
 
     def status_change(self, status: str) -> None:
@@ -218,50 +204,52 @@ class MoveModel:
         self.update_at = datetime.now(UTC)
 
     @staticmethod
-    def parse_status(value: str) -> MoveStatus:
+    def parse_status(value: str) -> AmrResponseStatusEnum:
         """
         - value: str
-        - return: MoveStatus
+        - return: AmrResponseStatusEnum
         """
         try:
-            return MoveStatus(value)
+            return AmrResponseStatusEnum(value)
         except ValueError:
-            return MoveStatus.UNKNOWN
+            return AmrResponseStatusEnum.UNKNOWN
 
     def check_variables(self) -> None:
         """
         - return: None
         """
-        if self.command == MoveCommand.MOVE_GOAL:
+        if self.robot_model is None:
+            raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
+        if self.command == AmrMoveCommandEnum.MOVE_GOAL:
             if self.goal_id == "":
                 raise ServiceException("goal_id 값이 없습니다", status_code=400)
 
-        elif self.command == MoveCommand.MOVE_TARGET:
+        elif self.command == AmrMoveCommandEnum.MOVE_TARGET:
             if self.goal_pose is None:
                 raise ServiceException("goalPose 값이 비어있습니다", status_code=400)
             if len(self.goal_pose) < 3:
                 raise ServiceException("goalPose 값이 x,y,z,rz 값을 가져야 합니다", status_code=400)
             if self.method is None:
-                self.method = MoveMethod.PP.value
+                self.method = AmrMoveMethodEnum.PP.value
             if self.preset is None:
                 self.preset = 0
 
-        elif self.command == MoveCommand.MOVE_JOG:
+        elif self.command == AmrMoveCommandEnum.MOVE_JOG:
             missing = [k for k in ("vx", "vy", "wz") if getattr(self, k) is None]
             if missing:
                 raise ServiceException("vel 값이 비어있습니다", status_code=400)
 
-        elif self.command in (MoveCommand.MOVE_STOP, MoveCommand.MOVE_PAUSE, MoveCommand.MOVE_RESUME):
+        elif self.command in (AmrMoveCommandEnum.MOVE_STOP, AmrMoveCommandEnum.MOVE_PAUSE, AmrMoveCommandEnum.MOVE_RESUME):
             # 추가 요구 사항 없으면 패스
             pass
 
-        elif self.command == MoveCommand.MOVE_X_LINEAR:
+        elif self.command == AmrMoveCommandEnum.MOVE_X_LINEAR:
             if self.target is None:
                 raise ServiceException("target 값이 비어있습니다", status_code=400)
             if self.speed is None:
                 raise ServiceException("speed 값이 비어있습니다", status_code=400)
 
-        elif self.command == MoveCommand.MOVE_CIRCULAR:
+        elif self.command == AmrMoveCommandEnum.MOVE_CIRCULAR:
             if self.target is None:
                 raise ServiceException("target 값이 비어있습니다", status_code=400)
             if self.speed is None:
@@ -269,7 +257,7 @@ class MoveModel:
             if self.direction not in ("right", "left"):
                 raise ServiceException("direction 값이 없거나 올바르지 않습니다. (right, left)", status_code=400)
 
-        elif self.command == MoveCommand.MOVE_ROTATE:
+        elif self.command == AmrMoveCommandEnum.MOVE_ROTATE:
             if self.target is None:
                 raise ServiceException("target 값이 비어있습니다", status_code=400)
             if self.speed is None:
@@ -290,28 +278,28 @@ class MoveModel:
         d["updateAt"] = self.update_at
         d["result"] = self.result
         d["message"] = self.message
-        if self.command == MoveCommand.MOVE_GOAL:
+        if self.command == AmrMoveCommandEnum.MOVE_GOAL:
             d["method"] = self.method
             d["preset"] = self.preset
             d["goalId"] = self.goal_id
-        elif self.command == MoveCommand.MOVE_TARGET:
+        elif self.command == AmrMoveCommandEnum.MOVE_TARGET:
             d["method"] = self.method
             d["preset"] = self.preset
             d["goalPose"] = self.goal_pose
-        elif self.command == MoveCommand.MOVE_JOG:
+        elif self.command == AmrMoveCommandEnum.MOVE_JOG:
             d["vx"] = self.vx
             d["vy"] = self.vy
             d["wz"] = self.wz
-        elif self.command == MoveCommand.MOVE_STOP or self.command == MoveCommand.MOVE_PAUSE or self.command == MoveCommand.MOVE_RESUME:
+        elif self.command == AmrMoveCommandEnum.MOVE_STOP or self.command == AmrMoveCommandEnum.MOVE_PAUSE or self.command == AmrMoveCommandEnum.MOVE_RESUME:
             pass
-        elif self.command == MoveCommand.MOVE_X_LINEAR:
+        elif self.command == AmrMoveCommandEnum.MOVE_X_LINEAR:
             d["target"] = self.target
             d["speed"] = self.speed
-        elif self.command == MoveCommand.MOVE_CIRCULAR:
+        elif self.command == AmrMoveCommandEnum.MOVE_CIRCULAR:
             d["direction"] = self.direction
             d["target"] = self.target
             d["speed"] = self.speed
-        elif self.command == MoveCommand.MOVE_ROTATE:
+        elif self.command == AmrMoveCommandEnum.MOVE_ROTATE:
             d["target"] = self.target
             d["speed"] = self.speed
 

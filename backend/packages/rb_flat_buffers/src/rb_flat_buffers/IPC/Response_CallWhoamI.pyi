@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamI
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -24,6 +22,13 @@ class Response_CallWhoamIT(object):
   model: str | None
   version: str | None
   alias: str | None
+  def __init__(
+    self,
+    category: str | None = ...,
+    model: str | None = ...,
+    version: str | None = ...,
+    alias: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_CallWhoamIT: ...
   @classmethod

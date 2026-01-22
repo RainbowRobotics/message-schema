@@ -15,16 +15,13 @@ from rb_flat_buffers.SLAMNAV.Response_Move_Rotate import Response_Move_RotateT
 from rb_flat_buffers.SLAMNAV.Response_Move_Stop import Response_Move_StopT
 from rb_flat_buffers.SLAMNAV.Response_Move_Target import Response_Move_TargetT
 from rb_flat_buffers.SLAMNAV.Response_Move_XLinear import Response_Move_XLinearT
-from rb_zenoh.client import ZenohClient
 
+from ..base import RBBaseSDK
 from .schema.amr_move_schema import SlamnavMovePort
 
 
-class RBAmrMoveSDK(SlamnavMovePort):
+class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
     """Rainbow Robotics AMR Move SDK"""
-    client: ZenohClient
-    def __init__(self, client: ZenohClient):
-        self.client = client
 
     # def _to_state_change_move_t(self, dt: dict) -> State_Change_MoveT:
     #     """
@@ -66,7 +63,8 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.preset = preset
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        print(f"=> send_move_goal: {robot_model}/move/goal")
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/goal",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_GoalT,
@@ -74,7 +72,10 @@ class RBAmrMoveSDK(SlamnavMovePort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Target failed: obj_payload is None")
+
+        return result["obj_payload"]
 
 
     async def send_move_target(self, robot_model: str, req_id: str, goal_pose: list[float], method: str, preset: int) -> Response_Move_TargetT:
@@ -91,7 +92,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.preset = preset
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/target",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_TargetT,
@@ -99,7 +100,10 @@ class RBAmrMoveSDK(SlamnavMovePort):
         )
 
         # 6) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Jog failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def send_move_jog(self, robot_model: str, vx: float, vy: float, wz: float) -> None:
         """
@@ -115,7 +119,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.wz = wz
 
         # 2) 요청 전송(jog는 반환 필요없으니 publish 사용)
-        self.client.publish(
+        self.zenoh_client.publish(
             f"{robot_model}/move/jog",
             payload=req,
         )
@@ -132,7 +136,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_StopT,
@@ -140,7 +144,11 @@ class RBAmrMoveSDK(SlamnavMovePort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Stop failed: obj_payload is None")
+
+        print(f"=> send_move_stop: {robot_model}/move/stop: {result['obj_payload']}")
+        return result["obj_payload"]
 
     async def send_move_pause(self, robot_model: str, req_id: str) -> Response_Move_PauseT:
         """
@@ -153,7 +161,7 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/pause",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_PauseT,
@@ -161,7 +169,10 @@ class RBAmrMoveSDK(SlamnavMovePort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Pause failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def send_move_resume(self, robot_model: str, req_id: str) -> Response_Move_ResumeT:
         """
@@ -174,14 +185,17 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/resume",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_ResumeT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Resume failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def send_move_linear(self, robot_model: str, req_id: str, target: list[float], speed: float) -> Response_Move_XLinearT:
         """
@@ -196,14 +210,17 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.speed = speed
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/linear",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_XLinearT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Linear failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def send_move_circular(self, robot_model: str, req_id: str, target: list[float], speed: float, direction: int) -> Response_Move_CircularT:
         """
@@ -219,14 +236,17 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.direction = direction
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/circular",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_CircularT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Circular failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def send_move_rotate(self, robot_model: str, req_id: str, target: list[float], speed: float) -> Response_Move_RotateT:
         """
@@ -241,11 +261,14 @@ class RBAmrMoveSDK(SlamnavMovePort):
         req.speed = speed
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/move/rotate",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Move_RotateT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Move Rotate failed: obj_payload is None")
+
+        return result["obj_payload"]

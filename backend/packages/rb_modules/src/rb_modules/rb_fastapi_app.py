@@ -30,6 +30,7 @@ class AppSettings(BaseSettings):
     IS_DEV: bool = Field(default=False)
     PORT: int | None = None
     SERVICE_NAME: str | None = None
+    DATA_DIR: str | None = None
 
     ROOT_PATH: str | None = None
 

@@ -41,7 +41,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_JB_RUNT(object):
 
     # Request_Move_JB_RUNT
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         pass
 
     @classmethod

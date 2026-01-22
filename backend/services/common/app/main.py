@@ -5,6 +5,7 @@ from rb_modules.rb_fastapi_app import (
 
 from app.features.config.config_api import config_router
 from app.features.config.config_module import ConfigService
+from app.features.network.network_api import network_router
 from app.features.config.config_socket import config_socket_router
 from app.features.email.adapter.input.email_api import (
     email_router,
@@ -21,6 +22,7 @@ from app.features.whoami.whoami_api import whoami_router
 from app.features.whoami.whoami_socket import whoami_socket_router
 from app.socket.socket_client import socket_client
 from app.socket.socket_server import RelayNS, app_with_sio, sio
+from app.features.network.network_zenoh import zenoh_network_router
 
 setting = AppSettings()
 
@@ -35,14 +37,22 @@ config_service = ConfigService()
 app = create_app(
     settings=setting,
     socket_client=socket_client,
-    zenoh_routers=[zenoh_state_router, zenoh_program_router],
+    zenoh_routers=[zenoh_state_router, zenoh_program_router, zenoh_network_router],
     socket_routers=[
         whoami_socket_router,
         config_socket_router,
         state_socket_router,
         info_socket_router,
     ],
-    api_routers=[state_router, config_router, whoami_router, info_router, program_router, email_router],
+    api_routers=[
+        state_router,
+        config_router,
+        whoami_router,
+        info_router,
+        program_router,
+        email_router,
+        network_router,
+    ],
     bg_tasks=[
         state_service.repeat_get_system_state,
         config_service.repeat_get_all_speedbar,

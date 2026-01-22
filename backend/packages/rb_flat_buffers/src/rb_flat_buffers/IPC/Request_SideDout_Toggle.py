@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_SideDout_ToggleT(object):
 
     # Request_SideDout_ToggleT
-    def __init__(self):
-        self.portNum = 0  # type: int
+    def __init__(
+        self,
+        portNum = 0,
+    ):
+        self.portNum = portNum  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

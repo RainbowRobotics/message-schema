@@ -96,6 +96,7 @@ class RBBaseSDK:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
+                print(f"[{fn.__name__}] cancelled error: {e}", flush=True)
                 raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
                 print(f"[{fn.__name__}] {e}", flush=True)

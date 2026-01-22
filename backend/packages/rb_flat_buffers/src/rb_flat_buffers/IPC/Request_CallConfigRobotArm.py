@@ -41,7 +41,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_CallConfigRobotArmT(object):
 
     # Request_CallConfigRobotArmT
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         pass
 
     @classmethod

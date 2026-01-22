@@ -3,7 +3,6 @@
 """
 
 from fastapi import APIRouter, BackgroundTasks
-from rb_modules.log import rb_log
 
 from app.features.move.schema.move_api import (
     Request_Move_CircularPD,
@@ -25,21 +24,18 @@ from app.features.move.schema.move_api import (
     Response_Move_XLinearPD,
 )
 from app.features.move.src.application.amr_move_service import AmrMoveService
-from app.socket.socket_client import (
-    socket_client,
-)
 
 # from app.main import amr_move_service
 amr_move_router = APIRouter(
     tags=["AMR 이동"],
-    prefix="/slamnav/move",
+    prefix="",
 )
 
 amr_move_service = AmrMoveService()
 
 
 @amr_move_router.post(
-    "/goal",
+    "/{robot_model}/move/goal",
     summary="목표 지점으로 이동",
     description= """
 SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
@@ -82,11 +78,11 @@ SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_goal(request: Request_Move_GoalPD) -> Response_Move_GoalPD:
-    return await amr_move_service.move_goal(request)
+async def slamnav_move_goal(robot_model: str, request: Request_Move_GoalPD) -> Response_Move_GoalPD:
+    return await amr_move_service.move_goal(robot_model, request)
 
 @amr_move_router.post(
-    "/target",
+    "/{robot_model}/move/target",
     summary="타겟 좌표로 이동",
     description="""
 SLAMNAV로 조이스틱 이동 명령을 전달합니다.
@@ -120,8 +116,8 @@ SLAMNAV로 조이스틱 이동 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_target(request: Request_Move_TargetPD) -> Response_Move_TargetPD:
-    return await amr_move_service.move_target(request)
+async def slamnav_move_target(robot_model: str, request: Request_Move_TargetPD) -> Response_Move_TargetPD:
+    return await amr_move_service.move_target(robot_model, request)
 
 # @amr_move_router.post(
 #     "/jog",
@@ -142,7 +138,7 @@ async def slamnav_move_target(request: Request_Move_TargetPD) -> Response_Move_T
 #     return await amr_move_service.move_jog(request)
 
 @amr_move_router.post(
-    "/stop",
+    "/{robot_model}/move/stop",
     summary="이동 중지",
     description="""
 SLAMNAV로 이동 정지 명령을 전달합니다.
@@ -172,12 +168,12 @@ SLAMNAV로 이동 정지 명령을 전달합니다.
     """,
     response_description="이동 중지 명령 처리 결과 반환"
 )
-async def slamnav_move_stop() -> Response_Move_StopPD:
-    return await amr_move_service.move_stop()
+async def slamnav_move_stop(robot_model: str) -> Response_Move_StopPD:
+    return await amr_move_service.move_stop(robot_model)
 
 
 @amr_move_router.post(
-    "/pause",
+    "/{robot_model}/move/pause",
     summary="이동 일시정지",
     description="""
 SLAMNAV로 이동 일시정지 명령을 전달합니다.
@@ -207,11 +203,11 @@ SLAMNAV로 이동 일시정지 명령을 전달합니다.
     """,
     response_description="이동 일시정지 명령 처리 결과 반환"
 )
-async def slamnav_move_pause() -> Response_Move_PausePD:
-    return await amr_move_service.move_pause()
+async def slamnav_move_pause(robot_model: str) -> Response_Move_PausePD:
+    return await amr_move_service.move_pause(robot_model)
 
 @amr_move_router.post(
-    "/resume",
+    "/{robot_model}/move/resume",
     summary="이동 재개",
     description="""
 SLAMNAV로 이동 일시재개 명령을 전달합니다.
@@ -241,12 +237,12 @@ SLAMNAV로 이동 일시재개 명령을 전달합니다.
     """,
     response_description="이동 재개 명령 처리 결과 반환"
 )
-async def slamnav_move_resume() -> Response_Move_ResumePD:
-    return await amr_move_service.move_resume()
+async def slamnav_move_resume(robot_model: str) -> Response_Move_ResumePD:
+    return await amr_move_service.move_resume(robot_model)
 
 
 @amr_move_router.post(
-    "/linear",
+    "/{robot_model}/move/linear",
     summary="선형 이동 명령",
     description="""
 SLAMNAV로 선형 이동 명령을 전달합니다.
@@ -286,12 +282,12 @@ SLAMNAV로 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_linear(request: Request_Move_XLinearPD) -> Response_Move_XLinearPD:
-    return await amr_move_service.move_linear(request)
+async def slamnav_move_linear(robot_model: str, request: Request_Move_XLinearPD) -> Response_Move_XLinearPD:
+    return await amr_move_service.move_linear(robot_model, request)
 
 
 @amr_move_router.post(
-    "/circular",
+    "/{robot_model}/move/circular",
     summary="회전 주행 명령",
     description="""
 SLAMNAV로 회전 명령을 전달합니다.
@@ -333,11 +329,11 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_circular(request: Request_Move_CircularPD) -> Response_Move_CircularPD:
-    return await amr_move_service.move_circular(request)
+async def slamnav_move_circular(robot_model: str, request: Request_Move_CircularPD) -> Response_Move_CircularPD:
+    return await amr_move_service.move_circular(robot_model, request)
 
 @amr_move_router.post(
-    "/rotate",
+    "/{robot_model}/move/rotate",
     summary="회전 명령",
     description="""
 SLAMNAV로 회전 명령을 전달합니다.
@@ -377,22 +373,36 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_rotate(request: Request_Move_RotatePD) -> Response_Move_RotatePD:
-    return await amr_move_service.move_rotate(request)
+async def slamnav_move_rotate(robot_model: str, request: Request_Move_RotatePD) -> Response_Move_RotatePD:
+    return await amr_move_service.move_rotate(robot_model, request)
 
 @amr_move_router.post(
     "/logs",
     summary="이동 로그 조회",
     description="""
-    이동 로그를 조회합니다.
+이동 로그를 조회합니다.
 
-    - limit: 페이지 당 로그 수
-    - page: 페이지 번호
-    - search_text: 검색어. 텍스트 필드에서 일치하는 내용을 검색합니다.
-    - sort: 정렬 기준 필드
-    - order: 정렬 순서 "asc" 또는 "desc"
-    - filter: 검색 필터. JSON 문자열로 입력합니다. MongoDB 조건식에 맞춰 입력해주세요. 예) {'result': 'success'}
-    - fields: 반환 필드. 입력이 없으면 저장된 모든 필드가 반환되며 입력한 필드의 값에 따라 특정 필드만 반환받거나 특정 필드를 제외하고 반환받고 싶을때 사용하세요. 예) id필드만 제외하고 반환 {'id': 0}, id와 status필드만 반환 {'id': 1, 'status': 1}
+## 📌 기능 설명
+- 로봇의 이동 기록을 조회합니다.
+- 페이지네이션 기능을 제공합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| limit | number | - | - | 페이지 당 로그 수 | 10 |
+| page | number | - | - | 페이지 번호 | 1 |
+| searchText | string | - | - | 검색어 | 'test' |
+| sort | string | - | - | 정렬 기준 필드. 기본값은 createdAt 입니다. | 'createdAt' |
+| order | string | - | - | 정렬 순서 | 'desc', 'asc' |
+| filter | dict | - | - | 검색 필터. MongoDB 조건식에 맞춰 입력해주세요.  | {'result': 'success'} |
+| fields | dict | - | - | 반환 필드. 입력이 없으면 저장된 모든 필드가 반환되며 입력한 필드의 값에 따라 특정 필드만 반환받거나 특정 필드를 제외하고 반환받고 싶을때 사용하세요. 예) id필드만 제외하고 반환 {'id': 0}, id와 status필드만 반환 {'id': 1, 'status': 1} | {'id': 0} |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
     """,
     response_description="이동 로그 조회 결과 반환"
 )
@@ -408,9 +418,28 @@ async def slamnav_move_logs(
 
 @amr_move_router.delete(
     "/logs",
-    summary="이동 로그 아카이브(디버그)",
-    description="이동 로그를 삭제합니다. 입력된 기간동안의 로그를 삭제하며 옵션으로는 삭제할 로그를 압축보관할 지 여부를 결정할 수 있습니다",
-    response_description="이동 로그 삭제 결과 반환"
+    summary="이동 로그 삭제",
+    description="""
+이동 로그를 삭제합니다.
+
+## 📌 기능 설명
+- 로봇의 이동 기록을 삭제합니다.
+- 입력된 날짜 이전의 로그를 삭제하며 옵션으로는 삭제할 로그를 압축보관할 지 여부를 결정할 수 있습니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| cutOffDate | string | - | - | 삭제 기준 날짜 | 2025-11-04 |
+| isDryRun | bool | - | - | 값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다 | False |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+    """,
+    response_description="이동 로그 조회 결과 반환"
 )
 async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
     """
@@ -448,8 +477,5 @@ async def export_move_logs(dto: RequestAmrMoveExportLogPD, background_tasks: Bac
 
 
 
-
-@amr_move_router.get("/test")
-async def test_move():
-    rb_log.info("============== 테스트 =================")
-    await socket_client.emit("test/v1/move/test", "test")
+# To Do Someday..
+# - pathRequest

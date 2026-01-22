@@ -7,6 +7,7 @@ members = [
     "amr",
     "common",
     "deploy",
+    "host",
     "log",
     "manipulate",
     "rb-backend-server",
@@ -452,6 +453,45 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/65/c8/d860888358bf5c8a6e7d78d1b508b59b0e255afd5655f243b8f65166dafd/honcho-2.0.0.tar.gz", hash = "sha256:af3815c03c634bf67d50f114253ea9fef72ecff26e4fd06b29234789ac5b8b2e", size = 45618, upload-time = "2024-10-06T14:26:53.871Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/48/1c/25631fc359955569e63f5446dbb7022c320edf9846cbe892ee5113433a7e/honcho-2.0.0-py3-none-any.whl", hash = "sha256:56dcd04fc72d362a4befb9303b1a1a812cba5da283526fbc6509be122918ddf3", size = 22093, upload-time = "2024-10-06T14:26:52.181Z" },
+]
+
+[[package]]
+name = "host"
+version = "0.1.0"
+source = { virtual = "host" }
+dependencies = [
+    { name = "eclipse-zenoh" },
+    { name = "email-validator" },
+    { name = "fastapi" },
+    { name = "pyinstaller" },
+    { name = "python-dotenv" },
+    { name = "rb-database" },
+    { name = "rb-flat-buffers" },
+    { name = "rb-modules" },
+    { name = "rb-resources" },
+    { name = "rb-schemas" },
+    { name = "rb-socketio" },
+    { name = "rb-utils" },
+    { name = "rb-zenoh" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "eclipse-zenoh", specifier = ">=1.5.0" },
+    { name = "email-validator", specifier = ">=2.3.0" },
+    { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
+    { name = "pyinstaller", specifier = ">=6.15.0" },
+    { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
+    { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-resources", editable = "packages/rb_resources" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
+    { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
+    { name = "rb-zenoh", editable = "packages/rb_zenoh" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
 ]
 
 [[package]]

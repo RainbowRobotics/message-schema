@@ -13,7 +13,7 @@ from .amr_move_api import amr_move_service
 move_zenoh_router = ZenohRouter()
 
 @move_zenoh_router.subscribe(
-    "*/v1/move",
+    "*/move",
     flatbuffer_obj_t=State_Change_MoveT
 )
 async def on_sub_slamnav_move_response(*, topic, obj):

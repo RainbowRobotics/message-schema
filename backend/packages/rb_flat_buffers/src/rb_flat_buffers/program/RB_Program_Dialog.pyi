@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_Dialog
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,6 +20,12 @@ class RB_Program_DialogT(object):
   robotModel: str | None
   title: str | None
   content: str | None
+  def __init__(
+    self,
+    robotModel: str | None = ...,
+    title: str | None = ...,
+    content: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> RB_Program_DialogT: ...
   @classmethod
