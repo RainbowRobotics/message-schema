@@ -1,0 +1,155 @@
+namespace SLAMNAV;
+
+table Request_Move_Goal {
+    id: string;
+    goal_id: string;
+    goal_name: string;
+    method: string;
+    preset: int;
+}
+
+table Response_Move_Goal {
+    id: string;
+    goal_id: string;
+    goal_name: string;
+    method: string;
+    preset: int;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Target {
+    id: string;
+    goal_pose: [double];
+    method: string;
+    preset: int;
+}
+table Response_Move_Target {
+    id: string;
+    method: string;
+    goal_pose: [double];
+    preset: int;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Jog {
+    vx: double;
+    vy: double;
+    wz: double;
+}
+
+table Request_Move_Stop {
+    id: string;
+}
+table Response_Move_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Pause {
+    id: string;
+}
+table Response_Move_Pause {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Resume {
+    id: string;
+}
+table Response_Move_Resume {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Move_XLinear {
+    id: string;
+    target: double;
+    speed: double;
+}
+table Response_Move_XLinear {
+    id: string;
+    target: double;
+    speed: double;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Circular {
+    id: string;
+    target: double;
+    speed: double;
+    direction: string;
+}
+table Response_Move_Circular {
+    id: string;
+    target: double;
+    speed: double;
+    direction: string;
+    result: string;
+    message: string;
+}
+
+table Request_Move_Rotate {
+    id: string;
+    target: double;
+    speed: double;
+}
+table Response_Move_Rotate {
+    id: string;
+    target: double;
+    speed: double;
+    result: string;
+    message: string;
+}
+
+table State_Change_Move {
+    id: string;
+    command: string;
+    cur_pose: [double];
+    goal_pose: [double];
+    map_name: string;
+    vel: [double];
+    goal_id: string;
+    goal_name: string;
+    method: string;
+    direction: string;
+    preset: int;
+    result: string;
+    message: string;
+    remaining_dist: double;
+    target: double;
+    speed: double;
+    bat_percent: int;
+}
+
+// use in multi
+table Request_Path {
+    id: string;
+    path: [string];
+}
+table Response_Path {
+    id: string;
+    path: [string];
+    result: string;
+    message: string;
+}
+
+table Request_Vobs {
+    id: string;
+    vobs_robots: string;
+    vobs_closures: string;
+    is_vobs_closures_change: string;
+}
+table Response_Vobs {
+    id: string;
+    vobs_robots: string;
+    vobs_closures: string;
+    is_vobs_closures_change: string;
+    result: string;
+    message: string;
+}

@@ -1,0 +1,224 @@
+namespace SLAMNAV;
+
+table MapFileInfo {
+    map_name: string;
+    creat_at: string;
+    update_at: string;
+    type: string;
+    size: double;
+}
+table MapDto {
+    file_name: string;
+    creat_at: string;
+    update_at: string;
+    type: string;
+    cloud_info: MapFileInfo;
+    topo_info: MapFileInfo;
+}
+table Request_Map_List {
+    id: string;
+}
+table Response_Map_List {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Map_Delete {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Delete {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Map_Current {
+    id: string;
+}
+table Response_Map_Current {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Map_Load {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    data: [ubyte];
+    result: string;
+    message: string;
+}
+
+// 이것도 잘 모르겠음.
+table Request_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+}
+table Response_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+    result: string;
+    message: string;
+    data: [Node];
+}
+
+//------------------------------------
+
+table Cloud_Data {
+    cloud: [float];
+}
+
+table Request_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: int;
+    data: [Cloud_Data];
+    result: string;
+    message: string;
+}
+
+table Request_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: int;
+    data: [Cloud_Data];
+}
+table Response_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: int;
+    // data: [Node]; -> too big
+    result: string;
+    message: string;
+}
+
+// 이거 모르겠음... 어떤 함수인지...
+table Request_Get_Map_pipe {}
+table Response_Get_Map_pipe {}
+table Request_Get_Map_Tiles {}
+table Response_Get_Map_Tiles {}
+
+//------------------------------------
+
+// DockingDto 의 의문점..이게 왜 필요한지.
+table Link {
+    id: string;
+    info: string;
+    speed: float;
+    method: string;
+    safety_field: int;
+}
+table Node {
+    id: string;
+    name: string;
+    pose: [double];
+    info: string;
+    links: [Link];
+    type: string;
+}
+table Request_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+}
+table Response_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    // data: [Node]; -> too big
+    result: string;
+    message: string;
+}
+
+table Request_Get_Map_Topology {
+    id: string;
+    map_name: string;
+}
+table Response_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Mapping_Start {
+    id: string;
+}
+table Response_Mapping_Start {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Stop {
+    id: string;
+}
+table Response_Mapping_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Save {
+    id: string;
+    map_name: string;
+}
+table Response_Mapping_Save {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Cloud_Reload {}
+table Response_Mapping_Cloud_Reload {}

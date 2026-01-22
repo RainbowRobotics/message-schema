@@ -1,0 +1,287 @@
+namespace SLAMNAV;
+
+table Request_Get_Safety_Field {
+    id: string;
+}
+table Response_Get_Safety_Field {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+table Request_Set_Safety_Field {
+    id: string;
+    safety_field: int;
+}
+table Response_Set_Safety_Field {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+table Safety_Flag {
+    name: string;
+    value: bool;
+}
+table Request_Get_Safety_Flag {
+    id: string;
+}
+table Response_Get_Safety_Flag {
+    id: string;
+    safety_flag: [Safety_Flag];
+    result: string;
+    message: string;
+}
+
+// Reset to Set
+table Request_Set_Safety_Flag {
+    id: string;
+    reset_flag: [Safety_Flag];
+}
+table Response_Set_Safety_Flag {
+    id: string;
+    reset_flag: [Safety_Flag];
+    result: string;
+    message: string;
+}
+
+table Request_Get_Safety_Io {
+    id: string;
+}
+table Response_Get_Safety_Io {
+    id: string;
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+    result: string;
+    message: string;
+}
+
+table Request_Set_Safety_Io {
+    id: string;
+    command: string;
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+}
+table Response_Set_Safety_Io {
+    id: string;
+    command: string;
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+// command : "dock", "undock", "dockstop"
+table Request_Dock {
+    id: string;
+    command: string;
+}
+table Response_Dock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
+}
+    // table Request_Dock {
+    //     id: string;
+    //     command:
+    // }
+    // table Response_Dock {
+    //     id: string;
+    //     result: string;
+    //     message: string;
+    // }
+
+    // table Request_Undock {
+    //     id: string;
+    // }
+    // table Response_Undock {
+    //     id: string;
+    //     result: string;
+    //     message: string;
+    // }
+
+    // table Request_DockStop {
+    //     id: string;
+    // }
+    // table Response_DockStop {
+    //     id: string;
+    //     result: string;
+    //     message: string;
+    // }
+
+table Request_Charge_Trigger {
+    id: string;
+    onoff: bool;
+}
+table Response_Charge_Trigger {
+    id: string;
+    onoff: bool;
+    result: string;
+    message: string;
+}
+
+table State_Change_Dock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+    // table Request_Obs_Box {
+    //     id: string;
+    //     command: string;
+    //     min_z: float;
+    //     max_z: float;
+    //     map_range: float;
+    // }
+    // table Response_Obs_Box {
+    //     id: string;
+    //     command: string;
+    //     min_z: float;
+    //     max_z: float;
+    //     map_range: float;
+    //     result: string;
+    //     message: string;
+    // }
+
+table Obs_box {
+    x: float;
+    y: float;
+    z: float;
+}
+table Request_Get_Obs_Box {
+    id: string;
+    command: string;
+    min: Obs_box;
+    max: Obs_box;
+    range: float;
+}
+table Response_Get_Obs_Box {
+    id: string;
+    command: string;
+    min: Obs_box;
+    max: Obs_box;
+    range: float;
+    result: string;
+    message: string;
+}
+
+table Request_Set_Obs_Box {
+    id: string;
+    command: string;
+    min: Obs_box;
+    max: Obs_box;
+    range: float;
+}
+table Response_Set_Obs_Box {
+    id: string;
+    command: string;
+    min: Obs_box;
+    max: Obs_box;
+    range: float;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Led {
+    id: string;
+    onoff: bool;
+    color: string;
+}
+table Response_Led {
+    id: string;
+    onoff: bool;
+    color: string;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Motor {
+    id: string;
+    onoff: bool;
+}
+table Response_Motor {
+    id: string;
+    onoff: bool;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Jog {
+    id: string;
+    onoff: bool;
+}
+table Response_Jog {
+    id: string;
+    onoff: bool;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+// sensor socket on/off & freq
+// command : camera, lidar2d, lidar3d
+table Request_Sensor {
+    id: string;
+    command: string;
+    onoff: bool;
+    frequency: int;
+}
+table Response_Sensor {
+    id: string;
+    command: string;
+    onoff: bool;
+    frequency: int;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Path {
+    id: string;
+    onoff: bool;
+    frequency: int;
+}
+table Response_Path {
+    id: string;
+    onoff: bool;
+    frequency: int;
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table Request_Detect {
+    id: string;
+    command: string;
+    cameraNumber: int;
+    cameraSerial: string;
+    size: double;
+}
+table Response_Detect {
+    id: string;
+    command: string;
+    cameraNumber: int;
+    cameraSerial: string;
+    size: double;
+    tf: [double]; // 4*4 Matrix [[1,0,0,0]....[0,0,0,1]]
+    result: string;
+    message: string;
+}
