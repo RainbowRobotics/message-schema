@@ -1,5 +1,7 @@
 include "flow_manager.fbs";
 
+attribute optional;
+
 namespace program;
 
 enum RB_Program_Sub_Task_Type: byte {
@@ -59,4 +61,14 @@ table Request_Update_Sub_Task_State {
   sub_task_id: string;
   sub_task_type: RB_Program_Sub_Task_Type;
   state: flow_manager.RB_Flow_Manager_ProgramState;
+}
+
+table Request_Exec_Control_Program {
+  robot_model: string;
+  program_id: string (optional);
+}
+
+table Response_Exec_Control_Program {
+  manipulate_return_value: int (optional);
+  amr_return_value: int (optional);
 }

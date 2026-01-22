@@ -110,17 +110,11 @@ except:
 class Request_Move_XB_ADDT(object):
 
     # Request_Move_XB_ADDT
-    def __init__(
-        self,
-        target = None,
-        speed = None,
-        type = None,
-        method = 0,
-    ):
-        self.target = target  # type: Optional[MoveInput_TargetT]
-        self.speed = speed  # type: Optional[MoveInput_SpeedT]
-        self.type = type  # type: Optional[MoveInput_TypeT]
-        self.method = method  # type: int
+    def __init__(self):
+        self.target = None  # type: Optional[MoveInput_TargetT]
+        self.speed = None  # type: Optional[MoveInput_SpeedT]
+        self.type = None  # type: Optional[MoveInput_TypeT]
+        self.method = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

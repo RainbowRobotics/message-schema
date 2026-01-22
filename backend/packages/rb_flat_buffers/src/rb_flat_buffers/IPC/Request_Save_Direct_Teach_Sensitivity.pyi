@@ -3,8 +3,10 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from rb_flat_buffers.IPC.Request_Save_Direct_Teach_Sensitivity import Request_Save_Direct_Teach_Sensitivity
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -17,10 +19,6 @@ class Request_Save_Direct_Teach_Sensitivity(object):
   def Sensitivity(self) -> N_JOINT_f | None: ...
 class Request_Save_Direct_Teach_SensitivityT(object):
   sensitivity: N_JOINT_fT | None
-  def __init__(
-    self,
-    sensitivity: 'N_JOINT_fT' | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_Direct_Teach_SensitivityT: ...
   @classmethod

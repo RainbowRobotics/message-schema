@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Save_User_Frame import Request_Save_User_Frame
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -30,17 +32,6 @@ class Request_Save_User_FrameT(object):
   userfRx: float
   userfRy: float
   userfRz: float
-  def __init__(
-    self,
-    userfNo: int = ...,
-    userfName: str | None = ...,
-    userfX: float = ...,
-    userfY: float = ...,
-    userfZ: float = ...,
-    userfRx: float = ...,
-    userfRy: float = ...,
-    userfRz: float = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_User_FrameT: ...
   @classmethod

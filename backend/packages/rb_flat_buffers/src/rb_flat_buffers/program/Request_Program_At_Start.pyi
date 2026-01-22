@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_Start
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,10 +18,6 @@ class Request_Program_At_Start(object):
   def TaskId(self) -> str | None: ...
 class Request_Program_At_StartT(object):
   taskId: str | None
-  def __init__(
-    self,
-    taskId: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Program_At_StartT: ...
   @classmethod

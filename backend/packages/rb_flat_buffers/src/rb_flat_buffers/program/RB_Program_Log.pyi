@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.program.RB_Program_Log import RB_Program_Log
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -21,12 +23,6 @@ class RB_Program_LogT(object):
   content: str | None
   robotModel: str | None
   type: typing.Literal[RB_Program_Log_Type.INFO, RB_Program_Log_Type.WARNING, RB_Program_Log_Type.ERROR, RB_Program_Log_Type.USER, RB_Program_Log_Type.DEBUG, RB_Program_Log_Type.GENERAL]
-  def __init__(
-    self,
-    content: str | None = ...,
-    robotModel: str | None = ...,
-    type: typing.Literal[RB_Program_Log_Type.INFO, RB_Program_Log_Type.WARNING, RB_Program_Log_Type.ERROR, RB_Program_Log_Type.USER, RB_Program_Log_Type.DEBUG, RB_Program_Log_Type.GENERAL] = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> RB_Program_LogT: ...
   @classmethod

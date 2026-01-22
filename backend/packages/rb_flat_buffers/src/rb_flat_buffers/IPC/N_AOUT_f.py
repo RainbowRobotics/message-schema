@@ -54,11 +54,8 @@ except:
 class N_AOUT_fT(object):
 
     # N_AOUT_fT
-    def __init__(
-        self,
-        f = None,
-    ):
-        self.f = f  # type: Optional[List[float]]
+    def __init__(self):
+        self.f = None  # type: List[float]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -197,33 +197,19 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_User_Frame_3PointsT(object):
 
     # Request_Set_User_Frame_3PointsT
-    def __init__(
-        self,
-        userFrameNum = 0,
-        settingOption = 0,
-        orderOption = 0,
-        point1X = 0.0,
-        point1Y = 0.0,
-        point1Z = 0.0,
-        point2X = 0.0,
-        point2Y = 0.0,
-        point2Z = 0.0,
-        point3X = 0.0,
-        point3Y = 0.0,
-        point3Z = 0.0,
-    ):
-        self.userFrameNum = userFrameNum  # type: int
-        self.settingOption = settingOption  # type: int
-        self.orderOption = orderOption  # type: int
-        self.point1X = point1X  # type: float
-        self.point1Y = point1Y  # type: float
-        self.point1Z = point1Z  # type: float
-        self.point2X = point2X  # type: float
-        self.point2Y = point2Y  # type: float
-        self.point2Z = point2Z  # type: float
-        self.point3X = point3X  # type: float
-        self.point3Y = point3Y  # type: float
-        self.point3Z = point3Z  # type: float
+    def __init__(self):
+        self.userFrameNum = 0  # type: int
+        self.settingOption = 0  # type: int
+        self.orderOption = 0  # type: int
+        self.point1X = 0.0  # type: float
+        self.point1Y = 0.0  # type: float
+        self.point1Z = 0.0  # type: float
+        self.point2X = 0.0  # type: float
+        self.point2Y = 0.0  # type: float
+        self.point2Z = 0.0  # type: float
+        self.point3X = 0.0  # type: float
+        self.point3Y = 0.0  # type: float
+        self.point3Z = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

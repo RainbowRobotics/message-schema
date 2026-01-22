@@ -3,9 +3,11 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
 from rb_flat_buffers.program.RB_Program_Sub_Task_Type import RB_Program_Sub_Task_Type
+from rb_flat_buffers.program.Request_Update_Sub_Task_State import Request_Update_Sub_Task_State
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -22,12 +24,6 @@ class Request_Update_Sub_Task_StateT(object):
   subTaskId: str | None
   subTaskType: typing.Literal[RB_Program_Sub_Task_Type.SUB_TASK_INSERT, RB_Program_Sub_Task_Type.SUB_TASK_CHANGE]
   state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED, RB_Flow_Manager_ProgramState.AFTER_COMPLETED]
-  def __init__(
-    self,
-    subTaskId: str | None = ...,
-    subTaskType: typing.Literal[RB_Program_Sub_Task_Type.SUB_TASK_INSERT, RB_Program_Sub_Task_Type.SUB_TASK_CHANGE] = ...,
-    state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED, RB_Flow_Manager_ProgramState.AFTER_COMPLETED] = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Update_Sub_Task_StateT: ...
   @classmethod

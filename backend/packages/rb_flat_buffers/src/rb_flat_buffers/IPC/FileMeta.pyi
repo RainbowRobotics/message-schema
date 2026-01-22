@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.FileMeta import FileMeta
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -31,16 +33,6 @@ class FileMetaT(object):
   chunkSize: int
   totalChunks: int
   sha256: typing.List[int]
-  def __init__(
-    self,
-    session: str | None = ...,
-    name: str | None = ...,
-    size: int = ...,
-    mime: str | None = ...,
-    chunkSize: int = ...,
-    totalChunks: int = ...,
-    sha256: typing.List[int] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> FileMetaT: ...
   @classmethod

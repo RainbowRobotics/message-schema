@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.State_Log import State_Log
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,12 +22,6 @@ class State_LogT(object):
   level: int
   timestamp: str | None
   contents: str | None
-  def __init__(
-    self,
-    level: int = ...,
-    timestamp: str | None = ...,
-    contents: str | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> State_LogT: ...
   @classmethod

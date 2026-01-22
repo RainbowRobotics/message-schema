@@ -41,9 +41,7 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_CallConfigControlBoxT(object):
 
     # Request_CallConfigControlBoxT
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         pass
 
     @classmethod

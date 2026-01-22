@@ -80,15 +80,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_Collision_ParameterT(object):
 
     # Request_Save_Collision_ParameterT
-    def __init__(
-        self,
-        onoff = 0,
-        react = 0,
-        threshold = 0.0,
-    ):
-        self.onoff = onoff  # type: int
-        self.react = react  # type: int
-        self.threshold = threshold  # type: float
+    def __init__(self):
+        self.onoff = 0  # type: int
+        self.react = 0  # type: int
+        self.threshold = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

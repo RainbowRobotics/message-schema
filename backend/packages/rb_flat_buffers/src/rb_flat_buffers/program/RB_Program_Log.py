@@ -81,15 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class RB_Program_LogT(object):
 
     # RB_Program_LogT
-    def __init__(
-        self,
-        content = None,
-        robotModel = None,
-        type = 0,
-    ):
-        self.content = content  # type: Optional[str]
-        self.robotModel = robotModel  # type: Optional[str]
-        self.type = type  # type: int
+    def __init__(self):
+        self.content = None  # type: str
+        self.robotModel = None  # type: str
+        self.type = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

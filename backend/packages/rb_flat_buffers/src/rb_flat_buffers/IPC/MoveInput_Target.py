@@ -89,15 +89,10 @@ except:
 class MoveInput_TargetT(object):
 
     # MoveInput_TargetT
-    def __init__(
-        self,
-        tarValues = None,
-        tarFrame = 0,
-        tarUnit = 0,
-    ):
-        self.tarValues = tarValues  # type: Optional[N_INPUT_fT]
-        self.tarFrame = tarFrame  # type: int
-        self.tarUnit = tarUnit  # type: int
+    def __init__(self):
+        self.tarValues = None  # type: Optional[N_INPUT_fT]
+        self.tarFrame = 0  # type: int
+        self.tarUnit = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

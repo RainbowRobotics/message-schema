@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_ProgramAfterT(object):
 
     # Request_ProgramAfterT
-    def __init__(
-        self,
-        option = 0,
-    ):
-        self.option = option  # type: int
+    def __init__(self):
+        self.option = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
