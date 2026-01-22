@@ -13,14 +13,14 @@ socket_client = RBSocketIONsClient(
 
 @socket_client.event
 def connect():
-    print("common service connected to socket-server", flush=True)
+    print("manipulate service connected to socket-server", flush=True)
 
 
 @socket_client.event
 def disconnect(sid):
-    print("common service disconnected from socket-server", flush=True)
+    print("manipulate service disconnected from socket-server", flush=True)
 
 
 @socket_client.event
 def message(data):
-    print("common service received message from socket-server")
+    print("manipulate service received message from socket-server")

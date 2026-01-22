@@ -36,11 +36,14 @@ class Step:
         disabled: bool | None = None,
         method: str | None = None,
         func: Callable | None = None,
+        post_func: Callable | None = None,
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
         func_name: str | None = None,
+        post_func_name: str | None = None,
         not_ast_eval: bool | None = None,
         args: dict[str, Any] | None = None,
+        post_args: dict[str, Any] | None = None,
         **kwargs,
     ):
         self._class_name = getattr(self, "_class_name", "Step")
@@ -50,11 +53,15 @@ class Step:
         self.variable = variable
         self.disabled = disabled
         self.method = method
+        self.func = func
+        self.post_func = post_func
         self.func_name = func_name
+        self.post_func_name = post_func_name
         self.not_ast_eval = not_ast_eval
         self.done_script = done_script
         self.children = children or []
         self.args = args or {}
+        self.post_args = post_args or {}
         self.kwargs = kwargs
         self.func = func
 
@@ -84,9 +91,11 @@ class Step:
             memo=d.get("memo"),
             variable=d.get("variable"),
             func_name=d.get("funcName"),
+            post_func_name=d.get("postFuncName"),
             not_ast_eval=d.get("notAstEval"),
             disabled=d.get("disabled"),
             args=d.get("args") or {},
+            post_args=d.get("postArgs") or {},
             done_script=d.get("doneScript"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
@@ -98,7 +107,9 @@ class Step:
             "disabled": self.disabled,
             "variable": self.variable,
             "funcName": self.func_name,
+            "postFuncName": self.post_func_name,
             "args": self.args,
+            "postArgs": self.post_args,
             "method": "Step",
             "children": [child.to_dict() for child in self.children],
         }
@@ -134,6 +145,11 @@ class Step:
             a = format_dict(self.args, depth + 4)
             args_block = _indent(f"args={a},\n\n", depth + 4)
 
+        post_args_block = ""
+        if self.post_args:
+            a = format_dict(self.post_args, depth + 4)
+            post_args_block = _indent(f"post_args={a},\n\n", depth + 4)
+
         other_kwargs_block = ""
         if self.kwargs:
             for k, v in self.kwargs.items():
@@ -160,6 +176,12 @@ class Step:
                 else ""
             )
             + args_block
+            + (
+                _indent(f"post_func_name={repr(self.post_func_name)},\n\n", depth + 4)
+                if self.post_func_name
+                else ""
+            )
+            + post_args_block
             + (
                 _indent(f"done_script={repr(self.done_script)},\n", depth + 4)
                 if self.done_script is not None
@@ -231,7 +253,7 @@ class Step:
         if len(self.children) > 0:
             ctx.current_depth -= 1
 
-    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None, _post_run: bool = False):
         """단계 실행"""
         is_skip = target_step_id is not None and target_step_id != self.step_id
 
@@ -244,9 +266,14 @@ class Step:
 
         done_called = False
 
-        fn = self.func
+        fn = self.func if not _post_run else self.post_func
         func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
         args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
+
+        if _post_run:
+            func_name = _resolve_arg_scope_value(self.post_func_name, ctx) if self.post_func_name else None
+            args = _resolve_arg_scope_value(self.post_args, ctx) if self.post_args else self.args or {}
+
 
         if fn is None and func_name and not self.disabled and not is_skip:
             fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
@@ -353,7 +380,11 @@ class Step:
         if not is_skip:
             ctx.emit_done(self.step_id)
 
-        self.execute_children(ctx, target_step_id=target_step_id)
+        if not _post_run:
+            self.execute_children(ctx, target_step_id=target_step_id)
+
+        if not _post_run and (self.post_func is not None or self.post_func_name is not None):
+            self.execute(ctx, target_step_id=target_step_id, _post_run=True)
 
 
 class FolderStep(Step):

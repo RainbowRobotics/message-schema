@@ -53,6 +53,8 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)  # pyright: ignore[reportAttributeAccessIssue]
 
 T = TypeVar("T")
+TReq = TypeVar("TReq")
+TRes = TypeVar("TRes")
 
 class FBPackable(Protocol):
     def Pack(self, builder: Any) -> Any: ...
@@ -414,7 +416,34 @@ class ZenohClient:
         for topic in list(self._cb_entries.keys()):
             self.unsubscribe_topic(topic)
 
-    def queryable(self, keyexpr: str, handler):
+    @overload
+    def queryable(
+        self,
+        keyexpr: str,
+        handler: Callable[[TReq, dict[str, str]], Any],
+        *,
+        flatbuffer_req_T_class: FBRootReadable[TReq],
+        flatbuffer_res_buf_size: int,
+    ): ...
+
+    @overload
+    def queryable(
+        self,
+        keyexpr: str,
+        handler: Callable[[dict[str, str]], Any],
+        *,
+        flatbuffer_req_T_class: None = None,
+        flatbuffer_res_buf_size: int | None = None,
+    ): ...
+
+    def queryable(
+        self,
+        keyexpr: str,
+        handler,
+        *,
+        flatbuffer_req_T_class=None,
+        flatbuffer_res_buf_size=None,
+    ):
         if self.session is None:
             self.connect()
 
@@ -430,32 +459,84 @@ class ZenohClient:
         def _auto_check_encoding(original):
             if isinstance(original, bytes | bytearray | memoryview):
                 return Encoding.APPLICATION_OCTET_STREAM
-
             return Encoding.APPLICATION_JSON
+
+        def _pack_fb(obj, buf_size: int) -> bytes:
+            b = flatbuffers.Builder(buf_size)
+            b.Finish(obj.Pack(b))
+            return bytes(b.Output())
+
+        # handler 시그니처 기반으로 kwargs 구성 (req/params 이름 지원)
+        def _select_kwargs(cb, *, req_obj, params):
+            sig = inspect.signature(cb)
+            kwargs = {}
+            if "req" in sig.parameters:
+                kwargs["req"] = req_obj
+            if "params" in sig.parameters:
+                kwargs["params"] = params
+            return kwargs
+
+        # async/sync 모두 실행
+        def _call_handler(cb, kwargs):
+            if inspect.iscoroutinefunction(cb):
+                loop = self._ensure_loop()
+                fut = asyncio.run_coroutine_threadsafe(cb(**kwargs), loop)
+                return fut.result(timeout=10)  # 필요하면 값 조정
+            return cb(**kwargs)
 
         def _handler(q):
             try:
                 params = q.parameters or {}
-                payload = handler(params)
-                if payload is None:
+
+                # FlatBuffer req 파싱
+                req_obj = None
+                if flatbuffer_req_T_class is not None:
+                    raw = bytes(q.payload)
+                    req_obj = flatbuffer_req_T_class.InitFromPackedBuf(raw, 0)
+
+                # 콜백 호출 (handler()도 허용, handler(params)도 허용)
+                kwargs = _select_kwargs(handler, req_obj=req_obj, params=params)
+                result = _call_handler(handler, kwargs)
+
+                if result is None:
                     q.reply_del(q.key_expr)
                     return
-                data = _to_bytes(payload)
+
                 att = f"sender={self.sender};sender_id={self.sender_id}"
+
+                # FlatBuffer 응답
+                if hasattr(result, "Pack"):
+                    if flatbuffer_res_buf_size is None:
+                        raise ValueError("flatbuffer_res_buf_size is required for flatbuffer response")
+                    data = _pack_fb(result, flatbuffer_res_buf_size)
+                    q.reply(
+                        key_expr=q.key_expr,
+                        payload=ZBytes(data),
+                        encoding=Encoding.APPLICATION_OCTET_STREAM,
+                        attachment=att,
+                    )
+                    return
+
+                # JSON/bytes 응답
+                data = _to_bytes(result)
                 q.reply(
                     key_expr=q.key_expr,
                     payload=ZBytes(data),
-                    encoding=_auto_check_encoding(payload),
+                    encoding=_auto_check_encoding(result),
                     attachment=att,
                 )
+
             except Exception as e:
-                q.reply_err(key_expr=q.key_expr, payload=ZBytes(str(e).encode("utf-8")))
+                # reply_err가 버전에 따라 시그니처가 다를 수 있어서 최소 인자로 보냄
+                q.reply_err(payload=ZBytes(str(e).encode("utf-8")))
 
         qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl
         print(f"🛠️  queryable declared: {keyexpr}")
 
         return qbl
+
+
 
     def undeclare_queryable(self, keyexpr: str):
         qbl = self._queryables.pop(keyexpr, None)

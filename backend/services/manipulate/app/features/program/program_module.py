@@ -35,7 +35,6 @@ from .program_schema import (
     Request_MoveXBRunPD,
     Request_ProgramAfterPD,
     Request_ProgramBeforePD,
-    Request_RelativeMovePD,
 )
 
 zenoh_client = ZenohClient()
@@ -445,25 +444,3 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
-
-    async def call_relative_move(self, *, robot_model: str, request: Request_RelativeMovePD):
-        """
-        [Relative Move 호출]
-        - relative_value: 상대 좌표
-        - reference_value: 기준 좌표
-        - move_type: 이동 타입 (0: move J 계열, 1: move L 계열)
-        - speed: 속도
-        """
-        res = manipulate_sdk.move.call_relative_move(
-            robot_model=robot_model,
-            relative_value=MoveInputTargetSchema(
-                tar_values=request.relative_value.tar_values,
-                tar_frame=request.relative_value.tar_frame,
-                tar_unit=request.relative_value.tar_unit,
-            ),
-            reference_value=request.reference_value,
-            move_type=request.move_type,
-            speed=request.speed,
-        )
-
-        return t_to_dict(res)

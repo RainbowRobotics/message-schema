@@ -19,6 +19,7 @@ dependencies = [
     "rb_schemas",
     "rb_resources",
     "rb_flat_buffers",
+    "rb_tcp",
     "pydantic-settings>=2.10.1",
 ]
 
@@ -30,3 +31,4 @@ rb_socketio = { workspace = true }
 rb_schemas = { workspace = true }
 rb_resources = { workspace = true }
 rb_flat_buffers = { workspace = true }
+rb_tcp = { workspace = true }

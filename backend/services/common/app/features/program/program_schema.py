@@ -32,8 +32,11 @@ class Step_Base(BaseModel):
     variable: dict[str, Any] | None = Field(default=None)
     method: str
     args: dict[str, Any] | None = Field(default=None)
+    postArgs: dict[str, Any] | None = Field(default=None)
     func: str | None = Field(default=None)
+    postFunc: str | None = Field(default=None)
     funcName: str | None = Field(default=None)
+    postFuncName: str | None = Field(default=None)
     summary: str | None = Field(default=None)
     doneScript: str | None = Field(default=None)
     subTaskScriptPath: str | None = Field(default=None)

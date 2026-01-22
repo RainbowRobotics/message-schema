@@ -325,7 +325,7 @@ class RBBaseSDK:
 
     def all_pause(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 일시정지"""
-        self.zenoh_client.publish("rrs/pause", payload={})
+        self.zenoh_client.query_one("rrs/pause", payload={})
 
         time_module.sleep(0.1)
 
@@ -334,7 +334,7 @@ class RBBaseSDK:
 
     def all_stop(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 정지"""
-        self.zenoh_client.publish("rrs/stop", payload={})
+        self.zenoh_client.query_one("rrs/stop", payload={})
         if flow_manager_args is not None:
             flow_manager_args.done()
 

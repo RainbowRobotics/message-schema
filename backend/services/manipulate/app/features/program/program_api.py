@@ -27,7 +27,6 @@ from .program_schema import (
     Request_PausePD,
     Request_ProgramAfterPD,
     Request_ProgramBeforePD,
-    Request_RelativeMovePD,
     Request_ResumePD,
 )
 
@@ -176,10 +175,4 @@ async def call_move_xb_add(robot_model: str, request: Request_MoveXBAddPD):
 @program_router.post("/{robot_model}/call_move_xb_run", response_model=Response_ReturnValuePD)
 async def call_move_xb_run(robot_model: str, request: Request_MoveXBRunPD):
     res = await program_service.call_move_xb_run(robot_model=robot_model, request=request)
-    return JSONResponse(res)
-
-
-@program_router.post("/{robot_model}/call_relative_move", response_model=Response_ReturnValuePD)
-async def call_relative_move(robot_model: str, request: Request_RelativeMovePD):
-    res = await program_service.call_relative_move(robot_model=robot_model, request=request)
     return JSONResponse(res)

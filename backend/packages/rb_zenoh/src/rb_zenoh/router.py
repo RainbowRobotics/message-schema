@@ -4,11 +4,13 @@ import asyncio
 import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar, overload
 
 from .client import FBRootReadable, ZenohClient
 from .schema import SubscribeOptions
 
+TReq = TypeVar("TReq")
+TRes = TypeVar("TRes")
 
 @dataclass(slots=True)
 class _Reg:
@@ -22,8 +24,11 @@ class _Reg:
 @dataclass(slots=True)
 class _QueryableReg:
     topic: str
-    cb: Callable[[dict[str, str]], Any]  # params -> payload
+    cb: Callable[..., Any]
+    flatbuffer_req_t: Any | None = None
+    flatbuffer_res_buf_size: int | None = None
     handle: Any | None = None
+
 
 
 class ZenohRouterError(Exception):
@@ -80,17 +85,55 @@ class ZenohRouter:
 
         return deco
 
+    # ✅ FlatBuffer req를 "객체 타입"으로 받는 모드
+    @overload
+    def queryable(
+        self,
+        topic: str,
+        *,
+        flatbuffer_req_t: type[TReq],
+        flatbuffer_res_buf_size: int,
+    ) -> Callable[[Callable[[TReq], TRes] | Callable[[TReq, dict[str, str]], TRes]], Callable[..., TRes]]:
+        ...
+
+    # ✅ req 없는 모드 (params만 혹은 아무것도 안 받는 콜백)
+    @overload
+    def queryable(
+        self,
+        topic: str,
+        *,
+        flatbuffer_req_t: None = None,
+        flatbuffer_res_buf_size: int | None = None,
+    ) -> Callable[[Callable[[], TRes] | Callable[[dict[str, str]], TRes]], Callable[..., TRes]]:
+        ...
+
+
     # 데코레이터: @router.queryable("file/get")
-    def queryable(self, topic: str):
+    def queryable(
+        self,
+        topic: str,
+        *,
+        flatbuffer_req_t=None,
+        flatbuffer_res_buf_size=None,
+    ):
         full_topic = self._join_topic(self.prefix, topic)
 
-        def deco(func: Callable[[dict[str, str]], Any]):
-            reg = _QueryableReg(full_topic, func)
+        def deco(func):
+            reg = _QueryableReg(
+                topic=full_topic,
+                cb=func,
+                flatbuffer_req_t=flatbuffer_req_t,
+                flatbuffer_res_buf_size=flatbuffer_res_buf_size,
+            )
             self._queryables.append(reg)
 
             if self._started and not self._closed:
-                # 이미 시작된 상태면 즉시 declare
-                reg.handle = self.client.queryable(reg.topic, reg.cb)
+                reg.handle = self.client.queryable(
+                    reg.topic,
+                    reg.cb,
+                    flatbuffer_req_T_class=reg.flatbuffer_req_t,
+                    flatbuffer_res_buf_size=reg.flatbuffer_res_buf_size,
+                )
             return func
 
         return deco
@@ -128,11 +171,22 @@ class ZenohRouter:
                 if exists:
                     raise ZenohRouterError(f"🚫 Duplicate queryable: {new_topic}")
 
-                qreg = _QueryableReg(topic=new_topic, cb=src.cb)
+                qreg = _QueryableReg(
+                    topic=new_topic,
+                    cb=src.cb,
+                    flatbuffer_req_t=src.flatbuffer_req_t,
+                    flatbuffer_res_buf_size=src.flatbuffer_res_buf_size,
+                )
                 self._queryables.append(qreg)
 
                 if self._started and not self._closed:
-                    qreg.handle = self.client.queryable(qreg.topic, qreg.cb)
+                    qreg.handle = self.client.queryable(
+                                    qreg.topic,
+                                    qreg.cb,
+                                    flatbuffer_req_T_class=qreg.flatbuffer_req_t,
+                                    flatbuffer_res_buf_size=qreg.flatbuffer_res_buf_size,
+                                )
+
 
     async def startup(self):
         async with self._lock:

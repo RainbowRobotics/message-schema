@@ -76,7 +76,7 @@ class Zenoh_Controller(BaseController):
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
         if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/resume", payload={})
+            self._zenoh_client.query_one("rrs/resume", payload={})
 
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)

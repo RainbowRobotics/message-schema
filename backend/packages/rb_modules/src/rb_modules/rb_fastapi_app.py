@@ -15,6 +15,9 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
+from rb_tcp.gateway_server import TcpGatewayServer
+from rb_tcp.router import TcpRouter
+from rb_tcp.rpc_zenoh import make_rpc_zenoh_router
 from rb_utils.file import get_env_path
 from rb_zenoh.exeption import register_zenoh_exception_handlers
 from rb_zenoh.router import ZenohRouter
@@ -64,15 +67,18 @@ def create_app(
     *,
     settings: AppSettings,
     socket_client: RBSocketIONsClient | None = None,
+    tcp_gateway: TcpGatewayServer | None = None,
     zenoh_routers: Sequence[ZenohRouter] | None = None,
     api_routers: Sequence[APIRouter] | None = None,  # [state_router, program_router, ...]
     socket_routers: (
         Sequence[RbSocketIORouter] | None
     ) = None,  # [state_socket_router, ...] (client를 받아 등록)
+    tcp_routers: Sequence[TcpRouter] | None = None,
     bg_tasks: list[Callable[[], Any]] | None = None,
 ) -> FastAPI:
 
     zenoh_router = ZenohRouter()
+    tcp_router = TcpRouter()
 
     if bg_tasks is None:
         bg_tasks = []
@@ -84,6 +90,12 @@ def create_app(
 
         await zenoh_router.startup()
         print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)
+
+        if tcp_gateway is not None:
+            await tcp_gateway.startup()
+            app.state.tcp_gateway = tcp_gateway
+            # registry 접근도 필요하면 tcp_gateway.registry 형태로 들고 있어도 됨
+            print(f"🧷 tcp gateway up :{tcp_gateway.port}", flush=True)
 
         if socket_client and not getattr(socket_client, "connected", False):
             app.state._sio_connect_task = asyncio.create_task(
@@ -125,6 +137,11 @@ def create_app(
                 await zenoh_router.shutdown()
                 print("⛔ zenoh 연결 종료", flush=True)
 
+                if getattr(app.state, "tcp_gateway", None) is not None:
+                    await app.state.tcp_gateway.shutdown()
+                    print("⛔ tcp gateway 종료", flush=True)
+
+
                 if socket_client:
                     await socket_client.disconnect()
 
@@ -157,6 +174,17 @@ def create_app(
     )
 
     register_zenoh_exception_handlers(app)
+
+    if tcp_routers:
+        for tcp_r in tcp_routers:
+            tcp_router.include_router(tcp_r)
+
+        rpc_zenoh_router = make_rpc_zenoh_router(
+            service=settings.SERVICE_NAME,
+            tcp_router=tcp_router,
+        )
+
+        zenoh_router.include_router(rpc_zenoh_router)
 
     if zenoh_routers:
         for zenoh_r in zenoh_routers:

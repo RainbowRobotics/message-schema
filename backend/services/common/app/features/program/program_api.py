@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from rb_database.mongo_db import MongoDB
+from rb_zenoh.client import ZenohClient
 
 from .program_module import (
     ProgramService,
@@ -44,6 +45,7 @@ from .program_schema import (
 
 program_service = ProgramService()
 program_router = APIRouter(tags=["Program"])
+zenoh_client = ZenohClient()
 
 
 @program_router.post("/program/load", response_model=Response_Get_ProgramPD)
@@ -247,3 +249,13 @@ async def pause_tasks(request: Request_Tasks_ExecutionPD, db: MongoDB):
 async def resume_tasks(request: Request_Tasks_ExecutionPD, db: MongoDB):
     res = await program_service.resume_tasks(request=request, db=db)
     return JSONResponse(res)
+
+@program_router.post("/test/executor/{status}", response_model=Response_Script_ExecutionPD)
+async def test_executor(status: Literal["pause", "resume", "stop"]):
+    if status == "pause":
+        zenoh_client.query_one("rrs/pause")
+    elif status == "resume":
+        zenoh_client.query_one("rrs/resume")
+    elif status == "stop":
+        zenoh_client.query_one("rrs/stop")
+    return JSONResponse({"status": "success"})
