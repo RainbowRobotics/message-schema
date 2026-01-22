@@ -47,8 +47,8 @@ table ST_Config_UserFrame{
 }
 
 table Response_CallConfigControlBox{
-  dout_special_func: N_DOUT_u;
-  din_special_func: N_DIN_u;
+  dout_special_func: N_DOUT_b;
+  din_special_func: N_DIN_b;
   din_filter_count: N_DIN_u;
 
   area_configs_0: ST_Config_Area;
