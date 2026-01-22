@@ -30,9 +30,6 @@ backend.lint: ## python ruff로 lint check 후 fix
 
 .PHONY: backend.local-dev
 backend.local-dev: backend.lint backend.flatc ## docker를 쓰지 않고 개발 환경 실행
-	echo "WORKDIR: $(WORKDIR)"
-	echo "SERVICE: $(SERVICE)"
-	echo "CONF_PORT: $(CONF_PORT)"
 	@cd ${WORKDIR}/services/${SERVICE} && uv run uvicorn app.main:app --host 0.0.0.0 --port ${CONF_PORT} --reload --reload-dir ${WORKDIR} --reload-include '**/*.py'
 
 .PHONY: backend.dev
