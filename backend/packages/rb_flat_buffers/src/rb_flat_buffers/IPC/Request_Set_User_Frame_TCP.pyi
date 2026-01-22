@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Set_User_Frame_TCP import Request_Set_User_Frame_TCP
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,6 +18,11 @@ class Request_Set_User_Frame_TCP(object):
 class Request_Set_User_Frame_TCPT(object):
   userFrameNum: int
   settingOption: int
+  def __init__(
+    self,
+    userFrameNum: int = ...,
+    settingOption: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_User_Frame_TCPT: ...
   @classmethod

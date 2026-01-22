@@ -135,12 +135,19 @@ except:
 class EmailMessageT(object):
 
     # EmailMessageT
-    def __init__(self):
-        self.fromEmail = None  # type: str
-        self.toEmail = None  # type: str
-        self.subject = None  # type: str
-        self.body = None  # type: str
-        self.attachment = None  # type: List[FileMessageT]
+    def __init__(
+        self,
+        fromEmail = None,
+        toEmail = None,
+        subject = None,
+        body = None,
+        attachment = None,
+    ):
+        self.fromEmail = fromEmail  # type: Optional[str]
+        self.toEmail = toEmail  # type: Optional[str]
+        self.subject = subject  # type: Optional[str]
+        self.body = body  # type: Optional[str]
+        self.attachment = attachment  # type: Optional[List[FileMessageT]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

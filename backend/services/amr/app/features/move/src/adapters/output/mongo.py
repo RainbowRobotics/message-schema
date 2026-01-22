@@ -7,6 +7,9 @@ from datetime import (
     date,
     datetime,
 )
+from typing import (
+    Any,
+)
 
 import rb_database.mongo_db as mongo_db
 from motor.motor_asyncio import (
@@ -25,7 +28,6 @@ from rb_utils.date import (
 from rb_utils.pagination import (
     LogsResponse,
 )
-from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import (
     ServiceException,
 )
@@ -142,7 +144,7 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
             rb_log.info(f"[AmrMove] getLogs : {options}")
 
             # 2) 옵션 파싱
-            filter_options = dict(options.get("filter")) or {}
+            filter_options = options.get("filter") or {}
             search_text = options.get("searchText")
             fields = dict(options.get("fields"))
             sort   = options.get("sort", "createdAt")
@@ -150,6 +152,8 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
             page   = max(1, int(options.get("page", 1)))
             limit  = max(1, min(int(options.get("limit", 20)), 200))
             skip   = (page - 1) * limit
+
+            print(f"[getLogs] filter_options: {filter_options}, search_text: {search_text}, fields: {fields}, sort: {sort}, order: {order}, page: {page}, limit: {limit}, skip: {skip}")
 
             # 3) 필드 세팅(_id 제외하는 것 일괄로 추가)
             fields = {**fields, "_id": 0}
@@ -184,9 +188,6 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
             }
         except ServiceException as e:
             raise e
-        except Exception as e:
-            rb_log.error(f"[AmrMove] getLogs Exception : {e}")
-            raise ServiceException("DB 조회 실패", status_code=500) from e
 
     async def archive_logs(self,
     cutoff_utc: datetime | date,
@@ -199,7 +200,7 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
         """
         try:
             tz_name = "Asia/Seoul"
-            out_dir = "/data/amr/archive/move"
+            out_dir = "/app/data/amr/archive/move"
             rb_log.info(f"[AmrMove] archiveLogs : cutoff_utc: {cutoff_utc}, tz_name: {tz_name}, out_dir: {out_dir}, dry_run: {dry_run}")
 
             # 1) 날짜 변환 (KST -> UTC)
@@ -269,37 +270,33 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
         )
         print(f"[migrate] createdAt strings→Date matched={res.matched_count} modified={res.modified_count}")
 
-    async def export_logs(self, options: dict) -> dict:
+    async def export_logs(self, start_dt: datetime | date, end_dt: datetime | date, filters: dict[str, Any], filename: str, search_text: str, fields: dict[str, Any], sort: str, order: str) -> dict:
         """
         [Move DB 로그 내보내기]
-        - options:
-            - start_dt: datetime | date # 내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)
-            - end_dt: datetime | date   # 내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)
-            - filters: dict            # Mongo 조건식
-            - filename: str             # 내보내기 파일명(확장자는 gz로 고정됩니다)
-            - search_text: str           # $text 검색어 (텍스트 인덱스 필요)
-            - fields: dict              # projection 예) {"_id":0, "contents":1}
-            - sort: str                 # 정렬 필드 (기본: createdAt)
-            - order: str                # "desc"(기본) | "asc"
+        - start_dt: datetime | date # 내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)
+        - end_dt: datetime | date   # 내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)
+        - filters: dict            # Mongo 조건식
+        - filename: str             # 내보내기 파일명(확장자는 gz로 고정됩니다)
+        - search_text: str           # $text 검색어 (텍스트 인덱스 필요)
+        - fields: dict              # projection 예) {"_id":0, "contents":1}
+        - sort: str                 # 정렬 필드 (기본: createdAt)
+        - order: str                # "desc"(기본) | "asc"
         """
         try:
             # 1) DB 세팅
             await self.check_db()
             col = mongo_db.db[self.name]
             tz_name = "Asia/Seoul"
-            out_dir = "/data/amr/export/move"
+            out_dir = "/app/data/amr/export/move"
 
-            rb_log.info(f"[exportLogs] exportLogs : {options}")
+            rb_log.info(f"[exportLogs] exportLogs : {start_dt}, {end_dt}, {filters}, {filename}, {search_text}, {fields}, {sort}, {order}")
 
             # 2) 옵션 파싱
-            filters = t_to_dict(options.get("filters")) if options.get("filters") else {}
-            search_text = options.get("search_text")
-            fields = t_to_dict(options.get("fields")) if options.get("fields") else {}
-            sort   = options.get("sort", "createdAt")
-            order  = DESCENDING if str(options.get("order", "desc")).lower() == "desc" else ASCENDING
-            start_utc = convert_dt(local=options.get("start_dt"), in_tz=tz_name, out_tz="UTC") if options.get("start_dt") else None
-            end_utc = convert_dt(local=options.get("end_dt"), in_tz=tz_name, out_tz="UTC") if options.get("end_dt") else None
-            filename = options.get("filename")
+            start_utc = convert_dt(local=start_dt, in_tz=tz_name, out_tz="UTC")
+            end_utc = convert_dt(local=end_dt, in_tz=tz_name, out_tz="UTC")
+            # filter = filters or {}
+            # fields = dict(fields)
+            order  = DESCENDING if str(order).lower() == "desc" else ASCENDING
 
             rb_log.info(f"[exportLogs] start_utc: {start_utc}, end_utc: {end_utc}, filename: {filename}, filters: {filters}, search_text: {search_text}, fields: {fields}, sort: {sort}, order: {order}")
 

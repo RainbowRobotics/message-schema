@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Move_XB_CLR import Request_Move_XB_CLR
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,6 +14,9 @@ class Request_Move_XB_CLR(object):
   def GetRootAsRequest_Move_XB_CLR(cls, buf: bytes, offset: int) -> Request_Move_XB_CLR: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
 class Request_Move_XB_CLRT(object):
+  def __init__(
+    self,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_XB_CLRT: ...
   @classmethod

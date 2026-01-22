@@ -54,8 +54,11 @@ except:
 class N_INPUT_fT(object):
 
     # N_INPUT_fT
-    def __init__(self):
-        self.f = None  # type: List[float]
+    def __init__(
+        self,
+        f = None,
+    ):
+        self.f = f  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

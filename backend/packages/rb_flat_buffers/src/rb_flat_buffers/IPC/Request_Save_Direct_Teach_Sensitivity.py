@@ -63,8 +63,11 @@ except:
 class Request_Save_Direct_Teach_SensitivityT(object):
 
     # Request_Save_Direct_Teach_SensitivityT
-    def __init__(self):
-        self.sensitivity = None  # type: Optional[N_JOINT_fT]
+    def __init__(
+        self,
+        sensitivity = None,
+    ):
+        self.sensitivity = sensitivity  # type: Optional[N_JOINT_fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

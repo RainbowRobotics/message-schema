@@ -33,11 +33,17 @@ for dir in "$BE/services"/*; do
   CONF="$dir/config.env"
   [ -f "$CONF" ] || continue
 
+  echo "CONF: $CONF"
+
   NAME=$(grep '^SERVICE_NAME=' "$CONF" | cut -d= -f2 | tr -d ' \r')
   PORT=$(grep '^PORT=' "$CONF" | cut -d= -f2 | tr -d ' \r')
+  DATA_DIR=$(grep '^DATA_DIR=' "$CONF" | cut -d= -f2 | tr -d ' \r') || true
 
   [ -n "$NAME" ] || continue
   [ -n "$PORT" ] || continue
+  if [ -z "$DATA_DIR" ]; then
+    DATA_DIR="./data"
+  fi
 
   CONF_PATH="./services/${NAME}/config.env"
   COMMON_ENV_PATH="./.env"
@@ -68,7 +74,7 @@ for dir in "$BE/services"/*; do
       - ./services/${NAME}:/app/backend/services/${NAME}
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
-      - ./temp-data:/app/data
+      - ${DATA_DIR}:/app/data
 EOF
 
   # preview 용
@@ -92,7 +98,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
-      - /data:/data
+      - ${DATA_DIR}:/data
 
 EOF
 
@@ -118,7 +124,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
-      - /data:/data
+      - ${DATA_DIR}:/data
 
 EOF
 done

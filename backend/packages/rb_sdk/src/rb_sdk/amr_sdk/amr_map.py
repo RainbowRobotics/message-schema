@@ -19,16 +19,13 @@ from rb_flat_buffers.SLAMNAV.Response_Mapping_Start import Response_Mapping_Star
 from rb_flat_buffers.SLAMNAV.Response_Mapping_Stop import Response_Mapping_StopT
 from rb_flat_buffers.SLAMNAV.Response_Set_Map_Cloud import Response_Set_Map_CloudT
 from rb_flat_buffers.SLAMNAV.Response_Set_Map_Topology import Response_Set_Map_TopologyT
-from rb_zenoh.client import ZenohClient
 
+from ..base import RBBaseSDK
 from .schema.amr_map_schema import SlamnavMapPort
 
 
-class RBAmrMapSDK(SlamnavMapPort):
+class RBAmrMapSDK(RBBaseSDK,SlamnavMapPort):
     """Rainbow Robotics AMR Map SDK"""
-    client: ZenohClient
-    def __init__(self, client: ZenohClient):
-        self.client = client
 
     async def get_map_file(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_FileT:
         """
@@ -42,7 +39,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.map_name = map_name
         req.file_name = file_name
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/file",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Map_FileT,
@@ -50,7 +47,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map List failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def get_map_list(self, robot_model: str, req_id: str) -> Response_Map_ListT:
         """
@@ -62,7 +62,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req = Request_Map_ListT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/list",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Map_ListT,
@@ -70,7 +70,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Load failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def map_load(self, robot_model: str, req_id: str, map_name: str) -> Response_Map_LoadT:
         """
@@ -83,7 +86,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.id = req_id
         req.map_name = map_name
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/load",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Map_LoadT,
@@ -106,14 +109,17 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.file_name = file_name
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/cloud/get",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Map_CloudT,
             flatbuffer_buf_size=125,
         )
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Cloud failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str, size: int, data: list[float]) -> Response_Set_Map_CloudT:
         """
@@ -131,7 +137,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.data = data
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/cloud/set",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Map_CloudT,
@@ -139,7 +145,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Cloud failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def get_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_TopologyT:
         """
@@ -154,7 +163,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.file_name = file_name
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/topology/get",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Get_Map_TopologyT,
@@ -162,7 +171,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Topology failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def set_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str, data: list[NodeT]) -> Response_Set_Map_TopologyT:
         """
@@ -178,7 +190,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.data = data
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/map/topology/set",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Set_Map_TopologyT,
@@ -186,7 +198,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Mapping Start failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def mapping_start(self, robot_model: str, req_id: str) -> Response_Mapping_StartT:
         """
@@ -198,7 +213,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req = Request_Mapping_StartT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/mapping/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_StartT,
@@ -218,7 +233,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req = Request_Mapping_StopT()
         req.id = req_id
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/mapping/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_StopT,
@@ -226,7 +241,10 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Mapping Save failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def mapping_save(self, robot_model: str, req_id: str, map_name: str) -> Response_Mapping_SaveT:
         """
@@ -239,7 +257,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         req.id = req_id
         req.map_name = map_name
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/mapping/save",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Mapping_SaveT,
@@ -247,4 +265,7 @@ class RBAmrMapSDK(SlamnavMapPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Mapping Save failed: obj_payload is None")
+
+        return result["obj_payload"]

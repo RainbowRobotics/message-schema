@@ -80,10 +80,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_SelfColl_ParameterT(object):
 
     # Request_Save_SelfColl_ParameterT
-    def __init__(self):
-        self.mode = 0  # type: int
-        self.distInternal = 0.0  # type: float
-        self.distExternal = 0.0  # type: float
+    def __init__(
+        self,
+        mode = 0,
+        distInternal = 0.0,
+        distExternal = 0.0,
+    ):
+        self.mode = mode  # type: int
+        self.distInternal = distInternal  # type: float
+        self.distExternal = distExternal  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -11,12 +11,12 @@ from datetime import (
     UTC,
     datetime,
 )
-from functools import wraps
 from pathlib import Path
 from typing import Any
 
 # pylint: disable=import-error,no-name-in-module
 from fastapi import BackgroundTasks
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
 from rb_sdk.amr import RBAmrSDK
@@ -52,48 +52,562 @@ from app.features.move.src.adapters.output.mongo import (
 from app.features.move.src.adapters.output.smtplib import (
     MoveSmtpLibEmailAdapter,
 )
-from app.features.move.src.domain.move_model import (
-    MoveModel,
-    MoveStatus,
-)
+from app.features.move.src.domain.move_model import MoveModel
+from app.schema.amr import AmrResponseStatusEnum
 from app.socket.socket_client import (
     socket_client,
 )
 
 rb_amr_sdk = RBAmrSDK()
-
-def handle_move_error(fn):
-    @wraps(fn)
-    async def wrapper(self,*args, **kwargs):
-        model = MoveModel()
-        try:
-            result = await fn(self, *args, **kwargs, model=model)
-            return result
-        except ServiceException as e:
-            # 에러 발생 시, 상태 변경 및 실패로 저장
-            print("[moveGoal] ServiceException : ", e.message, e.status_code)
-            model.status_change(MoveStatus.FAIL)
-            model.message = str(e.message)
-            await self.database_port.upsert(model.to_dict())
-            return JSONResponse(status_code=e.status_code,content=model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveGoal] Exception : ", e)
-            model.status_change(MoveStatus.FAIL)
-            model.message = str(e)
-            await self.database_port.upsert(model.to_dict())
-            return JSONResponse(status_code=500,content=model.to_dict())
-    return wrapper
-
 class AmrMoveService:
     """
     [AMR 이동 서비스 초기화]
     """
     def __init__(self):
-        self.robot_model = "test/v1"
         self.database_port = MoveMongoDatabaseAdapter()
-        # self.slamnav_port = SlamnavZenohAdapter()
         self.email_port = MoveSmtpLibEmailAdapter()
         self._locks = defaultdict(asyncio.Lock)
+
+    async def move_goal(self, robot_model: str, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
+        """
+        [AMR 목표 지점으로 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveGoal : {robot_model} {req.model_dump()}")
+
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_goal(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[moveGoal] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_goal(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                goal_id=model.goal_id,
+                method=model.method,
+                preset=model.preset
+            )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveGoal] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveGoal] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+
+    async def move_target(self,
+    robot_model: str,
+    req: Request_Move_TargetPD,
+    model:MoveModel | None = None) -> Response_Move_TargetPD:
+        """
+        [AMR 타겟 좌표로 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveTarget : {robot_model} {req.model_dump()}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_target(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveGoal] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_target(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                goal_pose=model.goal_pose,
+                method=model.method,
+                preset=model.preset
+            )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveTarget] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveTarget] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_jog(self, robot_model: str, req: Request_Move_JogPD, model:MoveModel | None = None):
+        """
+        [AMR 조이스틱 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveJog : {robot_model} {req.model_dump()}")
+
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_jog(req)
+
+            # 2) DB 저장 (패스)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            await rb_amr_sdk.move.send_move_jog(
+                robot_model=model.robot_model,
+                vx=model.vx,
+                vy=model.vy,
+                wz=model.wz
+            )
+
+            return None
+
+        except ServiceException as e:
+            print("[moveJog] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_stop(self, robot_model: str) -> Response_Move_StopPD:
+        """
+        [AMR 이동 중지]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveStop : {robot_model}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_stop()
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[moveGoal] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_stop(
+                robot_model=model.robot_model,
+                req_id=model.id
+            )
+
+            print(f"=> move_stop result: {result}")
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveStop] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveStop] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_pause(self, robot_model: str, model: MoveModel | None = None) -> Response_Move_PausePD:
+        """
+        [AMR 이동 일시정지]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] movePause : {robot_model}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_pause()
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[movePause] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_pause(
+                robot_model=model.robot_model,
+                req_id=model.id
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[movePause] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[movePause] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()} ))
+
+    async def move_resume(self, robot_model: str, model: MoveModel | None = None) -> Response_Move_ResumePD:
+        """
+        [AMR 이동 재개]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveResume : {robot_model}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_resume()
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:
+                print("[moveResume] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_resume(
+                robot_model=model.robot_model,
+                req_id=model.id
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveResume] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveResume] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_linear(self, robot_model: str, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
+        """
+        [AMR 선형 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveLinear : {robot_model} {req.model_dump()}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_x_linear(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveLinear] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_linear(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                target=model.target,
+                speed=model.speed
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveLinear] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveLinear] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_circular(self, robot_model: str, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
+        """
+        [AMR 원형 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveCircular : {robot_model} {req.model_dump()}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_circular(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveCircular] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_circular(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                target=model.target,
+                speed=model.speed,
+                direction=model.direction
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveCircular] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveCircular] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_rotate(self, robot_model: str, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
+        """
+        [AMR 원형 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] moveRotate : {robot_model} {req.model_dump()}")
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_rotate(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveRotate] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_rotate(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                target=model.target,
+                speed=model.speed
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[moveRotate] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[moveRotate] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def get_logs(
+        self,
+        request: RequestAmrMoveLogsPD
+        ) -> Response_Move_LogsPD:
+        """
+        [AMR 이동 로그 조회]
+        """
+        try:
+            rb_log.info(f"[amr_move_service] getLogs : {request.model_dump()}")
+
+            # 1) 요청 검사
+            if request.sort is None or request.sort == "":
+                request.sort = "createdAt"
+            if request.order is None or request.order == "":
+                request.order = "desc"
+            if request.page is None or request.page == 0:
+                request.page = 1
+            if request.limit is None or request.limit == 0:
+                request.limit = 10
+
+            result = await self.database_port.get_logs(request.model_dump())
+            return result
+        except ServiceException as e:
+            rb_log.error(f"[getLogs] ServiceException : {e.message}, {e.status_code}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
+
+    async def archive_logs(self, request: RequestAmrMoveArchiveLogPD):
+        """
+        [AMR 이동 로그 아카이브]
+        """
+
+        #1) 요청 검사
+        try:
+            if request.cutOffDate is None or request.cutOffDate == "":
+                raise ServiceException("삭제 기준 날짜가 없습니다", status_code=400)
+            if convert_dt(request.cutOffDate, "Asia/Seoul", "UTC") > datetime.now(UTC):
+                raise ServiceException("삭제 기준 날짜가 오늘 이후입니다", status_code=400)
+            if request.isDryRun is None or request.isDryRun == "":
+                request.isDryRun = False
+
+            rb_log.info(f"[amr_move_service] archiveLogs : {request}")
+
+            result = await self.database_port.archive_logs(cutoff_utc=request.cutOffDate, dry_run=request.isDryRun)
+
+            print(f"[archiveLogs] result: {result}")
+            return result
+        except ServiceException as e:
+            rb_log.error(f"[archiveLogs] ServiceException : {e.message}, {e.status_code}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
+
+    async def export_logs(self, request: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
+        """
+        [AMR 이동 로그 내보내기]
+        """
+        try:
+            rb_log.info(f"[amr_move_service] exportLogs : {request.model_dump()}")
+            # 1) 요청 검사
+            if request.startDt is None:
+                request.startDt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
+            else:
+                request.startDt = convert_dt(request.startDt, "Asia/Seoul", "UTC")
+
+            if request.endDt is None:
+                request.endDt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
+            else:
+                request.endDt = convert_dt(request.endDt, "Asia/Seoul", "UTC")
+
+            if request.startDt > request.endDt:
+                raise ServiceException("시작 날짜가 종료 날짜보다 이후입니다", status_code=400)
+
+            if request.startDt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
+                raise ServiceException("시작 날짜가 2025년 1월 1일 이전입니다", status_code=400)
+
+            # if request.endDt > datetime.now(UTC):
+            #     request.endDt = datetime.now(UTC)
+
+            # 2) 데이터 조회 및 파일 생성
+            result = await self.database_port.export_logs(
+                start_dt=request.startDt,
+                end_dt=request.endDt,
+                filters=request.filters,
+                filename=request.filename,
+                search_text=request.searchText,
+                fields=request.fields,
+                sort=request.sort,
+                order=request.order
+                )
+
+            rb_log.debug(f"[exportLogs] result: {result}")
+
+            if(result.get("estimatedDocs") == 0):
+                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
+
+            file_path = result.get("file") if result.get("file") else None
+            if file_path is not None and file_path != "":
+                p = Path(file_path)
+                if not p.exists():
+                    raise ServiceException("내보내기 파일 생성 실패", status_code=500)
+            else:
+                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
+
+            download_name = request.filename or p.name
+            if not download_name.endswith(".ndjson.gz"):
+                download_name += ".ndjson.gz"
+            download_name = os.path.basename(download_name)  # 디렉터리 traversal 방지
+
+            # 2) 파일 내보내는 방법 분기
+            if request.method == "email":
+                if not request.email:
+                    raise ServiceException("email 필드가 필요합니다 (method=email)", status_code=400)
+                # 백그라운드 메일 발송 트리거
+                background_tasks.add_task(self.email_port.send_export_email, request.email, str(p), download_name)
+                # await self.email_port.send_export_email(request.email, str(p), download_name)
+                return {
+                    "ok": True,
+                    "message": "메일 발송 요청 완료",
+                    "estimatedDocs": result.get("estimatedDocs"),
+                    "archivedDocs": result.get("archivedDocs"),
+                    # "filename": download_name,
+                    "size": result.get("size"),
+                }
+            elif request.method == "file":
+                # NDJSON + gzip
+                headers = {
+                    # 내용은 NDJSON, 전송은 gzip
+                    "Content-Type": "application/gzip",
+                }
+                # FileResponse는 알아서 async로 처리됨
+                return FileResponse(
+                    path=str(p),
+                    media_type="application/gzip",
+                    filename=download_name,     # Content-Disposition 세팅
+                    headers=headers,
+                )
+            else:
+                raise ServiceException("내보내기 방식 오류: 지원하지 않는 방식",status_code=400)
+        except ServiceException as e:
+            rb_log.error(f"[exportLogs] ServiceException : {e.message}, {e.status_code}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
+
+
+    #########################################################
+    # 내부 함수
+    #########################################################
 
     async def move_state_change(self, topic:str, obj:dict):
         """
@@ -115,329 +629,16 @@ class AmrMoveService:
                 db["updateAt"] = datetime.now(UTC)
 
             if obj["result"] == "fail" or obj["result"] == "success":
-                db["status"] = MoveStatus.DONE
+                db["status"] = AmrResponseStatusEnum.DONE
             elif obj["result"] == "cancel":
-                db["status"] = MoveStatus.CANCEL
+                db["status"] = AmrResponseStatusEnum.CANCEL
             elif obj["result"] == "start":
-                db["status"] = MoveStatus.MOVING
+                db["status"] = AmrResponseStatusEnum.MOVING
             elif obj["result"] == "pause":
-                db["status"] = MoveStatus.PAUSE
+                db["status"] = AmrResponseStatusEnum.PAUSE
 
             await self.database_port.upsert(db)
             await socket_client.emit(topic, t_to_dict(obj))
-
-    @handle_move_error
-    async def move_goal(self, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
-        """
-        [AMR 목표 지점으로 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveGoal : {req.model_dump()}")
-        # 1) moveModel 객체 생성
-        model.set_move_goal(req)
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except ServiceException as e:
-            print("[moveGoal] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_goal(
-            robot_model=self.robot_model,
-            req_id=model.id,
-            goal_id=model.goal_id,
-            method=model.method,
-            preset=model.preset
-        )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveGoal] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_target(self,
-    req: Request_Move_TargetPD,
-    model:MoveModel | None = None) -> Response_Move_TargetPD:
-        """
-        [AMR 타겟 좌표로 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveTarget : {req.model_dump()}")
-        # 1) moveModel 객체 생성
-        model.set_move_target(req)
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveGoal] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_target(
-            robot_model=self.robot_model,
-            req_id=model.id,
-            goal_pose=model.goal_pose,
-            method=model.method,
-            preset=model.preset
-        )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveTarget] DB Exception : ", e)
-
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_jog(self, req: Request_Move_JogPD, model:MoveModel | None = None):
-        """
-        [AMR 조이스틱 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveJog : {req.model_dump()}")
-
-        # 1) moveModel 객체 생성
-        model.set_move_jog(req)
-
-        # 2) DB 저장 (패스)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        await rb_amr_sdk.move_sdk.send_move_jog(
-            robot_model=self.robot_model,
-            vx=model.vx,
-            vy=model.vy,
-            wz=model.wz
-        )
-
-        return None
-
-
-    @handle_move_error
-    async def move_stop(self, model: MoveModel | None = None) -> Response_Move_StopPD:
-        """
-        [AMR 이동 중지]
-        """
-        rb_log.info("[amr_move_service] moveStop")
-        # 1) moveModel 객체 생성
-        model.set_move_stop()
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except ServiceException as e:
-            print("[moveGoal] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_stop(
-            robot_model=self.robot_model,
-            req_id=model.id
-        )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveStop] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_pause(self, model: MoveModel | None = None) -> Response_Move_PausePD:
-        """
-        [AMR 이동 일시정지]
-        """
-        rb_log.info("[amr_move_service] movePause")
-        # 1) moveModel 객체 생성
-        model.set_move_pause()
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[movePause] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_pause(
-            robot_model=self.robot_model,
-            req_id=model.id
-            )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[movePause] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_resume(self, model: MoveModel | None = None) -> Response_Move_ResumePD:
-        """
-        [AMR 이동 재개]
-        """
-        rb_log.info("[amr_move_service] moveResume")
-        # 1) moveModel 객체 생성
-        model.set_move_resume()
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:
-            print("[moveResume] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_resume(
-            robot_model=self.robot_model,
-            req_id=model.id
-            )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveResume] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_linear(self, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
-        """
-        [AMR 선형 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveLinear : {req.model_dump()}")
-        # 1) moveModel 객체 생성
-        model.set_move_x_linear(req)
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveLinear] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_linear(
-            robot_model=self.robot_model,
-            req_id=model.id,
-            target=model.target,
-            speed=model.speed
-            )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveLinear] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_circular(self, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
-        """
-        [AMR 원형 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveCircular : {req.model_dump()}")
-        # 1) moveModel 객체 생성
-        model.set_move_circular(req)
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveCircular] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_circular(
-            robot_model=self.robot_model,
-            req_id=model.id,
-            target=model.target,
-            speed=model.speed,
-            direction=model.direction
-            )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveCircular] DB Exception : ", e)
-        return model.to_dict()
-
-    @handle_move_error
-    async def move_rotate(self, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
-        """
-        [AMR 원형 이동]
-        """
-        rb_log.info(f"[amr_move_service] moveRotate : {req.model_dump()}")
-        # 1) moveModel 객체 생성
-        model.set_move_rotate(req)
-
-        # 2) DB 저장
-        try:
-            await self.database_port.upsert(model)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveRotate] DB Exception : ", e)
-
-        # 3) 요청 검사
-        model.check_variables()
-
-        # 4) 요청 전송
-        result = await rb_amr_sdk.move_sdk.send_move_rotate(
-            robot_model=self.robot_model,
-            req_id=model.id,
-            target=model.target,
-            speed=model.speed
-            )
-
-        model.result_change(result.get("result"))
-        model.message = result.get("message")
-        model.status_change(result.get("result"))
-
-        try:
-            await self.database_port.upsert(model.to_dict())
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print("[moveRotate] DB Exception : ", e)
-        return model.to_dict()
 
 
     def _parse_json_maybe(self, v: str | dict[str, Any] | None) -> dict[str, Any] | None:
@@ -464,114 +665,3 @@ class AmrMoveService:
                 # 혼용되면 projection 무시(혹은 400 에러)
                 return None
         return proj
-
-    async def get_logs(
-        self,
-        request: RequestAmrMoveLogsPD
-        ) -> Response_Move_LogsPD:
-        """
-        [AMR 이동 로그 조회]
-        """
-        rb_log.info(f"[amr_move_service] getLogs : {request.model_dump()}")
-        try:
-            # 1) 요청 검사
-            result = await self.database_port.get_logs(request.model_dump())
-            return result
-        except ServiceException as e:
-            raise e
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"[getLogs] Exception : {e}")
-            raise ServiceException("로그 조회 실패", status_code=500) from e
-
-
-
-    async def archive_logs(self, request: RequestAmrMoveArchiveLogPD):
-        """
-        [AMR 이동 로그 아카이브]
-        """
-        rb_log.info(f"[amr_move_service] archiveLogs : {request.model_dump()}")
-        result = await self.database_port.archive_logs(cutoff_utc=request.cut_off_date, dry_run=request.is_dry_run)
-        print(f"[archiveLogs] result: {result}")
-        return result
-
-
-
-    async def export_logs(self, body: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
-        """
-        [AMR 이동 로그 내보내기]
-        """
-        rb_log.info(f"[amr_move_service] exportLogs : {body.model_dump()}")
-        try:
-            # 1) 요청 검사
-            if body.start_dt is None:
-                body.start_dt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
-            if body.end_dt is None:
-                body.end_dt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
-            body.start_dt = convert_dt(body.start_dt, "UTC", "UTC")
-            body.end_dt = convert_dt(body.end_dt, "UTC", "UTC")
-
-            if body.start_dt > body.end_dt:
-                raise ServiceException("시작 날짜가 종료 날짜보다 이후입니다", status_code=400)
-            if body.start_dt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
-                raise ServiceException("시작 날짜가 2025년 1월 1일 이전입니다", status_code=400)
-            if body.end_dt > datetime.now(UTC):
-                body.end_dt = datetime.now(UTC)
-
-            # 2) 데이터 조회 및 파일 생성
-            result = await self.database_port.export_logs(options=body.model_dump(exclude_none=True))
-            rb_log.debug(f"[exportLogs] result: {result}")
-            # return result
-
-            if(result.get("estimatedDocs") == 0):
-                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
-
-            file_path = result.get("file") if result.get("file") else None
-            if file_path is not None and file_path != "":
-                p = Path(file_path)
-                if not p.exists():
-                    raise ServiceException("내보내기 파일 생성 실패", status_code=500)
-            else:
-                raise ServiceException("내보낼 데이터가 없습니다", status_code=400)
-
-            download_name = body.filename or p.name
-            if not download_name.endswith(".ndjson.gz"):
-                download_name += ".ndjson.gz"
-            download_name = os.path.basename(download_name)  # 디렉터리 traversal 방지
-
-            # 2) 파일 내보내는 방법 분기
-            if body.method == "email":
-                if not body.email:
-                    raise ServiceException("email 필드가 필요합니다 (method=email)", status_code=400)
-                # 백그라운드 메일 발송 트리거
-                background_tasks.add_task(self.email_port.send_export_email, body.email, str(p), download_name)
-                # await self.email_port.send_export_email(request.email, str(p), download_name)
-                return {
-                    "ok": True,
-                    "message": "메일 발송 요청 완료",
-                    "estimatedDocs": result.get("estimatedDocs"),
-                    "archivedDocs": result.get("archivedDocs"),
-                    # "filename": download_name,
-                    "size": result.get("size"),
-                }
-            elif body.method == "file":
-                # NDJSON + gzip
-                headers = {
-                    # 내용은 NDJSON, 전송은 gzip
-                    "Content-Type": "application/gzip",
-                }
-                # FileResponse는 알아서 async로 처리됨
-                return FileResponse(
-                    path=str(p),
-                    media_type="application/gzip",
-                    filename=download_name,     # Content-Disposition 세팅
-                    headers=headers,
-                )
-            else:
-                raise ServiceException("내보내기 방식 오류: 지원하지 않는 방식",status_code=400)
-        except ServiceException as e:
-            rb_log.error(f"[exportLogs] ServiceException : {e.message}, {e.status_code}")
-            # raise HTTPException(status_code=e.status_code, detail=e.message)
-            raise e
-        # except Exception as e:
-        #     rb_log.error(f"[exportLogs] Exception : {e}")
-        #     raise HTTPException(status_code=500, detail=str(e) if str(e) else "내보내기 실패") # pylint: disable=raise-missing-from

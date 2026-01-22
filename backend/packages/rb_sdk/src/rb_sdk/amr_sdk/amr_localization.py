@@ -16,16 +16,13 @@ from rb_flat_buffers.SLAMNAV.Response_Localization_SemiAutoInit import (
 )
 from rb_flat_buffers.SLAMNAV.Response_Localization_Start import Response_Localization_StartT
 from rb_flat_buffers.SLAMNAV.Response_Localization_Stop import Response_Localization_StopT
-from rb_zenoh.client import ZenohClient
 
+from ..base import RBBaseSDK
 from .schema.amr_localization_schema import SlamnavLocalizationPort
 
 
-class RBAmrLocalizationSDK(SlamnavLocalizationPort):
+class RBAmrLocalizationSDK(RBBaseSDK,SlamnavLocalizationPort):
     """Rainbow Robotics AMR Localization SDK"""
-    client: ZenohClient
-    def __init__(self, client: ZenohClient):
-        self.client = client
 
     async def localization_init(self, robot_model: str, req_id: str, x: float, y: float, z: float, rz: float) -> Response_Localization_InitT:
         """
@@ -42,7 +39,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.rz = rz
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_InitT,
@@ -50,7 +47,10 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Semi Auto Init failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def localization_semi_auto_init(self, robot_model: str, req_id: str) -> Response_Localization_SemiAutoInitT:
         """
@@ -63,7 +63,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/semi_auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_SemiAutoInitT,
@@ -71,7 +71,10 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Auto Init failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def localization_auto_init(self, robot_model: str, req_id: str) -> Response_Localization_AutoInitT:
         """
@@ -84,7 +87,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/auto_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_AutoInitT,
@@ -92,7 +95,10 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Start failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def localization_start(self, robot_model: str, req_id: str) -> Response_Localization_StartT:
         """
@@ -105,7 +111,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StartT,
@@ -113,7 +119,10 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Stop failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def localization_stop(self, robot_model: str, req_id: str) -> Response_Localization_StopT:
         """
@@ -126,7 +135,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.id = req_id
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_StopT,
@@ -134,7 +143,10 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Stop failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def localization_random_init(self, robot_model: str, req_id: str, random_seed: str) -> Response_Localization_RandomInitT:
         """
@@ -148,7 +160,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         req.random_seed = random_seed
 
         # 2) 요청 전송
-        result = self.client.query_one(
+        result = self.zenoh_client.query_one(
             f"{robot_model}/localization/random_init",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_Localization_RandomInitT,
@@ -156,4 +168,7 @@ class RBAmrLocalizationSDK(SlamnavLocalizationPort):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Localization Random Init failed: obj_payload is None")
+
+        return result["obj_payload"]
