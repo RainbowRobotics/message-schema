@@ -11,7 +11,6 @@ from app.features.email.adapter.input.email_api import (
 )
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
-from app.features.network.adapter.input.network_api import network_router
 from app.features.program.program_api import program_router
 from app.features.program.program_zenoh import zenoh_program_router
 from app.features.state.state_api import state_router
@@ -49,8 +48,7 @@ app = create_app(
         whoami_router,
         info_router,
         program_router,
-        email_router,
-        network_router,
+        email_router
     ],
     bg_tasks=[
         state_service.repeat_get_system_state,
