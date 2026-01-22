@@ -1,1 +1,0 @@
-exports_files(["flatbuffers_bundle.bzl"])
