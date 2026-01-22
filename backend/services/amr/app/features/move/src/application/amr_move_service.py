@@ -191,6 +191,7 @@ class AmrMoveService:
             )
 
             return None
+
         except ServiceException as e:
             print("[moveJog] ServiceException : ", e.message, e.status_code)
             model.status_change(AmrResponseStatusEnum.FAIL)

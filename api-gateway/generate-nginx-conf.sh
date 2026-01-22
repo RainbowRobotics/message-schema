@@ -39,7 +39,11 @@ for service_path in "$SERVICES_DIR"/*; do
   [ -n "$PORT" ] || continue
 
   if [ "$DEV_MODE" = true ]; then
-    PROXY_PASS="http://${SERVICE_NAME}:${PORT}"
+    if [ "$SERVICE_NAME" = "host" ]; then
+      PROXY_PASS="http://172.17.0.1:${PORT}"
+    else
+      PROXY_PASS="http://${SERVICE_NAME}:${PORT}"
+    fi
   else
     PROXY_PASS="http://127.0.0.1:${PORT}"
   fi

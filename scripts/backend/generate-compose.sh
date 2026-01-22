@@ -153,6 +153,8 @@ for FD in 3 4 5; do
     ports:
       - "3000:3000"
     networks: [rb_net]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   zenoh-router:
     build:

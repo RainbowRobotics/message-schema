@@ -12,8 +12,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 load_dotenv("config.env")
 
-port = int(os.getenv("PORT") or 8001)
+port = int(os.getenv("PORT") or 8010)
 
+print(f"Starting Host Service on port {port}")
 config = Config(app=app, host="0.0.0.0", port=port, lifespan="on")
 server = Server(config)
 
