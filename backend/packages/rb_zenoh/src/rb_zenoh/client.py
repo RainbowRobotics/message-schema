@@ -640,8 +640,6 @@ class ZenohClient:
 
             seen_any = False
 
-            print("get_result >>", get_result, flush=True)
-
             for rep in get_result:
                 seen_any = True
 
