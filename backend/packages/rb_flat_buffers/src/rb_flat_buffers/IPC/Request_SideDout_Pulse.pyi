@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_SideDout_Pulse import Request_SideDout_Pulse
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -28,6 +26,15 @@ class Request_SideDout_PulseT(object):
   time1: float
   time2: float
   time3: float
+  def __init__(
+    self,
+    portNum: int = ...,
+    blockMode: int = ...,
+    direction: int = ...,
+    time1: float = ...,
+    time2: float = ...,
+    time3: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_SideDout_PulseT: ...
   @classmethod

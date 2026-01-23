@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_CallConfigRobotArm import Request_CallConfigRobotArm
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,6 +14,9 @@ class Request_CallConfigRobotArm(object):
   def GetRootAsRequest_CallConfigRobotArm(cls, buf: bytes, offset: int) -> Request_CallConfigRobotArm: ...
   def Init(self, buf: bytes, pos: int) -> None: ...
 class Request_CallConfigRobotArmT(object):
+  def __init__(
+    self,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_CallConfigRobotArmT: ...
   @classmethod

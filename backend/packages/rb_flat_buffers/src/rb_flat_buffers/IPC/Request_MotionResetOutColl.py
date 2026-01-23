@@ -41,7 +41,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_MotionResetOutCollT(object):
 
     # Request_MotionResetOutCollT
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         pass
 
     @classmethod

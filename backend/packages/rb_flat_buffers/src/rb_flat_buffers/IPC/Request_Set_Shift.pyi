@@ -3,10 +3,8 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
-from rb_flat_buffers.IPC.Request_Set_Shift import Request_Set_Shift
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -23,6 +21,12 @@ class Request_Set_ShiftT(object):
   shiftNo: int
   shiftMode: int
   target: MoveInput_TargetT | None
+  def __init__(
+    self,
+    shiftNo: int = ...,
+    shiftMode: int = ...,
+    target: 'MoveInput_TargetT' | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_ShiftT: ...
   @classmethod

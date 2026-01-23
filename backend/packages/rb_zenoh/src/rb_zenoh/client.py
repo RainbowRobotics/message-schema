@@ -16,6 +16,7 @@ from typing import Any, NotRequired, Protocol, TypedDict, TypeVar, cast, overloa
 import flatbuffers
 import psutil
 from rb_utils.parser import t_to_dict
+from rb_utils.service_exception import ServiceException
 from zenoh import (
     Config,
     Encoding,
@@ -556,9 +557,17 @@ class ZenohClient:
                     attachment=att,
                 )
 
+            except ServiceException as e:
+                error_body = json.dumps(
+                    {"code": e.status_code, "message": e.message},
+                    ensure_ascii=False,
+                ).encode("utf-8")
+                q.reply_err(payload=ZBytes(error_body))
+                # q.reply_err(payload=ZBytes(str(e).encode("utf-8")))
+
             except Exception as e:
                 q.reply_err(payload=ZBytes(str(e).encode("utf-8")))
-                raise
+                # raise
 
         qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl
@@ -625,6 +634,7 @@ class ZenohClient:
                     "flatbuffer_res_T_class is required when flatbuffer_obj_t is provided"
                 )
 
+
             b = flatbuffers.Builder(flatbuffer_buf_size)
             b.Finish(flatbuffer_req_obj.Pack(b))
             payload = bytes(b.Output())
@@ -671,6 +681,7 @@ class ZenohClient:
                     )
 
                     # ✅ FlatBuffer 응답: obj_payload 타입이 T로 따라옴
+                    # if flatbuffer_req_obj is not None and flatbuffer_res_T_class is not None:
                     if flatbuffer_res_T_class is not None:
                         obj_payload = flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)  # T
                         dict_payload = t_to_dict(obj_payload)

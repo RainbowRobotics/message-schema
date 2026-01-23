@@ -14,7 +14,6 @@ from app.features.email.adapter.input.email_api import (
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.network.network_api import network_router
-from app.features.network.network_zenoh import zenoh_network_router
 from app.features.program.program_api import program_router
 from app.features.program.program_zenoh import zenoh_program_router
 from app.features.state.state_api import state_router
@@ -51,7 +50,7 @@ app = create_app(
     settings=setting,
     socket_client=socket_client,
     tcp_gateway=tcp_gateway,
-    zenoh_routers=[zenoh_state_router, zenoh_program_router, evt_router, zenoh_network_router],
+    zenoh_routers=[zenoh_state_router, zenoh_program_router, evt_router],
     socket_routers=[
         whoami_socket_router,
         config_socket_router,

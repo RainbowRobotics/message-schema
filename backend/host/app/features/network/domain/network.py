@@ -14,8 +14,25 @@ from typing import Any, List, Optional
 import uuid
 from rb_utils.service_exception import ServiceException
 
-from app.features.network.schema.network_dto import Network, Request_Network_ConnectWifi, Request_Network_SetPD
 
+@dataclass(frozen=True)
+class Wifi:
+    in_use: bool
+    ssid: str
+    signal: int
+    security: str
+    channel: int
+    rate: str
+@dataclass(frozen=True)
+class Network:
+    device: str
+    dhcp: bool
+    dns: list[str]             # IPv4 dns list
+    ssid: Optional[str]        # wifi만
+    address: Optional[str]          # IPv4
+    netmask: Optional[str]     # IPv4 netmask
+    gateway: Optional[str]     # IPv4 gateway
+    signal: Optional[int]      # wifi만
 
 class NetworkCommandEnum(str, Enum):
     """
@@ -24,8 +41,6 @@ class NetworkCommandEnum(str, Enum):
     GET_NETWORK = "getNetwork"
     SET_NETWORK = "setNetwork"
     CONNECT_WIFI = "connectWifi"
-
-
 
 @dataclass
 class NetworkModel:
@@ -55,20 +70,20 @@ class NetworkModel:
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     update_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    def set_network(self, req: Request_Network_SetPD):
+    def set_network(self, req: dict):
         self.command = NetworkCommandEnum.SET_NETWORK
-        self.ssid = req.ssid
-        self.dhcp = req.dhcp
-        self.address = req.address
-        self.gateway = req.gateway
-        self.netmask = req.netmask
-        self.dns = req.dns
+        self.ssid = req.get("ssid")
+        self.dhcp = req.get("dhcp")
+        self.address = req.get("address")
+        self.gateway = req.get("gateway")
+        self.netmask = req.get("netmask")
+        self.dns = req.get("dns")
         self.update_at = datetime.now(UTC)
 
-    def set_connect_wifi(self, req: Request_Network_ConnectWifi):
+    def set_connect_wifi(self, req: dict):
         self.command = NetworkCommandEnum.CONNECT_WIFI
-        self.ssid = req.ssid
-        self.password = req.password
+        self.ssid = req.get("ssid")
+        self.password = req.get("password")
         self.update_at = datetime.now(UTC)
 
     def network_info(self, network: Network) -> None:

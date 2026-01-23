@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_ServoControlT(object):
 
     # Request_ServoControlT
-    def __init__(self):
-        self.servoOption = 0  # type: int
+    def __init__(
+        self,
+        servoOption = 0,
+    ):
+        self.servoOption = servoOption  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
