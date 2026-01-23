@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Test_GeneralT(object):
 
     # Test_GeneralT
-    def __init__(
-        self,
-        test = 0.0,
-    ):
-        self.test = test  # type: float
+    def __init__(self):
+        self.test = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

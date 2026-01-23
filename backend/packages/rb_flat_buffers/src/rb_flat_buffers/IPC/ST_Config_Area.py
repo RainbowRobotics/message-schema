@@ -121,19 +121,12 @@ except:
 class ST_Config_AreaT(object):
 
     # ST_Config_AreaT
-    def __init__(
-        self,
-        areaName = None,
-        areaType = 0,
-        areaOffset = None,
-        areaEuler = None,
-        areaPara = None,
-    ):
-        self.areaName = areaName  # type: Optional[str]
-        self.areaType = areaType  # type: int
-        self.areaOffset = areaOffset  # type: Optional[Vec3fT]
-        self.areaEuler = areaEuler  # type: Optional[Vec3fT]
-        self.areaPara = areaPara  # type: Optional[Vec3fT]
+    def __init__(self):
+        self.areaName = None  # type: str
+        self.areaType = 0  # type: int
+        self.areaOffset = None  # type: Optional[Vec3fT]
+        self.areaEuler = None  # type: Optional[Vec3fT]
+        self.areaPara = None  # type: Optional[Vec3fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

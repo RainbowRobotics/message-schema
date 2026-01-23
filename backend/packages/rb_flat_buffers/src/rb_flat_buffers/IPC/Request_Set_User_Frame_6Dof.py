@@ -145,25 +145,15 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_User_Frame_6DofT(object):
 
     # Request_Set_User_Frame_6DofT
-    def __init__(
-        self,
-        userFrameNum = 0,
-        settingOption = 0,
-        targetX = 0.0,
-        targetY = 0.0,
-        targetZ = 0.0,
-        targetRx = 0.0,
-        targetRy = 0.0,
-        targetRz = 0.0,
-    ):
-        self.userFrameNum = userFrameNum  # type: int
-        self.settingOption = settingOption  # type: int
-        self.targetX = targetX  # type: float
-        self.targetY = targetY  # type: float
-        self.targetZ = targetZ  # type: float
-        self.targetRx = targetRx  # type: float
-        self.targetRy = targetRy  # type: float
-        self.targetRz = targetRz  # type: float
+    def __init__(self):
+        self.userFrameNum = 0  # type: int
+        self.settingOption = 0  # type: int
+        self.targetX = 0.0  # type: float
+        self.targetY = 0.0  # type: float
+        self.targetZ = 0.0  # type: float
+        self.targetRx = 0.0  # type: float
+        self.targetRy = 0.0  # type: float
+        self.targetRz = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

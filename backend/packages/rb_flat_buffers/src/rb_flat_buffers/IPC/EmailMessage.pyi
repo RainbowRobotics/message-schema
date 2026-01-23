@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.EmailMessage import EmailMessage
 from rb_flat_buffers.IPC.FileMessage import FileMessage, FileMessageT
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
@@ -27,14 +29,6 @@ class EmailMessageT(object):
   subject: str | None
   body: str | None
   attachment: typing.List[FileMessageT]
-  def __init__(
-    self,
-    fromEmail: str | None = ...,
-    toEmail: str | None = ...,
-    subject: str | None = ...,
-    body: str | None = ...,
-    attachment: typing.List['FileMessageT'] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> EmailMessageT: ...
   @classmethod

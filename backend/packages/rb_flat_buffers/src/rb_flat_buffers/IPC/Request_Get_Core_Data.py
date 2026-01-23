@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Get_Core_DataT(object):
 
     # Request_Get_Core_DataT
-    def __init__(
-        self,
-        option = 0,
-        name = None,
-    ):
-        self.option = option  # type: int
-        self.name = name  # type: Optional[str]
+    def __init__(self):
+        self.option = 0  # type: int
+        self.name = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

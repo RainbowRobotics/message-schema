@@ -1,4 +1,5 @@
 import json
+
 from fastapi.responses import JSONResponse
 from rb_flat_buffers.IPC.Request_Network_ConnectWifi import Request_Network_ConnectWifiT
 from rb_flat_buffers.IPC.Request_Network_GetWifiList import Request_Network_GetWifiListT

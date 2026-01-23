@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_SideDout_Toggle import Request_SideDout_Toggle
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,10 +18,6 @@ class Request_SideDout_Toggle(object):
   def PortNum(self) -> int: ...
 class Request_SideDout_ToggleT(object):
   portNum: int
-  def __init__(
-    self,
-    portNum: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_SideDout_ToggleT: ...
   @classmethod

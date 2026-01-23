@@ -20,7 +20,7 @@ services:
     volumes:
       - ./services/amr/amr.arm64.bin:/amr.arm64.bin
       - ./services/amr/amr.amd64.bin:/amr.amd64.bin
-      - /data:/data
+      - ./data:/data
 
   common:
     build:

@@ -3,9 +3,11 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
+from rb_flat_buffers.IPC.Request_Move_TickJogJ import Request_Move_TickJogJ
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -20,11 +22,6 @@ class Request_Move_TickJogJ(object):
 class Request_Move_TickJogJT(object):
   target: MoveInput_TargetT | None
   speed: MoveInput_SpeedT | None
-  def __init__(
-    self,
-    target: 'MoveInput_TargetT' | None = ...,
-    speed: 'MoveInput_SpeedT' | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Move_TickJogJT: ...
   @classmethod

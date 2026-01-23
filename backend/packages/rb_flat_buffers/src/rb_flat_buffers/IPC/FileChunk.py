@@ -124,17 +124,11 @@ except:
 class FileChunkT(object):
 
     # FileChunkT
-    def __init__(
-        self,
-        session = None,
-        index = 0,
-        offset = 0,
-        data = None,
-    ):
-        self.session = session  # type: Optional[str]
-        self.index = index  # type: int
-        self.offset = offset  # type: int
-        self.data = data  # type: Optional[List[int]]
+    def __init__(self):
+        self.session = None  # type: str
+        self.index = 0  # type: int
+        self.offset = 0  # type: int
+        self.data = None  # type: List[int]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

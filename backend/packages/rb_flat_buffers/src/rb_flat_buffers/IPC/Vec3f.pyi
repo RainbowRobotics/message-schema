@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Vec3f import Vec3f
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,10 +20,6 @@ class Vec3f(object):
   def VIsNone(self) -> bool: ...
 class Vec3fT(object):
   v: typing.List[float]
-  def __init__(
-    self,
-    v: typing.List[float] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Vec3fT: ...
   @classmethod

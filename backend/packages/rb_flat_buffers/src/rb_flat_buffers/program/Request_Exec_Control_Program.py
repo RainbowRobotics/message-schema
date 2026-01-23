@@ -68,13 +68,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Exec_Control_ProgramT(object):
 
     # Request_Exec_Control_ProgramT
-    def __init__(
-        self,
-        robotModel = None,
-        programId = None,
-    ):
-        self.robotModel = robotModel  # type: Optional[str]
-        self.programId = programId  # type: Optional[str]
+    def __init__(self):
+        self.robotModel = None  # type: str
+        self.programId = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

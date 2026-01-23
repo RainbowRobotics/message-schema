@@ -32,8 +32,15 @@ class Test_Advanced(object):
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
+    # Test_Advanced
+    def Test1(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
 def Test_AdvancedStart(builder: flatbuffers.Builder):
-    builder.StartObject(1)
+    builder.StartObject(2)
 
 def Start(builder: flatbuffers.Builder):
     Test_AdvancedStart(builder)
@@ -43,6 +50,12 @@ def Test_AdvancedAddTest(builder: flatbuffers.Builder, test: float):
 
 def AddTest(builder: flatbuffers.Builder, test: float):
     Test_AdvancedAddTest(builder, test)
+
+def Test_AdvancedAddTest1(builder: flatbuffers.Builder, test1: int):
+    builder.PrependInt32Slot(1, test1, 0)
+
+def AddTest1(builder: flatbuffers.Builder, test1: int):
+    Test_AdvancedAddTest1(builder, test1)
 
 def Test_AdvancedEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -54,11 +67,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Test_AdvancedT(object):
 
     # Test_AdvancedT
-    def __init__(
-        self,
-        test = 0.0,
-    ):
-        self.test = test  # type: float
+    def __init__(self):
+        self.test = 0.0  # type: float
+        self.test1 = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -82,10 +93,12 @@ class Test_AdvancedT(object):
         if testAdvanced is None:
             return
         self.test = testAdvanced.Test()
+        self.test1 = testAdvanced.Test1()
 
     # Test_AdvancedT
     def Pack(self, builder):
         Test_AdvancedStart(builder)
         Test_AdvancedAddTest(builder, self.test)
+        Test_AdvancedAddTest1(builder, self.test1)
         testAdvanced = Test_AdvancedEnd(builder)
         return testAdvanced

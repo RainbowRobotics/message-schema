@@ -67,13 +67,9 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_SideDout_SpecialFuncT(object):
 
     # Request_Save_SideDout_SpecialFuncT
-    def __init__(
-        self,
-        portNum = 0,
-        desiredFunction = 0,
-    ):
-        self.portNum = portNum  # type: int
-        self.desiredFunction = desiredFunction  # type: int
+    def __init__(self):
+        self.portNum = 0  # type: int
+        self.desiredFunction = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

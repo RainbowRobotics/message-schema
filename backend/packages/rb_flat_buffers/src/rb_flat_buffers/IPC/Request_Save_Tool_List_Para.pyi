@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Save_Tool_List_Para import Request_Save_Tool_List_Para
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -58,31 +60,6 @@ class Request_Save_Tool_List_ParaT(object):
   boxPara6: float
   boxPara7: float
   boxPara8: float
-  def __init__(
-    self,
-    toolNo: int = ...,
-    toolName: str | None = ...,
-    tcpX: float = ...,
-    tcpY: float = ...,
-    tcpZ: float = ...,
-    tcpRx: float = ...,
-    tcpRy: float = ...,
-    tcpRz: float = ...,
-    massM: float = ...,
-    massX: float = ...,
-    massY: float = ...,
-    massZ: float = ...,
-    boxType: int = ...,
-    boxPara0: float = ...,
-    boxPara1: float = ...,
-    boxPara2: float = ...,
-    boxPara3: float = ...,
-    boxPara4: float = ...,
-    boxPara5: float = ...,
-    boxPara6: float = ...,
-    boxPara7: float = ...,
-    boxPara8: float = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_Tool_List_ParaT: ...
   @classmethod

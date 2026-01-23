@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_FunctionsT(object):
 
     # Response_FunctionsT
-    def __init__(
-        self,
-        returnValue = 0,
-    ):
-        self.returnValue = returnValue  # type: int
+    def __init__(self):
+        self.returnValue = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -32,15 +32,8 @@ class Response_Exec_Control_Program(object):
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
-    # Response_Exec_Control_Program
-    def AmrReturnValue(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
 def Response_Exec_Control_ProgramStart(builder: flatbuffers.Builder):
-    builder.StartObject(2)
+    builder.StartObject(1)
 
 def Start(builder: flatbuffers.Builder):
     Response_Exec_Control_ProgramStart(builder)
@@ -50,12 +43,6 @@ def Response_Exec_Control_ProgramAddManipulateReturnValue(builder: flatbuffers.B
 
 def AddManipulateReturnValue(builder: flatbuffers.Builder, manipulateReturnValue: int):
     Response_Exec_Control_ProgramAddManipulateReturnValue(builder, manipulateReturnValue)
-
-def Response_Exec_Control_ProgramAddAmrReturnValue(builder: flatbuffers.Builder, amrReturnValue: int):
-    builder.PrependInt32Slot(1, amrReturnValue, 0)
-
-def AddAmrReturnValue(builder: flatbuffers.Builder, amrReturnValue: int):
-    Response_Exec_Control_ProgramAddAmrReturnValue(builder, amrReturnValue)
 
 def Response_Exec_Control_ProgramEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -67,13 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Exec_Control_ProgramT(object):
 
     # Response_Exec_Control_ProgramT
-    def __init__(
-        self,
-        manipulateReturnValue = 0,
-        amrReturnValue = 0,
-    ):
-        self.manipulateReturnValue = manipulateReturnValue  # type: int
-        self.amrReturnValue = amrReturnValue  # type: int
+    def __init__(self):
+        self.manipulateReturnValue = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -97,12 +79,10 @@ class Response_Exec_Control_ProgramT(object):
         if responseExecControlProgram is None:
             return
         self.manipulateReturnValue = responseExecControlProgram.ManipulateReturnValue()
-        self.amrReturnValue = responseExecControlProgram.AmrReturnValue()
 
     # Response_Exec_Control_ProgramT
     def Pack(self, builder):
         Response_Exec_Control_ProgramStart(builder)
         Response_Exec_Control_ProgramAddManipulateReturnValue(builder, self.manipulateReturnValue)
-        Response_Exec_Control_ProgramAddAmrReturnValue(builder, self.amrReturnValue)
         responseExecControlProgram = Response_Exec_Control_ProgramEnd(builder)
         return responseExecControlProgram

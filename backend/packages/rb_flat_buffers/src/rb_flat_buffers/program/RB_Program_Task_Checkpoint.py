@@ -162,21 +162,13 @@ except:
 class RB_Program_Task_CheckpointT(object):
 
     # RB_Program_Task_CheckpointT
-    def __init__(
-        self,
-        taskId = None,
-        programId = None,
-        syncTaskIds = None,
-        nodePath = None,
-        offset = 0,
-        status = None,
-    ):
-        self.taskId = taskId  # type: Optional[str]
-        self.programId = programId  # type: Optional[str]
-        self.syncTaskIds = syncTaskIds  # type: Optional[List[Optional[str]]]
-        self.nodePath = nodePath  # type: Optional[List[Optional[str]]]
-        self.offset = offset  # type: int
-        self.status = status  # type: Optional[str]
+    def __init__(self):
+        self.taskId = None  # type: str
+        self.programId = None  # type: str
+        self.syncTaskIds = None  # type: List[str]
+        self.nodePath = None  # type: List[str]
+        self.offset = 0  # type: int
+        self.status = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

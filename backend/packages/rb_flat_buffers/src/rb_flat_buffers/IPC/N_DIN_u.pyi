@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.N_DIN_u import N_DIN_u
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,10 +20,6 @@ class N_DIN_u(object):
   def UIsNone(self) -> bool: ...
 class N_DIN_uT(object):
   u: typing.List[int]
-  def __init__(
-    self,
-    u: typing.List[int] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> N_DIN_uT: ...
   @classmethod
