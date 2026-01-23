@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --dir) SCHEMA_DIR="$2"; shift 2 ;;
     --remote) REMOTE_NAME="$2"; shift 2 ;;
-    --yes) ASSUME_YES=1; shift 1 ;;
+    -y|--yes) ASSUME_YES=1; shift 1 ;;
     *) print_string "error" "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -103,10 +103,10 @@ if [ "$TREE_DIFF" -eq 0 ] && [ "$HAS_CHANGES" -eq 0 ]; then
   exit 0
 fi
 
-if [ "$HAS_CHANGES" -eq 1 ]; then
+if [ "$HAS_CHANGES" -eq 1 ] && [ "$ASSUME_YES" -eq 0 ]; then
   confirm_or_exit \
 "'$SCHEMA_DIR' 아래에 로컬 변경이 있습니다. 동기화하면 '$SCHEMA_DIR'의 로컬 변경(수정/추가/untracked/staged)이 삭제됩니다."
-else
+elif [ "$HAS_CHANGES" -eq 0 ] then
   # 로컬 작업은 없지만, 커밋된 상태(워킹트리 clean)라도 현재 schemas 상태가 덮일 수 있음
   confirm_or_exit \
 "'$SCHEMA_DIR'의 현재 커밋 상태가 '$REMOTE_NAME/main'과 다릅니다. 최신 main을 반영하기 위해 동기화합니다.
