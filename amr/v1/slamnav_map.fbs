@@ -1,0 +1,149 @@
+namespace SLAMNAV;
+
+table Request_Map_Load {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Map_List {
+    id: string;
+}
+table Response_Map_List {
+    id: string;
+    list: [string];
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
+    size: uint32;
+    data: [ubyte];
+}
+table Request_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
+    size: int;
+    data: [double];
+}
+table Request_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: int;
+    data: [double];
+}
+table Response_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
+}
+
+table Node {
+    id: string;
+    name: string;
+    pose: [double];
+    info: string;
+    links: [string];
+    type: string;
+}
+
+table Request_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+}
+table Response_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+    result: string;
+    message: string;
+    data: [Node];
+}
+table Request_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+}
+table Response_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+table Request_Get_Map_Tiles {}
+table Response_Get_Map_Tiles {}
+
+
+table Request_Mapping_Start {
+    id: string;
+}
+table Response_Mapping_Start {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Stop {
+    id: string;
+}
+table Response_Mapping_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Save {
+    id: string;
+    map_name: string;
+}
+table Response_Mapping_Save {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
