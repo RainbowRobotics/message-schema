@@ -40,7 +40,7 @@ async def on_program_at_end(*, topic, mv, obj, attachment):
     return await program_service.at_program_end(task_id=obj["taskId"], db=db)
 
 @zenoh_program_router.queryable("rrs/pause", flatbuffer_req_t=Request_Exec_Control_ProgramT, flatbuffer_res_buf_size=8)
-def on_pause():
+async def on_pause():
     """ 전체 로봇 프로그램 일시정지 """
     return program_service.call_resume_or_pause(is_pause=True)
 

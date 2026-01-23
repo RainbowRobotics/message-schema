@@ -39,8 +39,8 @@ class Response_Network_GetNetwork(BaseModel):
 class Request_Network_SetPD(BaseModel):
     ssid: str = Field(..., example="mobile_team")
     dhcp: bool = True
-    address: str = Field(None, example="192.168.1.100")
-    gateway: str = Field(None, example="192.168.1.1")
+    address: str = Field(None, example="10.108.1.20")
+    gateway: str = Field(None, example="10.108.1.1")
     netmask: str = Field(None, example="255.255.255.0")
     dns: list[str] = Field(None, example=["8.8.8.8", "8.8.4.4"])
 

@@ -5,10 +5,12 @@ import subprocess
 import re
 import ipaddress
 from typing import Optional, Dict, List, Tuple
+from rb_flat_buffers.IPC.Network import NetworkT
 from rb_modules.log import rb_log
 from rb_utils.service_exception import ServiceException
-from app.features.network.port.network_port import NetworkPort
-from app.features.network.domain.network import Network, NetworkModel
+from .port.network_port import NetworkPort
+from .domain.network import Network, NetworkModel
+from rb_flat_buffers.IPC.Wifi import WifiT
 
 
 _ipv4_re = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
@@ -25,6 +27,7 @@ def _parse_ip_and_netmask(ip_with_prefix: str) -> Tuple[Optional[str], Optional[
     if not ip_with_prefix:
         return None, None
     try:
+        ip_with_prefix = ip_with_prefix.split("|")[0].strip()
         iface = ipaddress.ip_interface(ip_with_prefix)
         return str(iface.ip), str(iface.netmask)
     except ValueError:
@@ -95,7 +98,7 @@ def _get_ssid(device: str) -> Optional[str]:
     # 2) 활성 프로파일 이름에서 802-11-wireless.ssid 조회 -> SSID 반환 (반환 예 : "mobile_team")
     code, ssid, err = _run_cmd(["nmcli", "-g", "802-11-wireless.ssid", "con", "show", conn])
     if code != 0:
-        rb_log.error(f"[get_ssid] nmcli 802-11-wireless.ssid ERROR: {err}")
+        # rb_log.error(f"[get_ssid] nmcli 802-11-wireless.ssid ERROR: {err}")
         return conn.strip()
     if ssid and ssid.strip() and ssid.strip() != "--":
         return ssid.strip()
@@ -104,6 +107,54 @@ def _get_ssid(device: str) -> Optional[str]:
 
 
 def _build_network(device: str, typ: str) -> Optional[Network]:
+    """
+    nmcli dev show 명령어를 통해 각 device의 상세정보를 조회 후 반환
+    """
+
+    # 1) IPv4 주소/게이트웨이/DNS 가져오기
+    code, vals, err = _run_cmd(["nmcli", "-g", "IP4.ADDRESS,IP4.GATEWAY,IP4.DNS", "dev", "show", device])
+    if code != 0:
+        rb_log.error(f"[build_network] ERROR: {err}")
+        return None
+    if vals is None:
+        return None
+
+    # 2) lines에서 IP4.ADDRESS, IP4.GATEWAY, IP4.DNS 구분
+    lines = vals.splitlines()
+    ip4_addr = lines[0].strip() if len(lines) > 0 else ""
+    ip4_gw   = lines[1].strip() if len(lines) > 1 else ""
+    ip4_dns  = "\n".join(lines[2:]).strip() if len(lines) > 2 else ""
+
+    print("ip4_addr: ", ip4_addr, flush=True)
+    # 3) IP4.ADDRESS 파싱 후 ip, netmask 반환
+    ip, netmask = _parse_ip_and_netmask(ip4_addr)
+
+    # 4) IP4.GATEWAY 파싱 후 gateway 반환
+    gateway = ip4_gw or None
+
+    # 5) IP4.DNS 파싱 후 dns 반환
+    dns = _parse_dns(ip4_dns)
+
+    # 6) 와이파이 관련 정보 조회 후 ssid 반환
+    ssid = _get_ssid(device)
+    dhcp = _get_ipv4_method(ssid)
+
+    # 7) 신호강도 조회 후 signal 반환
+    signal = wifi_signal_from_proc(device) if typ in {"wifi", "802-11-wireless"} else None
+
+    # 7) Network 객체 반환
+    return Network(
+        device=device,
+        dhcp=dhcp,
+        ssid=ssid,
+        address=ip,
+        netmask=netmask,
+        gateway=gateway,
+        dns=dns,
+        signal=signal
+    )
+
+def _build_networkT(device: str, typ: str) -> Optional[Network]:
     """
     nmcli dev show 명령어를 통해 각 device의 상세정보를 조회 후 반환
     """
@@ -141,7 +192,7 @@ def _build_network(device: str, typ: str) -> Optional[Network]:
 
 
     # 7) Network 객체 반환
-    return Network(
+    return NetworkT(
         device=device,
         dhcp=dhcp,
         ssid=ssid,
@@ -151,7 +202,6 @@ def _build_network(device: str, typ: str) -> Optional[Network]:
         dns=dns,
         signal=signal
     )
-
 def wifi_signal_from_proc(device: str) -> Optional[int]:
     """
     /proc/net/wireless 의 link quality(0~70 근처)를 0~100으로 대충 매핑.
@@ -209,7 +259,6 @@ class NetworkNmcliAdapter(NetworkPort):
             elif t in {"bluetooth", "bt"}:
                 result["bluetooth"] = _build_network(dev, t) or result["bluetooth"]
 
-
         if ssid is not None:
             print("=============> wifi ssid : ", result["wifi"].ssid, ssid)
             if result["ethernet"] is not None and result["ethernet"].ssid == ssid:
@@ -220,6 +269,7 @@ class NetworkNmcliAdapter(NetworkPort):
                 return result["bluetooth"]
             else:
                 return None
+
         return result
 
     async def get_ethernet(self) -> Optional[Network]:
@@ -254,6 +304,8 @@ class NetworkNmcliAdapter(NetworkPort):
             code, out, err = _run_cmd(["sudo","nmcli", "con", "modify", model.ssid, "ipv4.method", "auto"])
             if code != 0:
                 rb_log.error(f"[network] setNetwork ERROR: {err}")
+                if ("unknown connection" in err):
+                    raise ServiceException(f"{model.ssid} 와이파이 네트워크를 찾을 수 없습니다.", 404)
                 raise ServiceException(err, 500)
 
         else:
@@ -263,6 +315,8 @@ class NetworkNmcliAdapter(NetworkPort):
             code, out, err = _run_cmd(["sudo","nmcli", "con", "modify", model.ssid, "ipv4.addresses", f"{addr_str}", "ipv4.gateway", model.gateway, "ipv4.dns", dns_str, "ipv4.method", "manual"])
             if code != 0:
                 rb_log.error(f"[network] setNetwork ERROR: {err}")
+                if ("unknown connection" in err):
+                    raise ServiceException(f"{model.ssid} 와이파이 네트워크를 찾을 수 없습니다.", 404)
                 raise ServiceException(err, 500)
 
         code, out, err = _run_cmd(["sudo","nmcli", "con", "up", model.ssid])
@@ -310,7 +364,7 @@ class NetworkNmcliAdapter(NetworkPort):
         # 5) 네트워크 정보 반환
         return await self.get_network(model.ssid)
 
-    async def get_wifi_list(self, rescan: bool = False) -> list[dict]:
+    async def get_wifi_list(self, rescan: bool = False) -> list[WifiT]:
         """
         [와이파이 목록 조회]
         """
@@ -332,13 +386,13 @@ class NetworkNmcliAdapter(NetworkPort):
             in_use, ssid, signal, security, chan, rate = line.split(":")
             if not ssid or ssid == "--":
                 continue
-            result.append({
-                "in_use": in_use == "*",
-                "ssid": ssid,
-                "signal": signal,
-                "security": security,
-                "channel": chan,
-                "rate": rate
-            })
+            result.append(WifiT(
+                inUse=in_use == "*",
+                ssid=ssid,
+                signal=int(signal),
+                security=security,
+                channel=int(chan),
+                rate=rate
+            ))
 
         return result

@@ -169,8 +169,6 @@ class ProgramService(BaseService):
     def call_stop(self):
         manipulate_req = Request_MotionHaltT()
 
-        self.script_executor.stop_all()
-
         res_manipulate_halt = zenoh_client.query_one(
             "*/call_halt",
             flatbuffer_req_obj=manipulate_req,
@@ -178,10 +176,12 @@ class ProgramService(BaseService):
             flatbuffer_buf_size=2,
         )
 
+        self.script_executor.stop_all()
+
         return {
             "manipulateReturnValue": (
-                res_manipulate_halt["obj_payload"].returnValue
-                if res_manipulate_halt and res_manipulate_halt.get("obj_payload")
+                res_manipulate_halt["dict_payload"]["returnValue"]
+                if res_manipulate_halt and res_manipulate_halt.get("dict_payload")
                 else None
             ),
         }
