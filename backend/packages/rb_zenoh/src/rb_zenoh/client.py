@@ -398,6 +398,9 @@ class ZenohClient:
             self._cb_entries.pop(topic, None)
 
     def unsubscribe_topic(self, topic: str):
+        """
+        topic: 정확히 일치하는 토픽
+        """
         lst = self._cb_entries.pop(topic, [])
         for e in lst:
             for t in list(self._workers):
