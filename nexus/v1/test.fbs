@@ -1,0 +1,10 @@
+table Test_General {
+  test: float;
+}
+
+table Test_Advanced {
+  test: float;
+}
+
+root_type Test_General;
+root_type Test_Advanced;
