@@ -13,14 +13,14 @@ table Response_Path {
 
 table Request_Vobs {
     id: string;
-    vobs_robots: string;
-    vobs_closures: string;
+    vobs_robots: [string];
+    vobs_closures: [string];
     is_vobs_closures_change: string;
 }
 table Response_Vobs {
     id: string;
-    vobs_robots: string;
-    vobs_closures: string;
+    vobs_robots: [string];
+    vobs_closures: [string];
     is_vobs_closures_change: string;
     result: string;
     message: string;

@@ -23,3 +23,11 @@ table Response_Current_Version {
     result: string;
     message: string;
 }
+
+//--------------------------------------------
+//--------------------------------------------
+table Update_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
+}

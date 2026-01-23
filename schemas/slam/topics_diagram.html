@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLAM Zenoh Topics Structure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+        h2 {
+            color: #00d4ff;
+            margin: 30px 0 15px 0;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #ffd700;
+            margin: 20px 0 10px 0;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Communication Init Flow */
+        .init-flow {
+            background: #1e3a5f;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .flow-box {
+            background: linear-gradient(145deg, #2d5a87, #1e3a5f);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #00d4ff;
+        }
+
+        /* Topic Tree Structure */
+        .topic-tree {
+            background: #1e3a5f;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tree-root {
+            background: linear-gradient(145deg, #4a90d9, #2d5a87);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .tree-branches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .branch {
+            background: linear-gradient(145deg, #2d5a87, #1e3a5f);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid;
+        }
+        .branch.rpc { border-color: #00ff88; }
+        .branch.pubsub { border-color: #ff6b6b; }
+        .branch-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .branch-title .icon { font-size: 20px; }
+        .branch-items {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .branch-items div {
+            padding: 3px 0;
+            border-bottom: 1px solid #333;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        .tag.rpc { background: #00ff88; color: #000; }
+        .tag.pub { background: #ff6b6b; color: #fff; }
+        .tag.event { background: #ffd700; color: #000; }
+
+        /* Schema Files */
+        .schema-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .schema-card {
+            background: linear-gradient(145deg, #2d5a87, #1e3a5f);
+            border-radius: 10px;
+            padding: 15px;
+            border-top: 3px solid #00d4ff;
+        }
+        .schema-card h4 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        .schema-card p {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        /* Data Flow Diagram */
+        .data-flow {
+            background: #1e3a5f;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .flow-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .entity {
+            background: linear-gradient(145deg, #4a90d9, #2d5a87);
+            border-radius: 15px;
+            padding: 20px 30px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .entity.amr { border: 3px solid #00ff88; }
+        .entity.slam { border: 3px solid #ff6b6b; }
+        .entity.rrs { border: 3px solid #ffd700; }
+        .entity-icon { font-size: 40px; margin-bottom: 10px; }
+        .entity-name { font-weight: bold; font-size: 16px; }
+        .connection-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #00d4ff;
+        }
+        .connection-line .arrow { font-size: 30px; }
+        .connection-line .label { font-size: 11px; color: #888; }
+
+        /* Status Structure */
+        .struct-diagram {
+            background: #1e3a5f;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .struct-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .struct-box {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #4a90d9;
+        }
+        .struct-title {
+            background: #4a90d9;
+            margin: -15px -15px 15px -15px;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+        }
+        .struct-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-bottom: 1px solid #2d5a87;
+            font-size: 13px;
+        }
+        .struct-field:last-child { border-bottom: none; }
+        .field-name { color: #00d4ff; }
+        .field-type { color: #888; }
+        .field-type.struct { color: #00ff88; }
+        .field-type.table { color: #ffd700; }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+        .legend-color.rpc { background: #00ff88; }
+        .legend-color.pubsub { background: #ff6b6b; }
+        .legend-color.event { background: #ffd700; }
+        .legend-color.struct { border: 2px solid #00ff88; }
+        .legend-color.table { border: 2px solid #ffd700; }
+
+        /* RPC Detail Table */
+        .rpc-section {
+            background: #1e3a5f;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .rpc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .rpc-table th, .rpc-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #2d5a87;
+            font-size: 12px;
+        }
+        .rpc-table th {
+            background: #2d5a87;
+            color: #00d4ff;
+        }
+        .rpc-table td:first-child {
+            color: #00ff88;
+            font-family: monospace;
+        }
+        .rpc-table td:nth-child(2), .rpc-table td:nth-child(3) {
+            color: #ffd700;
+            font-family: monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SLAM Zenoh Topics Structure</h1>
+        <p class="subtitle">SLAM 서비스와 AMR 간의 Zenoh 통신 토픽 정의</p>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color rpc"></div>
+                <span>RPC (Request/Response)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color pubsub"></div>
+                <span>Pub/Sub (실시간 데이터)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color event"></div>
+                <span>Event (상태 변경)</span>
+            </div>
+        </div>
+
+        <!-- Communication Init Flow -->
+        <h2>통신 초기화 흐름</h2>
+        <div class="init-flow">
+            <div class="flow-diagram">
+                <div class="flow-box">
+                    <div>SLAMNAV</div>
+                    <small>시작</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div>Whoami 요청</div>
+                    <small>RRS에 연결</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div>{robot_serial}</div>
+                    <small>응답 수신</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div>Topic 발행</div>
+                    <small>{robot_serial}/...</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow Diagram -->
+        <h2>시스템 구성도</h2>
+        <div class="data-flow">
+            <div class="flow-row">
+                <div class="entity rrs">
+                    <div class="entity-icon">🖥️</div>
+                    <div class="entity-name">RRS</div>
+                    <small>Robot Remote Service</small>
+                </div>
+                <div class="connection-line">
+                    <div class="label">Whoami</div>
+                    <div class="arrow">⟷</div>
+                    <div class="label">{robot_serial}</div>
+                </div>
+                <div class="entity slam">
+                    <div class="entity-icon">🤖</div>
+                    <div class="entity-name">SLAMNAV</div>
+                    <small>SLAM Navigation</small>
+                </div>
+                <div class="connection-line">
+                    <div class="label">Zenoh</div>
+                    <div class="arrow">⟷</div>
+                    <div class="label">FlatBuffers</div>
+                </div>
+                <div class="entity amr">
+                    <div class="entity-icon">🚗</div>
+                    <div class="entity-name">AMR</div>
+                    <small>Client / UI</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic Tree Structure -->
+        <h2>Topic 구조</h2>
+        <div class="topic-tree">
+            <div class="tree-container">
+                <div class="tree-root">{robot_serial}/</div>
+                <div class="tree-branches">
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">📍</span> move/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>goal, target, stop, pause, resume</div>
+                            <div>xLinear, circular, rotate</div>
+                            <div>jog <span class="tag pub">Pub</span></div>
+                            <div>stateChange <span class="tag event">Event</span></div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">📌</span> localization/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>init, autoinit, semiautoinit</div>
+                            <div>randominit, start, stop</div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">🎛️</span> control/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>getSafetyField, setSafetyField</div>
+                            <div>getSafetyFlag, setSafetyFlag</div>
+                            <div>dock, chargeTrigger, led, motor</div>
+                            <div>getObsBox, setObsBox, detect</div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">🗺️</span> map/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>getList, getCurrent, load, delete</div>
+                            <div>getFile, getCloud, setCloud</div>
+                            <div>getTopology, setTopology</div>
+                            <div>mapping/start, stop, save</div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">⚙️</span> setting/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>getRobotType, setRobotType</div>
+                            <div>getSensorIndex, setSensorIndex</div>
+                            <div>getPduParam, setPduParam</div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">🔄</span> software/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>update, getVersion</div>
+                        </div>
+                    </div>
+                    <div class="branch rpc">
+                        <div class="branch-title"><span class="icon">🤝</span> multi/ <span class="tag rpc">RPC</span></div>
+                        <div class="branch-items">
+                            <div>path, vobs</div>
+                        </div>
+                    </div>
+                    <div class="branch pubsub">
+                        <div class="branch-title"><span class="icon">📊</span> status <span class="tag pub">100ms</span></div>
+                        <div class="branch-items">
+                            <div>IMU, Motor, Power, Condition</div>
+                            <div>RobotState, SafetyIoState</div>
+                        </div>
+                    </div>
+                    <div class="branch pubsub">
+                        <div class="branch-title"><span class="icon">🚀</span> moveStatus <span class="tag pub">500ms</span></div>
+                        <div class="branch-items">
+                            <div>Pose, Vel, MoveState</div>
+                            <div>CurNode, GoalNode</div>
+                        </div>
+                    </div>
+                    <div class="branch pubsub">
+                        <div class="branch-title"><span class="icon">📡</span> Sensor Data <span class="tag pub">Pub</span></div>
+                        <div class="branch-items">
+                            <div>lidar2d - Lidar_2D</div>
+                            <div>lidar3d - Lidar_3D</div>
+                            <div>mappingCloud - Mapping_Cloud</div>
+                        </div>
+                    </div>
+                    <div class="branch pubsub">
+                        <div class="branch-title"><span class="icon">🛤️</span> Path Data <span class="tag pub">Pub</span></div>
+                        <div class="branch-items">
+                            <div>globalPath - Global_Path</div>
+                            <div>localPath - Local_Path</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schema Files -->
+        <h2>스키마 파일 구조</h2>
+        <div class="schema-grid">
+            <div class="schema-card">
+                <h4>slamnav_move.fbs</h4>
+                <p>이동 관련 RPC + Pub/Sub (Jog, StateChange)</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_localization.fbs</h4>
+                <p>위치추정 관련 RPC</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_control.fbs</h4>
+                <p>제어 관련 RPC (Safety, Dock, LED, Motor)</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_map.fbs</h4>
+                <p>맵 관련 RPC + Mapping</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_setting.fbs</h4>
+                <p>설정 관련 RPC (Robot Type, Sensor, PDU)</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_update.fbs</h4>
+                <p>소프트웨어 업데이트 RPC</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_status.fbs</h4>
+                <p>로봇 상태 Pub/Sub (Status, Move_Status)</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_socket.fbs</h4>
+                <p>센서 데이터 Pub/Sub (Lidar, Cloud, Path)</p>
+            </div>
+            <div class="schema-card">
+                <h4>slamnav_multi.fbs</h4>
+                <p>멀티로봇 관련 RPC (Path, Vobs)</p>
+            </div>
+        </div>
+
+        <!-- Status Structure -->
+        <h2>Status 데이터 구조</h2>
+        <div class="struct-diagram">
+            <div class="struct-container">
+                <div class="struct-box">
+                    <div class="struct-title">Status (table)</div>
+                    <div class="struct-field">
+                        <span class="field-name">condition</span>
+                        <span class="field-type struct">StatusCondition (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">imu</span>
+                        <span class="field-type struct">StatusImu (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">motor0</span>
+                        <span class="field-type struct">StatusMotor (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">motor1</span>
+                        <span class="field-type struct">StatusMotor (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">power</span>
+                        <span class="field-type struct">StatusPower (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">robot_state</span>
+                        <span class="field-type table">StatusRobotState (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">robot_safety_io_state</span>
+                        <span class="field-type table">StatusRobotSafetyIoState (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">setting</span>
+                        <span class="field-type table">StatusSetting (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">map</span>
+                        <span class="field-type table">StatusMap (table)</span>
+                    </div>
+                </div>
+
+                <div class="struct-box">
+                    <div class="struct-title">Move_Status (table)</div>
+                    <div class="struct-field">
+                        <span class="field-name">cur_node</span>
+                        <span class="field-type table">MoveStatusNode (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">goal_node</span>
+                        <span class="field-type table">MoveStatusNode (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">move_state</span>
+                        <span class="field-type table">MoveStatusMoveState (table)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">pose</span>
+                        <span class="field-type struct">MoveStatusPose (struct)</span>
+                    </div>
+                    <div class="struct-field">
+                        <span class="field-name">vel</span>
+                        <span class="field-type struct">MoveStatusVel (struct)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Structs -->
+        <h2>공통 Struct 타입</h2>
+        <div class="struct-diagram">
+            <div class="struct-container">
+                <div class="struct-box">
+                    <div class="struct-title">LocalizationPose / MovePose (struct)</div>
+                    <div class="struct-field"><span class="field-name">x</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">y</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">z</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">rz</span><span class="field-type">float</span></div>
+                </div>
+                <div class="struct-box">
+                    <div class="struct-title">Point2D (struct)</div>
+                    <div class="struct-field"><span class="field-name">x</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">y</span><span class="field-type">float</span></div>
+                </div>
+                <div class="struct-box">
+                    <div class="struct-title">Point3D / CloudData (struct)</div>
+                    <div class="struct-field"><span class="field-name">x</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">y</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">z</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">intensity</span><span class="field-type">float (CloudData only)</span></div>
+                </div>
+                <div class="struct-box">
+                    <div class="struct-title">ObsBox (struct)</div>
+                    <div class="struct-field"><span class="field-name">x</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">y</span><span class="field-type">float</span></div>
+                    <div class="struct-field"><span class="field-name">z</span><span class="field-type">float</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RPC Details -->
+        <h2>RPC 상세 - Move</h2>
+        <div class="rpc-section">
+            <table class="rpc-table">
+                <tr><th>Topic</th><th>Request</th><th>Response</th><th>Description</th></tr>
+                <tr><td>{model}/move/goal</td><td>Request_Move_Goal</td><td>Response_Move_Goal</td><td>목표점 이동</td></tr>
+                <tr><td>{model}/move/target</td><td>Request_Move_Target</td><td>Response_Move_Target</td><td>목표 포즈 이동</td></tr>
+                <tr><td>{model}/move/stop</td><td>Request_Move_Stop</td><td>Response_Move_Stop</td><td>정지</td></tr>
+                <tr><td>{model}/move/pause</td><td>Request_Move_Pause</td><td>Response_Move_Pause</td><td>일시정지</td></tr>
+                <tr><td>{model}/move/resume</td><td>Request_Move_Resume</td><td>Response_Move_Resume</td><td>재개</td></tr>
+                <tr><td>{model}/move/xLinear</td><td>Request_Move_XLinear</td><td>Response_Move_XLinear</td><td>X축 이동</td></tr>
+                <tr><td>{model}/move/circular</td><td>Request_Move_Circular</td><td>Response_Move_Circular</td><td>Circular 이동</td></tr>
+                <tr><td>{model}/move/rotate</td><td>Request_Move_Rotate</td><td>Response_Move_Rotate</td><td>회전 이동</td></tr>
+            </table>
+        </div>
+
+        <h2>RPC 상세 - Localization</h2>
+        <div class="rpc-section">
+            <table class="rpc-table">
+                <tr><th>Topic</th><th>Request</th><th>Response</th><th>Description</th></tr>
+                <tr><td>{model}/localization/init</td><td>Request_Localization_Init</td><td>Response_Localization_Init</td><td>수동 초기 위치 설정</td></tr>
+                <tr><td>{model}/localization/autoinit</td><td>Request_Localization_AutoInit</td><td>Response_Localization_AutoInit</td><td>자동 초기화</td></tr>
+                <tr><td>{model}/localization/semiautoinit</td><td>Request_Localization_SemiAutoInit</td><td>Response_Localization_SemiAutoInit</td><td>반자동 초기화</td></tr>
+                <tr><td>{model}/localization/randominit</td><td>Request_Localization_RandomInit</td><td>Response_Localization_RandomInit</td><td>랜덤 초기화</td></tr>
+                <tr><td>{model}/localization/start</td><td>Request_Localization_Start</td><td>Response_Localization_Start</td><td>위치추정 시작</td></tr>
+                <tr><td>{model}/localization/stop</td><td>Request_Localization_Stop</td><td>Response_Localization_Stop</td><td>위치추정 정지</td></tr>
+            </table>
+        </div>
+
+        <h2>RPC 상세 - Control</h2>
+        <div class="rpc-section">
+            <table class="rpc-table">
+                <tr><th>Topic</th><th>Request</th><th>Response</th><th>Description</th></tr>
+                <tr><td>{model}/control/getSafetyField</td><td>Request_Get_Safety_Field</td><td>Response_Get_Safety_Field</td><td>안전 필드 조회</td></tr>
+                <tr><td>{model}/control/setSafetyField</td><td>Request_Set_Safety_Field</td><td>Response_Set_Safety_Field</td><td>안전 필드 설정</td></tr>
+                <tr><td>{model}/control/dock</td><td>Request_Dock</td><td>Response_Dock</td><td>도킹/언도킹</td></tr>
+                <tr><td>{model}/control/chargeTrigger</td><td>Request_Charge_Trigger</td><td>Response_Charge_Trigger</td><td>충전 트리거</td></tr>
+                <tr><td>{model}/control/led</td><td>Request_Led</td><td>Response_Led</td><td>LED 제어</td></tr>
+                <tr><td>{model}/control/motor</td><td>Request_Motor</td><td>Response_Motor</td><td>모터 On/Off</td></tr>
+                <tr><td>{model}/control/detect</td><td>Request_Detect</td><td>Response_Detect</td><td>카메라 검출</td></tr>
+            </table>
+        </div>
+
+        <h2>RPC 상세 - Map</h2>
+        <div class="rpc-section">
+            <table class="rpc-table">
+                <tr><th>Topic</th><th>Request</th><th>Response</th><th>Description</th></tr>
+                <tr><td>{model}/map/getList</td><td>Request_Map_List</td><td>Response_Map_List</td><td>맵 목록 조회</td></tr>
+                <tr><td>{model}/map/getCurrent</td><td>Request_Map_Current</td><td>Response_Map_Current</td><td>현재 맵 조회</td></tr>
+                <tr><td>{model}/map/load</td><td>Request_Map_Load</td><td>Response_Map_Load</td><td>맵 로드</td></tr>
+                <tr><td>{model}/map/delete</td><td>Request_Map_Delete</td><td>Response_Map_Delete</td><td>맵 삭제</td></tr>
+                <tr><td>{model}/map/getTopology</td><td>Request_Get_Map_Topology</td><td>Response_Get_Map_Topology</td><td>토폴로지 조회</td></tr>
+                <tr><td>{model}/map/setTopology</td><td>Request_Set_Map_Topology</td><td>Response_Set_Map_Topology</td><td>토폴로지 설정</td></tr>
+                <tr><td>{model}/map/mapping/start</td><td>Request_Mapping_Start</td><td>Response_Mapping_Start</td><td>매핑 시작</td></tr>
+                <tr><td>{model}/map/mapping/stop</td><td>Request_Mapping_Stop</td><td>Response_Mapping_Stop</td><td>매핑 정지</td></tr>
+                <tr><td>{model}/map/mapping/save</td><td>Request_Mapping_Save</td><td>Response_Mapping_Save</td><td>맵 저장</td></tr>
+            </table>
+        </div>
+
+        <!-- QoS Guide -->
+        <h2>QoS 설정 가이드</h2>
+        <div class="rpc-section">
+            <table class="rpc-table">
+                <tr><th>Topic Type</th><th>Pattern</th><th>Reliability</th><th>Priority</th></tr>
+                <tr><td>RPC</td><td>{model}/move/*, control/*, etc.</td><td>Reliable</td><td>High</td></tr>
+                <tr><td>Jog</td><td>{model}/move/jog</td><td>BestEffort</td><td>High</td></tr>
+                <tr><td>Status</td><td>{model}/status, moveStatus</td><td>BestEffort</td><td>Medium</td></tr>
+                <tr><td>Path</td><td>{model}/globalPath, localPath</td><td>BestEffort</td><td>Medium</td></tr>
+                <tr><td>Sensor</td><td>{model}/lidar2d, lidar3d</td><td>BestEffort</td><td>Low</td></tr>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>

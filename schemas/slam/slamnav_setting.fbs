@@ -20,7 +20,7 @@ table Response_Set_Robot_Type {
     message: string;
 }
 
-table Setting_Param {
+table SettingParam {
     key: string;
     type: string;
     value: string;
@@ -30,12 +30,12 @@ table Setting_Param {
 table Request_Get_Setting_Param {
     id: string;
     robot_type: string;
-    params: [Setting_Param];
+    params: [SettingParam];
 }
 table Response_Get_Setting_Param {
     id: string;
     robot_type: string;
-    params: [Setting_Param];
+    params: [SettingParam];
     result: string;
     message: string;
 }
@@ -46,65 +46,29 @@ table Request_Setting_Param_All {
 table Response_Setting_Param_All {
     id: string;
     robot_type: string;
-    params: [Setting_Param];
+    params: [SettingParam];
 }
 table Request_Set_Setting_Param {
     id: string;
     robot_type: string;
-    params: [Setting_Param];
+    params: [SettingParam];
 }
 table Response_Set_Setting_Param {
     id: string;
     robot_type: string;
-    params: [Setting_Param];
+    params: [SettingParam];
     result: string;
     message: string;
 }
 */
-table Sensor_Info {
-    id: int;
-    serial: string;
-}
-table Request_Get_Sensor_Index {
-    id: string;
-    target: string;
-}
-table Response_Get_Sensor_Index {
-    id: string;
-    target: string;
-    index: [Sensor_Info];
-    result: string;
-    message: string;
-}
-table Request_Set_Sensor_Index {
-    id: string;
-    target: string;
-    index: [Sensor_Info];
-}
-table Response_Set_Sensor_Index {
-    id: string;
-    target: string;
-    index: [Sensor_Info];
-    result: string;
-    message: string;
-}
-table Request_Set_Sensor_On {
-    id: string;
-    index: [Sensor_Info];
-}
-table Response_Set_Sensor_On {
-    id: string;
-    index: [Sensor_Info];
-    result: string;
-    message: string;
-}
+
 table Request_Get_Sensor_Off {
     id: string;
-    index: [Sensor_Info];
+    index: [SensorInfo];
 }
 table Response_Get_Sensor_Off {
     id: string;
-    index: [Sensor_Info];
+    index: [SensorInfo];
     result: string;
     message: string;
 }
@@ -114,17 +78,17 @@ table Request_Get_Pdu_Param {
 }
 table Response_Get_Pdu_Param {
     id: string;
-    params: [Setting_Param];
+    params: [SettingParam];
     result: string;
     message: string;
 }
 table Request_Set_Pdu_Param {
     id: string;
-    params: [Setting_Param];
+    params: [SettingParam];
 }
 table Response_Set_Pdu_Param {
     id: string;
-    params: [Setting_Param];
+    params: [SettingParam];
     result: string;
     message: string;
 }
@@ -134,47 +98,56 @@ table Request_Get_Drive_Param {
 }
 table Response_Get_Drive_Param {
     id: string;
-    params: [Setting_Param];
+    params: [SettingParam];
+    result: string;
+    message: string;
+}
+
+//--------------------------------------------
+
+table SensorInfo {
+    index: int;
+    serial: string;
+}
+table Request_Get_Sensor_Index {
+    id: string;
+    target: string;
+}
+table Response_Get_Sensor_Index {
+    id: string;
+    target: string;
+    index: [SensorInfo];
+    result: string;
+    message: string;
+}
+table Request_Set_Sensor_Index {
+    id: string;
+    target: string;
+    index: [SensorInfo];
+}
+table Response_Set_Sensor_Index {
+    id: string;
+    target: string;
+    index: [SensorInfo];
+    result: string;
+    message: string;
+}
+table Request_Set_Sensor_On {
+    id: string;
+    index: [SensorInfo];
+}
+table Response_Set_Sensor_On {
+    id: string;
+    index: [SensorInfo];
     result: string;
     message: string;
 }
 
 
-
-
-
 //--------------------------------------------
-
-struct Point2D {
-    x: double;
-    y: double;
-}
-
-table Lidar2D {
-    timestamp: double;
-    points: [Point2D];
-}
-
-root_type Lidar2D;
-
 //--------------------------------------------
-// 3D Lidar Data
-
-struct Point3D {
-    x: double;
-    y: double;
-    z: double;
-}
-
-table Lidar3D {
-    timestamp: double;
-    points: [Point3D];
-}
-
-//--------------------------------------------
-// Mapping Cloud Data
-
-table MappingCloud {
-    timestamp: double;
-    points: [Point3D];
+table Setting_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
 }
