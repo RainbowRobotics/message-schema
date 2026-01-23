@@ -2,16 +2,16 @@ namespace SLAMNAV;
 
 table MapFileInfo {
     map_name: string;
-    creat_at: string;
+    created_at: string;
     update_at: string;
-    type: string;
-    size: double;
+    map_type: string;
+    map_size: float;
 }
-table MapDto {
+table MapFile {
     file_name: string;
-    creat_at: string;
+    created_at: string;
     update_at: string;
-    type: string;
+    file_type: string;
     cloud_info: MapFileInfo;
     topo_info: MapFileInfo;
 }
@@ -20,6 +20,7 @@ table Request_Map_List {
 }
 table Response_Map_List {
     id: string;
+    list: [MapFile];
     result: string;
     message: string;
 }
@@ -58,6 +59,13 @@ table Response_Map_Load {
 
 //------------------------------------
 
+struct CloudData {
+    x: float;
+    y: float;
+    z: float;
+    intensity: float;
+}
+
 table Request_Get_Map_File {
     id: string;
     map_name: string;
@@ -68,44 +76,26 @@ table Response_Get_Map_File {
     map_name: string;
     file_name: string;
     size: uint32;
-    data: [ubyte];
+    // data: [ubyte];  //.../map/cloud
+    data:  [CloudData];
     result: string;
     message: string;
 }
 
-// 이것도 잘 모르겠음.
-table Request_Get_Map_Topology {
+table Link {
     id: string;
-    map_name: string;
-    file_name: string;
-    page_no: int;
-    page_size: int;
-    total_page: int;
-    node_type: string;
-    search_text: string;
-    sort_option: string;
-    sort_direction: string;
+    info: string;
+    speed: float;
+    method: string;
+    safety_field: int;
 }
-table Response_Get_Map_Topology {
+table Node {
     id: string;
-    map_name: string;
-    file_name: string;
-    page_no: int;
-    page_size: int;
-    total_page: int;
-    node_type: string;
-    search_text: string;
-    sort_option: string;
-    sort_direction: string;
-    result: string;
-    message: string;
-    data: [Node];
-}
-
-//------------------------------------
-
-table Cloud_Data {
-    cloud: [float];
+    name: string;
+    pose: [float];
+    info: string;
+    links: [Link];
+    type: string;
 }
 
 table Request_Get_Map_Cloud {
@@ -117,8 +107,8 @@ table Response_Get_Map_Cloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: int;
-    data: [Cloud_Data];
+    size: uint32;
+    data: [CloudData];
     result: string;
     message: string;
 }
@@ -127,14 +117,14 @@ table Request_Set_Map_Cloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: int;
-    data: [Cloud_Data];
+    size: uint32;
+    data: [CloudData];
 }
 table Response_Set_Map_Cloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: int;
+    size: uint32;
     // data: [Node]; -> too big
     result: string;
     message: string;
@@ -148,22 +138,6 @@ table Response_Get_Map_Tiles {}
 
 //------------------------------------
 
-// DockingDto 의 의문점..이게 왜 필요한지.
-table Link {
-    id: string;
-    info: string;
-    speed: float;
-    method: string;
-    safety_field: int;
-}
-table Node {
-    id: string;
-    name: string;
-    pose: [double];
-    info: string;
-    links: [Link];
-    type: string;
-}
 table Request_Set_Map_Topology {
     id: string;
     map_name: string;
@@ -222,3 +196,11 @@ table Response_Mapping_Save {
 
 table Request_Mapping_Cloud_Reload {}
 table Response_Mapping_Cloud_Reload {}
+
+//--------------------------------------------
+//--------------------------------------------
+table Map_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
+}
