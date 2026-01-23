@@ -21,6 +21,8 @@ namespace rb_ipc {
     bool initialize(std::string domain, int th_cpu);
     void Publish_Message(PUB_MESSAGE_ST t_msg);
     void Publish_Log(PUB_LOG_ST t_log);
+
+    void toPyFM_FlowControl(int option);
 }
 
 #endif // IPC_H

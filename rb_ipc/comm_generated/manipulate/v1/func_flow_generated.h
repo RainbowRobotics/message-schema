@@ -18,6 +18,10 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace IPC {
 
+struct NullSpace;
+struct NullSpaceBuilder;
+struct NullSpaceT;
+
 struct Request_MotionSpeedBar;
 struct Request_MotionSpeedBarBuilder;
 struct Request_MotionSpeedBarT;
@@ -45,6 +49,45 @@ struct Request_ProgramBeforeT;
 struct Request_ProgramAfter;
 struct Request_ProgramAfterBuilder;
 struct Request_ProgramAfterT;
+
+struct NullSpaceT : public ::flatbuffers::NativeTable {
+  typedef NullSpace TableType;
+};
+
+struct NullSpace FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef NullSpaceT NativeTableType;
+  typedef NullSpaceBuilder Builder;
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+  NullSpaceT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(NullSpaceT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<NullSpace> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const NullSpaceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct NullSpaceBuilder {
+  typedef NullSpace Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit NullSpaceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<NullSpace> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<NullSpace>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<NullSpace> CreateNullSpace(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  NullSpaceBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<NullSpace> CreateNullSpace(::flatbuffers::FlatBufferBuilder &_fbb, const NullSpaceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct Request_MotionSpeedBarT : public ::flatbuffers::NativeTable {
   typedef Request_MotionSpeedBar TableType;
@@ -357,6 +400,29 @@ inline ::flatbuffers::Offset<Request_ProgramAfter> CreateRequest_ProgramAfter(
 }
 
 ::flatbuffers::Offset<Request_ProgramAfter> CreateRequest_ProgramAfter(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramAfterT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+inline NullSpaceT *NullSpace::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<NullSpaceT>(new NullSpaceT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void NullSpace::UnPackTo(NullSpaceT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+}
+
+inline ::flatbuffers::Offset<NullSpace> NullSpace::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const NullSpaceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateNullSpace(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<NullSpace> CreateNullSpace(::flatbuffers::FlatBufferBuilder &_fbb, const NullSpaceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const NullSpaceT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  return IPC::CreateNullSpace(
+      _fbb);
+}
 
 inline Request_MotionSpeedBarT *Request_MotionSpeedBar::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_MotionSpeedBarT>(new Request_MotionSpeedBarT());

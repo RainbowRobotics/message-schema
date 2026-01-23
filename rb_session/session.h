@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <iostream>
 #include "fbs_helpers.h"
 #include "session_backend.h"
 #include "session_options.h"
@@ -65,23 +66,56 @@ class Session {
     });
   }
 
+  // 근준 오리지날
+  // template <typename ReqRootT, typename RepRootT, typename BuildReqFn, typename UseFn>
+  // bool CallWith(std::string_view path, BuildReqFn build_req, UseFn&& cb, int timeout_ms = 100) {
+  //   flatbuffers::FlatBufferBuilder fbb(kBufferLength);
+  //   auto offset = build_req(fbb);
+  //   static_assert(std::is_same_v<decltype(offset), flatbuffers::Offset<ReqRootT>>,
+  //                 "build_req(fbb) must return flatbuffers::Offset<ReqRootT>");
+  //   fbb.Finish(offset);
+  //   auto rep = backend_->Query(Resource(path), {fbb.GetBufferPointer(), fbb.GetSize()}, timeout_ms);
+  //   if (rep.empty() || !rb::fb::Verify<RepRootT>(rep)) {
+  //     return false;
+  //   }
+  //   const auto* res = rb::fb::Get<RepRootT>(rep);
+  //   if (!res) {
+  //     return false;
+  //   }
+  //   std::invoke(std::forward<UseFn>(cb), res);
+  //   return true;
+  // }
   template <typename ReqRootT, typename RepRootT, typename BuildReqFn, typename UseFn>
-  bool CallWith(std::string_view path, BuildReqFn build_req, UseFn&& cb, int timeout_ms = 100) {
-    flatbuffers::FlatBufferBuilder fbb(kBufferLength);
-    auto offset = build_req(fbb);
-    static_assert(std::is_same_v<decltype(offset), flatbuffers::Offset<ReqRootT>>,
-                  "build_req(fbb) must return flatbuffers::Offset<ReqRootT>");
-    fbb.Finish(offset);
-    auto rep = backend_->Query(Resource(path), {fbb.GetBufferPointer(), fbb.GetSize()}, timeout_ms);
-    if (rep.empty() || !rb::fb::Verify<RepRootT>(rep)) {
-      return false;
-    }
-    const auto* res = rb::fb::Get<RepRootT>(rep);
-    if (!res) {
-      return false;
-    }
-    std::invoke(std::forward<UseFn>(cb), res);
-    return true;
+  int CallWith(std::string_view path, BuildReqFn build_req, UseFn&& cb, int timeout_ms = 100) {
+      flatbuffers::FlatBufferBuilder fbb(kBufferLength);
+      auto offset = build_req(fbb);
+      static_assert(std::is_same_v<decltype(offset), flatbuffers::Offset<ReqRootT>>,
+                    "build_req(fbb) must return flatbuffers::Offset<ReqRootT>");
+      fbb.Finish(offset);
+
+      std::vector<uint8_t> rep;
+
+      try {
+          // Zenoh 쿼리 호출
+          rep = backend_->Query(Resource(path), {fbb.GetBufferPointer(), fbb.GetSize()}, timeout_ms);
+      } catch (const std::runtime_error& e) {
+          // 예외 잡아서 false 반환
+          std::cerr << "[Session::CallWith] Zenoh query failed: " << e.what() << std::endl;
+          return 1;
+      }
+
+      // 응답이 비었거나 FlatBuffer 검증 실패
+      if (rep.empty() || !rb::fb::Verify<RepRootT>(rep)) {
+          return 2;
+      }
+
+      const auto* res = rb::fb::Get<RepRootT>(rep);
+      if (!res) {
+          return 3;
+      }
+
+      std::invoke(std::forward<UseFn>(cb), res);
+      return 0;
   }
 
   template <typename ReqRootT, typename RepRootT, typename BuildRepFn>

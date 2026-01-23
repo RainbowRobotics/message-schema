@@ -528,20 +528,20 @@ CMakeFiles/rb_program.dir/rb_ipc/ipc.cpp.o: \
  /usr/local/include/zenoh_constants.h /usr/local/include/zenoh_macros.h \
  /usr/local/include/zenoh_memory.h \
  /root/Desktop/test_project/rb_common/utils/concurrentqueue.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/state_core_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/common_struct_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_return_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/state_message_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/state_log_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_servo_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_flow_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_move_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_config_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_arm_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_box_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_flage_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_set_generated.h \
- /root/Desktop/test_project/rb_ipc/comm_generated/func_get_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/state_core_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/common_struct_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_return_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/state_message_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/state_log_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_servo_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_flow_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_move_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_config_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_arm_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_box_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_flage_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_set_generated.h \
+ /root/Desktop/test_project/rb_ipc/comm_generated/manipulate/v1/func_get_generated.h \
  /root/Desktop/test_project/./rb_core/system.h \
  /root/Desktop/test_project/rb_common/rmoduleinfo.h \
  /root/Desktop/test_project/rb_common/rmath.h /usr/include/c++/12/deque \

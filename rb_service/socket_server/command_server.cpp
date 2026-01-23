@@ -225,6 +225,27 @@ namespace rb_socket_command_server {
                 // -----------------------------------------------------------------------
                 // Servo
                 // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_joint_brake", {
+                    if (a.size() == 2){
+                        int bno, option;
+                        if(!parse_int(a[0], bno) ||
+                            !parse_int(a[1], option)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Set_Joint_Brake(bno, option), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_joint_encoder_zero", {
+                    if (a.size() == 1){
+                        int bno;
+                        if(!parse_int(a[0], bno)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Set_Joint_Encoder_Zero(bno), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 ADD_CMD_HANDLER("call_powercontrol", {
                     if (a.size() == 1){
                         int input_val = std::stoi(a[0]);

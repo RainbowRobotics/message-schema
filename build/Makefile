@@ -1166,8 +1166,8 @@ cmake_check_build_system:
 .PHONY : cmake_check_build_system
 
 
-SCHEMA_DIR := rb_ipc/comm_fbs # 본인이 원하는 스키마 디렉토리명 (기본값: schemas)
-SCHEMA_REMOTE := message-schema # 본인이 원하는 remote 명 (기본값: message-schema)ㄴㄴ
+SCHEMA_DIR := "rb_ipc/comm_fbs"
+SCHEMA_REMOTE := "message-schema"
 
 .PHONY: schema-subtree-init
 schema-subtree-init:
@@ -1179,7 +1179,8 @@ schema-subtree-init:
 
 .PHONY: schema-update
 schema-update:
-	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+	cd .. && \
+	bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
 
 .PHONY: schema-sync
 schema-sync:

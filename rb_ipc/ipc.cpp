@@ -8,19 +8,19 @@
 // #include "session_options.h"
 #include "concurrentqueue.h"
 //---------------------------------------------------
-#include "comm_generated/state_core_generated.h"
-#include "comm_generated/state_message_generated.h"
-#include "comm_generated/state_log_generated.h"
+#include "comm_generated/manipulate/v1/state_core_generated.h"
+#include "comm_generated/manipulate/v1/state_message_generated.h"
+#include "comm_generated/manipulate/v1/state_log_generated.h"
 
-#include "comm_generated/func_servo_generated.h"
-#include "comm_generated/func_flow_generated.h"
-#include "comm_generated/func_move_generated.h"
-#include "comm_generated/func_config_generated.h"
-#include "comm_generated/func_arm_generated.h"
-#include "comm_generated/func_box_generated.h"
-#include "comm_generated/func_flage_generated.h"
-#include "comm_generated/func_set_generated.h"
-#include "comm_generated/func_get_generated.h"
+#include "comm_generated/manipulate/v1/func_servo_generated.h"
+#include "comm_generated/manipulate/v1/func_flow_generated.h"
+#include "comm_generated/manipulate/v1/func_move_generated.h"
+#include "comm_generated/manipulate/v1/func_config_generated.h"
+#include "comm_generated/manipulate/v1/func_arm_generated.h"
+#include "comm_generated/manipulate/v1/func_box_generated.h"
+#include "comm_generated/manipulate/v1/func_flage_generated.h"
+#include "comm_generated/manipulate/v1/func_set_generated.h"
+#include "comm_generated/manipulate/v1/func_get_generated.h"
 
 //---------------------------------------------------
 #include "rb_core/system.h"
@@ -49,8 +49,8 @@
 //     )
 
 #define ADD_SERVE_SIMPLE(CMD_NAME, func_req, func_resp, ...) \
-    session.Serve<func_req, func_resp>( \
-        CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+    session_rx->Serve<func_req, func_resp>( \
+        session_rx_ns + "/" + CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
             std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
             int return_int = MSG_OK; \
             __VA_ARGS__; \
@@ -59,8 +59,8 @@
     );
 
 #define ADD_SERVE_BLANK(CMD_NAME, func_req, func_resp, ...) \
-    session.Serve<func_req, func_resp>( \
-        CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+    session_rx->Serve<func_req, func_resp>( \
+        session_rx_ns + "/" + CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
             std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
             __VA_ARGS__; \
         } \
@@ -74,20 +74,24 @@ namespace rb_ipc {
 
         moodycamel::ConcurrentQueue<PUB_MESSAGE_ST>     que_publish_message;
         moodycamel::ConcurrentQueue<PUB_LOG_ST>         que_publish_log;
+
+        std::unique_ptr<rb::io::Session>                session_rx;
+        std::string                                     session_rx_ns;
+        std::unique_ptr<rb::io::Session>                session_tx;
+        std::string                                     session_tx_ns;
         //----------------------------------------------------------------------------------------------
         // RX
         //----------------------------------------------------------------------------------------------
         void *thread_ipccomm_rx(void *) {
 
             auto [s_category, s_model, s_version, s_alias] = rb_system::Get_System_Basic_Info();
-
-            // std::cout<<"s_model: "<<s_model<<std::endl;
+            session_rx_ns = s_model;
 
             rb::io::SessionOptions options;
             options.backend = rb::io::SessionBackendType::kZenoh;
-            options.ns = s_model;
+            options.ns = "";
             options.zenoh_config = rb::io::ZenohConfig::FromFile("config.json5");
-            auto session = rb::io::Session::Open(std::move(options));
+            session_rx = std::make_unique<rb::io::Session>(rb::io::Session::Open(std::move(options)));
 
             // session.Subscribe<IPC::State_Core>("state_core", [](IPC::State_CoreT robot_core_state) {
             //     if (robot_core_state.joint_q_ref) {
@@ -220,6 +224,12 @@ namespace rb_ipc {
             // -----------------------------------------------------------------------
             // Servo
             // -----------------------------------------------------------------------
+            ADD_SERVE_SIMPLE("call_joint_brake", IPC::Request_JointBrake, IPC::Response_Functions, {
+                return_int = rb_system::Set_Joint_Brake(req->board_no(), req->brake_optioin());
+            });
+            ADD_SERVE_SIMPLE("call_joint_encoder_zero", IPC::Request_JointEncoderZero, IPC::Response_Functions, {
+                return_int = rb_system::Set_Joint_Encoder_Zero(req->board_no());
+            });
             ADD_SERVE_SIMPLE("call_powercontrol", IPC::Request_PowerControl, IPC::Response_Functions, {
                 if(req->power_option() == 1){
                     return_int = rb_system::Set_Power(rb_system::PowerOption::On, false);
@@ -499,6 +509,7 @@ namespace rb_ipc {
             // Get Call
             // -----------------------------------------------------------------------
             ADD_SERVE_BLANK("get_core_data", IPC::Request_Get_Core_Data, IPC::Response_Get_Core_Data, {
+                std::cout<<"Get: "<<req->name()->c_str()<<std::endl;
                 GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(req->option(), req->name()->c_str());
 
                 int return_valid = 0;
@@ -714,7 +725,15 @@ namespace rb_ipc {
                 TARGET_INPUT input;
                 for (int i = 0; i < NO_OF_JOINT; i++) {
                     input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                    std::cout<<"input: "<<input.target_value[i]<<std::endl;
                 }
+                std::cout<<"req->target()->tar_frame(): "<<req->target()->tar_frame()<<std::endl;
+                std::cout<<"req->target()->tar_unit(): "<<req->target()->tar_unit()<<std::endl;
+                std::cout<<"req->speed()->spd_mode(): "<<req->speed()->spd_mode()<<std::endl;
+                std::cout<<"req->speed()->spd_vel_para(): "<<req->speed()->spd_vel_para()<<std::endl;
+                std::cout<<"req->speed()->spd_acc_para(): "<<req->speed()->spd_acc_para()<<std::endl;
+                std::cout<<"req->type()->pnt_type(): "<<req->type()->pnt_type()<<std::endl;
+                std::cout<<"req->type()->pnt_para(): "<<req->type()->pnt_para()<<std::endl;
                 input.target_frame  = req->target()->tar_frame();
                 input.target_unit   = req->target()->tar_unit();
                 int     spd_mode    = req->speed()->spd_mode();
@@ -822,12 +841,13 @@ namespace rb_ipc {
         void *thread_ipccomm_tx(void *) {
 
             auto [s_category, s_model, s_version, s_alias] = rb_system::Get_System_Basic_Info();
+            session_tx_ns = s_model;
 
             rb::io::SessionOptions options;
             options.backend = rb::io::SessionBackendType::kZenoh;
-            options.ns = s_model;
+            options.ns = "";
             options.zenoh_config = rb::io::ZenohConfig::FromFile("config.json5");
-            auto session = rb::io::Session::Open(std::move(options));
+            session_tx = std::make_unique<rb::io::Session>(rb::io::Session::Open(std::move(options)));
 
             while(true){
                 {// PUB MESSAGE
@@ -837,7 +857,7 @@ namespace rb_ipc {
                         state_msg.type = extract_msg.type;
                         state_msg.code = extract_msg.message_code;
                         state_msg.sub_str = extract_msg.sub_message;
-                        session.Publish<IPC::State_Message>("state_message", state_msg);
+                        session_tx->Publish<IPC::State_Message>(session_tx_ns + "/state_message", state_msg);
 
                         // std::cout<<"Message Extracted ... !! : "<<extract_msg.message_code<<std::endl;
                     }
@@ -850,7 +870,7 @@ namespace rb_ipc {
                         log_msg.level = extract_log.level;
                         log_msg.timestamp = extract_log.timestamp;
                         log_msg.contents = extract_log.logcontents;
-                        session.Publish<IPC::State_Log>("state_log", log_msg);
+                        session_tx->Publish<IPC::State_Log>(session_tx_ns + "/state_log", log_msg);
 
                         // std::cout<<"Log Extracted ... !! : "<<extract_log.logcontents<<std::endl;
                     }
@@ -924,10 +944,13 @@ namespace rb_ipc {
                     state_coreT.status_self_coll     = static_cast<uint8_t>(rb_system::Get_Flag_Self_Collision_Occur());
                     state_coreT.status_dt_mode       = static_cast<uint8_t>(rb_system::Get_Flag_Direct_Teaching());
 
-                    session.Publish<IPC::State_Core>("state_core", state_coreT);
+                    session_tx->Publish<IPC::State_Core>(session_tx_ns + "/state_core", state_coreT);
                     // std::cout<<"?"<<std::endl;
                 }
                 std::this_thread::sleep_for(0.05s);
+
+                // IPC::NullSpaceT req;
+                // IPC::NullSpaceT res;
 
                 // {
                 //     IPC::Request_PowerControlT req;
@@ -1005,4 +1028,58 @@ namespace rb_ipc {
         que_publish_log.enqueue(t_log);
         return;
     }
+
+    void toPyFM_FlowControl(int option) {
+        // option
+        // 0 : Stop
+        // 1 : Start
+        // 2 : Pause
+        // 3 : Resume
+
+        std::cout<<"toPyFM_FlowControl: "<<option<<std::endl;
+        std::string TX_MSG = "rrs/";
+        if(option == 0){
+            TX_MSG += "stop";
+        }else if(option == 1){
+            TX_MSG += "start";
+        }else if(option == 2){
+            TX_MSG += "pause";
+        }else if(option == 3){
+            TX_MSG += "resume";
+        }else{
+            return;
+        }
+
+        if (!session_tx) {
+            std::cerr << "[toPyFM_Stop] session_tx not initialized!" << std::endl;
+            return;
+        }
+
+        int call_ret = session_tx->CallWith<IPC::NullSpace, IPC::NullSpace>(
+            // "C500920/call_halt",  // 상대방 Zenoh 리소스 이름
+            TX_MSG,  // 상대방 Zenoh 리소스 이름
+            [](flatbuffers::FlatBufferBuilder& fbb) -> flatbuffers::Offset<IPC::NullSpace> {
+                // 요청 메시지 생성 (빈 메시지)
+                return IPC::CreateNullSpace(fbb);
+            },
+            [](const IPC::NullSpace* res) {
+                // 응답 콜백
+                std::cout << "[toPyFM_Stop] Stop RPC response received!" << std::endl;
+                // 필요하면 res 확인 가능
+            },
+            500  // 타임아웃(ms)
+        );
+
+        if (call_ret != 0) {
+            std::cerr << "Fail Call ::"<<call_ret << std::endl;
+        }else{
+            std::cout << "Success Call" << std::endl;
+        }
+
+
+        // IPC::NullSpaceT tx_payload;
+        // session_tx->Publish<IPC::NullSpace>("rrs/stop", tx_payload);
+    }
 }
+
+//return IPC::Response_Get_Joint_Value::Pack(fbb, &get_return_T);

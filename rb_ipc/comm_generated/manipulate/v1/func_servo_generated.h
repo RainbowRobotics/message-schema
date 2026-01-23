@@ -30,6 +30,14 @@ struct Request_ReferenceControl;
 struct Request_ReferenceControlBuilder;
 struct Request_ReferenceControlT;
 
+struct Request_JointBrake;
+struct Request_JointBrakeBuilder;
+struct Request_JointBrakeT;
+
+struct Request_JointEncoderZero;
+struct Request_JointEncoderZeroBuilder;
+struct Request_JointEncoderZeroT;
+
 struct Request_PowerControlT : public ::flatbuffers::NativeTable {
   typedef Request_PowerControl TableType;
   int32_t power_option = 0;
@@ -186,6 +194,121 @@ inline ::flatbuffers::Offset<Request_ReferenceControl> CreateRequest_ReferenceCo
 
 ::flatbuffers::Offset<Request_ReferenceControl> CreateRequest_ReferenceControl(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ReferenceControlT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_JointBrakeT : public ::flatbuffers::NativeTable {
+  typedef Request_JointBrake TableType;
+  int32_t board_no = 0;
+  int32_t brake_optioin = 0;
+};
+
+struct Request_JointBrake FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_JointBrakeT NativeTableType;
+  typedef Request_JointBrakeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BOARD_NO = 4,
+    VT_BRAKE_OPTIOIN = 6
+  };
+  int32_t board_no() const {
+    return GetField<int32_t>(VT_BOARD_NO, 0);
+  }
+  int32_t brake_optioin() const {
+    return GetField<int32_t>(VT_BRAKE_OPTIOIN, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_BOARD_NO, 4) &&
+           VerifyField<int32_t>(verifier, VT_BRAKE_OPTIOIN, 4) &&
+           verifier.EndTable();
+  }
+  Request_JointBrakeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_JointBrakeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_JointBrake> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointBrakeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_JointBrakeBuilder {
+  typedef Request_JointBrake Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_board_no(int32_t board_no) {
+    fbb_.AddElement<int32_t>(Request_JointBrake::VT_BOARD_NO, board_no, 0);
+  }
+  void add_brake_optioin(int32_t brake_optioin) {
+    fbb_.AddElement<int32_t>(Request_JointBrake::VT_BRAKE_OPTIOIN, brake_optioin, 0);
+  }
+  explicit Request_JointBrakeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_JointBrake> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_JointBrake>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_JointBrake> CreateRequest_JointBrake(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t board_no = 0,
+    int32_t brake_optioin = 0) {
+  Request_JointBrakeBuilder builder_(_fbb);
+  builder_.add_brake_optioin(brake_optioin);
+  builder_.add_board_no(board_no);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_JointBrake> CreateRequest_JointBrake(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointBrakeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_JointEncoderZeroT : public ::flatbuffers::NativeTable {
+  typedef Request_JointEncoderZero TableType;
+  int32_t board_no = 0;
+};
+
+struct Request_JointEncoderZero FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_JointEncoderZeroT NativeTableType;
+  typedef Request_JointEncoderZeroBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BOARD_NO = 4
+  };
+  int32_t board_no() const {
+    return GetField<int32_t>(VT_BOARD_NO, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_BOARD_NO, 4) &&
+           verifier.EndTable();
+  }
+  Request_JointEncoderZeroT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_JointEncoderZeroT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_JointEncoderZero> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointEncoderZeroT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_JointEncoderZeroBuilder {
+  typedef Request_JointEncoderZero Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_board_no(int32_t board_no) {
+    fbb_.AddElement<int32_t>(Request_JointEncoderZero::VT_BOARD_NO, board_no, 0);
+  }
+  explicit Request_JointEncoderZeroBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_JointEncoderZero> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_JointEncoderZero>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_JointEncoderZero> CreateRequest_JointEncoderZero(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t board_no = 0) {
+  Request_JointEncoderZeroBuilder builder_(_fbb);
+  builder_.add_board_no(board_no);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_JointEncoderZero> CreateRequest_JointEncoderZero(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointEncoderZeroT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_PowerControlT *Request_PowerControl::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_PowerControlT>(new Request_PowerControlT());
   UnPackTo(_o.get(), _resolver);
@@ -262,6 +385,61 @@ inline ::flatbuffers::Offset<Request_ReferenceControl> CreateRequest_ReferenceCo
   return IPC::CreateRequest_ReferenceControl(
       _fbb,
       _refcontrol_option);
+}
+
+inline Request_JointBrakeT *Request_JointBrake::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_JointBrakeT>(new Request_JointBrakeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_JointBrake::UnPackTo(Request_JointBrakeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = board_no(); _o->board_no = _e; }
+  { auto _e = brake_optioin(); _o->brake_optioin = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_JointBrake> Request_JointBrake::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointBrakeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_JointBrake(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_JointBrake> CreateRequest_JointBrake(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointBrakeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_JointBrakeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _board_no = _o->board_no;
+  auto _brake_optioin = _o->brake_optioin;
+  return IPC::CreateRequest_JointBrake(
+      _fbb,
+      _board_no,
+      _brake_optioin);
+}
+
+inline Request_JointEncoderZeroT *Request_JointEncoderZero::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_JointEncoderZeroT>(new Request_JointEncoderZeroT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_JointEncoderZero::UnPackTo(Request_JointEncoderZeroT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = board_no(); _o->board_no = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_JointEncoderZero> Request_JointEncoderZero::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointEncoderZeroT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_JointEncoderZero(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_JointEncoderZero> CreateRequest_JointEncoderZero(::flatbuffers::FlatBufferBuilder &_fbb, const Request_JointEncoderZeroT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_JointEncoderZeroT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _board_no = _o->board_no;
+  return IPC::CreateRequest_JointEncoderZero(
+      _fbb,
+      _board_no);
 }
 
 }  // namespace IPC

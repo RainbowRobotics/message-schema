@@ -269,6 +269,8 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // Power & ServoOn
     // ---------------------------------------------------------------
+    int             Set_Joint_Brake(int bno, int brk_action);
+    int             Set_Joint_Encoder_Zero(int bno);
     int             Set_Servo(int option, int who_issue);
     ServoState      Get_Servo();
     int             Set_Power(PowerOption opt, bool is_call_from_RT);
@@ -276,6 +278,7 @@ namespace rb_system {
     int             Get_Power_Switch();
     int             Get_Lan2Can_State();
     void            Notify_PowerChanged();
+    int             Set_SafetyBoard_Para_Single(unsigned int reg, unsigned int dat);
 
     // ---------------------------------------------------------------
     // Reference

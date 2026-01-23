@@ -1,12 +1,16 @@
 ```bash
-flatc --cpp -o rb_ipc/comm_generated rb_ipc/comm_fbs/*.fbs
+flatc --cpp -o rb_ipc/comm_generated rb_ipc/comm_fbs/manipulate/v1/*.fbs
 flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb/v1" *.fbs
-flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb_ipc/comm_generated" rb_ipc/comm_fbs/*.fbs
+flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb_ipc/comm_generated" rb_ipc/comm_fbs/manipulate/v1/*.fbs
+
+flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb_ipc/comm_generated/manipulate/v1" rb_ipc/comm_fbs/manipulate/v1/*.fbs
+flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb_ipc/comm_generated/nexus/v1" rb_ipc/comm_fbs/nexus/v1/*.fbs
 pmap -x 2504110
 ```
 
 echo -e "call_move_j(0,0,0,90,0,90,0,0.4,0.4)" | nc 127.0.0.1 5000
-
+echo -e "call_joint_brake(-1, 1)" | nc 127.0.0.1 5000
+echo -e "call_joint_encoder_zero(6)" | nc 127.0.0.1 5000
 ---
 
 KJ

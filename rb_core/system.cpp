@@ -22,6 +22,8 @@
 #include "toolflange.h"
 #include "rrbdl.h"
 
+#include "rb_ipc/ipc.h"
+
 bool is_save = false;
 
 lan2can         *_gv_Handler_Lan;
@@ -34,9 +36,10 @@ toolflange      *_gv_Handler_Toolflange;
 namespace rb_system {
     namespace {
         // IO Def
-        std::atomic<unsigned char>           request_PowerControl{0};       // 1=PowerOn, 2=PowerOff
-        std::atomic<unsigned char>           request_ServoControl{0};       // 1=ServoOn
-        std::atomic<unsigned char>           request_ReferenceControl{0};   // 1=toReal 2=toSimul
+        std::atomic<unsigned char>          request_PowerControl{0};       // 1=PowerOn, 2=PowerOff
+        std::atomic<unsigned char>          request_ServoControl{0};       // 1=ServoOn
+        std::atomic<unsigned char>          request_ReferenceControl{0};   // 1=toReal 2=toSimul
+        std::atomic<unsigned char>          request_PyFMControl{0};        // 1=Start, 2=Stop, 3=Pause, 4=Resume
         enum IO_DEF_DIN{
             DIN_DEF_NONE = 0,
             DIN_DEF_R_PowerOn,
@@ -52,7 +55,11 @@ namespace rb_system {
             DIN_DEF_R_ResumeColl,
             DIN_DEF_R_FreeDriveOn_F_FreeDriveOff,
             DIN_DEF_R_ProgramLoad,
+            DIN_DEF_R_ProgramStop,
             DIN_DEF_R_ProgramStart,
+            DIN_DEF_R_ProgramPause,
+            DIN_DEF_R_ProgramResume,
+            DIN_DEF_R_ProgramPause_F_Resume,
             DIN_DEF_NUM
         };
         enum IO_DEF_DOUT{
@@ -155,6 +162,18 @@ namespace rb_system {
         TimeScaler                  _sys_timescale[(int)SystemTimeScaler::NUM];
         bool                        flag_is_pause = false;
         bool                        flag_is_break = false;
+
+        std::vector<int> Joint_Action_List_Generator(int bno){
+            std::vector<int> shot_arr;
+            if(bno < 0){
+                for(int j = 0; j < NO_OF_JOINT; ++j){
+                    shot_arr.push_back(j);
+                }
+            }else if(bno >= 0 && bno < NO_OF_JOINT){
+                shot_arr.push_back(bno);
+            }
+            return shot_arr;
+        }
 
         std::tuple<bool, bool, int, float> Calc_Self_Collision(ROBOT_CONFIG tRobot, VectorJd qDeg, float dist_int, float dist_ext){
             CAPSULE_STRUCT tCAP[NO_OF_JOINT + 1];
@@ -506,6 +525,8 @@ namespace rb_system {
                 temp_is_all_connected &= flag_connection_components[NO_OF_JOINT];
                 temp_is_one_connected |= flag_connection_components[NO_OF_JOINT];
                 flag_connection_components[NO_OF_JOINT + 1] = _gv_Handler_Side->Set_ConnectionTimerUp(2);
+                _gv_Handler_SCB->Set_ConnectionTimerUp(0, 1);
+                _gv_Handler_SCB->Set_ConnectionTimerUp(1, 1);
 
                 flag_connection_is_all = temp_is_all_connected;
                 if(temp_is_one_connected != flag_connection_is_one){
@@ -774,8 +795,53 @@ namespace rb_system {
                     {
                         break;
                     }
+                    case DIN_DEF_R_ProgramStop:
+                    {
+                        if(nor_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(1, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
                     case DIN_DEF_R_ProgramStart:
                     {
+                        if(nor_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(2, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ProgramPause:
+                    {
+                        if(nor_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(3, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ProgramResume:
+                    {
+                        if(nor_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(4, std::memory_order_relaxed);
+                            }
+                        }
+                        break;
+                    }
+                    case DIN_DEF_R_ProgramPause_F_Resume:
+                    {
+                        if(nor_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(3, std::memory_order_relaxed);
+                            }
+                        }else if(rev_edge){
+                            if(request_PyFMControl.load(std::memory_order_relaxed) == 0){
+                                request_PyFMControl.store(4, std::memory_order_relaxed);
+                            }
+                        }
                         break;
                     }
                     default:
@@ -900,13 +966,6 @@ namespace rb_system {
         void *thread_system_general(void *) {
             int non_rt_counter = 0;
             while(1){
-                auto state_powerControl = request_powerControl.load(std::memory_order_relaxed);
-                if (state_powerControl == PowerOption::Off) {
-                    Set_Power(PowerOption::Off, false);
-                    request_powerControl.store(PowerOption::NONE, std::memory_order_relaxed);
-                    break;
-                }
-
                 non_rt_counter++;
                 if(non_rt_counter%50 == 0){
                     // origianl = 2msec = 2000us = 2000000ns
@@ -915,6 +974,28 @@ namespace rb_system {
                         LOG_WARNING("System General Thread Jitter High: " + std::to_string(g_max_jitter_ns) + " ns");
                         g_max_jitter_ns = 0;
                     }
+                }
+
+                auto scb_info = _gv_Handler_SCB->Get_Infos();
+                if(scb_info.connection_flag[0] && scb_info.connection_flag[1]){
+                    if(scb_info.configure_done[0] != true || scb_info.configure_done[1] != true){
+                        SAFETY_ONOFF_STRUCTURE temp_onoff;
+                        temp_onoff.raw = 0;
+                        int ret = Set_SafetyBoard_Para_Single(SFSET_CONFIG_SF_ONOFF, temp_onoff.raw);
+                        if(ret == MSG_OK){
+                            _gv_Handler_SCB->Set_ConfigDoneFlag(-1, true);
+                            LOG_INFO("SCB CONFIG DONE");
+                        }else{
+                            std::cout<<"SCB Config fail"<<std::endl;
+                        }
+                    }
+                }
+
+                auto state_powerControl = request_powerControl.load(std::memory_order_relaxed);
+                if (state_powerControl == PowerOption::Off) {
+                    Set_Power(PowerOption::Off, false);
+                    request_powerControl.store(PowerOption::NONE, std::memory_order_relaxed);
+                    break;
                 }
 
                 unsigned char request_trigger = 0;
@@ -939,6 +1020,10 @@ namespace rb_system {
                         rb_system::Set_ReferenceOnOff(false);
                     }
                     request_ReferenceControl.store(0, std::memory_order_relaxed);
+                }
+                if((request_trigger = request_PyFMControl.load(std::memory_order_relaxed)) != 0){
+                    rb_ipc::toPyFM_FlowControl(((int)request_trigger) - 1);
+                    request_PyFMControl.store(0, std::memory_order_relaxed);
                 }
                 
                 std::this_thread::sleep_for(20ms);
@@ -2061,6 +2146,51 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // Power & ServoOn
     // ---------------------------------------------------------------
+    int Set_Joint_Brake(int bno, int brk_action){
+        // action
+        // 0 : Close
+        // 1 : Open (Hard)
+        // 2 : Weak
+        // 3 : Close only
+
+        LOG_INFO("Joint Brake: " + std::to_string(bno) + "/" +std::to_string(brk_action));
+
+        if(brk_action == 1 || brk_action == 2){
+            if(!Get_Power()){
+                int pw_ret = Set_Power(PowerOption::On, false);
+                if(pw_ret != MSG_OK){
+                    return pw_ret;
+                }
+            }
+        }
+
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Brake(brk_action, false));
+        }
+
+        return MSG_OK;
+    }
+
+    int Set_Joint_Encoder_Zero(int bno){
+        LOG_INFO("Joint Encoder: " + std::to_string(bno));
+
+        if(!Get_Power()){
+            int pw_ret = Set_Power(PowerOption::On, false);
+            if(pw_ret != MSG_OK){
+                return pw_ret;
+            }
+        }
+
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_HomeOffsetZero());
+        }
+
+        return MSG_OK;
+    }
 
     int Set_Servo(int option, int who_issue){
         // option
@@ -2280,6 +2410,15 @@ namespace rb_system {
         if(!_gv_Handler_Lan->LAN_connectionStatus){
             return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_INTERFACE);
         }
+        auto scb_state = _gv_Handler_SCB->Get_Infos();
+        for(int scb = 0; scb < 2; ++scb){
+            if(!scb_state.connection_flag[scb]){
+                return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_SAFETY_1 + scb);
+            }
+            if(!scb_state.configure_done[scb]){
+                return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONFIGURED_SAFETY_1 + scb);
+            }
+        }
         if(opt == PowerOption::Off){
             Set_Servo_State(ServoState::NONE);
             if(is_call_from_RT){
@@ -2292,7 +2431,7 @@ namespace rb_system {
                 if(flag_reference_onoff){
                     std::cout<<"Soft Off Mode"<<std::endl;
                     flag_soft_power_cutoff = true;
-                    usleep(500*1000);
+                    std::this_thread::sleep_for(0.5s);
                     flag_soft_power_cutoff = false;
                 }
                 Set_ReferenceOnOff(false);                
@@ -2379,6 +2518,29 @@ namespace rb_system {
         power_cv.notify_all();  // 상태가 바뀌었음을 알림
     }
 
+    int Set_SafetyBoard_Para_Single(unsigned int reg, unsigned int dat){
+        if(reg >= SFSET_NUMBER){
+            return MSG_DESIRED_INDEX_IS_OVER_BOUND;
+        }
+        for(int k = 0; k < 2; ++k){
+            _gv_Handler_SCB->Clear_Infos();
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_SCB->Cmd_Setting(k, reg, dat));
+
+            float time_out = 0.;
+            while(1){
+                std::this_thread::sleep_for(0.002s);
+                time_out += 0.002;
+                auto temp = _gv_Handler_SCB->Get_Infos();
+                if(temp.config_flag[k] && (temp.config_addr[k] == reg) && (temp.config_data[k] == dat)){
+                    break;
+                }
+                if(time_out > 0.05){
+                    return MSG_EXECUTION_TIMEOUT;
+                }
+            }
+        }
+        return MSG_OK;
+    }
     // ---------------------------------------------------------------
     // Reference
     // ---------------------------------------------------------------

@@ -530,3 +530,18 @@ CAN_MSG motor::Cmd_Brake(int opmode, int nonslave_flag){
     }
     return can_m;
 }
+
+CAN_MSG motor::Cmd_HomeOffsetZero(){
+    CAN_MSG can_m;
+    can_m.id = cans.CAN_ID_CMD;
+    can_m.channel = cans.CAN_CH;
+    can_m.data[0] = 0xC6;
+    can_m.data[1] = 0;
+    can_m.data[2] = 0;
+    can_m.data[3] = 0;
+    can_m.data[4] = 0;
+    can_m.data[5] = 0;
+    can_m.data[6] = 1;
+    can_m.dlc = 7;
+    return can_m;
+}

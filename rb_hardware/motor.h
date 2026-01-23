@@ -173,6 +173,7 @@ public:
 
     CAN_MSG Cmd_MakeErrorSumZero(unsigned char mode);
     CAN_MSG Cmd_Brake(int opmode, int nonslave_flag);
+    CAN_MSG Cmd_HomeOffsetZero();
 
     
 
