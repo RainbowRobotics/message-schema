@@ -111,7 +111,7 @@ class ProgramService(BaseService):
         self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
-    def call_resume_or_pause(
+    async def call_resume_or_pause(
         self,
         *,
         is_pause: bool,
@@ -136,7 +136,7 @@ class ProgramService(BaseService):
                 "*/call_pause",
                 flatbuffer_req_obj=req_manipulate_resume_or_pause,
                 flatbuffer_res_T_class=Response_FunctionsT,
-                flatbuffer_buf_size=2,
+                flatbuffer_buf_size=256,
             )
 
             self.script_executor.pause_all()
@@ -150,21 +150,14 @@ class ProgramService(BaseService):
 
             self.script_executor.resume_all()
 
+        print("res_manipulate_resume_or_pause >>", res_manipulate_resume_or_pause, flush=True)
+
         # if program_id:
         #     await self.update_program_state(program_id=program_id, state=state, db=db)
         # if flow_id:
         #     await self.update_flow_state(flow_id=flow_id, state=state, db=db)
 
-        return {
-            "manipulateReturnValue": (
-                res_manipulate_resume_or_pause["dict_payload"]["returnValue"]
-                if (
-                    res_manipulate_resume_or_pause
-                    and res_manipulate_resume_or_pause.get("dict_payload")
-                )
-                else None
-            ),
-        }
+        return res_manipulate_resume_or_pause
 
     def call_stop(self):
         manipulate_req = Request_MotionHaltT()
