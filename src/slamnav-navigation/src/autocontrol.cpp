@@ -555,7 +555,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
 
   set_cur_move_info(msg);
 
-  if(msg.command == "goal")
+  if(msg.command == "goal"|| msg.command == "target")
   {
     if(is_rrs && config->get_use_multi())
     {
@@ -2635,14 +2635,17 @@ int AUTOCONTROL::is_everything_fine()
     return DRIVING_FAILED;
   }
 
+    MOBILE_STATUS ms = mobile->get_status();
+    QString wheel_type = config->get_robot_wheel_type();
+    bool is_mecanum = (wheel_type == "mecanum");
+
   // skip motor check in simulation mode
   if(config->get_use_sim())
   {
     return DRIVING_FINE;
   }
 
-  MOBILE_STATUS ms = mobile->get_status();
-  if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
+  if(ms.connection_m0 != 1 || ms.connection_m1 != 1 || (is_mecanum && (ms.connection_m2 != 1 || ms.connection_m3 != 1)))
   {
     log_error("failed (motor not connected)");
     {
@@ -2654,11 +2657,46 @@ int AUTOCONTROL::is_everything_fine()
     }
     return DRIVING_FAILED;
   }
+  else
+  {
+    if(ms.om_state == SM_OM_OPERATIONAL_STOP)
+    {
+        logger->write_log("[AUTO] MANUAL DRIVING MODE (BUMPER PUSHED OR LIDAR DETECT))", "Red", true, false);
+        log_error("MANUAL DRIVING MODE (BUMPER PUSHED LIDAR DETECT)");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.time    = get_time();
+            cur_move_info.result  = "fail"; // is it okay to fail?????????
+            cur_move_info.message = "SS2 pushed";
+            Q_EMIT signal_move_response(cur_move_info);
+        }
+        return DRIVING_MANUAL;
+    }
+  }
 
   // for multiple error detect!
-  if(ms.status_m0 > 1 || ms.status_m1 > 1)
+  if(ms.status_m0 > 1 || ms.status_m1 > 1|| (is_mecanum && (ms.connection_m2 > 1 || ms.connection_m3 > 1)))
   {
-    int motor_err_code = (ms.status_m0 > 1) ? ms.status_m0 : ms.status_m1;
+    // int motor_err_code = (ms.status_m0 > 1) ? ms.status_m0 : ms.status_m1;
+    int motor_err_code = 0;
+    if(ms.status_m0 > 1)
+    {
+        motor_err_code = ms.status_m0;
+    }
+    else if(ms.status_m1 > 1)
+    {
+        motor_err_code = ms.status_m1;
+    }
+    else if(is_mecanum && ms.status_m2 > 1)
+    {
+        motor_err_code = ms.status_m2;
+    }
+    else if(is_mecanum && ms.status_m3 > 1)
+    {
+        motor_err_code = ms.status_m3;
+    }
+  
+
     QStringList err_list;
     QString err_str = "";
 
@@ -2709,7 +2747,7 @@ int AUTOCONTROL::is_everything_fine()
     return DRIVING_FAILED;
   }
 
-  if(ms.status_m0 == 0 && ms.status_m1 == 0)
+   if(ms.status_m0 == 0 && ms.status_m1 == 0 && (is_mecanum && (ms.connection_m2 == 0 || ms.connection_m3 == 0)))
   {
     log_error("not ready (mootor lock off)");
     {

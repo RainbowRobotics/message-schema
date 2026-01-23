@@ -303,6 +303,7 @@ enum CHECK_DRIVING_STATE
   DRIVING_FAILED    = 0,
   DRIVING_NOT_READY = 1,
   DRIVING_FINE    = 2,
+  DRIVING_MANUAL    = 3,
 };
 
 enum MOTOR_ERROR_STATE
@@ -449,8 +450,6 @@ enum class DriveDir
   FORWARD,
   REVERSE
 };
-
-
 
 struct LOG_INFO
 {
