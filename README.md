@@ -14,7 +14,7 @@ SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema.git
 
 .PHONY: schema-subtree-init
 schema-subtree-init: ## schema subtree 최초 1회 초기화
-    @[ ! -d "$(SCHEMA_DIR)" ] || (echo "❌ $(SCHEMA_DIR) 이라는 디렉토리가 이미 존재합니다. 지워주시고 커밋/푸시 후 진행해주세요!"; exit 1)
+	@[ ! -d "$(SCHEMA_DIR)" ] || (echo "❌ $(SCHEMA_DIR) 이라는 디렉토리가 이미 존재합니다. 지워주시고 커밋/푸시 후 진행해주세요!"; exit 1)
 	@git remote get-url $(SCHEMA_REMOTE) >/dev/null 2>&1 \
 	  || git remote add $(SCHEMA_REMOTE) $(SCHEMA_REMOTE_URL)
 	@git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
