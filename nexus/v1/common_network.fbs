@@ -1,0 +1,82 @@
+namespace IPC;
+
+
+table Wifi {
+    in_use: bool;
+    ssid: string;
+    signal: int;
+    security: string;
+    channel: int;
+    rate: string;
+}
+
+// 네트워크 정보
+table Network {
+    device: string;
+    dhcp: bool;
+    dns: [string];
+    ssid: string;
+    address: string;
+    netmask: string;
+    gateway: string;
+    signal: int;
+}
+
+// 네트워크 정보 요청 ------------------------------------------------
+table Request_Network_GetNetwork {
+}
+
+table Response_Network_GetNetwork {
+    ethernet: Network;
+    wifi: Network;
+    bluetooth: Network;
+}
+
+// 네트워크 설정 ------------------------------------------------
+table Request_Network_SetPD {
+    ssid: string;
+    dhcp: bool;
+    address: string;
+    netmask: string;
+    gateway: string;
+    dns: [string];
+}
+
+table Response_Network_SetPD {
+    ssid: string;
+    dhcp: bool;
+    address: string;
+    netmask: string;
+    gateway: string;
+    dns: [string];
+    result: string;
+    message: string;
+}
+
+// 네트워크 접속 ------------------------------------------------
+table Request_Network_ConnectWifi {
+    ssid: string;
+    password: string;
+}
+
+table Response_Network_ConnectWifi {
+    ssid: string;
+    address: string;
+    gateway: string;
+    netmask: string;
+    dns: [string];
+    signal: int;
+    result: string;
+    message: string;
+}
+
+// 네트워크 목록 조회 ------------------------------------------------
+table Request_Network_GetWifiList {
+    rescan: bool;
+}
+
+table Response_Network_GetWifiList {
+    list: [Wifi];
+    result: string;
+    message: string;
+}
