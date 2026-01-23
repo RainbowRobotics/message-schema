@@ -1,15 +1,12 @@
 
-from rb_modules.service import BaseService
-from rb_zenoh.client import ZenohClient
-
 from rb_flat_buffers.IPC.Request_Network_GetNetwork import (
     Request_Network_GetNetworkT,
 )
-
 from rb_flat_buffers.IPC.Response_Network_GetNetwork import (
     Response_Network_GetNetworkT,
 )
-
+from rb_modules.service import BaseService
+from rb_zenoh.client import ZenohClient
 
 zenoh_client = ZenohClient()
 

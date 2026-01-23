@@ -10,15 +10,6 @@ from rb_modules.log import RBLog
 from .network_module import (
     NetworkService,
 )
-from .network_schema import (
-    Response_Network_GetNetwork,
-    Request_Network_ConnectWifi,
-    Request_Network_GetWifiList,
-    Request_Network_SetPD,
-    Response_Network_ConnectWifi,
-    Response_Network_GetWifiList,
-    Response_Network_SetPD,
-)
 
 network_service = NetworkService()
 network_router = APIRouter(

@@ -14,6 +14,7 @@ from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Updat
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
 from rb_flat_buffers.program.RB_Program_Log_Type import RB_Program_Log_Type
+from rb_flat_buffers.program.Request_Exec_Control_Program import Request_Exec_Control_ProgramT
 from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
 from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
 from rb_flat_buffers.program.Request_Update_Sub_Task_State import Request_Update_Sub_Task_StateT
@@ -38,7 +39,7 @@ async def on_program_at_end(*, topic, mv, obj, attachment):
     db = await get_db()
     return await program_service.at_program_end(task_id=obj["taskId"], db=db)
 
-@zenoh_program_router.queryable("rrs/pause")
+@zenoh_program_router.queryable("rrs/pause", flatbuffer_req_t=Request_Exec_Control_ProgramT, flatbuffer_res_buf_size=8)
 async def on_pause():
     """ 전체 로봇 프로그램 일시정지 """
     return await program_service.call_resume_or_pause(is_pause=True)

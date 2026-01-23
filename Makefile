@@ -22,10 +22,23 @@ schema-subtree-init: ## schema subtree 최초 1회 초기화
 	  || git remote add $(SCHEMA_REMOTE) $(SCHEMA_REMOTE_URL)
 	@git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
 
+.PHONY: schema-remote-add
+schema-remote-add: ## schema remote add
+	@if ! git remote get-url "$(SCHEMA_REMOTE)" >/dev/null 2>&1; then \
+		echo "remote '$(SCHEMA_REMOTE)' not found. adding..."; \
+		git remote add "$(SCHEMA_REMOTE)" "$(SCHEMA_REMOTE_URL)"; \
+	fi
+	@git fetch "$(SCHEMA_REMOTE)" --prune
+
 .PHONY: schema-update
-schema-update: ## schemas 변경사항을 현재 레포와 서브레포로 push 그리고 자동 PR 진행
+schema-update: schema-remote-add ## schemas 변경사항을 현재 레포와 서브레포로 push 그리고 자동 PR 진행
 	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
 
 .PHONY: schema-sync
-schema-sync: ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
+schema-sync: schema-remote-add ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
 	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+
+
+.PHONY: schema-sync-force
+schema-sync-force: schema-remote-add ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 강제 덮어씌우기)
+	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE) -y

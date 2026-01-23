@@ -136,7 +136,7 @@ class ProgramService(BaseService):
                 "*/call_pause",
                 flatbuffer_req_obj=req_manipulate_resume_or_pause,
                 flatbuffer_res_T_class=Response_FunctionsT,
-                flatbuffer_buf_size=2,
+                flatbuffer_buf_size=256,
             )
 
             self.script_executor.pause_all()
@@ -149,6 +149,8 @@ class ProgramService(BaseService):
             )
 
             self.script_executor.resume_all()
+
+        print("res_manipulate_resume_or_pause >>", res_manipulate_resume_or_pause, flush=True)
 
         # if program_id:
         #     await self.update_program_state(program_id=program_id, state=state, db=db)

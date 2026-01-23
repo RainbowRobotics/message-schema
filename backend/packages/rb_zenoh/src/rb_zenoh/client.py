@@ -450,7 +450,7 @@ class ZenohClient:
         def _to_bytes(x):
             if x is None:
                 return None
-            if isinstance(x, (bytes, bytearray, memoryview)):
+            if isinstance(x, bytes | bytearray | memoryview):
                 return bytes(x)
             if isinstance(x, str):
                 return x.encode("utf-8")
@@ -668,7 +668,7 @@ class ZenohClient:
                     )
 
                     # ✅ FlatBuffer 응답: obj_payload 타입이 T로 따라옴
-                    if flatbuffer_req_obj is not None and flatbuffer_res_T_class is not None:
+                    if flatbuffer_res_T_class is not None:
                         obj_payload = flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)  # T
                         dict_payload = t_to_dict(obj_payload)
 
