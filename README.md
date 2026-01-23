@@ -14,18 +14,32 @@ SCHEMA_REMOTE_URL := https://github.com/RainbowRobotics/message-schema.git
 
 .PHONY: schema-subtree-init
 schema-subtree-init: ## schema subtree 최초 1회 초기화
-    @[ ! -d "$(SCHEMA_DIR)" ] || (echo "❌ $(SCHEMA_DIR) 이라는 디렉토리가 이미 존재합니다. 지워주시고 커밋/푸시 후 진행해주세요!"; exit 1)
+	@[ ! -d "$(SCHEMA_DIR)" ] || (echo "❌ $(SCHEMA_DIR) 이라는 디렉토리가 이미 존재합니다. 지워주시고 커밋/푸시 후 진행해주세요!"; exit 1)
 	@git remote get-url $(SCHEMA_REMOTE) >/dev/null 2>&1 \
 	  || git remote add $(SCHEMA_REMOTE) $(SCHEMA_REMOTE_URL)
 	@git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
 
+.PHONY: schema-remote-add
+schema-remote-add: ## schema remote add
+	@if ! git remote get-url "$(SCHEMA_REMOTE)" >/dev/null 2>&1; then \
+		echo "remote '$(SCHEMA_REMOTE)' 를 찾을 수 없습니다. remote를 추가합니다."; \
+		git remote add "$(SCHEMA_REMOTE)" "$(SCHEMA_REMOTE_URL)"; \
+	fi
+	@git fetch "$(SCHEMA_REMOTE)" --prune
+
 .PHONY: schema-update
-schema-update: ## schemas 변경사항을 현재 레포와 서브레포로 push 그리고 자동 PR 진행
+schema-update: schema-remote-add ## schemas 변경사항을 현재 레포와 서브레포로 push 그리고 자동 PR 진행
 	@bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
 
 .PHONY: schema-sync
-schema-sync: ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
+schema-sync: schema-remote-add ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 진짜 덮어씌울건지 물어봄)
 	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
+
+
+.PHONY: schema-sync-force
+schema-sync-force: schema-remote-add ## message-schema의 main 브랜치 내용을 현재 SCHEMA_DIR에 그대로 가져오기 (변경 사항이 있다면 강제 덮어씌우기)
+	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE) -y
+
 ```
 
 ### 2. message-schema를 Subtree로 추가
@@ -75,7 +89,11 @@ message-schema 레포에서 **리뷰 후 수동 Apply** 되어야 main에 반영
 ### 📥 message-schema에 main 브랜치 내용으로 가져오기
 
 ```sh
-make schema-sync
+make schema-sync 
+
+#or
+
+make schema-sync-force # main 브랜치와 달라도 덮어씌울건지 안물어보고 강제로 main 브랜치 내용으로 덮어버림
 ```
 
 #### 동작 요약
@@ -91,8 +109,17 @@ make schema-sync
 📌 `schema-sync`는 `schema/from-* `**브랜치를 가져오지 않으며,
 PR이 `main`에 머지된 내용만** 반영됩니다.
 
+📌 `message-schema/main`에 이제까지 제대로 위 시나리오대로 `make schema-update`를 하고 Merge 하는 방식을 잘 따라줬더라면,
+작업이 끝나고 배포할때 무조건 `message-schema/main`꺼를 가져다가 쓰는 것이 더욱 안전하고 확실합니다.
+
 📌 `schemas/`에서 작업 중인 내용이 있다면, 동기화 시 **사라질 수 있습니다.**
 필요하면 먼저 `make schema-update`로 PR을 올리거나, 별도 백업 후 진행하세요.
+
+📌 `make schema-sync`(git subtree pull)는 prefix(schemas)만 깨끗하면 되는 게 아니라, “레포 전체 working tree가 clean” 이어야 실행됩니다.
+지금 스크립트는 schemas/만 restore/clean 했고, 다른 경로(예: Makefile, backend, 뭐든) 에 수정/스테이징/untracked가 남아있으면:
+
+> fatal: working tree has modifications. Cannot add.
+
 <br />
 
 ## 3️⃣ 디렉토리 구조

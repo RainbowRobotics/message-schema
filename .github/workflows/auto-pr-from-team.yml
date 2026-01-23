@@ -41,22 +41,29 @@ jobs:
       - name: Get changed files
         id: changed_files
         run: |
-          set -e
-          git fetch origin main --prune --unshallow || git fetch origin main --prune
-          
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-          
-          if [ -z "$CHANGED_FILES" ]; then
-            CHANGED_FILES=$(git diff --name-only $(git merge-base origin/main HEAD) HEAD)
-          fi
-          
+          set -euo pipefail
+
+          for d in 50 200 1000; do
+            echo "fetch origin main with depth=$d"
+            git fetch origin main --depth=$d --prune
+
+            if git merge-base origin/main HEAD >/dev/null 2>&1; then
+              echo "merge-base found with depth=$d"
+              break
+            fi
+          done
+
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD || true)
+
           echo "Changed files:"
           echo "$CHANGED_FILES"
           echo "$CHANGED_FILES" > /tmp/changed_files.txt
-          
-          # 루트 파일은 'root'로, 나머지는 폴더명만 추출
-          CHANGED_DIRS=$(echo "$CHANGED_FILES" | awk -F/ '{if (NF==1) print "root"; else print $1}' | sort -u | tr '\n' ' ')
-          
+
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
+            | awk -F/ '{if (NF==1) print "root"; else print $1}' \
+            | sort -u \
+            | tr '\n' ' ')
+
           echo "Final Dirs: [$CHANGED_DIRS]"
           echo "dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
 
