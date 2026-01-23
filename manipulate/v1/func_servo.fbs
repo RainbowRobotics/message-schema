@@ -3,14 +3,28 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "call_powercontrol"
 table Request_PowerControl {
-  power_option: int;
+  power_option:       int;
 }
 
+// "call_servocontrol"
 table Request_ServoControl {
-  servo_option: int;
+  servo_option:       int;
 }
 
+// "call_referencecontrol"
 table Request_ReferenceControl {
-  refcontrol_option: int;
+  refcontrol_option:  int;
+}
+
+// "call_joint_brake"
+table Request_JointBrake {
+  board_no:           int;
+  brake_optioin:      int;
+}
+
+// "call_joint_encoder_zero"
+table Request_JointEncoderZero {
+  board_no:           int;
 }
