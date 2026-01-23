@@ -1,9 +1,0 @@
-{
-    "recommendations": [
-        "BazelBuild.vscode-bazel",
-        "ms-vscode.cpptools",
-        "usernamehw.errorlens",
-        "floxay.vscode-flatbuffers",
-        "pkief.material-icon-theme"
-    ]
-}
