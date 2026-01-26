@@ -33,7 +33,7 @@ table Response_Network_GetNetwork {
 }
 
 // 네트워크 설정 ------------------------------------------------
-table Request_Network_SetPD {
+table Request_Network_SetNetwork {
     ssid: string;
     dhcp: bool;
     address: string;
@@ -42,7 +42,7 @@ table Request_Network_SetPD {
     dns: [string];
 }
 
-table Response_Network_SetPD {
+table Response_Network_SetNetwork {
     ssid: string;
     dhcp: bool;
     address: string;
