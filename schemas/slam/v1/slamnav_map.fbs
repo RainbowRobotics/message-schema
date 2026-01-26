@@ -1,0 +1,206 @@
+namespace SLAMNAV;
+
+table MapFileInfo {
+    map_name: string;
+    created_at: string;
+    update_at: string;
+    map_type: string;
+    map_size: float;
+}
+table MapFile {
+    file_name: string;
+    created_at: string;
+    update_at: string;
+    file_type: string;
+    cloud_info: MapFileInfo;
+    topo_info: MapFileInfo;
+}
+table Request_Map_List {
+    id: string;
+}
+table Response_Map_List {
+    id: string;
+    list: [MapFile];
+    result: string;
+    message: string;
+}
+
+table Request_Map_Delete {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Delete {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Map_Current {
+    id: string;
+}
+table Response_Map_Current {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Map_Load {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+struct CloudData {
+    x: float;
+    y: float;
+    z: float;
+    intensity: float;
+}
+
+table Request_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    // data: [ubyte];  //.../map/cloud
+    data:  [CloudData];
+    result: string;
+    message: string;
+}
+
+table Link {
+    id: string;
+    info: string;
+    speed: float;
+    method: string;
+    safety_field: int;
+}
+table Node {
+    id: string;
+    name: string;
+    pose: [float];
+    info: string;
+    links: [Link];
+    type: string;
+}
+
+table Request_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    data: [CloudData];
+    result: string;
+    message: string;
+}
+
+table Request_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    data: [CloudData];
+}
+table Response_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    // data: [Node]; -> too big
+    result: string;
+    message: string;
+}
+
+// 이거 모르겠음... 어떤 함수인지...
+table Request_Get_Map_pipe {}
+table Response_Get_Map_pipe {}
+table Request_Get_Map_Tiles {}
+table Response_Get_Map_Tiles {}
+
+//------------------------------------
+
+table Request_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+}
+table Response_Set_Map_Topology {
+    id: string;
+    map_name: string;
+    // data: [Node]; -> too big
+    result: string;
+    message: string;
+}
+
+table Request_Get_Map_Topology {
+    id: string;
+    map_name: string;
+}
+table Response_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Mapping_Start {
+    id: string;
+}
+table Response_Mapping_Start {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Stop {
+    id: string;
+}
+table Response_Mapping_Stop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Save {
+    id: string;
+    map_name: string;
+}
+table Response_Mapping_Save {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+table Request_Mapping_Cloud_Reload {}
+table Response_Mapping_Cloud_Reload {}
+
+//--------------------------------------------
+//--------------------------------------------
+table Map_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
+}
