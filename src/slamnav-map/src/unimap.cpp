@@ -137,7 +137,15 @@ void UNIMAP::load_map(QString path)
 
   bool loaded_2d = load_2d();
   bool loaded_3d = false;
-  if(loc_mode == "3D" && !config->get_use_sim())
+  // if(loc_mode == "3D" && !config->get_use_sim())
+  // {
+  //   auto future = std::async(std::launch::async, [this]()
+  //   {
+  //     return this->load_3d();
+  //   });
+  //   loaded_3d = future.get();
+  // }
+    if(loc_mode == "3D" )
   {
     auto future = std::async(std::launch::async, [this]()
     {
@@ -145,6 +153,8 @@ void UNIMAP::load_map(QString path)
     });
     loaded_3d = future.get();
   }
+
+
 
   // topo or node load
   QFileInfo node_info(QString(map_path + "/node.json"));
