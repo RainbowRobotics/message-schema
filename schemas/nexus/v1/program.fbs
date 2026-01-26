@@ -1,0 +1,62 @@
+include "flow_manager.fbs";
+
+namespace program;
+
+enum RB_Program_Sub_Task_Type: byte {
+  SUB_TASK_INSERT,
+  SUB_TASK_CHANGE,
+}
+
+table RB_Program_Task_Status {
+  task_id: string;
+  program_id: string;
+  sync_task_ids: [string];
+  node_path: [string];
+  status: string;
+  offset: int;
+}
+
+
+table RB_Program_Task_Checkpoint {
+  task_id: string;
+  program_id: string;
+  sync_task_ids: [string];
+  node_path: [string];
+  offset: int;
+  status: string;
+}
+
+table RB_Program_Dialog {
+  robot_model: string;
+  title: string;
+  content: string;
+}
+
+enum RB_Program_Log_Type: byte {
+  INFO,
+  WARNING,
+  ERROR,
+  USER,
+  DEBUG,
+  GENERAL,
+}
+
+table RB_Program_Log {
+  content: string;
+  robot_model: string;
+  type: RB_Program_Log_Type;
+}
+
+table Request_Program_At_Start {
+  task_id: string;
+}
+
+table Request_Program_At_End {
+  task_id: string;
+}
+
+table Request_Update_Sub_Task_State {
+  sub_task_id: string;
+  sub_task_type: RB_Program_Sub_Task_Type;
+  state: flow_manager.RB_Flow_Manager_ProgramState;
+}
