@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.program.Response_Exec_Control_Program import Response_Exec_Control_Program
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,6 +16,10 @@ class Response_Exec_Control_Program(object):
   def ManipulateReturnValue(self) -> int: ...
 class Response_Exec_Control_ProgramT(object):
   manipulateReturnValue: int
+  def __init__(
+    self,
+    manipulateReturnValue: int = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Exec_Control_ProgramT: ...
   @classmethod

@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.IPC.Request_Save_Area_Para import Request_Save_Area_Para
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -40,6 +38,21 @@ class Request_Save_Area_ParaT(object):
   areaPara0: float
   areaPara1: float
   areaPara2: float
+  def __init__(
+    self,
+    areaNo: int = ...,
+    areaName: str | None = ...,
+    areaType: int = ...,
+    areaX: float = ...,
+    areaY: float = ...,
+    areaZ: float = ...,
+    areaRx: float = ...,
+    areaRy: float = ...,
+    areaRz: float = ...,
+    areaPara0: float = ...,
+    areaPara1: float = ...,
+    areaPara2: float = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_Area_ParaT: ...
   @classmethod

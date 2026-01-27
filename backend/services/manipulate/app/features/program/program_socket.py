@@ -15,17 +15,17 @@ program_service = ProgramService()
 
 
 @program_socket_router.on("{robot_model}/call_resume")
-async def on_call_resume(robot_model: str):
+async def on_call_resume(data, robot_model: str):
     return to_json(await program_service.call_resume(robot_model=robot_model))
 
 
 @program_socket_router.on("{robot_model}/call_pause")
-async def on_call_pause(robot_model: str):
+async def on_call_pause(data, robot_model: str):
     return to_json(await program_service.call_pause(robot_model=robot_model))
 
 
 @program_socket_router.on("{robot_model}/call_halt")
-async def on_call_halt(robot_model: str):
+async def on_call_halt(data, robot_model: str):
     return to_json(await program_service.call_halt(robot_model=robot_model))
 
 
