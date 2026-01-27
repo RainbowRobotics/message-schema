@@ -42,15 +42,15 @@ class MoveInputType(BaseModel):
     pnt_para: float
 
 
-class Request_Move_SmoothJogJPD(BaseModel):
+class Request_MoveSmoothJogJPD(BaseModel):
     target: MoveInputTarget
 
 
-class Request_Move_SmoothJogLPD(BaseModel):
+class Request_MoveSmoothJogLPD(BaseModel):
     target: MoveInputTarget
 
 
-class Request_Move_SmoothJogStopPD(BaseModel):
+class Request_MoveSmoothJogStopPD(BaseModel):
     stoptime: float
 
 
@@ -74,10 +74,22 @@ class Request_MoveTickJogLPD(BaseModel):
     speed: MoveInputSpeed
 
 
+class Request_MoveJBClrPD(BaseModel):
+    pass
+
+
 class Request_MoveJBAddPD(BaseModel):
     target: MoveInputTarget
     speed: MoveInputSpeed
     type: MoveInputType
+
+
+class Request_MoveJBRunPD(BaseModel):
+    pass
+
+
+class Request_MoveLBClrPD(BaseModel):
+    pass
 
 
 class Request_MoveLBAddPD(BaseModel):
@@ -90,6 +102,10 @@ class Request_MoveLBRunPD(BaseModel):
     orientation: int
 
 
+class Request_MoveXBClrPD(BaseModel):
+    pass
+
+
 class Request_MoveXBAddPD(BaseModel):
     target: MoveInputTarget
     speed: MoveInputSpeed
@@ -100,14 +116,17 @@ class Request_MoveXBAddPD(BaseModel):
 class Request_MoveXBRunPD(BaseModel):
     running_mode: int
 
+
 class Request_GetRelativeValuePD(BaseModel):
     relative_value: MoveInputTarget
     reference_value: MoveInputTarget
     move_type: int
 
+
 class Response_GetRelativeValuePD(BaseModel):
     calculated_result: int
     calculated_value: MoveInputTarget
+
 
 class Request_RelativeMovePD(BaseModel):
     relative_value: MoveInputTarget

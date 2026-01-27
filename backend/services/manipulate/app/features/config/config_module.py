@@ -158,8 +158,7 @@ class ConfigService(BaseService):
 
 
     async def save_tool_list_parameter(
-        self, robot_model: str, *, request: Request_Save_Tool_List_ParameterPD
-    ):
+        self, robot_model: str, *, request: Request_Save_Tool_List_ParameterPD):
         req = Request_Save_Tool_List_ParaT()
         req.toolNo = request.tool_no
         req.toolName = request.tool_name

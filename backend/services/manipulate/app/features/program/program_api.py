@@ -12,17 +12,21 @@ from .program_module import (
 from .program_schema import (
     Request_MotionHaltPD,
     Request_MotionSpeedBarPD,
-    Request_Move_SmoothJogJPD,
-    Request_Move_SmoothJogLPD,
-    Request_Move_SmoothJogStopPD,
     Request_MoveJBAddPD,
+    Request_MoveJBClrPD,
+    Request_MoveJBRunPD,
     Request_MoveJPD,
     Request_MoveLBAddPD,
+    Request_MoveLBClrPD,
     Request_MoveLBRunPD,
     Request_MoveLPD,
+    Request_MoveSmoothJogJPD,
+    Request_MoveSmoothJogLPD,
+    Request_MoveSmoothJogStopPD,
     Request_MoveTickJogJPD,
     Request_MoveTickJogLPD,
     Request_MoveXBAddPD,
+    Request_MoveXBClrPD,
     Request_MoveXBRunPD,
     Request_PausePD,
     Request_ProgramAfterPD,
@@ -41,19 +45,19 @@ program_router = APIRouter(tags=["Program"])
 
 @program_router.post("/{robot_model}/call_resume", response_model=Response_ReturnValuePD)
 async def call_resume(robot_model: str, request: Request_ResumePD):
-    res = await program_service.call_resume(robot_model=robot_model)
+    res = await program_service.call_resume(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_pause", response_model=Response_ReturnValuePD)
 async def call_pause(robot_model: str, request: Request_PausePD):
-    res = await program_service.call_pause(robot_model=robot_model)
+    res = await program_service.call_pause(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_halt", response_model=Response_ReturnValuePD)
 async def call_halt(robot_model: str, request: Request_MotionHaltPD):
-    res = await program_service.call_halt(robot_model=robot_model)
+    res = await program_service.call_halt(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
@@ -77,19 +81,19 @@ def call_speedbar(robot_model: str, request: Request_MotionSpeedBarPD):
 
 
 @program_router.post("/{robot_model}/call_smoothjog_j", response_model=Response_ReturnValuePD)
-def call_smoothjog_j(robot_model: str, request: Request_Move_SmoothJogJPD):
+def call_smoothjog_j(robot_model: str, request: Request_MoveSmoothJogJPD):
     res = program_service.call_smoothjog_j(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_l", response_model=Response_ReturnValuePD)
-def call_smoothjog_l(robot_model: str, request: Request_Move_SmoothJogLPD):
+def call_smoothjog_l(robot_model: str, request: Request_MoveSmoothJogLPD):
     res = program_service.call_smoothjog_l(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_stop", response_model=Response_ReturnValuePD)
-def call_smoothjog_stop(robot_model: str, request: Request_Move_SmoothJogStopPD):
+def call_smoothjog_stop(robot_model: str, request: Request_MoveSmoothJogStopPD):
     res = program_service.call_smoothjog_stop(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
@@ -125,8 +129,8 @@ def call_move_l(robot_model: str, request: Request_MoveLPD):
 # ==============================================================================
 
 @program_router.post("/{robot_model}/call_move_jb_clr", response_model=Response_ReturnValuePD)
-async def call_move_jb_clr(robot_model: str):
-    res = await program_service.call_move_jb_clr(robot_model=robot_model)
+async def call_move_jb_clr(robot_model: str, request: Request_MoveJBClrPD):
+    res = await program_service.call_move_jb_clr(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
@@ -137,14 +141,14 @@ async def call_move_jb_add(robot_model: str, request: Request_MoveJBAddPD):
 
 
 @program_router.post("/{robot_model}/call_move_jb_run", response_model=Response_ReturnValuePD)
-async def call_move_jb_run(robot_model: str):
-    res = await program_service.call_move_jb_run(robot_model=robot_model)
+async def call_move_jb_run(robot_model: str, request: Request_MoveJBRunPD):
+    res = await program_service.call_move_jb_run(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_move_lb_clr", response_model=Response_ReturnValuePD)
-async def call_move_lb_clr(robot_model: str):
-    res = await program_service.call_move_lb_clr(robot_model=robot_model)
+async def call_move_lb_clr(robot_model: str, request: Request_MoveLBClrPD):
+    res = await program_service.call_move_lb_clr(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
@@ -161,8 +165,8 @@ async def call_move_lb_run(robot_model: str, request: Request_MoveLBRunPD):
 
 
 @program_router.post("/{robot_model}/call_move_xb_clr", response_model=Response_ReturnValuePD)
-async def call_move_xb_clr(robot_model: str):
-    res = await program_service.call_move_xb_clr(robot_model=robot_model)
+async def call_move_xb_clr(robot_model: str, request: Request_MoveXBClrPD):
+    res = await program_service.call_move_xb_clr(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
