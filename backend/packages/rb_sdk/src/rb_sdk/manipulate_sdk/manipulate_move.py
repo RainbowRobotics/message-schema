@@ -609,6 +609,8 @@ class RBManipulateMoveSDK(RBBaseSDK):
         req.target.tarFrame = target["tar_frame"]
         req.target.tarUnit = target["tar_unit"]
 
+        req.speed = MoveInput_SpeedT()
+
         req.speed.spdMode = speed.get("spd_mode", 1)
         req.speed.spdVelPara = speed.get("spd_vel_para", 60)
         req.speed.spdAccPara = speed.get("spd_acc_para", 120)
@@ -653,6 +655,8 @@ class RBManipulateMoveSDK(RBBaseSDK):
         req.target.tarValues = ni
         req.target.tarFrame = target["tar_frame"]
         req.target.tarUnit = target["tar_unit"]
+
+        req.speed = MoveInput_SpeedT()
 
         req.speed.spdMode = speed.get("spd_mode", 1)
         req.speed.spdVelPara = speed.get("spd_vel_para", 60)

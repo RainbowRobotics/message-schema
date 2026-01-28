@@ -40,111 +40,112 @@ class IoService(BaseService):
     # ==========================================================================
 
     def call_side_dout(self, robot_model: str, request: Request_SideDout_GeneralPD):
-        req_dict = Request_SideDout_GeneralPD.model_validate(t_to_dict(request)).model_dump()
-
         res = rb_manipulate_sdk.io.call_side_dout(
             robot_model=robot_model,
-            port_num=req_dict["port_num"],
-            desired_out=req_dict["desired_out"],
+            port_num=request.port_num,
+            desired_out=request.desired_out
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_side_dout_toggle(self, robot_model: str, request: Request_SideDout_TogglePD):
-        req_dict = Request_SideDout_TogglePD.model_validate(t_to_dict(request)).model_dump()
-
         res = rb_manipulate_sdk.io.call_side_dout_toggle(
             robot_model=robot_model,
-            port_num=req_dict["port_num"],
+            port_num=request.port_num
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_side_dout_bitcombination(self, robot_model: str, request: Request_SideDout_BitcombinationPD):
-        req_dict = Request_SideDout_BitcombinationPD.model_validate(t_to_dict(request)).model_dump()
-
         res = rb_manipulate_sdk.io.call_side_dout_bitcombination(
             robot_model=robot_model,
-            port_start=req_dict["port_start"],
-            port_end=req_dict["port_end"],
-            desired_value=req_dict["desired_value"],
-            direction_option=req_dict["direction_option"],
+            port_start=request.port_start,
+            port_end=request.port_end,
+            desired_value=request.desired_value,
+            direction_option=request.direction_option
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_side_dout_pulse(self, robot_model: str, request: Request_SideDout_PulsePD):
-        req_dict = Request_SideDout_PulsePD.model_validate(t_to_dict(request)).model_dump()
-
         res = rb_manipulate_sdk.io.call_side_dout_pulse(
             robot_model=robot_model,
-            port_num=req_dict["port_num"],
-            block_mode=req_dict["block_mode"],
-            direction=req_dict["direction"],
-            time_1=req_dict["time_1"],
-            time_2=req_dict["time_2"],
-            time_3=req_dict["time_3"],
+            port_num=request.port_num,
+            block_mode=request.block_mode,
+            direction=request.direction,
+            time_1=request.time_1,
+            time_2=request.time_2,
+            time_3=request.time_3
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_multiple_side_dout(self, robot_model: str, request: Request_Multiple_SideDoutPD):
-        req_dict = Request_Multiple_SideDoutPD.model_validate(t_to_dict(request)).model_dump()
+        args_dict_list = [item.model_dump() for item in request.side_dout_args]
 
         res = rb_manipulate_sdk.io.call_multiple_side_dout(
             robot_model=robot_model,
-            side_dout_args=req_dict["side_dout_args"],
+            side_dout_args=args_dict_list
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_multiple_side_dout_toggle(self, robot_model: str, request: Request_Multiple_SideDoutTogglePD):
-        req_dict = Request_Multiple_SideDoutTogglePD.model_validate(t_to_dict(request)).model_dump()
+        args_dict_list = [item.model_dump() for item in request.side_dout_args]
 
         res = rb_manipulate_sdk.io.call_multiple_side_dout_toggle(
             robot_model=robot_model,
-            side_dout_args=req_dict["side_dout_args"],
+            side_dout_args=args_dict_list
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_multiple_side_dout_bitcombination(self, robot_model: str, request: Request_Multiple_SideDoutBitcombinationPD):
-        req_dict = Request_Multiple_SideDoutBitcombinationPD.model_validate(t_to_dict(request)).model_dump()
+        args_dict_list = [item.model_dump() for item in request.side_dout_args]
 
         res = rb_manipulate_sdk.io.call_multiple_side_dout_bitcombination(
             robot_model=robot_model,
-            side_dout_args=req_dict["side_dout_args"],
+            side_dout_args=args_dict_list
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_multiple_side_dout_pulse(self, robot_model: str, request: Request_Multiple_SideDoutPulsePD):
-        req_dict = Request_Multiple_SideDoutPulsePD.model_validate(t_to_dict(request)).model_dump()
+        args_dict_list = [item.model_dump() for item in request.side_dout_args]
 
         res = rb_manipulate_sdk.io.call_multiple_side_dout_pulse(
             robot_model=robot_model,
-            side_dout_args=req_dict["side_dout_args"],
+            side_dout_args=args_dict_list
         )
-        return res
+
+        return t_to_dict(res)
 
 
     def call_side_aout(self, robot_model: str, request: Request_SideAout_GeneralPD):
-        req_dict = Request_SideAout_GeneralPD.model_validate(t_to_dict(request)).model_dump()
-
-        return rb_manipulate_sdk.io.call_side_aout(
+        res = rb_manipulate_sdk.io.call_side_aout(
             robot_model=robot_model,
-            port_num=req_dict["port_num"],
-            desired_voltage=req_dict["desired_voltage"],
+            port_num=request.port_num,
+            desired_voltage=request.desired_voltage
         )
 
+        return t_to_dict(res)
 
     def call_multiple_side_aout(self, robot_model: str, request: Request_Multiple_SideAoutPD):
-        req_dict = Request_Multiple_SideAoutPD.model_validate(t_to_dict(request)).model_dump()
+        args_dict_list = [item.model_dump() for item in request.side_aout_args]
 
-        return rb_manipulate_sdk.io.call_multiple_side_aout(
+        res = rb_manipulate_sdk.io.call_multiple_side_aout(
             robot_model=robot_model,
-            side_aout_args=req_dict["side_aout_args"],
+            side_aout_args=args_dict_list
         )
+
+        return t_to_dict(res)
 
     # ==========================================================================
     # 2. IO Configuration (DIN/DOUT)
@@ -162,7 +163,7 @@ class IoService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
-        return res["dict_payload"]
+        return t_to_dict(res)["dict_payload"]
 
 
     async def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_SpecialFuncPD):
@@ -176,7 +177,7 @@ class IoService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
-        return res["dict_payload"]
+        return t_to_dict(res)["dict_payload"]
 
 
     async def save_side_din_filter(self, robot_model: str, *, request: Request_Save_SideDin_FilterCountPD):
@@ -190,7 +191,7 @@ class IoService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
-        return res["dict_payload"]
+        return t_to_dict(res)["dict_payload"]
 
     # ==========================================================================
     # 3. Flange IO Control
@@ -206,7 +207,7 @@ class IoService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
-        return res["dict_payload"]
+        return t_to_dict(res)["dict_payload"]
 
 
     async def call_flange_dout(self, robot_model: str, request: Request_Flange_Digital_OutPD):
@@ -220,4 +221,4 @@ class IoService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
-        return res["dict_payload"]
+        return t_to_dict(res)["dict_payload"]
