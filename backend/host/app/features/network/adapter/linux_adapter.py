@@ -8,8 +8,8 @@ from typing import Optional, Dict, List, Tuple
 from rb_flat_buffers.IPC.Network import NetworkT
 from rb_modules.log import rb_log
 from rb_utils.service_exception import ServiceException
-from .port.network_port import NetworkPort
-from .domain.network import Network, NetworkModel
+from app.features.network.port.network_port import NetworkPort
+from app.features.network.domain.network import Network, NetworkModel
 from rb_flat_buffers.IPC.Wifi import WifiT
 
 
@@ -230,7 +230,7 @@ def wifi_signal_from_proc(device: str) -> Optional[int]:
             return None
     return None
 
-class NetworkNmcliAdapter(NetworkPort):
+class NetworkLinuxAdapter(NetworkPort):
     """
     [Network NMCLI 어댑터]
     """

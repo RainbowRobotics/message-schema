@@ -49,6 +49,7 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 .PHONY: backend.host
 backend.host: ## host 서비스 실행
 	@bash ${ROOT_DIR}scripts/backend/generate-host.sh
+
 .PHONY: backend.build
 backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
