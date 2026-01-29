@@ -24,6 +24,14 @@ find_library(SIOCLIENT_TLS_LIB
     PATHS /usr/local/lib /usr/lib
 )
 
+# zenoh
+find_package(zenohc REQUIRED)
+find_package(zenohcxx REQUIRED)
+
+# flatbuffers
+set(FLATBUFFERS_INCLUDE_DIR /tmp/flatbuffers/include)
+set(FLATBUFFERS_GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc/flatbuffer/generated)
+
 # ---- Sources ----
 file(GLOB_RECURSE COMMUNICATION_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE COMMUNICATION_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp)
@@ -49,6 +57,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${CMAKE_SOURCE_DIR}/src/ui/inc
     ${CMAKE_SOURCE_DIR}/src/slamnav-debug/inc
+    ${FLATBUFFERS_INCLUDE_DIR}
+    ${FLATBUFFERS_GENERATED_DIR}
 )
 
 # ---- link ----
@@ -64,6 +74,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt${QT_VERSION_MAJOR}::Core
         ${SIOCLIENT_LIB}
         ${SIOCLIENT_TLS_LIB}
+        zenohcxx::zenohc
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_communication")

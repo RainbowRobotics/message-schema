@@ -1,0 +1,323 @@
+/**
+ * @file comm_zenoh_update.cpp
+ * @brief Software Update 도메인 Zenoh 통신 구현
+ *
+ * RPC (Queryable):
+ *   - software/update
+ *   - software/getVersion
+ *
+ * Publisher:
+ *   - software/result
+ */
+
+#include "comm_zenoh.h"
+#include "global_defines.h"
+#include "slamnav_update_generated.h"
+
+#include <QDebug>
+#include <QProcess>
+#include <QFile>
+#include <QTextStream>
+#include <chrono>
+#include <functional>
+
+namespace
+{
+    const char* MODULE_NAME = "COMM_ZENOH_UPDATE";
+    const char* UPDATE_SCRIPT_PATH = "/home/rainbow/rainbow-deploy-kit/slamnav2/slamnav2-update.sh";
+    const char* VERSION_FILE_PATH = "/home/rainbow/slamnav2/version.txt";
+
+    // =========================================================================
+    // Helper: Update_Result FlatBuffer
+    // =========================================================================
+    std::vector<uint8_t> build_update_result(const QString& id,
+                                              const QString& result,
+                                              const QString& message)
+    {
+        flatbuffers::FlatBufferBuilder fbb(256);
+
+        auto fb_result = SLAMNAV::CreateUpdate_Result(
+            fbb,
+            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(result.toStdString()),
+            fbb.CreateString(message.toStdString())
+        );
+        fbb.Finish(fb_result);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    // =========================================================================
+    // Helper: Build Response FlatBuffers
+    // =========================================================================
+
+    // Response_Update
+    std::vector<uint8_t> build_response_update(
+        const QString& id,
+        const QString& branch,
+        const QString& version,
+        const QString& result,
+        const QString& message)
+    {
+        flatbuffers::FlatBufferBuilder fbb(512);
+
+        auto resp = SLAMNAV::CreateResponse_Update(
+            fbb,
+            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(branch.toStdString()),
+            fbb.CreateString(version.toStdString()),
+            fbb.CreateString(result.toStdString()),
+            fbb.CreateString(message.toStdString())
+        );
+        fbb.Finish(resp);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    // Response_Current_Version
+    std::vector<uint8_t> build_response_get_version(
+        const QString& id,
+        const QString& version,
+        const QString& result,
+        const QString& message)
+    {
+        flatbuffers::FlatBufferBuilder fbb(512);
+
+        auto resp = SLAMNAV::CreateResponse_Current_Version(
+            fbb,
+            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(version.toStdString()),
+            fbb.CreateString(result.toStdString()),
+            fbb.CreateString(message.toStdString())
+        );
+        fbb.Finish(resp);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    // =========================================================================
+    // Helper: Read current version from file
+    // =========================================================================
+    QString read_current_version()
+    {
+        QFile file(VERSION_FILE_PATH);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            return "";
+        }
+
+        QTextStream in(&file);
+        QString version = in.readLine().trimmed();
+        file.close();
+        return version;
+    }
+
+} // anonymous namespace
+
+// =============================================================================
+// update_loop
+// =============================================================================
+void COMM_ZENOH::update_loop()
+{
+    // 1. robotType 대기
+    while (get_robot_type().empty())
+    {
+        if (!is_update_running_.load()) return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    // 2. Session 유효성 확인
+    if (!is_session_valid())
+    {
+        qWarning() << "[" << MODULE_NAME << "] Session not valid, exiting update_loop";
+        return;
+    }
+
+    // 3. Topic 생성
+    std::string topic_update      = make_topic(ZENOH_TOPIC::SW_UPDATE);
+    std::string topic_get_version = make_topic(ZENOH_TOPIC::SW_GET_VERSION);
+    std::string topic_result      = make_topic(ZENOH_TOPIC::SW_RESULT);
+
+    qDebug() << "[" << MODULE_NAME << "] Topics:";
+    qDebug() << "  - update:" << QString::fromStdString(topic_update);
+    qDebug() << "  - getVersion:" << QString::fromStdString(topic_get_version);
+    qDebug() << "  - result:" << QString::fromStdString(topic_result);
+
+    auto& session = zenoh_session_->get_session();
+
+    // 4. Result Publisher 등록
+    auto pub_result = session.declare_publisher(
+        zenoh::KeyExpr(topic_result),
+        zenoh::Session::PublisherOptions::create_default()
+    );
+
+    // =========================================================================
+    // 5. Queryable: update (소프트웨어 업데이트 실행)
+    // =========================================================================
+    auto q_update = session.declare_queryable(
+        zenoh::KeyExpr(topic_update),
+        [this, &pub_result](const zenoh::Query& query) {
+            QString id = "";
+            QString branch = "";
+            QString version = "";
+            QString result_str = "reject";
+            QString message = "";
+
+            auto payload_opt = query.get_payload();
+            if (!payload_opt.has_value())
+            {
+                message = "no payload";
+            }
+            else
+            {
+                auto payload_bytes = payload_opt->get().as_vector();
+                auto req = SLAMNAV::GetRequest_Update(payload_bytes.data());
+                if (!req || !req->id())
+                {
+                    message = "invalid request";
+                }
+                else
+                {
+                    id = QString::fromStdString(req->id()->str());
+                    branch = req->branch() ? QString::fromStdString(req->branch()->str()) : "";
+                    version = req->version() ? QString::fromStdString(req->version()->str()) : "";
+
+                    if (!mobile)
+                    {
+                        message = "mobile not connected";
+                    }
+                    else
+                    {
+                        MOBILE_STATUS ms = mobile->get_status();
+
+                        // 충전 중이거나 모터 정지 상태일 때만 업데이트 허용
+                        if (ms.charge_state != 1 && ms.motor_stop_state != 0)
+                        {
+                            message = "robot must be charging or motor stopped";
+                        }
+                        else
+                        {
+                            // 업데이트 스크립트 실행
+                            QStringList args;
+                            args << UPDATE_SCRIPT_PATH;
+
+                            if (!version.isEmpty())
+                            {
+                                args << ("--version=" + version);
+                            }
+                            if (!branch.isEmpty())
+                            {
+                                args << ("--mode=" + branch);
+                            }
+
+                            bool ok = QProcess::startDetached("bash", args, QString());
+                            if (ok)
+                            {
+                                result_str = "accept";
+                                qDebug() << "[" << MODULE_NAME << "] Update script started:"
+                                         << "branch=" << branch << ", version=" << version;
+                            }
+                            else
+                            {
+                                message = "failed to start update script";
+                            }
+                        }
+                    }
+                }
+            }
+
+            auto resp_buf = build_response_update(id, branch, version, result_str, message);
+            query.reply(
+                zenoh::KeyExpr(query.get_keyexpr()),
+                zenoh::Bytes(std::move(resp_buf))
+            );
+
+            if (result_str == "accept" && !id.isEmpty())
+            {
+                auto result_buf = build_update_result(id, "success", "");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
+            }
+        },
+        zenoh::closures::none,
+        zenoh::Session::QueryableOptions::create_default()
+    );
+
+    // =========================================================================
+    // 6. Queryable: getVersion (현재 버전 조회)
+    // =========================================================================
+    auto q_get_version = session.declare_queryable(
+        zenoh::KeyExpr(topic_get_version),
+        [this, &pub_result](const zenoh::Query& query) {
+            QString id = "";
+            QString version = "";
+            QString result_str = "reject";
+            QString message = "";
+
+            auto payload_opt = query.get_payload();
+            if (!payload_opt.has_value())
+            {
+                message = "no payload";
+            }
+            else
+            {
+                auto payload_bytes = payload_opt->get().as_vector();
+                auto req = SLAMNAV::GetRequest_Current_Version(payload_bytes.data());
+                if (!req || !req->id())
+                {
+                    message = "invalid request";
+                }
+                else
+                {
+                    id = QString::fromStdString(req->id()->str());
+
+                    // 버전 파일에서 현재 버전 읽기
+                    version = read_current_version();
+                    if (version.isEmpty())
+                    {
+                        // 버전 파일이 없으면 빌드 타임 버전 사용
+                        version = QString(SLAMNAV_VERSION);
+                    }
+
+                    if (!version.isEmpty())
+                    {
+                        result_str = "accept";
+                    }
+                    else
+                    {
+                        message = "version not available";
+                    }
+                }
+            }
+
+            auto resp_buf = build_response_get_version(id, version, result_str, message);
+            query.reply(
+                zenoh::KeyExpr(query.get_keyexpr()),
+                zenoh::Bytes(std::move(resp_buf))
+            );
+
+            if (result_str == "accept" && !id.isEmpty())
+            {
+                auto result_buf = build_update_result(id, "success", "");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
+            }
+        },
+        zenoh::closures::none,
+        zenoh::Session::QueryableOptions::create_default()
+    );
+
+    qDebug() << "[" << MODULE_NAME << "] All queryables registered, entering main loop";
+
+    // =========================================================================
+    // 7. Main loop (keep alive)
+    // =========================================================================
+    while (is_update_running_.load())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    qDebug() << "[" << MODULE_NAME << "] Exiting update_loop";
+    // RAII: 리소스 자동 해제
+}

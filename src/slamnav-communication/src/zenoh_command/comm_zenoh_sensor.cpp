@@ -1,0 +1,262 @@
+/**
+ * @file comm_zenoh_sensor.cpp
+ * @brief Sensor 데이터 Publisher 구현
+ *
+ * Publisher Topics:
+ *   - {robotType}/lidar2d       : 2D 라이다 데이터
+ *   - {robotType}/lidar3d       : 3D 라이다 데이터
+ *   - {robotType}/mappingCloud  : 매핑 클라우드 데이터 (매핑 중일 때만)
+ *
+ * 스키마: slamnav_socket.fbs
+ */
+
+#include "comm_zenoh.h"
+#include "global_defines.h"
+#include "slamnav_socket_generated.h"
+
+#include <QDebug>
+#include <chrono>
+
+namespace
+{
+    const char* MODULE_NAME = "COMM_ZENOH_SENSOR";
+
+    // 발행 주기 (밀리초)
+    constexpr int LIDAR_2D_INTERVAL_MS = 100;       // 100ms
+    constexpr int LIDAR_3D_INTERVAL_MS = 100;       // 100ms
+    constexpr int MAPPING_CLOUD_INTERVAL_MS = 500;  // 500ms
+
+    // =========================================================================
+    // Helper: Build FlatBuffer Messages
+    // =========================================================================
+
+    /**
+     * @brief Lidar_2D FlatBuffer 메시지 생성
+     */
+    std::vector<uint8_t> build_lidar_2d(float timestamp, const std::vector<SLAMNAV::Point2D>& points)
+    {
+        flatbuffers::FlatBufferBuilder fbb(points.size() * sizeof(SLAMNAV::Point2D) + 256);
+
+        auto msg = SLAMNAV::CreateLidar_2D(
+            fbb,
+            timestamp,
+            fbb.CreateVectorOfStructs(points)
+        );
+        fbb.Finish(msg);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    /**
+     * @brief Lidar_3D FlatBuffer 메시지 생성
+     */
+    std::vector<uint8_t> build_lidar_3d(float timestamp, const std::vector<SLAMNAV::Point3D>& points)
+    {
+        flatbuffers::FlatBufferBuilder fbb(points.size() * sizeof(SLAMNAV::Point3D) + 256);
+
+        auto msg = SLAMNAV::CreateLidar_3D(
+            fbb,
+            timestamp,
+            fbb.CreateVectorOfStructs(points)
+        );
+        fbb.Finish(msg);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    /**
+     * @brief Mapping_Cloud FlatBuffer 메시지 생성
+     */
+    std::vector<uint8_t> build_mapping_cloud(float timestamp, const std::vector<SLAMNAV::Point3D>& points)
+    {
+        flatbuffers::FlatBufferBuilder fbb(points.size() * sizeof(SLAMNAV::Point3D) + 256);
+
+        auto msg = SLAMNAV::CreateMapping_Cloud(
+            fbb,
+            timestamp,
+            fbb.CreateVectorOfStructs(points)
+        );
+        fbb.Finish(msg);
+
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+} // anonymous namespace
+
+// =============================================================================
+// sensor_loop
+// =============================================================================
+void COMM_ZENOH::sensor_loop()
+{
+    qDebug() << "[" << MODULE_NAME << "] sensor_loop started";
+
+    // 1. robotType 대기
+    while (is_sensor_running_.load() && get_robot_type().empty())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    if (!is_sensor_running_.load())
+    {
+        qDebug() << "[" << MODULE_NAME << "] sensor_loop aborted (not running)";
+        return;
+    }
+
+    // 2. Session 유효성 확인
+    if (!is_session_valid())
+    {
+        qDebug() << "[" << MODULE_NAME << "] sensor_loop aborted (session invalid)";
+        return;
+    }
+
+    try
+    {
+        zenoh::Session& session = get_session();
+
+        // 3. Topic 생성
+        std::string topic_lidar_2d      = make_topic(ZENOH_TOPIC::LIDAR_2D);
+        std::string topic_lidar_3d      = make_topic(ZENOH_TOPIC::LIDAR_3D);
+        std::string topic_mapping_cloud = make_topic(ZENOH_TOPIC::MAPPING_CLOUD);
+
+        qDebug() << "[" << MODULE_NAME << "] Registering topics with prefix:" << QString::fromStdString(get_robot_type());
+
+        // 4. Publishers 등록
+        auto pub_lidar_2d = session.declare_publisher(zenoh::KeyExpr(topic_lidar_2d));
+        auto pub_lidar_3d = session.declare_publisher(zenoh::KeyExpr(topic_lidar_3d));
+        auto pub_mapping_cloud = session.declare_publisher(zenoh::KeyExpr(topic_mapping_cloud));
+
+        qDebug() << "[" << MODULE_NAME << "] Publishers registered:";
+        qDebug() << "  - lidar2d:" << QString::fromStdString(topic_lidar_2d);
+        qDebug() << "  - lidar3d:" << QString::fromStdString(topic_lidar_3d);
+        qDebug() << "  - mappingCloud:" << QString::fromStdString(topic_mapping_cloud);
+
+        // 타이밍 관리
+        auto last_lidar_2d_time = std::chrono::steady_clock::now();
+        auto last_lidar_3d_time = std::chrono::steady_clock::now();
+        auto last_mapping_cloud_time = std::chrono::steady_clock::now();
+
+        const auto lidar_2d_interval = std::chrono::milliseconds(LIDAR_2D_INTERVAL_MS);
+        const auto lidar_3d_interval = std::chrono::milliseconds(LIDAR_3D_INTERVAL_MS);
+        const auto mapping_cloud_interval = std::chrono::milliseconds(MAPPING_CLOUD_INTERVAL_MS);
+
+        // 마지막 발행 시간 (중복 발행 방지)
+        double last_lidar_2d_t = 0.0;
+        double last_lidar_3d_t = 0.0;
+
+        // =====================================================================
+        // 5. Main loop
+        // =====================================================================
+        while (is_sensor_running_.load())
+        {
+            auto now = std::chrono::steady_clock::now();
+
+            // -----------------------------------------------------------------
+            // Lidar 2D 발행
+            // -----------------------------------------------------------------
+            if (lidar_2d && lidar_2d->get_is_connected() &&
+                now - last_lidar_2d_time >= lidar_2d_interval)
+            {
+                FRAME frm = lidar_2d->get_cur_frm();
+
+                // 새로운 데이터만 발행 (timestamp 비교)
+                if (frm.t > last_lidar_2d_t && !frm.pts.empty())
+                {
+                    std::vector<SLAMNAV::Point2D> points;
+                    points.reserve(frm.pts.size());
+
+                    for (const auto& pt : frm.pts)
+                    {
+                        points.emplace_back(
+                            static_cast<float>(pt[0]),
+                            static_cast<float>(pt[1])
+                        );
+                    }
+
+                    auto buf = build_lidar_2d(static_cast<float>(frm.t), points);
+                    pub_lidar_2d.put(zenoh::Bytes::serialize(buf));
+
+                    last_lidar_2d_t = frm.t;
+                }
+                last_lidar_2d_time = now;
+            }
+
+            // -----------------------------------------------------------------
+            // Lidar 3D 발행
+            // -----------------------------------------------------------------
+            if (lidar_3d && lidar_3d->get_is_connected() &&
+                now - last_lidar_3d_time >= lidar_3d_interval)
+            {
+                TIME_PTS frm = lidar_3d->get_cur_frm();
+
+                // 새로운 데이터만 발행 (timestamp 비교)
+                if (frm.t > last_lidar_3d_t && !frm.pts.empty())
+                {
+                    std::vector<SLAMNAV::Point3D> points;
+                    points.reserve(frm.pts.size());
+
+                    for (const auto& pt : frm.pts)
+                    {
+                        points.emplace_back(
+                            static_cast<float>(pt[0]),
+                            static_cast<float>(pt[1]),
+                            static_cast<float>(pt[2])
+                        );
+                    }
+
+                    auto buf = build_lidar_3d(static_cast<float>(frm.t), points);
+                    pub_lidar_3d.put(zenoh::Bytes::serialize(buf));
+
+                    last_lidar_3d_t = frm.t;
+                }
+                last_lidar_3d_time = now;
+            }
+
+            // -----------------------------------------------------------------
+            // Mapping Cloud 발행 (매핑 중일 때만)
+            // -----------------------------------------------------------------
+            if (mapping && mapping->get_is_mapping() &&
+                now - last_mapping_cloud_time >= mapping_cloud_interval)
+            {
+                auto cloud_ptr = mapping->get_live_cloud_pts();
+
+                if (cloud_ptr && !cloud_ptr->empty())
+                {
+                    std::vector<SLAMNAV::Point3D> points;
+                    points.reserve(cloud_ptr->size());
+
+                    for (const auto& pt : *cloud_ptr)
+                    {
+                        points.emplace_back(
+                            static_cast<float>(pt.x),
+                            static_cast<float>(pt.y),
+                            static_cast<float>(pt.z)
+                        );
+                    }
+
+                    float timestamp = static_cast<float>(get_time0());
+                    auto buf = build_mapping_cloud(timestamp, points);
+                    pub_mapping_cloud.put(zenoh::Bytes::serialize(buf));
+                }
+                last_mapping_cloud_time = now;
+            }
+
+            // CPU 사용량 최소화
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        qDebug() << "[" << MODULE_NAME << "] sensor_loop ending, resources will be released";
+    }
+    catch (const zenoh::ZException& e)
+    {
+        qDebug() << "[" << MODULE_NAME << "] Zenoh exception:" << e.what();
+    }
+    catch (const std::exception& e)
+    {
+        qDebug() << "[" << MODULE_NAME << "] Exception:" << e.what();
+    }
+
+    qDebug() << "[" << MODULE_NAME << "] sensor_loop ended";
+}
