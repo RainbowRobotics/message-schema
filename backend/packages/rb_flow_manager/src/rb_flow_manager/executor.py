@@ -131,6 +131,15 @@ def _execute_tree_in_process(
             if e.sub_task_tree is None:
                 raise RuntimeError("SubTask: Tree is not found.") from e
 
+            # 서브태스크 flags 등록
+            ctx.emit_subtask_sync_register(
+                e.sub_task_tree,
+                e.sub_task_post_tree,
+                "CHANGE"
+            )
+
+            time.sleep(0.05)  # executor가 처리할 시간
+
             if e.sub_task_post_tree is not None:
                 post_tree_ref["value"] = e.sub_task_post_tree
             else:
@@ -196,7 +205,7 @@ def _execute_tree_in_process(
             step_mode=step_mode,
         )
 
-        # Sync 레지스트리 설정 (sync_parties 제거)
+        # Sync 레지스트리 설정
         ctx.sync_members = sync_members
         ctx.sync_state = sync_state
         ctx.sync_cond = sync_cond
@@ -324,8 +333,8 @@ class ScriptExecutor:
         self._batch_start_event: EventType | None = None
 
         # 동기화 관리 - _ensure_manager() 호출 전에 먼저 None으로 초기화
-        self._sync_lock: AcquirerProxy | None = None
-        self._sync_cond: ConditionProxy | None = None
+        self._sync_lock = None
+        self._sync_cond = None
         self._sync_state: DictProxy | None = None
         self._sync_members: DictProxy | None = None
 
@@ -344,12 +353,17 @@ class ScriptExecutor:
         if self.manager is None:
             self.manager = self._mp_ctx.Manager()
 
-        # Sync 레지스트리 초기화 (한 번만, sync_parties 제거)
-        if self._sync_lock is None:
-            self._sync_lock = self.manager.RLock()
-            self._sync_cond = self.manager.Condition(self._sync_lock)
+        # dict류만 manager로
+        if self._sync_state is None:
             self._sync_state = self.manager.dict()
+        if self._sync_members is None:
             self._sync_members = self.manager.dict()
+
+        # 락/컨디션은 "진짜 multiprocessing 객체"로 (프록시 금지)
+        if self._sync_lock is None:
+            self._sync_lock = self._mp_ctx.RLock()
+        if self._sync_cond is None:
+            self._sync_cond = self._mp_ctx.Condition(self._sync_lock)
 
     def _collect_sync_flags(self, step: Step | None) -> set[str]:
         """Step 트리에서 모든 SyncStep의 flag 수집"""
@@ -369,6 +383,312 @@ class ScriptExecutor:
 
         walk(step)
         return flags
+
+    def _register_process_sync_flags(
+        self, process_id: str, step: Step | None, post_tree: Step | None = None
+    ):
+        """단일 프로세스의 sync flags를 등록/업데이트"""
+        if self.manager is None:
+            raise RuntimeError("Manager not initialized")
+
+        flags = self._collect_sync_flags(step) | self._collect_sync_flags(post_tree)
+
+        with self._sync_lock:
+            # 각 flag에 이 프로세스 등록
+            for flag in flags:
+                # members 업데이트
+                members = list(self._sync_members.get(flag, []))
+                if process_id not in members:
+                    members.append(process_id)
+                self._sync_members[flag] = members
+
+                # state 업데이트
+                st = dict(self._sync_state.get(flag, {}))
+                if not st:
+                    st = {
+                        "arrived": 0,
+                        "phase": 0,
+                        "parties_cur": len(members),
+                        "parties_next": len(members),
+                    }
+                else:
+                    # parties_next를 현재 멤버 수로 업데이트
+                    st["parties_next"] = len(members)
+
+                self._sync_state[flag] = st
+
+                print(
+                    f"[SyncRegistry] Registered {process_id} to flag '{flag}', "
+                    f"parties_next: {st['parties_next']}",
+                    flush=True,
+                )
+
+        return flags
+
+    def _unregister_process_sync_flags(self, process_id: str):
+        if self.manager is None or self._sync_cond is None:
+            return
+
+        # Condition을 락으로 사용 (acquire/release 포함)
+        with self._sync_cond:
+            for flag in list(self._sync_members.keys()):
+                members = list(self._sync_members.get(flag, []))
+                if process_id not in members:
+                    continue
+
+                # members에서 제거
+                members.remove(process_id)
+
+                if not members:
+                    # flag 자체 제거
+                    del self._sync_members[flag]
+                    if flag in self._sync_state:
+                        del self._sync_state[flag]
+                    continue
+
+                # members 저장
+                self._sync_members[flag] = members
+
+                # sync_state 갱신
+                st = dict(self._sync_state.get(flag, {}))
+                parties_next = len(members)
+                st["parties_next"] = parties_next
+
+                # 현재 라운드 parties_cur도 현실에 맞춰 감소
+                parties_cur = int(st.get("parties_cur", parties_next))
+                if parties_cur > parties_next:
+                    st["parties_cur"] = parties_next
+                    parties_cur = parties_next
+
+                arrived = int(st.get("arrived", 0))
+                phase = int(st.get("phase", 0))
+
+                # 제거 때문에 이미 조건이 충족 됐으면 라운드 종료 처리
+                if parties_cur > 0 and arrived >= parties_cur:
+                    st["phase"] = phase + 1
+                    st["arrived"] = 0
+                    # parties_cur는 다음 라운드 기준으로 스왑
+                    st["parties_cur"] = parties_next
+
+                self._sync_state[flag] = st
+
+            # 대기중인 애들 깨우기
+            self._sync_cond.notify_all()
+
+    def _handle_main_tree_sync_unregister(self, pid: str):
+        """메인 트리 sync flags 해제 처리 (CHANGE 타입 전환 시)"""
+        if pid not in self.state_dicts:
+            return
+
+        # state_dict에 저장된 메인 트리의 sync flags 가져오기
+        main_flags = set(self.state_dicts[pid].get("sync_flags", []))
+
+        if not main_flags:
+            print(f"[CHANGE] No main tree sync flags to unregister for {pid}", flush=True)
+            return
+
+        # 각 flag에서 해제
+        if self._sync_cond is not None:
+            with self._sync_cond:
+                for flag in main_flags:
+                    members = list(self._sync_members.get(flag, []))
+                    if pid not in members:
+                        continue
+
+                    members.remove(pid)
+
+                    if not members:
+                        # 참가자가 없으면 flag 자체 삭제
+                        del self._sync_members[flag]
+                        if flag in self._sync_state:
+                            del self._sync_state[flag]
+                        print(f"[CHANGE] Removed empty flag '{flag}'", flush=True)
+                        continue
+
+                    self._sync_members[flag] = members
+
+                    # state 업데이트
+                    st = dict(self._sync_state.get(flag, {}))
+                    parties_next = len(members)
+                    st["parties_next"] = parties_next
+
+                    parties_cur = int(st.get("parties_cur", parties_next))
+                    if parties_cur > parties_next:
+                        st["parties_cur"] = parties_next
+                        parties_cur = parties_next
+
+                    arrived = int(st.get("arrived", 0))
+                    phase = int(st.get("phase", 0))
+
+                    # 제거로 인해 조건 충족되면 라운드 종료
+                    if parties_cur > 0 and arrived >= parties_cur:
+                        st["phase"] = phase + 1
+                        st["arrived"] = 0
+                        st["parties_cur"] = parties_next
+
+                    self._sync_state[flag] = st
+
+                    print(
+                        f"[CHANGE] Unregistered main tree flag '{flag}' for {pid}, "
+                        f"remaining members: {len(members)}",
+                        flush=True
+                    )
+
+                self._sync_cond.notify_all()
+
+        # state_dict의 sync_flags 초기화 (메인 트리 flags는 이제 없음)
+        self.state_dicts[pid]["sync_flags"] = []
+
+    def _handle_subtask_sync_register(self, pid: str, evt: dict):
+        """서브태스크 sync flags 등록 처리"""
+        if pid not in self.state_dicts:
+            return
+
+        # 이벤트에서 트리 정보 추출
+        tree_dict = evt.get("sub_task_tree")
+        post_tree_dict = evt.get("post_tree")
+        subtask_type = evt.get("subtask_type", "INSERT")
+
+        if not tree_dict:
+            return
+
+        # Step 객체 재구성
+        sub_task_tree = Step.from_dict(tree_dict)
+        post_tree = Step.from_dict(post_tree_dict) if post_tree_dict else None
+
+        # 서브태스크의 sync flags 수집
+        new_flags = self._collect_sync_flags(sub_task_tree) | self._collect_sync_flags(post_tree)
+
+        if not new_flags:
+            print(f"[SubTask-{subtask_type}] No sync flags found for {pid}", flush=True)
+            return
+
+        # CHANGE 타입이면 같은 태스크를 실행 중인 다른 프로세스들도 찾아서 함께 등록
+        if subtask_type == "CHANGE":
+            # 모든 프로세스가 현재 어떤 태스크를 실행 중인지 확인
+            task_id = sub_task_tree.step_id
+            participating_pids = [pid]  # 일단 현재 프로세스는 포함
+
+            # 다른 프로세스들 확인
+            for other_pid, other_state in self.state_dicts.items():
+                if other_pid == pid:
+                    continue
+
+                # 다른 프로세스의 현재 step 확인
+                other_step = other_state.get("step", {})
+                if other_step.get("stepId") == task_id:
+                    # 같은 태스크를 실행 중
+                    participating_pids.append(other_pid)
+                    print(f"[CHANGE] Found {other_pid} also running task {task_id}", flush=True)
+
+            # 모든 참여 프로세스를 flags에 등록
+            with self._sync_lock:
+                for flag in new_flags:
+                    members = list(self._sync_members.get(flag, []))
+
+                    # participating_pids의 모든 프로세스 추가
+                    for p in participating_pids:
+                        if p not in members:
+                            members.append(p)
+
+                    self._sync_members[flag] = members
+
+                    # state 업데이트
+                    st = dict(self._sync_state.get(flag, {}))
+                    if not st:
+                        st = {
+                            "arrived": 0,
+                            "phase": 0,
+                            "parties_cur": len(members),
+                            "parties_next": len(members),
+                        }
+                    else:
+                        st["parties_next"] = len(members)
+                        st["parties_cur"] = len(members)
+
+                    self._sync_state[flag] = st
+
+                    print(
+                        f"[CHANGE] Registered flag '{flag}' with {len(members)} participants: {members}",
+                        flush=True
+                    )
+
+            # CHANGE 타입이면 state_dict의 sync_flags 업데이트
+            self.state_dicts[pid]["sync_flags"] = list(new_flags)
+
+        else:
+            # INSERT 타입은 기존 로직 사용
+            sync_flags = self._register_process_sync_flags(pid, sub_task_tree, post_tree)
+            print(
+                f"[SubTask-{subtask_type}] Registered sync flags for {pid}: {sync_flags}",
+                flush=True
+            )
+
+    def _handle_subtask_sync_unregister(self, pid: str, evt: dict):
+        """서브태스크 sync flags 해제 처리"""
+        if pid not in self.state_dicts:
+            return
+
+        # 이벤트에서 트리 정보 추출
+        tree_dict = evt.get("sub_task_tree")
+        post_tree_dict = evt.get("post_tree")
+
+        if not tree_dict:
+            return
+
+        # Step 객체 재구성
+        sub_task_tree = Step.from_dict(tree_dict)
+        post_tree = Step.from_dict(post_tree_dict) if post_tree_dict else None
+
+        # 서브태스크의 flags 수집 (tree + post_tree 모두 포함)
+        flags = self._collect_sync_flags(sub_task_tree) | self._collect_sync_flags(post_tree)
+
+        if not flags:
+            return
+
+        # 각 flag에서 해제
+        if self._sync_cond is not None:
+            with self._sync_cond:
+                for flag in flags:
+                    members = list(self._sync_members.get(flag, []))
+                    if pid not in members:
+                        continue
+
+                    members.remove(pid)
+
+                    if not members:
+                        del self._sync_members[flag]
+                        if flag in self._sync_state:
+                            del self._sync_state[flag]
+                        continue
+
+                    self._sync_members[flag] = members
+
+                    st = dict(self._sync_state.get(flag, {}))
+                    parties_next = len(members)
+                    st["parties_next"] = parties_next
+
+                    parties_cur = int(st.get("parties_cur", parties_next))
+                    if parties_cur > parties_next:
+                        st["parties_cur"] = parties_next
+                        parties_cur = parties_next
+
+                    arrived = int(st.get("arrived", 0))
+                    phase = int(st.get("phase", 0))
+
+                    if parties_cur > 0 and arrived >= parties_cur:
+                        st["phase"] = phase + 1
+                        st["arrived"] = 0
+                        st["parties_cur"] = parties_next
+
+                    self._sync_state[flag] = st
+
+                self._sync_cond.notify_all()
+
+        print(
+            f"[SubTask-{evt.get('subtask_type')}] Unregistered sync flags for {pid}: {flags}",
+            flush=True
+        )
 
     def _register_batch(self, batch: list[MakeProcessArgs]) -> dict[str, set[str]]:
         """배치 실행을 위한 동기화 플래그 등록"""
@@ -398,8 +718,8 @@ class ScriptExecutor:
                 members = list(self._sync_members.get(flag, []))
 
                 # 이번 배치의 pid들만 추가
-                for pid in pid_flags.items():
-                    if flag in pid_flags[pid] and pid not in members:
+                for pid, flags in pid_flags.items():
+                    if flag in flags and pid not in members:
                         members.append(pid)
 
                 self._sync_members[flag] = members
@@ -497,6 +817,11 @@ class ScriptExecutor:
             self.state_dicts[process_id] = self.manager.dict()
 
         self.result_queues[process_id] = self._mp_ctx.Queue(maxsize=10)
+
+        # ⭐ 단일 프로세스의 경우 sync flags 등록 (배치가 아닐 때)
+        if not multi_start:
+            sync_flags = self._register_process_sync_flags(process_id, step, post_tree)
+            self.state_dicts[process_id]["sync_flags"] = list(sync_flags)
 
         # 상태 정보 업데이트
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
@@ -685,6 +1010,15 @@ class ScriptExecutor:
                 if self.controller is not None:
                     self.controller.on_sub_task_done(pid, sub_task_id, sub_task_type)
 
+            elif evt_type == "subtask_sync_register":
+                self._handle_subtask_sync_register(pid, evt)
+
+            elif evt_type == "subtask_sync_unregister":
+                self._handle_subtask_sync_unregister(pid, evt)
+
+            elif evt_type == "main_tree_sync_unregister":
+                self._handle_main_tree_sync_unregister(pid)
+
             elif evt_type == "done":
                 if self._on_done is not None:
                     self._on_done(pid)
@@ -812,25 +1146,38 @@ class ScriptExecutor:
             time.sleep(POLLING_INTERVAL)
 
     def _cleanup_process(self, process_id: str):
-        """개별 프로세스 정리"""
+        p = self.processes.get(process_id)
+
+        # 프로세스가 없거나 이미 죽었으면 무조건 unregister
+        dead = (p is None) or (not p.is_alive())
+
+        if dead:
+            self._unregister_process_sync_flags(process_id)
+            print(f"[Cleanup] {process_id} is dead -> unregister sync flags", flush=True)
+        else:
+            # 살아있는데 cleanup 타는 케이스면 보통 없지만, 안전하게 유지
+            state = self.state_dicts.get(process_id, {}).get("state")
+            print(f"[Cleanup] {process_id} still alive? state={state}", flush=True)
+
         with self._mu:
             p = self.processes.pop(process_id, None)
             if p:
                 p.join(timeout=0.1)
 
             self.completion_events.pop(process_id, None)
-            self.state_dicts.pop(process_id, None)
+
+            q = self.result_queues.pop(process_id, None)
+            if q:
+                with contextlib.suppress(Exception):
+                    q.close()
+
             self.pause_events.pop(process_id, None)
             self.resume_events.pop(process_id, None)
             self.stop_events.pop(process_id, None)
             self.start_events.pop(process_id, None)
+
             self._pid_generation.pop(process_id, None)
 
-            # 큐 정리
-            if process_id in self.result_queues:
-                with contextlib.suppress(Exception):
-                    self.result_queues[process_id].close()
-                self.result_queues.pop(process_id, None)
 
     def _auto_cleanup(self):
         """모든 프로세스 종료 시 자동 정리"""
@@ -845,6 +1192,15 @@ class ScriptExecutor:
 
         self.result_queues = {}
         self._monitor_thread = None
+
+        if self._sync_state is not None:
+            self._sync_state.clear()
+        if self._sync_members is not None:
+            self._sync_members.clear()
+
+        # 락/컨디션은 stuck 가능성 때문에 재생성
+        self._sync_lock = self._mp_ctx.RLock()
+        self._sync_cond = self._mp_ctx.Condition(self._sync_lock)
 
         # 콜백 호출
         if self._on_close is not None:
@@ -866,7 +1222,7 @@ class ScriptExecutor:
         if self.state_dicts[process_id].get("state") == RB_Flow_Manager_ProgramState.PAUSED:
             return False
 
-        # pulse 패턴: clear 후 set
+        # clear 후 set (pulse 패턴)
         self.pause_events[process_id].clear()
         self.pause_events[process_id].set()
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.PAUSED

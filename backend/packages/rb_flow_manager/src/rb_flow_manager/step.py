@@ -85,6 +85,9 @@ class Step:
         if d.get("method") == "SubTask":
             return SubTaskStep.from_dict(d)
 
+        if d.get("method") == "Sync":
+            return SyncStep.from_dict(d)
+
         return Step(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             name=d["name"],
@@ -985,6 +988,10 @@ class SubTaskStep(Step):
 
         if self.sub_task_type == "INSERT":
             try:
+                # 서브태스크 트리 정보를 state_dict에 저장
+                ctx.emit_subtask_sync_register(sub_task_tree, sub_task_post_tree, "INSERT")
+                time.sleep(0.05)
+
                 sub_task_list = ctx.state_dict.get("sub_task_list", [])
                 sub_task_list.append(
                     {"task_id": sub_task_tree.step_id, "sub_task_type": self.sub_task_type}
@@ -997,6 +1004,9 @@ class SubTaskStep(Step):
             except SubTaskHaltException:
                 pass
             finally:
+                ctx.emit_subtask_sync_unregister(sub_task_tree, sub_task_post_tree, "INSERT")
+                time.sleep(0.05)
+
                 sub_task_list = ctx.state_dict.get("sub_task_list", [])
                 if len(sub_task_list) > 0:
                     sub_task_list.pop()
@@ -1016,3 +1026,226 @@ class SubTaskStep(Step):
         self._post_execute(ctx, ignore_step_interval=True)
 
         ctx.emit_done(self.step_id)
+
+class SyncStep(Step):
+    """
+    여러 프로세스 간 동기화를 위한 Step
+
+    프로세스가 동적으로 추가/제거되어도 올바르게 동작하는 barrier 패턴 구현
+    - 지정된 flag에서 모든 참가 프로세스가 도착할 때까지 대기
+    - phase 기반으로 같은 flag를 반복 사용 가능 (loop 내에서도 작동)
+    - 프로세스 추가 시 parties_next 증가
+    - 프로세스 제거 시 parties_next 감소 및 대기 중인 프로세스 깨우기
+    """
+
+    _class_name = "SyncStep"
+
+    def __init__(
+        self,
+        flag: str | None = None,
+        timeout: float | None = None,
+        name: str | None = None,
+        step_id: str | None = None,
+        args: dict[str, Any] | None = None,
+        disabled: bool | None = None,
+    ):
+        """
+        Args:
+            flag: 동기화 플래그 (같은 플래그를 사용하는 프로세스들이 동기화됨)
+            timeout: 최대 대기 시간 (초). None이면 무제한 대기
+            name: Step 이름 (기본값: f"Sync({flag})")
+            step_id: Step ID
+            disabled: Step 비활성화 여부
+        """
+        super().__init__(
+            step_id=step_id,
+            name=name,
+            args=args,
+            disabled=disabled,
+        )
+        _args = args or {}
+
+        self.disabled = disabled
+        self.args = _args
+        self.flag = flag if flag is not None else _args.get("flag")
+        self.timeout = timeout if timeout is not None else _args.get("timeout")
+
+        if not self.flag:
+            raise ValueError("SyncStep requires 'flag' parameter")
+
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None, _post_run: bool = False):
+        """
+        동기화 barrier 실행
+
+        동작 원리:
+        1. 프로세스가 도착하면 arrived 카운트 증가
+        2. arrived >= parties_cur이면 마지막 도착자
+           - phase를 증가시켜 다음 라운드로 진입
+           - parties_cur를 parties_next로 업데이트 (동적 변경 반영)
+           - 모든 대기 프로세스를 notify_all()로 깨움
+        3. 마지막 도착자가 아니면 대기
+           - phase가 증가할 때까지 대기
+           - 대기 중 프로세스 제거로 인해 arrived >= parties가 된 경우도 처리
+
+        Raises:
+            RuntimeError: Sync 인프라가 초기화되지 않았거나 flag가 등록되지 않은 경우
+            TimeoutError: timeout 시간 내에 동기화가 완료되지 않은 경우
+        """
+        if self.disabled:
+            return
+
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if is_skip:
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
+        ctx.emit_next(self.step_id)
+        ctx.check_stop()
+
+        if ctx.sync_lock is None or ctx.sync_cond is None:
+            raise RuntimeError("Sync infrastructure not initialized")
+
+        pid = ctx.process_id
+        flag = self.flag
+
+        deadline = None
+        if self.timeout is not None:
+            deadline = time.time() + float(self.timeout)
+
+        acquired = ctx.sync_cond.acquire(timeout=1.0)
+        if not acquired:
+            raise RuntimeError(f"SyncStep({flag}): sync lock stuck")
+        try:
+            state = dict(ctx.sync_state.get(flag, {}))
+            if not state:
+                raise RuntimeError(
+                    f"SyncStep({flag}): Sync state not initialized. "
+                    f"Process {pid} may not be registered for this flag."
+                )
+
+            current_phase = int(state.get("phase", 0))
+
+            # 현재 참가자 수: members 기준
+            parties_cur = int(state.get("parties_cur", 0))
+            if parties_cur <= 0:
+                members = list(ctx.sync_members.get(flag, []))
+                parties_cur = len(members)
+                state["parties_cur"] = parties_cur
+                state["parties_next"] = int(state.get("parties_next", parties_cur))
+                ctx.sync_state[flag] = state
+
+            if parties_cur <= 1:
+                raise RuntimeError(
+                    f"SyncStep(Flag = > {flag}): only one participant. "
+                    "This sync must have at least 2 participants."
+                )
+
+
+            arrived = int(state.get("arrived", 0)) + 1
+            state["arrived"] = arrived
+            ctx.sync_state[flag] = state
+
+            print(f"[Sync {flag}] {pid} arrived ({arrived}/{parties_cur}) phase={current_phase}", flush=True)
+
+            # 마지막 도착자
+            if arrived >= parties_cur:
+                # 마지막 도착자
+                next_parties = int(state.get("parties_next", parties_cur))
+                state["phase"] = current_phase + 1
+                state["arrived"] = 0
+                state["parties_cur"] = next_parties
+                # parties_next는 이미 레지스트리가 관리하는 값 => 덮지 않아도 됨
+                ctx.sync_state[flag] = state
+                ctx.sync_cond.notify_all()
+            else:
+                # 대기
+                while True:
+                    ctx.check_stop()
+
+                    if deadline is not None:
+                        remaining = deadline - time.time()
+                        if remaining <= 0:
+                            break
+                        wait_timeout = min(remaining, 0.1)
+                    else:
+                        wait_timeout = 0.1
+
+                    # wait()는 내부적으로 release -> wait -> reacquire를 수행
+                    ctx.sync_cond.wait(timeout=wait_timeout)
+
+                    updated = dict(ctx.sync_state.get(flag, {}))
+                    updated_phase = int(updated.get("phase", 0))
+
+                    # phase가 넘어갔으면 해제
+                    if updated_phase > current_phase:
+                        print(f"[Sync {flag}] {pid} released from phase {current_phase}", flush=True)
+                        break
+
+                    # 중간에 parties가 줄어서(프로세스 제거) 프로세스가 사실상 마지막이 된 경우 처리
+                    updated_arrived = int(updated.get("arrived", 0))
+                    updated_parties_cur = int(updated.get("parties_cur", parties_cur))
+
+                    if updated_parties_cur > 0 and updated_arrived >= updated_parties_cur:
+                        next_parties = int(updated.get("parties_next", updated_parties_cur))
+                        if next_parties < 0:
+                            next_parties = 0
+
+                        updated["phase"] = updated_phase + 1
+                        updated["arrived"] = 0
+                        updated["parties_cur"] = next_parties
+                        updated["parties_next"] = next_parties
+                        ctx.sync_state[flag] = updated
+
+                        print(
+                            f"[Sync {flag}] {pid} becoming last due to parties reduction, "
+                            f"phase {updated_phase} -> {updated_phase + 1}, "
+                            f"parties: {updated_parties_cur} -> {next_parties}",
+                            flush=True,
+                        )
+                        ctx.sync_cond.notify_all()
+                        break
+
+            print(f"[Sync {flag}] {pid} exiting sync", flush=True)
+
+        finally:
+            if acquired:
+                ctx.sync_cond.release()
+
+
+
+        self._post_execute(ctx, ignore_step_interval=True)
+        ctx.emit_done(self.step_id)
+
+    @staticmethod
+    def from_dict(d) -> "SyncStep":
+        args = d.get("args", {})
+
+        flag = args.get("flag") or d.get("flag")
+        timeout = args.get("timeout") or d.get("timeout")
+
+        if not flag:
+            raise ValueError(
+                f"SyncStep requires 'flag' parameter. "
+                f"Received dict: {d}, args: {args}"
+            )
+
+        return SyncStep(
+            flag=flag,
+            timeout=timeout,
+            name=d.get("name"),
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            args=args,
+            disabled=d.get("disabled", False),
+        )
+
+    def to_dict(self) -> dict:
+        """Step을 딕셔너리로 직렬화"""
+        base = super().to_dict()
+        base.update({
+            "flag": self.flag,
+            "timeout": self.timeout,
+        })
+        return base

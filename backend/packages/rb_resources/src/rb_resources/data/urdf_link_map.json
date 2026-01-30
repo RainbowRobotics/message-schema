@@ -26,6 +26,15 @@
       }
     }
   },
+  "C502880": {
+    "urdfFileName": "rb5_850e.urdf",
+    "components": {
+      "C502880": {
+        "type": "array",
+        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+      }
+    }
+  },
   "RBY2": {
     "urdfFileName": "rb5_850e.urdf",
     "components": {

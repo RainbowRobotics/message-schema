@@ -341,6 +341,39 @@ class ExecutionContext:
             }
         )
 
+    def emit_subtask_sync_register(self, sub_task_tree, post_tree=None, subtask_type: Literal["INSERT", "CHANGE"] = "INSERT"):
+        """서브태스크 sync flags 등록 요청 이벤트"""
+        self.result_queue.put({
+            "type": "subtask_sync_register",
+            "process_id": self.process_id,
+            "subtask_type": subtask_type,
+            "sub_task_tree": sub_task_tree.to_dict() if sub_task_tree else None,
+            "post_tree": post_tree.to_dict() if post_tree else None,
+            "ts": time.time(),
+            "generation": self._generation,
+        })
+
+    def emit_subtask_sync_unregister(self, sub_task_tree, post_tree=None, subtask_type: Literal["INSERT", "CHANGE"] = "INSERT"):
+        """서브태스크 sync flags 해제 요청 이벤트"""
+        self.result_queue.put({
+            "type": "subtask_sync_unregister",
+            "process_id": self.process_id,
+            "subtask_type": subtask_type,
+            "sub_task_tree": sub_task_tree.to_dict() if sub_task_tree else None,
+            "post_tree": post_tree.to_dict() if post_tree else None,
+            "ts": time.time(),
+            "generation": self._generation,
+        })
+
+    def emit_main_tree_sync_unregister(self):
+        """메인 트리 sync flags 해제 요청 (CHANGE 타입 전환 시)"""
+        self.result_queue.put({
+            "type": "main_tree_sync_unregister",
+            "process_id": self.process_id,
+            "ts": time.time(),
+            "generation": self._generation,
+        })
+
     def emit_sub_task_start(self, task_id: str, sub_task_type: Literal["INSERT", "CHANGE"]):
         """sub_task_start 이벤트 발생"""
         self.result_queue.put(
