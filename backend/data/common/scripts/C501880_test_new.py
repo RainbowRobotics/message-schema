@@ -104,13 +104,12 @@ tree = Step(
                 'second': 1,
              },
         ),
-        Step(
-            step_id='6977393f882a5839d1bfdd9b',
-            name='Wait',
-            func_name='rb_manipulate_sdk.program.manipulate_wait',
+        SyncStep(
+            step_id='697c17fa109a8c50c0cb6f75',
+            name='Sync',
             args={
-                'wait_type': 'TIME',
-                'second': 1,
+                'flag': '1',
+                'timeout': None,
              },
         ),
         Step(

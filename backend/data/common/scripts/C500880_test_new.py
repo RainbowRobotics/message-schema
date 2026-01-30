@@ -16,6 +16,39 @@ tree = Step(
                 'second': 1,
              },
         ),
+        RepeatStep(
+            step_id='697c340f01e944dcb633b2b8',
+            name='Repeat',
+            count=-1,
+            children=[
+                SyncStep(
+                    step_id='697c340f01e944dcb633b2b9',
+                    name='Sync',
+                    args={
+                        'flag': '1',
+                        'timeout': None,
+                     },
+                ),
+                Step(
+                    step_id='697c340f01e944dcb633b2ba',
+                    name='Wait',
+                    func_name='rb_manipulate_sdk.program.manipulate_wait',
+                    args={
+                        'wait_type': 'TIME',
+                        'second': 1,
+                     },
+                ),
+                Step(
+                    step_id='697c340f01e944dcb633b2bb',
+                    name='Wait',
+                    func_name='rb_manipulate_sdk.program.manipulate_wait',
+                    args={
+                        'wait_type': 'TIME',
+                        'second': 1,
+                     },
+                ),
+            ],
+        ),
         Step(
             step_id='6979d57fd1a0155cbef53d91',
             name='Wait',
@@ -124,9 +157,81 @@ tree = Step(
                 'second': 1,
              },
         ),
+        Step(
+            step_id='697bf99b63551189750300fe',
+            name='MoveL',
+            args={
+                'robot_model': 'C500880',
+                'move_type': 'L',
+                'orientation': None,
+             },
+            children=[
+                Step(
+                    step_id='697bf99b63551189750300ff',
+                    name='Point',
+                    func_name='rb_manipulate_sdk.point.set_point',
+                    args={
+                        'robot_model': '$parent.robot_model',
+                        'move_type': '$parent.move_type',
+                        'input_method': 0,
+                        'pnt_para': 100,
+                        'pnt_type': 0,
+                        'tar_frame': 0,
+                        'tar_unit': 0,
+                        'tar_values': [0, 0, 0, 0, 0, 0, 0],
+                        'spd_mode': 0,
+                        'spd_vel_para': 0.4,
+                        'spd_acc_para': 0.1,
+                        'tcp_num': -1,
+                        'orientation': '$parent.orientation',
+                     },
+                ),
+            ],
+        ),
+        Step(
+            step_id='697bf99b6355118975030100',
+            name='MoveJ',
+            args={
+                'robot_model': 'C500880',
+                'move_type': 'J',
+                'orientation': None,
+             },
+            children=[
+                Step(
+                    step_id='697bf99b6355118975030101',
+                    name='Point',
+                    func_name='rb_manipulate_sdk.point.set_point',
+                    args={
+                        'robot_model': '$parent.robot_model',
+                        'move_type': '$parent.move_type',
+                        'input_method': 0,
+                        'pnt_para': 100,
+                        'pnt_type': 0,
+                        'tar_frame': -1,
+                        'tar_unit': 0,
+                        'tar_values': [0, 0, 0, 0, 0, 0, 0],
+                        'spd_mode': 0,
+                        'spd_vel_para': 0.4,
+                        'spd_acc_para': 0.1,
+                        'tcp_num': -1,
+                        'orientation': '$parent.orientation',
+                     },
+                ),
+            ],
+        ),
     ],
 )
 
+post_tree = Step(
+    step_id='697bf99b63551189750300fc',
+    name='PostProgram',
+    children=[
+        Step(
+            step_id='697bf99b63551189750300fd',
+            name='Empty',
+        ),
+    ],
+)
 
 if __name__ == "__main__":
 
@@ -139,6 +244,6 @@ if __name__ == "__main__":
         repeat_count=1,
         robot_model='C500880',
         category='manipulate',
-        post_tree=None,
+        post_tree=post_tree,
     )
 
