@@ -32,5 +32,6 @@ backend/docker-compose.preview.yml
 .out-arm64
 
 backend/temp-data/**
+backend/data/common/scripts/**
 
 backend/packages/rb_flat_buffers/src/rb_flat_buffers/**
