@@ -68,9 +68,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class FileRequestT(object):
 
     # FileRequestT
-    def __init__(self):
-        self.session = None  # type: str
-        self.wantIndex = 0  # type: int
+    def __init__(
+        self,
+        session = None,
+        wantIndex = 0,
+    ):
+        self.session = session  # type: Optional[str]
+        self.wantIndex = wantIndex  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

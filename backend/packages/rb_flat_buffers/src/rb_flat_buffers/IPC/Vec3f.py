@@ -54,8 +54,11 @@ except:
 class Vec3fT(object):
 
     # Vec3fT
-    def __init__(self):
-        self.v = None  # type: List[float]
+    def __init__(
+        self,
+        v = None,
+    ):
+        self.v = v  # type: Optional[List[float]]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

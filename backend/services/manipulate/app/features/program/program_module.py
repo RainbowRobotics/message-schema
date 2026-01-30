@@ -20,24 +20,31 @@ from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 
 from .program_schema import (
+    Request_MotionHaltPD,
     Request_MotionSpeedBarPD,
-    Request_Move_SmoothJogJPD,
-    Request_Move_SmoothJogLPD,
-    Request_Move_SmoothJogStopPD,
     Request_MoveApproachJPD,
     Request_MoveApproachLPD,
     Request_MoveApproachStopPD,
     Request_MoveJBAddPD,
+    Request_MoveJBClrPD,
+    Request_MoveJBRunPD,
     Request_MoveJPD,
     Request_MoveLBAddPD,
+    Request_MoveLBClrPD,
     Request_MoveLBRunPD,
     Request_MoveLPD,
+    Request_MoveSmoothJogJPD,
+    Request_MoveSmoothJogLPD,
+    Request_MoveSmoothJogStopPD,
     Request_MoveTickJogJPD,
     Request_MoveTickJogLPD,
     Request_MoveXBAddPD,
+    Request_MoveXBClrPD,
     Request_MoveXBRunPD,
+    Request_PausePD,
     Request_ProgramAfterPD,
     Request_ProgramBeforePD,
+    Request_ResumePD,
 )
 
 zenoh_client = ZenohClient()
@@ -50,7 +57,7 @@ class ProgramService(BaseService):
     # 1. System Control (Resume, Pause, Halt, Program Flow)
     # ==========================================================================
 
-    async def call_resume(self, *, robot_model: str):
+    async def call_resume(self, *, robot_model: str, request: Request_ResumePD):
         """
         [Resume 호출]
         """
@@ -62,7 +69,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    async def call_pause(self, *, robot_model: str):
+    async def call_pause(self, *, robot_model: str, request: Request_PausePD):
         """
         [Pause 호출]
         """
@@ -74,7 +81,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    async def call_halt(self, *, robot_model: str):
+    async def call_halt(self, *, robot_model: str, request: Request_MotionHaltPD):
         """
         [Halt 호출]
         """
@@ -86,7 +93,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    def call_program_before(self, *, robot_model: str, request : Request_ProgramBeforePD):
+    def call_program_before(self, *, robot_model: str, request: Request_ProgramBeforePD):
         """
         [Program Before 호출]
         - option: 프로그램 옵션
@@ -100,7 +107,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    def call_program_after(self, *, robot_model: str, request : Request_ProgramAfterPD):
+    def call_program_after(self, *, robot_model: str, request: Request_ProgramAfterPD):
         """
         [Program After 호출]
         - option: 프로그램 옵션
@@ -114,7 +121,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    def call_speedbar(self, *, robot_model: str, request : Request_MotionSpeedBarPD):
+    def call_speedbar(self, *, robot_model: str, request: Request_MotionSpeedBarPD):
         """
         [Speed Bar 호출]
         - request: Speed Bar 요청 데이터 (alpha: 스피드 바 값)
@@ -132,7 +139,7 @@ class ProgramService(BaseService):
     # ==========================================================================
 
     def call_smoothjog_j(
-        self, *, robot_model: str, request: Request_Move_SmoothJogJPD
+        self, *, robot_model: str, request: Request_MoveSmoothJogJPD
     ):
         """
         [Smooth Jog J 호출]
@@ -152,7 +159,7 @@ class ProgramService(BaseService):
 
 
     def call_smoothjog_l(
-        self, *, robot_model: str, request: Request_Move_SmoothJogLPD
+        self, *, robot_model: str, request: Request_MoveSmoothJogLPD
     ):
         """
         [Smooth Jog L 호출]
@@ -171,7 +178,7 @@ class ProgramService(BaseService):
         return t_to_dict(res)
 
 
-    def call_smoothjog_stop(self, *, robot_model: str, request: Request_Move_SmoothJogStopPD):
+    def call_smoothjog_stop(self, *, robot_model: str, request: Request_MoveSmoothJogStopPD):
         """
         [Smooth Jog Stop 호출]
         - stop_time: 정지 시간
@@ -285,7 +292,7 @@ class ProgramService(BaseService):
     # 4. Blend Move Control (JB, LB, XB)
     # ==========================================================================
 
-    async def call_move_jb_clr(self, *, robot_model: str):
+    async def call_move_jb_clr(self, *, robot_model: str, request: Request_MoveJBClrPD):
         req = Request_Move_JB_CLRT()
 
         res = zenoh_client.query_one(
@@ -326,7 +333,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    async def call_move_jb_run(self, *, robot_model: str):
+    async def call_move_jb_run(self, *, robot_model: str, request: Request_MoveJBRunPD):
         req = Request_Move_JB_RUNT()
 
         res = zenoh_client.query_one(
@@ -338,7 +345,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    async def call_move_lb_clr(self, *, robot_model: str):
+    async def call_move_lb_clr(self, *, robot_model: str, request: Request_MoveLBClrPD):
         req = Request_Move_LB_CLRT()
 
         res = zenoh_client.query_one(
@@ -392,7 +399,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    async def call_move_xb_clr(self, *, robot_model: str):
+    async def call_move_xb_clr(self, *, robot_model: str, request: Request_MoveXBClrPD):
         req = Request_Move_XB_CLRT()
 
         res = zenoh_client.query_one(

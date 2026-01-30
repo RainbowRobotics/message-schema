@@ -67,9 +67,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Set_User_Frame_TCPT(object):
 
     # Request_Set_User_Frame_TCPT
-    def __init__(self):
-        self.userFrameNum = 0  # type: int
-        self.settingOption = 0  # type: int
+    def __init__(
+        self,
+        userFrameNum = 0,
+        settingOption = 0,
+    ):
+        self.userFrameNum = userFrameNum  # type: int
+        self.settingOption = settingOption  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

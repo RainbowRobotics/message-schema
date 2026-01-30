@@ -67,9 +67,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_Robot_CodeT(object):
 
     # Request_Save_Robot_CodeT
-    def __init__(self):
-        self.code = 0  # type: int
-        self.option = 0  # type: int
+    def __init__(
+        self,
+        code = 0,
+        option = 0,
+    ):
+        self.code = code  # type: int
+        self.option = option  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

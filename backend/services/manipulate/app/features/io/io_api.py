@@ -39,18 +39,10 @@ async def call_side_dout(robot_model: str, request: Request_SideDout_GeneralPD):
     return JSONResponse(io_service.call_side_dout(robot_model=robot_model, request=request))
 
 
-@io_router.post("/{robot_model}/call_side_aout", response_model=Response_ReturnValuePD)
-async def call_side_aout(robot_model: str, request: Request_SideAout_GeneralPD):
-    return JSONResponse(io_service.call_side_aout(robot_model=robot_model, request=request))
-
-
 @io_router.post("/{robot_model}/call_side_dout_toggle", response_model=Response_ReturnValuePD)
 async def call_side_dout_toggle(robot_model: str, request: Request_SideDout_TogglePD):
     return JSONResponse(io_service.call_side_dout_toggle(robot_model=robot_model, request=request))
 
-@io_router.post("/{robot_model}/call_multiple_side_aout", response_model=Response_ReturnValuePD)
-async def call_multiple_side_aout(robot_model: str, request: Request_Multiple_SideAoutPD):
-    return JSONResponse(io_service.call_multiple_side_aout(robot_model=robot_model, request=request))
 
 @io_router.post(
     "/{robot_model}/call_side_dout_bitcombination", response_model=Response_ReturnValuePD
@@ -63,21 +55,36 @@ async def call_side_dout_bitcombination(robot_model: str, request: Request_SideD
 async def call_side_dout_pulse(robot_model: str, request: Request_SideDout_PulsePD):
     return JSONResponse(io_service.call_side_dout_pulse(robot_model=robot_model, request=request))
 
+
 @io_router.post("/{robot_model}/call_multiple_side_dout", response_model=Response_ReturnValuePD)
 async def call_multiple_side_dout(robot_model: str, request: Request_Multiple_SideDoutPD):
     return JSONResponse(io_service.call_multiple_side_dout(robot_model=robot_model, request=request))
+
 
 @io_router.post("/{robot_model}/call_multiple_side_dout_toggle", response_model=Response_ReturnValuePD)
 async def call_multiple_side_dout_toggle(robot_model: str, request: Request_Multiple_SideDoutTogglePD):
     return JSONResponse(io_service.call_multiple_side_dout_toggle(robot_model=robot_model, request=request))
 
+
 @io_router.post("/{robot_model}/call_multiple_side_dout_bitcombination", response_model=Response_ReturnValuePD)
 async def call_multiple_side_dout_bitcombination(robot_model: str, request: Request_Multiple_SideDoutBitcombinationPD):
     return JSONResponse(io_service.call_multiple_side_dout_bitcombination(robot_model=robot_model, request=request))
 
+
 @io_router.post("/{robot_model}/call_multiple_side_dout_pulse", response_model=Response_ReturnValuePD)
 async def call_multiple_side_dout_pulse(robot_model: str, request: Request_Multiple_SideDoutPulsePD):
     return JSONResponse(io_service.call_multiple_side_dout_pulse(robot_model=robot_model, request=request))
+
+
+@io_router.post("/{robot_model}/call_side_aout", response_model=Response_ReturnValuePD)
+async def call_side_aout(robot_model: str, request: Request_SideAout_GeneralPD):
+    return JSONResponse(io_service.call_side_aout(robot_model=robot_model, request=request))
+
+
+@io_router.post("/{robot_model}/call_multiple_side_aout", response_model=Response_ReturnValuePD)
+async def call_multiple_side_aout(robot_model: str, request: Request_Multiple_SideAoutPD):
+    return JSONResponse(io_service.call_multiple_side_aout(robot_model=robot_model, request=request))
+
 
 # ==============================================================================
 # 2. IO Configuration (DIN/DOUT)

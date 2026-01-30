@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Response_Exec_Control_ProgramT(object):
 
     # Response_Exec_Control_ProgramT
-    def __init__(self):
-        self.manipulateReturnValue = 0  # type: int
+    def __init__(
+        self,
+        manipulateReturnValue = 0,
+    ):
+        self.manipulateReturnValue = manipulateReturnValue  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
