@@ -202,6 +202,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
         robot_model: str,
         option: Literal["ALARM", "HALT", "FOLDER_HALT", "SUB_PROGRAM_HALT"],
         save_log: bool = False,
+        pause_option: Literal["ALL", "CURRENT"] = "ALL",
         is_only_at_ui: bool = False,
         title: str,
         content: str,
@@ -251,7 +252,8 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
         if flow_manager_args is not None:
             if stop_type == "pause":
-                flow_manager_args.ctx.pause_all()
+                if pause_option == "ALL":
+                    flow_manager_args.ctx.pause_all()
                 flow_manager_args.ctx.pause()
             elif stop_type == "stop":
                 flow_manager_args.ctx.stop()
@@ -266,6 +268,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
         is_only_at_ui: bool = False,
         variables: list[str],
         log_content: str | None = None,
+        pause_option: Literal["ALL", "CURRENT"] = "ALL",
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """변수 디버깅 호출"""
@@ -328,7 +331,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 )
 
         if flow_manager_args is not None:
-            flow_manager_args.ctx.pause_all()
+            if pause_option == "ALL":
+                flow_manager_args.ctx.pause_all()
+
             flow_manager_args.ctx.pause()
             flow_manager_args.ctx.check_stop()
             flow_manager_args.done()
