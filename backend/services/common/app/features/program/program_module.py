@@ -882,7 +882,8 @@ class ProgramService(BaseService):
             body_context = ""
 
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep, SubTaskStep\n"
+        header_context += "from rb_flow_manager.schema import MakeProcessArgs\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep, SubTaskStep, SyncStep\n"
         header_context += (
             "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
         )
@@ -922,14 +923,16 @@ class ProgramService(BaseService):
         footer_context = 'if __name__ == "__main__":\n\n'
         footer_context += "    zenoh_controller = Zenoh_Controller()\n"
         footer_context += "    executor = ScriptExecutor(controller=zenoh_controller)\n\n"
+
         footer_context += (
             f"    executor.start(\n"
-            f"        process_id='{script_name}',\n"
-            f"        step=tree,\n"
-            f"        repeat_count={repeat_count},\n"
-            f"        robot_model='{robot_model}',\n"
-            f"        category='{category}',\n"
-            f"        post_tree={"post_tree" if post_tree else None},\n"
+            f"        MakeProcessArgs(\n"
+            f"            process_id='{script_name}',\n"
+            f"            step=tree,\n"
+            f"            repeat_count={repeat_count},\n"
+            f"            robot_model={repr(robot_model)},\n"
+            f"            category={repr(category)},\n"
+            f"        )\n"
             f"    )\n\n"
         )
 
