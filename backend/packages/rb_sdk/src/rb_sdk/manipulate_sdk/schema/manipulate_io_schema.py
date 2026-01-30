@@ -34,3 +34,8 @@ class SideAoutArg(TypedDict):
 class MultipleSideAoutArg(TypedDict):
     """Multiple Side Analog Out 호출 인자"""
     side_aout_args: list[SideAoutArg]
+
+class FlangeDoutArg(TypedDict):
+    """Flange Digital Out 호출 인자"""
+    port_num: int
+    desired_out: bool

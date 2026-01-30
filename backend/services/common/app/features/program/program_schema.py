@@ -54,6 +54,7 @@ class Step_Base(BaseModel):
     requireChildren: bool = Field(default=False)
     requireParent: bool = Field(default=False)
     disableDelete: bool = Field(default=False)
+    disableCopy: bool = Field(default=False)
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
@@ -148,6 +149,12 @@ class Task_Base(BaseModel):
 
 class Response_Get_TaskInfoPD(BaseModel):
     task: Task_Base
+
+class Response_Get_TaskStatePD(BaseModel):
+    state: RB_Flow_Manager_ProgramState
+    taskId: str
+    robotModel: str
+    stepMode: bool
 
 class Request_Create_TaskPD(Omit(Task_Base, "taskId")):
     pass

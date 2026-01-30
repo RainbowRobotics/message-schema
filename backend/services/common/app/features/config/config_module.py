@@ -59,11 +59,12 @@ class ConfigService(BaseService):
         """
         Get all speedbar
         """
-        try:
-            # diff_flag = False
-            min_speedbar = 1.0
 
-            for component in components:
+        # diff_flag = False
+        min_speedbar = 1.0
+
+        for component in components:
+            try:
                 model_info = self._robot_models.get(component)
                 be_service = model_info.get("be_service")
                 if be_service == "manipulate":
@@ -89,18 +90,19 @@ class ConfigService(BaseService):
                 else:
                     # TODO: other speedbar
                     continue
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
+                rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
+                continue
+                # raise HTTPException(status_code=503, detail="Zenoh communication error") from e
+            except Exception as e:
+                rb_log.error(f"get_all_speedbar {e}", disable_db=True)
+                continue
 
-            # if diff_flag:
-            #     await self.control_speed_bar(components=components, speedbar=min_speedbar)
+        # if diff_flag:
+        #     await self.control_speed_bar(components=components, speedbar=min_speedbar)
 
-            return {"speedbar": min_speedbar}
-        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-            rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
-            return {"speedbar": 0}
-            # raise HTTPException(status_code=503, detail="Zenoh communication error") from e
-        except Exception as e:
-            rb_log.error(f"get_all_speedbar {e}", disable_db=True)
-            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}") from e
+        return {"speedbar": min_speedbar}
+
 
     async def repeat_get_all_speedbar(self):
         """

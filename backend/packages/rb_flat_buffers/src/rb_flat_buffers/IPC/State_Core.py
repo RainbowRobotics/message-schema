@@ -345,77 +345,84 @@ class State_Core(object):
         return 0
 
     # State_Core
-    def MotionSpeedBar(self):
+    def MotionExecutionResult(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(76))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
+
+    # State_Core
+    def MotionSpeedBar(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # State_Core
     def MotionIsPause(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
-        return 0
-
-    # State_Core
-    def StatusLan2can(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusSwitchEmg(self):
+    def StatusLan2can(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusPowerOut(self):
+    def StatusSwitchEmg(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusServoNum(self):
+    def StatusPowerOut(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusIsRefon(self):
+    def StatusServoNum(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusOutColl(self):
+    def StatusIsRefon(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(90))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusSelfColl(self):
+    def StatusOutColl(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusDtMode(self):
+    def StatusSelfColl(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
+    # State_Core
+    def StatusDtMode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
+
 def State_CoreStart(builder: flatbuffers.Builder):
-    builder.StartObject(46)
+    builder.StartObject(47)
 
 def Start(builder: flatbuffers.Builder):
     State_CoreStart(builder)
@@ -636,62 +643,68 @@ def State_CoreAddMotionMode(builder: flatbuffers.Builder, motionMode: int):
 def AddMotionMode(builder: flatbuffers.Builder, motionMode: int):
     State_CoreAddMotionMode(builder, motionMode)
 
+def State_CoreAddMotionExecutionResult(builder: flatbuffers.Builder, motionExecutionResult: int):
+    builder.PrependUint8Slot(36, motionExecutionResult, 0)
+
+def AddMotionExecutionResult(builder: flatbuffers.Builder, motionExecutionResult: int):
+    State_CoreAddMotionExecutionResult(builder, motionExecutionResult)
+
 def State_CoreAddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
-    builder.PrependFloat32Slot(36, motionSpeedBar, 0.0)
+    builder.PrependFloat32Slot(37, motionSpeedBar, 0.0)
 
 def AddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
     State_CoreAddMotionSpeedBar(builder, motionSpeedBar)
 
 def State_CoreAddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
-    builder.PrependUint8Slot(37, motionIsPause, 0)
+    builder.PrependUint8Slot(38, motionIsPause, 0)
 
 def AddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
     State_CoreAddMotionIsPause(builder, motionIsPause)
 
 def State_CoreAddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
-    builder.PrependUint8Slot(38, statusLan2can, 0)
+    builder.PrependUint8Slot(39, statusLan2can, 0)
 
 def AddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
     State_CoreAddStatusLan2can(builder, statusLan2can)
 
 def State_CoreAddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
-    builder.PrependUint8Slot(39, statusSwitchEmg, 0)
+    builder.PrependUint8Slot(40, statusSwitchEmg, 0)
 
 def AddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
     State_CoreAddStatusSwitchEmg(builder, statusSwitchEmg)
 
 def State_CoreAddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
-    builder.PrependUint8Slot(40, statusPowerOut, 0)
+    builder.PrependUint8Slot(41, statusPowerOut, 0)
 
 def AddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
     State_CoreAddStatusPowerOut(builder, statusPowerOut)
 
 def State_CoreAddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
-    builder.PrependUint8Slot(41, statusServoNum, 0)
+    builder.PrependUint8Slot(42, statusServoNum, 0)
 
 def AddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
     State_CoreAddStatusServoNum(builder, statusServoNum)
 
 def State_CoreAddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
-    builder.PrependUint8Slot(42, statusIsRefon, 0)
+    builder.PrependUint8Slot(43, statusIsRefon, 0)
 
 def AddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
     State_CoreAddStatusIsRefon(builder, statusIsRefon)
 
 def State_CoreAddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
-    builder.PrependUint8Slot(43, statusOutColl, 0)
+    builder.PrependUint8Slot(44, statusOutColl, 0)
 
 def AddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
     State_CoreAddStatusOutColl(builder, statusOutColl)
 
 def State_CoreAddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
-    builder.PrependUint8Slot(44, statusSelfColl, 0)
+    builder.PrependUint8Slot(45, statusSelfColl, 0)
 
 def AddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
     State_CoreAddStatusSelfColl(builder, statusSelfColl)
 
 def State_CoreAddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
-    builder.PrependUint8Slot(45, statusDtMode, 0)
+    builder.PrependUint8Slot(46, statusDtMode, 0)
 
 def AddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
     State_CoreAddStatusDtMode(builder, statusDtMode)
@@ -747,6 +760,7 @@ class State_CoreT(object):
         self.toolAnalogOutput = None  # type: Optional[N_AOUT_fT]
         self.toolVoltageOutput = 0.0  # type: float
         self.motionMode = 0  # type: int
+        self.motionExecutionResult = 0  # type: int
         self.motionSpeedBar = 0.0  # type: float
         self.motionIsPause = 0  # type: int
         self.statusLan2can = 0  # type: int
@@ -835,6 +849,7 @@ class State_CoreT(object):
             self.toolAnalogOutput = N_AOUT_fT.InitFromObj(stateCore.ToolAnalogOutput())
         self.toolVoltageOutput = stateCore.ToolVoltageOutput()
         self.motionMode = stateCore.MotionMode()
+        self.motionExecutionResult = stateCore.MotionExecutionResult()
         self.motionSpeedBar = stateCore.MotionSpeedBar()
         self.motionIsPause = stateCore.MotionIsPause()
         self.statusLan2can = stateCore.StatusLan2can()
@@ -928,6 +943,7 @@ class State_CoreT(object):
             State_CoreAddToolAnalogOutput(builder, toolAnalogOutput)
         State_CoreAddToolVoltageOutput(builder, self.toolVoltageOutput)
         State_CoreAddMotionMode(builder, self.motionMode)
+        State_CoreAddMotionExecutionResult(builder, self.motionExecutionResult)
         State_CoreAddMotionSpeedBar(builder, self.motionSpeedBar)
         State_CoreAddMotionIsPause(builder, self.motionIsPause)
         State_CoreAddStatusLan2can(builder, self.statusLan2can)

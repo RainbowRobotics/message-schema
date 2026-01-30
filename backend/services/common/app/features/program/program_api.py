@@ -1,3 +1,4 @@
+import inspect
 from typing import Literal
 
 from fastapi import APIRouter
@@ -38,6 +39,7 @@ from .program_schema import (
     Response_Get_Sub_Task_ListPD,
     Response_Get_Task_ListPD,
     Response_Get_TaskInfoPD,
+    Response_Get_TaskStatePD,
     Response_Script_ExecutionPD,
     Response_Update_Multiple_TaskPD,
     Response_Update_ProgramPD,
@@ -131,6 +133,11 @@ async def get_task_info(task_id: str, db: MongoDB):
     res = await program_service.get_task_info(task_id=task_id, db=db)
     return JSONResponse(res)
 
+@program_router.get("/program/task/{task_id}/state", response_model=Response_Get_TaskStatePD)
+async def get_task_state(task_id: str):
+    res = await program_service.get_task_state(task_id=task_id)
+    return JSONResponse(res)
+
 @program_router.post("/program/tasks/update", response_model=Response_Update_Multiple_TaskPD)
 async def update_tasks(request: Request_Update_Multiple_TaskPD, db: MongoDB):
     res = await program_service.update_tasks(request=request, db=db)
@@ -203,6 +210,8 @@ async def preview_pause_program(request: Request_Preview_Stop_ProgramPD):
 @program_router.post("/program/preview/resume", response_model=Response_Script_ExecutionPD)
 async def preview_resume_program(request: Request_Preview_Stop_ProgramPD):
     res = await program_service.preview_resume_program(request=request)
+    print("TYPE:", type(res), flush=True)
+    print("is coroutine?", inspect.iscoroutine(res), flush=True)
     return JSONResponse(res)
 
 

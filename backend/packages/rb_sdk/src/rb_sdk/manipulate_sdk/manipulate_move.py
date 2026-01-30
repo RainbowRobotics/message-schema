@@ -5,11 +5,17 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_TypeT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
+from rb_flat_buffers.IPC.Request_Move_ApproachJ import Request_Move_ApproachJT
+from rb_flat_buffers.IPC.Request_Move_ApproachL import Request_Move_ApproachLT
+from rb_flat_buffers.IPC.Request_Move_ApproachStop import Request_Move_ApproachStopT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_JB_ADD import Request_Move_JB_ADDT
 from rb_flat_buffers.IPC.Request_Move_JB_CLR import Request_Move_JB_CLRT
 from rb_flat_buffers.IPC.Request_Move_JB_RUN import Request_Move_JB_RUNT
 from rb_flat_buffers.IPC.Request_Move_L import Request_Move_LT
+from rb_flat_buffers.IPC.Request_Move_LB_ADD import Request_Move_LB_ADDT
+from rb_flat_buffers.IPC.Request_Move_LB_CLR import Request_Move_LB_CLRT
+from rb_flat_buffers.IPC.Request_Move_LB_RUN import Request_Move_LB_RUNT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogJ import Request_Move_SmoothJogJT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogL import Request_Move_SmoothJogLT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
@@ -80,7 +86,8 @@ class RBManipulateMoveSDK(RBBaseSDK):
                             break
 
                     if obj is not None and obj.get("motionMode") == 0:
-                        flow_manager_args.done()
+                        if obj.get("motionExecutionResult") == 0:
+                            flow_manager_args.done()
                         break
 
                 except asyncio.CancelledError:
@@ -276,7 +283,7 @@ class RBManipulateMoveSDK(RBBaseSDK):
         *,
         robot_model: str,
         flow_manager_args: FlowManagerArgs | None = None
-    ) -> Response_FunctionsT | None:
+    ):
         """
         [협동로봇이 관절 블랜드 이동 명령 배열을 초기화하는 명령 전송 함수]
         """
@@ -365,11 +372,9 @@ class RBManipulateMoveSDK(RBBaseSDK):
         move_input_target.tarFrame = target["tar_frame"]
         move_input_target.tarUnit = target["tar_unit"]
 
-        move_input_speed.spdMode = speed.get("spd_mode")
-        move_input_speed.spdVelPara = speed.get("spd_vel_para")
-        move_input_speed.spdAccPara = speed.get("spd_acc_para")
-
-        print("blend_type", blend_type, flush=True)
+        move_input_speed.spdMode = speed.get("spd_mode", 1)
+        move_input_speed.spdVelPara = speed.get("spd_vel_para", 60)
+        move_input_speed.spdAccPara = speed.get("spd_acc_para", 120)
 
         move_input_type.pntType = blend_type.get("pnt_type")
         move_input_type.pntPara = blend_type.get("pnt_para")
@@ -429,36 +434,162 @@ class RBManipulateMoveSDK(RBBaseSDK):
 
         return res["obj_payload"]
 
-    def call_move_lb(
+    def call_move_lb_clr(
         self,
         *,
         robot_model: str,
-        pnt_para: int,
-        pnt_type: int,
-        tar_frame: int,
-        tar_unit: int,
-        tar_values: list[float],
-        spd_mode: int,
-        spd_vel_para: float,
-        spd_acc_para: float,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
+        """
+        [협동로봇이 직선 블랜드 이동 명령 배열을 초기화하는 명령 전송 함수]
+        """
+        req = Request_Move_LB_CLRT()
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_lb_clr",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move LB Clear failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+        return res["obj_payload"]
+
+    def call_move_lb_add(
+        self,
+        *,
+        robot_model: str,
+        target: MoveInputTargetSchema,
+        reference_value: list[float | int] | None = None,
+        speed: MoveInputSpeedSchema | None = None,
+        blend_type: MoveInputTypeSchema,
         flow_manager_args: FlowManagerArgs | None = None
     ) -> Response_FunctionsT | None:
+        """
+        [협동로봇이 직선 블랜드 이동 명령 배열에 명령을 추가하는 명령 전송 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            target: 이동 좌표 및 프레임 정보
+            reference_value: 기준 타겟의 직선 좌표 리스트 [0,0,0,0,0,0,0]
+            speed: 이동 속도 정보
+            blend_type: 블랜드 타입 정보
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        if speed is None:
+            speed = MoveInputSpeedSchema(
+                spd_mode=1,
+                spd_vel_para=250,
+                spd_acc_para=1000,
+            )
+
+        res_get_relative_value: Response_Get_Relative_ValueT | None = None
+
+        if reference_value is not None:
+            res_get_relative_value = self.get_data_sdk.get_relative_value(
+                robot_model=robot_model,
+                relative_value=target,
+                reference_value=MoveInputTargetSchema(
+                    tar_values=reference_value,
+                    tar_frame=0,
+                    tar_unit=0,
+                ),
+                move_type=1,
+            )
+
+            if res_get_relative_value.calculatedResult != 0:
+                raise RuntimeError(
+                    f"Relative move value getting failed: calculated_result={res_get_relative_value.calculatedResult}"
+                )
+
+            target = MoveInputTargetSchema(
+                tar_values=res_get_relative_value.calculatedValue.tarValues.f,
+                tar_frame=res_get_relative_value.calculatedValue.tarFrame,
+                tar_unit=res_get_relative_value.calculatedValue.tarUnit,
+            )
+
+        req = Request_Move_LB_ADDT()
+        move_input_target = MoveInput_TargetT()
+        move_input_speed = MoveInput_SpeedT()
+        move_input_type = MoveInput_TypeT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        move_input_target.tarValues = ni
+        move_input_target.tarFrame = target["tar_frame"]
+        move_input_target.tarUnit = target["tar_unit"]
+
+        move_input_speed.spdMode = speed.get("spd_mode", 1)
+        move_input_speed.spdVelPara = speed.get("spd_vel_para", 250)
+        move_input_speed.spdAccPara = speed.get("spd_acc_para", 1000)
+
+        move_input_type.pntType = blend_type.get("pnt_type")
+        move_input_type.pntPara = blend_type.get("pnt_para")
+
+        req.target = move_input_target
+        req.speed = move_input_speed
+        req.type = move_input_type
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_lb_add",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=400,
+            timeout=2,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move LB Add failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+        return res["obj_payload"]
+
+    def call_move_lb_run(
+        self,
+        *,
+        robot_model: str,
+        orientation: int,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
         """
         [협동로봇이 직선 블랜드 이동을 시작하는 명령 전송 함수]
 
         Args:
             robot_model: 로봇 모델명
-            pnt_para: 포인트타입 (0: 직선포인트, 1: %기반 블랜드포인트, 2: 거리기반 블랜드포인트)
-            pnt_type: 블랜드 파라미터 (%기반 블랜드포인트나 거리기반 블랜드포인트을 위한 파라미터)
-            tar_frame: 기준 좌표계 (-1: Joint Space, 0: Global Frame, 1: Tool Frame, 2: User Frame, 3: Target Frame)
-            tar_unit: 단위계 옵션 (0: mm/degree, 1: meter/radian, 2: inch/degree)
-            tar_values: 이동 좌표 리스트
-            spd_mode: 속도 측정 설정 방식 (0: %기반 설정, 1: 절대값(물리값))
-            spd_vel_para: 속도
-            spd_acc_para: 가속도
+            orientation: 방향 정보
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
 
+        req = Request_Move_LB_RUNT()
+        req.orientation = orientation
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_lb_run",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+            timeout=2,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move LB Run failed: obj_payload is None")
+
+        self._run_coro_blocking(
+            self._move_flow_manager_solver(
+                robot_model=robot_model,
+                flow_manager_args=flow_manager_args
+            )
+        )
+
+        return res["obj_payload"]
 
     def call_smoothjog_j(
         self,
@@ -601,6 +732,7 @@ class RBManipulateMoveSDK(RBBaseSDK):
         """
         req = Request_Move_TickJogJT()
         req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
         ni.f = target["tar_values"]
@@ -646,6 +778,7 @@ class RBManipulateMoveSDK(RBBaseSDK):
 
         req = Request_Move_TickJogLT()
         req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
         ni.f = target["tar_values"]
@@ -674,5 +807,141 @@ class RBManipulateMoveSDK(RBBaseSDK):
                 flow_manager_args=flow_manager_args
             )
         )
+
+        return res["obj_payload"]
+
+    def call_approach_j(
+        self,
+        *,
+        robot_model: str,
+        target: MoveInputTargetSchema,
+        speed: MoveInputSpeedSchema,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
+        """
+        [Approach J로 협동로봇의 관절 공간 이동을 시작하는 명령 전송 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            target: 이동 좌표 및 프레임 정보
+            speed: 이동 속도 정보
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        req = Request_Move_ApproachJT()
+        req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        req.target.tarValues = ni
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        req.speed.spdMode = speed.get("spd_mode", 1)
+        req.speed.spdVelPara = speed.get("spd_vel_para", 60)
+        req.speed.spdAccPara = speed.get("spd_acc_para", 120)
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_approach_j",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Approach J failed: obj_payload is None")
+
+        self._run_coro_blocking(
+            self._move_flow_manager_solver(
+                robot_model=robot_model,
+                flow_manager_args=flow_manager_args
+            )
+        )
+
+        return res["obj_payload"]
+
+    def call_approach_l(
+        self,
+        *,
+        robot_model: str,
+        target: MoveInputTargetSchema,
+        speed: MoveInputSpeedSchema,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
+        """
+        [Approach L로 협동로봇의 직선 공간 이동을 시작하는 명령 전송 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            target: 이동 좌표 및 프레임 정보
+            speed: 이동 속도 정보
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        req = Request_Move_ApproachLT()
+        req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        req.target.tarValues = ni
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        req.speed.spdMode = speed.get("spd_mode", 1)
+        req.speed.spdVelPara = speed.get("spd_vel_para", 250)
+        req.speed.spdAccPara = speed.get("spd_acc_para", 1000)
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_approach_l",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Approach L failed: obj_payload is None")
+
+        self._run_coro_blocking(
+            self._move_flow_manager_solver(
+                robot_model=robot_model,
+                flow_manager_args=flow_manager_args
+            )
+        )
+
+        return res["obj_payload"]
+
+    def call_approach_stop(
+        self,
+        *,
+        robot_model: str,
+        stop_time: float | int,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
+        """
+        [Approach Stop로 협동로봇의 이동을 정지하는 명령 전송 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            stop_time: 정지 시간
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        req = Request_Move_ApproachStopT()
+        req.stoptime = float(stop_time)
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_approach_stop",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Approach Stop failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
 
         return res["obj_payload"]

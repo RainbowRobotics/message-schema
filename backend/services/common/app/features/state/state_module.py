@@ -24,6 +24,7 @@ from rb_flat_buffers.IPC.Response_Functions import (
 from rb_flat_buffers.IPC.State_Core import (
     State_CoreT,
 )
+from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_modules.log import (
     rb_log,
 )
@@ -64,6 +65,7 @@ from .state_schema import (
 
 program_service = ProgramService()
 info_service = InfoService()
+
 zenoh_client = ZenohClient()
 
 
@@ -253,12 +255,27 @@ class StateService:
     async def get_state_message(self, *, topic: str, message: StateMessageItemPD):
         rb_log.debug("🔎 subscribe */state_message")
 
+        executor_states = program_service.script_executor.get_all_states()
+
+        is_running = any(state["state"] != RB_Flow_Manager_ProgramState.IDLE for state in executor_states.values())
+
         message_dict = t_to_dict(message)
 
         sw_name = topic.split("/")[0]
 
         message_dict["sw_name"] = sw_name
+
+
         fire_and_log(socket_client.emit("state_message", message_dict))
+
+
+        if is_running and (message["type"] == 1 or message["type"] == 2):
+            asyncio.create_task(
+                asyncio.to_thread(
+                    program_service.script_executor.stop_all
+                )
+            )
+
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: float | None = 0.5
@@ -275,7 +292,7 @@ class StateService:
                 await program_service.call_smoothjog_stop(stoptime=stoptime)
 
             res = zenoh_client.query_one(
-                "C500920/call_powercontrol",
+                "*/call_powercontrol",
                 flatbuffer_req_obj=req,
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=32,

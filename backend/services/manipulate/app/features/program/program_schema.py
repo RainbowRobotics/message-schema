@@ -114,3 +114,14 @@ class Request_RelativeMovePD(BaseModel):
     reference_value: MoveInputTarget
     speed: MoveInputSpeed
     move_type: int
+
+class Request_MoveApproachJPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+
+class Request_MoveApproachLPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+
+class Request_MoveApproachStopPD(BaseModel):
+    stoptime: float

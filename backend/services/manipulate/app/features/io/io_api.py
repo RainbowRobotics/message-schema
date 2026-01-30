@@ -10,6 +10,7 @@ from .io_module import IoService
 from .io_schema import (
     Request_Flange_Digital_OutPD,
     Request_Flange_PowerPD,
+    Request_Multiple_Flange_Digital_OutPD,
     Request_Multiple_SideAoutPD,
     Request_Multiple_SideDoutBitcombinationPD,
     Request_Multiple_SideDoutPD,
@@ -109,3 +110,7 @@ async def call_flange_power(robot_model: str, request: Request_Flange_PowerPD):
 @io_router.post("/{robot_model}/call_flange_dout", response_model=Response_ReturnValuePD)
 async def call_flange_dout(robot_model: str, request: Request_Flange_Digital_OutPD):
     return JSONResponse(await io_service.call_flange_dout(robot_model=robot_model, request=request))
+
+@io_router.post("/{robot_model}/call_multiple_flange_dout", response_model=Response_ReturnValuePD)
+async def call_multiple_flange_dout(robot_model: str, request: Request_Multiple_Flange_Digital_OutPD):
+    return JSONResponse(io_service.call_multiple_flange_dout(robot_model=robot_model, request=request))

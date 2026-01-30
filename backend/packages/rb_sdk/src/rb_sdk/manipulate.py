@@ -39,3 +39,4 @@ class RBManipulateSDK(RBBaseSDK):
         self.io = RBManipulateIOSDK()
         self.get_data = RBManipulateGetDataSDK()
         self.point = RBManipulatePointSDK()
+        self.alarm_or_halt = self.program.alarm_or_halt

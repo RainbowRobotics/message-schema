@@ -30,7 +30,7 @@ from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJo
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller
 from rb_flow_manager.executor import ScriptExecutor
-from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
+from rb_flow_manager.schema import MakeProcessArgs, RB_Flow_Manager_ProgramState
 from rb_flow_manager.step import Step
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
@@ -132,23 +132,22 @@ class ProgramService(BaseService):
         res_manipulate_resume_or_pause: dict[str, Any] | None = None
 
         if is_pause:
+            self.script_executor.pause_all()
+
             res_manipulate_resume_or_pause = zenoh_client.query_one(
                 "*/call_pause",
                 flatbuffer_req_obj=req_manipulate_resume_or_pause,
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=256,
             )
-
-            self.script_executor.pause_all()
         else:
+            self.script_executor.resume_all()
             res_manipulate_resume_or_pause = zenoh_client.query_one(
                 "*/call_resume",
                 flatbuffer_req_obj=req_manipulate_resume_or_pause,
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=2,
             )
-
-            self.script_executor.resume_all()
 
         print("res_manipulate_resume_or_pause >>", res_manipulate_resume_or_pause, flush=True)
 
@@ -593,6 +592,19 @@ class ProgramService(BaseService):
                 name="emit_task_ended",
             )
 
+            fire_and_log(
+                socket_client.emit(
+                    f"program/task/{real_task_id}/state",
+                    {
+                        "state": state,
+                        "taskId": real_task_id,
+                        "robotModel": task_doc.get("robotModel", "*"),
+                        "stepMode": False,
+                    },
+                ),
+                name="emit_task_state",
+            )
+
         update_res = await steps_col.update_many(
             {
                 "taskId": real_task_id,
@@ -626,6 +638,17 @@ class ProgramService(BaseService):
                         "variables": execute_state.get("variables", {}),
                     },
                 ),
+            )
+
+            fire_and_log(
+                socket_client.emit(
+                    f"program/task/{task_id}/state", {
+                        "state": execute_state.get("state"),
+                        "taskId": task_id,
+                        "robotModel": execute_state.get("robot_model"),
+                        "stepMode": execute_state.get("step_mode"),
+                    }
+                )
             )
 
 
@@ -1018,6 +1041,21 @@ class ProgramService(BaseService):
 
         return {
             "task": task_doc,
+        }
+
+    async def get_task_state(self, *, task_id: str):
+        """
+        Task 상태를 조회하는 함수.
+        """
+
+        execute_states = self.script_executor.get_all_states()
+        task_state = dict(execute_states.get(task_id, {}) or {})
+
+        return {
+            "state": task_state.get("state"),
+            "taskId": task_id,
+            "robotModel": task_state.get("robot_model"),
+            "stepMode": task_state.get("step_mode"),
         }
 
     async def create_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
@@ -1770,7 +1808,7 @@ class ProgramService(BaseService):
             task_id = script["taskId"]
             repeat_count = script["repeatCount"]
             steps_tree = script["steps"]
-            step_mode = script.get("stepMode", False)
+            step_mode = script.get("stepMode", False)  # 각 스크립트마다 step_mode 가져오기
 
             normal_steps_tree = []
             post_steps_tree = []
@@ -1793,8 +1831,6 @@ class ProgramService(BaseService):
             category = self._robot_models[robot_model].get("be_service", None)
             begin = script.get("begin", None)
 
-
-
             tree = self.build_tree_from_client(normal_steps_tree, task_id, robot_model, category, begin)
             post_tree = self.parse_step_context(post_steps_tree[0], depth=8) if len(post_steps_tree) > 0 else None
 
@@ -1806,23 +1842,30 @@ class ProgramService(BaseService):
                     "repeat_count": repeat_count,
                     "robot_model": robot_model,
                     "category": category,
+                    "step_mode": step_mode,  # 각 스크립트의 step_mode 저장
                 }
             )
 
+        make_process_args_list = []
         for tree in tree_list:
-            self.script_executor.start(
-                tree["taskId"],
-                tree["tree"],
-                tree["repeat_count"],
-                robot_model=tree["robot_model"],
-                category=tree["category"],
-                step_mode=step_mode,
-                min_step_interval=0.5 if step_mode else None,
-                is_ui_execution=True,
-                post_tree=tree["post_tree"],
+            make_process_args_list.append(
+                MakeProcessArgs(
+                    process_id=tree["taskId"],
+                    step=tree["tree"],
+                    repeat_count=tree["repeat_count"],
+                    robot_model=tree["robot_model"],
+                    category=tree["category"],
+                    step_mode=tree["step_mode"],  # 각 tree의 step_mode 사용
+                    min_step_interval=0.5 if tree["step_mode"] else None,  # 각 tree의 step_mode 기준
+                    is_ui_execution=True,
+                    post_tree=tree["post_tree"],
+                )
             )
 
-        self._step_mode = step_mode
+        self.script_executor.start(make_process_args_list)
+
+        # 모든 스크립트의 step_mode를 확인 (하나라도 True면 True)
+        self._step_mode = any(tree["step_mode"] for tree in tree_list)
 
         return {
             "status": "success",
@@ -1867,13 +1910,15 @@ class ProgramService(BaseService):
 
         for tree in tree_list:
             self.script_executor.start(
-                tree["taskId"],
-                tree["tree"],
-                tree["repeat_count"],
-                robot_model=tree["robot_model"],
-                category=tree["category"],
-                step_mode=False,
-                is_ui_execution=True,
+                MakeProcessArgs(
+                    process_id=tree["taskId"],
+                    step=tree["tree"],
+                    repeat_count=tree["repeat_count"],
+                    robot_model=tree["robot_model"],
+                    category=tree["category"],
+                    step_mode=False,
+                    is_ui_execution=True,
+                )
             )
 
         return {
@@ -2024,7 +2069,13 @@ class ProgramService(BaseService):
             tree = self._load_tree_from_script(f"{script_path}/{script_name}.{extension}")
 
             self.script_executor.start(
-                script_name, tree, repeat_count, robot_model=robot_model, category=category
+                MakeProcessArgs(
+                    process_id=script_name,
+                    step=tree,
+                    repeat_count=repeat_count,
+                    robot_model=robot_model,
+                    category=category,
+                )
             )
 
         return {

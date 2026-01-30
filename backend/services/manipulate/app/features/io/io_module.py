@@ -1,6 +1,4 @@
 
-from rb_flat_buffers.IPC.Request_Flange_Digital_Out import Request_Flange_Digital_OutT
-from rb_flat_buffers.IPC.Request_Flange_Power import Request_Flange_PowerT
 from rb_flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCountT
 from rb_flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
 from rb_flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFuncT
@@ -13,6 +11,7 @@ from rb_zenoh.client import ZenohClient
 from .io_schema import (
     Request_Flange_Digital_OutPD,
     Request_Flange_PowerPD,
+    Request_Multiple_Flange_Digital_OutPD,
     Request_Multiple_SideAoutPD,
     Request_Multiple_SideDoutBitcombinationPD,
     Request_Multiple_SideDoutPD,
@@ -196,27 +195,39 @@ class IoService(BaseService):
     # ==========================================================================
 
     async def call_flange_power(self, robot_model: str, request: Request_Flange_PowerPD):
-        req = Request_Flange_PowerT()
-        req.desiredVoltage = request.desired_voltage
+        """ Flange Power 호출 함수 """
 
-        res = zenoh_client.query_one(
-            f"{robot_model}/call_flange_power",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        res = rb_manipulate_sdk.io.call_flange_power(
+            robot_model=robot_model,
+            desired_voltage=request.desired_voltage,
         )
-        return res["dict_payload"]
+
+        return {
+            "returnValue": res.returnValue
+        }
 
 
     async def call_flange_dout(self, robot_model: str, request: Request_Flange_Digital_OutPD):
-        req = Request_Flange_Digital_OutT()
-        req.portNum = request.port_num
-        req.desiredOut = request.desired_out
+        """ Flange Digital Out 호출 함수 """
 
-        res = zenoh_client.query_one(
-            f"{robot_model}/call_flange_dout",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=8,
+        res = rb_manipulate_sdk.io.call_flange_dout(
+            robot_model=robot_model,
+            port_num=request.port_num,
+            desired_out=request.desired_out,
         )
-        return res["dict_payload"]
+
+        return {
+            "returnValue": res.returnValue
+        }
+
+    def call_multiple_flange_dout(self, robot_model: str, request: Request_Multiple_Flange_Digital_OutPD):
+        """ Multiple Flange Digital Out 호출 함수 """
+
+        res = rb_manipulate_sdk.io.call_multiple_flange_dout(
+            robot_model=robot_model,
+            flange_dout_args=t_to_dict(request.flange_dout_args),
+        )
+
+        return {
+            "returnValues": [res.returnValue for res in res]
+        }

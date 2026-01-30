@@ -13,12 +13,18 @@ from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
     Request_Update_Executor_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
+from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
+from rb_flat_buffers.IPC.Request_MotionResume import Request_MotionResumeT
+from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.program.RB_Program_Sub_Task_Type import RB_Program_Sub_Task_Type
 from rb_flat_buffers.program.Request_Program_At_End import Request_Program_At_EndT
 from rb_flat_buffers.program.Request_Program_At_Start import Request_Program_At_StartT
 from rb_flat_buffers.program.Request_Update_Sub_Task_State import Request_Update_Sub_Task_StateT
 from rb_flow_manager.controller.base_controller import BaseController
+from rb_modules.log import rb_log
 from rb_zenoh.client import ZenohClient
+from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError
 
 
 class Zenoh_Controller(BaseController):
@@ -40,8 +46,11 @@ class Zenoh_Controller(BaseController):
                 raise RuntimeError("Zenoh session not established within 3 seconds.")
             time.sleep(0.1)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/stop", payload={})
+        for task_id in self._state_dicts:
+            self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
+
+        # if self._zenoh_client is not None:
+        #     self._zenoh_client.query_one("rrs/stop")
 
     def on_start(self, task_id: str) -> None:
         if self._zenoh_client is not None:
@@ -49,34 +58,88 @@ class Zenoh_Controller(BaseController):
             req.taskId = task_id
             self._zenoh_client.publish("rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
 
+        self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_stop(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.STOPPED)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/stop", payload={})
+        robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
+
+        try:
+
+            if self._zenoh_client is not None:
+                self._zenoh_client.query_one(
+                    f"{robot_model}/call_halt",
+                    flatbuffer_req_obj=Request_MotionHaltT(),
+                    flatbuffer_res_T_class=Response_FunctionsT,
+                    flatbuffer_buf_size=2,
+                )
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.warning(f"Warning program: {e}")
+        except Exception as e:
+            raise e
 
     def on_wait(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.WAITING)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/pause", payload={})
+        try:
+            robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
+
+            if self._zenoh_client is not None:
+                self._zenoh_client.query_one(
+                    f"{robot_model}/call_pause",
+                    flatbuffer_req_obj=Request_MotionPauseT(),
+                    flatbuffer_res_T_class=Response_FunctionsT,
+                    flatbuffer_buf_size=2,
+                )
+
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.warning(f"Warning program: {e}")
+        except Exception as e:
+            raise e
 
     def on_pause(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.PAUSED)
         self.update_executor_state(RB_Flow_Manager_ProgramState.PAUSED)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.publish("rrs/pause", payload={})
+        try:
+
+            robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
+
+            if self._zenoh_client is not None:
+                self._zenoh_client.query_one(
+                    f"{robot_model}/call_pause",
+                    flatbuffer_req_obj=Request_MotionPauseT(),
+                    flatbuffer_res_T_class=Response_FunctionsT,
+                    flatbuffer_buf_size=2,
+                )
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.warning(f"Warning program: {e}")
+        except Exception as e:
+            raise e
 
     def on_resume(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
-        if self._zenoh_client is not None:
-            self._zenoh_client.query_one("rrs/resume", payload={})
+        try:
+
+            robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
+
+            if self._zenoh_client is not None:
+                self._zenoh_client.query_one(
+                    f"{robot_model}/call_resume",
+                    flatbuffer_req_obj=Request_MotionResumeT(),
+                    flatbuffer_res_T_class=Response_FunctionsT,
+                    flatbuffer_buf_size=2,
+                )
+
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.warning(f"Warning program: {e}")
+        except Exception as e:
+            raise e
 
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
@@ -101,6 +164,7 @@ class Zenoh_Controller(BaseController):
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.AFTER_COMPLETED)
 
     def on_complete(self, task_id: str) -> None:
+        self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.IDLE)
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 
         if self._zenoh_client is not None:

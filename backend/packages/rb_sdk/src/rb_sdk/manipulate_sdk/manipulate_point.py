@@ -107,15 +107,14 @@ class RBManipulatePointSDK(RBBaseSDK):
             if pnt_para is None or pnt_type is None:
                 raise ValueError("pnt_para and pnt_type are required for LB move")
 
-            return self.manipulate_move_sdk.call_move_lb(
+            return self.manipulate_move_sdk.call_move_lb_add(
                 robot_model=robot_model,
-                pnt_para=pnt_para,
-                pnt_type=pnt_type,
-                tar_frame=tar_frame,
-                tar_unit=tar_unit,
-                tar_values=tar_values,
-                spd_mode=spd_mode,
-                spd_vel_para=spd_vel_para,
-                spd_acc_para=spd_acc_para,
+                target=target,
+                reference_value=tar_frame_reference_point,
+                speed=speed,
+                blend_type=MoveInputTypeSchema(
+                    pnt_type=pnt_type,
+                    pnt_para=pnt_para,
+                ),
                 flow_manager_args=flow_manager_args,
             )

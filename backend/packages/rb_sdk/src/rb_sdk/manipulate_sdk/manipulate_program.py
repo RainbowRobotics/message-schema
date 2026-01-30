@@ -12,17 +12,22 @@ from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.Response_Get_Absolute_Value import Response_Get_Absolute_ValueT
 from rb_flat_buffers.IPC.Response_Get_Relative_Value import Response_Get_Relative_ValueT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
+from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import safe_eval_expr
 from rb_utils.parser import to_json
+from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError
 
 from rb_sdk.manipulate_sdk.manipulate_get_data import RBManipulateGetDataSDK
 
 from ..base import RBBaseSDK
+from .manipulate_io import RBManipulateIOSDK
+from .schema.manipulate_io_schema import FlangeDoutArg
 from .schema.manipulate_move_schema import MoveInputTargetSchema
 from .schema.manipulate_program_schema import DigitalInputConditionSchema
 
 rb_manipulate_get_data_sdk = RBManipulateGetDataSDK()
+rb_manipulate_io_sdk = RBManipulateIOSDK()
 
 class RBManipulateProgramSDK(RBBaseSDK):
     """Rainbow Robotics Manipulate Program SDK"""
@@ -93,20 +98,25 @@ class RBManipulateProgramSDK(RBBaseSDK):
             option: 프로그램 옵션
         """
 
-        req = Request_ProgramBeforeT()
-        req.option = option
+        try:
+            req = Request_ProgramBeforeT()
+            req.option = option
 
-        res = self.zenoh_client.query_one(
-            f"{robot_model}/call_program_before",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=2,
-        )
+            res = self.zenoh_client.query_one(
+                f"{robot_model}/call_program_before",
+                flatbuffer_req_obj=req,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=2,
+            )
 
-        if res["obj_payload"] is None:
-            raise RuntimeError("Call Program Before failed: obj_payload is None")
+            if res["obj_payload"] is None:
+                raise RuntimeError("Call Program Before failed: obj_payload is None")
 
-        return res["obj_payload"]
+            return res["obj_payload"]
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.error(f"Call Program Before failed: {e}")
+        except Exception as e:
+            raise e
 
     def call_program_after(self, *, robot_model: str, option: int) -> Response_FunctionsT:
         """
@@ -116,21 +126,26 @@ class RBManipulateProgramSDK(RBBaseSDK):
             robot_model: 로봇 모델명
             option: 프로그램 옵션
         """
+        try:
 
-        req = Request_ProgramAfterT()
-        req.option = option
+            req = Request_ProgramAfterT()
+            req.option = option
 
-        res = self.zenoh_client.query_one(
-            f"{robot_model}/call_program_after",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FunctionsT,
-            flatbuffer_buf_size=2,
-        )
+            res = self.zenoh_client.query_one(
+                f"{robot_model}/call_program_after",
+                flatbuffer_req_obj=req,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=2,
+            )
 
-        if res["obj_payload"] is None:
-            raise RuntimeError("Call Program After failed: obj_payload is None")
+            if res["obj_payload"] is None:
+                raise RuntimeError("Call Program After failed: obj_payload is None")
 
-        return res["obj_payload"]
+            return res["obj_payload"]
+        except (ZenohNoReply, ZenohReplyError) as e:
+            rb_log.error(f"Call Program After failed: {e}")
+        except Exception as e:
+            raise e
 
     async def set_begin(self, *, robot_model: str, position: list[float | int] | None = None, is_enable: bool = True, flow_manager_args: FlowManagerArgs | None = None):
         """
@@ -236,6 +251,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
         if flow_manager_args is not None:
             if stop_type == "pause":
+                flow_manager_args.ctx.pause_all()
                 flow_manager_args.ctx.pause()
             elif stop_type == "stop":
                 flow_manager_args.ctx.stop()
@@ -312,6 +328,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 )
 
         if flow_manager_args is not None:
+            flow_manager_args.ctx.pause_all()
             flow_manager_args.ctx.pause()
             flow_manager_args.ctx.check_stop()
             flow_manager_args.done()
@@ -352,7 +369,8 @@ class RBManipulateProgramSDK(RBBaseSDK):
         is_break = False
 
         if wait_type == "TIME":
-            return await self.wait(second=second, flow_manager_args=flow_manager_args)
+            await self.wait(second=second, flow_manager_args=flow_manager_args)
+            return
         elif wait_type == "HOLDING":
             if mode == "GENERAL":
                 while True:
@@ -489,14 +507,40 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
         calculated_value = res.calculatedValue
 
-        print(f"calculated_value: {calculated_value.tarValues.f}, variable_name: {variable_name}", flush=True)
-
         if variable_name is not None:
             flow_manager_args.ctx.update_local_variables({
                 variable_name: calculated_value.tarValues.f
             })
 
-        print(f"flow_manager_args.ctx.variables: {flow_manager_args.ctx.variables}", flush=True)
+        flow_manager_args.done()
+
+        return res
+
+    def tool_out(self, *, robot_model: str, tool_voltage: int, tool_dout_args: list[FlangeDoutArg], flow_manager_args: FlowManagerArgs | None = None) -> Response_FunctionsT:
+        """
+        [Tool Out 호출 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            tool_voltage: 툴 전압
+            tool_dout_args: 툴 디지털 아웃 인자
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        if flow_manager_args is None:
+            return
+
+        res = rb_manipulate_io_sdk.call_flange_power(
+            robot_model=robot_model,
+            desired_voltage=tool_voltage,
+        )
+
+        if res.returnValue != 0:
+            raise RuntimeError(f"Tool Out failed: returnValue={res.returnValue}")
+
+        res = rb_manipulate_io_sdk.call_multiple_flange_dout(
+            robot_model=robot_model,
+            flange_dout_args=tool_dout_args,
+        )
 
         flow_manager_args.done()
 

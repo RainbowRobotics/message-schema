@@ -15,6 +15,9 @@ from .program_schema import (
     Request_Move_SmoothJogJPD,
     Request_Move_SmoothJogLPD,
     Request_Move_SmoothJogStopPD,
+    Request_MoveApproachJPD,
+    Request_MoveApproachLPD,
+    Request_MoveApproachStopPD,
     Request_MoveJBAddPD,
     Request_MoveJPD,
     Request_MoveLBAddPD,
@@ -175,4 +178,19 @@ async def call_move_xb_add(robot_model: str, request: Request_MoveXBAddPD):
 @program_router.post("/{robot_model}/call_move_xb_run", response_model=Response_ReturnValuePD)
 async def call_move_xb_run(robot_model: str, request: Request_MoveXBRunPD):
     res = await program_service.call_move_xb_run(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+@program_router.post("/{robot_model}/call_approach_j", response_model=Response_ReturnValuePD)
+def call_approach_j(robot_model: str, request: Request_MoveApproachJPD):
+    res = program_service.call_approach_j(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+@program_router.post("/{robot_model}/call_approach_l", response_model=Response_ReturnValuePD)
+def call_approach_l(robot_model: str, request: Request_MoveApproachLPD):
+    res = program_service.call_approach_l(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+@program_router.post("/{robot_model}/call_approach_stop", response_model=Response_ReturnValuePD)
+def call_approach_stop(robot_model: str, request: Request_MoveApproachStopPD):
+    res = program_service.call_approach_stop(robot_model=robot_model, request=request)
     return JSONResponse(res)

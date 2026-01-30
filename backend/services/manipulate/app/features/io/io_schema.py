@@ -64,3 +64,6 @@ class Request_SideDout_PulsePD(BaseModel):
 
 class Request_Multiple_SideDoutPulsePD(BaseModel):
     side_dout_args: list[Request_SideDout_PulsePD]
+
+class Request_Multiple_Flange_Digital_OutPD(BaseModel):
+    flange_dout_args: list[Request_Flange_Digital_OutPD]

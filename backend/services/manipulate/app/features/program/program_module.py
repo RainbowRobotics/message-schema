@@ -15,7 +15,7 @@ from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_sdk.manipulate import RBManipulateSDK
 from rb_sdk.manipulate_sdk.schema.manipulate_move_schema import MoveInputSpeedSchema
-from rb_sdk.schema.manipulate_schema import MoveInputTargetSchema
+from rb_sdk.schema.manipulate_schema import MoveInputTargetSchema, ResponseCamelReturnValue
 from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 
@@ -24,6 +24,9 @@ from .program_schema import (
     Request_Move_SmoothJogJPD,
     Request_Move_SmoothJogLPD,
     Request_Move_SmoothJogStopPD,
+    Request_MoveApproachJPD,
+    Request_MoveApproachLPD,
+    Request_MoveApproachStopPD,
     Request_MoveJBAddPD,
     Request_MoveJPD,
     Request_MoveLBAddPD,
@@ -444,3 +447,62 @@ class ProgramService(BaseService):
         )
 
         return res["dict_payload"]
+
+    def call_approach_j(self, *, robot_model: str, request: Request_MoveApproachJPD) -> ResponseCamelReturnValue:
+        """
+        [Approach J 호출]
+        - target: 이동 좌표 및 프레임 정보
+        - speed: 이동 속도 정보
+        """
+
+        res = manipulate_sdk.move.call_approach_j(
+            robot_model=robot_model,
+            target=MoveInputTargetSchema(
+                tar_values=request.target.tar_values,
+                tar_frame=request.target.tar_frame,
+                tar_unit=request.target.tar_unit,
+            ),
+            speed=MoveInputSpeedSchema(
+                spd_mode=request.speed.spd_mode,
+                spd_vel_para=request.speed.spd_vel_para,
+                spd_acc_para=request.speed.spd_acc_para,
+            )
+        )
+
+        return t_to_dict(res)
+
+    def call_approach_l(self, *, robot_model: str, request: Request_MoveApproachLPD):
+        """
+        [Approach L 호출]
+        - target: 이동 좌표 및 프레임 정보
+        - speed: 이동 속도 정보
+        """
+
+        res = manipulate_sdk.move.call_approach_l(
+            robot_model=robot_model,
+            target=MoveInputTargetSchema(
+                tar_values=request.target.tar_values,
+                tar_frame=request.target.tar_frame,
+                tar_unit=request.target.tar_unit,
+            ),
+            speed=MoveInputSpeedSchema(
+                spd_mode=request.speed.spd_mode,
+                spd_vel_para=request.speed.spd_vel_para,
+                spd_acc_para=request.speed.spd_acc_para,
+            )
+        )
+
+        return t_to_dict(res)
+
+    def call_approach_stop(self, *, robot_model: str, request: Request_MoveApproachStopPD):
+        """
+        [Approach Stop 호출]
+        - stoptime: 정지 시간
+        """
+
+        res = manipulate_sdk.move.call_approach_stop(
+            robot_model=robot_model,
+            stop_time=request.stoptime,
+        )
+
+        return t_to_dict(res)

@@ -394,6 +394,24 @@ class ExecutionContext:
             }
         )
 
+    def pause_all(self):
+        self.result_queue.put({
+            "type": "control",
+            "action": "pause_all",
+            "process_id": self.process_id,
+            "ts": time.time(),
+            "generation": self._generation,
+        })
+
+    def resume_all(self):
+        self.result_queue.put({
+            "type": "control",
+            "action": "resume_all",
+            "process_id": self.process_id,
+            "ts": time.time(),
+            "generation": self._generation,
+        })
+
     def enter_folder(self):
         """Folder 진입"""
         self._folder_depth += 1

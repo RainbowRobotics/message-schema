@@ -11,7 +11,7 @@
   "C500880": {
     "model": "C500880",
     "be_service":"manipulate",
-    "alias": "C500880",
+    "alias": "Right Arm",
     "useCharge": false,
     "components": [
       "C500880"
@@ -20,10 +20,19 @@
   "C501880": {
     "model": "C501880",
     "be_service":"manipulate",
-    "alias": "C501880",
+    "alias": "Left Arm",
     "useCharge": false,
     "components": [
       "C501880"
+    ]
+  },
+  "C502880": {
+    "model": "C502880",
+    "be_service":"manipulate",
+    "alias": "Torso",
+    "useCharge": false,
+    "components": [
+      "C502880"
     ]
   },
   "RBY2": {
@@ -33,7 +42,36 @@
     "useCharge": false,
     "components": [
       "C500880",
-      "C501880"
+      "C501880",
+      "C502880"
+    ]
+  },
+  "TEST": {
+    "model": "TEST",
+    "be_service":"manipulate",
+    "alias": "TEST",
+    "useCharge": false,
+    "components": [
+      "TEST1",
+      "TEST2"
+    ]
+  },
+  "TEST1": {
+    "model": "TEST1",
+    "be_service":"manipulate",
+    "alias": "TEST1",
+    "useCharge": false,
+    "components": [
+      "TEST1"
+    ]
+  },
+  "TEST2": {
+    "model": "TEST2",
+    "be_service":"manipulate",
+    "alias": "TEST2",
+    "useCharge": false,
+    "components": [
+      "TEST2"
     ]
   }
 }

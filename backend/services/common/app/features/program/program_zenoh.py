@@ -45,10 +45,10 @@ async def on_pause():
     return await program_service.call_resume_or_pause(is_pause=True)
 
 
-@zenoh_program_router.queryable("rrs/resume")
-def on_resume():
+@zenoh_program_router.queryable("rrs/resume", flatbuffer_req_t=Request_Exec_Control_ProgramT, flatbuffer_res_buf_size=8)
+async def on_resume():
     """ 전체 로봇 프로그램 재개 """
-    return program_service.call_resume_or_pause(is_pause=False)
+    return await program_service.call_resume_or_pause(is_pause=False)
 
 
 @zenoh_program_router.queryable("rrs/stop")
