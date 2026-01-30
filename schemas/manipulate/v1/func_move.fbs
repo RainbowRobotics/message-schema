@@ -98,3 +98,21 @@ table Request_Servo_L {
     filter:         float;
 }
 //---------------------------------------------------------------
+// Approach Move
+//---------------------------------------------------------------
+// "call_approach_j"
+table Request_Move_ApproachJ {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+
+// "call_approach_l"
+table Request_Move_ApproachL {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+
+// "call_approach_stop"
+table Request_Move_ApproachStop {
+    stoptime:       float;
+}
