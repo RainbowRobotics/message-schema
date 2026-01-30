@@ -19,9 +19,9 @@ from rb_modules.log import rb_log
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
 
-from .adapter.linux_adapter import NetworkLinuxAdapter
-from .adapter.windows_adapter import NetworkWindowsAdapter
-from .adapter.mac_adapter import NetworkMacAdapter
+from .adapter.network_linux_adapter import NetworkLinuxAdapter
+from .adapter.network_windows_adapter import NetworkWindowsAdapter
+from .adapter.network_mac_adapter import NetworkMacAdapter
 from .domain.network import NetworkModel,Network
 
 class NetworkService:
@@ -78,7 +78,7 @@ class NetworkService:
 
         except ServiceException as e:
             rb_log.error(f"[network_service] getNetwork ServiceException : {e.message} {e.status_code}")
-            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+            raise e
 
     async def set_network(self, request: Request_Network_SetNetworkT) -> Response_Network_SetNetworkT:
         """
@@ -206,4 +206,4 @@ class NetworkService:
         except ServiceException as e:
             rb_log.error(f"[network_service] getWifiList ServiceException : {e.message} {e.status_code}")
 
-            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+            raise e
