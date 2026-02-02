@@ -11,6 +11,7 @@ from app.features.config.config_socket import config_socket_router
 from app.features.email.adapter.input.email_api import (
     email_router,
 )
+from app.features.sound.sound_api import sound_router
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.network.network_api import network_router
@@ -65,6 +66,7 @@ app = create_app(
         program_router,
         email_router,
         network_router,
+        sound_router,
     ],
     bg_tasks=[
         state_service.repeat_get_system_state,

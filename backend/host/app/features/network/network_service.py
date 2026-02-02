@@ -3,6 +3,7 @@
 """
 
 from contextlib import suppress
+import platform
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from rb_database import mongo_db
@@ -18,7 +19,9 @@ from rb_modules.log import rb_log
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
 
-from .nmcli_adapter import NetworkNmcliAdapter
+from .adapter.network_linux_adapter import NetworkLinuxAdapter
+from .adapter.network_windows_adapter import NetworkWindowsAdapter
+from .adapter.network_mac_adapter import NetworkMacAdapter
 from .domain.network import NetworkModel,Network
 
 class NetworkService:
@@ -27,7 +30,19 @@ class NetworkService:
     """
     def __init__(self):
         self.name = "network"
-        self.network_port = NetworkNmcliAdapter()
+        self.os = platform.system()
+        if self.os.lower().__contains__("linux"):
+            rb_log.info("[network_service] Host OS : Linux")
+            self.network_port = NetworkLinuxAdapter()
+        elif self.os.lower().__contains__("windows"):
+            self.network_port = NetworkWindowsAdapter()
+            rb_log.info("[network_service] Host OS : Windows")
+        elif self.os.lower().__contains__("darwin"):
+            rb_log.info("[network_service] Host OS : Darwin")
+            self.network_port = NetworkMacAdapter()
+        else:
+            rb_log.error(f"[network_service] Unsupported OS: {self.os}")
+            raise ValueError(f"Unsupported OS: {self.os}")
 
     def network_to_networkT(self, network: Network) -> NetworkT:
         """
@@ -63,7 +78,7 @@ class NetworkService:
 
         except ServiceException as e:
             rb_log.error(f"[network_service] getNetwork ServiceException : {e.message} {e.status_code}")
-            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+            raise e
 
     async def set_network(self, request: Request_Network_SetNetworkT) -> Response_Network_SetNetworkT:
         """
@@ -191,4 +206,4 @@ class NetworkService:
         except ServiceException as e:
             rb_log.error(f"[network_service] getWifiList ServiceException : {e.message} {e.status_code}")
 
-            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+            raise e

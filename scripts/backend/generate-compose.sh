@@ -98,7 +98,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
-      - ${DATA_DIR}:/data
+      - ${DATA_DIR}:/app/data
 
 EOF
 
@@ -124,7 +124,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
-      - ${DATA_DIR}:/data
+      - ${DATA_DIR}:/app/data
 
 EOF
 done
