@@ -2,7 +2,54 @@ include "func_return.fbs";
 include "common_struct.fbs";
 
 namespace IPC;
+//------------------------------------------------------
+// "call_joint_brake"
+table Request_JointBrake {
+  board_no:           int;
+  brake_optioin:      int;
+}
 
+// "call_joint_encoder_zero"
+table Request_JointEncoderZero {
+  board_no:           int;
+}
+
+// "call_joint_sensor_reset"
+table Request_JointSensorReset {
+  board_no:           int;
+}
+
+// "pop_joint_gain_pos"
+table Request_Pop_JointGain_Pos{
+  board_no:           int;
+}
+
+// "pop_joint_gain_cur"
+table Request_Pop_JointGain_Cur{
+  board_no:           int;
+}
+
+// "set_joint_gain_pos"
+table Request_Set_JointGain_Pos{
+  board_no:           int;
+  pgain:              int;
+  igain:              int;
+  dgain:              int;
+}
+
+// "set_joint_gain_cur"
+table Request_Set_JointGain_Cur{
+  board_no:           int;
+  pgain:              int;
+  igain:              int;
+}
+
+// "pop_joint_infos"
+table Request_Pop_JointInfos {
+  board_no:           int;
+}
+
+//------------------------------------------------------
 // "call_powercontrol"
 table Request_PowerControl {
   power_option:       int;
@@ -17,14 +64,4 @@ table Request_ServoControl {
 table Request_ReferenceControl {
   refcontrol_option:  int;
 }
-
-// "call_joint_brake"
-table Request_JointBrake {
-  board_no:           int;
-  brake_optioin:      int;
-}
-
-// "call_joint_encoder_zero"
-table Request_JointEncoderZero {
-  board_no:           int;
-}
+//------------------------------------------------------
