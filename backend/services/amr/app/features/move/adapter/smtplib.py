@@ -2,7 +2,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from app.features.move.src.port.email_output import (
+from app.features.move.port.move_email_port import (
     MoveEmailPort,
 )
 

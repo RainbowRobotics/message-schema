@@ -4,28 +4,28 @@
 
 from fastapi import APIRouter, BackgroundTasks
 
-from app.features.move.schema.move_api import (
-    Request_Move_CircularPD,
-    Request_Move_GoalPD,
-    Request_Move_RotatePD,
-    Request_Move_TargetPD,
-    Request_Move_XLinearPD,
-    RequestAmrMoveArchiveLogPD,
-    RequestAmrMoveExportLogPD,
-    RequestAmrMoveLogsPD,
-    Response_Move_CircularPD,
-    Response_Move_GoalPD,
-    Response_Move_LogsPD,
-    Response_Move_PausePD,
-    Response_Move_ResumePD,
-    Response_Move_RotatePD,
-    Response_Move_StopPD,
-    Response_Move_TargetPD,
-    Response_Move_XLinearPD,
-)
-from app.features.move.src.application.amr_move_service import AmrMoveService
+from app.features.move.move_service import AmrMoveService
+from app.features.move.move_schema import Request_Move_GoalPD
+from app.features.move.move_schema import Request_Move_TargetPD
+from app.features.move.move_schema import Request_Move_XLinearPD
+from app.features.move.move_schema import Request_Move_CircularPD
+from app.features.move.move_schema import Request_Move_RotatePD
+from app.features.move.move_schema import Request_Move_ArchiveLogPD
+from app.features.move.move_schema import Request_Move_ExportLogPD
+from app.features.move.move_schema import Request_Move_LogsPD
 
-# from app.main import amr_move_service
+from app.features.move.move_schema import Response_Move_StopPD
+from app.features.move.move_schema import Response_Move_PausePD
+from app.features.move.move_schema import Response_Move_ResumePD
+from app.features.move.move_schema import Response_Move_XLinearPD
+from app.features.move.move_schema import Response_Move_CircularPD
+from app.features.move.move_schema import Response_Move_RotatePD
+from app.features.move.move_schema import Response_Move_LogsPD
+from app.features.move.move_schema import Response_Move_GoalPD
+from app.features.move.move_schema import Response_Move_TargetPD
+from app.features.move.move_schema import Response_Move_LogsPD
+
+
 amr_move_router = APIRouter(
     tags=["AMR 이동"],
     prefix="",
@@ -407,7 +407,7 @@ async def slamnav_move_rotate(robot_model: str, request: Request_Move_RotatePD) 
     response_description="이동 로그 조회 결과 반환"
 )
 async def slamnav_move_logs(
-    request: RequestAmrMoveLogsPD) -> Response_Move_LogsPD:
+    request: Request_Move_LogsPD) -> Response_Move_LogsPD:
     """
     - request: RequestAmrMoveLogsPD
     - amr_move_service.get_logs: amr_move_service.get_logs 메서드 호출
@@ -441,7 +441,7 @@ async def slamnav_move_logs(
     """,
     response_description="이동 로그 조회 결과 반환"
 )
-async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
+async def archive_move_logs(request: Request_Move_ArchiveLogPD):
     """
     - request: RequestAmrMoveArchiveLogPD
     - amr_move_service.archive_logs: amr_move_service.archive_logs 메서드 호출
@@ -467,13 +467,13 @@ async def archive_move_logs(request: RequestAmrMoveArchiveLogPD):
     """,
     response_description="이동 로그 내보내기 결과 반환"
 )
-async def export_move_logs(dto: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
+async def export_move_logs(request: Request_Move_ExportLogPD, background_tasks: BackgroundTasks):
     """
     - request: RequestAmrMoveExportLogPD
     - amr_move_service.export_logs: amr_move_service.export_logs 메서드 호출
     - 이동 로그 내보내기 결과 반환
     """
-    return await amr_move_service.export_logs(dto, background_tasks)
+    return await amr_move_service.export_logs(request, background_tasks)
 
 
 

@@ -17,15 +17,13 @@ from rb_utils.service_exception import (
     ServiceException,
 )
 
-from app.features.move.schema.move_api import (
-    Request_Move_CircularPD,
-    Request_Move_GoalPD,
-    Request_Move_JogPD,
-    Request_Move_RotatePD,
-    Request_Move_TargetPD,
-    Request_Move_XLinearPD,
-)
 from app.schema.amr import AmrResponseStatusEnum
+from app.features.move.amr_move_schema import Request_Move_GoalPD
+from app.features.move.amr_move_schema import Request_Move_TargetPD
+from app.features.move.amr_move_schema import Request_Move_JogPD
+from app.features.move.amr_move_schema import Request_Move_XLinearPD
+from app.features.move.amr_move_schema import Request_Move_CircularPD
+from app.features.move.amr_move_schema import Request_Move_RotatePD
 
 
 # === Enums ==========================================================

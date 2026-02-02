@@ -1,28 +1,34 @@
 
 
 from rb_flat_buffers.SLAMNAV.Request_Dock import Request_DockT
-from rb_flat_buffers.SLAMNAV.Request_DockStop import Request_DockStopT
-from rb_flat_buffers.SLAMNAV.Request_Frequency import Request_FrequencyT
+from rb_flat_buffers.SLAMNAV.Response_Dock import Response_DockT
+from rb_flat_buffers.SLAMNAV.Request_Charge_Trigger import Request_Charge_TriggerT
+from rb_flat_buffers.SLAMNAV.Response_Charge_Trigger import Response_Charge_TriggerT
+from rb_flat_buffers.SLAMNAV.State_Change_Dock import State_Change_DockT
+from rb_flat_buffers.SLAMNAV.Request_Get_Obs_Box import Request_Get_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Response_Get_Obs_Box import Response_Get_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Request_Set_Obs_Box import Request_Set_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Response_Set_Obs_Box import Response_Set_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.Request_Jog import Request_JogT
+from rb_flat_buffers.SLAMNAV.Response_Jog import Response_JogT
+from rb_flat_buffers.SLAMNAV.Request_Sensor import Request_SensorT
+from rb_flat_buffers.SLAMNAV.Response_Sensor import Response_SensorT
+from rb_flat_buffers.SLAMNAV.Request_Path import Request_PathT
+from rb_flat_buffers.SLAMNAV.Response_Path import Response_PathT
+from rb_flat_buffers.SLAMNAV.Request_Detect import Request_DetectT
+from rb_flat_buffers.SLAMNAV.Response_Detect import Response_DetectT
 from rb_flat_buffers.SLAMNAV.Request_Led import Request_LedT
 from rb_flat_buffers.SLAMNAV.Request_Motor import Request_MotorT
-from rb_flat_buffers.SLAMNAV.Request_Obs_Box import Request_Obs_BoxT
-from rb_flat_buffers.SLAMNAV.Request_Random_Sequence import Request_Random_SequenceT
-from rb_flat_buffers.SLAMNAV.Request_Reset_Safety_Flag import Request_Reset_Safety_FlagT
-from rb_flat_buffers.SLAMNAV.Request_Safety_Field import Request_Safety_FieldT
-from rb_flat_buffers.SLAMNAV.Request_Safety_Io import Request_Safety_IoT
-from rb_flat_buffers.SLAMNAV.Request_Undock import Request_UndockT
-from rb_flat_buffers.SLAMNAV.Response_Dock import Response_DockT
-from rb_flat_buffers.SLAMNAV.Response_DockStop import Response_DockStopT
-from rb_flat_buffers.SLAMNAV.Response_Frequency import Response_FrequencyT
 from rb_flat_buffers.SLAMNAV.Response_Led import Response_LedT
 from rb_flat_buffers.SLAMNAV.Response_Motor import Response_MotorT
-from rb_flat_buffers.SLAMNAV.Response_Obs_Box import Response_Obs_BoxT
-from rb_flat_buffers.SLAMNAV.Response_Random_Sequence import Response_Random_SequenceT
-from rb_flat_buffers.SLAMNAV.Response_Reset_Safety_Flag import Response_Reset_Safety_FlagT
-from rb_flat_buffers.SLAMNAV.Response_Safety_Field import Response_Safety_FieldT
-from rb_flat_buffers.SLAMNAV.Response_Safety_Io import Response_Safety_IoT
-from rb_flat_buffers.SLAMNAV.Response_Undock import Response_UndockT
-from rb_flat_buffers.SLAMNAV.Safety_Flag import Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Request_Get_Safety_Field import Request_Get_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Request_Set_Safety_Field import Request_Set_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Response_Get_Safety_Field import Response_Get_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Response_Set_Safety_Field import Response_Set_Safety_FieldT
+from rb_flat_buffers.SLAMNAV.Request_Get_Safety_Flag import Request_Get_Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Request_Set_Safety_Flag import Request_Set_Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Response_Get_Safety_Flag import Response_Get_Safety_FlagT
+from rb_flat_buffers.SLAMNAV.Response_Set_Safety_Flag import Response_Set_Safety_FlagT
 
 from ..base import RBBaseSDK
 from .schema.amr_control_schema import SlamnavControlPort
@@ -46,26 +52,26 @@ class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
             Response_FrequencyT: 응답 객체
         """
 
-        # 1) Request_FrequencyT 객체 생성
-        req = Request_FrequencyT()
-        req.id = req_id
-        req.target = target
-        req.onoff = onoff
-        req.frequency = frequency
+        # # 1) Request_FrequencyT 객체 생성
+        # req = Request_FrequencyT()
+        # req.id = req_id
+        # req.target = target
+        # req.onoff = onoff
+        # req.frequency = frequency
 
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/frequency",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_FrequencyT,
-            flatbuffer_buf_size=125,
-        )
+        # # 2) 요청 전송
+        # result = self.zenoh_client.query_one(
+        #     f"{robot_model}/control/frequency",
+        #     flatbuffer_req_obj=req,
+        #     flatbuffer_res_T_class=Response_FrequencyT,
+        #     flatbuffer_buf_size=125,
+        # )
 
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Frequency failed: obj_payload is None")
+        # # 3) 결과 처리 및 반환
+        # if result["obj_payload"] is None:
+        #     raise RuntimeError("Call Control Frequency failed: obj_payload is None")
 
-        return result["obj_payload"]
+        # return result["obj_payload"]
 
     async def control_led(self, robot_model: str, req_id: str, onoff: bool, color: str) -> Response_LedT:
         """
@@ -128,6 +134,7 @@ class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
         # 1) Request_DockT 객체 생성
         req = Request_DockT()
         req.id = req_id
+        req.command = "dock"
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(

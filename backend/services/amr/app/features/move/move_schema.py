@@ -92,7 +92,7 @@ class Response_Move_RotatePD(BaseModel):
     result: str = Field(..., description="이동 회전 명령 처리 결과", example="accept")
     message: str | None = Field(None, description="상태 메시지", example="")
 
-class RequestAmrMoveLogsPD(BaseModel):
+class Request_Move_LogsPD(BaseModel):
     limit: int | None = Field(None, example=10)
     page: int | None = Field(None, example=1)
     searchText: str | None = Field(None, example="")
@@ -112,20 +112,20 @@ class Response_Move_LogsPD(BaseModel):
     items: list[dict] = Field(..., description="로그 목록", example=[{"id": "1", "createdAt": "2021-01-01 12:00:00", "message": "로그 메시지"}])
     pageInfo: PageInfo = Field(..., description="페이지 정보", example={"mode": "offset", "page": 1, "pages": 10, "limit": 10, "total": 100, "sort": "createdAt", "order": "desc"})
 
-class RequestAmrMoveArchiveLogPD(BaseModel):
+class Request_Move_ArchiveLogPD(BaseModel):
     cutOffDate: datetime | date | None = Field(None, example="2026-01-01")
     isDryRun: bool | None = Field(None, example=False)
 
-class ResponseAmrMoveArchiveLogPD(BaseModel):
+class Response_Move_ArchiveLogPD(BaseModel):
     cutOffDate: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
     isDryRun: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
 
-class RequestAmrMoveArchiveLogFilterPD(BaseModel):
+class Request_Move_ArchiveLogFilterPD(BaseModel):
     cutOffDate: datetime | date = Field(..., description="아카이브 기준 날짜(해당날짜기준부터 이전날짜를 모두 아카이브합니다)",example="2025-11-04")
     filters: str | dict[str, Any] | None = Field(..., description="", example="{'result': 'success'}")
     isDryRun: bool = Field(..., description="값이 True이면 실제 기능을 수행하진 않고 예상 결과를 반환합니다", example=False)
 
-class RequestAmrMoveExportLogPD(BaseModel):
+class Request_Move_ExportLogPD(BaseModel):
     startDt: datetime | date | None = Field(None,example="2026-01-01")
     endDt: datetime | date | None = Field(None,example="2026-12-31")
     filters: dict[str, Any] | None = Field(None, example={"result": "success"})
@@ -137,7 +137,7 @@ class RequestAmrMoveExportLogPD(BaseModel):
     method: Literal["file", "email"] = Field(None, example="file")
     email: str | None = Field(None, example="test@example.com")
 
-class ResponseAmrMoveExportLogPD(BaseModel):
+class Response_Move_ExportLogPD(BaseModel):
     startDt: datetime | date = Field(..., description="내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)",example="2025-11-04")
     endDt: datetime | date = Field(..., description="내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)",example="2025-11-04")
     filters: str | dict[str, Any] | None = Field(..., description="", example="{'result': 'success'}")

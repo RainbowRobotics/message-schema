@@ -1,20 +1,20 @@
-from rb_flat_buffers.SLAMNAV.Request_Move_Circular import Request_Move_CircularT
 from rb_flat_buffers.SLAMNAV.Request_Move_Goal import Request_Move_GoalT
-from rb_flat_buffers.SLAMNAV.Request_Move_Jog import Request_Move_JogT
-from rb_flat_buffers.SLAMNAV.Request_Move_Pause import Request_Move_PauseT
-from rb_flat_buffers.SLAMNAV.Request_Move_Resume import Request_Move_ResumeT
-from rb_flat_buffers.SLAMNAV.Request_Move_Rotate import Request_Move_RotateT
-from rb_flat_buffers.SLAMNAV.Request_Move_Stop import Request_Move_StopT
 from rb_flat_buffers.SLAMNAV.Request_Move_Target import Request_Move_TargetT
-from rb_flat_buffers.SLAMNAV.Request_Move_XLinear import Request_Move_XLinearT
-from rb_flat_buffers.SLAMNAV.Response_Move_Circular import Response_Move_CircularT
 from rb_flat_buffers.SLAMNAV.Response_Move_Goal import Response_Move_GoalT
-from rb_flat_buffers.SLAMNAV.Response_Move_Pause import Response_Move_PauseT
-from rb_flat_buffers.SLAMNAV.Response_Move_Resume import Response_Move_ResumeT
-from rb_flat_buffers.SLAMNAV.Response_Move_Rotate import Response_Move_RotateT
 from rb_flat_buffers.SLAMNAV.Response_Move_Stop import Response_Move_StopT
 from rb_flat_buffers.SLAMNAV.Response_Move_Target import Response_Move_TargetT
+from rb_flat_buffers.SLAMNAV.Move_Jog import Move_JogT
+from rb_flat_buffers.SLAMNAV.Request_Move_Stop import Request_Move_StopT
+from rb_flat_buffers.SLAMNAV.Response_Move_Pause import Response_Move_PauseT
+from rb_flat_buffers.SLAMNAV.Request_Move_Pause import Request_Move_PauseT
+from rb_flat_buffers.SLAMNAV.Response_Move_Resume import Response_Move_ResumeT
+from rb_flat_buffers.SLAMNAV.Request_Move_Resume import Request_Move_ResumeT
 from rb_flat_buffers.SLAMNAV.Response_Move_XLinear import Response_Move_XLinearT
+from rb_flat_buffers.SLAMNAV.Request_Move_XLinear import Request_Move_XLinearT
+from rb_flat_buffers.SLAMNAV.Response_Move_Circular import Response_Move_CircularT
+from rb_flat_buffers.SLAMNAV.Request_Move_Circular import Request_Move_CircularT
+from rb_flat_buffers.SLAMNAV.Response_Move_Rotate import Response_Move_RotateT
+from rb_flat_buffers.SLAMNAV.Request_Move_Rotate import Request_Move_RotateT
 
 from ..base import RBBaseSDK
 from .schema.amr_move_schema import SlamnavMovePort
@@ -22,32 +22,6 @@ from .schema.amr_move_schema import SlamnavMovePort
 
 class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
     """Rainbow Robotics AMR Move SDK"""
-
-    # def _to_state_change_move_t(self, dt: dict) -> State_Change_MoveT:
-    #     """
-    #     [State_Change_MoveT 변환]
-    #     - dict: dict
-    #     - State_Change_MoveT 객체 반환
-    #     """
-    #     return State_Change_MoveT(
-    #         id=dt.get("id"),
-    #         command=dt.get("command"),
-    #         curPose=dt.get("curPose") if dt.get("curPose") else dt.get("cur_pose"),
-    #         goalPose=dt.get("goalPose") if dt.get("goalPose") else dt.get("goal_pose"),
-    #         mapName=dt.get("mapName") if dt.get("mapName") else dt.get("map_name"),
-    #         vel=dt.get("vel"),
-    #         goalId=dt.get("goalId") if dt.get("goalId") else dt.get("goal_id"),
-    #         goalName=dt.get("goalName") if dt.get("goalName") else dt.get("goal_name"),
-    #         method=dt.get("method"),
-    #         direction=dt.get("direction"),
-    #         preset=dt.get("preset"),
-    #         result=dt.get("result"),
-    #         message=dt.get("message"),
-    #         remainingDist=dt.get("reamaingDist") if dt.get("reamaingDist") else dt.get("remaining_dist"),
-    #         target=dt.get("target"),
-    #         speed=dt.get("speed"),
-    #         batPercent=dt.get("batPercent") if dt.get("batPercent") else dt.get("bat_percent"),
-    #     )
 
     async def send_move_goal(self, robot_model: str, req_id: str, goal_id: str, method: str, preset: int) -> Response_Move_GoalT:
         """
@@ -113,7 +87,7 @@ class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
         """
 
         # 1) Request_Move_JogT 객체 생성
-        req = Request_Move_JogT()
+        req = Move_JogT()
         req.vx = vx
         req.vy = vy
         req.wz = wz

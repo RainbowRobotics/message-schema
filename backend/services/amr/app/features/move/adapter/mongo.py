@@ -32,10 +32,7 @@ from rb_utils.service_exception import (
     ServiceException,
 )
 
-from app.features.move.src.port.database_output import (
-    MoveDatabasePort,
-)
-
+from app.features.move.port.move_database_port import MoveDatabasePort
 
 class MoveMongoDatabaseAdapter(MoveDatabasePort):
     """

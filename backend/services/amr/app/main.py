@@ -6,15 +6,12 @@ from rb_modules.rb_fastapi_app import (
     create_app,
 )
 
+from app.features.move.move_api import amr_move_router
+from app.features.move.move_zenoh import move_zenoh_router
+
 from .features.control.src.adapters.input.amr_control_api import amr_control_router
 from .features.gateway.amr_zenoh import (
     amr_zenoh_router,
-)
-from .features.move.src.adapters.input.amr_move_api import (
-    amr_move_router,
-)
-from .features.move.src.adapters.input.amr_move_zenoh import (
-    move_zenoh_router,
 )
 from .socket.socket_client import (
     socket_client,
@@ -31,7 +28,7 @@ app = create_app(
     zenoh_routers=[amr_zenoh_router, move_zenoh_router],
     api_routers=[
         amr_move_router,
-        amr_control_router,
+        # amr_control_router,
         # amr_localization_router,
         # amr_map_router,
         # amr_network_router,

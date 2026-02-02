@@ -26,16 +26,16 @@ from rb_utils.service_exception import (
     ServiceException,  # pylint: disable=import-error,no-name-in-module
 )
 
-from app.features.move.schema.move_api import (
+from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_GoalPD,
     Request_Move_JogPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
     Request_Move_XLinearPD,
-    RequestAmrMoveArchiveLogPD,
-    RequestAmrMoveExportLogPD,
-    RequestAmrMoveLogsPD,
+    Request_Move_ArchiveLogPD,
+    Request_Move_ExportLogPD,
+    Request_Move_LogsPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LogsPD,
@@ -46,13 +46,13 @@ from app.features.move.schema.move_api import (
     Response_Move_TargetPD,
     Response_Move_XLinearPD,
 )
-from app.features.move.src.adapters.output.mongo import (
+from app.features.move.adapter.mongo import (
     MoveMongoDatabaseAdapter,
 )
-from app.features.move.src.adapters.output.smtplib import (
+from app.features.move.adapter.smtplib import (
     MoveSmtpLibEmailAdapter,
 )
-from app.features.move.src.domain.move_model import MoveModel
+from app.features.move.domain.move import MoveModel
 from app.schema.amr import AmrResponseStatusEnum
 from app.socket.socket_client import (
     socket_client,
@@ -466,7 +466,7 @@ class AmrMoveService:
 
     async def get_logs(
         self,
-        request: RequestAmrMoveLogsPD
+        request: Request_Move_LogsPD
         ) -> Response_Move_LogsPD:
         """
         [AMR 이동 로그 조회]
@@ -490,7 +490,7 @@ class AmrMoveService:
             rb_log.error(f"[getLogs] ServiceException : {e.message}, {e.status_code}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
 
-    async def archive_logs(self, request: RequestAmrMoveArchiveLogPD):
+    async def archive_logs(self, request: Request_Move_ArchiveLogPD):
         """
         [AMR 이동 로그 아카이브]
         """
@@ -514,7 +514,7 @@ class AmrMoveService:
             rb_log.error(f"[archiveLogs] ServiceException : {e.message}, {e.status_code}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
 
-    async def export_logs(self, request: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
+    async def export_logs(self, request: Request_Move_ExportLogPD, background_tasks: BackgroundTasks):
         """
         [AMR 이동 로그 내보내기]
         """
