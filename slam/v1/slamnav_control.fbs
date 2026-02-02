@@ -77,11 +77,11 @@ table Response_Set_Safety_Io {
 //--------------------------------------------
 
 // command : "dock", "undock", "dockstop"
-table Request_Dock {
+table Request_Dock_Control {
     id: string;
     command: string;
 }
-table Response_Dock {
+table Response_Dock_Control {
     id: string;
     command: string;
     result: string;
@@ -95,13 +95,6 @@ table Request_Charge_Trigger {
 table Response_Charge_Trigger {
     id: string;
     onoff: bool;
-    result: string;
-    message: string;
-}
-
-table State_Change_Dock {
-    id: string;
-    command: string;
     result: string;
     message: string;
 }
@@ -149,12 +142,12 @@ table Response_Set_Obs_Box {
 
 //--------------------------------------------
 
-table Request_Led {
+table Request_Led_Control {
     id: string;
     onoff: bool;
     color: string;
 }
-table Response_Led {
+table Response_Led_Control {
     id: string;
     onoff: bool;
     color: string;
@@ -164,11 +157,11 @@ table Response_Led {
 
 //--------------------------------------------
 
-table Request_Motor {
+table Request_Motor_Control {
     id: string;
     onoff: bool;
 }
-table Response_Motor {
+table Response_Motor_Control {
     id: string;
     onoff: bool;
     result: string;
@@ -191,13 +184,13 @@ table Response_Jog {
 //--------------------------------------------
 // sensor socket on/off & freq
 // command : camera, lidar2d, lidar3d
-table Request_Sensor {
+table Request_Sensor_Socket {
     id: string;
     command: string;
     onoff: bool;
     frequency: int;
 }
-table Response_Sensor {
+table Response_Sensor_Socket {
     id: string;
     command: string;
     onoff: bool;
@@ -208,12 +201,12 @@ table Response_Sensor {
 
 //--------------------------------------------
 
-table Request_Path {
+table Request_Path_Socket {
     id: string;
     onoff: bool;
     frequency: int;
 }
-table Response_Path {
+table Response_Path_Socket {
     id: string;
     onoff: bool;
     frequency: int;
@@ -223,14 +216,14 @@ table Response_Path {
 
 //--------------------------------------------
 
-table Request_Detect {
+table Request_Detect_Marker {
     id: string;
     command: string;
     camera_number: int;
     camera_serial: string;
     marker_size: float;
 }
-table Response_Detect {
+table Response_Detect_Marker {
     id: string;
     command: string;
     camera_number: int;
@@ -243,8 +236,10 @@ table Response_Detect {
 
 //--------------------------------------------
 //--------------------------------------------
-table Control_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+
+table Result_Control_Dock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
 }

@@ -1,5 +1,31 @@
 namespace SLAMNAV;
 
+// load map
+table Request_Map_Load {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+// load topo
+table Request_Topo_Load {
+    id: string;
+    // map_name: string;    // need not to declear
+}
+table Response_Topo_Load {
+    id: string;
+    map_name: string;   // return cur map_name
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
 table MapFileInfo {
     map_name: string;
     created_at: string;
@@ -15,6 +41,8 @@ table MapFile {
     cloud_info: MapFileInfo;
     topo_info: MapFileInfo;
 }
+
+// get map list
 table Request_Map_List {
     id: string;
 }
@@ -46,17 +74,6 @@ table Response_Map_Current {
     message: string;
 }
 
-table Request_Map_Load {
-    id: string;
-    map_name: string;
-}
-table Response_Map_Load {
-    id: string;
-    map_name: string;
-    result: string;
-    message: string;
-}
-
 //------------------------------------
 
 struct CloudData {
@@ -66,6 +83,7 @@ struct CloudData {
     intensity: float;
 }
 
+// get map file
 table Request_Get_Map_File {
     id: string;
     map_name: string;
@@ -76,11 +94,54 @@ table Response_Get_Map_File {
     map_name: string;
     file_name: string;
     size: uint32;
-    // data: [ubyte];  //.../map/cloud
-    data:  [CloudData];
+    data:  [CloudData]; // data: [ubyte];
     result: string;
     message: string;
 }
+
+// get map cloud
+table Request_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Get_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    data: [CloudData];
+    result: string;
+    message: string;
+}
+
+// set map cloud
+table Request_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    size: uint32;
+    data: [CloudData];
+}
+table Response_Set_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    // size: uint32;
+    // data: [Node]; -> too big
+    result: string;
+    message: string;
+}
+
+// 이거 모르겠음... 어떤 함수인지...
+table Request_Get_Map_pipe {}
+table Response_Get_Map_pipe {}
+
+// get map tiles
+table Request_Get_Map_Tiles {}
+table Response_Get_Map_Tiles {}
+
+//------------------------------------
 
 table Link {
     id: string;
@@ -98,46 +159,7 @@ table Node {
     type: string;
 }
 
-table Request_Get_Map_Cloud {
-    id: string;
-    map_name: string;
-    file_name: string;
-}
-table Response_Get_Map_Cloud {
-    id: string;
-    map_name: string;
-    file_name: string;
-    size: uint32;
-    data: [CloudData];
-    result: string;
-    message: string;
-}
-
-table Request_Set_Map_Cloud {
-    id: string;
-    map_name: string;
-    file_name: string;
-    size: uint32;
-    data: [CloudData];
-}
-table Response_Set_Map_Cloud {
-    id: string;
-    map_name: string;
-    file_name: string;
-    size: uint32;
-    // data: [Node]; -> too big
-    result: string;
-    message: string;
-}
-
-// 이거 모르겠음... 어떤 함수인지...
-table Request_Get_Map_pipe {}
-table Response_Get_Map_pipe {}
-table Request_Get_Map_Tiles {}
-table Response_Get_Map_Tiles {}
-
-//------------------------------------
-
+// set map topo
 table Request_Set_Map_Topology {
     id: string;
     map_name: string;
@@ -151,13 +173,30 @@ table Response_Set_Map_Topology {
     message: string;
 }
 
+// get map topo
 table Request_Get_Map_Topology {
     id: string;
     map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
 }
 table Response_Get_Map_Topology {
     id: string;
     map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
     data: [Node];
     result: string;
     message: string;
@@ -165,6 +204,7 @@ table Response_Get_Map_Topology {
 
 //------------------------------------
 
+// mapping start
 table Request_Mapping_Start {
     id: string;
 }
@@ -174,6 +214,7 @@ table Response_Mapping_Start {
     message: string;
 }
 
+// mapping stop
 table Request_Mapping_Stop {
     id: string;
 }
@@ -183,6 +224,7 @@ table Response_Mapping_Stop {
     message: string;
 }
 
+// mapping save
 table Request_Mapping_Save {
     id: string;
     map_name: string;
@@ -199,8 +241,9 @@ table Response_Mapping_Cloud_Reload {}
 
 //--------------------------------------------
 //--------------------------------------------
-table Map_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+table Result_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
 }

@@ -20,11 +20,9 @@ table Response_Localization_Init {
 
 table Request_Localization_RandomInit {
     id: string;
-    random_seed: string;
 }
 table Response_Localization_RandomInit {
     id: string;
-    random_seed: string;
     pose: LocalizationPose;
     result: string;
     message: string;
@@ -73,8 +71,10 @@ table Response_Localization_Stop {
 
 //--------------------------------------------
 //--------------------------------------------
-table Localization_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+
+table Result_Localization_Init {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
 }
