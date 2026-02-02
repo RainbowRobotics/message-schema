@@ -6,7 +6,7 @@ struct Point2D {
 }
 
 table Lidar_2D {
-    timestamp: float;
+    id: string;
     points: [Point2D];
 }
 
@@ -18,14 +18,14 @@ struct Point3D {
     z: float;
 }
 table Lidar_3D {
-    timestamp: float;
+    id: string;
     points: [Point3D];
 }
 
 //--------------------------------------------
 
 table Mapping_Cloud {
-    timestamp: float;
+    id: string;
     points: [Point3D];
 }
 
