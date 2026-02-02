@@ -1,42 +1,118 @@
 namespace SLAMNAV;
 
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       2D Point Structure
+    field
+        - x, y          :       2D 좌표
+        - intensity     :       강도
+*/
 struct Point2D {
     x: float;
     y: float;
+    intensity: float;
 }
 
-table Lidar_2D {
-    id: string;
-    points: [Point2D];
-}
-
-//--------------------------------------------
-
+/*
+    category    :       Data Structure
+    usage       :       3D Point Structure
+    field
+        - x, y, z       :       3D 좌표
+        - intensity     :       강도
+*/
 struct Point3D {
     x: float;
     y: float;
     z: float;
+    intensity: float;
 }
-table Lidar_3D {
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/lidar2d
+    usage       :       2D 라이다 포인트 클라우드 데이터
+    field
+        - id            :       time
+        - points        :       2D 포인트 배열 ( num : 360 )
+*/
+table Lidar2D {
+    id: string;
+    points: [Point2D];
+}
+
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/lidar3d
+    usage       :       3D 라이다 포인트 클라우드 데이터
+    field
+        - id            :       time
+        - points        :       3D 포인트 배열 ( num : ??? )
+*/
+table Lidar3D {
     id: string;
     points: [Point3D];
 }
 
-//--------------------------------------------
 
-table Mapping_Cloud {
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/mappingCloud
+    usage       :       매핑 포인트 클라우드 데이터
+    field
+        - id            :       time
+        - points        :       3D 포인트 배열
+*/
+table MappingCloud {
     id: string;
     points: [Point3D];
 }
 
-//--------------------------------------------
 
-table Global_Path {
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/globalPath
+    usage       :       전역 경로 데이터
+    field
+        - id            :       time
+        - path          :       경로 노드 목록
+*/
+table GlobalPath {
     id: string;
     path: [string];
 }
 
-table Local_Path {
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/localPath
+    usage       :       지역 경로 데이터
+    field
+        - id            :       time
+        - path          :       경로 노드 목록
+*/
+table LocalPath {
     id: string;
     path: [string];
 }

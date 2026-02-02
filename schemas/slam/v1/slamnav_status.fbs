@@ -1,5 +1,20 @@
 namespace SLAMNAV;
 
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       IMU 센서 상태
+    field
+        - acc_x/y/z     :       가속도 (x, y, z)
+        - gyr_x/y/z     :       자이로 (x, y, z)
+        - imu_rx/ry/rz  :       IMU 회전값
+*/
 struct StatusImu {
     acc_x: float;
     acc_y: float;
@@ -12,6 +27,15 @@ struct StatusImu {
     imu_rz: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       모터 상태
+    field
+        - connection    :       연결 상태
+        - status        :       모터 상태 코드
+        - temp          :       온도
+        - current       :       전류
+*/
 struct StatusMotor {
     connection: bool;
     status: int;
@@ -19,6 +43,15 @@ struct StatusMotor {
     current: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       위치 추정 상태
+    field
+        - inlier_error  :       인라이어 오차
+        - inlier_ratio  :       인라이어 비율
+        - mapping_error :       매핑 오차
+        - mapping_ratio :       매핑 비율
+*/
 struct StatusCondition {
     inlier_error: float;
     inlier_ratio: float;
@@ -26,6 +59,23 @@ struct StatusCondition {
     mapping_ratio: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       로봇 상태 플래그
+    field
+        - charge        :       충전 상태
+        - dock          :       도킹 상태
+        - emo           :       비상정지 상태
+        - localization  :       위치 추정 상태 ( "good" / "none" / "fail" )
+        - power         :       전원 상태
+        - sss_recovery  :       SSS 복구 상태
+        - sw_reset      :       소프트웨어 리셋 상태
+        - sw_stop       :       소프트웨어 정지 상태
+        - sw_start      :       소프트웨어 시작 상태
+        - sf_bumper_detect      :       범퍼 감지 상태
+        - sf_obs_detect         :       장애물 감지 상태
+        - sf_operational_stop   :       운영 정지 상태
+*/
 table StatusRobotState {
     charge: string;
     dock: bool;
@@ -41,13 +91,35 @@ table StatusRobotState {
     sf_operational_stop: bool;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       로봇 Safety IO 상태
+    field
+        - mcu0_dio      :       MCU0 Digital Output (8bit)
+        - mcu1_dio      :       MCU1 Digital Output (8bit)
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+*/
 table StatusRobotSafetyIoState {
-    mcu0_dio: [bool];   // vector(8)
-    mcu1_dio: [bool];   // vector(8)
-    mcu0_din: [bool];   // vector(8)
-    mcu1_din: [bool];   // vector(8)
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
 }
 
+/*
+    category    :       Data Structure
+    usage       :       전원 상태
+    field
+        - bat_in/out    :       배터리 입출력 전압
+        - bat_current   :       배터리 전류
+        - total_power   :       총 전력
+        - power         :       현재 전력
+        - bat_percent   :       배터리 잔량 (%)
+        - tabos_*       :       TABOS BMS 정보
+        - charge_current    :   충전 전류
+        - contact_voltage   :   접점 전압
+*/
 struct StatusPower {
     bat_in: float;
     bat_out: float;
@@ -69,16 +141,51 @@ struct StatusPower {
     contact_voltage: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       설정 정보
+    field
+        - platform_type :       플랫폼 타입
+        - platform_name :       플랫폼 이름
+*/
 table StatusSetting {
     platform_type: string;
     platform_name: string;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       맵 상태
+    field
+        - map_name      :       현재 맵 이름
+        - map_status    :       맵 상태
+*/
 table StatusMap {
     map_name: string;
     map_status: string;
 }
 
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/status
+    usage       :       로봇 전체 상태 정보
+    field
+        - condition     :       위치 추정 상태
+        - imu           :       IMU 센서 상태
+        - motor         :       모터 상태 배열
+        - power         :       전원 상태
+        - robot_state   :       로봇 상태 플래그
+        - robot_safety_io_state :   Safety IO 상태
+        - setting       :       설정 정보
+        - map           :       맵 상태
+*/
 table Status {
     condition: StatusCondition;
     imu: StatusImu;
@@ -90,42 +197,106 @@ table Status {
     map: StatusMap;
 }
 
-//--------------------------------------------
 
+
+
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Data Structure
+    usage       :       이동 상태
+    field
+        - auto_move     :       자동 이동 상태 ( "stop" / "move" / "pause" / "error" / "not ready" / "vir" )
+        - dock_move     :       도킹 이동 상태 ( "stop" )
+        - jog_move      :       조그 이동 상태 ( "none" )
+        - obs           :       장애물 상태 ( "none" / "near" / "far" / "vir" )
+        - path_state    :       경로 상태 ( "none" / "req_path" / "recv_path" )
+        - path_t        :       경로 발행 시간
+        - step          :       로봇 경로 step
+        - multi_state   :       multi 상태  ( "none" / "move" / "complete" / "fail" / "obstacle" / "cancel" )
+*/
 table StatusMoveState {
     auto_move: string;
     dock_move: string;
     jog_move: string;
     obs: string;
-    path: string;
+    path_state: string;
+    path_t: double;
+    step: int;
+    multi_state: string;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       위치 정보
+    field
+        - x, y      :       위치 좌표
+        - rz        :       회전 각도 (yaw)
+*/
 struct StatusPose {
     x: float;
     y: float;
-    z: float;
     rz: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       속도 정보
+    field
+        - vx        :       X축 선속도
+        - vy        :       Y축 선속도
+        - wz        :       Z축 각속도
+*/
 struct StatusVel {
     vx: float;
     vy: float;
     wz: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       노드 상태 정보
+    field
+        - id        :       노드 ID
+        - name      :       노드 이름
+        - pose      :       노드 위치
+*/
 table StatusNode {
-    node_id: string;
+    id: string;
     name: string;
-    state: string;
-    x: float;
-    y: float;
-    rz: float;
+    pose: StatusPose;
 }
 
-table Move_Status {
-    cur_node: StatusNode;
-    goal_node: StatusNode;
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/moveStatus
+    usage       :       이동 상태 정보
+    field
+        - move_state    :       이동 상태
+        - pose          :       현재 위치
+        - vel           :       현재 속도
+        - cur_node      :       현재 노드
+        - goal_node     :       목표 노드
+*/
+table MoveStatus {
     move_state: StatusMoveState;
     pose: StatusPose;
     vel: StatusVel;
+    cur_node: StatusNode;
+    goal_node: StatusNode;
 }

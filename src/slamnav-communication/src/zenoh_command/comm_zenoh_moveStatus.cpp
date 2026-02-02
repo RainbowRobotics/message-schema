@@ -73,7 +73,6 @@ static void publish_move_status(COMM_ZENOH* zenoh)
 
         const MOBILE_POSE mo = mobile->get_pose();
         const Eigen::Vector3d cur_xi = TF_to_se2(loc->get_cur_tf());
-
         QString cur_node_id = ctrl->get_cur_node_id();
         QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
 

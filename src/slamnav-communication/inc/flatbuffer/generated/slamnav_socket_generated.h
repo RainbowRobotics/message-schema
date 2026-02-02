@@ -17,36 +17,39 @@ namespace SLAMNAV {
 
 struct Point2D;
 
-struct Lidar_2D;
-struct Lidar_2DBuilder;
-
 struct Point3D;
 
-struct Lidar_3D;
-struct Lidar_3DBuilder;
+struct Lidar2D;
+struct Lidar2DBuilder;
 
-struct Mapping_Cloud;
-struct Mapping_CloudBuilder;
+struct Lidar3D;
+struct Lidar3DBuilder;
 
-struct Global_Path;
-struct Global_PathBuilder;
+struct MappingCloud;
+struct MappingCloudBuilder;
 
-struct Local_Path;
-struct Local_PathBuilder;
+struct GlobalPath;
+struct GlobalPathBuilder;
+
+struct LocalPath;
+struct LocalPathBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point2D FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
   float y_;
+  float intensity_;
 
  public:
   Point2D()
       : x_(0),
-        y_(0) {
+        y_(0),
+        intensity_(0) {
   }
-  Point2D(float _x, float _y)
+  Point2D(float _x, float _y, float _intensity)
       : x_(::flatbuffers::EndianScalar(_x)),
-        y_(::flatbuffers::EndianScalar(_y)) {
+        y_(::flatbuffers::EndianScalar(_y)),
+        intensity_(::flatbuffers::EndianScalar(_intensity)) {
   }
   float x() const {
     return ::flatbuffers::EndianScalar(x_);
@@ -54,25 +57,31 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point2D FLATBUFFERS_FINAL_CLASS {
   float y() const {
     return ::flatbuffers::EndianScalar(y_);
   }
+  float intensity() const {
+    return ::flatbuffers::EndianScalar(intensity_);
+  }
 };
-FLATBUFFERS_STRUCT_END(Point2D, 8);
+FLATBUFFERS_STRUCT_END(Point2D, 12);
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point3D FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
   float y_;
   float z_;
+  float intensity_;
 
  public:
   Point3D()
       : x_(0),
         y_(0),
-        z_(0) {
+        z_(0),
+        intensity_(0) {
   }
-  Point3D(float _x, float _y, float _z)
+  Point3D(float _x, float _y, float _z, float _intensity)
       : x_(::flatbuffers::EndianScalar(_x)),
         y_(::flatbuffers::EndianScalar(_y)),
-        z_(::flatbuffers::EndianScalar(_z)) {
+        z_(::flatbuffers::EndianScalar(_z)),
+        intensity_(::flatbuffers::EndianScalar(_intensity)) {
   }
   float x() const {
     return ::flatbuffers::EndianScalar(x_);
@@ -83,11 +92,14 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point3D FLATBUFFERS_FINAL_CLASS {
   float z() const {
     return ::flatbuffers::EndianScalar(z_);
   }
+  float intensity() const {
+    return ::flatbuffers::EndianScalar(intensity_);
+  }
 };
-FLATBUFFERS_STRUCT_END(Point3D, 12);
+FLATBUFFERS_STRUCT_END(Point3D, 16);
 
-struct Lidar_2D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Lidar_2DBuilder Builder;
+struct Lidar2D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Lidar2DBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_POINTS = 6
@@ -108,51 +120,51 @@ struct Lidar_2D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Lidar_2DBuilder {
-  typedef Lidar_2D Table;
+struct Lidar2DBuilder {
+  typedef Lidar2D Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Lidar_2D::VT_ID, id);
+    fbb_.AddOffset(Lidar2D::VT_ID, id);
   }
   void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point2D *>> points) {
-    fbb_.AddOffset(Lidar_2D::VT_POINTS, points);
+    fbb_.AddOffset(Lidar2D::VT_POINTS, points);
   }
-  explicit Lidar_2DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Lidar2DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Lidar_2D> Finish() {
+  ::flatbuffers::Offset<Lidar2D> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Lidar_2D>(end);
+    auto o = ::flatbuffers::Offset<Lidar2D>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Lidar_2D> CreateLidar_2D(
+inline ::flatbuffers::Offset<Lidar2D> CreateLidar2D(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point2D *>> points = 0) {
-  Lidar_2DBuilder builder_(_fbb);
+  Lidar2DBuilder builder_(_fbb);
   builder_.add_points(points);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Lidar_2D> CreateLidar_2DDirect(
+inline ::flatbuffers::Offset<Lidar2D> CreateLidar2DDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<SLAMNAV::Point2D> *points = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point2D>(*points) : 0;
-  return SLAMNAV::CreateLidar_2D(
+  return SLAMNAV::CreateLidar2D(
       _fbb,
       id__,
       points__);
 }
 
-struct Lidar_3D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Lidar_3DBuilder Builder;
+struct Lidar3D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Lidar3DBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_POINTS = 6
@@ -173,51 +185,51 @@ struct Lidar_3D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Lidar_3DBuilder {
-  typedef Lidar_3D Table;
+struct Lidar3DBuilder {
+  typedef Lidar3D Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Lidar_3D::VT_ID, id);
+    fbb_.AddOffset(Lidar3D::VT_ID, id);
   }
   void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
-    fbb_.AddOffset(Lidar_3D::VT_POINTS, points);
+    fbb_.AddOffset(Lidar3D::VT_POINTS, points);
   }
-  explicit Lidar_3DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Lidar3DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Lidar_3D> Finish() {
+  ::flatbuffers::Offset<Lidar3D> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Lidar_3D>(end);
+    auto o = ::flatbuffers::Offset<Lidar3D>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Lidar_3D> CreateLidar_3D(
+inline ::flatbuffers::Offset<Lidar3D> CreateLidar3D(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
-  Lidar_3DBuilder builder_(_fbb);
+  Lidar3DBuilder builder_(_fbb);
   builder_.add_points(points);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Lidar_3D> CreateLidar_3DDirect(
+inline ::flatbuffers::Offset<Lidar3D> CreateLidar3DDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<SLAMNAV::Point3D> *points = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point3D>(*points) : 0;
-  return SLAMNAV::CreateLidar_3D(
+  return SLAMNAV::CreateLidar3D(
       _fbb,
       id__,
       points__);
 }
 
-struct Mapping_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Mapping_CloudBuilder Builder;
+struct MappingCloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MappingCloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_POINTS = 6
@@ -238,51 +250,51 @@ struct Mapping_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Mapping_CloudBuilder {
-  typedef Mapping_Cloud Table;
+struct MappingCloudBuilder {
+  typedef MappingCloud Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Mapping_Cloud::VT_ID, id);
+    fbb_.AddOffset(MappingCloud::VT_ID, id);
   }
   void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
-    fbb_.AddOffset(Mapping_Cloud::VT_POINTS, points);
+    fbb_.AddOffset(MappingCloud::VT_POINTS, points);
   }
-  explicit Mapping_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit MappingCloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Mapping_Cloud> Finish() {
+  ::flatbuffers::Offset<MappingCloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Mapping_Cloud>(end);
+    auto o = ::flatbuffers::Offset<MappingCloud>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Mapping_Cloud> CreateMapping_Cloud(
+inline ::flatbuffers::Offset<MappingCloud> CreateMappingCloud(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
-  Mapping_CloudBuilder builder_(_fbb);
+  MappingCloudBuilder builder_(_fbb);
   builder_.add_points(points);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Mapping_Cloud> CreateMapping_CloudDirect(
+inline ::flatbuffers::Offset<MappingCloud> CreateMappingCloudDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<SLAMNAV::Point3D> *points = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point3D>(*points) : 0;
-  return SLAMNAV::CreateMapping_Cloud(
+  return SLAMNAV::CreateMappingCloud(
       _fbb,
       id__,
       points__);
 }
 
-struct Global_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Global_PathBuilder Builder;
+struct GlobalPath FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef GlobalPathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6
@@ -304,51 +316,51 @@ struct Global_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Global_PathBuilder {
-  typedef Global_Path Table;
+struct GlobalPathBuilder {
+  typedef GlobalPath Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Global_Path::VT_ID, id);
+    fbb_.AddOffset(GlobalPath::VT_ID, id);
   }
   void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
-    fbb_.AddOffset(Global_Path::VT_PATH, path);
+    fbb_.AddOffset(GlobalPath::VT_PATH, path);
   }
-  explicit Global_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit GlobalPathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Global_Path> Finish() {
+  ::flatbuffers::Offset<GlobalPath> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Global_Path>(end);
+    auto o = ::flatbuffers::Offset<GlobalPath>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Global_Path> CreateGlobal_Path(
+inline ::flatbuffers::Offset<GlobalPath> CreateGlobalPath(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0) {
-  Global_PathBuilder builder_(_fbb);
+  GlobalPathBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Global_Path> CreateGlobal_PathDirect(
+inline ::flatbuffers::Offset<GlobalPath> CreateGlobalPathDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
-  return SLAMNAV::CreateGlobal_Path(
+  return SLAMNAV::CreateGlobalPath(
       _fbb,
       id__,
       path__);
 }
 
-struct Local_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Local_PathBuilder Builder;
+struct LocalPath FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef LocalPathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6
@@ -370,44 +382,44 @@ struct Local_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Local_PathBuilder {
-  typedef Local_Path Table;
+struct LocalPathBuilder {
+  typedef LocalPath Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Local_Path::VT_ID, id);
+    fbb_.AddOffset(LocalPath::VT_ID, id);
   }
   void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
-    fbb_.AddOffset(Local_Path::VT_PATH, path);
+    fbb_.AddOffset(LocalPath::VT_PATH, path);
   }
-  explicit Local_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit LocalPathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Local_Path> Finish() {
+  ::flatbuffers::Offset<LocalPath> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Local_Path>(end);
+    auto o = ::flatbuffers::Offset<LocalPath>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Local_Path> CreateLocal_Path(
+inline ::flatbuffers::Offset<LocalPath> CreateLocalPath(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0) {
-  Local_PathBuilder builder_(_fbb);
+  LocalPathBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Local_Path> CreateLocal_PathDirect(
+inline ::flatbuffers::Offset<LocalPath> CreateLocalPathDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
-  return SLAMNAV::CreateLocal_Path(
+  return SLAMNAV::CreateLocalPath(
       _fbb,
       id__,
       path__);
