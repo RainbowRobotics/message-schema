@@ -63,12 +63,12 @@ class LogService:
         params_dict = t_to_dict(params)
 
         limit = params_dict["limit"]
-        pageNum = params_dict["pageNum"]
-        swName = params_dict["swName"]
+        page_num = params_dict["pageNum"]
+        sw_name = params_dict["swName"]
         level = params_dict["level"]
-        searchText = params_dict["searchText"]
-        fromDate = params_dict["fromDate"]
-        toDate = params_dict["toDate"]
+        search_text = params_dict["searchText"]
+        from_date = params_dict["fromDate"]
+        to_date = params_dict["toDate"]
 
         col = db["state_logs"]
 
@@ -76,23 +76,23 @@ class LogService:
 
         query: dict[str, Any] = {}
 
-        if searchText:
-            if len(searchText) > 100:
+        if search_text:
+            if len(search_text) > 100:
                 raise ValueError("searchText must be less than 100 characters")
 
-            query = make_check_search_text_query("contents", searchText, query=query)
+            query = make_check_search_text_query("contents", search_text, query=query)
 
         query = make_check_include_query("level", level, query=query)
-        query = make_check_include_query("swName", swName, query=query)
+        query = make_check_include_query("swName", sw_name, query=query)
 
-        if fromDate and toDate is None:
-            toDate = datetime.now(UTC).isoformat()
-        elif fromDate is None and toDate:
-            raise ValueError("When there is a toDate, there must also be a fromDate.")
+        if from_date and to_date is None:
+            to_date = datetime.now(UTC).isoformat()
+        elif from_date is None and to_date:
+            raise ValueError("When there is a to_date, there must also be a from_date.")
 
-        if fromDate and toDate:
+        if from_date and to_date:
             query = make_check_date_range_query(
-                "createdAt", {"from": fromDate, "to": toDate}, query=query
+                "createdAt", {"from": from_date, "to": to_date}, query=query
             )
 
         if limit is not None and limit <= 0:
@@ -100,10 +100,10 @@ class LogService:
 
         total_count = await col.count_documents(query)
 
-        if pageNum is not None and pageNum > 0:
+        if page_num is not None and page_num > 0:
             if limit is None:
                 limit = 30
-            skip = (pageNum - 1) * limit
+            skip = (page_num - 1) * limit
         else:
             skip = 0
 
