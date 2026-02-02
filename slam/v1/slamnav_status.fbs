@@ -82,8 +82,7 @@ table StatusMap {
 table Status {
     condition: StatusCondition;
     imu: StatusImu;
-    motor0: StatusMotor;
-    motor1: StatusMotor;
+    motor: [StatusMotor];
     power: StatusPower;
     robot_state: StatusRobotState;
     robot_safety_io_state: StatusRobotSafetyIoState;
@@ -93,7 +92,7 @@ table Status {
 
 //--------------------------------------------
 
-table MoveStatusMoveState {
+table StatusMoveState {
     auto_move: string;
     dock_move: string;
     jog_move: string;
@@ -101,20 +100,20 @@ table MoveStatusMoveState {
     path: string;
 }
 
-struct MoveStatusPose {
+struct StatusPose {
     x: float;
     y: float;
     z: float;
     rz: float;
 }
 
-struct MoveStatusVel {
+struct StatusVel {
     vx: float;
     vy: float;
     wz: float;
 }
 
-table MoveStatusNode {
+table StatusNode {
     node_id: string;
     name: string;
     state: string;
@@ -124,17 +123,9 @@ table MoveStatusNode {
 }
 
 table Move_Status {
-    cur_node: MoveStatusNode;
-    goal_node: MoveStatusNode;
-    move_state: MoveStatusMoveState;
-    pose: MoveStatusPose;
-    vel: MoveStatusVel;
-}
-
-//--------------------------------------------
-//--------------------------------------------
-table Status_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+    cur_node: StatusNode;
+    goal_node: StatusNode;
+    move_state: StatusMoveState;
+    pose: StatusPose;
+    vel: StatusVel;
 }

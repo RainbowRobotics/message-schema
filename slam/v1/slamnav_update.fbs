@@ -26,8 +26,10 @@ table Response_Current_Version {
 
 //--------------------------------------------
 //--------------------------------------------
-table Update_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+table Result_Update {
+    id: string;
+    branch: string;
+    version: string;
+    result: string;
+    message: string;
 }

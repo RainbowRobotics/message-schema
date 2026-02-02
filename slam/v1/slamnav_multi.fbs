@@ -1,23 +1,25 @@
 namespace SLAMNAV;
 
-table Request_Path {
+// multi path
+table Request_Multi_Path {
     id: string;
     path: [string];
 }
-table Response_Path {
+table Response_Multi_Path {
     id: string;
     path: [string];
     result: string;
     message: string;
 }
 
-table Request_Vobs {
+// multi Vobs
+table Request_Multi_Vobs {
     id: string;
     vobs_robots: [string];
     vobs_closures: [string];
     is_vobs_closures_change: string;
 }
-table Response_Vobs {
+table Response_Multi_Vobs {
     id: string;
     vobs_robots: [string];
     vobs_closures: [string];

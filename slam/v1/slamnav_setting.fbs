@@ -1,5 +1,6 @@
 namespace SLAMNAV;
 
+// get robot_type
 table Request_Get_Robot_Type {
     id: string;
 }
@@ -9,6 +10,8 @@ table Response_Get_Robot_Type {
     result: string;
     message: string;
 }
+
+// set robot_type
 table Request_Set_Robot_Type {
     id: string;
     robot_type: string;
@@ -62,17 +65,6 @@ table Response_Set_Setting_Param {
 }
 */
 
-table Request_Get_Sensor_Off {
-    id: string;
-    index: [SensorInfo];
-}
-table Response_Get_Sensor_Off {
-    id: string;
-    index: [SensorInfo];
-    result: string;
-    message: string;
-}
-
 table Request_Get_Pdu_Param {
     id: string;
 }
@@ -82,6 +74,7 @@ table Response_Get_Pdu_Param {
     result: string;
     message: string;
 }
+
 table Request_Set_Pdu_Param {
     id: string;
     params: [SettingParam];
@@ -109,17 +102,21 @@ table SensorInfo {
     index: int;
     serial: string;
 }
-table Request_Get_Sensor_Index {
+
+// get sensor info
+table Request_Get_Sensor_Info {
     id: string;
     target: string;
 }
-table Response_Get_Sensor_Index {
+table Response_Get_Sensor_Info {
     id: string;
     target: string;
     index: [SensorInfo];
     result: string;
     message: string;
 }
+
+// set sensor info
 table Request_Set_Sensor_Index {
     id: string;
     target: string;
@@ -132,22 +129,49 @@ table Response_Set_Sensor_Index {
     result: string;
     message: string;
 }
-table Request_Set_Sensor_On {
+
+// get sensor control
+table Request_Get_Sensor_Control {
     id: string;
-    index: [SensorInfo];
+    target: string;
+    control: bool;  // on / off
 }
-table Response_Set_Sensor_On {
+table Response_Get_Sensor_Control {
     id: string;
-    index: [SensorInfo];
+    target: string;
+    control: bool;
     result: string;
     message: string;
 }
 
+// set sensor control
+table Request_Set_Sensor_Control {
+    id: string;
+    target: string;
+    control: bool;
+}
+table Response_Set_Sensor_Control {
+    id: string;
+    target: string;
+    control: bool;
+    result: string;
+    message: string;
+}
 
 //--------------------------------------------
 //--------------------------------------------
-table Setting_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+table Result_Setting_Param {
+    id: string;
+    params: [SettingParam];
+    result: string;
+    message: string;
+}
+
+table Result_Setting_Sensor {
+    id: string;
+    target: string;
+    control: bool;
+    index: [SensorInfo];
+    result: string;
+    message: string;
 }

@@ -7,6 +7,7 @@ struct MovePose {
     rz: float;
 }
 
+// move_goal
 table Request_Move_Goal {
     id: string;
     goal_id: string;
@@ -14,7 +15,6 @@ table Request_Move_Goal {
     method: string;
     preset: int;
 }
-
 table Response_Move_Goal {
     id: string;
     goal_id: string;
@@ -25,6 +25,7 @@ table Response_Move_Goal {
     message: string;
 }
 
+// move_target
 table Request_Move_Target {
     id: string;
     goal_pose: MovePose;
@@ -40,12 +41,14 @@ table Response_Move_Target {
     message: string;
 }
 
+// jog
 table Move_Jog {
     vx: float;
     vy: float;
     wz: float;
 }
 
+// stop
 table Request_Move_Stop {
     id: string;
 }
@@ -55,6 +58,7 @@ table Response_Move_Stop {
     message: string;
 }
 
+// pause
 table Request_Move_Pause {
     id: string;
 }
@@ -64,6 +68,7 @@ table Response_Move_Pause {
     message: string;
 }
 
+// resume
 table Request_Move_Resume {
     id: string;
 }
@@ -73,12 +78,13 @@ table Response_Move_Resume {
     message: string;
 }
 
-table Request_Move_XLinear {
+// x_axis move
+table Request_Move_xLinear {
     id: string;
     target: float;
     speed: float;
 }
-table Response_Move_XLinear {
+table Response_Move_xLinear {
     id: string;
     target: float;
     speed: float;
@@ -86,11 +92,26 @@ table Response_Move_XLinear {
     message: string;
 }
 
+// y_axis move
+table Request_Move_yLinear {
+    id: string;
+    target: float;
+    speed: float;
+}
+table Response_Move_yLinear {
+    id: string;
+    target: float;
+    speed: float;
+    result: string;
+    message: string;
+}
+
+// move circular
 table Request_Move_Circular {
     id: string;
     target: float;
     speed: float;
-    direction: string;
+    direction: string;  //right, left
 }
 table Response_Move_Circular {
     id: string;
@@ -101,6 +122,7 @@ table Response_Move_Circular {
     message: string;
 }
 
+// move rotation
 table Request_Move_Rotate {
     id: string;
     target: float;
@@ -114,31 +136,24 @@ table Response_Move_Rotate {
     message: string;
 }
 
-// 모르겠엄...
-table State_Change_Move {
+//--------------------------------------------
+//--------------------------------------------
+table Result_Move {
     id: string;
-    command: string;
-    cur_pose: MovePose;
-    goal_pose: MovePose;
-    map_name: string;
-    vel: [float];
     goal_id: string;
     goal_name: string;
     method: string;
-    direction: string;
     preset: int;
-    result: string;
-    message: string;
-    remaining_dist: float;
+    goal_pose: MovePose;
     target: float;
     speed: float;
-    bat_percent: int;
-}
-
-//--------------------------------------------
-//--------------------------------------------
-table Move_Result {
-    id: string;     // Response ID
-    result: string; // success / fail
-    message: string;    // reason
+    direction: string;
+    result: string;
+    message: string;
+    // map_name: string;
+    // vel: [float];
+    // cur_pose: MovePose;
+    // command: string;
+    // remaining_dist: float;
+    // bat_percent: int;
 }
