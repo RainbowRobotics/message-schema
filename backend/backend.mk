@@ -11,7 +11,7 @@ backend.sync: ## uv sync
 	@cd ${WORKDIR} && uv sync --all-packages --frozen
 
 .PHONY: backend.add
-backend.add: ## uv add - SERVICE or PACKAGE 로 설치할 위치 지정 필수, DEPS 는 설치할 의존성 지정 필수 (ex. backend.add SERVICE=manipulate DEPS=fastapi)
+backend.add: ## uv add - SERVICE or PACKAGE or HOST=1 로 설치할 위치 지정 필수, DEPS 는 설치할 의존성 지정 필수 (ex. backend.add SERVICE=manipulate DEPS=fastapi)
 	@bash -c '\
 	if [ -n "$(PACKAGE)" ]; then \
 		echo "📦 패키지 '$(PACKAGE)'에 러닝타임 의존성 추가 중: $(DEPS)"; \
@@ -19,6 +19,9 @@ backend.add: ## uv add - SERVICE or PACKAGE 로 설치할 위치 지정 필수, 
 	elif [ -n "$(SERVICE)" ]; then \
 		echo "📦 서비스 '$(SERVICE)'에 러닝타임 의존성 추가 중: $(DEPS)"; \
 		cd ${WORKDIR}/services/${SERVICE} && uv add ${IS_DEV:--dev} ${DEPS}; \
+	elif [ -n "$(HOST)" ]; then \
+		echo "📦 호스트에 러닝타임 의존성 추가 중: $(DEPS)"; \
+		cd ${WORKDIR}/host && uv add ${IS_DEV:--dev} ${DEPS}; \
 	else \
 		echo "📦 루트에 개발용 의존성 추가 중: ${DEPS}"; \
 		cd ${WORKDIR} && uv add --dev ${DEPS}; \

@@ -9,6 +9,7 @@ from rb_flat_buffers.SLAMNAV.Request_Get_Obs_Box import Request_Get_Obs_BoxT
 from rb_flat_buffers.SLAMNAV.Response_Get_Obs_Box import Response_Get_Obs_BoxT
 from rb_flat_buffers.SLAMNAV.Request_Set_Obs_Box import Request_Set_Obs_BoxT
 from rb_flat_buffers.SLAMNAV.Response_Set_Obs_Box import Response_Set_Obs_BoxT
+from rb_flat_buffers.SLAMNAV.ObsBox import ObsBoxT
 from rb_flat_buffers.SLAMNAV.Request_Jog import Request_JogT
 from rb_flat_buffers.SLAMNAV.Response_Jog import Response_JogT
 from rb_flat_buffers.SLAMNAV.Request_Sensor import Request_SensorT
@@ -36,201 +37,6 @@ from .schema.amr_control_schema import SlamnavControlPort
 
 class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
     """Rainbow Robotics AMR Control SDK"""
-
-    async def control_frequency(self, robot_model: str, req_id: str, target: str, onoff: bool, frequency: int) -> Response_FrequencyT:
-        """
-        Control Frequency 전송]
-
-        Args:
-            robot_model: 로봇 모델명
-            req_id: 요청 ID
-            target: 대상
-            onoff: 켜기/끄기
-            frequency: 주기
-
-        Returns:
-            Response_FrequencyT: 응답 객체
-        """
-
-        # # 1) Request_FrequencyT 객체 생성
-        # req = Request_FrequencyT()
-        # req.id = req_id
-        # req.target = target
-        # req.onoff = onoff
-        # req.frequency = frequency
-
-        # # 2) 요청 전송
-        # result = self.zenoh_client.query_one(
-        #     f"{robot_model}/control/frequency",
-        #     flatbuffer_req_obj=req,
-        #     flatbuffer_res_T_class=Response_FrequencyT,
-        #     flatbuffer_buf_size=125,
-        # )
-
-        # # 3) 결과 처리 및 반환
-        # if result["obj_payload"] is None:
-        #     raise RuntimeError("Call Control Frequency failed: obj_payload is None")
-
-        # return result["obj_payload"]
-
-    async def control_led(self, robot_model: str, req_id: str, onoff: bool, color: str) -> Response_LedT:
-        """
-        [Control LED 전송]
-        - model: ControlRequestModel
-        - Response_Control_LEDT 객체 반환
-        """
-
-        # 1) Request_Control_LEDT 객체 생성
-        req = Request_LedT()
-        req.id = req_id
-        req.onoff = onoff
-        req.color = color
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/led",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_LedT,
-            flatbuffer_buf_size=125,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control LED failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def control_motor(self, robot_model: str, req_id: str, onoff: bool) -> Response_MotorT:
-        """
-        [Control Motor 전송]
-        - model: ControlRequestModel
-        - Response_Control_MotorT 객체 반환
-        """
-        # 1) Request_Control_MotorT 객체 생성
-        req = Request_MotorT()
-        req.id = req_id
-        req.onoff = onoff
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/motor",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_MotorT,
-            flatbuffer_buf_size=125,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Motor failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def control_dock(self, robot_model: str, req_id: str) -> Response_DockT:
-        """
-        [Control Dock 전송]
-        - model: ControlRequestModel
-        - Response_DockT 객체 반환
-        """
-        # 1) Request_DockT 객체 생성
-        req = Request_DockT()
-        req.id = req_id
-        req.command = "dock"
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/dock",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_DockT,
-            flatbuffer_buf_size=125,
-        )
-        print("============== control_dock ===============")
-        print(result)
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Undock failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def control_undock(self, robot_model: str, req_id: str) -> Response_UndockT:
-        """
-        [Control Undock 전송]
-        - model: ControlRequestModel
-        - Response_UndockT 객체 반환
-        """
-        # 1) Request_UndockT 객체 생성
-        req = Request_UndockT()
-        req.id = req_id
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/dock",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_UndockT,
-            flatbuffer_buf_size=125,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Undock failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def control_dock_stop(self, robot_model: str, req_id: str) -> Response_DockStopT:
-        """
-        [Control Dock Stop 전송]
-        - model: ControlRequestModel
-        - Response_DockStopT 객체 반환
-        """
-        # 1) Request_DockStopT 객체 생성
-        req = Request_DockStopT()
-        req.id = req_id
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/dockStop",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_DockStopT,
-            flatbuffer_buf_size=125,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Dock Stop failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def control_obs_box(self, robot_model: str, req_id: str, command: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> Response_Obs_BoxT:
-        """
-        [Control Obs Box 전송]
-        - model: ControlRequestModel
-        - Response_Obs_BoxT 객체 반환
-        """
-        # 1) Request_Obs_BoxT 객체 생성
-        req = Request_Obs_BoxT()
-        req.id = req_id
-        req.command = command
-        req.minX = min_x
-        req.minY = min_y
-        req.minZ = min_z
-        req.maxX = max_x
-        req.maxY = max_y
-        req.maxZ = max_z
-        req.mapRange = map_range
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/control/obs_box",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_Obs_BoxT,
-            flatbuffer_buf_size=125,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Control Obs Box failed: obj_payload is None")
-
-        return result["obj_payload"]
 
     async def control_safety_field(self, robot_model: str, req_id: str, command: str, safety_field: int) -> Response_Safety_FieldT:
         """
@@ -331,5 +137,251 @@ class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
         # 3) 결과 처리 및 반환
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Random Sequence failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_dock(self, robot_model: str, req_id: str, command: str) -> Response_DockT:
+        """
+        [Control Dock 전송]
+        - model: ControlRequestModel
+        - Response_DockT 객체 반환
+        """
+        # 1) Request_DockT 객체 생성
+        req = Request_DockT()
+        req.id = req_id
+        req.command = command
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/dock",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_DockT,
+            flatbuffer_buf_size=125,
+        )
+        print("============== control_dock ===============")
+        print(result)
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Undock failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_get_obs_box(self, robot_model: str, req_id: str, command: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> Response_Obs_BoxT:
+        """
+        [Control Obs Box 전송]
+        - req_id: 요청 ID
+        - command: 검출 명령
+        - min_x: 최소 X 좌표
+        - min_y: 최소 Y 좌표
+        - min_z: 최소 Z 좌표
+        - max_x: 최대 X 좌표
+        - max_y: 최대 Y 좌표
+        - max_z: 최대 Z 좌표
+        - map_range: 맵 범위
+        - Response_Obs_BoxT 객체 반환
+        """
+        # 1) Request_Obs_BoxT 객체 생성
+        req = Request_Get_Obs_BoxT()
+        req.id = req_id
+        req.command = command
+        minT = ObsBoxT()
+        minT.x = min_x
+        minT.y = min_y
+        minT.z = min_z
+        maxT = ObsBoxT()
+        maxT.x = max_x
+        maxT.y = max_y
+        maxT.z = max_z
+        req.min = minT
+        req.max = maxT
+        req.mapRange = map_range
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/obs_box",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_Get_Obs_BoxT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Obs Box failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_led(self, robot_model: str, req_id: str, onoff: bool, color: str) -> Response_LedT:
+        """
+        [Control LED 전송]
+        - req_id: 요청 ID
+        - onoff: LED 수동조작 켜기/끄기 (off면 SLAMNAV2 선에서 자동 제어)
+        - color: LED 색상
+        - Response_Control_LEDT 객체 반환
+        """
+
+        # 1) Request_Control_LEDT 객체 생성
+        req = Request_LedT()
+        req.id = req_id
+        req.onoff = onoff
+        req.color = color
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/led",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_LedT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control LED failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_motor(self, robot_model: str, req_id: str, onoff: bool) -> Response_MotorT:
+        """
+        [Control Motor 전송]
+        - req_id: 요청 ID
+        - onoff: 모터 켜기/끄기
+        - Response_Control_MotorT 객체 반환
+        """
+        # 1) Request_Control_MotorT 객체 생성
+        req = Request_MotorT()
+        req.id = req_id
+        req.onoff = onoff
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/motor",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_MotorT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_jog_onoff(self, robot_model: str, req_id: str, onoff: bool) -> Response_JogT:
+        """
+        [Control Jog On/Off 전송]
+        - req_id: 요청 ID
+        - onoff: Joystick 조작 켜기/끄기
+        - Response_Control_JogT 객체 반환
+        """
+
+        # 1) Request_Control_MotorT 객체 생성
+        req = Request_JogT()
+        req.id = req_id
+        req.onoff = onoff
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/jog",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_JogT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_sensor_onoff(self, robot_model: str, req_id: str, command: str, onoff: bool, frequency: int) -> Response_SensorT:
+        """
+        [Control Sensor On/Off 전송]
+        - req_id: 요청 ID
+        - command: 센서 종류
+        - onoff: 센서 켜기/끄기
+        - frequency: 센서 주파수
+        - Response_SensorT 객체 반환
+        """
+
+        # 1) Request_SensorT 객체 생성
+        req = Request_SensorT()
+        req.id = req_id
+        req.command = command
+        req.onoff = onoff
+        req.frequency = frequency
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/sensor",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_SensorT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_path(self, robot_model: str, req_id: str, onoff: bool, frequency: int) -> Response_PathT:
+        """
+        [Control Path On/Off 전송]
+        - req_id: 요청 ID
+        - onoff: 경로 전송 켜기/끄기
+        - frequency: 경로 전송 주파수
+        - Response_PathT 객체 반환
+        """
+
+        # 1) Request_PathT 객체 생성
+        req = Request_PathT()
+        req.id = req_id
+        req.onoff = onoff
+        req.frequency = frequency
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/path",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_PathT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_detect(self, robot_model: str, req_id: str, command: str, camera_number: int, camera_serial: str, marker_size: float) -> Response_DetectT:
+        """
+        [Control Detect 전송]
+        - req_id: 요청 ID
+        - command: 검출 명령
+        - camera_number: 카메라 번호
+        - camera_serial: 카메라 시리얼 번호
+        - marker_size: 마커 크기
+        - Response_DetectT 객체 반환
+        """
+
+        # 1) Request_DetectT 객체 생성
+        req = Request_DetectT()
+        req.id = req_id
+        req.command = command
+        req.camera_number = camera_number
+        req.camera_serial = camera_serial
+        req.marker_size = marker_size
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/detect",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_DetectT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Motor failed: obj_payload is None")
 
         return result["obj_payload"]
