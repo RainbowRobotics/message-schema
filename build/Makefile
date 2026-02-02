@@ -130,6 +130,19 @@ rb_program/fast:
 .PHONY : rb_program/fast
 
 #=============================================================================
+# Target rules for targets named copy_config
+
+# Build rule for target.
+copy_config: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 copy_config
+.PHONY : copy_config
+
+# fast build rule for target.
+copy_config/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_config.dir/build.make CMakeFiles/copy_config.dir/build
+.PHONY : copy_config/fast
+
+#=============================================================================
 # Target rules for targets named rb_session
 
 # Build rule for target.
@@ -1030,6 +1043,54 @@ rb_service/socket_server/data_server.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s
 .PHONY : rb_service/socket_server/data_server.cpp.s
 
+rb_service/socket_server/udp_command_server.o: rb_service/socket_server/udp_command_server.cpp.o
+.PHONY : rb_service/socket_server/udp_command_server.o
+
+# target to build an object file
+rb_service/socket_server/udp_command_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_command_server.cpp.o
+.PHONY : rb_service/socket_server/udp_command_server.cpp.o
+
+rb_service/socket_server/udp_command_server.i: rb_service/socket_server/udp_command_server.cpp.i
+.PHONY : rb_service/socket_server/udp_command_server.i
+
+# target to preprocess a source file
+rb_service/socket_server/udp_command_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_command_server.cpp.i
+.PHONY : rb_service/socket_server/udp_command_server.cpp.i
+
+rb_service/socket_server/udp_command_server.s: rb_service/socket_server/udp_command_server.cpp.s
+.PHONY : rb_service/socket_server/udp_command_server.s
+
+# target to generate assembly for a file
+rb_service/socket_server/udp_command_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_command_server.cpp.s
+.PHONY : rb_service/socket_server/udp_command_server.cpp.s
+
+rb_service/socket_server/udp_data_server.o: rb_service/socket_server/udp_data_server.cpp.o
+.PHONY : rb_service/socket_server/udp_data_server.o
+
+# target to build an object file
+rb_service/socket_server/udp_data_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_data_server.cpp.o
+.PHONY : rb_service/socket_server/udp_data_server.cpp.o
+
+rb_service/socket_server/udp_data_server.i: rb_service/socket_server/udp_data_server.cpp.i
+.PHONY : rb_service/socket_server/udp_data_server.i
+
+# target to preprocess a source file
+rb_service/socket_server/udp_data_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_data_server.cpp.i
+.PHONY : rb_service/socket_server/udp_data_server.cpp.i
+
+rb_service/socket_server/udp_data_server.s: rb_service/socket_server/udp_data_server.cpp.s
+.PHONY : rb_service/socket_server/udp_data_server.s
+
+# target to generate assembly for a file
+rb_service/socket_server/udp_data_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/udp_data_server.cpp.s
+.PHONY : rb_service/socket_server/udp_data_server.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1038,6 +1099,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... copy_config"
 	@echo "... rb_program"
 	@echo "... rb_session"
 	@echo "... main.o"
@@ -1151,6 +1213,12 @@ help:
 	@echo "... rb_service/socket_server/data_server.o"
 	@echo "... rb_service/socket_server/data_server.i"
 	@echo "... rb_service/socket_server/data_server.s"
+	@echo "... rb_service/socket_server/udp_command_server.o"
+	@echo "... rb_service/socket_server/udp_command_server.i"
+	@echo "... rb_service/socket_server/udp_command_server.s"
+	@echo "... rb_service/socket_server/udp_data_server.o"
+	@echo "... rb_service/socket_server/udp_data_server.i"
+	@echo "... rb_service/socket_server/udp_data_server.s"
 .PHONY : help
 
 
@@ -1165,23 +1233,3 @@ cmake_check_build_system:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
-
-SCHEMA_DIR := "rb_ipc/comm_fbs"
-SCHEMA_REMOTE := "message-schema"
-
-.PHONY: schema-subtree-init
-schema-subtree-init:
-	cd .. && \
-	git remote get-url $(SCHEMA_REMOTE) >/dev/null 2>&1 || \
-	git remote add $(SCHEMA_REMOTE) https://github.com/RainbowRobotics/message-schema.git && \
-	git subtree add --prefix=$(SCHEMA_DIR) $(SCHEMA_REMOTE) main --squash
-
-
-.PHONY: schema-update
-schema-update:
-	cd .. && \
-	bash "$(SCHEMA_DIR)/schema-update.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)
-
-.PHONY: schema-sync
-schema-sync:
-	@bash "$(SCHEMA_DIR)/schema-sync.sh" --dir $(SCHEMA_DIR) --remote $(SCHEMA_REMOTE)

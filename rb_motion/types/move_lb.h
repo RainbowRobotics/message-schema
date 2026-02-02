@@ -27,9 +27,9 @@ public:
     move_lb();
     ~move_lb();
 
-    void Clear(VectorCd x_sta);
+    void Clear();
     int Add(VectorCd x_tar, double x_pos_vel, double x_pos_acc, double x_rot_vel, double x_rot_acc, int p_type, float blend_para);
-    int Init(int rot_mode, int filter_window);
+    int Init(VectorCd x_sta, int rot_mode, int filter_window);
 
     void Update_Timer(double dt);
     double Get_Timer();

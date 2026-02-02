@@ -77,6 +77,7 @@ move_servo_j_control_ret move_servo_j::Control(double speed_scaler){
     timer += RT_PERIOD_SEC;
     if(timer <= timer_goal){
         double progress_alpha = timer / timer_control;
+        //std::cout<<"progress_alpha: "<<progress_alpha<<std::endl;
         j_target_final = (1. - progress_alpha) * j_input_target_old + progress_alpha * j_input_target_new;
         //j_target_final += j_target_speed * RT_PERIOD_SEC;
         

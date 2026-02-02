@@ -5,9 +5,15 @@
 namespace rb_module {
     enum class MCODE
     {
+        M400 = 400,
         M250 = 250,
         M200 = 200,
         M140 = 140,
+
+        M250S = 255,
+        M200S = 205,
+        M140S = 145,
+        MFHB = 487,
     };
 
     struct Module_Info{

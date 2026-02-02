@@ -255,6 +255,7 @@ struct SAFETY_MCU_SHARED_DATA_STRUC{
 
 struct iCANS{
     int                         CAN_CH[2];
+    int                         CAN_ID_SSX[2];
     int                         CAN_ID_CMD[2];
     int                         CAN_ID_STA[2];
     int                         CAN_ID_RET[2];

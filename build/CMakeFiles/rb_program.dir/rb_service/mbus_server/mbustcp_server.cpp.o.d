@@ -544,4 +544,5 @@ CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o: \
  /usr/local/include/rbdl/rbdl_utils.h /usr/include/eigen3/Eigen/Dense \
  /root/Desktop/test_project/rb_common/message.h \
  /root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.h \
- /root/Desktop/test_project/rb_service/shareddata.h
+ /root/Desktop/test_project/rb_service/shareddata.h \
+ /root/Desktop/test_project/rb_common/dof.h

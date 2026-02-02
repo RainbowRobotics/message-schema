@@ -21,9 +21,8 @@
 
 #include "common.h"
 #include "data_server.h"
-
-
-
+#include "shareddata.h"
+#include "system.h"
 
 
 
@@ -42,19 +41,13 @@ namespace rb_socket_data_server {
         int event_fd = -1;
         pthread_t server_thread;
 
-        struct MyDataStruct {
-            int id;
-            float temperature;
-            float pressure;
-            char status[8];
-        };
-        static MyDataStruct g_data = {1, 25.6f, 1013.2f, "OK"};
+        void Send_Data_as_Byte(int client_fd){
+            if(client_fd < 0) return;
 
-        std::string serialize_data(const MyDataStruct &d) {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "DATA[id=%d,temp=%.2f,press=%.2f,status=%s]",
-                    d.id, d.temperature, d.pressure, d.status);
-            return std::string(buf);
+            ST_SHM_M2F_STATE_CORE my_Data = rb_shareddata::getLocalShm()->robots[rb_system::Get_System_ID_Index()].m2f_state_core;
+            int d_size = sizeof(my_Data);
+            std::cout<<"Send_Data_as_Byte size : "<<d_size<<std::endl;
+            send(client_fd, &my_Data, d_size, MSG_NOSIGNAL);
         }
 
         struct ClientInfo {
@@ -85,6 +78,12 @@ namespace rb_socket_data_server {
         void enable_tcp_keepalive(int sockfd) {
             int optval;
             socklen_t optlen = sizeof(optval);
+
+            // NODELAY
+            optval = 1;
+            if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &optval, optlen) == -1) {
+                perror("setsockopt(TCP_NODELAY)");
+            }
 
             // 기본 keepalive 활성화
             optval = 1;
@@ -167,15 +166,15 @@ namespace rb_socket_data_server {
                 if (args.empty()) {
                     // 1회 송신 + 자동 전송 해제
                     c.auto_send = false;
-                    std::string payload = serialize_data(g_data) + "\n";
-                    send(client_fd, payload.c_str(), payload.size(), MSG_NOSIGNAL);
-                    std::cout << "[SDS] Sent single data to " << c.ip << std::endl;
+                    Send_Data_as_Byte(client_fd);
+
                     return MSG_OK;
                 } else {
                     try {
                         double hz = std::stod(args[0]);
                         if (hz <= 0)
                             return MSG_NOT_VALID_COMMAND_FORMAT;
+                        Send_Data_as_Byte(client_fd);
                         c.auto_send = true;
                         c.send_hz = hz;
                         c.next_send_time = std::chrono::steady_clock::now();
@@ -370,8 +369,7 @@ namespace rb_socket_data_server {
                     for (auto &p : clients) {
                         auto &c = p.second;
                         if (c.auto_send && now >= c.next_send_time) {
-                            std::string payload = serialize_data(g_data) + "\n";
-                            send(c.fd, payload.c_str(), payload.size(), MSG_NOSIGNAL);
+                            Send_Data_as_Byte(c.fd);
 
                             // 다음 전송 시각 계산 (Hz 기반)
                             auto interval = std::chrono::microseconds((int)(1'000'000.0 / c.send_hz));
@@ -482,10 +480,10 @@ namespace rb_socket_data_server {
         pthread_join(server_thread, nullptr);
     }
     void broadcast(const std::string& message){
-        std::lock_guard<std::mutex> lk(clients_mutex);
+        // std::lock_guard<std::mutex> lk(clients_mutex);
 
         if (clients.empty()) {
-            std::cout << "[SDS] Broadcast skipped (no clients)" << std::endl;
+            //std::cout << "[SDS] Broadcast skipped (no clients)" << std::endl;
             return;
         }
 

@@ -113,6 +113,10 @@ namespace rb_config {
         return true;
     }
 
+    int READ_System_Id_No(){
+        return Call_Value_I(DB_ADDR_LIST::SYS_ID_NO, 0);
+    }
+
     int READ_System_Gate_IP(int octet){
         ;// octet : 0 ~ 3
         if(octet == 0){
@@ -137,16 +141,75 @@ namespace rb_config {
         // 0 : MBUS
         // 1 : SOCKCMD
         // 2 : SOCKDATA
+        // 3 : UDPCMD
+        // 4 : UDPDATA
         if(port_type == 0){
             return Call_Value_I(DB_ADDR_LIST::SYS_PORT_NO_MBUS, 502);
         }else if(port_type == 1){
             return Call_Value_I(DB_ADDR_LIST::SYS_PORT_NO_SOCKCMD, 5000);
         }else if(port_type == 2){
             return Call_Value_I(DB_ADDR_LIST::SYS_PORT_NO_SOCKDATA, 5001);
+        }else if(port_type == 3){
+            return Call_Value_I(DB_ADDR_LIST::SYS_PORT_NO_UDPCMD, 50000);
+        }else if(port_type == 4){
+            return Call_Value_I(DB_ADDR_LIST::SYS_PORT_NO_UDPDATA, 50001);
         }else{
             LOG_ERROR("Invalid Port Type Number");
             return 60000;
         }
+    }
+
+    std::string READ_System_Cpu_Domain_Name(){
+        return Call_Value_S(DB_ADDR_LIST::SYS_CPU_DOMAIN_NAME, "cobot");
+    }
+
+    int READ_System_Cpu_Number(int class_num){
+        if(class_num == 0){
+            return Call_Value_I(DB_ADDR_LIST::SYS_CPU_NUM_CLASS_A, 0);
+        }else if(class_num == 1){
+            return Call_Value_I(DB_ADDR_LIST::SYS_CPU_NUM_CLASS_B, 1);
+        }else if(class_num == 2){
+            return Call_Value_I(DB_ADDR_LIST::SYS_CPU_NUM_CLASS_C, 2);
+        }else if(class_num == 3){
+            return Call_Value_I(DB_ADDR_LIST::SYS_CPU_NUM_CLASS_D, 3);
+        }else{
+            return 3;
+        }
+    }
+
+    int READ_DEV_Emg_Switch(){
+        return Call_Value_I(DB_ADDR_LIST::DEV_EMG_SWITCH, 1);
+    }
+    int READ_DEV_Side_IO(){
+        return Call_Value_I(DB_ADDR_LIST::DEV_SIDE_IO, 1);
+    }
+    int READ_DEV_Tool_Flange(){
+        return Call_Value_I(DB_ADDR_LIST::DEV_TOOL_FLANGE, 1);
+    }
+    int READ_DEV_Motor(int bno){
+        if(bno >= 0 && bno < NO_OF_JOINT){
+            int target_no = static_cast<int>(DB_ADDR_LIST::DEV_MOTOR_0) + bno;
+            return Call_Value_I(static_cast<DB_ADDR_LIST>(target_no), 1);
+        }else{
+            return 0;
+        }
+    }
+
+    std::string READ_Script_Command(int cno){
+        if(cno >= 0 && cno < 16){
+            int target_no = static_cast<int>(DB_ADDR_LIST::SCRIPT_CMD_0) + cno;
+            return Call_Value_S(static_cast<DB_ADDR_LIST>(target_no), "");
+        }else{
+            return "";
+        }
+    }
+    bool WRITE_Script_Command(int cno, std::string target_str){
+        if(cno >= 0 && cno < 16){
+            int target_no = static_cast<int>(DB_ADDR_LIST::SCRIPT_CMD_0) + cno;
+            return Write_Value_S(static_cast<DB_ADDR_LIST>(target_no), target_str);
+        }else{
+            return false;
+        }        
     }
 
     ROBOT_CONFIG READ_Robot_Parameter(int r_code){
@@ -433,7 +496,7 @@ namespace rb_config {
             ret.arm_max_payload = 5;
             ret.redundancy_type = 2;
 
-            ret.arm_max_pos_vel = 1000;//mm/s
+            ret.arm_max_pos_vel = 1500;//mm/s
             ret.arm_max_pos_acc = 20000;
             ret.arm_max_rot_vel = 360;//deg/s
             ret.arm_max_rot_acc = 720;
@@ -445,13 +508,23 @@ namespace rb_config {
             ret.can_Ch[0] = ret.can_Ch[1] = ret.can_Ch[2] = ret.can_Ch[3] = 1;
             ret.can_Ch[4] = ret.can_Ch[5] = ret.can_Ch[6] = ret.can_Ch[7] = 0;
 
-            ret.mdr_target[0] = 0;
-            ret.mdr_target[1] = 0;
-            ret.mdr_target[2] = 0;
-            ret.mdr_target[3] = 0;
-            ret.mdr_target[4] = 0;
-            ret.mdr_target[5] = 0;
-            ret.mdr_target[6] = 0;
+            if(r_code == 500880){
+                ret.mdr_target[0] = 0;
+                ret.mdr_target[1] = 0;
+                ret.mdr_target[2] = 0;
+                ret.mdr_target[3] = 0;
+                ret.mdr_target[4] = 0;
+                ret.mdr_target[5] = 0;
+                ret.mdr_target[6] = 1;
+            }else{
+                ret.mdr_target[0] = 1;//Y
+                ret.mdr_target[1] = 0;
+                ret.mdr_target[2] = 0;
+                ret.mdr_target[3] = 1;//Y
+                ret.mdr_target[4] = 0;
+                ret.mdr_target[5] = 1;//Y
+                ret.mdr_target[6] = 1;
+            }
 
             ret.modules_axis[0] = 1;
             ret.modules_axis[1] = 0;
@@ -461,26 +534,27 @@ namespace rb_config {
             ret.modules_axis[5] = 1;
             ret.modules_axis[6] = 0;
 
-            ret.modules_type[0] = ret.modules_type[1] = rb_module::MCODE::M250;
-            ret.modules_type[2] = ret.modules_type[3] = rb_module::MCODE::M200;
-            ret.modules_type[4] = ret.modules_type[5] = ret.modules_type[6] =rb_module::MCODE::M140;
+            ret.modules_type[0] = ret.modules_type[1] = rb_module::MCODE::M250S;
+            ret.modules_type[2] = ret.modules_type[3] = rb_module::MCODE::M200S;
+            ret.modules_type[4] = ret.modules_type[5] = rb_module::MCODE::M140S;
+            ret.modules_type[6] =                       rb_module::MCODE::MFHB;
 
             ret.modules_range_low[0] = -180;
             ret.modules_range_up[0]  = +180;
 
             if(r_code == 500880){
                 ret.modules_range_low[1] = -180;
-                ret.modules_range_up[1]  = +4;
+                ret.modules_range_up[1]  = +10;
             }else{
-                ret.modules_range_low[1] = -4;
+                ret.modules_range_low[1] = -10;
                 ret.modules_range_up[1]  = +180;
             }
 
             ret.modules_range_low[2] = -180;
             ret.modules_range_up[2]  = +180;
 
-            ret.modules_range_low[3] = -120;
-            ret.modules_range_up[3]  = +120;
+            ret.modules_range_low[3] = -125;
+            ret.modules_range_up[3]  = +125;
 
             ret.modules_range_low[4] = -360;
             ret.modules_range_up[4]  = +360;
@@ -508,7 +582,7 @@ namespace rb_config {
                 ret.link_capsule_up[0] = Eigen::Vector3d(0, 0, 0);
                 ret.link_capsule_radi[0] = 60;
 
-                ret.link_mass_m[1] = 1.0;
+                ret.link_mass_m[1] = 4.0;
                 ret.link_mass_C[1] = Eigen::Vector3d(0, 0, 0);
                 ret.link_offset[1] = Eigen::Vector3d(0, 0, 0);
                 ret.link_rotation[1] = rb_math::Rx(+7.0 * M_PI / 180.0);
@@ -524,7 +598,7 @@ namespace rb_config {
                 ret.link_capsule_up[0] = Eigen::Vector3d(0, 0, 0);
                 ret.link_capsule_radi[0] = 60;
 
-                ret.link_mass_m[1] = 1.0;
+                ret.link_mass_m[1] = 4.0;
                 ret.link_mass_C[1] = Eigen::Vector3d(0, 0, 0);
                 ret.link_offset[1] = Eigen::Vector3d(0, 0, 0);
                 ret.link_rotation[1] = rb_math::Rx(-7.0 * M_PI / 180.0);
@@ -533,31 +607,31 @@ namespace rb_config {
                 ret.link_capsule_radi[1] = 60;
             }
 
-            ret.link_mass_m[2] = 1.0;
-            ret.link_mass_C[2] = Eigen::Vector3d(0, 0, 0);
+            ret.link_mass_m[2] = 5.0;
+            ret.link_mass_C[2] = Eigen::Vector3d(0, 0, -100.0);
             ret.link_offset[2] = Eigen::Vector3d(0, 0, -100.0);
             ret.link_rotation[2] = Eigen::Matrix3d::Identity();
             ret.link_capsule_dw[2] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_up[2] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_radi[2] = 60;
 
-            ret.link_mass_m[3] = 1.0;
-            ret.link_mass_C[3] = Eigen::Vector3d(0, 0, 0);
+            ret.link_mass_m[3] = 3.0;
+            ret.link_mass_C[3] = Eigen::Vector3d(0, 0, -50);
             ret.link_offset[3] = Eigen::Vector3d(0, 0, -325.0);
             ret.link_rotation[3] = Eigen::Matrix3d::Identity();
             ret.link_capsule_dw[3] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_up[3] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_radi[3] = 60;
 
-            ret.link_mass_m[4] = 1.0;
-            ret.link_mass_C[4] = Eigen::Vector3d(0, 0, 0);
+            ret.link_mass_m[4] = 2.0;
+            ret.link_mass_C[4] = Eigen::Vector3d(0, 0, -50);
             ret.link_offset[4] = Eigen::Vector3d(0, 0, -100.0);
             ret.link_rotation[4] = Eigen::Matrix3d::Identity();
             ret.link_capsule_dw[4] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_up[4] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_radi[4] = 50;
 
-            ret.link_mass_m[5] = 1.0;
+            ret.link_mass_m[5] = 2.0;
             ret.link_mass_C[5] = Eigen::Vector3d(0, 0, 0);
             ret.link_offset[5] = Eigen::Vector3d(0, 0, -265.0);
             ret.link_rotation[5] = Eigen::Matrix3d::Identity();
@@ -565,7 +639,7 @@ namespace rb_config {
             ret.link_capsule_up[5] = Eigen::Vector3d(0, 0, 0);
             ret.link_capsule_radi[5] = 45;
 
-            ret.link_mass_m[6] = 0.5;
+            ret.link_mass_m[6] = 1.0;
             ret.link_mass_C[6] = Eigen::Vector3d(0, 0, 0);
             ret.link_offset[6] = Eigen::Vector3d(0, 0, 0);
             ret.link_rotation[6] = Eigen::Matrix3d::Identity();
@@ -634,6 +708,81 @@ namespace rb_config {
             ret.self_coll_check_list.push_back(temp_combination);
 
             #endif
+        }else if(r_code == 502880){
+            valid_number = true;
+
+            ret.arm_name = "RBY2_TORSO";
+            ret.arm_max_payload = 50;
+            ret.redundancy_type = 6;
+            ret.arm_max_pos_vel = 200;//mm/s
+            ret.arm_max_pos_acc = 200;
+            ret.arm_max_rot_vel = 200;//deg/s
+            ret.arm_max_rot_acc = 200;
+
+            ret.arm_coll_max = 10;
+            ret.arm_coll_min = 0;
+
+            ret.can_Ch[0] = ret.can_Ch[1] = ret.can_Ch[2] = ret.can_Ch[3] = 0;
+            ret.can_Ch[4] = ret.can_Ch[5] = ret.can_Ch[6] = ret.can_Ch[7] = 1;
+
+            ret.mdr_target[0] = 1;
+            ret.mdr_target[1] = 1;
+            ret.mdr_target[2] = 0;
+            ret.mdr_target[3] = 0;
+            ret.mdr_target[4] = 0;
+            ret.mdr_target[5] = 0;
+            ret.mdr_target[6] = 0;
+
+            ret.modules_axis[0] = 2;
+            ret.modules_axis[1] = 1;
+            ret.modules_axis[2] = 0;
+            ret.modules_axis[3] = 0;
+            ret.modules_axis[4] = 0;
+            ret.modules_axis[5] = 0;
+            ret.modules_axis[6] = 0;
+
+            ret.modules_type[0] = ret.modules_type[1] = rb_module::MCODE::M400;
+            ret.modules_type[2] = ret.modules_type[3] = rb_module::MCODE::M250;
+            ret.modules_type[4] = ret.modules_type[5] = rb_module::MCODE::M250;
+            ret.modules_type[6] =                       rb_module::MCODE::M250;
+
+            // link_offset : to motor center (mm)
+            // link_mass_C : from motor center -> that motor's link com (mm)
+            // link_capsule : capsule from prev_P to motor center (mm)
+            ret.link_ee_offset = Eigen::Vector3d(0, 0, (350.0 + 275.0 * tan(7.0 * M_PI / 180.0)));
+            ret.link_ee_capsule_dw = Eigen::Vector3d(0, 0, 0);
+            ret.link_ee_capsule_up = Eigen::Vector3d(0, 0, 0);
+            ret.link_ee_capsule_radi = 45;
+
+            for(int k = 0; k < NO_OF_JOINT; k++){
+                ret.modules_range_low[k] = -0.1;
+                ret.modules_range_up[k]  = +0.1;
+
+                ret.link_mass_m[k] = 1.0;
+                ret.link_mass_C[k] = Eigen::Vector3d(0, 0, 0);
+                ret.link_offset[k] = Eigen::Vector3d(0, 0, 0.0);
+                ret.link_rotation[k] = Eigen::Matrix3d::Identity();
+                ret.link_capsule_dw[k] = Eigen::Vector3d(0, 0, 0);
+                ret.link_capsule_up[k] = Eigen::Vector3d(0, 0, 0);
+                ret.link_capsule_radi[k] = 60;
+
+                ret.link_inerti[k] = Eigen::Matrix3d::Zero(3, 3);
+            }
+
+            ret.modules_range_low[0] = -271;
+            ret.modules_range_up[0]  = +271;
+
+            ret.modules_range_low[1] = -95;
+            ret.modules_range_up[1]  = +95;
+
+            ret.link_mass_m[0] = 1.0;
+            ret.link_mass_C[0] = Eigen::Vector3d(0, 0, 0);
+            ret.link_offset[0] = Eigen::Vector3d(0, 0, 1093.8);
+            ret.link_rotation[0] = Eigen::Matrix3d::Identity();
+            ret.link_capsule_dw[0] = Eigen::Vector3d(0, 0, 0);
+            ret.link_capsule_up[0] = Eigen::Vector3d(0, 0, 0);
+            ret.link_capsule_radi[0] = 60;
+
         }
         return ret;
     }

@@ -14,21 +14,13 @@ move_lb::~move_lb(){
     ;
 }
 
-void move_lb::Clear(VectorCd x_sta){
+void move_lb::Clear(){
     ref_datas.clear();
-
-    lb_data_struct temp_line;
-    temp_line._x_tar = x_sta;
-    temp_line._x_vel[0] = temp_line._x_vel[1] = 0;
-    temp_line._x_acc[0] = temp_line._x_acc[1] = 0;
-    temp_line._b_par = 0;
-    temp_line._m_type = 0;
-    temp_line._m_indexing = 0.;
-
-    ref_datas.push_back(temp_line);
 }
 
 int move_lb::Add(VectorCd x_tar, double x_pos_vel, double x_pos_acc, double x_rot_vel, double x_rot_acc, int p_type, float blend_para){
+    std::cout<<"real p_type: "<<p_type<<" / "<<blend_para<<std::endl;
+
     lb_data_struct temp_line;
     temp_line._x_tar = x_tar;
     temp_line._x_vel[0] = x_pos_vel;
@@ -44,10 +36,22 @@ int move_lb::Add(VectorCd x_tar, double x_pos_vel, double x_pos_acc, double x_ro
     return MSG_OK;
 }
 
-int move_lb::Init(int rot_mode, int filter_window){
+int move_lb::Init(VectorCd x_sta, int rot_mode, int filter_window){
     // rot mode
     // 0 : intended
     // 1 : constant
+
+    if(true){
+        lb_data_struct first_line;
+        first_line._x_tar = x_sta;
+        first_line._x_vel[0] = first_line._x_vel[1] = 0;
+        first_line._x_acc[0] = first_line._x_acc[1] = 0;
+        first_line._b_par = 0;
+        first_line._m_type = 0;
+        first_line._m_indexing = 0.;
+
+        ref_datas.push_front(first_line);
+    }
 
     float pos_dev_ = 10;
     float ang_dev_ = 10;

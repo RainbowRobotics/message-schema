@@ -33,12 +33,13 @@ namespace rb_motion {
 
     void        Set_Motion_Mode(MotionMode t_mode);
     MotionMode  Get_Motion_Mode();
+    int         Get_Motion_Ex_Result();
     void        Set_Motion_q(unsigned int idx, double angle);
     VectorCd    Get_Motion_X();
     VectorJd    Get_Motion_J();
     void        Wait_Motion_Finish();
 
-    bool        Start_Motion_Checker();
+    int         Start_Approach_Process();
 
     int         Start_Motion_J(TARGET_INPUT tar, double vel_para, double acc_para, int mode);
     int         Start_Motion_J(TARGET_INPUT tar, VectorJd j_vel, VectorJd j_acc);

@@ -19,7 +19,8 @@
 					"source" : ".",
 					"targetIndexes" : 
 					[
-						0
+						0,
+						1
 					]
 				},
 				{
@@ -34,7 +35,7 @@
 					"source" : "rb_session",
 					"targetIndexes" : 
 					[
-						1
+						2
 					]
 				}
 			],
@@ -51,7 +52,8 @@
 					"targetIndexes" : 
 					[
 						0,
-						1
+						1,
+						2
 					]
 				}
 			],
@@ -59,8 +61,15 @@
 			[
 				{
 					"directoryIndex" : 0,
+					"id" : "copy_config::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-copy_config-Release-88273888571b89036bee.json",
+					"name" : "copy_config",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "rb_program::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-rb_program-Release-a2edca0f497338a31019.json",
+					"jsonFile" : "target-rb_program-Release-a5e4872316d42555aaca.json",
 					"name" : "rb_program",
 					"projectIndex" : 0
 				},

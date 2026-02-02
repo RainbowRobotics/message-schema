@@ -14,20 +14,8 @@ move_jb::~move_jb(){
     ;
 }
 
-void move_jb::Clear(VectorJd j_sta){
+void move_jb::Clear(){
     ref_datas.clear();
-
-    jb_data_struct temp_line;
-    temp_line._j_tar = j_sta;
-    temp_line._j_vel = VectorJd::Zero(NO_OF_JOINT, 1);
-    temp_line._j_acc = VectorJd::Zero(NO_OF_JOINT, 1);
-    temp_line._b_opt = 0;
-    temp_line._b_par = 0;
-    // dummy for not init warning
-    temp_line._j_pvel = VectorJd::Zero(NO_OF_JOINT, 1);
-    temp_line._j_pacc = VectorJd::Zero(NO_OF_JOINT, 1);
-    temp_line._t_pseg[0] = temp_line._t_pseg[1] = temp_line._t_pseg[2] = 0.;
-    ref_datas.push_back(temp_line);
 }
 
 int move_jb::Add(VectorJd j_tar, VectorJd j_vel, VectorJd j_acc, int blend_option, float blend_para){
@@ -55,11 +43,25 @@ int move_jb::Add(VectorJd j_tar, VectorJd j_vel, VectorJd j_acc, int blend_optio
     return 0;
 }
 
-int move_jb::Init(VectorJd Limit_Vel){
-
+int move_jb::Init(VectorJd j_sta, VectorJd Limit_Vel){
     if(ref_datas.size() < 2){
         return MSG_MOVE_POINT_NUM_ERR;
     }
+
+    if(true){
+        jb_data_struct first_line;
+        first_line._j_tar = j_sta;
+        first_line._j_vel = VectorJd::Zero(NO_OF_JOINT, 1);
+        first_line._j_acc = VectorJd::Zero(NO_OF_JOINT, 1);
+        first_line._b_opt = 0;
+        first_line._b_par = 0;
+        // dummy for not init warning
+        first_line._j_pvel = VectorJd::Zero(NO_OF_JOINT, 1);
+        first_line._j_pacc = VectorJd::Zero(NO_OF_JOINT, 1);
+        first_line._t_pseg[0] = first_line._t_pseg[1] = first_line._t_pseg[2] = 0.;
+        ref_datas.push_front(first_line);
+    }
+    
     for(int i = 1; i < (int)ref_datas.size(); ++i){
         jb_data_struct prev_line = ref_datas.at(i - 1);
         jb_data_struct temp_line = ref_datas.at(i);
@@ -324,6 +326,14 @@ int move_jb::Init(VectorJd Limit_Vel){
     time_total = total_motion_time;
     timer = 0;
     return MSG_OK;
+}
+
+int move_jb::Get_Buffer_Size(){
+    return ref_datas.size();
+}
+
+jb_data_struct move_jb::Get_Buffer_Data(int idx){
+    return ref_datas.at(idx);
 }
 
 void move_jb::Update_Timer(double dt){

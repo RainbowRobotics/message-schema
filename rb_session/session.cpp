@@ -1,6 +1,7 @@
 #include "session.h"
 #include "zenoh_backend.h"
 #include "zenoh_config.h"
+#include <zenoh.h>
 
 namespace {
 inline std::string normalize_join(std::string_view ns, std::string_view p) {
@@ -36,6 +37,12 @@ inline std::string normalize_join(std::string_view ns, std::string_view p) {
 
 namespace rb::io {
 Session Session::Open(SessionOptions options) {
+  static bool log_inited = false;
+  if (!log_inited) {
+    zc_try_init_log_from_env();
+    log_inited = true;
+  }
+
   switch (options.backend) {
     case SessionBackendType::kZenoh: {
       ZenohConfig cfg = options.zenoh_config ? std::move(*options.zenoh_config) : ZenohConfig{};

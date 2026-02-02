@@ -51,7 +51,9 @@
 #define ADD_SERVE_SIMPLE(CMD_NAME, func_req, func_resp, ...) \
     session_rx->Serve<func_req, func_resp>( \
         session_rx_ns + "/" + CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+            if(CMD_NAME != "call_servo_j" && CMD_NAME != "call_servo_l"){ \
             std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
+            } \
             int return_int = MSG_OK; \
             __VA_ARGS__; \
             return IPC::CreateResponse_Functions(fbb, return_int); \
@@ -170,13 +172,6 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("save_robot_code", IPC::Request_Save_Robot_Code, IPC::Response_Functions, {
                 return_int = rb_system::Save_Robot_Code(req->code(), req->option());
             });
-            ADD_SERVE_SIMPLE("save_user_frame_parameter", IPC::Request_Save_User_Frame, IPC::Response_Functions, {
-                USERF_CONFIG tar_conf;
-                tar_conf.userf_name = req->userf_name()->c_str();
-                tar_conf.userf_offset = Eigen::Vector3d(req->userf_x(), req->userf_y(), req->userf_z());
-                tar_conf.userf_rotation = rb_math::RPY_to_R(req->userf_rx(), req->userf_ry(), req->userf_rz());
-                return_int = rb_system::Save_UserFrameParameter(req->userf_no(), tar_conf);
-            });
             ADD_SERVE_SIMPLE("save_area_parameter", IPC::Request_Save_Area_Para, IPC::Response_Functions, {
                 AREA_CONFIG tar_conf;
                 tar_conf.area_name = req->area_name()->c_str();
@@ -187,6 +182,16 @@ namespace rb_ipc {
                 tar_conf.area_parameter[1] = req->area_para_1();
                 tar_conf.area_parameter[2] = req->area_para_2();
                 return_int = rb_system::Save_AreaParameter(req->area_no(), tar_conf);
+            });
+            ADD_SERVE_SIMPLE("save_user_frame_parameter", IPC::Request_Save_User_Frame, IPC::Response_Functions, {
+                USERF_CONFIG tar_conf;
+                tar_conf.userf_name = req->userf_name()->c_str();
+                tar_conf.userf_offset = Eigen::Vector3d(req->userf_x(), req->userf_y(), req->userf_z());
+                tar_conf.userf_rotation = rb_math::RPY_to_R(req->userf_rx(), req->userf_ry(), req->userf_rz());
+                return_int = rb_system::Save_UserFrameParameter(req->userf_no(), tar_conf);
+            });
+            ADD_SERVE_SIMPLE("save_user_script", IPC::Request_Save_User_Script, IPC::Response_Functions, {
+                return_int = rb_system::Save_UserScript(req->script_no(), req->script_txt()->c_str());
             });
             ADD_SERVE_SIMPLE("save_side_dout_function", IPC::Request_Save_SideDout_SpecialFunc, IPC::Response_Functions, {
                 return_int = rb_system::Save_Box_Special_Dout(req->port_num(), req->desired_function());
@@ -230,6 +235,25 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_joint_encoder_zero", IPC::Request_JointEncoderZero, IPC::Response_Functions, {
                 return_int = rb_system::Set_Joint_Encoder_Zero(req->board_no());
             });
+            ADD_SERVE_SIMPLE("call_joint_sensor_reset", IPC::Request_JointSensorReset, IPC::Response_Functions, {
+                return_int = rb_system::Set_Joint_Sensor_Reset(req->board_no());
+            });
+            ADD_SERVE_SIMPLE("pop_joint_gain_pos", IPC::Request_Pop_JointGain_Pos, IPC::Response_Functions, {
+                return_int = rb_system::Pop_Joint_GainPos(req->board_no());
+            });
+            ADD_SERVE_SIMPLE("pop_joint_gain_cur", IPC::Request_Pop_JointGain_Cur, IPC::Response_Functions, {
+                return_int = rb_system::Pop_Joint_GainCur(req->board_no());
+            });
+            ADD_SERVE_SIMPLE("set_joint_gain_pos", IPC::Request_Set_JointGain_Pos, IPC::Response_Functions, {
+                return_int = rb_system::Set_Joint_GainPos(req->board_no(), req->pgain(), req->igain(), req->dgain());
+            });
+            ADD_SERVE_SIMPLE("set_joint_gain_cur", IPC::Request_Set_JointGain_Cur, IPC::Response_Functions, {
+                return_int = rb_system::Set_Joint_GainCur(req->board_no(), req->pgain(), req->igain());
+            });
+            ADD_SERVE_SIMPLE("pop_joint_infos", IPC::Request_Pop_JointInfos, IPC::Response_Functions, {
+                return_int = rb_system::Pop_Joint_Infos(req->board_no());
+            });
+            
             ADD_SERVE_SIMPLE("call_powercontrol", IPC::Request_PowerControl, IPC::Response_Functions, {
                 if(req->power_option() == 1){
                     return_int = rb_system::Set_Power(rb_system::PowerOption::On, false);
@@ -505,9 +529,12 @@ namespace rb_ipc {
                                                         , req->point_2_x(), req->point_2_y(), req->point_2_z()
                                                         , req->point_3_x(), req->point_3_y(), req->point_3_z());
             });
+            ADD_SERVE_SIMPLE("set_master_mode", IPC::Request_Set_Master_Mode, IPC::Response_Functions, {
+                return_int = rb_system::Set_Master_Mode(req->mode());
+            });
             // -----------------------------------------------------------------------
             // Get Call
-            // -----------------------------------------------------------------------
+            // ----------------------------------------------------------------------
             ADD_SERVE_BLANK("get_core_data", IPC::Request_Get_Core_Data, IPC::Response_Get_Core_Data, {
                 std::cout<<"Get: "<<req->name()->c_str()<<std::endl;
                 GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(req->option(), req->name()->c_str());
@@ -687,6 +714,46 @@ namespace rb_ipc {
                 }
             });
 
+            ADD_SERVE_SIMPLE("call_approach_j", IPC::Request_Move_ApproachJ, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+
+                std::cout<<"Approach J target_frame: "<<input.target_frame<<std::endl;
+                std::cout<<"spd_mode: "<<spd_mode<<" = "<<vel_para<<", "<<acc_para<<std::endl;
+
+                rb_motion::Start_Approach_Process();
+                return_int = rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+            });
+            ADD_SERVE_SIMPLE("call_approach_l", IPC::Request_Move_ApproachL, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+
+                std::cout<<"Approach L target_frame: "<<input.target_frame<<std::endl;
+                std::cout<<"spd_mode: "<<spd_mode<<" = "<<vel_para<<", "<<acc_para<<std::endl;
+
+                rb_motion::Start_Approach_Process();
+                return_int = rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+            });
+            ADD_SERVE_SIMPLE("call_approach_stop", IPC::Request_Move_AppraochStop, IPC::Response_Functions, {
+                return_int = rb_system::Call_MoveBreak(req->stoptime());
+            });
+
             ADD_SERVE_SIMPLE("call_move_j", IPC::Request_Move_J, IPC::Response_Functions, {
                 TARGET_INPUT input;
                 for (int i = 0; i < NO_OF_JOINT; i++) {
@@ -741,6 +808,9 @@ namespace rb_ipc {
                 float   acc_para    = req->speed()->spd_acc_para();
                 int     blend_type  = req->type()->pnt_type();
                 float   blend_para  = req->type()->pnt_para();
+                if(blend_type == 0){
+                    blend_para /= 100.;
+                }
                 return_int = rb_motion::Start_Motion_JB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para);
             });
             ADD_SERVE_SIMPLE("call_move_jb_run", IPC::Request_Move_JB_RUN, IPC::Response_Functions, {
@@ -803,6 +873,8 @@ namespace rb_ipc {
                 float gain = req->gain();
                 float filter = req->filter();
                 return_int = rb_motion::Start_Motion_SERVO_J(input, t1, t2, gain, filter);
+
+                // return_int = MSG_OK;
             });
             ADD_SERVE_SIMPLE("call_servo_l", IPC::Request_Servo_L, IPC::Response_Functions, {
                 TARGET_INPUT input;
@@ -926,6 +998,7 @@ namespace rb_ipc {
                     state_coreT.tool_voltage_output = static_cast<float>(rb_system::Get_Tool_Voltage());
 
                     state_coreT.motion_mode = static_cast<uint8_t>(rb_motion::Get_Motion_Mode());
+                    state_coreT.motion_execution_result = static_cast<uint8_t>(rb_motion::Get_Motion_Ex_Result());
                     state_coreT.motion_speed_bar = static_cast<float>(rb_system::Get_MoveSpeedBar());
                     state_coreT.motion_is_pause = static_cast<uint8_t>(rb_system::Get_MovePauseState());
                     
@@ -1079,6 +1152,95 @@ namespace rb_ipc {
 
         // IPC::NullSpaceT tx_payload;
         // session_tx->Publish<IPC::NullSpace>("rrs/stop", tx_payload);
+    }
+
+    int toFriend_ServoJ(std::string friend_domain, std::array<float, NO_OF_JOINT> &target_angles, float t1, float t2, float gain, float filter){
+        std::cout<<"friend_domain: "<<friend_domain<<std::endl;
+        if (!session_tx) {
+            std::cerr << "[toFriend_ServoJ] session_tx not initialized!" << std::endl;
+            return -1;
+        }
+
+        std::string TX_MSG = friend_domain + "/call_servo_j";
+
+        int function_response = MSG_OK;  // 바깥 변수 선언
+
+        int call_ret = session_tx->CallWith<IPC::Request_Servo_J, IPC::Response_Functions>(
+            TX_MSG,  // 상대방 Zenoh 리소스 이름
+            [&target_angles, t1, t2, gain, filter](flatbuffers::FlatBufferBuilder& fbb) -> flatbuffers::Offset<IPC::Request_Servo_J> {
+                // 요청 메시지 생성 
+                auto input_T = std::make_unique<IPC::MoveInput_TargetT>();
+                input_T->tar_values = std::make_unique<IPC::N_INPUT_f>(::flatbuffers::span<const float, NO_OF_JOINT>(target_angles.data(), NO_OF_JOINT));
+                input_T->tar_frame  = FRAME_JOINT;
+                input_T->tar_unit   = 0;
+
+                IPC::Request_Servo_JT reqT;
+                reqT.target = std::move(input_T);
+                reqT.t1     = t1;
+                reqT.t2     = t2;
+                reqT.gain   = gain;
+                reqT.filter = filter;
+                return IPC::Request_Servo_J::Pack(fbb, &reqT);
+            },
+            [&function_response](const IPC::Response_Functions* res) {
+                // 응답 콜백
+                // 필요하면 res 확인 가능
+                function_response = res->return_value();
+            },
+            1  // 타임아웃(ms)
+        );
+
+        if (call_ret != 0) {
+            std::cerr << "Fail Call ::"<<call_ret << std::endl;
+            return -1;
+        }else{
+            //std::cout << "Success Call"<<function_response << std::endl;
+            return function_response;
+        }
+    }
+
+    int toFriend_ServoL(std::string friend_domain, std::array<float, NO_OF_CARTE> &target_cartes, float t1, float t2, float gain, float filter){
+        if (!session_tx) {
+            std::cerr << "[toFriend_ServoJ] session_tx not initialized!" << std::endl;
+            return -1;
+        }
+
+        std::string TX_MSG = friend_domain + "/call_servo_l";
+
+        int function_response = MSG_OK;  // 바깥 변수 선언
+
+        int call_ret = session_tx->CallWith<IPC::Request_Servo_L, IPC::Response_Functions>(
+            TX_MSG,  // 상대방 Zenoh 리소스 이름
+            [&target_cartes, t1, t2, gain, filter](flatbuffers::FlatBufferBuilder& fbb) -> flatbuffers::Offset<IPC::Request_Servo_L> {
+                // 요청 메시지 생성 
+                auto input_T = std::make_unique<IPC::MoveInput_TargetT>();
+                input_T->tar_values = std::make_unique<IPC::N_INPUT_f>(::flatbuffers::span<const float, NO_OF_CARTE>(target_cartes.data(), NO_OF_CARTE));
+                input_T->tar_frame  = FRAME_GLOBAL;
+                input_T->tar_unit   = 0;
+
+                IPC::Request_Servo_LT reqT;
+                reqT.target = std::move(input_T);
+                reqT.t1     = t1;
+                reqT.t2     = t2;
+                reqT.gain   = gain;
+                reqT.filter = filter;
+                return IPC::Request_Servo_L::Pack(fbb, &reqT);
+            },
+            [&function_response](const IPC::Response_Functions* res) {
+                // 응답 콜백
+                // 필요하면 res 확인 가능
+                function_response = res->return_value();
+            },
+            1  // 타임아웃(ms)
+        );
+
+        if (call_ret != 0) {
+            std::cerr << "Fail Call ::"<<call_ret << std::endl;
+            return -1;
+        }else{
+            //std::cout << "Success Call"<<function_response << std::endl;
+            return function_response;
+        }
     }
 }
 

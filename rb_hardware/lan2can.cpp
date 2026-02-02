@@ -4,7 +4,7 @@
 
 #define P_NAME  "LAN2CAN"
 
-lan2can::lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3)
+lan2can::lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3, int th_cpu_connection, std::string domain)
 {
     L2C_IP = std::to_string(ip_0)+"."+std::to_string(ip_1)+"."+std::to_string(ip_2)+"."+std::to_string(ip_3);
     L2C_PORT = port;
@@ -18,7 +18,7 @@ lan2can::lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3)
 
     power_command_flag = false;
     power_command_payload = 0;
-    rb_common::thread_create(LAN_connectionThread, 0, "RB_L2C_CONNECT", LAN_connectionThreadHandler, this);
+    rb_common::thread_create(LAN_connectionThread, th_cpu_connection, "RB_" + domain + "_ICONNECT", LAN_connectionThreadHandler, this);
 }
 
 lan2can::~lan2can(){
@@ -378,6 +378,9 @@ void lan2can::CAN_unregisterObserver(ICANObserver* obs) {
 }
 
 void lan2can::CAN_notifyCANObservers(int ch, int id, const unsigned char* data, int dlc) {
+    if(ch < 0 || ch > 1){
+        return;
+    }
     std::lock_guard<std::mutex> lock(CAN_Observers_mutex);
     for (auto* obs : CAN_observers) {
         obs->onCANMessage(ch, id, data, dlc);

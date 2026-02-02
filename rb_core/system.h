@@ -114,7 +114,8 @@ struct GET_SYSTEM_DATA_RET{
 };
 
 namespace rb_system {
-    bool initialize(std::string domain, int th_cpu);
+    bool initialize(std::string domain, int th_cpu_sysgen, int th_cpu_lan_connection);
+    void system_destroyer();
 
     enum class SystemTimeScaler         {SPEEDBAR, USER, PAUSE, BREAK, COLLISION_OUT, COLLISION_SELF, NUM};
     enum class PowerOption              {NONE, Off, On};
@@ -132,6 +133,12 @@ namespace rb_system {
     // Robot Parameter
     int             Save_Robot_Code(int t_code, int option);
     ROBOT_CONFIG    Get_CurrentRobotParameter();
+
+    // ---------------------------------------------------------------
+    // Multi Robot
+    // ---------------------------------------------------------------
+    int             Get_System_ID_Index();
+    int             Set_Master_Mode(int mode);
     
     // ---------------------------------------------------------------
     // JOINT
@@ -147,6 +154,12 @@ namespace rb_system {
     std::array<float, NO_OF_JOINT>      Get_Motor_Encoder();
     std::array<float, NO_OF_JOINT>      Get_Torque(int option);
     std::array<float, NO_OF_JOINT>      Get_Temperature(int option);
+
+    // ---------------------------------------------------------------
+    // Other Systems
+    // ---------------------------------------------------------------
+    int             Save_UserScript(unsigned int s_num, std::string s_txt);
+    int             Recover_UserScript(int s_num);
 
     // ---------------------------------------------------------------
     // USER FRAME
@@ -271,6 +284,12 @@ namespace rb_system {
     // ---------------------------------------------------------------
     int             Set_Joint_Brake(int bno, int brk_action);
     int             Set_Joint_Encoder_Zero(int bno);
+    int             Set_Joint_Sensor_Reset(int bno);
+    int             Pop_Joint_GainPos(int bno);
+    int             Pop_Joint_GainCur(int bno);
+    int             Set_Joint_GainPos(int bno, int pgain, int igain, int dgain);
+    int             Set_Joint_GainCur(int bno, int pgain, int igain);
+    int             Pop_Joint_Infos(int bno);
     int             Set_Servo(int option, int who_issue);
     ServoState      Get_Servo();
     int             Set_Power(PowerOption opt, bool is_call_from_RT);

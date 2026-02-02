@@ -18,12 +18,14 @@ namespace rb_shareddata {
         bool is_creator = false;
         ST_SHARED_DATA* sharedDataPtr = nullptr;
 
-        std::string SHM_NAME = "RBSHM";
+        ST_SHARED_DATA sharedData_Local;
+
+        std::string SHM_NAME = "RB_COBOT_SHM";
     }
 
-    bool initialize(std::string domain) {
+    bool initialize(std::string SHM_name) {
 
-        SHM_NAME = "RBSHM_" + domain;
+        SHM_NAME = SHM_name;
 
         // 시도 1: 새로 생성
         shmFD_GENERAL = shm_open(SHM_NAME.c_str(), O_CREAT | O_EXCL | O_RDWR, 0666);
@@ -92,7 +94,19 @@ namespace rb_shareddata {
         }
     }
 
-    ST_SHARED_DATA* get() {
+    void copySharedDataToLocal() {
+        if (sharedDataPtr != nullptr) {
+            sharedData_Local = *sharedDataPtr;  // sharedDataPtr의 내용을 localData에 복사
+        } else {
+            std::cerr << "[ERROR] Shared memory not initialized or corrupted!" << std::endl;
+        }
+    }
+
+    ST_SHARED_DATA* getGlobalShm() {
         return sharedDataPtr;
+    }
+
+    ST_SHARED_DATA* getLocalShm() {
+        return &sharedData_Local;
     }
 }

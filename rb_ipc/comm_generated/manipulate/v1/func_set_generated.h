@@ -58,6 +58,10 @@ struct Request_Set_User_Frame_3Points;
 struct Request_Set_User_Frame_3PointsBuilder;
 struct Request_Set_User_Frame_3PointsT;
 
+struct Request_Set_Master_Mode;
+struct Request_Set_Master_ModeBuilder;
+struct Request_Set_Master_ModeT;
+
 struct Request_Set_Tool_ListT : public ::flatbuffers::NativeTable {
   typedef Request_Set_Tool_List TableType;
   int32_t target_tool_num = 0;
@@ -895,6 +899,58 @@ inline ::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_U
 
 ::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_User_Frame_3Points(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_User_Frame_3PointsT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Set_Master_ModeT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_Master_Mode TableType;
+  int32_t mode = 0;
+};
+
+struct Request_Set_Master_Mode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_Master_ModeT NativeTableType;
+  typedef Request_Set_Master_ModeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MODE = 4
+  };
+  int32_t mode() const {
+    return GetField<int32_t>(VT_MODE, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_MODE, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_Master_ModeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_Master_ModeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_Master_Mode> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Master_ModeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_Master_ModeBuilder {
+  typedef Request_Set_Master_Mode Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mode(int32_t mode) {
+    fbb_.AddElement<int32_t>(Request_Set_Master_Mode::VT_MODE, mode, 0);
+  }
+  explicit Request_Set_Master_ModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_Master_Mode> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_Master_Mode>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_Master_Mode> CreateRequest_Set_Master_Mode(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t mode = 0) {
+  Request_Set_Master_ModeBuilder builder_(_fbb);
+  builder_.add_mode(mode);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_Master_Mode> CreateRequest_Set_Master_Mode(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Master_ModeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Set_Tool_ListT *Request_Set_Tool_List::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Set_Tool_ListT>(new Request_Set_Tool_ListT());
   UnPackTo(_o.get(), _resolver);
@@ -1263,6 +1319,32 @@ inline ::flatbuffers::Offset<Request_Set_User_Frame_3Points> CreateRequest_Set_U
       _point_3_x,
       _point_3_y,
       _point_3_z);
+}
+
+inline Request_Set_Master_ModeT *Request_Set_Master_Mode::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_Master_ModeT>(new Request_Set_Master_ModeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_Master_Mode::UnPackTo(Request_Set_Master_ModeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = mode(); _o->mode = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Set_Master_Mode> Request_Set_Master_Mode::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Master_ModeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_Master_Mode(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_Master_Mode> CreateRequest_Set_Master_Mode(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Master_ModeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_Master_ModeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _mode = _o->mode;
+  return IPC::CreateRequest_Set_Master_Mode(
+      _fbb,
+      _mode);
 }
 
 }  // namespace IPC

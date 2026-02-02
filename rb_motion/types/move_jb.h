@@ -40,9 +40,12 @@ public:
     move_jb();
     ~move_jb();
 
-    void Clear(VectorJd j_sta);
+    void Clear();
     int Add(VectorJd j_tar, VectorJd j_vel, VectorJd j_acc, int blend_option, float blend_para);
-    int Init(VectorJd Limit_Vel);
+    int Init(VectorJd j_sta, VectorJd Limit_Vel);
+
+    int Get_Buffer_Size();
+    jb_data_struct Get_Buffer_Data(int idx);
 
     void Update_Timer(double dt);
     double Get_Timer();

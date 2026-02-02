@@ -70,6 +70,8 @@ void toolflange::onCANMessage(int ch, int id, const unsigned char* data, int dlc
         states.dout[1]      = ((data[7] >> 4) & 0x01);
         states.rs485        = ((data[7] >> 3) & 0x01);
         states.voltage      = ((data[7] >> 0) & 0b11)*12;
+
+        //std::cout<<"states.voltage: "<<states.voltage<<std::endl;
     }else if(id == cans.CAN_ID_485){
         ;
     }else if(id == cans.CAN_ID_MBS_LEGACY_RX){

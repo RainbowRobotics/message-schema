@@ -33,7 +33,7 @@ struct CAN_MSG{
 class lan2can
 {
 public:
-    lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3);
+    lan2can(int port, int ip_0, int ip_1, int ip_2, int ip_3, int th_cpu_connection, std::string domain);
     ~lan2can();
 
     bool                    LAN_connectionStatus;

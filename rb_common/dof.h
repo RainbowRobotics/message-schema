@@ -15,7 +15,6 @@
 
 #define SYSTEM_VERSION      "1.0.0"
 #define SYSTEM_CATEGORY     "manipulate"
-#define SYSTEM_NAME         "cobot"
 
 #define NO_OF_TOOL          8
 #define NO_OF_USERF         8

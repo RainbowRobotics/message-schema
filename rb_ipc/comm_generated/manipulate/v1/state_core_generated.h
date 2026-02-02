@@ -60,6 +60,7 @@ struct State_CoreT : public ::flatbuffers::NativeTable {
   std::unique_ptr<IPC::N_AOUT_f> tool_analog_output{};
   float tool_voltage_output = 0.0f;
   uint8_t motion_mode = 0;
+  uint8_t motion_execution_result = 0;
   float motion_speed_bar = 0.0f;
   uint8_t motion_is_pause = 0;
   uint8_t status_lan2can = 0;
@@ -116,16 +117,17 @@ struct State_Core FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TOOL_ANALOG_OUTPUT = 70,
     VT_TOOL_VOLTAGE_OUTPUT = 72,
     VT_MOTION_MODE = 74,
-    VT_MOTION_SPEED_BAR = 76,
-    VT_MOTION_IS_PAUSE = 78,
-    VT_STATUS_LAN2CAN = 80,
-    VT_STATUS_SWITCH_EMG = 82,
-    VT_STATUS_POWER_OUT = 84,
-    VT_STATUS_SERVO_NUM = 86,
-    VT_STATUS_IS_REFON = 88,
-    VT_STATUS_OUT_COLL = 90,
-    VT_STATUS_SELF_COLL = 92,
-    VT_STATUS_DT_MODE = 94
+    VT_MOTION_EXECUTION_RESULT = 76,
+    VT_MOTION_SPEED_BAR = 78,
+    VT_MOTION_IS_PAUSE = 80,
+    VT_STATUS_LAN2CAN = 82,
+    VT_STATUS_SWITCH_EMG = 84,
+    VT_STATUS_POWER_OUT = 86,
+    VT_STATUS_SERVO_NUM = 88,
+    VT_STATUS_IS_REFON = 90,
+    VT_STATUS_OUT_COLL = 92,
+    VT_STATUS_SELF_COLL = 94,
+    VT_STATUS_DT_MODE = 96
   };
   uint8_t heart_beat() const {
     return GetField<uint8_t>(VT_HEART_BEAT, 0);
@@ -235,6 +237,9 @@ struct State_Core FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint8_t motion_mode() const {
     return GetField<uint8_t>(VT_MOTION_MODE, 0);
   }
+  uint8_t motion_execution_result() const {
+    return GetField<uint8_t>(VT_MOTION_EXECUTION_RESULT, 0);
+  }
   float motion_speed_bar() const {
     return GetField<float>(VT_MOTION_SPEED_BAR, 0.0f);
   }
@@ -304,6 +309,7 @@ struct State_Core FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<IPC::N_AOUT_f>(verifier, VT_TOOL_ANALOG_OUTPUT, 4) &&
            VerifyField<float>(verifier, VT_TOOL_VOLTAGE_OUTPUT, 4) &&
            VerifyField<uint8_t>(verifier, VT_MOTION_MODE, 1) &&
+           VerifyField<uint8_t>(verifier, VT_MOTION_EXECUTION_RESULT, 1) &&
            VerifyField<float>(verifier, VT_MOTION_SPEED_BAR, 4) &&
            VerifyField<uint8_t>(verifier, VT_MOTION_IS_PAUSE, 1) &&
            VerifyField<uint8_t>(verifier, VT_STATUS_LAN2CAN, 1) &&
@@ -433,6 +439,9 @@ struct State_CoreBuilder {
   void add_motion_mode(uint8_t motion_mode) {
     fbb_.AddElement<uint8_t>(State_Core::VT_MOTION_MODE, motion_mode, 0);
   }
+  void add_motion_execution_result(uint8_t motion_execution_result) {
+    fbb_.AddElement<uint8_t>(State_Core::VT_MOTION_EXECUTION_RESULT, motion_execution_result, 0);
+  }
   void add_motion_speed_bar(float motion_speed_bar) {
     fbb_.AddElement<float>(State_Core::VT_MOTION_SPEED_BAR, motion_speed_bar, 0.0f);
   }
@@ -512,6 +521,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_Core(
     const IPC::N_AOUT_f *tool_analog_output = nullptr,
     float tool_voltage_output = 0.0f,
     uint8_t motion_mode = 0,
+    uint8_t motion_execution_result = 0,
     float motion_speed_bar = 0.0f,
     uint8_t motion_is_pause = 0,
     uint8_t status_lan2can = 0,
@@ -567,6 +577,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_Core(
   builder_.add_status_switch_emg(status_switch_emg);
   builder_.add_status_lan2can(status_lan2can);
   builder_.add_motion_is_pause(motion_is_pause);
+  builder_.add_motion_execution_result(motion_execution_result);
   builder_.add_motion_mode(motion_mode);
   builder_.add_heart_beat(heart_beat);
   return builder_.Finish();
@@ -610,6 +621,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_CoreDirect(
     const IPC::N_AOUT_f *tool_analog_output = nullptr,
     float tool_voltage_output = 0.0f,
     uint8_t motion_mode = 0,
+    uint8_t motion_execution_result = 0,
     float motion_speed_bar = 0.0f,
     uint8_t motion_is_pause = 0,
     uint8_t status_lan2can = 0,
@@ -659,6 +671,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_CoreDirect(
       tool_analog_output,
       tool_voltage_output,
       motion_mode,
+      motion_execution_result,
       motion_speed_bar,
       motion_is_pause,
       status_lan2can,
@@ -710,6 +723,7 @@ inline State_CoreT::State_CoreT(const State_CoreT &o)
         tool_analog_output((o.tool_analog_output) ? new IPC::N_AOUT_f(*o.tool_analog_output) : nullptr),
         tool_voltage_output(o.tool_voltage_output),
         motion_mode(o.motion_mode),
+        motion_execution_result(o.motion_execution_result),
         motion_speed_bar(o.motion_speed_bar),
         motion_is_pause(o.motion_is_pause),
         status_lan2can(o.status_lan2can),
@@ -759,6 +773,7 @@ inline State_CoreT &State_CoreT::operator=(State_CoreT o) FLATBUFFERS_NOEXCEPT {
   std::swap(tool_analog_output, o.tool_analog_output);
   std::swap(tool_voltage_output, o.tool_voltage_output);
   std::swap(motion_mode, o.motion_mode);
+  std::swap(motion_execution_result, o.motion_execution_result);
   std::swap(motion_speed_bar, o.motion_speed_bar);
   std::swap(motion_is_pause, o.motion_is_pause);
   std::swap(status_lan2can, o.status_lan2can);
@@ -817,6 +832,7 @@ inline void State_Core::UnPackTo(State_CoreT *_o, const ::flatbuffers::resolver_
   { auto _e = tool_analog_output(); if (_e) _o->tool_analog_output = std::unique_ptr<IPC::N_AOUT_f>(new IPC::N_AOUT_f(*_e)); }
   { auto _e = tool_voltage_output(); _o->tool_voltage_output = _e; }
   { auto _e = motion_mode(); _o->motion_mode = _e; }
+  { auto _e = motion_execution_result(); _o->motion_execution_result = _e; }
   { auto _e = motion_speed_bar(); _o->motion_speed_bar = _e; }
   { auto _e = motion_is_pause(); _o->motion_is_pause = _e; }
   { auto _e = status_lan2can(); _o->status_lan2can = _e; }
@@ -873,6 +889,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_Core(::flatbuffers::FlatBuf
   auto _tool_analog_output = _o->tool_analog_output ? _o->tool_analog_output.get() : nullptr;
   auto _tool_voltage_output = _o->tool_voltage_output;
   auto _motion_mode = _o->motion_mode;
+  auto _motion_execution_result = _o->motion_execution_result;
   auto _motion_speed_bar = _o->motion_speed_bar;
   auto _motion_is_pause = _o->motion_is_pause;
   auto _status_lan2can = _o->status_lan2can;
@@ -921,6 +938,7 @@ inline ::flatbuffers::Offset<State_Core> CreateState_Core(::flatbuffers::FlatBuf
       _tool_analog_output,
       _tool_voltage_output,
       _motion_mode,
+      _motion_execution_result,
       _motion_speed_bar,
       _motion_is_pause,
       _status_lan2can,

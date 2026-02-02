@@ -9,6 +9,9 @@ scb_v1::scb_v1()
     cans.CAN_CH[0] = 0;
     cans.CAN_CH[1] = 1;
 
+    cans.CAN_ID_SSX[0] = 0x04;
+    cans.CAN_ID_SSX[1] = 0x05;
+
     cans.CAN_ID_CMD[0] = 0x407;
     cans.CAN_ID_CMD[1] = 0x417;
 
@@ -36,8 +39,15 @@ void scb_v1::onCANMessage(int ch, int id, const unsigned char* data, int dlc) {
     (void)dlc;
     (void)data;
 
-    if(id == cans.CAN_ID_STA[ch]){
+    if(id == cans.CAN_ID_SSX[ch]){
+        int type = data[0];
+        int time = data[1];
+        std::cout<<"SCB"<<ch<<" issue "<<type<<std::endl;
+    }else if(id == cans.CAN_ID_STA[ch]){
         infos.connection_timer[ch] = 0;
+        if(!infos.connection_flag[ch]){
+            LOG_INFO("SCB CON " + std::to_string(ch));
+        }
         infos.connection_flag[ch] = true;
         //std::cout << P_NAME << " can : "<<ch<<std::endl;
     }else if(id == cans.CAN_ID_RET[ch]){
@@ -68,7 +78,7 @@ bool scb_v1::Set_ConnectionTimerUp(unsigned int sf_no, unsigned char up_cnt){
     if(infos.connection_timer[sf_no] >= 1000){
         infos.connection_timer[sf_no] = 1000;
         if(infos.connection_flag[sf_no]){
-            rb_common::log_push(LogLevel::Warning, "SCB DISCON " + std::to_string(sf_no), P_NAME);
+            LOG_WARNING("SCB DISCON " + std::to_string(sf_no));
         }
         infos.configure_done[sf_no] = false;
         infos.connection_flag[sf_no] = false;

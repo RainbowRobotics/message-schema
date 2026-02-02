@@ -31,13 +31,14 @@ namespace rb_motion {
             int ret;
         };
         enum class MoveTerminate        {DONE, IK_ERR, TRAJ_ERR, INPUT_ERR};
-
         
         //--------------------------------------------------------------
         // Sector Motion
         //--------------------------------------------------------------
         RBDLrobot       _motion_Robot;
         MotionMode      _motion_mode = MotionMode::MOVE_NONE;
+        int             _motion_ex_result = 0;
+        bool            _motion_approach_flag = false;
         
         VectorJd        _motion_q_ang;
         VectorJd        _motion_q_vel;
@@ -78,6 +79,7 @@ namespace rb_motion {
         //--------------------------------------------------------------
 
         void Terminate_Motion(MoveTerminate type){
+            _motion_ex_result = static_cast<int>(type);
             if(type == MoveTerminate::IK_ERR){
                 MESSAGE(MSG_LEVEL_ERRR, MSG_MOVE_RUNTIME_TERMINATE_IK_ERR);
                 LOG_ERROR("Motion-Ik Problem");
@@ -88,6 +90,10 @@ namespace rb_motion {
                 LOG_ERROR("Motion-Input Wrong");
             }else{
                 LOG_INFO("Motion-Time Done");
+                if(_motion_approach_flag){
+                    MESSAGE(MSG_LEVEL_INFO, MSG_MOVE_GOAL_POSTURE_DONE);
+                    _motion_approach_flag = false;
+                }
             }
 
             rb_system::Reset_MoveBreak();
@@ -567,7 +573,7 @@ namespace rb_motion {
         switch(_motion_mode){
             case MotionMode::MOVE_NONE:
             {
-                ;
+                _motion_approach_flag = false;
                 break;
             }
             case MotionMode::MOVE_J:
@@ -800,12 +806,19 @@ namespace rb_motion {
     void Set_Motion_Mode(MotionMode t_mode){
         if(_motion_mode != t_mode){
             LOG_INFO("Motion Mode Changed: " + std::to_string((int)_motion_mode) + "->" + std::to_string((int)t_mode));
+            if(t_mode != MotionMode::MOVE_NONE){
+                _motion_ex_result = 99;
+            }
         }
         _motion_mode = t_mode;
     }
 
     MotionMode Get_Motion_Mode(){
         return _motion_mode;
+    }
+
+    int Get_Motion_Ex_Result(){
+        return _motion_ex_result;
     }
 
     void Set_Motion_q(unsigned int idx, double angle){
@@ -836,6 +849,11 @@ namespace rb_motion {
         return (Get_Is_Motion_Idle() && rb_system::Get_Is_Idle());
     }
 
+    int Start_Approach_Process(){
+        _motion_approach_flag = true;
+        return MSG_OK;
+    }
+    
     int Start_Motion_J(TARGET_INPUT tar, double vel_para, double acc_para, int mode){
         // mode
         // 0 : %
@@ -896,6 +914,8 @@ namespace rb_motion {
         // 0 : %
         // 1 : mm/s
 
+        std::cout<<"L mode: "<<mode<<" / "<<vel_para<<" and "<<acc_para<<std::endl;
+
         double t_pos_vel = 0;
         double t_pos_acc = 0;
         double t_rot_vel = 0;
@@ -940,7 +960,7 @@ namespace rb_motion {
     int Start_Motion_JB_Clear(){
         if(!Motion_Condition_Checker()) return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
 
-        _motion_move_jb.Clear(_motion_q_ang);
+        _motion_move_jb.Clear();
         return MSG_OK;
     }
 
@@ -966,6 +986,9 @@ namespace rb_motion {
     }
 
     int Start_Motion_JB_Add(TARGET_INPUT tar, VectorJd j_vel, VectorJd j_acc, int blend_option, double blend_parameter){
+
+        std::cout<<"blend_option: "<<blend_option<<" / "<<blend_parameter<<std::endl;
+
         if(!Motion_Condition_Checker()) return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
 
         PreMotionRet pre_t = PreMotion_to_J(tar, 0);
@@ -997,7 +1020,16 @@ namespace rb_motion {
     int Start_Motion_JB(){
         if(!Motion_Condition_Checker()) return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
 
-        int run_ret = _motion_move_jb.Init(rb_system::Get_Motor_Limit_Vel());
+        if(_motion_move_jb.Get_Buffer_Size() == 1){
+            jb_data_struct last_line = _motion_move_jb.Get_Buffer_Data(0);
+            TARGET_INPUT last_target = rb_math::Make_Input_Zero(FRAME_JOINT);
+            for(int i = 0; i < NO_OF_JOINT; ++i){
+                last_target.target_value[i] = last_line._j_tar(i);
+            }
+            return Start_Motion_J(last_target, last_line._j_vel, last_line._j_acc);
+        }
+
+        int run_ret = _motion_move_jb.Init(_motion_q_ang, rb_system::Get_Motor_Limit_Vel());
         if(run_ret != 0){
             return MESSAGE(MSG_LEVEL_WARN, run_ret);
         }
@@ -1009,7 +1041,7 @@ namespace rb_motion {
     int Start_Motion_LB_Clear(){
         if(!Motion_Condition_Checker()) return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
 
-        _motion_move_lb.Clear(_motion_x_pos);
+        _motion_move_lb.Clear();
         return MSG_OK;
     }
 
@@ -1046,12 +1078,30 @@ namespace rb_motion {
     }
 
     int Start_Motion_LB_Add(TARGET_INPUT tar, double p_vel, double p_acc, double o_vel, double o_acc, int point_type, double blend_parameter){
+        // point_type
+        // 0 B %
+        // 1 B mm
+        // 2 Ltype
+        // 3 Corner
+        int push_point_type = 0;
+        if(point_type == 0){
+            blend_parameter /= 100.;
+            blend_parameter = rb_math::saturation_L_and_U(blend_parameter, 0., 1.);
+            push_point_type = 2;
+        }else if(point_type == 1){
+            push_point_type = 3;
+        }else if(point_type == 2){
+            push_point_type = 0;
+        }else if(point_type == 3){
+            push_point_type = 1;
+        }
+
         if(!Motion_Condition_Checker()) return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
 
         PreMotionRet pre_t = PreMotion_to_L(tar, 0);
         if(pre_t.ret != MSG_OK) return MESSAGE(MSG_LEVEL_WARN, pre_t.ret);
 
-        int add_ret = _motion_move_lb.Add(pre_t.c_output, p_vel, p_acc, o_vel, o_acc, point_type, blend_parameter);
+        int add_ret = _motion_move_lb.Add(pre_t.c_output, p_vel, p_acc, o_vel, o_acc, push_point_type, blend_parameter);
         if(add_ret != MSG_OK){
             return MESSAGE(MSG_LEVEL_WARN, add_ret);
         }
@@ -1063,7 +1113,7 @@ namespace rb_motion {
 
         filter_window = rb_math::saturation_L_and_U(filter_window, 0, 200);
         
-        int run_ret = _motion_move_lb.Init(rot_mode, filter_window);
+        int run_ret = _motion_move_lb.Init(_motion_x_pos, rot_mode, filter_window);
         if(run_ret != MSG_OK){
             return MESSAGE(MSG_LEVEL_WARN, run_ret);
         }
@@ -1269,6 +1319,7 @@ namespace rb_motion {
         if(pre_t.ret != MSG_OK) return MESSAGE(MSG_LEVEL_WARN, pre_t.ret);
 
         if(_motion_mode == MotionMode::MOVE_SERVO_J){
+            //std::cout<<"Que: "<<rb_common::get_CurrentTime(1)<<std::endl;
             int que_ret = _motion_move_servo_j.Queue_Target(pre_t.j_output, t1, t2, gain, filter);
             if(que_ret != MSG_OK){
                 Terminate_Motion(MoveTerminate::INPUT_ERR);

@@ -67,9 +67,9 @@ struct ST_SHM_TO_MBUS{
 };
 
 const ST_SHM_TO_MBUS MBUS_MAP_INPUT_REGS[MBUS_INPUT_REGS_NUM] = {
-    {SHM_ARM_CODE, 1.0},
-    {SHM_SYSTEM_VERSION, 1.0},
-    {SHM_HEART_BEAT, 1.0},
+    // {SHM_ARM_CODE, 1.0},
+    // {SHM_SYSTEM_VERSION, 1.0},
+    // {SHM_HEART_BEAT, 1.0},
 };
 
 namespace rb_mbus_server {

@@ -17,6 +17,9 @@ namespace rb_daemon {
     namespace {
         static RT_TASK  rtTaskCon;
 
+        int th_cpu_for_LAN_READ = 1;
+        std::string domain_name = "";
+
         
 
         void *thread_readLan(void *){
@@ -41,7 +44,7 @@ namespace rb_daemon {
             rt_task_set_periodic(NULL, TM_NOW, period_ns);
 
             pthread_t hThread;
-            rb_common::thread_create(thread_readLan, 1, "RB_READ", hThread, NULL);
+            rb_common::thread_create(thread_readLan, th_cpu_for_LAN_READ, "RB_" + domain_name + "_READ", hThread, NULL);
 
             while(1){
                 rt_task_wait_period(NULL);
@@ -69,12 +72,14 @@ namespace rb_daemon {
             }
         }
     }
-    bool initialize(std::string domain){
-        std::string th_name = "RB_" + domain + "_DAEMON";
-        if(rt_task_create(&rtTaskCon, th_name.c_str(), 0, 99, 0) == 0){
+    bool initialize(std::string domain, int th_cpu_rt, int th_cpu_lanread){
+        th_cpu_for_LAN_READ = th_cpu_lanread;
+        domain_name = domain;
+
+        if(rt_task_create(&rtTaskCon, ("RB_" + domain + "_DAEMON").c_str(), 0, 99, 0) == 0){
             cpu_set_t aCPU;
             CPU_ZERO(&aCPU);
-            CPU_SET(0, &aCPU);
+            CPU_SET(th_cpu_rt, &aCPU);
             if(rt_task_set_affinity(&rtTaskCon, &aCPU) != 0){
                 rb_common::log_push(LogLevel::Error, "Fail to set CPU affinity real-time thread", P_NAME);
                 return false;

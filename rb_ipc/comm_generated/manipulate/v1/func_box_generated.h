@@ -30,6 +30,10 @@ struct Request_Save_User_Frame;
 struct Request_Save_User_FrameBuilder;
 struct Request_Save_User_FrameT;
 
+struct Request_Save_User_Script;
+struct Request_Save_User_ScriptBuilder;
+struct Request_Save_User_ScriptT;
+
 struct Request_Save_SideDin_SpecialFunc;
 struct Request_Save_SideDin_SpecialFuncBuilder;
 struct Request_Save_SideDin_SpecialFuncT;
@@ -482,6 +486,81 @@ inline ::flatbuffers::Offset<Request_Save_User_Frame> CreateRequest_Save_User_Fr
 }
 
 ::flatbuffers::Offset<Request_Save_User_Frame> CreateRequest_Save_User_Frame(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_User_FrameT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Save_User_ScriptT : public ::flatbuffers::NativeTable {
+  typedef Request_Save_User_Script TableType;
+  int32_t script_no = 0;
+  std::string script_txt{};
+};
+
+struct Request_Save_User_Script FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Save_User_ScriptT NativeTableType;
+  typedef Request_Save_User_ScriptBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SCRIPT_NO = 4,
+    VT_SCRIPT_TXT = 6
+  };
+  int32_t script_no() const {
+    return GetField<int32_t>(VT_SCRIPT_NO, 0);
+  }
+  const ::flatbuffers::String *script_txt() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_SCRIPT_TXT);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_SCRIPT_NO, 4) &&
+           VerifyOffset(verifier, VT_SCRIPT_TXT) &&
+           verifier.VerifyString(script_txt()) &&
+           verifier.EndTable();
+  }
+  Request_Save_User_ScriptT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Save_User_ScriptT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Save_User_Script> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_User_ScriptT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Save_User_ScriptBuilder {
+  typedef Request_Save_User_Script Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_script_no(int32_t script_no) {
+    fbb_.AddElement<int32_t>(Request_Save_User_Script::VT_SCRIPT_NO, script_no, 0);
+  }
+  void add_script_txt(::flatbuffers::Offset<::flatbuffers::String> script_txt) {
+    fbb_.AddOffset(Request_Save_User_Script::VT_SCRIPT_TXT, script_txt);
+  }
+  explicit Request_Save_User_ScriptBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Save_User_Script> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Save_User_Script>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Save_User_Script> CreateRequest_Save_User_Script(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t script_no = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> script_txt = 0) {
+  Request_Save_User_ScriptBuilder builder_(_fbb);
+  builder_.add_script_txt(script_txt);
+  builder_.add_script_no(script_no);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Request_Save_User_Script> CreateRequest_Save_User_ScriptDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t script_no = 0,
+    const char *script_txt = nullptr) {
+  auto script_txt__ = script_txt ? _fbb.CreateString(script_txt) : 0;
+  return IPC::CreateRequest_Save_User_Script(
+      _fbb,
+      script_no,
+      script_txt__);
+}
+
+::flatbuffers::Offset<Request_Save_User_Script> CreateRequest_Save_User_Script(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_User_ScriptT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct Request_Save_SideDin_SpecialFuncT : public ::flatbuffers::NativeTable {
   typedef Request_Save_SideDin_SpecialFunc TableType;
@@ -1175,6 +1254,35 @@ inline ::flatbuffers::Offset<Request_Save_User_Frame> CreateRequest_Save_User_Fr
       _userf_rx,
       _userf_ry,
       _userf_rz);
+}
+
+inline Request_Save_User_ScriptT *Request_Save_User_Script::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Save_User_ScriptT>(new Request_Save_User_ScriptT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Save_User_Script::UnPackTo(Request_Save_User_ScriptT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = script_no(); _o->script_no = _e; }
+  { auto _e = script_txt(); if (_e) _o->script_txt = _e->str(); }
+}
+
+inline ::flatbuffers::Offset<Request_Save_User_Script> Request_Save_User_Script::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_User_ScriptT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Save_User_Script(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Save_User_Script> CreateRequest_Save_User_Script(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Save_User_ScriptT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Save_User_ScriptT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _script_no = _o->script_no;
+  auto _script_txt = _o->script_txt.empty() ? 0 : _fbb.CreateString(_o->script_txt);
+  return IPC::CreateRequest_Save_User_Script(
+      _fbb,
+      _script_no,
+      _script_txt);
 }
 
 inline Request_Save_SideDin_SpecialFuncT *Request_Save_SideDin_SpecialFunc::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {

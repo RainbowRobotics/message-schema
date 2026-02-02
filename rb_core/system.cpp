@@ -23,6 +23,7 @@
 #include "rrbdl.h"
 
 #include "rb_ipc/ipc.h"
+#include "rb_service/socket_server/command_server.h"
 
 bool is_save = false;
 
@@ -84,10 +85,11 @@ namespace rb_system {
 
         // RT
         volatile int64_t            g_max_jitter_ns = 0;
+        pthread_mutex_t             mutex_shm = PTHREAD_MUTEX_INITIALIZER;
 
         // reuqest flag
         std::atomic<PowerOption>    request_powerControl{PowerOption::NONE};
-        std::atomic<unsigned char>           request_ModelChange{0};
+        std::atomic<unsigned char>  request_ModelChange{0};
 
         // Heart Beat
         uint8_t                     flag_heart_beat = 0;
@@ -97,10 +99,22 @@ namespace rb_system {
         bool                        flag_soft_power_cutoff = false;
         bool                        flag_reference_onoff = false;
         bool                        flag_direct_teaching = false;
-        bool                        flag_sw_switch_free_drive = false;   
+        bool                        flag_sw_switch_free_drive = false;
+
+        // Multi Robot Working
+        int                         parameter_id = 0;
+        int                         parameter_id_friend = 1;
+        int                         flag_master_mode = 0;
+        std::string                 friend_robot_namespace = "";
+        VectorCd                    m2s_starting_carte_slave;
+        VectorCd                    m2s_starting_carte_master;
+        
+        // User Script
+        std::string                 parameter_userscript[16];
 
         // Connection Detector
-        bool                        flag_connection_components[NO_OF_JOINT + 2];
+        bool                        flag_dev_configuration[NO_OF_JOINT + 3];//motor + tfb + side + emg
+        bool                        flag_connection_components[NO_OF_JOINT + 2];//motor + tfb + side
         bool                        flag_connection_is_all = false;
         bool                        flag_connection_is_one = false;
 
@@ -139,6 +153,7 @@ namespace rb_system {
 
         ServoState                  servo_stat;
 
+        
         int                         parameter_code;
         ROBOT_CONFIG                parameter_robot;
         int                         parameter_out_coll_onoff;
@@ -414,7 +429,9 @@ namespace rb_system {
         }
 
         void Set_Servo_State(ServoState t_state){
-            rb_common::log_push(LogLevel::Info, "ServoState: " + std::to_string((int)t_state), P_NAME);
+            if(servo_stat != t_state){
+                LOG_INFO("ServoState: " + std::to_string((int)t_state));
+            }
             servo_stat = t_state;
         }
 
@@ -439,6 +456,124 @@ namespace rb_system {
                 }
                 flag_direct_teaching = t_flag;
             }
+        }
+
+        void RT_Update_My_Shared_Memory(){
+            TCP_CONFIG cur_TCP = rb_system::Get_CurrentTcpParameter();
+            Eigen::Vector3d cur_TCP_euler = rb_math::R_to_RPY(cur_TCP.tcp_rotation);
+
+            ST_SHM_M2F_STATE_CORE state_coreT;
+
+            state_coreT.heart_beat      = rb_system::Get_Flag_Heart_Beat();
+            state_coreT.joint_q_ref     = rb_motion::Get_Wrapper_J();
+            state_coreT.joint_q_enc     = rb_system::Get_Motor_Encoder();
+            state_coreT.joint_t_esti    = rb_system::Get_Torque(1);
+            state_coreT.joint_t_meas    = rb_system::Get_Torque(0);
+            state_coreT.joint_temper    = rb_system::Get_Temperature(1);
+
+            state_coreT.carte_x_ref     = rb_motion::Get_Wrapper_X();
+            state_coreT.carte_x_enc     = rb_motion::Get_Wrapper_X();
+
+            state_coreT.userf_selection_no  = rb_system::Get_CurrentUserFrameNumber();
+            state_coreT.userf_x_ref         = rb_motion::Get_Wrapper_X_User();
+
+            state_coreT.tool_selection_no   = rb_system::Get_CurrentTcpNumber();
+            // state_coreT.tool_name = cur_TCP.tool_name;
+            state_coreT.tool_tcp_x              = cur_TCP.tcp_offset(0);
+            state_coreT.tool_tcp_y              = cur_TCP.tcp_offset(1);
+            state_coreT.tool_tcp_z              = cur_TCP.tcp_offset(2);
+            state_coreT.tool_tcp_rx             = cur_TCP_euler(0);
+            state_coreT.tool_tcp_ry             = cur_TCP_euler(1);
+            state_coreT.tool_tcp_rz             = cur_TCP_euler(2);
+            state_coreT.tool_com_m              = cur_TCP.com_mass;
+            state_coreT.tool_com_x              = cur_TCP.com_offset(0);
+            state_coreT.tool_com_y              = cur_TCP.com_offset(1);
+            state_coreT.tool_com_z              = cur_TCP.com_offset(2);
+
+            state_coreT.cbox_digital_input      = rb_system::Get_Box_Din();
+            state_coreT.cbox_digital_output     = rb_system::Get_Box_Dout();
+            state_coreT.cbox_analog_input       = rb_system::Get_Box_Ain();
+            state_coreT.cbox_analog_output      = rb_system::Get_Box_Aout();
+
+            state_coreT.ex_digital_input        = rb_system::Get_EX_Din();
+            state_coreT.ex_digital_output       = rb_system::Get_EX_Dout();
+            state_coreT.ex_analog_input         = rb_system::Get_EX_Ain();
+            state_coreT.ex_analog_output        = rb_system::Get_EX_Aout();
+
+            state_coreT.tool_digital_input      = rb_system::Get_Tool_Din();
+            state_coreT.tool_digital_output     = rb_system::Get_Tool_Dout();
+            state_coreT.tool_analog_input       = rb_system::Get_Tool_Ain();
+            state_coreT.tool_analog_output      = rb_system::Get_Tool_Aout();
+            state_coreT.tool_voltage_output     = static_cast<float>(rb_system::Get_Tool_Voltage());
+
+            state_coreT.motion_mode             = static_cast<uint8_t>(rb_motion::Get_Motion_Mode());
+            state_coreT.motion_execution_result = static_cast<uint8_t>(rb_motion::Get_Motion_Ex_Result());
+            state_coreT.motion_speed_bar        = static_cast<float>(rb_system::Get_MoveSpeedBar());
+            state_coreT.motion_is_pause         = static_cast<uint8_t>(rb_system::Get_MovePauseState());
+
+            state_coreT.status_lan2can          = static_cast<uint8_t>(rb_system::Get_Lan2Can_State());
+            if(rb_system::Get_Lan2Can_State()){
+                state_coreT.status_switch_emg   = static_cast<uint8_t>(rb_system::Get_Power_Switch());
+                state_coreT.status_power_out    = static_cast<uint8_t>(rb_system::Get_Power());
+            }else{
+                state_coreT.status_switch_emg   = 0;
+                state_coreT.status_power_out    = 0;
+            }
+            
+            state_coreT.status_servo_num        = static_cast<uint8_t>(rb_system::Get_Servo());
+            state_coreT.status_is_refon         = static_cast<uint8_t>(rb_system::Get_ReferenceOnOff());
+            state_coreT.status_out_coll         = static_cast<uint8_t>(rb_system::Get_Flag_Out_Collision_Occur());
+            state_coreT.status_self_coll        = static_cast<uint8_t>(rb_system::Get_Flag_Self_Collision_Occur());
+            state_coreT.status_dt_mode          = static_cast<uint8_t>(rb_system::Get_Flag_Direct_Teaching());
+
+            rb_shareddata::getGlobalShm()->robots[parameter_id].m2f_state_core = state_coreT;
+        }
+
+        void RT_Update_My_Intention_to_Friends(){
+            if((parameter_id + parameter_id_friend) == 1){
+                if(!rb_shareddata::getLocalShm()->robots[parameter_id_friend].m2f_state_core.status_is_refon){
+                    if(flag_master_mode != 0){
+                        LOG_WARNING("RESET MASTER FLAG");
+                        flag_master_mode = 0;
+                    }
+                }
+                if(flag_master_mode == 1){
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[0] = +rb_motion::Get_Wrapper_J().at(0);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[1] = -rb_motion::Get_Wrapper_J().at(1);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[2] = -rb_motion::Get_Wrapper_J().at(2);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[3] = +rb_motion::Get_Wrapper_J().at(3);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[4] = -rb_motion::Get_Wrapper_J().at(4);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[5] = +rb_motion::Get_Wrapper_J().at(5);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[6] = -rb_motion::Get_Wrapper_J().at(6);
+                }else if(flag_master_mode == 2){
+                    VectorCd m2s_current_carte_master;
+                    for(int k = 0; k < NO_OF_CARTE; ++k){
+                        m2s_current_carte_master(k) = rb_motion::Get_Wrapper_X().at(k);
+                    }
+
+                    Matrix3d m2s_delta_R = rb_math::get_R_3x3(m2s_starting_carte_master).transpose() * rb_math::get_R_3x3(m2s_starting_carte_slave);
+                    Vector3d m2s_delta_P = rb_math::get_R_3x3(m2s_starting_carte_master).transpose() * (rb_math::get_P_3x1(m2s_starting_carte_slave) - rb_math::get_P_3x1(m2s_starting_carte_master));
+
+                    Matrix3d new_slave_R = rb_math::get_R_3x3(m2s_current_carte_master) * m2s_delta_R;
+                    Vector3d new_slave_E = rb_math::R_to_RPY(new_slave_R);
+                    Vector3d new_slave_P = rb_math::get_P_3x1(m2s_current_carte_master) + rb_math::get_R_3x3(m2s_current_carte_master) * m2s_delta_P;
+                    double   new_slave_A = rb_math::get_REDUN_1x1(m2s_starting_carte_slave);
+
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[0] = new_slave_P(0);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[1] = new_slave_P(1);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[2] = new_slave_P(2);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[3] = new_slave_E(0);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[4] = new_slave_E(1);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[5] = new_slave_E(2);
+                    rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_f[6] = new_slave_A;
+                }
+
+                rb_shareddata::getGlobalShm()->robots[parameter_id_friend].f2m_command.command_flag = flag_master_mode;
+            }            
+        }
+
+        void RT_Copy_From_Shared_Memory(){
+            rb_shareddata::copySharedDataToLocal();
         }
 
         double RT_SysSpeed_Handler(){
@@ -512,19 +647,26 @@ namespace rb_system {
                 heart_beat_counter = 0;
                 flag_heart_beat ^= 1;
             }
+            
             // Arm Connection Check Update
             {
                 bool temp_is_all_connected = true;
                 bool temp_is_one_connected = false;
                 for(int i = 0; i < NO_OF_JOINT; ++i){
+                    if(flag_dev_configuration[i] == 0)  continue;
+
                     flag_connection_components[i] = _gv_Handler_Motor[i]->Set_ConnectionTimerUp(2);
                     temp_is_all_connected &= flag_connection_components[i];
                     temp_is_one_connected |= flag_connection_components[i];
                 }
-                flag_connection_components[NO_OF_JOINT] = _gv_Handler_Toolflange->Set_ConnectionTimerUp(2);
-                temp_is_all_connected &= flag_connection_components[NO_OF_JOINT];
-                temp_is_one_connected |= flag_connection_components[NO_OF_JOINT];
-                flag_connection_components[NO_OF_JOINT + 1] = _gv_Handler_Side->Set_ConnectionTimerUp(2);
+                if(flag_dev_configuration[NO_OF_JOINT] == 1){
+                    flag_connection_components[NO_OF_JOINT] = _gv_Handler_Toolflange->Set_ConnectionTimerUp(2);
+                    temp_is_all_connected &= flag_connection_components[NO_OF_JOINT];
+                    temp_is_one_connected |= flag_connection_components[NO_OF_JOINT];
+                }
+                if(flag_dev_configuration[NO_OF_JOINT + 1] == 1){
+                    flag_connection_components[NO_OF_JOINT + 1] = _gv_Handler_Side->Set_ConnectionTimerUp(2);
+                }
                 _gv_Handler_SCB->Set_ConnectionTimerUp(0, 1);
                 _gv_Handler_SCB->Set_ConnectionTimerUp(1, 1);
 
@@ -543,7 +685,17 @@ namespace rb_system {
                 flag_connection_is_one = temp_is_one_connected;
             }
 
+            // Power Component State Checker
+            if(flag_connection_is_one){
+                if(_gv_Handler_Lan->power_mc_sw_stat != 1){
+                    Set_Power(PowerOption::Off, true);
+                }
+            }
+            
+
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                if(flag_dev_configuration[i] == 0)  continue;
+
                 bool is_there_critical_err_in_motor = false;
                 if(flag_connection_components[i]){
                     auto m_param = _gv_Handler_Motor[i]->Get_Parameters();
@@ -577,6 +729,8 @@ namespace rb_system {
 
             if(servo_stat == ServoState::DONE){
                 for(int i = 0; i < (NO_OF_JOINT + 1); ++i){
+                    if(flag_dev_configuration[i] == 0)  continue;
+
                     if(!flag_connection_components[i]){
                         if(i == NO_OF_JOINT){
                             MESSAGE(MSG_LEVEL_ERRR, MSG_TFB_DISCONNECTED_DURING_RUN);
@@ -593,6 +747,8 @@ namespace rb_system {
             if(servo_stat == ServoState::DONE){
                 bool is_there_critical_err_in_motor = false;
                 for(int i = 0; i < NO_OF_JOINT; ++i){
+                    if(flag_dev_configuration[i] == 0)  continue;
+
                     auto m_state = _gv_Handler_Motor[i]->Get_States();
                     auto m_infos = _gv_Handler_Motor[i]->Get_Infos();
 
@@ -895,12 +1051,12 @@ namespace rb_system {
                     case DOUT_DEF_H_RealMode_and_Idle:
                     {
                         temp_out = static_cast<int>(flag_reference_onoff == true);
-                        temp_out &= static_cast<int>(rb_motion::Get_Is_Motion_Idle() != true);
+                        temp_out &= static_cast<int>(rb_motion::Get_Is_Motion_Idle() == true);
                         break;
                     }
                     case DOUT_DEF_H_Idle:
                     {
-                        temp_out = static_cast<int>(rb_motion::Get_Is_Motion_Idle() != true);
+                        temp_out = static_cast<int>(rb_motion::Get_Is_Motion_Idle() == true);
                         break;
                     }
                     case DOUT_DEF_H_Pause:
@@ -981,6 +1137,7 @@ namespace rb_system {
                     if(scb_info.configure_done[0] != true || scb_info.configure_done[1] != true){
                         SAFETY_ONOFF_STRUCTURE temp_onoff;
                         temp_onoff.raw = 0;
+                        temp_onoff.on_EM1 = 1;
                         int ret = Set_SafetyBoard_Para_Single(SFSET_CONFIG_SF_ONOFF, temp_onoff.raw);
                         if(ret == MSG_OK){
                             _gv_Handler_SCB->Set_ConfigDoneFlag(-1, true);
@@ -1032,21 +1189,38 @@ namespace rb_system {
         }
     }
 
-    bool initialize(std::string domain, int th_cpu){
+    bool initialize(std::string domain, int th_cpu_sysgen, int th_cpu_lan_connection){
         // ------------------------------------------------------
         // Call DB infomation
         // ------------------------------------------------------
-        parameter_code = rb_config::READ_Robot_Model();
+        parameter_id    = rb_config::READ_System_Id_No();
+        if(parameter_id == 0)   parameter_id_friend = 1;
+        if(parameter_id == 1)   parameter_id_friend = 0;
+        parameter_code  = rb_config::READ_Robot_Model();
         parameter_robot = rb_config::READ_Robot_Parameter(parameter_code);
 
         std::cout<<"ARM: "<<parameter_robot.arm_name<<std::endl;
+        
+        // ------------------------------------------------------
+        // Get Dev Configuration
+        // ------------------------------------------------------
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            flag_dev_configuration[i] = rb_config::READ_DEV_Motor(i);
+        }
+        flag_dev_configuration[NO_OF_JOINT + 0] = rb_config::READ_DEV_Tool_Flange();
+        flag_dev_configuration[NO_OF_JOINT + 1] = rb_config::READ_DEV_Side_IO();
+        flag_dev_configuration[NO_OF_JOINT + 2] = rb_config::READ_DEV_Emg_Switch();
 
+        // ------------------------------------------------------
+        // Get Dev Configuration
+        // ------------------------------------------------------
         Recover_Out_Coll_Para();
         Recover_Self_Coll_Para();
         Recover_Gravity_Para();
         Recover_Direct_Teaching_Sensitivity();
         Recover_TcpParameter(-1);
         Recover_UserFrameParameter(-1);
+        Recover_UserScript(-1);
         Recover_AreaParameter(-1);
 
         Recover_Box_Special_Dout(-1);
@@ -1057,7 +1231,7 @@ namespace rb_system {
         // Make Instances
         // ------------------------------------------------------
 
-        _gv_Handler_Lan = new lan2can(rb_config::READ_System_Gate_Port(), rb_config::READ_System_Gate_IP(0), rb_config::READ_System_Gate_IP(1), rb_config::READ_System_Gate_IP(2), rb_config::READ_System_Gate_IP(3));
+        _gv_Handler_Lan = new lan2can(rb_config::READ_System_Gate_Port(), rb_config::READ_System_Gate_IP(0), rb_config::READ_System_Gate_IP(1), rb_config::READ_System_Gate_IP(2), rb_config::READ_System_Gate_IP(3), th_cpu_lan_connection, domain);
         _gv_Handler_SCB = new scb_v1();
         _gv_Handler_Side = new side_io(1);
         for(int i = 0; i < NO_OF_JOINT; ++i){
@@ -1129,16 +1303,23 @@ namespace rb_system {
         Config_TimeScaler(SystemTimeScaler::COLLISION_OUT, 1.0, 0.96);
         Config_TimeScaler(SystemTimeScaler::COLLISION_SELF, 1.0, 0.0);
 
-        if(rb_common::thread_create(thread_system_general, th_cpu, std::string("RB_" + domain + "_SYSGEN"), hThread_sys_gen, NULL) != 0){
+        if(rb_common::thread_create(thread_system_general, th_cpu_sysgen, std::string("RB_" + domain + "_SYSGEN"), hThread_sys_gen, NULL) != 0){
             return false;
         }
 
         return true;
     }
 
+    void system_destroyer(){
+        std::cout<<"Bye Bye"<<std::endl;
+        pthread_mutex_destroy(&mutex_shm);  // 프로그램 종료 시 뮤텍스를 소멸
+        std::cout << "Mutex destroyed!" << std::endl;
+    }
+
     std::tuple<std::string, std::string, std::string, std::string> Get_System_Basic_Info(){
         std::string s_category = SYSTEM_CATEGORY;
         std::string s_model = "C" + std::to_string(parameter_code);
+
         std::string s_version = SYSTEM_VERSION;
         std::string s_alias = parameter_robot.arm_name;
         return {s_category, s_model, s_version, s_alias};
@@ -1163,6 +1344,66 @@ namespace rb_system {
     }
 
     // ---------------------------------------------------------------
+    // Multi Robot
+    // ---------------------------------------------------------------
+    int Get_System_ID_Index(){
+        return parameter_id;
+    }
+    int Set_Master_Mode(int mode){
+        // mode
+        // 0 : Off
+        // 1 : J / J
+        // 2 : L / L
+        LOG_INFO("MASTER MODE: " + std::to_string(mode));
+
+        if(mode == 0){
+            flag_master_mode = 0;
+            return MSG_OK;
+        }
+
+        if(!Get_Is_Idle())  return MESSAGE(MSG_LEVEL_WARN, MSG_MOVE_COMMAND_ERR);
+
+        if(mode == 1 || mode == 2){
+            if(parameter_id == 0){
+                friend_robot_namespace = "C501880";
+            }else if(parameter_id == 1){
+                friend_robot_namespace = "C500880";
+            }else{
+                return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_OPTION_IS_OVER_BOUND);
+            }
+
+            ST_SHM_M2F_STATE_CORE friends_core = rb_shareddata::getLocalShm()->robots[parameter_id_friend].m2f_state_core;
+
+            for(int k = 0; k < NO_OF_CARTE; ++k){
+                m2s_starting_carte_slave(k) = friends_core.carte_x_ref.at(k);
+                m2s_starting_carte_master(k) = rb_motion::Get_Wrapper_X().at(k);
+            }
+        }else{
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_OPTION_IS_OVER_BOUND);
+        }
+
+        // {
+        //     std::array<float, 7> target = rb_motion::Get_Wrapper_J();
+        //     target.at(1) *= -1;
+        //     target.at(2) *= -1;
+        //     target.at(4) *= -1;
+        //     target.at(6) *= -1;
+        //     auto t0 = std::chrono::steady_clock::now();
+        //     int ipc_ret = rb_ipc::toFriend_ServoJ(friend_robot_namespace, target, ((float)RT_PERIOD_SEC) * 2, 0.05, 1, 0.1);
+        //     auto t1 = std::chrono::steady_clock::now();
+        //     auto elapsed_us =
+        //         std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+
+        //     std::cout << "toFriend_ServoJ elapsed: "
+        //             << elapsed_us << " us" << std::endl;
+        //     std::cout<<"ipc_ret: "<<ipc_ret<<std::endl;
+        //     return MSG_OK;
+        // }
+        flag_master_mode = mode;
+        LOG_INFO("MASTER MODE: " + std::to_string(flag_master_mode) + "START");
+        return MSG_OK;
+    }
+    // ---------------------------------------------------------------
     // JOINT
     // ---------------------------------------------------------------
     VectorJd Get_Motor_Limit_Ang_Low(){
@@ -1172,7 +1413,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     VectorJd Get_Motor_Limit_Ang_Up(){
         VectorJd ret;
         for(int i = 0; i < NO_OF_JOINT; i++){
@@ -1196,7 +1436,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     VectorJd Get_Motor_Reco_Acc(){
         VectorJd ret;
         for(int i = 0; i < NO_OF_JOINT; i++){
@@ -1212,7 +1451,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     VectorJd Get_Motor_HwMax_Acc(){
         VectorJd ret;
         for(int i = 0; i < NO_OF_JOINT; i++){
@@ -1257,6 +1495,30 @@ namespace rb_system {
         return ret;
     }
 
+    // ---------------------------------------------------------------
+    // Other Systems
+    // ---------------------------------------------------------------
+    int Save_UserScript(unsigned int s_num, std::string s_txt){
+        if(s_num >= 16)    return MSG_DESIRED_INDEX_IS_OVER_BOUND;
+
+        if(!rb_config::WRITE_Script_Command(s_num, s_txt)){
+            return MSG_SAVE_TO_DB_FAIL;
+        }
+        // ADJUST
+        Recover_UserScript(s_num);
+
+        return MSG_OK;
+    }
+    int Recover_UserScript(int s_num){
+        if(s_num >= 0 && s_num < 16){
+            parameter_userscript[s_num] = rb_config::READ_Script_Command(s_num);
+        }else{
+            for(int i = 0; i < 16; ++i){
+                parameter_userscript[i] = rb_config::READ_Script_Command(i);
+            }
+        }
+        return MSG_OK;
+    }
     // ---------------------------------------------------------------
     // USER FRAME
     // ---------------------------------------------------------------
@@ -1696,13 +1958,14 @@ namespace rb_system {
     // MoveFlow
     // ---------------------------------------------------------------
     int Call_Halt(){//nonblock
+        LOG_INFO("CALL HALT");
         rb_motion::Set_Motion_Mode(rb_motion::MotionMode::MOVE_NONE);
         flag_collision_out_occur = false;
         flag_collision_self_occur = false;
         flag_is_break = false;
         flag_is_pause = false;
         flag_direct_teaching = false;
-        flag_joint_impedance_mode = false;
+        // flag_joint_impedance_mode = false;
         flag_sw_switch_free_drive = false;
         return MSG_OK;
     }
@@ -1710,7 +1973,6 @@ namespace rb_system {
         _sys_timescale[(int)SystemTimeScaler::SPEEDBAR].input = rb_math::saturation_L_and_U(alpha, 0.0, 1.0);
         return MSG_OK;
     }
-
     double Get_MoveSpeedBar(){
         return _sys_timescale[(int)SystemTimeScaler::SPEEDBAR].output;
     }
@@ -1718,7 +1980,6 @@ namespace rb_system {
     void Set_MoveUserSpeedBar(double alpha){
         _sys_timescale[(int)SystemTimeScaler::USER].input = rb_math::saturation_L_and_U(alpha, 0.0, 1.0);
     }
-
     double Get_MoveUserSpeedBar(){
         return _sys_timescale[(int)SystemTimeScaler::USER].output;
     }
@@ -1730,7 +1991,6 @@ namespace rb_system {
         flag_is_pause = true;
         return MSG_OK;
     }
-
     int Call_MoveResume(){//nonblock
         if(flag_is_pause){
             LOG_INFO("RESUME from PAUSE");
@@ -1738,7 +1998,6 @@ namespace rb_system {
         flag_is_pause = false;
         return MSG_OK;
     }
-
     int Get_MovePauseState(){
         return flag_is_pause;
     }
@@ -1754,7 +2013,6 @@ namespace rb_system {
         flag_is_break = true;
         return MSG_OK;
     }
-
     void Reset_MoveBreak(){
         _sys_timescale[(int)SystemTimeScaler::BREAK].input = 1.;
         _sys_timescale[(int)SystemTimeScaler::BREAK].output = 1.;
@@ -2111,6 +2369,7 @@ namespace rb_system {
     }
 
     int Set_Flange_Power(int desired_voltage){
+        std::cout<<"desired_voltage: "<<desired_voltage<<std::endl;
         if(desired_voltage > 0 && desired_voltage != 12 && desired_voltage != 24){
             return MSG_DESIRED_VALUE_IS_OVER_BOUND;
         }
@@ -2119,10 +2378,11 @@ namespace rb_system {
             return MSG_SYSTEM_THIS_FUNC_IS_AVAIL_WHEN_POWER_ENGAGED;
         }
 
-        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdPowerControl(24));
+        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdPowerControl(desired_voltage));
         return MSG_OK;
     }
     int Set_Flange_Digital_Output(int p_num, int value){
+        std::cout<<"tool out"<<p_num<<" / "<<value<<std::endl;
         if(p_num >= TFB_NUM_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
@@ -2154,17 +2414,16 @@ namespace rb_system {
         // 3 : Close only
 
         LOG_INFO("Joint Brake: " + std::to_string(bno) + "/" +std::to_string(brk_action));
-
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
         if(brk_action == 1 || brk_action == 2){
             if(!Get_Power()){
-                int pw_ret = Set_Power(PowerOption::On, false);
-                if(pw_ret != MSG_OK){
-                    return pw_ret;
-                }
+                if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
             }
         }
 
-        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
         for(int s = 0; s < shot_arr.size(); ++s){
             int target_bno = shot_arr.at(s);
             _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Brake(brk_action, false));
@@ -2175,20 +2434,200 @@ namespace rb_system {
 
     int Set_Joint_Encoder_Zero(int bno){
         LOG_INFO("Joint Encoder: " + std::to_string(bno));
-
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
         if(!Get_Power()){
-            int pw_ret = Set_Power(PowerOption::On, false);
-            if(pw_ret != MSG_OK){
-                return pw_ret;
-            }
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
         }
 
-        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
         for(int s = 0; s < shot_arr.size(); ++s){
             int target_bno = shot_arr.at(s);
             _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_HomeOffsetZero());
         }
 
+        return MSG_OK;
+    }
+
+    int Set_Joint_Sensor_Reset(int bno){
+        LOG_INFO("Joint Sensor Reset: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+
+            std::cout<<"Stage 1: Open and DQ Align"<<std::endl;
+            for(int tr = 0; tr < 3; ++tr){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Brake(1, false));
+                std::this_thread::sleep_for(0.2s);
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_DQ_Align());
+                std::this_thread::sleep_for(1.5s);
+            }
+            std::cout<<"Stage 2: DQ Save"<<std::endl;
+            for(int tr = 0; tr < 2; ++tr){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_DQ_Save());
+                std::this_thread::sleep_for(1.5s);
+            }
+            std::cout<<"Stage 3: Sensor Nulling"<<std::endl;
+            for(int tr = 0; tr < 2; ++tr){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Current_Nulling());
+                std::this_thread::sleep_for(1.5s);
+            }
+
+
+            std::cout<<"Sensor Reset joint "<<target_bno<<" done"<<std::endl;
+            // _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_HomeOffsetZero());
+        }
+
+        return MSG_OK;
+    }
+
+    int Pop_Joint_GainPos(int bno){
+        LOG_INFO("Joint Pgain Pop: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+        
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+
+            std::this_thread::sleep_for(3ms);
+            _gv_Handler_Motor[target_bno]->Clear_Gain_Position();
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Ask_Gain_Position());
+        }
+
+        std::this_thread::sleep_for(20ms);
+
+        std::string total_str = "";
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            mINFO tMotor = _gv_Handler_Motor[target_bno]->Get_Infos();
+            if(tMotor.gain_position_flag == true){
+                total_str += ("Motor " + std::to_string(target_bno) + " PosGain = " + std::to_string(tMotor.gain_position_P) + "/" + std::to_string(tMotor.gain_position_I) + "/" + std::to_string(tMotor.gain_position_D));
+            }else{
+                total_str += ("Motor " + std::to_string(target_bno) + " PosGain not received");
+            }
+            if(s != ((int)shot_arr.size() - 1)){
+                total_str += "\n";
+            }
+        }
+        POPUP(MSG_LEVEL_INFO, MSG_OK, total_str);
+        return MSG_OK;
+    }
+    int Pop_Joint_GainCur(int bno){
+        LOG_INFO("Joint Cgain Pop: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+
+            std::this_thread::sleep_for(3ms);
+            _gv_Handler_Motor[target_bno]->Clear_Gain_Current();
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Ask_Gain_Current());
+        }
+
+        std::this_thread::sleep_for(20ms);
+
+        std::string total_str = "";
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            mINFO tMotor = _gv_Handler_Motor[target_bno]->Get_Infos();
+            if(tMotor.gain_current_flag == true){
+                total_str += ("Motor " + std::to_string(target_bno) + " CurGain = " + std::to_string(tMotor.gain_current_P) + "/" + std::to_string(tMotor.gain_current_I));
+            }else{
+                total_str += ("Motor " + std::to_string(target_bno) + " CurGain not received");
+            }
+            if(s != ((int)shot_arr.size() - 1)){
+                total_str += "\n";
+            }
+        }
+        POPUP(MSG_LEVEL_INFO, MSG_OK, total_str);
+        return MSG_OK;
+    }
+    int Set_Joint_GainPos(int bno, int pgain, int igain, int dgain){
+        LOG_INFO("Joint Pgain Set: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Save_Gain_Posision(pgain, igain, dgain));
+            std::this_thread::sleep_for(20ms);
+        }
+        return MESSAGE(MSG_LEVEL_INFO, MSG_SAVE_DONE);
+    }
+    int Set_Joint_GainCur(int bno, int pgain, int igain){
+        LOG_INFO("Joint Cgain Set: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[target_bno]->Cmd_Save_Gain_Current(pgain, igain));
+            std::this_thread::sleep_for(20ms);
+        }
+        return MESSAGE(MSG_LEVEL_INFO, MSG_SAVE_DONE);
+    }
+
+    int Pop_Joint_Infos(int bno){
+        LOG_INFO("Joint Infos: " + std::to_string(bno));
+        std::vector<int> shot_arr = Joint_Action_List_Generator(bno);
+        if(shot_arr.size() == 0){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_INDEX_IS_OVER_BOUND);
+        }
+
+        if(!Get_Power()){
+            if (int pw_ret = Set_Power(PowerOption::On, false); pw_ret != MSG_OK) return pw_ret;
+        }
+        
+        std::string total_str = "";
+        for(int s = 0; s < shot_arr.size(); ++s){
+            int target_bno = shot_arr.at(s);
+            auto m_info = _gv_Handler_Motor[target_bno]->Get_Infos();
+            auto m_stat = _gv_Handler_Motor[target_bno]->Get_States();
+            auto m_para = _gv_Handler_Motor[target_bno]->Get_Parameters();
+
+            std::string single_str = "J" + std::to_string(target_bno) + ": ";
+            if(flag_connection_components[target_bno]){
+                single_str += ("V(" + std::to_string(m_info.firmware_version) +") ");
+                single_str += ("T(" + std::to_string(m_info.type_num) +") ");
+                single_str += ("D(" + std::to_string(m_info.type_mdr) +") ");
+                single_str += ("E(" + std::to_string((int)m_info.encoder_deg) +") ");
+                single_str += ("M(" + std::to_string(m_info.stat_mul) +") ");
+            }else{
+                single_str += "Not Connected";
+            }
+            total_str += ("\n" + single_str);
+        }
+
+        POPUP(MSG_LEVEL_INFO, MSG_OK, total_str);
         return MSG_OK;
     }
 
@@ -2216,7 +2655,7 @@ namespace rb_system {
         Set_Servo_State(ServoState::PWCHECK);
         //----------------------------------------------------------------------
         if(!flag_connection_is_all){
-            if(!flag_connection_components[NO_OF_JOINT]){
+            if(!flag_connection_components[NO_OF_JOINT + 0]){
                 return MESSAGE(MSG_LEVEL_ERRR, MSG_TFB_NOT_DETECTED);
             }
             if(!flag_connection_components[NO_OF_JOINT + 1]){
@@ -2250,54 +2689,78 @@ namespace rb_system {
             std::this_thread::sleep_for(15ms);
             for(int i = 0; i < NO_OF_JOINT; ++i){
                 std::this_thread::sleep_for(3ms);
+                _gv_Handler_Motor[i]->Clear_Gain_Current();
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Ask_Gain_Current());
+            }
+            std::this_thread::sleep_for(15ms);
+            for(int i = 0; i < NO_OF_JOINT; ++i){
+                std::this_thread::sleep_for(3ms);
                 _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_AdminMode(true));
             }
 
             for(int i = 0; i < NO_OF_JOINT; ++i){
-                int m_version = _gv_Handler_Motor[i]->Get_Infos().firmware_version;
-                if(m_version < 0){
-                    return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_FIRMWARE_IS_NOT_DETECTED_0 + i);
-                }else{
-                    LOG_INFO("Motor Firmware: " + std::to_string(i) + " : " + std::to_string(m_version));
-                    if(m_version < 1240219){
-                        return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_FIRMWARE_VER_IS_LOW_0 + i);
+                if(flag_dev_configuration[i]){
+                    int m_version = _gv_Handler_Motor[i]->Get_Infos().firmware_version;
+                    if(m_version < 0){
+                        return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_FIRMWARE_IS_NOT_DETECTED_0 + i);
+                    }else{
+                        LOG_INFO("Motor Firmware: " + std::to_string(i) + " : " + std::to_string(m_version));
+                        if(m_version < 1240219){
+                            return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_FIRMWARE_VER_IS_LOW_0 + i);
+                        }
                     }
                 }
             }
-            int s_version = _gv_Handler_Side->Get_Info().firmware_version;
-            if(s_version < 0){
-                return MESSAGE(MSG_LEVEL_ERRR, MSG_SIDE_ERR_FIRMWARE_IS_NOT_DETECTED);
-            }else{
-                LOG_INFO("Side Firmware : " + std::to_string(s_version));
-            }
 
-            int t_version = _gv_Handler_Toolflange->Get_Info().firmware_version;
-            if(t_version < 0){
-                return MESSAGE(MSG_LEVEL_ERRR, MSG_TFB_ERR_FIRMWARE_IS_NOT_DETECTED);
-            }else{
-                LOG_INFO("ToolFlange Firmware : " + std::to_string(t_version));
+            if(flag_dev_configuration[NO_OF_JOINT + 0]){
+                int t_version = _gv_Handler_Toolflange->Get_Info().firmware_version;
+                if(t_version < 0){
+                    return MESSAGE(MSG_LEVEL_ERRR, MSG_TFB_ERR_FIRMWARE_IS_NOT_DETECTED);
+                }else{
+                    LOG_INFO("ToolFlange Firmware : " + std::to_string(t_version));
+                }
+            }
+            if(flag_dev_configuration[NO_OF_JOINT + 1]){
+                int s_version = _gv_Handler_Side->Get_Info().firmware_version;
+                if(s_version < 0){
+                    return MESSAGE(MSG_LEVEL_ERRR, MSG_SIDE_ERR_FIRMWARE_IS_NOT_DETECTED);
+                }else{
+                    LOG_INFO("Side Firmware : " + std::to_string(s_version));
+                }
             }
         }
 
         {// Do Type and Bound Check
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                if(flag_dev_configuration[i] == 0)  continue;
+
                 mINFO tMotor = _gv_Handler_Motor[i]->Get_Infos();
                 if((int)parameter_robot.modules_type[i] != tMotor.type_num){
                     LOG_ERROR("Motor Type Not Math: " + std::to_string(i) + "[" + std::to_string(tMotor.type_num) + "/" + std::to_string((int)parameter_robot.modules_type[i]) + "]");
                     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_TYPE_NOT_MATCH_0 + i);
                 }
+                if(tMotor.stat_mul == 1){
+                    LOG_ERROR("Motor Mul Error: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg)  + "]");
+                    return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_MUL_0 + i);
+                }
                 if(tMotor.encoder_deg > (parameter_robot.modules_range_up[i] + 10)){
-                    LOG_ERROR("Motor Type Not Math: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg) + "/" + std::to_string(parameter_robot.modules_range_up[i]) + "]");
+                    LOG_ERROR("Motor Bound Up Over: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg) + "/" + std::to_string(parameter_robot.modules_range_up[i]) + "]");
                     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_ANG_LIMIT_UP_0 + i);
                 }
                 if(tMotor.encoder_deg < (parameter_robot.modules_range_low[i] - 10)){
-                    LOG_ERROR("Motor Type Not Math: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg) + "/" + std::to_string(parameter_robot.modules_range_low[i]) + "]");
+                    LOG_ERROR("Motor Bound Dw Over: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg) + "/" + std::to_string(parameter_robot.modules_range_low[i]) + "]");
                     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_ANG_LIMIT_DW_0 + i);
                 }
                 if(tMotor.gain_position_flag == true){
                     LOG_INFO("Motor PGain: " + std::to_string(i) + " : " + std::to_string(tMotor.gain_position_P) + "/" + std::to_string(tMotor.gain_position_I) + "/" + std::to_string(tMotor.gain_position_D));
                 }else{
                     LOG_ERROR("Motor PGain: " + std::to_string(i) + " : Not Received");
+                    return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_CORE_PARAMETER_NOT_RECEIVED_0 + i);
+                }
+                if(tMotor.gain_current_flag == true){
+                    LOG_INFO("Motor CGain: " + std::to_string(i) + " : " + std::to_string(tMotor.gain_current_P) + "/" + std::to_string(tMotor.gain_current_I));
+                }else{
+                    LOG_ERROR("Motor CGain: " + std::to_string(i) + " : Not Received");
                     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_CORE_PARAMETER_NOT_RECEIVED_0 + i);
                 }
             }
@@ -2320,6 +2783,7 @@ namespace rb_system {
         temp_robot.Init_Robot(Get_CurrentRobotParameter(), Get_CurrentTcpParameter(), rb_system::Get_CurrentGravityParameter());
         VectorJd t_torque_ID = temp_robot.Calc_InverseDynamics(t_enc_deg, VectorJd::Zero(NO_OF_JOINT, 1), VectorJd::Zero(NO_OF_JOINT, 1));
         for(int i = 0; i < NO_OF_JOINT; ++i){
+            if(flag_dev_configuration[i] == 0)  continue;
             _gv_Handler_Motor[i]->Activation_Process_Start();
             _gv_Handler_Motor[i]->Clear_States();
             _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_ServoOn(t_torque_ID(i)));            ;
@@ -2330,6 +2794,8 @@ namespace rb_system {
         while(1){
             bool is_all_motor_on = true;
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                if(flag_dev_configuration[i] == 0)  continue;
+
                 mSTAT t_info = _gv_Handler_Motor[i]->Get_States();
                 if(!t_info.b.INIT || !t_info.b.RUN){
                     is_all_motor_on = false;
@@ -2342,11 +2808,18 @@ namespace rb_system {
             std::this_thread::sleep_for(50ms);
             init_check_time += 0.05;
             if(init_check_time > 5.0){
+                std::cout<<"Servo Flag Check time out"<<std::endl;
+                for(int i = 0; i < NO_OF_JOINT; ++i){
+                    mSTAT t_info = _gv_Handler_Motor[i]->Get_States();
+                    std::cout<<"Joint : "<<i<<"= "<<(int)t_info.b.INIT<<" / "<<(int)t_info.b.RUN<<std::endl;
+                }
                 break;
             }
         }
 
         for(int i = 0; i < NO_OF_JOINT; ++i){
+            if(flag_dev_configuration[i] == 0)  continue;
+
             double desired_shake_ang = _gv_Handler_Motor[i]->Get_Parameters().para_shake_pulse * _gv_Handler_Motor[i]->Get_Parameters().para_pulse_to_deg;
             auto [act_min, act_max] = _gv_Handler_Motor[i]->Activation_Process_Stop();
             LOG_INFO("Motor Acts: " + std::to_string(i) + "[" + std::to_string(act_min) + "," + std::to_string(act_max) + "/" + std::to_string(desired_shake_ang) + "]");
@@ -2361,23 +2834,25 @@ namespace rb_system {
                 is_there_plus_err = true;
             }
 
-            if(is_there_minus_err && is_there_plus_err){
-                LOG_ERROR("Motor Shake Both Fail: " + std::to_string(i));
-                Set_Power(PowerOption::Off, false);
-                return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_0 + i);
-            }else if(is_there_minus_err){
-                LOG_ERROR("Motor Shake Minus Fail: " + std::to_string(i));
-                Set_Power(PowerOption::Off, false);
-                return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_MINUS_0 + i);
-            }else if(is_there_plus_err){
-                LOG_ERROR("Motor Shake Plus Fail: " + std::to_string(i));
-                Set_Power(PowerOption::Off, false);
-                return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_PLUS_0 + i);
-            }
+            // if(is_there_minus_err && is_there_plus_err){
+            //     LOG_ERROR("Motor Shake Both Fail: " + std::to_string(i));
+            //     Set_Power(PowerOption::Off, false);
+            //     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_0 + i);
+            // }else if(is_there_minus_err){
+            //     LOG_ERROR("Motor Shake Minus Fail: " + std::to_string(i));
+            //     Set_Power(PowerOption::Off, false);
+            //     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_MINUS_0 + i);
+            // }else if(is_there_plus_err){
+            //     LOG_ERROR("Motor Shake Plus Fail: " + std::to_string(i));
+            //     Set_Power(PowerOption::Off, false);
+            //     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_NO_MOVE_DURING_SERVOON_PLUS_0 + i);
+            // }
         }
 
         if(!is_success_to_servoOn){
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                if(flag_dev_configuration[i] == 0)  continue;
+
                 mSTAT t_info = _gv_Handler_Motor[i]->Get_States();
                 if(!t_info.b.INIT || !t_info.b.RUN){
                     rb_common::log_push(LogLevel::Error, "Motor Servon Fail: " + std::to_string(i), P_NAME);
@@ -2406,20 +2881,9 @@ namespace rb_system {
         return servo_stat;
     }
 
-    int Set_Power(PowerOption opt, bool is_call_from_RT){
-        if(!_gv_Handler_Lan->LAN_connectionStatus){
-            return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_INTERFACE);
-        }
-        auto scb_state = _gv_Handler_SCB->Get_Infos();
-        for(int scb = 0; scb < 2; ++scb){
-            if(!scb_state.connection_flag[scb]){
-                return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_SAFETY_1 + scb);
-            }
-            if(!scb_state.configure_done[scb]){
-                return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONFIGURED_SAFETY_1 + scb);
-            }
-        }
+    int Set_Power(PowerOption opt, bool is_call_from_RT){        
         if(opt == PowerOption::Off){
+            Call_Halt();
             Set_Servo_State(ServoState::NONE);
             if(is_call_from_RT){
                 request_powerControl.store(PowerOption::Off, std::memory_order_relaxed);
@@ -2439,6 +2903,19 @@ namespace rb_system {
             }
         }else if(opt == PowerOption::On){
             LOG_INFO("CMD Power On");
+
+            if(!_gv_Handler_Lan->LAN_connectionStatus){
+                return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_INTERFACE);
+            }
+            auto scb_state = _gv_Handler_SCB->Get_Infos();
+            for(int scb = 0; scb < 2; ++scb){
+                if(!scb_state.connection_flag[scb]){
+                    return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONNECT_SAFETY_1 + scb);
+                }
+                if(!scb_state.configure_done[scb]){
+                    return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_NOT_CONFIGURED_SAFETY_1 + scb);
+                }
+            }
 
             if(_gv_Handler_Lan->power_48V_in_stat != true){
                 return MESSAGE(MSG_LEVEL_WARN, MSG_SYSTEM_INPUT_LOW_48V);
@@ -2572,6 +3049,8 @@ namespace rb_system {
             output_lpf_q_vel = output_lpf_q_vel_old = output_lpf_q_acc = VectorJd::Zero(NO_OF_JOINT, 1);
 
             LOG_INFO("Reference On");
+
+            rb_socket_command_server::ascii_script_execution(parameter_userscript[15]);
         }
         flag_reference_onoff = opt;
         return MSG_OK;
@@ -2687,8 +3166,77 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         // SHM 
         // -------------------------------------------------------------------------
-        auto shm_ptr = rb_shareddata::get();
-        shm_ptr->sdata.info_heart_beat = flag_heart_beat;
+        pthread_mutex_lock(&mutex_shm);
+        RT_Update_My_Shared_Memory();
+        RT_Update_My_Intention_to_Friends();
+        RT_Copy_From_Shared_Memory();
+        pthread_mutex_unlock(&mutex_shm);
+
+        // // TX command through Zenoh
+        // if(flag_master_mode != 0){
+        //     ST_SHM_M2F_STATE_CORE friends_core = rb_shareddata::getLocalShm()->robots[parameter_id_friend].m2f_state_core;
+        //     static int servo_cnt = 0;
+        //     servo_cnt++;
+        //     if(!friends_core.status_is_refon && false){
+        //         LOG_ERROR("FRIEND IS NOT REF ON");
+        //         flag_master_mode = 0;
+        //     }else{
+        //         int ipc_ret = MSG_OK;
+
+        //         if(flag_master_mode == 1){
+        //             std::array<float, 7> target = rb_motion::Get_Wrapper_J();
+        //             target.at(1) *= -1;
+        //             target.at(2) *= -1;
+        //             target.at(4) *= -1;
+        //             target.at(6) *= -1;
+        //             ipc_ret = rb_ipc::toFriend_ServoJ(friend_robot_namespace, target, ((float)RT_PERIOD_SEC) * 2, 0.05, 1, 0.1);
+        //         }else if(flag_master_mode == 2){
+        //             VectorCd m2s_current_carte_master;
+        //             for(int k = 0; k < NO_OF_CARTE; ++k){
+        //                 m2s_current_carte_master(k) = rb_motion::Get_Wrapper_X().at(k);
+        //             }
+
+        //             Matrix3d m2s_delta_R = rb_math::get_R_3x3(m2s_starting_carte_master).transpose() * rb_math::get_R_3x3(m2s_starting_carte_slave);
+        //             Vector3d m2s_delta_P = rb_math::get_R_3x3(m2s_starting_carte_master).transpose() * (rb_math::get_P_3x1(m2s_starting_carte_slave) - rb_math::get_P_3x1(m2s_starting_carte_master));
+
+        //             Matrix3d new_slave_R = rb_math::get_R_3x3(m2s_current_carte_master) * m2s_delta_R;
+        //             Vector3d new_slave_E = rb_math::R_to_RPY(new_slave_R);
+        //             Vector3d new_slave_P = rb_math::get_P_3x1(m2s_current_carte_master) + rb_math::get_R_3x3(m2s_current_carte_master) * m2s_delta_P;
+        //             double   new_slave_A = rb_math::get_REDUN_1x1(m2s_starting_carte_slave);
+        //             std::array<float, 7> target;
+        //             target.at(0) = new_slave_P(0);
+        //             target.at(1) = new_slave_P(1);
+        //             target.at(2) = new_slave_P(2);
+        //             target.at(3) = new_slave_E(0);
+        //             target.at(4) = new_slave_E(1);
+        //             target.at(5) = new_slave_E(2);
+        //             target.at(6) = new_slave_A;
+        //             ipc_ret = rb_ipc::toFriend_ServoL(friend_robot_namespace, target, ((float)RT_PERIOD_SEC) * 2, 0.05, 1, 0.1);
+        //         }
+
+        //         if(ipc_ret != MSG_OK){
+        //             LOG_ERROR("FRIEND IPC RETURN FAIL" + std::to_string(ipc_ret));
+        //             flag_master_mode = 0;
+        //         }
+        //     }
+        // }
+
+        {//SHM Receiver
+            ST_SHM_F2M_COMMAND temp_income = rb_shareddata::getLocalShm()->robots[parameter_id].f2m_command;
+            if(temp_income.command_flag == 1){
+                TARGET_INPUT temp_input = rb_math::Make_Input_Zero(FRAME_JOINT);
+                for(int j = 0; j < NO_OF_JOINT; ++j){
+                    temp_input.target_value[j] = temp_income.command_f[j];
+                }
+                rb_motion::Start_Motion_SERVO_J(temp_input, RT_PERIOD_SEC, 0.05, 1.0, 0.1);
+            }else if(temp_income.command_flag == 2){
+                TARGET_INPUT temp_input = rb_math::Make_Input_Zero(FRAME_GLOBAL);
+                for(int j = 0; j < NO_OF_CARTE; ++j){
+                    temp_input.target_value[j] = temp_income.command_f[j];
+                }
+                rb_motion::Start_Motion_SERVO_L(temp_input, RT_PERIOD_SEC, 0.05, 1.0, 0.1);
+            }
+        }
 
         // -------------------------------------------------------------------------
         // Update 
@@ -2969,6 +3517,7 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         if(flag_reference_onoff){
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                if(flag_dev_configuration[i] == 0)  continue;
                 _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Control(output_lpf_q_ang(i), t_torque_Esti(i), fb_gain, ff_gain, torque_limit_A[i]));
             }
         }

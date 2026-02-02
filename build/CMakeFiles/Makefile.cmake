@@ -69,5 +69,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/rb_program.dir/DependInfo.cmake"
+  "CMakeFiles/copy_config.dir/DependInfo.cmake"
   "rb_session/CMakeFiles/rb_session.dir/DependInfo.cmake"
   )

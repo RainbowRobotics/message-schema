@@ -546,4 +546,5 @@ CMakeFiles/rb_program.dir/rb_core/system.cpp.o: \
  /usr/include/c++/12/bits/locale_conv.h \
  /usr/include/c++/12/bits/quoted_string.h \
  /root/Desktop/test_project/rb_core/system.h \
- /root/Desktop/test_project/./rb_ipc/ipc.h
+ /root/Desktop/test_project/./rb_ipc/ipc.h \
+ /root/Desktop/test_project/./rb_service/socket_server/command_server.h

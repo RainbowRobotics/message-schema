@@ -352,18 +352,18 @@ namespace rb_mbus_server {
                     // 주소 영역: 3xxxx (30001–39999)
                     // 읽기: FC04
                     // ---------------------
-                    auto shm_ptr = rb_shareddata::get();
-                    for(int i = 0; i < MBUS_INPUT_REGS_NUM; ++i){
-                        int tar_addr = MBUS_MAP_INPUT_REGS[i].shm_index;
-                        float tar_scaler = MBUS_MAP_INPUT_REGS[i].scaler;
+                    // auto shm_ptr = rb_shareddata::get();
+                    // for(int i = 0; i < MBUS_INPUT_REGS_NUM; ++i){
+                    //     int tar_addr = MBUS_MAP_INPUT_REGS[i].shm_index;
+                    //     float tar_scaler = MBUS_MAP_INPUT_REGS[i].scaler;
 
-                        int shm_type = SHARED_DATA_TYPE[tar_addr];
-                        if(shm_type == 0){
-                            mb_mapping->tab_input_registers[i] = static_cast<uint16_t>(shm_ptr->idata[tar_addr]);
-                        }else{
-                            mb_mapping->tab_input_registers[i] = static_cast<uint16_t>(shm_ptr->fdata[tar_addr] / tar_scaler);
-                        }
-                    }
+                    //     int shm_type = SHARED_DATA_TYPE[tar_addr];
+                    //     if(shm_type == 0){
+                    //         mb_mapping->tab_input_registers[i] = static_cast<uint16_t>(shm_ptr->idata[tar_addr]);
+                    //     }else{
+                    //         mb_mapping->tab_input_registers[i] = static_cast<uint16_t>(shm_ptr->fdata[tar_addr] / tar_scaler);
+                    //     }
+                    // }
                 }
             } // while running
 

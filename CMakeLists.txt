@@ -127,6 +127,8 @@ add_executable(rb_program
     rb_service/mbus_server/mbustcp_server.cpp
     rb_service/socket_server/command_server.cpp
     rb_service/socket_server/data_server.cpp
+    rb_service/socket_server/udp_command_server.cpp
+    rb_service/socket_server/udp_data_server.cpp
 
     rb_motion/rrbdl.cpp
 )
@@ -168,6 +170,7 @@ endif()
 
 # ===== 빌드 후 다른 프로젝트로 실행 파일 복사 =====
 set(SECOND_BUILD_DIR "/root/Desktop/test_project_2/build")
+set(THIRD_BUILD_DIR "/root/Desktop/test_project_3/build")
 
 add_custom_command(TARGET rb_program POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${SECOND_BUILD_DIR}
@@ -176,3 +179,23 @@ add_custom_command(TARGET rb_program POST_BUILD
             ${SECOND_BUILD_DIR}/rb_program
     COMMENT "Copying rb_program to test_project_2 build directory"
 )
+add_custom_command(TARGET rb_program POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${THIRD_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:rb_program>
+            ${THIRD_BUILD_DIR}/rb_program
+    COMMENT "Copying rb_program to test_project_3 build directory"
+)
+
+# ===== config.json 복사 =====
+add_custom_target(copy_config ALL
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_BINARY_DIR}/config.json5
+            ${SECOND_BUILD_DIR}/config.json5
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_BINARY_DIR}/config.json5
+            ${THIRD_BUILD_DIR}/config.json5
+    COMMENT "Force copying config.json5 every build"
+)
+
+add_dependencies(copy_config rb_program)

@@ -490,6 +490,7 @@ CAN_MSG motor::Cmd_Control(double position_deg, double torque_Nm, double fb_gain
     if(tq_limit_A >= 0){
         can_m.data[7] = 0b01000000 | (tq_limit_A & 0b00111111);
         can_m.dlc = 8;
+        //std::cout<<"Limit Mode : "<<cans.CAN_BNO<<" / "<<tq_limit_A<<std::endl;
     }
     return can_m;
 }
@@ -528,6 +529,37 @@ CAN_MSG motor::Cmd_Brake(int opmode, int nonslave_flag){
     }else{
         can_m.dlc = 3;
     }
+    return can_m;
+}
+
+CAN_MSG motor::Cmd_DQ_Align(){
+    CAN_MSG can_m;
+    can_m.id = cans.CAN_ID_CMD;
+    can_m.channel = cans.CAN_CH;
+    can_m.data[0] = 0xC2;
+    can_m.data[1] = 0;
+    can_m.dlc = 2;
+    return can_m;
+}
+
+CAN_MSG motor::Cmd_DQ_Save(){
+    CAN_MSG can_m;
+    can_m.id = cans.CAN_ID_CMD;
+    can_m.channel = cans.CAN_CH;
+    can_m.data[0] = 0x06;
+    can_m.data[1] = 1;
+    can_m.data[2] = 1;
+    can_m.dlc = 3;
+    return can_m;
+}
+
+CAN_MSG motor::Cmd_Current_Nulling(){
+    CAN_MSG can_m;
+    can_m.id = cans.CAN_ID_CMD;
+    can_m.channel = cans.CAN_CH;
+    can_m.data[0] = 0xD6;
+    can_m.data[1] = 0;
+    can_m.dlc = 2;
     return can_m;
 }
 

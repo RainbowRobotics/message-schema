@@ -1,0 +1,18 @@
+{
+  "mode": "peer",
+  "scouting": { 
+    "multicast": { "enabled": true, "ttl": 1 },
+    "gossip": { 
+      "enabled": true,
+      "multihop": true,
+    }
+  },
+  "connect": { 
+    "endpoints": []
+  },
+  "listen": { 
+    "endpoints": { "peer": ["tcp/0.0.0.0:7447"] },
+    "exit_on_failure": false
+  },
+  "transport": { "shared_memory": { "enabled": true } }
+}

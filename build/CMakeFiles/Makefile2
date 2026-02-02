@@ -64,6 +64,7 @@ CMAKE_BINARY_DIR = /root/Desktop/test_project/build
 
 # The main recursive "all" target.
 all: CMakeFiles/rb_program.dir/all
+all: CMakeFiles/copy_config.dir/all
 all: rb_session/all
 .PHONY : all
 
@@ -73,6 +74,7 @@ preinstall: rb_session/preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/rb_program.dir/clean
+clean: CMakeFiles/copy_config.dir/clean
 clean: rb_session/clean
 .PHONY : clean
 
@@ -98,12 +100,12 @@ rb_session/clean: rb_session/CMakeFiles/rb_session.dir/clean
 CMakeFiles/rb_program.dir/all: rb_session/CMakeFiles/rb_session.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38 "Built target rb_program"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41 "Built target rb_program"
 .PHONY : CMakeFiles/rb_program.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/rb_program.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/test_project/build/CMakeFiles 41
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/test_project/build/CMakeFiles 43
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/rb_program.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/test_project/build/CMakeFiles 0
 .PHONY : CMakeFiles/rb_program.dir/rule
@@ -118,13 +120,39 @@ CMakeFiles/rb_program.dir/clean:
 .PHONY : CMakeFiles/rb_program.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/copy_config.dir
+
+# All Build rule for target.
+CMakeFiles/copy_config.dir/all: CMakeFiles/rb_program.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_config.dir/build.make CMakeFiles/copy_config.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_config.dir/build.make CMakeFiles/copy_config.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=1 "Built target copy_config"
+.PHONY : CMakeFiles/copy_config.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/copy_config.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/test_project/build/CMakeFiles 44
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/copy_config.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/Desktop/test_project/build/CMakeFiles 0
+.PHONY : CMakeFiles/copy_config.dir/rule
+
+# Convenience name for target.
+copy_config: CMakeFiles/copy_config.dir/rule
+.PHONY : copy_config
+
+# clean rule for target.
+CMakeFiles/copy_config.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_config.dir/build.make CMakeFiles/copy_config.dir/clean
+.PHONY : CMakeFiles/copy_config.dir/clean
+
+#=============================================================================
 # Target rules for target rb_session/CMakeFiles/rb_session.dir
 
 # All Build rule for target.
 rb_session/CMakeFiles/rb_session.dir/all:
 	$(MAKE) $(MAKESILENT) -f rb_session/CMakeFiles/rb_session.dir/build.make rb_session/CMakeFiles/rb_session.dir/depend
 	$(MAKE) $(MAKESILENT) -f rb_session/CMakeFiles/rb_session.dir/build.make rb_session/CMakeFiles/rb_session.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=39,40,41 "Built target rb_session"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=42,43,44 "Built target rb_session"
 .PHONY : rb_session/CMakeFiles/rb_session.dir/all
 
 # Build rule for subdir invocation for target.

@@ -7,12 +7,50 @@ enum class DB_ADDR_LIST{
     SYS_PORT_NO_MBUS = 0,
     SYS_PORT_NO_SOCKCMD,
     SYS_PORT_NO_SOCKDATA,
+    SYS_PORT_NO_UDPCMD,
+    SYS_PORT_NO_UDPDATA,
+
+    SYS_ID_NO,
+
+    SYS_CPU_DOMAIN_NAME,
+    SYS_CPU_NUM_CLASS_A,
+    SYS_CPU_NUM_CLASS_B,
+    SYS_CPU_NUM_CLASS_C,
+    SYS_CPU_NUM_CLASS_D,
 
     SYS_GATE_PORT,
     SYS_GATE_IP_0,
     SYS_GATE_IP_1,
     SYS_GATE_IP_2,
     SYS_GATE_IP_3,
+
+    DEV_EMG_SWITCH,
+    DEV_SIDE_IO,
+    DEV_TOOL_FLANGE,
+    DEV_MOTOR_0,
+    DEV_MOTOR_1,
+    DEV_MOTOR_2,
+    DEV_MOTOR_3,
+    DEV_MOTOR_4,
+    DEV_MOTOR_5,
+    DEV_MOTOR_6,
+
+    SCRIPT_CMD_0,
+    SCRIPT_CMD_1,
+    SCRIPT_CMD_2,
+    SCRIPT_CMD_3,
+    SCRIPT_CMD_4,
+    SCRIPT_CMD_5,
+    SCRIPT_CMD_6,
+    SCRIPT_CMD_7,
+    SCRIPT_CMD_8,
+    SCRIPT_CMD_9,
+    SCRIPT_CMD_10,
+    SCRIPT_CMD_11,
+    SCRIPT_CMD_12,
+    SCRIPT_CMD_13,
+    SCRIPT_CMD_14,
+    SCRIPT_CMD_15,
 
     ARM_CODE,
 
@@ -487,12 +525,50 @@ const DB_ADDR_MAP DB_MAP[(int)DB_ADDR_LIST::NUM_OF_LIST] = {
     {"SYS_PORT_NO_MBUS", 0},
     {"SYS_PORT_NO_SOCKCMD", 0},
     {"SYS_PORT_NO_SOCKDATA", 0},
+    {"SYS_PORT_NO_UDPCMD", 0},
+    {"SYS_PORT_NO_UDPDATA", 0},
+
+    {"SYS_ID_NO", 0},
+
+    {"SYS_CPU_DOMAIN_NAME", 2},
+    {"SYS_CPU_NUM_CLASS_A", 0},
+    {"SYS_CPU_NUM_CLASS_B", 0},
+    {"SYS_CPU_NUM_CLASS_C", 0},
+    {"SYS_CPU_NUM_CLASS_D", 0},
 
     {"SYS_GATE_PORT", 0},
     {"SYS_GATE_IP_0", 0},
     {"SYS_GATE_IP_1", 0},
     {"SYS_GATE_IP_2", 0},
     {"SYS_GATE_IP_3", 0},
+
+    {"DEV_EMG_SWITCH", 0},
+    {"DEV_SIDE_IO", 0},
+    {"DEV_TOOL_FLANGE", 0},
+    {"DEV_MOTOR_0", 0},
+    {"DEV_MOTOR_1", 0},
+    {"DEV_MOTOR_2", 0},
+    {"DEV_MOTOR_3", 0},
+    {"DEV_MOTOR_4", 0},
+    {"DEV_MOTOR_5", 0},
+    {"DEV_MOTOR_6", 0},
+
+    {"SCRIPT_CMD_0", 2},
+    {"SCRIPT_CMD_1", 2},
+    {"SCRIPT_CMD_2", 2},
+    {"SCRIPT_CMD_3", 2},
+    {"SCRIPT_CMD_4", 2},
+    {"SCRIPT_CMD_5", 2},
+    {"SCRIPT_CMD_6", 2},
+    {"SCRIPT_CMD_7", 2},
+    {"SCRIPT_CMD_8", 2},
+    {"SCRIPT_CMD_9", 2},
+    {"SCRIPT_CMD_10", 2},
+    {"SCRIPT_CMD_11", 2},
+    {"SCRIPT_CMD_12", 2},
+    {"SCRIPT_CMD_13", 2},
+    {"SCRIPT_CMD_14", 2},
+    {"SCRIPT_CMD_15", 2},
 
     {"ARM_CODE", 0},
 
@@ -954,12 +1030,24 @@ const DB_ADDR_MAP DB_MAP[(int)DB_ADDR_LIST::NUM_OF_LIST] = {
 };
 
 namespace rb_config {
-    bool initialize(std::string db_name);
+    bool                            initialize(std::string db_name);
+
+    int                             READ_System_Id_No();
 
     int                             READ_System_Gate_IP(int octet);
-    int                             READ_System_Gate_Port(); 
-
+    int                             READ_System_Gate_Port();
     int                             READ_System_Port_Number(int port_type);
+
+    std::string                     READ_System_Cpu_Domain_Name();
+    int                             READ_System_Cpu_Number(int class_num);
+
+    int                             READ_DEV_Emg_Switch();
+    int                             READ_DEV_Side_IO();
+    int                             READ_DEV_Tool_Flange();
+    int                             READ_DEV_Motor(int bno);
+
+    std::string                     READ_Script_Command(int cno);
+    bool                            WRITE_Script_Command(int cno, std::string target_str);
 
     ROBOT_CONFIG                    READ_Robot_Parameter(int r_code);
     int                             READ_Robot_Model();

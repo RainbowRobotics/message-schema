@@ -96,6 +96,12 @@ namespace rb_socket_command_server {
             int optval;
             socklen_t optlen = sizeof(optval);
 
+            // NODELAY
+            optval = 1;
+            if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &optval, optlen) == -1) {
+                perror("setsockopt(TCP_NODELAY)");
+            }
+
             // 기본 keepalive 활성화
             optval = 1;
             if (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) == -1) {
@@ -246,6 +252,74 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("call_joint_sensor_reset", {
+                    if (a.size() == 1){
+                        int bno;
+                        if(!parse_int(a[0], bno)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Set_Joint_Sensor_Reset(bno), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("pop_joint_gain_pos", {
+                    if (a.size() == 1){
+                        int bno;
+                        if(!parse_int(a[0], bno)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Pop_Joint_GainPos(bno), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("pop_joint_gain_cur", {
+                    if (a.size() == 1){
+                        int bno;
+                        if(!parse_int(a[0], bno)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Pop_Joint_GainCur(bno), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("set_joint_gain_pos", {
+                    if (a.size() == 4){
+                        int bno;
+                        int pgain, igain, dgain;
+                        if(!parse_int(a[0], bno)
+                            || !parse_int(a[1], pgain)
+                            || !parse_int(a[2], igain)
+                            || !parse_int(a[3], dgain)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Set_Joint_GainPos(bno, pgain, igain, dgain), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("set_joint_gain_cur", {
+                    if (a.size() == 3){
+                        int bno;
+                        int pgain, igain;
+                        if(!parse_int(a[0], bno)
+                            || !parse_int(a[1], pgain)
+                            || !parse_int(a[2], igain)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Set_Joint_GainCur(bno, pgain, igain), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("pop_joint_infos", {
+                    if (a.size() == 1){
+                        int bno;
+                        if(!parse_int(a[0], bno)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Pop_Joint_Infos(bno), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+
                 ADD_CMD_HANDLER("call_powercontrol", {
                     if (a.size() == 1){
                         int input_val = std::stoi(a[0]);
@@ -271,7 +345,6 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
-
                 // -----------------------------------------------------------------------
                 // Flow
                 // -----------------------------------------------------------------------
@@ -423,6 +496,12 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("set_master_mode", {
+                    if (a.size() == 1){
+                        return {rb_system::Set_Master_Mode(std::stoi(a[0])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Get Call
                 // -----------------------------------------------------------------------
@@ -461,9 +540,124 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("get_tcp", {
+                    if (a.size() == 1){
+                        int option = 0;
+                        if (!parse_int(a[0], option)){
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        (void)option;
+                        std::string data_str = "";
+                        auto data_values = rb_motion::Get_Wrapper_X();
+                        for(int i = 0; i < data_values.size(); ++i){
+                            data_str += std::to_string(data_values[i]);
+                            if(i != (data_values.size() - 1)){
+                                data_str += ",";
+                            }
+                        }
+                        return {-1, data_str};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("get_joint", {
+                    if (a.size() == 1){
+                        int option = 0;
+                        if (!parse_int(a[0], option)){
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        (void)option;
+                        std::string data_str = "";
+                        auto data_values = rb_motion::Get_Wrapper_J();
+                        if(option == 1){
+                            data_values = rb_system::Get_Motor_Encoder();
+                        }
+                        for(int i = 0; i < data_values.size(); ++i){
+                            data_str += std::to_string(data_values[i]);
+                            if(i != (data_values.size() - 1)){
+                                data_str += ",";
+                            }
+                        }
+                        return {-1, data_str};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Move Call
                 // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_approach_j", {
+                    if (a.size() == (NO_OF_JOINT + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = std::stoi(a[NO_OF_JOINT + 0]);
+                        input.target_unit   = 0;
+
+                        int spd_mode        = std::stoi(a[NO_OF_JOINT + 1]);
+                        float vel_para      = std::stof(a[NO_OF_JOINT + 2]);
+                        float acc_para      = std::stof(a[NO_OF_JOINT + 3]);
+
+                        rb_motion::Start_Approach_Process();
+                        return {rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode), ""};
+                    }else if(a.size() == (NO_OF_JOINT + 2)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = FRAME_JOINT;
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = std::stof(a[NO_OF_JOINT]);
+                        float acc_para = std::stof(a[NO_OF_JOINT + 1]);
+
+                        rb_motion::Start_Approach_Process();
+                        return {rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_approach_l", {
+                    if (a.size() == (NO_OF_CARTE + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = std::stoi(a[NO_OF_CARTE + 0]);
+                        input.target_unit   = 0;
+
+                        int spd_mode        = std::stoi(a[NO_OF_CARTE + 1]);
+                        float vel_para      = std::stof(a[NO_OF_CARTE + 2]);
+                        float acc_para      = std::stof(a[NO_OF_CARTE + 3]);
+
+                        rb_motion::Start_Approach_Process();
+                        return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
+                    }else if(a.size() == (NO_OF_CARTE + 2)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = FRAME_GLOBAL;
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = std::stof(a[NO_OF_CARTE]);
+                        float acc_para = std::stof(a[NO_OF_CARTE + 1]);
+
+                        rb_motion::Start_Approach_Process();
+                        return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_approach_stop", {
+                    if (a.size() == 1){
+                        float stoping_time = 0;
+                        if (!parse_float(a[0], stoping_time)){
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_system::Call_MoveBreak(stoping_time), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 ADD_CMD_HANDLER("call_move_j", {
                     if (a.size() == (NO_OF_JOINT + 4)){
                         TARGET_INPUT input;
@@ -519,6 +713,136 @@ namespace rb_socket_command_server {
                         float vel_para = std::stof(a[NO_OF_CARTE]);
                         float acc_para = std::stof(a[NO_OF_CARTE + 1]);
                         return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_jb_clr", {
+                    if(a.size() == 0){
+                        return {rb_motion::Start_Motion_JB_Clear(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_jb_add", {
+                    if(a.size() == (NO_OF_JOINT + 6)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        if(!parse_int(a[NO_OF_JOINT + 0], input.target_frame)){
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = 0;
+                        float acc_para = 0;
+                        int blend_type = 0;
+                        float blend_para = 0;
+                        if (!parse_int(a[NO_OF_JOINT + 1], spd_mode) ||
+                            !parse_float(a[NO_OF_JOINT + 2], vel_para) ||
+                            !parse_float(a[NO_OF_JOINT + 3], acc_para) ||
+                            !parse_int(a[NO_OF_JOINT + 4], blend_type) ||
+                            !parse_float(a[NO_OF_JOINT + 5], blend_para)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_JB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para), ""};
+                    }else if(a.size() == (NO_OF_JOINT + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        input.target_frame = FRAME_JOINT;
+                        input.target_unit  = 0;
+                        int spd_mode = 0;
+                        float vel_para = 0;
+                        float acc_para = 0;
+                        int blend_type = 0;
+                        float blend_para = 0;
+                        if (!parse_float(a[NO_OF_JOINT + 0], vel_para) ||
+                            !parse_float(a[NO_OF_JOINT + 1], acc_para) ||
+                            !parse_int(a[NO_OF_JOINT + 2], blend_type) ||
+                            !parse_float(a[NO_OF_JOINT + 3], blend_para)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_JB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_jb_run", {
+                    if(a.size() == 0){
+                        return {rb_motion::Start_Motion_JB(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_lb_clr", {
+                    if(a.size() == 0){
+                        return {rb_motion::Start_Motion_LB_Clear(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_lb_add", {
+                    if(a.size() == (NO_OF_CARTE + 6)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        if(!parse_int(a[NO_OF_CARTE + 0], input.target_frame)){
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = 0;
+                        float acc_para = 0;
+                        int blend_type = 0;
+                        float blend_para = 0;
+                        if (!parse_int(a[FRAME_GLOBAL + 1], spd_mode) ||
+                            !parse_float(a[FRAME_GLOBAL + 2], vel_para) ||
+                            !parse_float(a[FRAME_GLOBAL + 3], acc_para) ||
+                            !parse_int(a[FRAME_GLOBAL + 4], blend_type) ||
+                            !parse_float(a[FRAME_GLOBAL + 5], blend_para)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_LB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para), ""};
+                    }else if(a.size() == (NO_OF_CARTE + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            if (!parse_float(a[i], input.target_value[i])) {
+                                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                            }
+                        }
+                        input.target_frame = FRAME_GLOBAL;
+                        input.target_unit  = 0;
+                        int spd_mode = 0;
+                        float vel_para = 0;
+                        float acc_para = 0;
+                        int blend_type = 0;
+                        float blend_para = 0;
+                        if (!parse_float(a[FRAME_GLOBAL + 0], vel_para) ||
+                            !parse_float(a[FRAME_GLOBAL + 1], acc_para) ||
+                            !parse_int(a[FRAME_GLOBAL + 2], blend_type) ||
+                            !parse_float(a[FRAME_GLOBAL + 3], blend_para)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_LB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_move_lb_run", {
+                    if(a.size() == 0){
+                        return {rb_motion::Start_Motion_LB(0, 10), ""};
+                    }else if(a.size() == 1){
+                        int rotation_option = 0;
+                        if (!parse_int(a[0], rotation_option)) {
+                            return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                        }
+                        return {rb_motion::Start_Motion_LB(rotation_option, 10), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
@@ -622,6 +946,10 @@ namespace rb_socket_command_server {
 
             Command_Return ret = execute_command(func, args);
 
+            if(client_fd == -99){
+                return;
+            }
+
             std::string response = "";
             if(ret.return_code >= 0){
                 response = "return[SCS][" + std::to_string(ret.return_code) + "]\n";
@@ -636,7 +964,7 @@ namespace rb_socket_command_server {
         // 🔹 클라이언트 데이터 처리
         // =============================
         void handle_client_data(int epfd, int fd) {
-            char buf[512];
+            char buf[2048];
             int n = read(fd, buf, sizeof(buf));
             if (n <= 0) {
                 if (n == 0 || (errno != EAGAIN && errno != EWOULDBLOCK)) {
@@ -684,7 +1012,7 @@ namespace rb_socket_command_server {
                         cmd.clear(); // 전부 공백이면 빈 문자열
 
                     if (!cmd.empty()) {
-                        std::cout << "[SCS] Executing raw: " << cmd << std::endl;
+                        //std::cout << "[SCS] Executing raw: " << cmd << std::endl;
                         parse_and_execute(cmd, fd);
                     }
 
@@ -876,10 +1204,10 @@ namespace rb_socket_command_server {
     }
 
     void broadcast(const std::string& message) {
-        std::lock_guard<std::mutex> lk(clients_mutex);
+        // std::lock_guard<std::mutex> lk(clients_mutex);
 
         if (clients.empty()) {
-            std::cout << "[SCS] Broadcast skipped (no clients)" << std::endl;
+            //std::cout << "[SCS] Broadcast skipped (no clients)" << std::endl;
             return;
         }
 
@@ -901,5 +1229,9 @@ namespace rb_socket_command_server {
         }
 
         std::cout << "[SCS] Broadcasted to " << clients.size() << " clients: " << message << std::endl;
+    }
+
+    void ascii_script_execution(std::string& t_script){
+        parse_and_execute(t_script, -99);
     }
 } // namespace rb_socket_command_server

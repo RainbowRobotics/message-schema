@@ -38,6 +38,18 @@ struct Request_Move_TickJogL;
 struct Request_Move_TickJogLBuilder;
 struct Request_Move_TickJogLT;
 
+struct Request_Move_ApproachJ;
+struct Request_Move_ApproachJBuilder;
+struct Request_Move_ApproachJT;
+
+struct Request_Move_ApproachL;
+struct Request_Move_ApproachLBuilder;
+struct Request_Move_ApproachLT;
+
+struct Request_Move_AppraochStop;
+struct Request_Move_AppraochStopBuilder;
+struct Request_Move_AppraochStopT;
+
 struct Request_Move_J;
 struct Request_Move_JBuilder;
 struct Request_Move_JT;
@@ -393,6 +405,196 @@ inline ::flatbuffers::Offset<Request_Move_TickJogL> CreateRequest_Move_TickJogL(
 }
 
 ::flatbuffers::Offset<Request_Move_TickJogL> CreateRequest_Move_TickJogL(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_TickJogLT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Move_ApproachJT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_ApproachJ TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> target{};
+  std::unique_ptr<IPC::MoveInput_SpeedT> speed{};
+  Request_Move_ApproachJT() = default;
+  Request_Move_ApproachJT(const Request_Move_ApproachJT &o);
+  Request_Move_ApproachJT(Request_Move_ApproachJT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Move_ApproachJT &operator=(Request_Move_ApproachJT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Move_ApproachJ FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_ApproachJT NativeTableType;
+  typedef Request_Move_ApproachJBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_SPEED = 6
+  };
+  const IPC::MoveInput_Target *target() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_TARGET);
+  }
+  const IPC::MoveInput_Speed *speed() const {
+    return GetPointer<const IPC::MoveInput_Speed *>(VT_SPEED);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyOffset(verifier, VT_SPEED) &&
+           verifier.VerifyTable(speed()) &&
+           verifier.EndTable();
+  }
+  Request_Move_ApproachJT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_ApproachJT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_ApproachJ> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachJT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_ApproachJBuilder {
+  typedef Request_Move_ApproachJ Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<IPC::MoveInput_Target> target) {
+    fbb_.AddOffset(Request_Move_ApproachJ::VT_TARGET, target);
+  }
+  void add_speed(::flatbuffers::Offset<IPC::MoveInput_Speed> speed) {
+    fbb_.AddOffset(Request_Move_ApproachJ::VT_SPEED, speed);
+  }
+  explicit Request_Move_ApproachJBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_ApproachJ> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_ApproachJ>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_ApproachJ> CreateRequest_Move_ApproachJ(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> target = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Speed> speed = 0) {
+  Request_Move_ApproachJBuilder builder_(_fbb);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_ApproachJ> CreateRequest_Move_ApproachJ(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachJT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Move_ApproachLT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_ApproachL TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> target{};
+  std::unique_ptr<IPC::MoveInput_SpeedT> speed{};
+  Request_Move_ApproachLT() = default;
+  Request_Move_ApproachLT(const Request_Move_ApproachLT &o);
+  Request_Move_ApproachLT(Request_Move_ApproachLT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Move_ApproachLT &operator=(Request_Move_ApproachLT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Move_ApproachL FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_ApproachLT NativeTableType;
+  typedef Request_Move_ApproachLBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_SPEED = 6
+  };
+  const IPC::MoveInput_Target *target() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_TARGET);
+  }
+  const IPC::MoveInput_Speed *speed() const {
+    return GetPointer<const IPC::MoveInput_Speed *>(VT_SPEED);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyOffset(verifier, VT_SPEED) &&
+           verifier.VerifyTable(speed()) &&
+           verifier.EndTable();
+  }
+  Request_Move_ApproachLT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_ApproachLT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_ApproachL> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachLT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_ApproachLBuilder {
+  typedef Request_Move_ApproachL Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<IPC::MoveInput_Target> target) {
+    fbb_.AddOffset(Request_Move_ApproachL::VT_TARGET, target);
+  }
+  void add_speed(::flatbuffers::Offset<IPC::MoveInput_Speed> speed) {
+    fbb_.AddOffset(Request_Move_ApproachL::VT_SPEED, speed);
+  }
+  explicit Request_Move_ApproachLBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_ApproachL> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_ApproachL>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_ApproachL> CreateRequest_Move_ApproachL(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> target = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Speed> speed = 0) {
+  Request_Move_ApproachLBuilder builder_(_fbb);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_ApproachL> CreateRequest_Move_ApproachL(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachLT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Move_AppraochStopT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_AppraochStop TableType;
+  float stoptime = 0.0f;
+};
+
+struct Request_Move_AppraochStop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_AppraochStopT NativeTableType;
+  typedef Request_Move_AppraochStopBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_STOPTIME = 4
+  };
+  float stoptime() const {
+    return GetField<float>(VT_STOPTIME, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_STOPTIME, 4) &&
+           verifier.EndTable();
+  }
+  Request_Move_AppraochStopT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_AppraochStopT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_AppraochStop> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_AppraochStopT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_AppraochStopBuilder {
+  typedef Request_Move_AppraochStop Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_stoptime(float stoptime) {
+    fbb_.AddElement<float>(Request_Move_AppraochStop::VT_STOPTIME, stoptime, 0.0f);
+  }
+  explicit Request_Move_AppraochStopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_AppraochStop> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_AppraochStop>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_AppraochStop> CreateRequest_Move_AppraochStop(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float stoptime = 0.0f) {
+  Request_Move_AppraochStopBuilder builder_(_fbb);
+  builder_.add_stoptime(stoptime);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_AppraochStop> CreateRequest_Move_AppraochStop(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_AppraochStopT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct Request_Move_JT : public ::flatbuffers::NativeTable {
   typedef Request_Move_J TableType;
@@ -1422,6 +1624,112 @@ inline ::flatbuffers::Offset<Request_Move_TickJogL> CreateRequest_Move_TickJogL(
       _fbb,
       _target,
       _speed);
+}
+
+inline Request_Move_ApproachJT::Request_Move_ApproachJT(const Request_Move_ApproachJT &o)
+      : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr),
+        speed((o.speed) ? new IPC::MoveInput_SpeedT(*o.speed) : nullptr) {
+}
+
+inline Request_Move_ApproachJT &Request_Move_ApproachJT::operator=(Request_Move_ApproachJT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(target, o.target);
+  std::swap(speed, o.speed);
+  return *this;
+}
+
+inline Request_Move_ApproachJT *Request_Move_ApproachJ::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_ApproachJT>(new Request_Move_ApproachJT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_ApproachJ::UnPackTo(Request_Move_ApproachJT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = target(); if (_e) { if(_o->target) { _e->UnPackTo(_o->target.get(), _resolver); } else { _o->target = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->target) { _o->target.reset(); } }
+  { auto _e = speed(); if (_e) { if(_o->speed) { _e->UnPackTo(_o->speed.get(), _resolver); } else { _o->speed = std::unique_ptr<IPC::MoveInput_SpeedT>(_e->UnPack(_resolver)); } } else if (_o->speed) { _o->speed.reset(); } }
+}
+
+inline ::flatbuffers::Offset<Request_Move_ApproachJ> Request_Move_ApproachJ::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachJT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_ApproachJ(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_ApproachJ> CreateRequest_Move_ApproachJ(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachJT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_ApproachJT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _target = _o->target ? CreateMoveInput_Target(_fbb, _o->target.get(), _rehasher) : 0;
+  auto _speed = _o->speed ? CreateMoveInput_Speed(_fbb, _o->speed.get(), _rehasher) : 0;
+  return IPC::CreateRequest_Move_ApproachJ(
+      _fbb,
+      _target,
+      _speed);
+}
+
+inline Request_Move_ApproachLT::Request_Move_ApproachLT(const Request_Move_ApproachLT &o)
+      : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr),
+        speed((o.speed) ? new IPC::MoveInput_SpeedT(*o.speed) : nullptr) {
+}
+
+inline Request_Move_ApproachLT &Request_Move_ApproachLT::operator=(Request_Move_ApproachLT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(target, o.target);
+  std::swap(speed, o.speed);
+  return *this;
+}
+
+inline Request_Move_ApproachLT *Request_Move_ApproachL::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_ApproachLT>(new Request_Move_ApproachLT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_ApproachL::UnPackTo(Request_Move_ApproachLT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = target(); if (_e) { if(_o->target) { _e->UnPackTo(_o->target.get(), _resolver); } else { _o->target = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->target) { _o->target.reset(); } }
+  { auto _e = speed(); if (_e) { if(_o->speed) { _e->UnPackTo(_o->speed.get(), _resolver); } else { _o->speed = std::unique_ptr<IPC::MoveInput_SpeedT>(_e->UnPack(_resolver)); } } else if (_o->speed) { _o->speed.reset(); } }
+}
+
+inline ::flatbuffers::Offset<Request_Move_ApproachL> Request_Move_ApproachL::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachLT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_ApproachL(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_ApproachL> CreateRequest_Move_ApproachL(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ApproachLT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_ApproachLT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _target = _o->target ? CreateMoveInput_Target(_fbb, _o->target.get(), _rehasher) : 0;
+  auto _speed = _o->speed ? CreateMoveInput_Speed(_fbb, _o->speed.get(), _rehasher) : 0;
+  return IPC::CreateRequest_Move_ApproachL(
+      _fbb,
+      _target,
+      _speed);
+}
+
+inline Request_Move_AppraochStopT *Request_Move_AppraochStop::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_AppraochStopT>(new Request_Move_AppraochStopT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_AppraochStop::UnPackTo(Request_Move_AppraochStopT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = stoptime(); _o->stoptime = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Move_AppraochStop> Request_Move_AppraochStop::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_AppraochStopT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_AppraochStop(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_AppraochStop> CreateRequest_Move_AppraochStop(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_AppraochStopT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_AppraochStopT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _stoptime = _o->stoptime;
+  return IPC::CreateRequest_Move_AppraochStop(
+      _fbb,
+      _stoptime);
 }
 
 inline Request_Move_JT::Request_Move_JT(const Request_Move_JT &o)

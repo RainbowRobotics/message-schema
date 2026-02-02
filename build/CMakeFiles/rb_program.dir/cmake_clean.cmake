@@ -73,6 +73,10 @@ file(REMOVE_RECURSE
   "CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o.d"
   "CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o"
   "CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o.d"
+  "CMakeFiles/rb_program.dir/rb_service/socket_server/udp_command_server.cpp.o"
+  "CMakeFiles/rb_program.dir/rb_service/socket_server/udp_command_server.cpp.o.d"
+  "CMakeFiles/rb_program.dir/rb_service/socket_server/udp_data_server.cpp.o"
+  "CMakeFiles/rb_program.dir/rb_service/socket_server/udp_data_server.cpp.o.d"
   "rb_program"
   "rb_program.pdb"
 )
