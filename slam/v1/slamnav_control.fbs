@@ -1,121 +1,214 @@
 namespace SLAMNAV;
 
-table Request_Get_Safety_Field {
-    id: string;
-}
-table Response_Get_Safety_Field {
-    id: string;
-    safety_field: int;
-    result: string;
-    message: string;
-}
 
-table Request_Set_Safety_Field {
-    id: string;
-    safety_field: int;
-}
-table Response_Set_Safety_Field {
-    id: string;
-    safety_field: int;
-    result: string;
-    message: string;
-}
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
 
+/*
+    category    :       Data Structure
+    usage       :       safety Flag Structure
+    field
+        - name          :       obstacle, bumper, interlock, operationStop
+        - value         :       true / false
+*/
 table SafetyFlag {
-    name: string;
+    name: string;   
     value: bool;
 }
-table Request_Get_Safety_Flag {
+/*
+    category    :       Data Structure
+    usage       :       Obstacle Range Structure
+*/
+struct ObsBox {
+    x: float;
+    y: float;
+    z: float;
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/getSafetyField
+    usage       :
+    field
+        - safety_field  :       safety field number
+*/
+table RequestGetSafetyField {
     id: string;
 }
-table Response_Get_Safety_Flag {
+table ResponseGetSafetyField {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/setSafetyField
+    usage       :
+    field
+        - safety_field  :       safety field number
+*/
+table RequestSetSafetyField {
+    id: string;
+    safety_field: int;
+}
+table ResponseSetSafetyField {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/getSafetyFlag
+    usage       :
+    field
+        - safety_flag  :        safety Flag Structure
+*/
+table RequestGetSafetyFlag {
+    id: string;
+}
+table ResponseGetSafetyFlag {
     id: string;
     safety_flag: [SafetyFlag];
     result: string;
     message: string;
 }
 
-table Request_Set_Safety_Flag {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/setSafetyFlag
+    usage       :
+    field
+        - safety_flag  :        safety Flag Structure
+*/
+table RequestSetSafetyFlag {
     id: string;
     reset_flag: [SafetyFlag];
 }
-table Response_Set_Safety_Flag {
+table ResponseSetSafetyFlag {
     id: string;
     reset_flag: [SafetyFlag];
     result: string;
     message: string;
 }
 
-table Request_Get_Safety_Io {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/getSafetyIo
+    usage       :
+    field
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+        - mcu0_do       :       MCU0 Digital Output (8bit)
+        - mcu1_do       :       MCU1 Digital Output (8bit)
+*/
+table RequestGetSafetyIo {
     id: string;
 }
-table Response_Get_Safety_Io {
+table ResponseGetSafetyIo {
     id: string;
-    mcu0_dio: [bool];   // vector(8)
-    mcu1_dio: [bool];   // vector(8)
-    mcu0_din: [bool];   // vector(8)
-    mcu1_din: [bool];   // vector(8)
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
     result: string;
     message: string;
 }
 
-table Request_Set_Safety_Io {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/setSafetyIo
+    usage       :
+    field
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+*/
+table RequestSetSafetyIo {
     id: string;
-    command: string;
-    mcu0_din: [bool];   // vector(8)
-    mcu1_din: [bool];   // vector(8)
+    mcu0_din: [bool];
+    mcu1_din: [bool];
 }
-table Response_Set_Safety_Io {
+table ResponseSetSafetyIo {
     id: string;
-    command: string;
-    mcu0_din: [bool];   // vector(8)
-    mcu1_din: [bool];   // vector(8)
+    mcu0_din: [bool];
+    mcu1_din: [bool];
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-// command : "dock", "undock", "dockstop"
-table Request_Dock_Control {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/dock
+    usage       :
+    field
+        - command       :       도킹 명령 ( "dock", "undock", "dockstop" )
+*/
+table RequestDockControl {
     id: string;
     command: string;
 }
-table Response_Dock_Control {
+table ResponseDockControl {
     id: string;
     command: string;
     result: string;
     message: string;
 }
 
-table Request_Charge_Trigger {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/chargeTrigger
+    usage       :
+    field
+        - control       :       충전 on / off
+*/
+table RequestChargeTrigger {
     id: string;
-    onoff: bool;
+    control: bool;
 }
-table Response_Charge_Trigger {
+table ResponseChargeTrigger {
     id: string;
-    onoff: bool;
+    control: bool;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-struct ObsBox {
-    x: float;
-    y: float;
-    z: float;
-}
-table Request_Get_Obs_Box {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/getObsBox
+    usage       :       장애물 박스 범위 조회
+    field
+        - min           :       Obstacle Min Range Structure (x, y, z)
+        - max           :       Obstacle Max Range Structure (x, y, z)
+        - range         :       set Obstacle Radius
+*/
+table RequestGetObsBox {
     id: string;
-    command: string;
     min: ObsBox;
     max: ObsBox;
     range: float;
 }
-table Response_Get_Obs_Box {
+table ResponseGetObsBox {
     id: string;
-    command: string;
     min: ObsBox;
     max: ObsBox;
     range: float;
@@ -123,16 +216,24 @@ table Response_Get_Obs_Box {
     message: string;
 }
 
-table Request_Set_Obs_Box {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/setObsBox
+    usage       :       장애물 박스 범위 설정
+    field
+        - min           :       Obstacle Min Range Structure (x, y, z)
+        - max           :       Obstacle Max Range Structure (x, y, z)
+        - range         :       set Obstacle Radius
+*/
+table RequestSetObsBox {
     id: string;
-    command: string;
     min: ObsBox;
     max: ObsBox;
     range: float;
 }
-table Response_Set_Obs_Box {
+table ResponseSetObsBox {
     id: string;
-    command: string;
     min: ObsBox;
     max: ObsBox;
     range: float;
@@ -140,104 +241,158 @@ table Response_Set_Obs_Box {
     message: string;
 }
 
-//--------------------------------------------
 
-table Request_Led_Control {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/led
+    usage       :       LED Mode
+    field
+        - control       :       LED on / off
+        - color         :       Color
+*/
+table RequestLedMode {
     id: string;
-    onoff: bool;
+    control: bool;
     color: string;
 }
-table Response_Led_Control {
+table ResponseLedMode {
     id: string;
-    onoff: bool;
+    control: bool;
     color: string;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-table Request_Motor_Control {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/motor
+    usage       :       모터 Mode
+    field
+        - control       :       모터 Init on / off
+*/
+table RequestMotorMode {
     id: string;
-    onoff: bool;
+    control: bool;
 }
-table Response_Motor_Control {
+table ResponseMotorMode {
     id: string;
-    onoff: bool;
+    control: bool;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-table Request_Jog {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/jog
+    usage       :       조그 Mode
+    field
+        - control       :       조그 on / off
+*/
+table RequestJog {
     id: string;
-    onoff: bool;
+    control: bool;
 }
-table Response_Jog {
+table ResponseJog {
     id: string;
-    onoff: bool;
+    control: bool;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
-// sensor socket on/off & freq
-// command : camera, lidar2d, lidar3d
-table Request_Sensor_Socket {
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/sensor
+    usage       :       센서 소켓 On/Off 및 주파수 설정
+    field
+        - command       :       센서 ( "camera", "lidar2d", "lidar3d" )
+        - control       :       센서 통신 on / off
+        - frequency     :       데이터 전송 주파수 (Hz)
+*/
+table RequestSensorMode {
     id: string;
     command: string;
-    onoff: bool;
+    control: bool;
     frequency: int;
 }
-table Response_Sensor_Socket {
+table ResponseSensorMode {
     id: string;
     command: string;
-    onoff: bool;
+    control: bool;
     frequency: int;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-table Request_Path_Socket {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/path
+    usage       :       경로 소켓 On/Off 및 주파수 설정
+    field
+        - control       :       경로 통신 on / off
+        - frequency     :       데이터 전송 주파수 (Hz)
+*/
+table RequestPathMode {
     id: string;
-    onoff: bool;
+    control: bool;
     frequency: int;
 }
-table Response_Path_Socket {
+table ResponsePathMode {
     id: string;
-    onoff: bool;
+    control: bool;
     frequency: int;
     result: string;
     message: string;
 }
 
-//--------------------------------------------
 
-table Request_Detect_Marker {
+/*
+    category    :       RPC
+    topic       :       {robotType}/control/detectMarker
+    usage       :       마커 감지 제어
+    field
+        - command       :       감지 명령   ( "charuco" / "aruco" )
+        - number        :       카메라 번호
+        - serial        :       카메라 시리얼
+        - m_size        :       마커 크기
+        - tf            :       변환 행렬 (4x4 Matrix)
+*/
+table RequestDetectMarker {
     id: string;
-    command: string;
-    camera_number: int;
-    camera_serial: string;
-    marker_size: float;
+    number: int;
+    serial: string;
+    m_size: float;
 }
-table Response_Detect_Marker {
+table ResponseDetectMarker {
     id: string;
-    command: string;
-    camera_number: int;
-    camera_serial: string;
-    marker_size: float;
-    tf: [float];    // 4*4 Matrix [[1,0,0,0]....[0,0,0,1]]
+    number: int;
+    serial: string;
+    m_size: float;
+    tf: [float];
     result: string;
     message: string;
 }
 
-//--------------------------------------------
-//--------------------------------------------
 
-table Result_Control_Dock {
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC ( Result )
+    topic       :       {robotType}/control/result/dock
+    usage       :       도킹 제어 결과 응답
+    field
+        - command       :       실행된 도킹 명령
+        - result        :       결과 상태   ( "success" / "fail" )
+        - message       :       결과 메시지
+*/
+table ResultControlDock {
     id: string;
     command: string;
     result: string;
