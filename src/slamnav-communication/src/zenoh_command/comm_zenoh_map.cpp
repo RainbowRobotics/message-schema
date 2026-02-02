@@ -14,33 +14,31 @@
 
 #include "comm_zenoh.h"
 #include "global_defines.h"
-#include "slamnav_map_generated.h"
+#include "flatbuffer/generated/slamnav_map_generated.h"
 
-#include <QDebug>
-#include <QDir>
-#include <QFileInfo>
-#include <QDateTime>
+#include <filesystem>
 #include <chrono>
-#include <functional>
+#include <sys/stat.h>
 
 namespace
 {
-    const char* MODULE_NAME = "COMM_ZENOH_MAP";
+    constexpr const char* MODULE_NAME = "MAP";
+    const std::string MAP_BASE_PATH = "/data/maps";
 
     // =========================================================================
     // Helper: Map_Result FlatBuffer
     // =========================================================================
-    std::vector<uint8_t> build_map_result(const QString& id,
-                                          const QString& result,
-                                          const QString& message)
+    std::vector<uint8_t> build_map_result(const std::string& id,
+                                          const std::string& result,
+                                          const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
 
         auto fb_result = SLAMNAV::CreateMap_Result(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(fb_result);
 
@@ -53,18 +51,18 @@ namespace
     // =========================================================================
 
     // Response_Map_Current
-    std::vector<uint8_t> build_response_current(const QString& id,
-                                                 const QString& map_name,
-                                                 const QString& result,
-                                                 const QString& message)
+    std::vector<uint8_t> build_response_current(const std::string& id,
+                                                 const std::string& map_name,
+                                                 const std::string& result,
+                                                 const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Map_Current(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(map_name.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(map_name),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -72,18 +70,18 @@ namespace
     }
 
     // Response_Map_Load
-    std::vector<uint8_t> build_response_load(const QString& id,
-                                              const QString& map_name,
-                                              const QString& result,
-                                              const QString& message)
+    std::vector<uint8_t> build_response_load(const std::string& id,
+                                              const std::string& map_name,
+                                              const std::string& result,
+                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Map_Load(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(map_name.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(map_name),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -91,18 +89,18 @@ namespace
     }
 
     // Response_Map_Delete
-    std::vector<uint8_t> build_response_delete(const QString& id,
-                                                const QString& map_name,
-                                                const QString& result,
-                                                const QString& message)
+    std::vector<uint8_t> build_response_delete(const std::string& id,
+                                                const std::string& map_name,
+                                                const std::string& result,
+                                                const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Map_Delete(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(map_name.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(map_name),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -110,22 +108,22 @@ namespace
     }
 
     // Response_Set_Map_Cloud
-    std::vector<uint8_t> build_response_set_cloud(const QString& id,
-                                                   const QString& map_name,
-                                                   const QString& file_name,
+    std::vector<uint8_t> build_response_set_cloud(const std::string& id,
+                                                   const std::string& map_name,
+                                                   const std::string& file_name,
                                                    uint32_t size,
-                                                   const QString& result,
-                                                   const QString& message)
+                                                   const std::string& result,
+                                                   const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Set_Map_Cloud(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(map_name.toStdString()),
-            fbb.CreateString(file_name.toStdString()),
+            fbb.CreateString(id),
+            fbb.CreateString(map_name),
+            fbb.CreateString(file_name),
             size,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -133,16 +131,16 @@ namespace
     }
 
     // Response_Mapping_Start
-    std::vector<uint8_t> build_response_mapping_start(const QString& id,
-                                                       const QString& result,
-                                                       const QString& message)
+    std::vector<uint8_t> build_response_mapping_start(const std::string& id,
+                                                       const std::string& result,
+                                                       const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Mapping_Start(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -150,16 +148,16 @@ namespace
     }
 
     // Response_Mapping_Stop
-    std::vector<uint8_t> build_response_mapping_stop(const QString& id,
-                                                      const QString& result,
-                                                      const QString& message)
+    std::vector<uint8_t> build_response_mapping_stop(const std::string& id,
+                                                      const std::string& result,
+                                                      const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Mapping_Stop(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -167,18 +165,18 @@ namespace
     }
 
     // Response_Mapping_Save
-    std::vector<uint8_t> build_response_mapping_save(const QString& id,
-                                                      const QString& map_name,
-                                                      const QString& result,
-                                                      const QString& message)
+    std::vector<uint8_t> build_response_mapping_save(const std::string& id,
+                                                      const std::string& map_name,
+                                                      const std::string& result,
+                                                      const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Mapping_Save(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(map_name.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(map_name),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -186,15 +184,54 @@ namespace
     }
 
     // Helper: Get map list from directory
-    QStringList get_map_directories()
+    std::vector<std::string> get_map_directories()
     {
-        QString map_base_path = "/data/maps";
-        QDir dir(map_base_path);
-        if (!dir.exists())
+        std::vector<std::string> result;
+        std::filesystem::path map_path(MAP_BASE_PATH);
+
+        if (!std::filesystem::exists(map_path))
         {
-            return QStringList();
+            return result;
         }
-        return dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+
+        for (const auto& entry : std::filesystem::directory_iterator(map_path))
+        {
+            if (entry.is_directory())
+            {
+                result.push_back(entry.path().filename().string());
+            }
+        }
+
+        std::sort(result.begin(), result.end());
+        return result;
+    }
+
+    // Helper: Get file modification time as ISO string
+    std::string get_file_time_iso(const std::filesystem::path& path)
+    {
+        try
+        {
+            struct stat file_stat;
+            if (stat(path.c_str(), &file_stat) == 0)
+            {
+                std::time_t mod_time = file_stat.st_mtime;
+                std::tm* tm_info = std::localtime(&mod_time);
+                char buffer[32];
+                std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", tm_info);
+                return std::string(buffer);
+            }
+        }
+        catch (...)
+        {
+        }
+        return "";
+    }
+
+    // Helper: Extract directory name from path
+    std::string get_dir_name(const std::string& path)
+    {
+        std::filesystem::path p(path);
+        return p.filename().string();
     }
 
 } // anonymous namespace
@@ -204,7 +241,7 @@ namespace
 // =============================================================================
 void COMM_ZENOH::map_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] map_loop started";
+    log_info("map_loop started");
 
     // 1. robotType이 설정될 때까지 대기
     while (is_map_running_.load() && get_robot_type().empty())
@@ -214,16 +251,18 @@ void COMM_ZENOH::map_loop()
 
     if (!is_map_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] map_loop aborted (not running)";
+        log_info("map_loop ended (stopped before init)");
         return;
     }
 
     // 2. Session 유효성 확인
     if (!is_session_valid())
     {
-        qDebug() << "[" << MODULE_NAME << "] map_loop aborted (session invalid)";
+        log_error("map_loop aborted: session invalid");
         return;
     }
+
+    log_info("map_loop initialized with robotType: {}", get_robot_type());
 
     try
     {
@@ -239,12 +278,13 @@ void COMM_ZENOH::map_loop()
         std::string topic_setcloud    = make_topic(ZENOH_TOPIC::MAP_SET_CLOUD);
         std::string topic_gettopo     = make_topic(ZENOH_TOPIC::MAP_GET_TOPOLOGY);
         std::string topic_settopo     = make_topic(ZENOH_TOPIC::MAP_SET_TOPOLOGY);
+        std::string topic_loadtopo    = make_topic(ZENOH_TOPIC::MAP_LOAD_TOPOLOGY);
         std::string topic_map_start   = make_topic(ZENOH_TOPIC::MAP_MAPPING_START);
         std::string topic_map_stop    = make_topic(ZENOH_TOPIC::MAP_MAPPING_STOP);
         std::string topic_map_save    = make_topic(ZENOH_TOPIC::MAP_MAPPING_SAVE);
         std::string topic_result      = make_topic(ZENOH_TOPIC::MAP_RESULT);
 
-        qDebug() << "[" << MODULE_NAME << "] Registering topics with prefix:" << QString::fromStdString(get_robot_type());
+        log_info("map_loop registering topics with prefix: {}", get_robot_type());
 
         // 4. Result Publisher
         auto pub_result = session.declare_publisher(zenoh::KeyExpr(topic_result));
@@ -257,7 +297,7 @@ void COMM_ZENOH::map_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -265,7 +305,7 @@ void COMM_ZENOH::map_loop()
                     auto req = SLAMNAV::GetRequest_Map_List(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
@@ -273,17 +313,16 @@ void COMM_ZENOH::map_loop()
                 std::vector<flatbuffers::Offset<SLAMNAV::MapFile>> map_list;
 
                 // Get map directories
-                QStringList maps = get_map_directories();
-                QString map_base_path = "/data/maps";
+                std::vector<std::string> maps = get_map_directories();
 
-                for (const QString& map_name : maps)
+                for (const std::string& map_name : maps)
                 {
-                    QString map_path = map_base_path + "/" + map_name;
-                    QFileInfo dir_info(map_path);
+                    std::filesystem::path map_path = std::filesystem::path(MAP_BASE_PATH) / map_name;
+                    std::string time_str = get_file_time_iso(map_path);
 
-                    auto file_name = fbb.CreateString(map_name.toStdString());
-                    auto created_at = fbb.CreateString(dir_info.birthTime().toString(Qt::ISODate).toStdString());
-                    auto update_at = fbb.CreateString(dir_info.lastModified().toString(Qt::ISODate).toStdString());
+                    auto file_name = fbb.CreateString(map_name);
+                    auto created_at = fbb.CreateString(time_str);
+                    auto update_at = fbb.CreateString(time_str);
                     auto file_type = fbb.CreateString("map");
 
                     auto map_file = SLAMNAV::CreateMapFile(fbb, file_name, created_at, update_at, file_type);
@@ -292,7 +331,7 @@ void COMM_ZENOH::map_loop()
 
                 auto resp = SLAMNAV::CreateResponse_Map_List(
                     fbb,
-                    fbb.CreateString(id.toStdString()),
+                    fbb.CreateString(id),
                     fbb.CreateVector(map_list),
                     fbb.CreateString("accept"),
                     fbb.CreateString("")
@@ -307,7 +346,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_getlist);
+        log_info("Queryable registered: {}", topic_getlist);
 
         // ---- map/getCurrent ----
         auto q_getcurrent = session.declare_queryable(
@@ -315,7 +354,7 @@ void COMM_ZENOH::map_loop()
             [this](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -323,16 +362,16 @@ void COMM_ZENOH::map_loop()
                     auto req = SLAMNAV::GetRequest_Map_Current(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
-                QString map_name = "";
-                if (unimap && unimap->get_is_loaded() == MAP_LOADED)
+                std::string map_name;
+                UNIMAP* unimap_ptr = get_unimap();
+                if (unimap_ptr && unimap_ptr->get_is_loaded() == MAP_LOADED)
                 {
-                    QString map_path = unimap->get_map_path();
-                    QDir dir(map_path);
-                    map_name = dir.dirName();
+                    std::string map_path = unimap_ptr->get_map_path().toStdString();
+                    map_name = get_dir_name(map_path);
                 }
 
                 auto resp = build_response_current(id, map_name, "accept", "");
@@ -340,7 +379,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_getcurrent);
+        log_info("Queryable registered: {}", topic_getcurrent);
 
         // ---- map/load ----
         auto q_load = session.declare_queryable(
@@ -364,17 +403,22 @@ void COMM_ZENOH::map_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
-                QString map_name = QString::fromStdString(req->map_name() ? req->map_name()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
+                std::string map_name = req->map_name() ? req->map_name()->str() : "";
 
-                if (!unimap || !loc || !obsmap || !config)
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                OBSMAP* obsmap_ptr = get_obsmap();
+                CONFIG* config_ptr = get_config();
+
+                if (!unimap_ptr || !loc_ptr || !obsmap_ptr || !config_ptr)
                 {
                     auto resp = build_response_load(id, map_name, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                if (map_name.isEmpty())
+                if (map_name.empty())
                 {
                     auto resp = build_response_load(id, map_name, "reject", "empty map name");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -382,8 +426,8 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Construct map path
-                QString map_path = "/data/maps/" + map_name;
-                if (!QDir(map_path).exists())
+                std::string map_path = MAP_BASE_PATH + "/" + map_name;
+                if (!std::filesystem::exists(map_path))
                 {
                     auto resp = build_response_load(id, map_name, "reject", "map not found");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -391,14 +435,15 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Validate map files
-                QString check_msg = unimap->is_load_map_check(map_path);
+                QString map_path_q = QString::fromStdString(map_path);
+                QString check_msg = unimap_ptr->is_load_map_check(map_path_q);
                 if (check_msg == "no 2d map!")
                 {
                     auto resp = build_response_load(id, map_name, "reject", "no 2d map");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
-                if (config->get_use_lidar_3d() && check_msg == "no 3d map!")
+                if (config_ptr->get_use_lidar_3d() && check_msg == "no 3d map!")
                 {
                     auto resp = build_response_load(id, map_name, "reject", "no 3d map");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -406,12 +451,12 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Stop localization and clear obsmap before loading
-                loc->stop();
-                obsmap->clear();
-                config->set_map_path(map_path);
+                loc_ptr->stop();
+                obsmap_ptr->clear();
+                config_ptr->set_map_path(map_path_q);
 
                 // Load map
-                unimap->load_map(map_path);
+                unimap_ptr->load_map(map_path_q);
 
                 auto resp = build_response_load(id, map_name, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -421,7 +466,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_load);
+        log_info("Queryable registered: {}", topic_load);
 
         // ---- map/delete ----
         auto q_delete = session.declare_queryable(
@@ -445,13 +490,12 @@ void COMM_ZENOH::map_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
-                QString map_name = QString::fromStdString(req->map_name() ? req->map_name()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
+                std::string map_name = req->map_name() ? req->map_name()->str() : "";
 
-                QString map_path = "/data/maps/" + map_name;
-                QDir dir(map_path);
+                std::string map_path = MAP_BASE_PATH + "/" + map_name;
 
-                if (!dir.exists())
+                if (!std::filesystem::exists(map_path))
                 {
                     auto resp = build_response_delete(id, map_name, "reject", "map not found");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -459,9 +503,10 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Check if this map is currently loaded
-                if (unimap && unimap->get_is_loaded() == MAP_LOADED)
+                UNIMAP* unimap_ptr = get_unimap();
+                if (unimap_ptr && unimap_ptr->get_is_loaded() == MAP_LOADED)
                 {
-                    QString cur_map_path = unimap->get_map_path();
+                    std::string cur_map_path = unimap_ptr->get_map_path().toStdString();
                     if (cur_map_path == map_path)
                     {
                         auto resp = build_response_delete(id, map_name, "reject", "cannot delete loaded map");
@@ -471,7 +516,9 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Delete the map directory
-                if (!dir.removeRecursively())
+                std::error_code ec;
+                std::filesystem::remove_all(map_path, ec);
+                if (ec)
                 {
                     auto resp = build_response_delete(id, map_name, "reject", "delete failed");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -486,7 +533,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_delete);
+        log_info("Queryable registered: {}", topic_delete);
 
         // ---- map/getFile ----
         auto q_getfile = session.declare_queryable(
@@ -505,7 +552,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_getfile);
+        log_info("Queryable registered: {}", topic_getfile);
 
         // ---- map/getCloud ----
         auto q_getcloud = session.declare_queryable(
@@ -513,9 +560,9 @@ void COMM_ZENOH::map_loop()
             [this](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
-                QString map_name = "";
-                QString file_name = "";
+                std::string id;
+                std::string map_name;
+                std::string file_name;
 
                 if (payload.has_value())
                 {
@@ -523,18 +570,19 @@ void COMM_ZENOH::map_loop()
                     auto req = SLAMNAV::GetRequest_Get_Map_Cloud(bytes.data());
                     if (req)
                     {
-                        if (req->id()) id = QString::fromStdString(req->id()->str());
-                        if (req->map_name()) map_name = QString::fromStdString(req->map_name()->str());
-                        if (req->file_name()) file_name = QString::fromStdString(req->file_name()->str());
+                        if (req->id()) id = req->id()->str();
+                        if (req->map_name()) map_name = req->map_name()->str();
+                        if (req->file_name()) file_name = req->file_name()->str();
                     }
                 }
 
-                if (!unimap || unimap->get_is_loaded() != MAP_LOADED)
+                UNIMAP* unimap_ptr = get_unimap();
+                if (!unimap_ptr || unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     flatbuffers::FlatBufferBuilder fbb(256);
                     auto resp = SLAMNAV::CreateResponse_Get_Map_CloudDirect(
-                        fbb, id.toStdString().c_str(), map_name.toStdString().c_str(),
-                        file_name.toStdString().c_str(), 0, nullptr, "reject", "map not loaded"
+                        fbb, id.c_str(), map_name.c_str(),
+                        file_name.c_str(), 0, nullptr, "reject", "map not loaded"
                     );
                     fbb.Finish(resp);
                     const uint8_t* buf = fbb.GetBufferPointer();
@@ -544,7 +592,7 @@ void COMM_ZENOH::map_loop()
                 }
 
                 // Get cloud data from unimap
-                auto cloud_ptr = unimap->get_kdtree_cloud();
+                auto cloud_ptr = unimap_ptr->get_kdtree_cloud();
                 std::vector<SLAMNAV::CloudData> cloud_data;
 
                 if (cloud_ptr)
@@ -563,9 +611,9 @@ void COMM_ZENOH::map_loop()
                 flatbuffers::FlatBufferBuilder fbb(1024 * 1024);  // Large buffer for cloud data
                 auto resp = SLAMNAV::CreateResponse_Get_Map_Cloud(
                     fbb,
-                    fbb.CreateString(id.toStdString()),
-                    fbb.CreateString(map_name.toStdString()),
-                    fbb.CreateString(file_name.toStdString()),
+                    fbb.CreateString(id),
+                    fbb.CreateString(map_name),
+                    fbb.CreateString(file_name),
                     static_cast<uint32_t>(cloud_data.size()),
                     fbb.CreateVectorOfStructs(cloud_data),
                     fbb.CreateString("accept"),
@@ -578,7 +626,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_getcloud);
+        log_info("Queryable registered: {}", topic_getcloud);
 
         // ---- map/setCloud ----
         auto q_setcloud = session.declare_queryable(
@@ -591,7 +639,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_setcloud);
+        log_info("Queryable registered: {}", topic_setcloud);
 
         // ---- map/getTopology ----
         auto q_gettopo = session.declare_queryable(
@@ -610,7 +658,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_gettopo);
+        log_info("Queryable registered: {}", topic_gettopo);
 
         // ---- map/setTopology ----
         auto q_settopo = session.declare_queryable(
@@ -629,7 +677,26 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_settopo);
+        log_info("Queryable registered: {}", topic_settopo);
+
+        // ---- map/loadTopo ----
+        auto q_loadtopo = session.declare_queryable(
+            zenoh::KeyExpr(topic_loadtopo),
+            [this](const zenoh::Query& query)
+            {
+                // TODO: Implement topology loading
+                flatbuffers::FlatBufferBuilder fbb(256);
+                auto resp = SLAMNAV::CreateResponse_Topo_LoadDirect(
+                    fbb, "", "", "reject", "not implemented"
+                );
+                fbb.Finish(resp);
+                const uint8_t* buf = fbb.GetBufferPointer();
+                std::vector<uint8_t> data(buf, buf + fbb.GetSize());
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(data));
+            },
+            zenoh::closures::none
+        );
+        log_info("Queryable registered: {}", topic_loadtopo);
 
         // ---- map/mapping/start ----
         auto q_map_start = session.declare_queryable(
@@ -637,7 +704,7 @@ void COMM_ZENOH::map_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -645,20 +712,21 @@ void COMM_ZENOH::map_loop()
                     auto req = SLAMNAV::GetRequest_Mapping_Start(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 // Check lidar connection
-                if (!lidar_2d || !lidar_2d->get_is_connected())
+                LIDAR_2D* lidar_2d_ptr = get_lidar_2d();
+                if (!lidar_2d_ptr || !lidar_2d_ptr->get_is_connected())
                 {
                     auto resp = build_response_mapping_start(id, "reject", "lidar not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                // Emit signal to start mapping
-                Q_EMIT signal_map_build_start();
+                // Invoke callback to start mapping
+                invoke_map_build_start_callback();
 
                 auto resp = build_response_mapping_start(id, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -668,7 +736,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_map_start);
+        log_info("Queryable registered: {}", topic_map_start);
 
         // ---- map/mapping/stop ----
         auto q_map_stop = session.declare_queryable(
@@ -676,7 +744,7 @@ void COMM_ZENOH::map_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -684,12 +752,12 @@ void COMM_ZENOH::map_loop()
                     auto req = SLAMNAV::GetRequest_Mapping_Stop(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
-                // Emit signal to stop mapping
-                Q_EMIT signal_map_build_stop();
+                // Invoke callback to stop mapping
+                invoke_map_build_stop_callback();
 
                 auto resp = build_response_mapping_stop(id, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -699,7 +767,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_map_stop);
+        log_info("Queryable registered: {}", topic_map_stop);
 
         // ---- map/mapping/save ----
         auto q_map_save = session.declare_queryable(
@@ -723,18 +791,18 @@ void COMM_ZENOH::map_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
-                QString map_name = QString::fromStdString(req->map_name() ? req->map_name()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
+                std::string map_name = req->map_name() ? req->map_name()->str() : "";
 
-                if (map_name.isEmpty())
+                if (map_name.empty())
                 {
                     auto resp = build_response_mapping_save(id, map_name, "reject", "map name required");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                // Emit signal to save mapping
-                Q_EMIT signal_map_save(map_name);
+                // Invoke callback to save mapping
+                invoke_map_save_callback(map_name);
 
                 auto resp = build_response_mapping_save(id, map_name, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -744,7 +812,7 @@ void COMM_ZENOH::map_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_map_save);
+        log_info("Queryable registered: {}", topic_map_save);
 
         // 6. Main loop - keep alive
         while (is_map_running_.load())
@@ -752,16 +820,16 @@ void COMM_ZENOH::map_loop()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        qDebug() << "[" << MODULE_NAME << "] map_loop ending, resources will be released";
+        log_info("map_loop ending, resources will be released");
     }
     catch (const zenoh::ZException& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Zenoh exception:" << e.what();
+        log_error("map_loop Zenoh exception: {}", e.what());
     }
     catch (const std::exception& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Exception:" << e.what();
+        log_error("map_loop exception: {}", e.what());
     }
 
-    qDebug() << "[" << MODULE_NAME << "] map_loop ended";
+    log_info("map_loop ended");
 }

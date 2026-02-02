@@ -80,7 +80,8 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 | `{model}/move/stop` | `Request_Move_Stop` | `Response_Move_Stop` | 정지 |
 | `{model}/move/pause` | `Request_Move_Pause` | `Response_Move_Pause` | 일시정지 |
 | `{model}/move/resume` | `Request_Move_Resume` | `Response_Move_Resume` | 재개 |
-| `{model}/move/xLinear` | `Request_Move_XLinear` | `Response_Move_XLinear` | X축 이동 (target, speed) |
+| `{model}/move/xLinear` | `Request_Move_xLinear` | `Response_Move_xLinear` | X축 이동 (target, speed) |
+| `{model}/move/yLinear` | `Request_Move_yLinear` | `Response_Move_yLinear` | Y축 이동 (target, speed) |
 | `{model}/move/circular` | `Request_Move_Circular` | `Response_Move_Circular` | Circular 이동 (target, speed, direction) |
 | `{model}/move/rotate` | `Request_Move_Rotate` | `Response_Move_Rotate` | 회전 이동 (target, speed) |
 
@@ -92,21 +93,14 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 |-------|--------------|-------------|
 | `{model}/move/jog` | `Move_Jog` | 조그 이동 (vx, vy, wz) |
 
-### 이동 상태 변경 이벤트
-
-> 스키마 파일: `slamnav_move.fbs`
-
-| Topic | Message Type | Description |
-|-------|--------------|-------------|
-| `{model}/move/stateChange` | `State_Change_Move` | 이동 상태 변경 이벤트 |
-
 ### 이동 결과 응답
 
 > 스키마 파일: `slamnav_move.fbs`
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/move/result` | `Move_Result` | 이동 결과 (id, result, message) |
+| `{model}/move/result` | `Result_Move` | 이동 결과 (id, goal_id, goal_name, method, preset, goal_pose, target, speed, direction, result, message) |
+
 
 ### 위치추정 (Localization) - `{model}/localization/*`
 
@@ -127,7 +121,7 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/localization/result` | `Localization_Result` | 위치추정 결과 (id, result, message) |
+| `{model}/localization/result` | `Result_Localization_Init` | 위치추정 결과 (id, pose, result, message) |
 
 ### 제어 (Control) - `{model}/control/*`
 
@@ -148,14 +142,14 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Request | Response | Description |
 |-------|---------|----------|-------------|
-| `{model}/control/dock` | `Request_Dock` | `Response_Dock` | 도킹/언도킹/정지 (command: dock/undock/dockstop) |
+| `{model}/control/dock` | `Request_Dock_Control` | `Response_Dock_Control` | 도킹/언도킹/정지 (command: dock/undock/dockstop) |
 | `{model}/control/chargeTrigger` | `Request_Charge_Trigger` | `Response_Charge_Trigger` | 충전 트리거 On/Off |
 
-#### Dock 상태 변경 이벤트
+#### Dock 결과 응답
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/control/dock/stateChange` | `State_Change_Dock` | 도킹 상태 변경 이벤트 |
+| `{model}/control/dock/result` | `Result_Control_Dock` | 도킹 결과 (id, command, result, message) |
 
 #### 장애물 박스
 
@@ -168,22 +162,22 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Request | Response | Description |
 |-------|---------|----------|-------------|
-| `{model}/control/led` | `Request_Led` | `Response_Led` | LED 제어 (onoff, color) |
-| `{model}/control/motor` | `Request_Motor` | `Response_Motor` | 모터 On/Off |
+| `{model}/control/led` | `Request_Led_Control` | `Response_Led_Control` | LED 제어 (onoff, color) |
+| `{model}/control/motor` | `Request_Motor_Control` | `Response_Motor_Control` | 모터 On/Off |
 | `{model}/control/jog` | `Request_Jog` | `Response_Jog` | 조그 모드 On/Off |
 
 #### 센서/경로 주파수 설정
 
 | Topic | Request | Response | Description |
 |-------|---------|----------|-------------|
-| `{model}/control/sensor` | `Request_Sensor` | `Response_Sensor` | 센서 소켓 설정 (command: camera/lidar2d/lidar3d, onoff, frequency) |
-| `{model}/control/path` | `Request_Path` | `Response_Path` | 경로 Pub 설정 (onoff, frequency) |
+| `{model}/control/sensor` | `Request_Sensor_Socket` | `Response_Sensor_Socket` | 센서 소켓 설정 (command: camera/lidar2d/lidar3d, onoff, frequency) |
+| `{model}/control/path` | `Request_Path_Socket` | `Response_Path_Socket` | 경로 Pub 설정 (onoff, frequency) |
 
-#### 카메라 검출
+#### 마커 검출
 
 | Topic | Request | Response | Description |
 |-------|---------|----------|-------------|
-| `{model}/control/detect` | `Request_Detect` | `Response_Detect` | 카메라 검출 (camera_number, camera_serial, size, tf 반환) |
+| `{model}/control/detectMarker` | `Request_Detect_Marker` | `Response_Detect_Marker` | 마커 검출 (command, camera_number, camera_serial, marker_size, tf 반환) |
 
 ### 맵 (Map) - `{model}/map/*`
 
@@ -198,8 +192,9 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 | `{model}/map/getFile` | `Request_Get_Map_File` | `Response_Get_Map_File` | 맵 파일 조회 (바이너리 데이터) |
 | `{model}/map/getCloud` | `Request_Get_Map_Cloud` | `Response_Get_Map_Cloud` | 맵 포인트클라우드 조회 |
 | `{model}/map/setCloud` | `Request_Set_Map_Cloud` | `Response_Set_Map_Cloud` | 맵 포인트클라우드 설정 |
-| `{model}/map/getTopology` | `Request_Get_Map_Topology` | `Response_Get_Map_Topology` | 토폴로지 조회 |
+| `{model}/map/getTopology` | `Request_Get_Map_Topology` | `Response_Get_Map_Topology` | 토폴로지 조회 (페이징: page_no, page_size, total_page, 필터: node_type, search_text, 정렬: sort_option, sort_direction) |
 | `{model}/map/setTopology` | `Request_Set_Map_Topology` | `Response_Set_Map_Topology` | 토폴로지 설정 |
+| `{model}/map/loadTopo` | `Request_Topo_Load` | `Response_Topo_Load` | 토폴로지 로드 |
 | `{model}/map/mapping/start` | `Request_Mapping_Start` | `Response_Mapping_Start` | 매핑 시작 |
 | `{model}/map/mapping/stop` | `Request_Mapping_Stop` | `Response_Mapping_Stop` | 매핑 정지 |
 | `{model}/map/mapping/save` | `Request_Mapping_Save` | `Response_Mapping_Save` | 맵 저장 |
@@ -210,7 +205,7 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/map/result` | `Map_Result` | 맵 결과 (id, result, message) |
+| `{model}/map/result` | `Result_Map_Load` | 맵 로드 결과 (id, map_name, result, message) |
 
 ### 설정 (Setting) - `{model}/setting/*`
 
@@ -220,10 +215,10 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 |-------|---------|----------|-------------|
 | `{model}/setting/getRobotType` | `Request_Get_Robot_Type` | `Response_Get_Robot_Type` | 로봇 타입 조회 |
 | `{model}/setting/setRobotType` | `Request_Set_Robot_Type` | `Response_Set_Robot_Type` | 로봇 타입 설정 |
-| `{model}/setting/getSensorIndex` | `Request_Get_Sensor_Index` | `Response_Get_Sensor_Index` | 센서 인덱스 조회 (target) |
-| `{model}/setting/setSensorIndex` | `Request_Set_Sensor_Index` | `Response_Set_Sensor_Index` | 센서 인덱스 설정 (target, index) |
-| `{model}/setting/setSensorOn` | `Request_Set_Sensor_On` | `Response_Set_Sensor_On` | 센서 켜기 |
-| `{model}/setting/getSensorOff` | `Request_Get_Sensor_Off` | `Response_Get_Sensor_Off` | 센서 끄기 |
+| `{model}/setting/getSensorInfo` | `Request_Get_Sensor_Info` | `Response_Get_Sensor_Info` | 센서 정보 조회 (target, index: [SensorInfo]) |
+| `{model}/setting/setSensorIndex` | `Request_Set_Sensor_Index` | `Response_Set_Sensor_Index` | 센서 인덱스 설정 (target, index: [SensorInfo]) |
+| `{model}/setting/getSensorControl` | `Request_Get_Sensor_Control` | `Response_Get_Sensor_Control` | 센서 제어 상태 조회 (target, control) |
+| `{model}/setting/setSensorControl` | `Request_Set_Sensor_Control` | `Response_Set_Sensor_Control` | 센서 제어 설정 (target, control) |
 | `{model}/setting/getPduParam` | `Request_Get_Pdu_Param` | `Response_Get_Pdu_Param` | PDU 파라미터 조회 |
 | `{model}/setting/setPduParam` | `Request_Set_Pdu_Param` | `Response_Set_Pdu_Param` | PDU 파라미터 설정 |
 | `{model}/setting/getDriveParam` | `Request_Get_Drive_Param` | `Response_Get_Drive_Param` | 드라이브 파라미터 조회 |
@@ -234,7 +229,8 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/setting/result` | `Setting_Result` | 설정 결과 (id, result, message) |
+| `{model}/setting/paramResult` | `Result_Setting_Param` | 설정 파라미터 결과 (id, params, result, message) |
+| `{model}/setting/sensorResult` | `Result_Setting_Sensor` | 센서 설정 결과 (id, target, control, index, result, message) |
 
 ### 소프트웨어 (Software) - `{model}/software/*`
 
@@ -251,7 +247,7 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Message Type | Description |
 |-------|--------------|-------------|
-| `{model}/software/result` | `Update_Result` | 업데이트 결과 (id, result, message) |
+| `{model}/software/result` | `Result_Update` | 업데이트 결과 (id, branch, version, result, message) |
 
 ### 멀티로봇 (Multi) - `{model}/multi/*`
 
@@ -259,8 +255,8 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 
 | Topic | Request | Response | Description |
 |-------|---------|----------|-------------|
-| `{model}/multi/path` | `Request_Path` | `Response_Path` | 경로 설정/조회 (path: [string]) |
-| `{model}/multi/vobs` | `Request_Vobs` | `Response_Vobs` | 가상 장애물 설정 (vobs_robots, vobs_closures: [string]) |
+| `{model}/multi/path` | `Request_Multi_Path` | `Response_Multi_Path` | 경로 설정/조회 (path: [string]) |
+| `{model}/multi/vobs` | `Request_Multi_Vobs` | `Response_Multi_Vobs` | 가상 장애물 설정 (vobs_robots, vobs_closures: [string], is_vobs_closures_change) |
 
 ---
 
@@ -275,14 +271,6 @@ Zenoh Queryable을 사용한 Request/Response 패턴.
 | `{model}/status` | `Status` | 100ms | 로봇 상태 (IMU, Motor, Condition, Robot State, Safety I/O, Power, Setting, Map) |
 | `{model}/moveStatus` | `Move_Status` | 500ms | 이동 상태 (Move State, Pose, Vel, Goal Node, Cur Node) |
 
-### 상태 결과 응답
-
-> 스키마 파일: `slamnav_status.fbs`
-
-| Topic | Message Type | Description |
-|-------|--------------|-------------|
-| `{model}/status/result` | `Status_Result` | 상태 결과 (id, result, message) |
-
 #### Status 구조
 
 ```
@@ -292,7 +280,7 @@ Status (table)
 ├── motor0: StatusMotor (struct)            # 모터0 상태 (connection, status, temp, current)
 ├── motor1: StatusMotor (struct)            # 모터1 상태
 ├── power: StatusPower (struct)             # 전원 상태 (배터리, TABOS 등)
-├── robot_state: StatusRobotState (table)   # 로봇 상태 (charge, dock, emo, localization, power)
+├── robot_state: StatusRobotState (table)   # 로봇 상태 (charge, dock, emo, localization, power, sss_recovery, sw_reset, sw_stop, sw_start, sf_bumper_detect, sf_obs_detect, sf_operational_stop)
 ├── robot_safety_io_state: StatusRobotSafetyIoState (table)  # Safety I/O 상태
 ├── setting: StatusSetting (table)          # 설정 (platform_type, platform_name)
 └── map: StatusMap (table)                  # 맵 상태 (map_name, map_status)
@@ -302,11 +290,11 @@ Status (table)
 
 ```
 Move_Status (table)
-├── cur_node: MoveStatusNode (table)        # 현재 노드 정보
-├── goal_node: MoveStatusNode (table)       # 목표 노드 정보
-├── move_state: MoveStatusMoveState (table) # 이동 상태 (auto_move, dock_move, jog_move, obs, path)
-├── pose: MoveStatusPose (struct)           # 현재 위치 (x, y, z, rz)
-└── vel: MoveStatusVel (struct)             # 현재 속도 (vx, vy, wz)
+├── cur_node: StatusNode (table)        # 현재 노드 정보 (node_id, name, state, x, y, rz)
+├── goal_node: StatusNode (table)       # 목표 노드 정보 (node_id, name, state, x, y, rz)
+├── move_state: StatusMoveState (table) # 이동 상태 (auto_move, dock_move, jog_move, obs, path)
+├── pose: StatusPose (struct)           # 현재 위치 (x, y, z, rz)
+└── vel: StatusVel (struct)             # 현재 속도 (vx, vy, wz)
 ```
 
 ### 센서 데이터 (Sensor Data)
@@ -400,8 +388,8 @@ session.declare_subscriber("{model}/**", callback);
 | `map_name` | string | 맵 이름 |
 | `created_at` | string | 생성 시간 |
 | `update_at` | string | 수정 시간 |
-| `type` | string | 파일 타입 |
-| `size` | float | 파일 크기 |
+| `map_type` | string | 맵 타입 |
+| `map_size` | float | 맵 크기 |
 
 ### MapFile (slamnav_map.fbs) - table
 
@@ -410,7 +398,7 @@ session.declare_subscriber("{model}/**", callback);
 | `file_name` | string | 파일 이름 |
 | `created_at` | string | 생성 시간 |
 | `update_at` | string | 수정 시간 |
-| `type` | string | 파일 타입 |
+| `file_type` | string | 파일 타입 |
 | `cloud_info` | MapFileInfo | 클라우드 정보 |
 | `topo_info` | MapFileInfo | 토폴로지 정보 |
 
@@ -435,7 +423,7 @@ session.declare_subscriber("{model}/**", callback);
 
 | 필드 | 타입 | 설명 |
 |------|------|------|
-| `id` | int | 센서 ID |
+| `index` | int | 센서 인덱스 |
 | `serial` | string | 센서 시리얼 번호 |
 
 ### SafetyFlag (slamnav_control.fbs) - table
@@ -486,7 +474,28 @@ session.declare_subscriber("{model}/**", callback);
 | `z` | float | Z 좌표 |
 | `rz` | float | Z축 회전 |
 
-### MoveStatusPose (slamnav_status.fbs) - struct
+### StatusNode (slamnav_status.fbs) - table
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `node_id` | string | 노드 ID |
+| `name` | string | 노드 이름 |
+| `state` | string | 노드 상태 |
+| `x` | float | X 좌표 |
+| `y` | float | Y 좌표 |
+| `rz` | float | Z축 회전 |
+
+### StatusMoveState (slamnav_status.fbs) - table
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `auto_move` | string | 자동 이동 상태 |
+| `dock_move` | string | 도킹 이동 상태 |
+| `jog_move` | string | 조그 이동 상태 |
+| `obs` | string | 장애물 상태 |
+| `path` | string | 경로 상태 |
+
+### StatusPose (slamnav_status.fbs) - struct
 
 | 필드 | 타입 | 설명 |
 |------|------|------|
@@ -495,7 +504,7 @@ session.declare_subscriber("{model}/**", callback);
 | `z` | float | Z 좌표 |
 | `rz` | float | Z축 회전 |
 
-### MoveStatusVel (slamnav_status.fbs) - struct
+### StatusVel (slamnav_status.fbs) - struct
 
 | 필드 | 타입 | 설명 |
 |------|------|------|

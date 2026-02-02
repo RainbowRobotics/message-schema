@@ -6,85 +6,76 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 9 &&
+              FLATBUFFERS_VERSION_REVISION == 23,
+             "Non-compatible flatbuffers version included");
+
 namespace SLAMNAV {
 
 struct MovePose;
 
 struct Request_Move_Goal;
 struct Request_Move_GoalBuilder;
-struct Request_Move_GoalT;
 
 struct Response_Move_Goal;
 struct Response_Move_GoalBuilder;
-struct Response_Move_GoalT;
 
 struct Request_Move_Target;
 struct Request_Move_TargetBuilder;
-struct Request_Move_TargetT;
 
 struct Response_Move_Target;
 struct Response_Move_TargetBuilder;
-struct Response_Move_TargetT;
 
 struct Move_Jog;
 struct Move_JogBuilder;
-struct Move_JogT;
 
 struct Request_Move_Stop;
 struct Request_Move_StopBuilder;
-struct Request_Move_StopT;
 
 struct Response_Move_Stop;
 struct Response_Move_StopBuilder;
-struct Response_Move_StopT;
 
 struct Request_Move_Pause;
 struct Request_Move_PauseBuilder;
-struct Request_Move_PauseT;
 
 struct Response_Move_Pause;
 struct Response_Move_PauseBuilder;
-struct Response_Move_PauseT;
 
 struct Request_Move_Resume;
 struct Request_Move_ResumeBuilder;
-struct Request_Move_ResumeT;
 
 struct Response_Move_Resume;
 struct Response_Move_ResumeBuilder;
-struct Response_Move_ResumeT;
 
-struct Request_Move_XLinear;
-struct Request_Move_XLinearBuilder;
-struct Request_Move_XLinearT;
+struct Request_Move_xLinear;
+struct Request_Move_xLinearBuilder;
 
-struct Response_Move_XLinear;
-struct Response_Move_XLinearBuilder;
-struct Response_Move_XLinearT;
+struct Response_Move_xLinear;
+struct Response_Move_xLinearBuilder;
+
+struct Request_Move_yLinear;
+struct Request_Move_yLinearBuilder;
+
+struct Response_Move_yLinear;
+struct Response_Move_yLinearBuilder;
 
 struct Request_Move_Circular;
 struct Request_Move_CircularBuilder;
-struct Request_Move_CircularT;
 
 struct Response_Move_Circular;
 struct Response_Move_CircularBuilder;
-struct Response_Move_CircularT;
 
 struct Request_Move_Rotate;
 struct Request_Move_RotateBuilder;
-struct Request_Move_RotateT;
 
 struct Response_Move_Rotate;
 struct Response_Move_RotateBuilder;
-struct Response_Move_RotateT;
 
-struct State_Change_Move;
-struct State_Change_MoveBuilder;
-struct State_Change_MoveT;
-
-struct Move_Result;
-struct Move_ResultBuilder;
-struct Move_ResultT;
+struct Result_Move;
+struct Result_MoveBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MovePose FLATBUFFERS_FINAL_CLASS {
  private:
@@ -101,52 +92,27 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MovePose FLATBUFFERS_FINAL_CLASS {
         rz_(0) {
   }
   MovePose(float _x, float _y, float _z, float _rz)
-      : x_(flatbuffers::EndianScalar(_x)),
-        y_(flatbuffers::EndianScalar(_y)),
-        z_(flatbuffers::EndianScalar(_z)),
-        rz_(flatbuffers::EndianScalar(_rz)) {
+      : x_(::flatbuffers::EndianScalar(_x)),
+        y_(::flatbuffers::EndianScalar(_y)),
+        z_(::flatbuffers::EndianScalar(_z)),
+        rz_(::flatbuffers::EndianScalar(_rz)) {
   }
   float x() const {
-    return flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    flatbuffers::WriteScalar(&x_, _x);
+    return ::flatbuffers::EndianScalar(x_);
   }
   float y() const {
-    return flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    flatbuffers::WriteScalar(&y_, _y);
+    return ::flatbuffers::EndianScalar(y_);
   }
   float z() const {
-    return flatbuffers::EndianScalar(z_);
-  }
-  void mutate_z(float _z) {
-    flatbuffers::WriteScalar(&z_, _z);
+    return ::flatbuffers::EndianScalar(z_);
   }
   float rz() const {
-    return flatbuffers::EndianScalar(rz_);
-  }
-  void mutate_rz(float _rz) {
-    flatbuffers::WriteScalar(&rz_, _rz);
+    return ::flatbuffers::EndianScalar(rz_);
   }
 };
 FLATBUFFERS_STRUCT_END(MovePose, 16);
 
-struct Request_Move_GoalT : public flatbuffers::NativeTable {
-  typedef Request_Move_Goal TableType;
-  std::string id;
-  std::string goal_id;
-  std::string goal_name;
-  std::string method;
-  int32_t preset;
-  Request_Move_GoalT()
-      : preset(0) {
-  }
-};
-
-struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_GoalT NativeTableType;
+struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_GoalBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -155,37 +121,22 @@ struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_METHOD = 10,
     VT_PRESET = 12
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *goal_id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_ID);
   }
-  const flatbuffers::String *goal_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_ID);
+  const ::flatbuffers::String *goal_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_NAME);
   }
-  flatbuffers::String *mutable_goal_id() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_ID);
-  }
-  const flatbuffers::String *goal_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  flatbuffers::String *mutable_goal_name() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  const flatbuffers::String *method() const {
-    return GetPointer<const flatbuffers::String *>(VT_METHOD);
-  }
-  flatbuffers::String *mutable_method() {
-    return GetPointer<flatbuffers::String *>(VT_METHOD);
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
   }
   int32_t preset() const {
     return GetField<int32_t>(VT_PRESET, 0);
   }
-  bool mutate_preset(int32_t _preset) {
-    return SetField<int32_t>(VT_PRESET, _preset, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -195,50 +146,47 @@ struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(goal_name()) &&
            VerifyOffset(verifier, VT_METHOD) &&
            verifier.VerifyString(method()) &&
-           VerifyField<int32_t>(verifier, VT_PRESET) &&
+           VerifyField<int32_t>(verifier, VT_PRESET, 4) &&
            verifier.EndTable();
   }
-  Request_Move_GoalT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_GoalT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Goal> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_GoalT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_GoalBuilder {
   typedef Request_Move_Goal Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Goal::VT_ID, id);
   }
-  void add_goal_id(flatbuffers::Offset<flatbuffers::String> goal_id) {
+  void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
     fbb_.AddOffset(Request_Move_Goal::VT_GOAL_ID, goal_id);
   }
-  void add_goal_name(flatbuffers::Offset<flatbuffers::String> goal_name) {
+  void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
     fbb_.AddOffset(Request_Move_Goal::VT_GOAL_NAME, goal_name);
   }
-  void add_method(flatbuffers::Offset<flatbuffers::String> method) {
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
     fbb_.AddOffset(Request_Move_Goal::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
     fbb_.AddElement<int32_t>(Request_Move_Goal::VT_PRESET, preset, 0);
   }
-  explicit Request_Move_GoalBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_GoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Goal> Finish() {
+  ::flatbuffers::Offset<Request_Move_Goal> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Goal>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Goal>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_id = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_name = 0,
-    flatbuffers::Offset<flatbuffers::String> method = 0,
+inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0) {
   Request_Move_GoalBuilder builder_(_fbb);
   builder_.add_preset(preset);
@@ -249,8 +197,8 @@ inline flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *goal_id = nullptr,
     const char *goal_name = nullptr,
@@ -269,24 +217,7 @@ inline flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
       preset);
 }
 
-flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_GoalT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_GoalT : public flatbuffers::NativeTable {
-  typedef Response_Move_Goal TableType;
-  std::string id;
-  std::string goal_id;
-  std::string goal_name;
-  std::string method;
-  int32_t preset;
-  std::string result;
-  std::string message;
-  Response_Move_GoalT()
-      : preset(0) {
-  }
-};
-
-struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_GoalT NativeTableType;
+struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_GoalBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -297,49 +228,28 @@ struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RESULT = 14,
     VT_MESSAGE = 16
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *goal_id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_ID);
   }
-  const flatbuffers::String *goal_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_ID);
+  const ::flatbuffers::String *goal_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_NAME);
   }
-  flatbuffers::String *mutable_goal_id() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_ID);
-  }
-  const flatbuffers::String *goal_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  flatbuffers::String *mutable_goal_name() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  const flatbuffers::String *method() const {
-    return GetPointer<const flatbuffers::String *>(VT_METHOD);
-  }
-  flatbuffers::String *mutable_method() {
-    return GetPointer<flatbuffers::String *>(VT_METHOD);
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
   }
   int32_t preset() const {
     return GetField<int32_t>(VT_PRESET, 0);
   }
-  bool mutate_preset(int32_t _preset) {
-    return SetField<int32_t>(VT_PRESET, _preset, 0);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -349,63 +259,60 @@ struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(goal_name()) &&
            VerifyOffset(verifier, VT_METHOD) &&
            verifier.VerifyString(method()) &&
-           VerifyField<int32_t>(verifier, VT_PRESET) &&
+           VerifyField<int32_t>(verifier, VT_PRESET, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_GoalT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_GoalT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Goal> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_GoalT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_GoalBuilder {
   typedef Response_Move_Goal Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Goal::VT_ID, id);
   }
-  void add_goal_id(flatbuffers::Offset<flatbuffers::String> goal_id) {
+  void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
     fbb_.AddOffset(Response_Move_Goal::VT_GOAL_ID, goal_id);
   }
-  void add_goal_name(flatbuffers::Offset<flatbuffers::String> goal_name) {
+  void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
     fbb_.AddOffset(Response_Move_Goal::VT_GOAL_NAME, goal_name);
   }
-  void add_method(flatbuffers::Offset<flatbuffers::String> method) {
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
     fbb_.AddOffset(Response_Move_Goal::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
     fbb_.AddElement<int32_t>(Response_Move_Goal::VT_PRESET, preset, 0);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Goal::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Goal::VT_MESSAGE, message);
   }
-  explicit Response_Move_GoalBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_GoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Goal> Finish() {
+  ::flatbuffers::Offset<Response_Move_Goal> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Goal>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Goal>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_id = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_name = 0,
-    flatbuffers::Offset<flatbuffers::String> method = 0,
+inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_GoalBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -417,8 +324,8 @@ inline flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *goal_id = nullptr,
     const char *goal_name = nullptr,
@@ -443,21 +350,7 @@ inline flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_GoalT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_TargetT : public flatbuffers::NativeTable {
-  typedef Request_Move_Target TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::MovePose> goal_pose;
-  std::string method;
-  int32_t preset;
-  Request_Move_TargetT()
-      : preset(0) {
-  }
-};
-
-struct Request_Move_Target FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_TargetT NativeTableType;
+struct Request_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_TargetBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -465,77 +358,62 @@ struct Request_Move_Target FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
     VT_METHOD = 8,
     VT_PRESET = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::MovePose *goal_pose() const {
     return GetStruct<const SLAMNAV::MovePose *>(VT_GOAL_POSE);
   }
-  SLAMNAV::MovePose *mutable_goal_pose() {
-    return GetStruct<SLAMNAV::MovePose *>(VT_GOAL_POSE);
-  }
-  const flatbuffers::String *method() const {
-    return GetPointer<const flatbuffers::String *>(VT_METHOD);
-  }
-  flatbuffers::String *mutable_method() {
-    return GetPointer<flatbuffers::String *>(VT_METHOD);
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
   }
   int32_t preset() const {
     return GetField<int32_t>(VT_PRESET, 0);
   }
-  bool mutate_preset(int32_t _preset) {
-    return SetField<int32_t>(VT_PRESET, _preset, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE) &&
+           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE, 4) &&
            VerifyOffset(verifier, VT_METHOD) &&
            verifier.VerifyString(method()) &&
-           VerifyField<int32_t>(verifier, VT_PRESET) &&
+           VerifyField<int32_t>(verifier, VT_PRESET, 4) &&
            verifier.EndTable();
   }
-  Request_Move_TargetT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_TargetT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Target> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_TargetT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_TargetBuilder {
   typedef Request_Move_Target Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Target::VT_ID, id);
   }
   void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
     fbb_.AddStruct(Request_Move_Target::VT_GOAL_POSE, goal_pose);
   }
-  void add_method(flatbuffers::Offset<flatbuffers::String> method) {
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
     fbb_.AddOffset(Request_Move_Target::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
     fbb_.AddElement<int32_t>(Request_Move_Target::VT_PRESET, preset, 0);
   }
-  explicit Request_Move_TargetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_TargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Target> Finish() {
+  ::flatbuffers::Offset<Request_Move_Target> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Target>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Target>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::MovePose *goal_pose = 0,
-    flatbuffers::Offset<flatbuffers::String> method = 0,
+inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0) {
   Request_Move_TargetBuilder builder_(_fbb);
   builder_.add_preset(preset);
@@ -545,10 +423,10 @@ inline flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::MovePose *goal_pose = 0,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
     const char *method = nullptr,
     int32_t preset = 0) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -561,23 +439,7 @@ inline flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirect(
       preset);
 }
 
-flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_TargetT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_TargetT : public flatbuffers::NativeTable {
-  typedef Response_Move_Target TableType;
-  std::string id;
-  std::string method;
-  std::unique_ptr<SLAMNAV::MovePose> goal_pose;
-  int32_t preset;
-  std::string result;
-  std::string message;
-  Response_Move_TargetT()
-      : preset(0) {
-  }
-};
-
-struct Response_Move_Target FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_TargetT NativeTableType;
+struct Response_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_TargetBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -587,69 +449,48 @@ struct Response_Move_Target FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
     VT_RESULT = 12,
     VT_MESSAGE = 14
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  const flatbuffers::String *method() const {
-    return GetPointer<const flatbuffers::String *>(VT_METHOD);
-  }
-  flatbuffers::String *mutable_method() {
-    return GetPointer<flatbuffers::String *>(VT_METHOD);
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
   }
   const SLAMNAV::MovePose *goal_pose() const {
     return GetStruct<const SLAMNAV::MovePose *>(VT_GOAL_POSE);
   }
-  SLAMNAV::MovePose *mutable_goal_pose() {
-    return GetStruct<SLAMNAV::MovePose *>(VT_GOAL_POSE);
-  }
   int32_t preset() const {
     return GetField<int32_t>(VT_PRESET, 0);
   }
-  bool mutate_preset(int32_t _preset) {
-    return SetField<int32_t>(VT_PRESET, _preset, 0);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_METHOD) &&
            verifier.VerifyString(method()) &&
-           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE) &&
-           VerifyField<int32_t>(verifier, VT_PRESET) &&
+           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE, 4) &&
+           VerifyField<int32_t>(verifier, VT_PRESET, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_TargetT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_TargetT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Target> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_TargetT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_TargetBuilder {
   typedef Response_Move_Target Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Target::VT_ID, id);
   }
-  void add_method(flatbuffers::Offset<flatbuffers::String> method) {
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
     fbb_.AddOffset(Response_Move_Target::VT_METHOD, method);
   }
   void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
@@ -658,31 +499,31 @@ struct Response_Move_TargetBuilder {
   void add_preset(int32_t preset) {
     fbb_.AddElement<int32_t>(Response_Move_Target::VT_PRESET, preset, 0);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Target::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Target::VT_MESSAGE, message);
   }
-  explicit Response_Move_TargetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_TargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Target> Finish() {
+  ::flatbuffers::Offset<Response_Move_Target> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Target>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Target>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> method = 0,
-    const SLAMNAV::MovePose *goal_pose = 0,
+inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
     int32_t preset = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_TargetBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -693,11 +534,11 @@ inline flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *method = nullptr,
-    const SLAMNAV::MovePose *goal_pose = 0,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
     int32_t preset = 0,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -715,22 +556,7 @@ inline flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDirec
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_TargetT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Move_JogT : public flatbuffers::NativeTable {
-  typedef Move_Jog TableType;
-  float vx;
-  float vy;
-  float wz;
-  Move_JogT()
-      : vx(0.0f),
-        vy(0.0f),
-        wz(0.0f) {
-  }
-};
-
-struct Move_Jog FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Move_JogT NativeTableType;
+struct Move_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Move_JogBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VX = 4,
@@ -740,37 +566,25 @@ struct Move_Jog FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   float vx() const {
     return GetField<float>(VT_VX, 0.0f);
   }
-  bool mutate_vx(float _vx) {
-    return SetField<float>(VT_VX, _vx, 0.0f);
-  }
   float vy() const {
     return GetField<float>(VT_VY, 0.0f);
-  }
-  bool mutate_vy(float _vy) {
-    return SetField<float>(VT_VY, _vy, 0.0f);
   }
   float wz() const {
     return GetField<float>(VT_WZ, 0.0f);
   }
-  bool mutate_wz(float _wz) {
-    return SetField<float>(VT_WZ, _wz, 0.0f);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_VX) &&
-           VerifyField<float>(verifier, VT_VY) &&
-           VerifyField<float>(verifier, VT_WZ) &&
+           VerifyField<float>(verifier, VT_VX, 4) &&
+           VerifyField<float>(verifier, VT_VY, 4) &&
+           VerifyField<float>(verifier, VT_WZ, 4) &&
            verifier.EndTable();
   }
-  Move_JogT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Move_JogT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Move_Jog> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_JogT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Move_JogBuilder {
   typedef Move_Jog Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
   void add_vx(float vx) {
     fbb_.AddElement<float>(Move_Jog::VT_VX, vx, 0.0f);
   }
@@ -780,19 +594,19 @@ struct Move_JogBuilder {
   void add_wz(float wz) {
     fbb_.AddElement<float>(Move_Jog::VT_WZ, wz, 0.0f);
   }
-  explicit Move_JogBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Move_JogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Move_Jog> Finish() {
+  ::flatbuffers::Offset<Move_Jog> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Move_Jog>(end);
+    auto o = ::flatbuffers::Offset<Move_Jog>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Move_Jog> CreateMove_Jog(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Move_Jog> CreateMove_Jog(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     float vx = 0.0f,
     float vy = 0.0f,
     float wz = 0.0f) {
@@ -803,66 +617,50 @@ inline flatbuffers::Offset<Move_Jog> CreateMove_Jog(
   return builder_.Finish();
 }
 
-flatbuffers::Offset<Move_Jog> CreateMove_Jog(flatbuffers::FlatBufferBuilder &_fbb, const Move_JogT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_StopT : public flatbuffers::NativeTable {
-  typedef Request_Move_Stop TableType;
-  std::string id;
-  Request_Move_StopT() {
-  }
-};
-
-struct Request_Move_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_StopT NativeTableType;
+struct Request_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_StopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Move_StopT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_StopT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Stop> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_StopBuilder {
   typedef Request_Move_Stop Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Stop::VT_ID, id);
   }
-  explicit Request_Move_StopBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Stop> Finish() {
+  ::flatbuffers::Offset<Request_Move_Stop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Stop>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Stop>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_Stop(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_Stop(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Move_StopBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_StopDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_StopDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Move_Stop(
@@ -870,44 +668,23 @@ inline flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_StopDirect(
       id__);
 }
 
-flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_StopT : public flatbuffers::NativeTable {
-  typedef Response_Move_Stop TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Response_Move_StopT() {
-  }
-};
-
-struct Response_Move_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_StopT NativeTableType;
+struct Response_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_StopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
     VT_MESSAGE = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -917,40 +694,37 @@ struct Response_Move_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_StopT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_StopT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Stop> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_StopBuilder {
   typedef Response_Move_Stop Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Stop::VT_ID, id);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Stop::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Stop::VT_MESSAGE, message);
   }
-  explicit Response_Move_StopBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Stop> Finish() {
+  ::flatbuffers::Offset<Response_Move_Stop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Stop>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Stop>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_StopBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -958,8 +732,8 @@ inline flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_StopDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_StopDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -973,66 +747,50 @@ inline flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_StopDirect(
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_PauseT : public flatbuffers::NativeTable {
-  typedef Request_Move_Pause TableType;
-  std::string id;
-  Request_Move_PauseT() {
-  }
-};
-
-struct Request_Move_Pause FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_PauseT NativeTableType;
+struct Request_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_PauseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Move_PauseT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_PauseT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Pause> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_PauseT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_PauseBuilder {
   typedef Request_Move_Pause Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Pause::VT_ID, id);
   }
-  explicit Request_Move_PauseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_PauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Pause> Finish() {
+  ::flatbuffers::Offset<Request_Move_Pause> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Pause>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Pause>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_Pause(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_Pause(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Move_PauseBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_PauseDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_PauseDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Move_Pause(
@@ -1040,44 +798,23 @@ inline flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_PauseDirect(
       id__);
 }
 
-flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_Pause(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_PauseT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_PauseT : public flatbuffers::NativeTable {
-  typedef Response_Move_Pause TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Response_Move_PauseT() {
-  }
-};
-
-struct Response_Move_Pause FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_PauseT NativeTableType;
+struct Response_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_PauseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
     VT_MESSAGE = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -1087,40 +824,37 @@ struct Response_Move_Pause FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_PauseT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_PauseT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Pause> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_PauseT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_PauseBuilder {
   typedef Response_Move_Pause Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Pause::VT_ID, id);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Pause::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Pause::VT_MESSAGE, message);
   }
-  explicit Response_Move_PauseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_PauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Pause> Finish() {
+  ::flatbuffers::Offset<Response_Move_Pause> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Pause>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Pause>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_PauseBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -1128,8 +862,8 @@ inline flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_PauseDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_PauseDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -1143,66 +877,50 @@ inline flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_PauseDirect(
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_PauseT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_ResumeT : public flatbuffers::NativeTable {
-  typedef Request_Move_Resume TableType;
-  std::string id;
-  Request_Move_ResumeT() {
-  }
-};
-
-struct Request_Move_Resume FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_ResumeT NativeTableType;
+struct Request_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_ResumeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Move_ResumeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_ResumeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Resume> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ResumeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_ResumeBuilder {
   typedef Request_Move_Resume Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Resume::VT_ID, id);
   }
-  explicit Request_Move_ResumeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_ResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Resume> Finish() {
+  ::flatbuffers::Offset<Request_Move_Resume> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Resume>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Resume>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_Resume(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_Resume(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Move_ResumeBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_ResumeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_ResumeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Move_Resume(
@@ -1210,44 +928,23 @@ inline flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_ResumeDirect(
       id__);
 }
 
-flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_Resume(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ResumeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_ResumeT : public flatbuffers::NativeTable {
-  typedef Response_Move_Resume TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Response_Move_ResumeT() {
-  }
-};
-
-struct Response_Move_Resume FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_ResumeT NativeTableType;
+struct Response_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_ResumeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
     VT_MESSAGE = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -1257,40 +954,37 @@ struct Response_Move_Resume FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_ResumeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_ResumeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Resume> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_ResumeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_ResumeBuilder {
   typedef Response_Move_Resume Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Resume::VT_ID, id);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Resume::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Resume::VT_MESSAGE, message);
   }
-  explicit Response_Move_ResumeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_ResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Resume> Finish() {
+  ::flatbuffers::Offset<Response_Move_Resume> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Resume>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Resume>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_ResumeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -1298,8 +992,8 @@ inline flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_ResumeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_ResumeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -1313,125 +1007,83 @@ inline flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_ResumeDirec
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_ResumeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_XLinearT : public flatbuffers::NativeTable {
-  typedef Request_Move_XLinear TableType;
-  std::string id;
-  float target;
-  float speed;
-  Request_Move_XLinearT()
-      : target(0.0f),
-        speed(0.0f) {
-  }
-};
-
-struct Request_Move_XLinear FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_XLinearT NativeTableType;
-  typedef Request_Move_XLinearBuilder Builder;
+struct Request_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_xLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
     VT_SPEED = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            verifier.EndTable();
   }
-  Request_Move_XLinearT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_XLinearT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_XLinear> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XLinearT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct Request_Move_XLinearBuilder {
-  typedef Request_Move_XLinear Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_XLinear::VT_ID, id);
+struct Request_Move_xLinearBuilder {
+  typedef Request_Move_xLinear Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Request_Move_xLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Request_Move_XLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(Request_Move_xLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Request_Move_XLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(Request_Move_xLinear::VT_SPEED, speed, 0.0f);
   }
-  explicit Request_Move_XLinearBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_xLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_XLinear> Finish() {
+  ::flatbuffers::Offset<Request_Move_xLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_XLinear>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_xLinear>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_XLinear> CreateRequest_Move_XLinear(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Request_Move_xLinear> CreateRequest_Move_xLinear(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f) {
-  Request_Move_XLinearBuilder builder_(_fbb);
+  Request_Move_xLinearBuilder builder_(_fbb);
   builder_.add_speed(speed);
   builder_.add_target(target);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_XLinear> CreateRequest_Move_XLinearDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_xLinear> CreateRequest_Move_xLinearDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_XLinear(
+  return SLAMNAV::CreateRequest_Move_xLinear(
       _fbb,
       id__,
       target,
       speed);
 }
 
-flatbuffers::Offset<Request_Move_XLinear> CreateRequest_Move_XLinear(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XLinearT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_XLinearT : public flatbuffers::NativeTable {
-  typedef Response_Move_XLinear TableType;
-  std::string id;
-  float target;
-  float speed;
-  std::string result;
-  std::string message;
-  Response_Move_XLinearT()
-      : target(0.0f),
-        speed(0.0f) {
-  }
-};
-
-struct Response_Move_XLinear FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_XLinearT NativeTableType;
-  typedef Response_Move_XLinearBuilder Builder;
+struct Response_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Response_Move_xLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1439,91 +1091,73 @@ struct Response_Move_XLinear FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
     VT_RESULT = 10,
     VT_MESSAGE = 12
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_XLinearT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_XLinearT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_XLinear> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_XLinearT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct Response_Move_XLinearBuilder {
-  typedef Response_Move_XLinear Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_XLinear::VT_ID, id);
+struct Response_Move_xLinearBuilder {
+  typedef Response_Move_xLinear Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Response_Move_xLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Response_Move_XLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(Response_Move_xLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Response_Move_XLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(Response_Move_xLinear::VT_SPEED, speed, 0.0f);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_XLinear::VT_RESULT, result);
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(Response_Move_xLinear::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_XLinear::VT_MESSAGE, message);
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(Response_Move_xLinear::VT_MESSAGE, message);
   }
-  explicit Response_Move_XLinearBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_xLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_XLinear> Finish() {
+  ::flatbuffers::Offset<Response_Move_xLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_XLinear>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_xLinear>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinear(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinear(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
-  Response_Move_XLinearBuilder builder_(_fbb);
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  Response_Move_xLinearBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_speed(speed);
@@ -1532,8 +1166,8 @@ inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinear(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinearDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinearDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
@@ -1542,7 +1176,7 @@ inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinearDir
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_XLinear(
+  return SLAMNAV::CreateResponse_Move_xLinear(
       _fbb,
       id__,
       target,
@@ -1551,22 +1185,185 @@ inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinearDir
       message__);
 }
 
-flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinear(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_XLinearT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_CircularT : public flatbuffers::NativeTable {
-  typedef Request_Move_Circular TableType;
-  std::string id;
-  float target;
-  float speed;
-  std::string direction;
-  Request_Move_CircularT()
-      : target(0.0f),
-        speed(0.0f) {
+struct Request_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_yLinearBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_SPEED = 8
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  float target() const {
+    return GetField<float>(VT_TARGET, 0.0f);
+  }
+  float speed() const {
+    return GetField<float>(VT_SPEED, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
+           verifier.EndTable();
   }
 };
 
-struct Request_Move_Circular FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_CircularT NativeTableType;
+struct Request_Move_yLinearBuilder {
+  typedef Request_Move_yLinear Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Request_Move_yLinear::VT_ID, id);
+  }
+  void add_target(float target) {
+    fbb_.AddElement<float>(Request_Move_yLinear::VT_TARGET, target, 0.0f);
+  }
+  void add_speed(float speed) {
+    fbb_.AddElement<float>(Request_Move_yLinear::VT_SPEED, speed, 0.0f);
+  }
+  explicit Request_Move_yLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_yLinear> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_yLinear>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_yLinear> CreateRequest_Move_yLinear(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    float target = 0.0f,
+    float speed = 0.0f) {
+  Request_Move_yLinearBuilder builder_(_fbb);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Request_Move_yLinear> CreateRequest_Move_yLinearDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    float target = 0.0f,
+    float speed = 0.0f) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequest_Move_yLinear(
+      _fbb,
+      id__,
+      target,
+      speed);
+}
+
+struct Response_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Response_Move_yLinearBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_SPEED = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  float target() const {
+    return GetField<float>(VT_TARGET, 0.0f);
+  }
+  float speed() const {
+    return GetField<float>(VT_SPEED, 0.0f);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct Response_Move_yLinearBuilder {
+  typedef Response_Move_yLinear Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Response_Move_yLinear::VT_ID, id);
+  }
+  void add_target(float target) {
+    fbb_.AddElement<float>(Response_Move_yLinear::VT_TARGET, target, 0.0f);
+  }
+  void add_speed(float speed) {
+    fbb_.AddElement<float>(Response_Move_yLinear::VT_SPEED, speed, 0.0f);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(Response_Move_yLinear::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(Response_Move_yLinear::VT_MESSAGE, message);
+  }
+  explicit Response_Move_yLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Response_Move_yLinear> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Response_Move_yLinear>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinear(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    float target = 0.0f,
+    float speed = 0.0f,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  Response_Move_yLinearBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinearDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    float target = 0.0f,
+    float speed = 0.0f,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponse_Move_yLinear(
+      _fbb,
+      id__,
+      target,
+      speed,
+      result__,
+      message__);
+}
+
+struct Request_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_CircularBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -1574,50 +1371,35 @@ struct Request_Move_Circular FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
     VT_SPEED = 8,
     VT_DIRECTION = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
+  const ::flatbuffers::String *direction() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_DIRECTION);
   }
-  const flatbuffers::String *direction() const {
-    return GetPointer<const flatbuffers::String *>(VT_DIRECTION);
-  }
-  flatbuffers::String *mutable_direction() {
-    return GetPointer<flatbuffers::String *>(VT_DIRECTION);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            VerifyOffset(verifier, VT_DIRECTION) &&
            verifier.VerifyString(direction()) &&
            verifier.EndTable();
   }
-  Request_Move_CircularT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_CircularT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Circular> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_CircularT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_CircularBuilder {
   typedef Request_Move_Circular Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Circular::VT_ID, id);
   }
   void add_target(float target) {
@@ -1626,26 +1408,26 @@ struct Request_Move_CircularBuilder {
   void add_speed(float speed) {
     fbb_.AddElement<float>(Request_Move_Circular::VT_SPEED, speed, 0.0f);
   }
-  void add_direction(flatbuffers::Offset<flatbuffers::String> direction) {
+  void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
     fbb_.AddOffset(Request_Move_Circular::VT_DIRECTION, direction);
   }
-  explicit Request_Move_CircularBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_CircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Circular> Finish() {
+  ::flatbuffers::Offset<Request_Move_Circular> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Circular>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Circular>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
-    flatbuffers::Offset<flatbuffers::String> direction = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> direction = 0) {
   Request_Move_CircularBuilder builder_(_fbb);
   builder_.add_direction(direction);
   builder_.add_speed(speed);
@@ -1654,8 +1436,8 @@ inline flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
@@ -1670,24 +1452,7 @@ inline flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularDir
       direction__);
 }
 
-flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_CircularT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_CircularT : public flatbuffers::NativeTable {
-  typedef Response_Move_Circular TableType;
-  std::string id;
-  float target;
-  float speed;
-  std::string direction;
-  std::string result;
-  std::string message;
-  Response_Move_CircularT()
-      : target(0.0f),
-        speed(0.0f) {
-  }
-};
-
-struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_CircularT NativeTableType;
+struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_CircularBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -1697,48 +1462,30 @@ struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
     VT_RESULT = 12,
     VT_MESSAGE = 14
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
+  const ::flatbuffers::String *direction() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_DIRECTION);
   }
-  const flatbuffers::String *direction() const {
-    return GetPointer<const flatbuffers::String *>(VT_DIRECTION);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  flatbuffers::String *mutable_direction() {
-    return GetPointer<flatbuffers::String *>(VT_DIRECTION);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            VerifyOffset(verifier, VT_DIRECTION) &&
            verifier.VerifyString(direction()) &&
            VerifyOffset(verifier, VT_RESULT) &&
@@ -1747,16 +1494,13 @@ struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_CircularT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_CircularT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Circular> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_CircularT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_CircularBuilder {
   typedef Response_Move_Circular Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Circular::VT_ID, id);
   }
   void add_target(float target) {
@@ -1765,34 +1509,34 @@ struct Response_Move_CircularBuilder {
   void add_speed(float speed) {
     fbb_.AddElement<float>(Response_Move_Circular::VT_SPEED, speed, 0.0f);
   }
-  void add_direction(flatbuffers::Offset<flatbuffers::String> direction) {
+  void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
     fbb_.AddOffset(Response_Move_Circular::VT_DIRECTION, direction);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Circular::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Circular::VT_MESSAGE, message);
   }
-  explicit Response_Move_CircularBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_CircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Circular> Finish() {
+  ::flatbuffers::Offset<Response_Move_Circular> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Circular>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Circular>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
-    flatbuffers::Offset<flatbuffers::String> direction = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> direction = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_CircularBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -1803,8 +1547,8 @@ inline flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_CircularDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_CircularDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
@@ -1825,63 +1569,37 @@ inline flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_CircularD
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_CircularT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Move_RotateT : public flatbuffers::NativeTable {
-  typedef Request_Move_Rotate TableType;
-  std::string id;
-  float target;
-  float speed;
-  Request_Move_RotateT()
-      : target(0.0f),
-        speed(0.0f) {
-  }
-};
-
-struct Request_Move_Rotate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Move_RotateT NativeTableType;
+struct Request_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Move_RotateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
     VT_SPEED = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            verifier.EndTable();
   }
-  Request_Move_RotateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Move_RotateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Move_Rotate> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_RotateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Move_RotateBuilder {
   typedef Request_Move_Rotate Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Move_Rotate::VT_ID, id);
   }
   void add_target(float target) {
@@ -1890,20 +1608,20 @@ struct Request_Move_RotateBuilder {
   void add_speed(float speed) {
     fbb_.AddElement<float>(Request_Move_Rotate::VT_SPEED, speed, 0.0f);
   }
-  explicit Request_Move_RotateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Move_RotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Move_Rotate> Finish() {
+  ::flatbuffers::Offset<Request_Move_Rotate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Move_Rotate>(end);
+    auto o = ::flatbuffers::Offset<Request_Move_Rotate>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f) {
   Request_Move_RotateBuilder builder_(_fbb);
@@ -1913,8 +1631,8 @@ inline flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_RotateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_RotateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f) {
@@ -1926,23 +1644,7 @@ inline flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_RotateDirect(
       speed);
 }
 
-flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_RotateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Move_RotateT : public flatbuffers::NativeTable {
-  typedef Response_Move_Rotate TableType;
-  std::string id;
-  float target;
-  float speed;
-  std::string result;
-  std::string message;
-  Response_Move_RotateT()
-      : target(0.0f),
-        speed(0.0f) {
-  }
-};
-
-struct Response_Move_Rotate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Move_RotateT NativeTableType;
+struct Response_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Move_RotateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -1951,58 +1653,40 @@ struct Response_Move_Rotate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
     VT_RESULT = 10,
     VT_MESSAGE = 12
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Move_RotateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Move_RotateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Move_Rotate> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_RotateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Move_RotateBuilder {
   typedef Response_Move_Rotate Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Move_Rotate::VT_ID, id);
   }
   void add_target(float target) {
@@ -2011,30 +1695,30 @@ struct Response_Move_RotateBuilder {
   void add_speed(float speed) {
     fbb_.AddElement<float>(Response_Move_Rotate::VT_SPEED, speed, 0.0f);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Move_Rotate::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Move_Rotate::VT_MESSAGE, message);
   }
-  explicit Response_Move_RotateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Move_RotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Move_Rotate> Finish() {
+  ::flatbuffers::Offset<Response_Move_Rotate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Move_Rotate>(end);
+    auto o = ::flatbuffers::Offset<Response_Move_Rotate>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
+inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Move_RotateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -2044,8 +1728,8 @@ inline flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
@@ -2063,1141 +1747,187 @@ inline flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDirec
       message__);
 }
 
-flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_RotateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct State_Change_MoveT : public flatbuffers::NativeTable {
-  typedef State_Change_Move TableType;
-  std::string id;
-  std::string command;
-  std::unique_ptr<SLAMNAV::MovePose> cur_pose;
-  std::unique_ptr<SLAMNAV::MovePose> goal_pose;
-  std::string map_name;
-  std::vector<float> vel;
-  std::string goal_id;
-  std::string goal_name;
-  std::string method;
-  std::string direction;
-  int32_t preset;
-  std::string result;
-  std::string message;
-  float remaining_dist;
-  float target;
-  float speed;
-  int32_t bat_percent;
-  State_Change_MoveT()
-      : preset(0),
-        remaining_dist(0.0f),
-        target(0.0f),
-        speed(0.0f),
-        bat_percent(0) {
-  }
-};
-
-struct State_Change_Move FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef State_Change_MoveT NativeTableType;
-  typedef State_Change_MoveBuilder Builder;
+struct Result_Move FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Result_MoveBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_CUR_POSE = 8,
-    VT_GOAL_POSE = 10,
-    VT_MAP_NAME = 12,
-    VT_VEL = 14,
-    VT_GOAL_ID = 16,
-    VT_GOAL_NAME = 18,
-    VT_METHOD = 20,
-    VT_DIRECTION = 22,
-    VT_PRESET = 24,
-    VT_RESULT = 26,
-    VT_MESSAGE = 28,
-    VT_REMAINING_DIST = 30,
-    VT_TARGET = 32,
-    VT_SPEED = 34,
-    VT_BAT_PERCENT = 36
+    VT_GOAL_ID = 6,
+    VT_GOAL_NAME = 8,
+    VT_METHOD = 10,
+    VT_PRESET = 12,
+    VT_GOAL_POSE = 14,
+    VT_TARGET = 16,
+    VT_SPEED = 18,
+    VT_DIRECTION = 20,
+    VT_RESULT = 22,
+    VT_MESSAGE = 24
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *goal_id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_ID);
   }
-  const flatbuffers::String *command() const {
-    return GetPointer<const flatbuffers::String *>(VT_COMMAND);
+  const ::flatbuffers::String *goal_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_GOAL_NAME);
   }
-  flatbuffers::String *mutable_command() {
-    return GetPointer<flatbuffers::String *>(VT_COMMAND);
-  }
-  const SLAMNAV::MovePose *cur_pose() const {
-    return GetStruct<const SLAMNAV::MovePose *>(VT_CUR_POSE);
-  }
-  SLAMNAV::MovePose *mutable_cur_pose() {
-    return GetStruct<SLAMNAV::MovePose *>(VT_CUR_POSE);
-  }
-  const SLAMNAV::MovePose *goal_pose() const {
-    return GetStruct<const SLAMNAV::MovePose *>(VT_GOAL_POSE);
-  }
-  SLAMNAV::MovePose *mutable_goal_pose() {
-    return GetStruct<SLAMNAV::MovePose *>(VT_GOAL_POSE);
-  }
-  const flatbuffers::String *map_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_MAP_NAME);
-  }
-  flatbuffers::String *mutable_map_name() {
-    return GetPointer<flatbuffers::String *>(VT_MAP_NAME);
-  }
-  const flatbuffers::Vector<float> *vel() const {
-    return GetPointer<const flatbuffers::Vector<float> *>(VT_VEL);
-  }
-  flatbuffers::Vector<float> *mutable_vel() {
-    return GetPointer<flatbuffers::Vector<float> *>(VT_VEL);
-  }
-  const flatbuffers::String *goal_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_ID);
-  }
-  flatbuffers::String *mutable_goal_id() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_ID);
-  }
-  const flatbuffers::String *goal_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  flatbuffers::String *mutable_goal_name() {
-    return GetPointer<flatbuffers::String *>(VT_GOAL_NAME);
-  }
-  const flatbuffers::String *method() const {
-    return GetPointer<const flatbuffers::String *>(VT_METHOD);
-  }
-  flatbuffers::String *mutable_method() {
-    return GetPointer<flatbuffers::String *>(VT_METHOD);
-  }
-  const flatbuffers::String *direction() const {
-    return GetPointer<const flatbuffers::String *>(VT_DIRECTION);
-  }
-  flatbuffers::String *mutable_direction() {
-    return GetPointer<flatbuffers::String *>(VT_DIRECTION);
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
   }
   int32_t preset() const {
     return GetField<int32_t>(VT_PRESET, 0);
   }
-  bool mutate_preset(int32_t _preset) {
-    return SetField<int32_t>(VT_PRESET, _preset, 0);
-  }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  float remaining_dist() const {
-    return GetField<float>(VT_REMAINING_DIST, 0.0f);
-  }
-  bool mutate_remaining_dist(float _remaining_dist) {
-    return SetField<float>(VT_REMAINING_DIST, _remaining_dist, 0.0f);
+  const SLAMNAV::MovePose *goal_pose() const {
+    return GetStruct<const SLAMNAV::MovePose *>(VT_GOAL_POSE);
   }
   float target() const {
     return GetField<float>(VT_TARGET, 0.0f);
   }
-  bool mutate_target(float _target) {
-    return SetField<float>(VT_TARGET, _target, 0.0f);
-  }
   float speed() const {
     return GetField<float>(VT_SPEED, 0.0f);
   }
-  bool mutate_speed(float _speed) {
-    return SetField<float>(VT_SPEED, _speed, 0.0f);
+  const ::flatbuffers::String *direction() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_DIRECTION);
   }
-  int32_t bat_percent() const {
-    return GetField<int32_t>(VT_BAT_PERCENT, 0);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  bool mutate_bat_percent(int32_t _bat_percent) {
-    return SetField<int32_t>(VT_BAT_PERCENT, _bat_percent, 0);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
-           VerifyField<SLAMNAV::MovePose>(verifier, VT_CUR_POSE) &&
-           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE) &&
-           VerifyOffset(verifier, VT_MAP_NAME) &&
-           verifier.VerifyString(map_name()) &&
-           VerifyOffset(verifier, VT_VEL) &&
-           verifier.VerifyVector(vel()) &&
            VerifyOffset(verifier, VT_GOAL_ID) &&
            verifier.VerifyString(goal_id()) &&
            VerifyOffset(verifier, VT_GOAL_NAME) &&
            verifier.VerifyString(goal_name()) &&
            VerifyOffset(verifier, VT_METHOD) &&
            verifier.VerifyString(method()) &&
+           VerifyField<int32_t>(verifier, VT_PRESET, 4) &&
+           VerifyField<SLAMNAV::MovePose>(verifier, VT_GOAL_POSE, 4) &&
+           VerifyField<float>(verifier, VT_TARGET, 4) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
            VerifyOffset(verifier, VT_DIRECTION) &&
            verifier.VerifyString(direction()) &&
-           VerifyField<int32_t>(verifier, VT_PRESET) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
-           VerifyField<float>(verifier, VT_REMAINING_DIST) &&
-           VerifyField<float>(verifier, VT_TARGET) &&
-           VerifyField<float>(verifier, VT_SPEED) &&
-           VerifyField<int32_t>(verifier, VT_BAT_PERCENT) &&
            verifier.EndTable();
   }
-  State_Change_MoveT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(State_Change_MoveT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<State_Change_Move> Pack(flatbuffers::FlatBufferBuilder &_fbb, const State_Change_MoveT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct State_Change_MoveBuilder {
-  typedef State_Change_Move Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(State_Change_Move::VT_ID, id);
+struct Result_MoveBuilder {
+  typedef Result_Move Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Result_Move::VT_ID, id);
   }
-  void add_command(flatbuffers::Offset<flatbuffers::String> command) {
-    fbb_.AddOffset(State_Change_Move::VT_COMMAND, command);
+  void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
+    fbb_.AddOffset(Result_Move::VT_GOAL_ID, goal_id);
   }
-  void add_cur_pose(const SLAMNAV::MovePose *cur_pose) {
-    fbb_.AddStruct(State_Change_Move::VT_CUR_POSE, cur_pose);
+  void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
+    fbb_.AddOffset(Result_Move::VT_GOAL_NAME, goal_name);
   }
-  void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
-    fbb_.AddStruct(State_Change_Move::VT_GOAL_POSE, goal_pose);
-  }
-  void add_map_name(flatbuffers::Offset<flatbuffers::String> map_name) {
-    fbb_.AddOffset(State_Change_Move::VT_MAP_NAME, map_name);
-  }
-  void add_vel(flatbuffers::Offset<flatbuffers::Vector<float>> vel) {
-    fbb_.AddOffset(State_Change_Move::VT_VEL, vel);
-  }
-  void add_goal_id(flatbuffers::Offset<flatbuffers::String> goal_id) {
-    fbb_.AddOffset(State_Change_Move::VT_GOAL_ID, goal_id);
-  }
-  void add_goal_name(flatbuffers::Offset<flatbuffers::String> goal_name) {
-    fbb_.AddOffset(State_Change_Move::VT_GOAL_NAME, goal_name);
-  }
-  void add_method(flatbuffers::Offset<flatbuffers::String> method) {
-    fbb_.AddOffset(State_Change_Move::VT_METHOD, method);
-  }
-  void add_direction(flatbuffers::Offset<flatbuffers::String> direction) {
-    fbb_.AddOffset(State_Change_Move::VT_DIRECTION, direction);
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
+    fbb_.AddOffset(Result_Move::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(State_Change_Move::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(Result_Move::VT_PRESET, preset, 0);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(State_Change_Move::VT_RESULT, result);
-  }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(State_Change_Move::VT_MESSAGE, message);
-  }
-  void add_remaining_dist(float remaining_dist) {
-    fbb_.AddElement<float>(State_Change_Move::VT_REMAINING_DIST, remaining_dist, 0.0f);
+  void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
+    fbb_.AddStruct(Result_Move::VT_GOAL_POSE, goal_pose);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(State_Change_Move::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(Result_Move::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(State_Change_Move::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(Result_Move::VT_SPEED, speed, 0.0f);
   }
-  void add_bat_percent(int32_t bat_percent) {
-    fbb_.AddElement<int32_t>(State_Change_Move::VT_BAT_PERCENT, bat_percent, 0);
+  void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
+    fbb_.AddOffset(Result_Move::VT_DIRECTION, direction);
   }
-  explicit State_Change_MoveBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(Result_Move::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(Result_Move::VT_MESSAGE, message);
+  }
+  explicit Result_MoveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<State_Change_Move> Finish() {
+  ::flatbuffers::Offset<Result_Move> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<State_Change_Move>(end);
+    auto o = ::flatbuffers::Offset<Result_Move>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<State_Change_Move> CreateState_Change_Move(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> command = 0,
-    const SLAMNAV::MovePose *cur_pose = 0,
-    const SLAMNAV::MovePose *goal_pose = 0,
-    flatbuffers::Offset<flatbuffers::String> map_name = 0,
-    flatbuffers::Offset<flatbuffers::Vector<float>> vel = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_id = 0,
-    flatbuffers::Offset<flatbuffers::String> goal_name = 0,
-    flatbuffers::Offset<flatbuffers::String> method = 0,
-    flatbuffers::Offset<flatbuffers::String> direction = 0,
+inline ::flatbuffers::Offset<Result_Move> CreateResult_Move(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> goal_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0,
-    float remaining_dist = 0.0f,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
-    int32_t bat_percent = 0) {
-  State_Change_MoveBuilder builder_(_fbb);
-  builder_.add_bat_percent(bat_percent);
-  builder_.add_speed(speed);
-  builder_.add_target(target);
-  builder_.add_remaining_dist(remaining_dist);
+    ::flatbuffers::Offset<::flatbuffers::String> direction = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  Result_MoveBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
-  builder_.add_preset(preset);
   builder_.add_direction(direction);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  builder_.add_goal_pose(goal_pose);
+  builder_.add_preset(preset);
   builder_.add_method(method);
   builder_.add_goal_name(goal_name);
   builder_.add_goal_id(goal_id);
-  builder_.add_vel(vel);
-  builder_.add_map_name(map_name);
-  builder_.add_goal_pose(goal_pose);
-  builder_.add_cur_pose(cur_pose);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<State_Change_Move> CreateState_Change_MoveDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Result_Move> CreateResult_MoveDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
-    const SLAMNAV::MovePose *cur_pose = 0,
-    const SLAMNAV::MovePose *goal_pose = 0,
-    const char *map_name = nullptr,
-    const std::vector<float> *vel = nullptr,
     const char *goal_id = nullptr,
     const char *goal_name = nullptr,
     const char *method = nullptr,
-    const char *direction = nullptr,
     int32_t preset = 0,
-    const char *result = nullptr,
-    const char *message = nullptr,
-    float remaining_dist = 0.0f,
+    const SLAMNAV::MovePose *goal_pose = nullptr,
     float target = 0.0f,
     float speed = 0.0f,
-    int32_t bat_percent = 0) {
+    const char *direction = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
-  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  auto vel__ = vel ? _fbb.CreateVector<float>(*vel) : 0;
   auto goal_id__ = goal_id ? _fbb.CreateString(goal_id) : 0;
   auto goal_name__ = goal_name ? _fbb.CreateString(goal_name) : 0;
   auto method__ = method ? _fbb.CreateString(method) : 0;
   auto direction__ = direction ? _fbb.CreateString(direction) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateState_Change_Move(
+  return SLAMNAV::CreateResult_Move(
       _fbb,
       id__,
-      command__,
-      cur_pose,
-      goal_pose,
-      map_name__,
-      vel__,
       goal_id__,
       goal_name__,
       method__,
-      direction__,
       preset,
-      result__,
-      message__,
-      remaining_dist,
+      goal_pose,
       target,
       speed,
-      bat_percent);
-}
-
-flatbuffers::Offset<State_Change_Move> CreateState_Change_Move(flatbuffers::FlatBufferBuilder &_fbb, const State_Change_MoveT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Move_ResultT : public flatbuffers::NativeTable {
-  typedef Move_Result TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Move_ResultT() {
-  }
-};
-
-struct Move_Result FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Move_ResultT NativeTableType;
-  typedef Move_ResultBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_RESULT = 6,
-    VT_MESSAGE = 8
-  };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-  Move_ResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Move_ResultT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Move_Result> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct Move_ResultBuilder {
-  typedef Move_Result Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Move_Result::VT_ID, id);
-  }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(Move_Result::VT_RESULT, result);
-  }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(Move_Result::VT_MESSAGE, message);
-  }
-  explicit Move_ResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<Move_Result> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Move_Result>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Move_Result> CreateMove_Result(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
-  Move_ResultBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Move_Result> CreateMove_ResultDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateMove_Result(
-      _fbb,
-      id__,
+      direction__,
       result__,
       message__);
-}
-
-flatbuffers::Offset<Move_Result> CreateMove_Result(flatbuffers::FlatBufferBuilder &_fbb, const Move_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-inline Request_Move_GoalT *Request_Move_Goal::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_GoalT> _o = std::unique_ptr<SLAMNAV::Request_Move_GoalT>(new Request_Move_GoalT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Goal::UnPackTo(Request_Move_GoalT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = goal_id(); if (_e) _o->goal_id = _e->str(); }
-  { auto _e = goal_name(); if (_e) _o->goal_name = _e->str(); }
-  { auto _e = method(); if (_e) _o->method = _e->str(); }
-  { auto _e = preset(); _o->preset = _e; }
-}
-
-inline flatbuffers::Offset<Request_Move_Goal> Request_Move_Goal::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_GoalT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Goal(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_GoalT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_GoalT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _goal_id = _o->goal_id.empty() ? 0 : _fbb.CreateString(_o->goal_id);
-  auto _goal_name = _o->goal_name.empty() ? 0 : _fbb.CreateString(_o->goal_name);
-  auto _method = _o->method.empty() ? 0 : _fbb.CreateString(_o->method);
-  auto _preset = _o->preset;
-  return SLAMNAV::CreateRequest_Move_Goal(
-      _fbb,
-      _id,
-      _goal_id,
-      _goal_name,
-      _method,
-      _preset);
-}
-
-inline Response_Move_GoalT *Response_Move_Goal::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_GoalT> _o = std::unique_ptr<SLAMNAV::Response_Move_GoalT>(new Response_Move_GoalT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Goal::UnPackTo(Response_Move_GoalT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = goal_id(); if (_e) _o->goal_id = _e->str(); }
-  { auto _e = goal_name(); if (_e) _o->goal_name = _e->str(); }
-  { auto _e = method(); if (_e) _o->method = _e->str(); }
-  { auto _e = preset(); _o->preset = _e; }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Goal> Response_Move_Goal::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_GoalT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Goal(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_GoalT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_GoalT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _goal_id = _o->goal_id.empty() ? 0 : _fbb.CreateString(_o->goal_id);
-  auto _goal_name = _o->goal_name.empty() ? 0 : _fbb.CreateString(_o->goal_name);
-  auto _method = _o->method.empty() ? 0 : _fbb.CreateString(_o->method);
-  auto _preset = _o->preset;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Goal(
-      _fbb,
-      _id,
-      _goal_id,
-      _goal_name,
-      _method,
-      _preset,
-      _result,
-      _message);
-}
-
-inline Request_Move_TargetT *Request_Move_Target::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_TargetT> _o = std::unique_ptr<SLAMNAV::Request_Move_TargetT>(new Request_Move_TargetT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Target::UnPackTo(Request_Move_TargetT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = goal_pose(); if (_e) _o->goal_pose = std::unique_ptr<SLAMNAV::MovePose>(new SLAMNAV::MovePose(*_e)); }
-  { auto _e = method(); if (_e) _o->method = _e->str(); }
-  { auto _e = preset(); _o->preset = _e; }
-}
-
-inline flatbuffers::Offset<Request_Move_Target> Request_Move_Target::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_TargetT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Target(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_TargetT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_TargetT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _goal_pose = _o->goal_pose ? _o->goal_pose.get() : 0;
-  auto _method = _o->method.empty() ? 0 : _fbb.CreateString(_o->method);
-  auto _preset = _o->preset;
-  return SLAMNAV::CreateRequest_Move_Target(
-      _fbb,
-      _id,
-      _goal_pose,
-      _method,
-      _preset);
-}
-
-inline Response_Move_TargetT *Response_Move_Target::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_TargetT> _o = std::unique_ptr<SLAMNAV::Response_Move_TargetT>(new Response_Move_TargetT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Target::UnPackTo(Response_Move_TargetT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = method(); if (_e) _o->method = _e->str(); }
-  { auto _e = goal_pose(); if (_e) _o->goal_pose = std::unique_ptr<SLAMNAV::MovePose>(new SLAMNAV::MovePose(*_e)); }
-  { auto _e = preset(); _o->preset = _e; }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Target> Response_Move_Target::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_TargetT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Target(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_TargetT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_TargetT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _method = _o->method.empty() ? 0 : _fbb.CreateString(_o->method);
-  auto _goal_pose = _o->goal_pose ? _o->goal_pose.get() : 0;
-  auto _preset = _o->preset;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Target(
-      _fbb,
-      _id,
-      _method,
-      _goal_pose,
-      _preset,
-      _result,
-      _message);
-}
-
-inline Move_JogT *Move_Jog::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Move_JogT> _o = std::unique_ptr<SLAMNAV::Move_JogT>(new Move_JogT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Move_Jog::UnPackTo(Move_JogT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = vx(); _o->vx = _e; }
-  { auto _e = vy(); _o->vy = _e; }
-  { auto _e = wz(); _o->wz = _e; }
-}
-
-inline flatbuffers::Offset<Move_Jog> Move_Jog::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_JogT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMove_Jog(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Move_Jog> CreateMove_Jog(flatbuffers::FlatBufferBuilder &_fbb, const Move_JogT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Move_JogT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _vx = _o->vx;
-  auto _vy = _o->vy;
-  auto _wz = _o->wz;
-  return SLAMNAV::CreateMove_Jog(
-      _fbb,
-      _vx,
-      _vy,
-      _wz);
-}
-
-inline Request_Move_StopT *Request_Move_Stop::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_StopT> _o = std::unique_ptr<SLAMNAV::Request_Move_StopT>(new Request_Move_StopT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Stop::UnPackTo(Request_Move_StopT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Move_Stop> Request_Move_Stop::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Stop(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_StopT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Move_Stop(
-      _fbb,
-      _id);
-}
-
-inline Response_Move_StopT *Response_Move_Stop::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_StopT> _o = std::unique_ptr<SLAMNAV::Response_Move_StopT>(new Response_Move_StopT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Stop::UnPackTo(Response_Move_StopT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Stop> Response_Move_Stop::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Stop(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_StopT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Stop(
-      _fbb,
-      _id,
-      _result,
-      _message);
-}
-
-inline Request_Move_PauseT *Request_Move_Pause::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_PauseT> _o = std::unique_ptr<SLAMNAV::Request_Move_PauseT>(new Request_Move_PauseT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Pause::UnPackTo(Request_Move_PauseT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Move_Pause> Request_Move_Pause::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_PauseT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Pause(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_Pause(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_PauseT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_PauseT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Move_Pause(
-      _fbb,
-      _id);
-}
-
-inline Response_Move_PauseT *Response_Move_Pause::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_PauseT> _o = std::unique_ptr<SLAMNAV::Response_Move_PauseT>(new Response_Move_PauseT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Pause::UnPackTo(Response_Move_PauseT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Pause> Response_Move_Pause::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_PauseT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Pause(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_PauseT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_PauseT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Pause(
-      _fbb,
-      _id,
-      _result,
-      _message);
-}
-
-inline Request_Move_ResumeT *Request_Move_Resume::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_ResumeT> _o = std::unique_ptr<SLAMNAV::Request_Move_ResumeT>(new Request_Move_ResumeT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Resume::UnPackTo(Request_Move_ResumeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Move_Resume> Request_Move_Resume::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ResumeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Resume(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_Resume(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_ResumeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_ResumeT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Move_Resume(
-      _fbb,
-      _id);
-}
-
-inline Response_Move_ResumeT *Response_Move_Resume::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_ResumeT> _o = std::unique_ptr<SLAMNAV::Response_Move_ResumeT>(new Response_Move_ResumeT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Resume::UnPackTo(Response_Move_ResumeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Resume> Response_Move_Resume::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_ResumeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Resume(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_ResumeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_ResumeT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Resume(
-      _fbb,
-      _id,
-      _result,
-      _message);
-}
-
-inline Request_Move_XLinearT *Request_Move_XLinear::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_XLinearT> _o = std::unique_ptr<SLAMNAV::Request_Move_XLinearT>(new Request_Move_XLinearT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_XLinear::UnPackTo(Request_Move_XLinearT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-}
-
-inline flatbuffers::Offset<Request_Move_XLinear> Request_Move_XLinear::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XLinearT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_XLinear(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_XLinear> CreateRequest_Move_XLinear(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XLinearT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_XLinearT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  return SLAMNAV::CreateRequest_Move_XLinear(
-      _fbb,
-      _id,
-      _target,
-      _speed);
-}
-
-inline Response_Move_XLinearT *Response_Move_XLinear::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_XLinearT> _o = std::unique_ptr<SLAMNAV::Response_Move_XLinearT>(new Response_Move_XLinearT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_XLinear::UnPackTo(Response_Move_XLinearT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_XLinear> Response_Move_XLinear::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_XLinearT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_XLinear(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_XLinear> CreateResponse_Move_XLinear(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_XLinearT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_XLinearT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_XLinear(
-      _fbb,
-      _id,
-      _target,
-      _speed,
-      _result,
-      _message);
-}
-
-inline Request_Move_CircularT *Request_Move_Circular::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_CircularT> _o = std::unique_ptr<SLAMNAV::Request_Move_CircularT>(new Request_Move_CircularT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Circular::UnPackTo(Request_Move_CircularT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-  { auto _e = direction(); if (_e) _o->direction = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Move_Circular> Request_Move_Circular::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_CircularT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Circular(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_CircularT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_CircularT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  auto _direction = _o->direction.empty() ? 0 : _fbb.CreateString(_o->direction);
-  return SLAMNAV::CreateRequest_Move_Circular(
-      _fbb,
-      _id,
-      _target,
-      _speed,
-      _direction);
-}
-
-inline Response_Move_CircularT *Response_Move_Circular::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_CircularT> _o = std::unique_ptr<SLAMNAV::Response_Move_CircularT>(new Response_Move_CircularT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Circular::UnPackTo(Response_Move_CircularT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-  { auto _e = direction(); if (_e) _o->direction = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Circular> Response_Move_Circular::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_CircularT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Circular(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_CircularT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_CircularT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  auto _direction = _o->direction.empty() ? 0 : _fbb.CreateString(_o->direction);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Circular(
-      _fbb,
-      _id,
-      _target,
-      _speed,
-      _direction,
-      _result,
-      _message);
-}
-
-inline Request_Move_RotateT *Request_Move_Rotate::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Move_RotateT> _o = std::unique_ptr<SLAMNAV::Request_Move_RotateT>(new Request_Move_RotateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Move_Rotate::UnPackTo(Request_Move_RotateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-}
-
-inline flatbuffers::Offset<Request_Move_Rotate> Request_Move_Rotate::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_RotateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Move_Rotate(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_RotateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_RotateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  return SLAMNAV::CreateRequest_Move_Rotate(
-      _fbb,
-      _id,
-      _target,
-      _speed);
-}
-
-inline Response_Move_RotateT *Response_Move_Rotate::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Move_RotateT> _o = std::unique_ptr<SLAMNAV::Response_Move_RotateT>(new Response_Move_RotateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Move_Rotate::UnPackTo(Response_Move_RotateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Move_Rotate> Response_Move_Rotate::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_RotateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Move_Rotate(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(flatbuffers::FlatBufferBuilder &_fbb, const Response_Move_RotateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Move_RotateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Move_Rotate(
-      _fbb,
-      _id,
-      _target,
-      _speed,
-      _result,
-      _message);
-}
-
-inline State_Change_MoveT *State_Change_Move::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::State_Change_MoveT> _o = std::unique_ptr<SLAMNAV::State_Change_MoveT>(new State_Change_MoveT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void State_Change_Move::UnPackTo(State_Change_MoveT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = command(); if (_e) _o->command = _e->str(); }
-  { auto _e = cur_pose(); if (_e) _o->cur_pose = std::unique_ptr<SLAMNAV::MovePose>(new SLAMNAV::MovePose(*_e)); }
-  { auto _e = goal_pose(); if (_e) _o->goal_pose = std::unique_ptr<SLAMNAV::MovePose>(new SLAMNAV::MovePose(*_e)); }
-  { auto _e = map_name(); if (_e) _o->map_name = _e->str(); }
-  { auto _e = vel(); if (_e) { _o->vel.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->vel[_i] = _e->Get(_i); } } }
-  { auto _e = goal_id(); if (_e) _o->goal_id = _e->str(); }
-  { auto _e = goal_name(); if (_e) _o->goal_name = _e->str(); }
-  { auto _e = method(); if (_e) _o->method = _e->str(); }
-  { auto _e = direction(); if (_e) _o->direction = _e->str(); }
-  { auto _e = preset(); _o->preset = _e; }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-  { auto _e = remaining_dist(); _o->remaining_dist = _e; }
-  { auto _e = target(); _o->target = _e; }
-  { auto _e = speed(); _o->speed = _e; }
-  { auto _e = bat_percent(); _o->bat_percent = _e; }
-}
-
-inline flatbuffers::Offset<State_Change_Move> State_Change_Move::Pack(flatbuffers::FlatBufferBuilder &_fbb, const State_Change_MoveT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateState_Change_Move(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<State_Change_Move> CreateState_Change_Move(flatbuffers::FlatBufferBuilder &_fbb, const State_Change_MoveT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const State_Change_MoveT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _command = _o->command.empty() ? 0 : _fbb.CreateString(_o->command);
-  auto _cur_pose = _o->cur_pose ? _o->cur_pose.get() : 0;
-  auto _goal_pose = _o->goal_pose ? _o->goal_pose.get() : 0;
-  auto _map_name = _o->map_name.empty() ? 0 : _fbb.CreateString(_o->map_name);
-  auto _vel = _o->vel.size() ? _fbb.CreateVector(_o->vel) : 0;
-  auto _goal_id = _o->goal_id.empty() ? 0 : _fbb.CreateString(_o->goal_id);
-  auto _goal_name = _o->goal_name.empty() ? 0 : _fbb.CreateString(_o->goal_name);
-  auto _method = _o->method.empty() ? 0 : _fbb.CreateString(_o->method);
-  auto _direction = _o->direction.empty() ? 0 : _fbb.CreateString(_o->direction);
-  auto _preset = _o->preset;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  auto _remaining_dist = _o->remaining_dist;
-  auto _target = _o->target;
-  auto _speed = _o->speed;
-  auto _bat_percent = _o->bat_percent;
-  return SLAMNAV::CreateState_Change_Move(
-      _fbb,
-      _id,
-      _command,
-      _cur_pose,
-      _goal_pose,
-      _map_name,
-      _vel,
-      _goal_id,
-      _goal_name,
-      _method,
-      _direction,
-      _preset,
-      _result,
-      _message,
-      _remaining_dist,
-      _target,
-      _speed,
-      _bat_percent);
-}
-
-inline Move_ResultT *Move_Result::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Move_ResultT> _o = std::unique_ptr<SLAMNAV::Move_ResultT>(new Move_ResultT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Move_Result::UnPackTo(Move_ResultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Move_Result> Move_Result::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMove_Result(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Move_Result> CreateMove_Result(flatbuffers::FlatBufferBuilder &_fbb, const Move_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Move_ResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateMove_Result(
-      _fbb,
-      _id,
-      _result,
-      _message);
 }
 
 }  // namespace SLAMNAV

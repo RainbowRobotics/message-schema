@@ -12,15 +12,13 @@
 
 #include "comm_zenoh.h"
 #include "global_defines.h"
-#include "slamnav_localization_generated.h"
-
-#include <QDebug>
-#include <chrono>
-#include <functional>
+#include "flatbuffer/generated/slamnav_localization_generated.h"
 
 namespace
 {
-    const char* MODULE_NAME = "COMM_ZENOH_LOC";
+    constexpr const char* MODULE_NAME = "LOC";
+    constexpr double R2D = 180.0 / M_PI;
+    constexpr double D2R = M_PI / 180.0;
 
     // semi_auto_init 스레드 관리용
     std::unique_ptr<std::thread> semi_auto_init_thread_;
@@ -28,17 +26,17 @@ namespace
     // =========================================================================
     // Helper: Localization_Result FlatBuffer
     // =========================================================================
-    std::vector<uint8_t> build_localization_result(const QString& id,
-                                                    const QString& result,
-                                                    const QString& message)
+    std::vector<uint8_t> build_localization_result(const std::string& id,
+                                                    const std::string& result,
+                                                    const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
 
         auto fb_result = SLAMNAV::CreateLocalization_Result(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(fb_result);
 
@@ -51,18 +49,18 @@ namespace
     // =========================================================================
 
     // Response_Localization_Init
-    std::vector<uint8_t> build_response_init(const QString& id,
+    std::vector<uint8_t> build_response_init(const std::string& id,
                                               const SLAMNAV::LocalizationPose* pose,
-                                              const QString& result,
-                                              const QString& message)
+                                              const std::string& result,
+                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_Init(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -70,18 +68,18 @@ namespace
     }
 
     // Response_Localization_AutoInit
-    std::vector<uint8_t> build_response_autoinit(const QString& id,
+    std::vector<uint8_t> build_response_autoinit(const std::string& id,
                                                   const SLAMNAV::LocalizationPose* pose,
-                                                  const QString& result,
-                                                  const QString& message)
+                                                  const std::string& result,
+                                                  const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_AutoInit(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -89,18 +87,18 @@ namespace
     }
 
     // Response_Localization_SemiAutoInit
-    std::vector<uint8_t> build_response_semiautoinit(const QString& id,
+    std::vector<uint8_t> build_response_semiautoinit(const std::string& id,
                                                       const SLAMNAV::LocalizationPose* pose,
-                                                      const QString& result,
-                                                      const QString& message)
+                                                      const std::string& result,
+                                                      const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_SemiAutoInit(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -108,20 +106,20 @@ namespace
     }
 
     // Response_Localization_RandomInit
-    std::vector<uint8_t> build_response_randominit(const QString& id,
-                                                    const QString& random_seed,
+    std::vector<uint8_t> build_response_randominit(const std::string& id,
+                                                    const std::string& random_seed,
                                                     const SLAMNAV::LocalizationPose* pose,
-                                                    const QString& result,
-                                                    const QString& message)
+                                                    const std::string& result,
+                                                    const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_RandomInit(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(random_seed.toStdString()),
+            fbb.CreateString(id),
+            fbb.CreateString(random_seed),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -129,18 +127,18 @@ namespace
     }
 
     // Response_Localization_Start
-    std::vector<uint8_t> build_response_start(const QString& id,
+    std::vector<uint8_t> build_response_start(const std::string& id,
                                                const SLAMNAV::LocalizationPose* pose,
-                                               const QString& result,
-                                               const QString& message)
+                                               const std::string& result,
+                                               const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_Start(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -148,18 +146,18 @@ namespace
     }
 
     // Response_Localization_Stop
-    std::vector<uint8_t> build_response_stop(const QString& id,
+    std::vector<uint8_t> build_response_stop(const std::string& id,
                                               const SLAMNAV::LocalizationPose* pose,
-                                              const QString& result,
-                                              const QString& message)
+                                              const std::string& result,
+                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Localization_Stop(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             pose,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -191,7 +189,7 @@ namespace
 // =============================================================================
 void COMM_ZENOH::localization_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] localization_loop started";
+    log_info("localization_loop started");
 
     // 1. robotType이 설정될 때까지 대기
     while (is_localization_running_.load() && get_robot_type().empty())
@@ -201,16 +199,18 @@ void COMM_ZENOH::localization_loop()
 
     if (!is_localization_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] localization_loop aborted (not running)";
+        log_info("localization_loop ended (stopped before init)");
         return;
     }
 
     // 2. Session 유효성 확인
     if (!is_session_valid())
     {
-        qDebug() << "[" << MODULE_NAME << "] localization_loop aborted (session invalid)";
+        log_error("localization_loop aborted: session invalid");
         return;
     }
+
+    log_info("localization_loop initialized with robotType: {}", get_robot_type());
 
     try
     {
@@ -225,7 +225,7 @@ void COMM_ZENOH::localization_loop()
         std::string topic_stop         = make_topic(ZENOH_TOPIC::LOC_STOP);
         std::string topic_result       = make_topic(ZENOH_TOPIC::LOC_RESULT);
 
-        qDebug() << "[" << MODULE_NAME << "] Registering topics with prefix:" << QString::fromStdString(get_robot_type());
+        log_info("localization_loop registering topics with prefix: {}", get_robot_type());
 
         // 4. Result Publisher
         auto pub_result = session.declare_publisher(zenoh::KeyExpr(topic_result));
@@ -256,10 +256,16 @@ void COMM_ZENOH::localization_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
 
                 // Validate modules
-                if (!unimap || !loc || !config || !lidar_2d || !lidar_3d)
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                CONFIG* config_ptr = get_config();
+                LIDAR_2D* lidar_2d_ptr = get_lidar_2d();
+                LIDAR_3D* lidar_3d_ptr = get_lidar_3d();
+
+                if (!unimap_ptr || !loc_ptr || !config_ptr || !lidar_2d_ptr || !lidar_3d_ptr)
                 {
                     auto resp = build_response_init(id, &pose, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -267,7 +273,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check map loaded
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_init(id, &pose, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -275,14 +281,14 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check sensor connected
-                QString loc_mode = config->get_loc_mode();
-                if (loc_mode == "2D" && !lidar_2d->get_is_connected())
+                std::string loc_mode = config_ptr->get_loc_mode().toStdString();
+                if (loc_mode == "2D" && !lidar_2d_ptr->get_is_connected())
                 {
                     auto resp = build_response_init(id, &pose, "reject", "lidar 2d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
-                else if (loc_mode == "3D" && !lidar_3d->get_is_connected())
+                else if (loc_mode == "3D" && !lidar_3d_ptr->get_is_connected())
                 {
                     auto resp = build_response_init(id, &pose, "reject", "lidar 3d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -297,10 +303,10 @@ void COMM_ZENOH::localization_loop()
                 float rz = req_pose ? req_pose->rz() : 0.0f;
 
                 // Set pose
-                loc->stop();
+                loc_ptr->stop();
                 Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz * D2R));
                 tf(2, 3) = z;
-                loc->set_cur_tf(tf);
+                loc_ptr->set_cur_tf(tf);
 
                 pose = SLAMNAV::LocalizationPose(x, y, z, rz);
 
@@ -314,7 +320,7 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_init);
+        log_info("Queryable registered: {}", topic_init);
 
         // ---- localization/autoinit ----
         auto q_autoinit = session.declare_queryable(
@@ -324,7 +330,7 @@ void COMM_ZENOH::localization_loop()
                 SLAMNAV::LocalizationPose pose(0, 0, 0, 0);
 
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -332,12 +338,18 @@ void COMM_ZENOH::localization_loop()
                     auto req = SLAMNAV::GetRequest_Localization_AutoInit(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 // Validate modules
-                if (!unimap || !loc || !config || !lidar_2d || !lidar_3d)
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                CONFIG* config_ptr = get_config();
+                LIDAR_2D* lidar_2d_ptr = get_lidar_2d();
+                LIDAR_3D* lidar_3d_ptr = get_lidar_3d();
+
+                if (!unimap_ptr || !loc_ptr || !config_ptr || !lidar_2d_ptr || !lidar_3d_ptr)
                 {
                     auto resp = build_response_autoinit(id, &pose, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -345,7 +357,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check map loaded
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_autoinit(id, &pose, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -353,14 +365,14 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check sensor connected
-                QString loc_mode = config->get_loc_mode();
-                if (loc_mode == "2D" && !lidar_2d->get_is_connected())
+                std::string loc_mode = config_ptr->get_loc_mode().toStdString();
+                if (loc_mode == "2D" && !lidar_2d_ptr->get_is_connected())
                 {
                     auto resp = build_response_autoinit(id, &pose, "reject", "lidar 2d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
-                else if (loc_mode == "3D" && !lidar_3d->get_is_connected())
+                else if (loc_mode == "3D" && !lidar_3d_ptr->get_is_connected())
                 {
                     auto resp = build_response_autoinit(id, &pose, "reject", "lidar 3d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -368,7 +380,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check busy
-                if (loc->get_is_busy())
+                if (loc_ptr->get_is_busy())
                 {
                     auto resp = build_response_autoinit(id, &pose, "reject", "localization busy");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -376,7 +388,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Start auto init (same as semiautoinit)
-                loc->stop();
+                loc_ptr->stop();
 
                 if (semi_auto_init_thread_)
                 {
@@ -386,9 +398,9 @@ void COMM_ZENOH::localization_loop()
                     }
                     semi_auto_init_thread_.reset();
                 }
-                semi_auto_init_thread_ = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc);
+                semi_auto_init_thread_ = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc_ptr);
 
-                pose = get_current_pose(loc);
+                pose = get_current_pose(loc_ptr);
 
                 // Response
                 auto resp = build_response_autoinit(id, &pose, "accept", "");
@@ -400,7 +412,7 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_autoinit);
+        log_info("Queryable registered: {}", topic_autoinit);
 
         // ---- localization/semiautoinit ----
         auto q_semiautoinit = session.declare_queryable(
@@ -410,7 +422,7 @@ void COMM_ZENOH::localization_loop()
                 SLAMNAV::LocalizationPose pose(0, 0, 0, 0);
 
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -418,12 +430,18 @@ void COMM_ZENOH::localization_loop()
                     auto req = SLAMNAV::GetRequest_Localization_SemiAutoInit(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 // Validate modules
-                if (!unimap || !loc || !config || !lidar_2d || !lidar_3d)
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                CONFIG* config_ptr = get_config();
+                LIDAR_2D* lidar_2d_ptr = get_lidar_2d();
+                LIDAR_3D* lidar_3d_ptr = get_lidar_3d();
+
+                if (!unimap_ptr || !loc_ptr || !config_ptr || !lidar_2d_ptr || !lidar_3d_ptr)
                 {
                     auto resp = build_response_semiautoinit(id, &pose, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -431,7 +449,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check map loaded
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_semiautoinit(id, &pose, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -439,14 +457,14 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check sensor connected
-                QString loc_mode = config->get_loc_mode();
-                if (loc_mode == "2D" && !lidar_2d->get_is_connected())
+                std::string loc_mode = config_ptr->get_loc_mode().toStdString();
+                if (loc_mode == "2D" && !lidar_2d_ptr->get_is_connected())
                 {
                     auto resp = build_response_semiautoinit(id, &pose, "reject", "lidar 2d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
-                else if (loc_mode == "3D" && !lidar_3d->get_is_connected())
+                else if (loc_mode == "3D" && !lidar_3d_ptr->get_is_connected())
                 {
                     auto resp = build_response_semiautoinit(id, &pose, "reject", "lidar 3d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -454,7 +472,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check busy
-                if (loc->get_is_busy())
+                if (loc_ptr->get_is_busy())
                 {
                     auto resp = build_response_semiautoinit(id, &pose, "reject", "localization busy");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -462,7 +480,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Start semi-auto init
-                loc->stop();
+                loc_ptr->stop();
 
                 if (semi_auto_init_thread_)
                 {
@@ -472,9 +490,9 @@ void COMM_ZENOH::localization_loop()
                     }
                     semi_auto_init_thread_.reset();
                 }
-                semi_auto_init_thread_ = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc);
+                semi_auto_init_thread_ = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc_ptr);
 
-                pose = get_current_pose(loc);
+                pose = get_current_pose(loc_ptr);
 
                 // Response
                 auto resp = build_response_semiautoinit(id, &pose, "accept", "");
@@ -486,18 +504,18 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_semiautoinit);
+        log_info("Queryable registered: {}", topic_semiautoinit);
 
         // ---- localization/randominit ----
         auto q_randominit = session.declare_queryable(
             zenoh::KeyExpr(topic_randominit),
-            [this, &pub_result](const zenoh::Query& query)
+            [this](const zenoh::Query& query)
             {
                 SLAMNAV::LocalizationPose pose(0, 0, 0, 0);
 
                 const auto& payload = query.get_payload();
-                QString id = "";
-                QString random_seed = "";
+                std::string id;
+                std::string random_seed;
 
                 if (payload.has_value())
                 {
@@ -507,17 +525,23 @@ void COMM_ZENOH::localization_loop()
                     {
                         if (req->id())
                         {
-                            id = QString::fromStdString(req->id()->str());
+                            id = req->id()->str();
                         }
                         if (req->random_seed())
                         {
-                            random_seed = QString::fromStdString(req->random_seed()->str());
+                            random_seed = req->random_seed()->str();
                         }
                     }
                 }
 
                 // Validate modules
-                if (!unimap || !loc || !config || !lidar_2d || !lidar_3d)
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                CONFIG* config_ptr = get_config();
+                LIDAR_2D* lidar_2d_ptr = get_lidar_2d();
+                LIDAR_3D* lidar_3d_ptr = get_lidar_3d();
+
+                if (!unimap_ptr || !loc_ptr || !config_ptr || !lidar_2d_ptr || !lidar_3d_ptr)
                 {
                     auto resp = build_response_randominit(id, random_seed, &pose, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -525,7 +549,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check map loaded
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_randominit(id, random_seed, &pose, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -533,14 +557,14 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Check sensor connected
-                QString loc_mode = config->get_loc_mode();
-                if (loc_mode == "2D" && !lidar_2d->get_is_connected())
+                std::string loc_mode = config_ptr->get_loc_mode().toStdString();
+                if (loc_mode == "2D" && !lidar_2d_ptr->get_is_connected())
                 {
                     auto resp = build_response_randominit(id, random_seed, &pose, "reject", "lidar 2d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
-                else if (loc_mode == "3D" && !lidar_3d->get_is_connected())
+                else if (loc_mode == "3D" && !lidar_3d_ptr->get_is_connected())
                 {
                     auto resp = build_response_randominit(id, random_seed, &pose, "reject", "lidar 3d not connected");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -554,7 +578,7 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_randominit);
+        log_info("Queryable registered: {}", topic_randominit);
 
         // ---- localization/start ----
         auto q_start = session.declare_queryable(
@@ -564,7 +588,7 @@ void COMM_ZENOH::localization_loop()
                 SLAMNAV::LocalizationPose pose(0, 0, 0, 0);
 
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -572,12 +596,13 @@ void COMM_ZENOH::localization_loop()
                     auto req = SLAMNAV::GetRequest_Localization_Start(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 // Validate modules
-                if (!loc)
+                LOCALIZATION* loc_ptr = get_localization();
+                if (!loc_ptr)
                 {
                     auto resp = build_response_start(id, &pose, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -585,7 +610,7 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Get current pose for validation
-                pose = get_current_pose(loc);
+                pose = get_current_pose(loc_ptr);
                 float x = pose.x();
                 float y = pose.y();
                 float rz = pose.rz();
@@ -598,11 +623,11 @@ void COMM_ZENOH::localization_loop()
                 }
 
                 // Start localization
-                loc->stop();
+                loc_ptr->stop();
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                loc->start();
+                loc_ptr->start();
 
-                pose = get_current_pose(loc);
+                pose = get_current_pose(loc_ptr);
 
                 // Response
                 auto resp = build_response_start(id, &pose, "accept", "");
@@ -614,7 +639,7 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_start);
+        log_info("Queryable registered: {}", topic_start);
 
         // ---- localization/stop ----
         auto q_stop = session.declare_queryable(
@@ -624,7 +649,7 @@ void COMM_ZENOH::localization_loop()
                 SLAMNAV::LocalizationPose pose(0, 0, 0, 0);
 
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -632,15 +657,16 @@ void COMM_ZENOH::localization_loop()
                     auto req = SLAMNAV::GetRequest_Localization_Stop(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 // Stop localization
-                if (loc)
+                LOCALIZATION* loc_ptr = get_localization();
+                if (loc_ptr)
                 {
-                    loc->stop();
-                    pose = get_current_pose(loc);
+                    loc_ptr->stop();
+                    pose = get_current_pose(loc_ptr);
                 }
 
                 // Response
@@ -653,7 +679,7 @@ void COMM_ZENOH::localization_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_stop);
+        log_info("Queryable registered: {}", topic_stop);
 
         // 6. Main loop - keep alive
         while (is_localization_running_.load())
@@ -671,16 +697,16 @@ void COMM_ZENOH::localization_loop()
             semi_auto_init_thread_.reset();
         }
 
-        qDebug() << "[" << MODULE_NAME << "] localization_loop ending, resources will be released";
+        log_info("localization_loop ending, resources will be released");
     }
     catch (const zenoh::ZException& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Zenoh exception:" << e.what();
+        log_error("localization_loop Zenoh exception: {}", e.what());
     }
     catch (const std::exception& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Exception:" << e.what();
+        log_error("localization_loop exception: {}", e.what());
     }
 
-    qDebug() << "[" << MODULE_NAME << "] localization_loop ended";
+    log_info("localization_loop ended");
 }

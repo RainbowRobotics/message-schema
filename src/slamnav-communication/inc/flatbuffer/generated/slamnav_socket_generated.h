@@ -6,31 +6,33 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 9 &&
+              FLATBUFFERS_VERSION_REVISION == 23,
+             "Non-compatible flatbuffers version included");
+
 namespace SLAMNAV {
 
 struct Point2D;
 
 struct Lidar_2D;
 struct Lidar_2DBuilder;
-struct Lidar_2DT;
 
 struct Point3D;
 
 struct Lidar_3D;
 struct Lidar_3DBuilder;
-struct Lidar_3DT;
 
 struct Mapping_Cloud;
 struct Mapping_CloudBuilder;
-struct Mapping_CloudT;
 
 struct Global_Path;
 struct Global_PathBuilder;
-struct Global_PathT;
 
 struct Local_Path;
 struct Local_PathBuilder;
-struct Local_PathT;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point2D FLATBUFFERS_FINAL_CLASS {
  private:
@@ -43,20 +45,14 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point2D FLATBUFFERS_FINAL_CLASS {
         y_(0) {
   }
   Point2D(float _x, float _y)
-      : x_(flatbuffers::EndianScalar(_x)),
-        y_(flatbuffers::EndianScalar(_y)) {
+      : x_(::flatbuffers::EndianScalar(_x)),
+        y_(::flatbuffers::EndianScalar(_y)) {
   }
   float x() const {
-    return flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    flatbuffers::WriteScalar(&x_, _x);
+    return ::flatbuffers::EndianScalar(x_);
   }
   float y() const {
-    return flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    flatbuffers::WriteScalar(&y_, _y);
+    return ::flatbuffers::EndianScalar(y_);
   }
 };
 FLATBUFFERS_STRUCT_END(Point2D, 8);
@@ -74,311 +70,230 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Point3D FLATBUFFERS_FINAL_CLASS {
         z_(0) {
   }
   Point3D(float _x, float _y, float _z)
-      : x_(flatbuffers::EndianScalar(_x)),
-        y_(flatbuffers::EndianScalar(_y)),
-        z_(flatbuffers::EndianScalar(_z)) {
+      : x_(::flatbuffers::EndianScalar(_x)),
+        y_(::flatbuffers::EndianScalar(_y)),
+        z_(::flatbuffers::EndianScalar(_z)) {
   }
   float x() const {
-    return flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    flatbuffers::WriteScalar(&x_, _x);
+    return ::flatbuffers::EndianScalar(x_);
   }
   float y() const {
-    return flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    flatbuffers::WriteScalar(&y_, _y);
+    return ::flatbuffers::EndianScalar(y_);
   }
   float z() const {
-    return flatbuffers::EndianScalar(z_);
-  }
-  void mutate_z(float _z) {
-    flatbuffers::WriteScalar(&z_, _z);
+    return ::flatbuffers::EndianScalar(z_);
   }
 };
 FLATBUFFERS_STRUCT_END(Point3D, 12);
 
-struct Lidar_2DT : public flatbuffers::NativeTable {
-  typedef Lidar_2D TableType;
-  float timestamp;
-  std::vector<SLAMNAV::Point2D> points;
-  Lidar_2DT()
-      : timestamp(0.0f) {
-  }
-};
-
-struct Lidar_2D FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Lidar_2DT NativeTableType;
+struct Lidar_2D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Lidar_2DBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TIMESTAMP = 4,
+    VT_ID = 4,
     VT_POINTS = 6
   };
-  float timestamp() const {
-    return GetField<float>(VT_TIMESTAMP, 0.0f);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool mutate_timestamp(float _timestamp) {
-    return SetField<float>(VT_TIMESTAMP, _timestamp, 0.0f);
+  const ::flatbuffers::Vector<const SLAMNAV::Point2D *> *points() const {
+    return GetPointer<const ::flatbuffers::Vector<const SLAMNAV::Point2D *> *>(VT_POINTS);
   }
-  const flatbuffers::Vector<const SLAMNAV::Point2D *> *points() const {
-    return GetPointer<const flatbuffers::Vector<const SLAMNAV::Point2D *> *>(VT_POINTS);
-  }
-  flatbuffers::Vector<const SLAMNAV::Point2D *> *mutable_points() {
-    return GetPointer<flatbuffers::Vector<const SLAMNAV::Point2D *> *>(VT_POINTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_TIMESTAMP) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_POINTS) &&
            verifier.VerifyVector(points()) &&
            verifier.EndTable();
   }
-  Lidar_2DT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Lidar_2DT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Lidar_2D> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_2DT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Lidar_2DBuilder {
   typedef Lidar_2D Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_timestamp(float timestamp) {
-    fbb_.AddElement<float>(Lidar_2D::VT_TIMESTAMP, timestamp, 0.0f);
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Lidar_2D::VT_ID, id);
   }
-  void add_points(flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point2D *>> points) {
+  void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point2D *>> points) {
     fbb_.AddOffset(Lidar_2D::VT_POINTS, points);
   }
-  explicit Lidar_2DBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Lidar_2DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Lidar_2D> Finish() {
+  ::flatbuffers::Offset<Lidar_2D> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Lidar_2D>(end);
+    auto o = ::flatbuffers::Offset<Lidar_2D>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Lidar_2D> CreateLidar_2D(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
-    flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point2D *>> points = 0) {
+inline ::flatbuffers::Offset<Lidar_2D> CreateLidar_2D(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point2D *>> points = 0) {
   Lidar_2DBuilder builder_(_fbb);
   builder_.add_points(points);
-  builder_.add_timestamp(timestamp);
+  builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Lidar_2D> CreateLidar_2DDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
+inline ::flatbuffers::Offset<Lidar_2D> CreateLidar_2DDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
     const std::vector<SLAMNAV::Point2D> *points = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point2D>(*points) : 0;
   return SLAMNAV::CreateLidar_2D(
       _fbb,
-      timestamp,
+      id__,
       points__);
 }
 
-flatbuffers::Offset<Lidar_2D> CreateLidar_2D(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_2DT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Lidar_3DT : public flatbuffers::NativeTable {
-  typedef Lidar_3D TableType;
-  float timestamp;
-  std::vector<SLAMNAV::Point3D> points;
-  Lidar_3DT()
-      : timestamp(0.0f) {
-  }
-};
-
-struct Lidar_3D FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Lidar_3DT NativeTableType;
+struct Lidar_3D FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Lidar_3DBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TIMESTAMP = 4,
+    VT_ID = 4,
     VT_POINTS = 6
   };
-  float timestamp() const {
-    return GetField<float>(VT_TIMESTAMP, 0.0f);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool mutate_timestamp(float _timestamp) {
-    return SetField<float>(VT_TIMESTAMP, _timestamp, 0.0f);
+  const ::flatbuffers::Vector<const SLAMNAV::Point3D *> *points() const {
+    return GetPointer<const ::flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
   }
-  const flatbuffers::Vector<const SLAMNAV::Point3D *> *points() const {
-    return GetPointer<const flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
-  }
-  flatbuffers::Vector<const SLAMNAV::Point3D *> *mutable_points() {
-    return GetPointer<flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_TIMESTAMP) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_POINTS) &&
            verifier.VerifyVector(points()) &&
            verifier.EndTable();
   }
-  Lidar_3DT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Lidar_3DT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Lidar_3D> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_3DT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Lidar_3DBuilder {
   typedef Lidar_3D Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_timestamp(float timestamp) {
-    fbb_.AddElement<float>(Lidar_3D::VT_TIMESTAMP, timestamp, 0.0f);
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Lidar_3D::VT_ID, id);
   }
-  void add_points(flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
+  void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
     fbb_.AddOffset(Lidar_3D::VT_POINTS, points);
   }
-  explicit Lidar_3DBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Lidar_3DBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Lidar_3D> Finish() {
+  ::flatbuffers::Offset<Lidar_3D> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Lidar_3D>(end);
+    auto o = ::flatbuffers::Offset<Lidar_3D>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Lidar_3D> CreateLidar_3D(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
-    flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
+inline ::flatbuffers::Offset<Lidar_3D> CreateLidar_3D(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
   Lidar_3DBuilder builder_(_fbb);
   builder_.add_points(points);
-  builder_.add_timestamp(timestamp);
+  builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Lidar_3D> CreateLidar_3DDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
+inline ::flatbuffers::Offset<Lidar_3D> CreateLidar_3DDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
     const std::vector<SLAMNAV::Point3D> *points = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point3D>(*points) : 0;
   return SLAMNAV::CreateLidar_3D(
       _fbb,
-      timestamp,
+      id__,
       points__);
 }
 
-flatbuffers::Offset<Lidar_3D> CreateLidar_3D(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_3DT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Mapping_CloudT : public flatbuffers::NativeTable {
-  typedef Mapping_Cloud TableType;
-  float timestamp;
-  std::vector<SLAMNAV::Point3D> points;
-  Mapping_CloudT()
-      : timestamp(0.0f) {
-  }
-};
-
-struct Mapping_Cloud FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Mapping_CloudT NativeTableType;
+struct Mapping_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Mapping_CloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TIMESTAMP = 4,
+    VT_ID = 4,
     VT_POINTS = 6
   };
-  float timestamp() const {
-    return GetField<float>(VT_TIMESTAMP, 0.0f);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool mutate_timestamp(float _timestamp) {
-    return SetField<float>(VT_TIMESTAMP, _timestamp, 0.0f);
+  const ::flatbuffers::Vector<const SLAMNAV::Point3D *> *points() const {
+    return GetPointer<const ::flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
   }
-  const flatbuffers::Vector<const SLAMNAV::Point3D *> *points() const {
-    return GetPointer<const flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
-  }
-  flatbuffers::Vector<const SLAMNAV::Point3D *> *mutable_points() {
-    return GetPointer<flatbuffers::Vector<const SLAMNAV::Point3D *> *>(VT_POINTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_TIMESTAMP) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_POINTS) &&
            verifier.VerifyVector(points()) &&
            verifier.EndTable();
   }
-  Mapping_CloudT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Mapping_CloudT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Mapping_Cloud> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Mapping_CloudT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Mapping_CloudBuilder {
   typedef Mapping_Cloud Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_timestamp(float timestamp) {
-    fbb_.AddElement<float>(Mapping_Cloud::VT_TIMESTAMP, timestamp, 0.0f);
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Mapping_Cloud::VT_ID, id);
   }
-  void add_points(flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
+  void add_points(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points) {
     fbb_.AddOffset(Mapping_Cloud::VT_POINTS, points);
   }
-  explicit Mapping_CloudBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Mapping_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Mapping_Cloud> Finish() {
+  ::flatbuffers::Offset<Mapping_Cloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Mapping_Cloud>(end);
+    auto o = ::flatbuffers::Offset<Mapping_Cloud>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Mapping_Cloud> CreateMapping_Cloud(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
-    flatbuffers::Offset<flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
+inline ::flatbuffers::Offset<Mapping_Cloud> CreateMapping_Cloud(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::Point3D *>> points = 0) {
   Mapping_CloudBuilder builder_(_fbb);
   builder_.add_points(points);
-  builder_.add_timestamp(timestamp);
+  builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Mapping_Cloud> CreateMapping_CloudDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    float timestamp = 0.0f,
+inline ::flatbuffers::Offset<Mapping_Cloud> CreateMapping_CloudDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
     const std::vector<SLAMNAV::Point3D> *points = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
   auto points__ = points ? _fbb.CreateVectorOfStructs<SLAMNAV::Point3D>(*points) : 0;
   return SLAMNAV::CreateMapping_Cloud(
       _fbb,
-      timestamp,
+      id__,
       points__);
 }
 
-flatbuffers::Offset<Mapping_Cloud> CreateMapping_Cloud(flatbuffers::FlatBufferBuilder &_fbb, const Mapping_CloudT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Global_PathT : public flatbuffers::NativeTable {
-  typedef Global_Path TableType;
-  std::string id;
-  std::vector<std::string> path;
-  Global_PathT() {
-  }
-};
-
-struct Global_Path FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Global_PathT NativeTableType;
+struct Global_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Global_PathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *path() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_PATH);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *path() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PATH);
-  }
-  flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *mutable_path() {
-    return GetPointer<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PATH);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -387,84 +302,64 @@ struct Global_Path FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVectorOfStrings(path()) &&
            verifier.EndTable();
   }
-  Global_PathT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Global_PathT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Global_Path> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Global_PathT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Global_PathBuilder {
   typedef Global_Path Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Global_Path::VT_ID, id);
   }
-  void add_path(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> path) {
+  void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
     fbb_.AddOffset(Global_Path::VT_PATH, path);
   }
-  explicit Global_PathBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Global_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Global_Path> Finish() {
+  ::flatbuffers::Offset<Global_Path> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Global_Path>(end);
+    auto o = ::flatbuffers::Offset<Global_Path>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Global_Path> CreateGlobal_Path(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> path = 0) {
+inline ::flatbuffers::Offset<Global_Path> CreateGlobal_Path(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0) {
   Global_PathBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Global_Path> CreateGlobal_PathDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Global_Path> CreateGlobal_PathDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *path = nullptr) {
+    const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto path__ = path ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*path) : 0;
+  auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
   return SLAMNAV::CreateGlobal_Path(
       _fbb,
       id__,
       path__);
 }
 
-flatbuffers::Offset<Global_Path> CreateGlobal_Path(flatbuffers::FlatBufferBuilder &_fbb, const Global_PathT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Local_PathT : public flatbuffers::NativeTable {
-  typedef Local_Path TableType;
-  std::string id;
-  std::vector<std::string> path;
-  Local_PathT() {
-  }
-};
-
-struct Local_Path FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Local_PathT NativeTableType;
+struct Local_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Local_PathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *path() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_PATH);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *path() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PATH);
-  }
-  flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *mutable_path() {
-    return GetPointer<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PATH);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -473,199 +368,49 @@ struct Local_Path FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVectorOfStrings(path()) &&
            verifier.EndTable();
   }
-  Local_PathT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Local_PathT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Local_Path> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Local_PathT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Local_PathBuilder {
   typedef Local_Path Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Local_Path::VT_ID, id);
   }
-  void add_path(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> path) {
+  void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
     fbb_.AddOffset(Local_Path::VT_PATH, path);
   }
-  explicit Local_PathBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Local_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Local_Path> Finish() {
+  ::flatbuffers::Offset<Local_Path> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Local_Path>(end);
+    auto o = ::flatbuffers::Offset<Local_Path>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Local_Path> CreateLocal_Path(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> path = 0) {
+inline ::flatbuffers::Offset<Local_Path> CreateLocal_Path(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0) {
   Local_PathBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Local_Path> CreateLocal_PathDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Local_Path> CreateLocal_PathDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *path = nullptr) {
+    const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto path__ = path ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*path) : 0;
+  auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
   return SLAMNAV::CreateLocal_Path(
       _fbb,
       id__,
       path__);
-}
-
-flatbuffers::Offset<Local_Path> CreateLocal_Path(flatbuffers::FlatBufferBuilder &_fbb, const Local_PathT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-inline Lidar_2DT *Lidar_2D::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Lidar_2DT> _o = std::unique_ptr<SLAMNAV::Lidar_2DT>(new Lidar_2DT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Lidar_2D::UnPackTo(Lidar_2DT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = timestamp(); _o->timestamp = _e; }
-  { auto _e = points(); if (_e) { _o->points.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->points[_i] = *_e->Get(_i); } } }
-}
-
-inline flatbuffers::Offset<Lidar_2D> Lidar_2D::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_2DT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateLidar_2D(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Lidar_2D> CreateLidar_2D(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_2DT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Lidar_2DT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _timestamp = _o->timestamp;
-  auto _points = _o->points.size() ? _fbb.CreateVectorOfStructs(_o->points) : 0;
-  return SLAMNAV::CreateLidar_2D(
-      _fbb,
-      _timestamp,
-      _points);
-}
-
-inline Lidar_3DT *Lidar_3D::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Lidar_3DT> _o = std::unique_ptr<SLAMNAV::Lidar_3DT>(new Lidar_3DT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Lidar_3D::UnPackTo(Lidar_3DT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = timestamp(); _o->timestamp = _e; }
-  { auto _e = points(); if (_e) { _o->points.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->points[_i] = *_e->Get(_i); } } }
-}
-
-inline flatbuffers::Offset<Lidar_3D> Lidar_3D::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_3DT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateLidar_3D(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Lidar_3D> CreateLidar_3D(flatbuffers::FlatBufferBuilder &_fbb, const Lidar_3DT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Lidar_3DT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _timestamp = _o->timestamp;
-  auto _points = _o->points.size() ? _fbb.CreateVectorOfStructs(_o->points) : 0;
-  return SLAMNAV::CreateLidar_3D(
-      _fbb,
-      _timestamp,
-      _points);
-}
-
-inline Mapping_CloudT *Mapping_Cloud::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Mapping_CloudT> _o = std::unique_ptr<SLAMNAV::Mapping_CloudT>(new Mapping_CloudT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Mapping_Cloud::UnPackTo(Mapping_CloudT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = timestamp(); _o->timestamp = _e; }
-  { auto _e = points(); if (_e) { _o->points.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->points[_i] = *_e->Get(_i); } } }
-}
-
-inline flatbuffers::Offset<Mapping_Cloud> Mapping_Cloud::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Mapping_CloudT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMapping_Cloud(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Mapping_Cloud> CreateMapping_Cloud(flatbuffers::FlatBufferBuilder &_fbb, const Mapping_CloudT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Mapping_CloudT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _timestamp = _o->timestamp;
-  auto _points = _o->points.size() ? _fbb.CreateVectorOfStructs(_o->points) : 0;
-  return SLAMNAV::CreateMapping_Cloud(
-      _fbb,
-      _timestamp,
-      _points);
-}
-
-inline Global_PathT *Global_Path::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Global_PathT> _o = std::unique_ptr<SLAMNAV::Global_PathT>(new Global_PathT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Global_Path::UnPackTo(Global_PathT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = path(); if (_e) { _o->path.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->path[_i] = _e->Get(_i)->str(); } } }
-}
-
-inline flatbuffers::Offset<Global_Path> Global_Path::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Global_PathT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateGlobal_Path(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Global_Path> CreateGlobal_Path(flatbuffers::FlatBufferBuilder &_fbb, const Global_PathT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Global_PathT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _path = _o->path.size() ? _fbb.CreateVectorOfStrings(_o->path) : 0;
-  return SLAMNAV::CreateGlobal_Path(
-      _fbb,
-      _id,
-      _path);
-}
-
-inline Local_PathT *Local_Path::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Local_PathT> _o = std::unique_ptr<SLAMNAV::Local_PathT>(new Local_PathT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Local_Path::UnPackTo(Local_PathT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = path(); if (_e) { _o->path.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->path[_i] = _e->Get(_i)->str(); } } }
-}
-
-inline flatbuffers::Offset<Local_Path> Local_Path::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Local_PathT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateLocal_Path(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Local_Path> CreateLocal_Path(flatbuffers::FlatBufferBuilder &_fbb, const Local_PathT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Local_PathT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _path = _o->path.size() ? _fbb.CreateVectorOfStrings(_o->path) : 0;
-  return SLAMNAV::CreateLocal_Path(
-      _fbb,
-      _id,
-      _path);
 }
 
 }  // namespace SLAMNAV

@@ -15,30 +15,29 @@
 
 #include "comm_zenoh.h"
 #include "global_defines.h"
-#include "slamnav_move_generated.h"
+#include "flatbuffer/generated/slamnav_move_generated.h"
 
-#include <QDebug>
 #include <chrono>
-#include <functional>
 
 namespace
 {
-    const char* MODULE_NAME = "COMM_ZENOH_MOVE";
+    constexpr const char* MODULE_NAME = "MOVE";
+    constexpr double D2R = M_PI / 180.0;
 
     // =========================================================================
     // Helper: DATA_MOVE -> Move_Result FlatBuffer
     // =========================================================================
-    std::vector<uint8_t> build_move_result(const QString& id,
-                                           const QString& result,
-                                           const QString& message)
+    std::vector<uint8_t> build_move_result(const std::string& id,
+                                           const std::string& result,
+                                           const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
 
         auto fb_result = SLAMNAV::CreateMove_Result(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(fb_result);
 
@@ -51,24 +50,24 @@ namespace
     // =========================================================================
 
     // Response_Move_Goal
-    std::vector<uint8_t> build_response_goal(const QString& id,
-                                             const QString& goal_id,
-                                             const QString& goal_name,
-                                             const QString& method,
+    std::vector<uint8_t> build_response_goal(const std::string& id,
+                                             const std::string& goal_id,
+                                             const std::string& goal_name,
+                                             const std::string& method,
                                              int preset,
-                                             const QString& result,
-                                             const QString& message)
+                                             const std::string& result,
+                                             const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(512);
         auto resp = SLAMNAV::CreateResponse_Move_Goal(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(goal_id.toStdString()),
-            fbb.CreateString(goal_name.toStdString()),
-            fbb.CreateString(method.toStdString()),
+            fbb.CreateString(id),
+            fbb.CreateString(goal_id),
+            fbb.CreateString(goal_name),
+            fbb.CreateString(method),
             preset,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -76,22 +75,22 @@ namespace
     }
 
     // Response_Move_Target
-    std::vector<uint8_t> build_response_target(const QString& id,
-                                               const QString& method,
+    std::vector<uint8_t> build_response_target(const std::string& id,
+                                               const std::string& method,
                                                const SLAMNAV::MovePose* goal_pose,
                                                int preset,
-                                               const QString& result,
-                                               const QString& message)
+                                               const std::string& result,
+                                               const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(512);
         auto resp = SLAMNAV::CreateResponse_Move_Target(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(method.toStdString()),
+            fbb.CreateString(id),
+            fbb.CreateString(method),
             goal_pose,
             preset,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -99,16 +98,16 @@ namespace
     }
 
     // Response_Move_Stop
-    std::vector<uint8_t> build_response_stop(const QString& id,
-                                             const QString& result,
-                                             const QString& message)
+    std::vector<uint8_t> build_response_stop(const std::string& id,
+                                             const std::string& result,
+                                             const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_Stop(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -116,16 +115,16 @@ namespace
     }
 
     // Response_Move_Pause
-    std::vector<uint8_t> build_response_pause(const QString& id,
-                                              const QString& result,
-                                              const QString& message)
+    std::vector<uint8_t> build_response_pause(const std::string& id,
+                                              const std::string& result,
+                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_Pause(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -133,16 +132,16 @@ namespace
     }
 
     // Response_Move_Resume
-    std::vector<uint8_t> build_response_resume(const QString& id,
-                                               const QString& result,
-                                               const QString& message)
+    std::vector<uint8_t> build_response_resume(const std::string& id,
+                                               const std::string& result,
+                                               const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_Resume(
             fbb,
-            fbb.CreateString(id.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(id),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -150,20 +149,20 @@ namespace
     }
 
     // Response_Move_XLinear
-    std::vector<uint8_t> build_response_xlinear(const QString& id,
+    std::vector<uint8_t> build_response_xlinear(const std::string& id,
                                                 float target,
                                                 float speed,
-                                                const QString& result,
-                                                const QString& message)
+                                                const std::string& result,
+                                                const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_XLinear(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             target,
             speed,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -171,22 +170,22 @@ namespace
     }
 
     // Response_Move_Circular
-    std::vector<uint8_t> build_response_circular(const QString& id,
+    std::vector<uint8_t> build_response_circular(const std::string& id,
                                                  float target,
                                                  float speed,
-                                                 const QString& direction,
-                                                 const QString& result,
-                                                 const QString& message)
+                                                 const std::string& direction,
+                                                 const std::string& result,
+                                                 const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_Circular(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             target,
             speed,
-            fbb.CreateString(direction.toStdString()),
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(direction),
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -194,20 +193,20 @@ namespace
     }
 
     // Response_Move_Rotate
-    std::vector<uint8_t> build_response_rotate(const QString& id,
+    std::vector<uint8_t> build_response_rotate(const std::string& id,
                                                float target,
                                                float speed,
-                                               const QString& result,
-                                               const QString& message)
+                                               const std::string& result,
+                                               const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
         auto resp = SLAMNAV::CreateResponse_Move_Rotate(
             fbb,
-            fbb.CreateString(id.toStdString()),
+            fbb.CreateString(id),
             target,
             speed,
-            fbb.CreateString(result.toStdString()),
-            fbb.CreateString(message.toStdString())
+            fbb.CreateString(result),
+            fbb.CreateString(message)
         );
         fbb.Finish(resp);
         const uint8_t* buf = fbb.GetBufferPointer();
@@ -217,11 +216,12 @@ namespace
 } // anonymous namespace
 
 // =============================================================================
-// COMM_ZENOH::move_loop()
+// Move Loop Implementation
 // =============================================================================
+
 void COMM_ZENOH::move_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] move_loop started";
+    log_info("move_loop started");
 
     // 1. robotType이 설정될 때까지 대기
     while (is_move_running_.load() && get_robot_type().empty())
@@ -231,34 +231,36 @@ void COMM_ZENOH::move_loop()
 
     if (!is_move_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] move_loop aborted (not running)";
+        log_info("move_loop ended (stopped before init)");
         return;
     }
 
     // 2. Session 유효성 확인
     if (!is_session_valid())
     {
-        qDebug() << "[" << MODULE_NAME << "] move_loop aborted (session invalid)";
+        log_error("move_loop aborted: session invalid");
         return;
     }
+
+    log_info("move_loop initialized with robotType: {}", get_robot_type());
 
     try
     {
         zenoh::Session& session = get_session();
 
         // 3. Topic 생성
-        std::string topic_goal     = make_topic(ZENOH_TOPIC::MOVE_GOAL);
-        std::string topic_target   = make_topic(ZENOH_TOPIC::MOVE_TARGET);
-        std::string topic_stop     = make_topic(ZENOH_TOPIC::MOVE_STOP);
-        std::string topic_pause    = make_topic(ZENOH_TOPIC::MOVE_PAUSE);
-        std::string topic_resume   = make_topic(ZENOH_TOPIC::MOVE_RESUME);
-        std::string topic_xlinear  = make_topic(ZENOH_TOPIC::MOVE_XLINEAR);
-        std::string topic_circular = make_topic(ZENOH_TOPIC::MOVE_CIRCULAR);
-        std::string topic_rotate   = make_topic(ZENOH_TOPIC::MOVE_ROTATE);
-        std::string topic_jog      = make_topic(ZENOH_TOPIC::MOVE_JOG);
-        std::string topic_result   = make_topic(ZENOH_TOPIC::MOVE_RESULT);
+        std::string topic_goal     = make_topic("move/goal");
+        std::string topic_target   = make_topic("move/target");
+        std::string topic_stop     = make_topic("move/stop");
+        std::string topic_pause    = make_topic("move/pause");
+        std::string topic_resume   = make_topic("move/resume");
+        std::string topic_xlinear  = make_topic("move/xLinear");
+        std::string topic_circular = make_topic("move/circular");
+        std::string topic_rotate   = make_topic("move/rotate");
+        std::string topic_jog      = make_topic("move/jog");
+        std::string topic_result   = make_topic("move/result");
 
-        qDebug() << "[" << MODULE_NAME << "] Registering topics with prefix:" << QString::fromStdString(get_robot_type());
+        log_info("move_loop registering topics with prefix: {}", get_robot_type());
 
         // 4. Result Publisher
         auto pub_result = session.declare_publisher(zenoh::KeyExpr(topic_result));
@@ -268,7 +270,8 @@ void COMM_ZENOH::move_loop()
             zenoh::KeyExpr(topic_jog),
             [this](const zenoh::Sample& sample)
             {
-                if (!mobile) return;
+                MOBILE* mobile_ptr = get_mobile();
+                if (!mobile_ptr) return;
 
                 const auto& payload = sample.get_payload();
                 auto bytes = payload.as_vector();
@@ -280,12 +283,12 @@ void COMM_ZENOH::move_loop()
                 double vy = static_cast<double>(jog->vy());
                 double wz = static_cast<double>(jog->wz()) * D2R;
 
-                Q_EMIT signal_mobile_jog_update(Eigen::Vector3d(vx, vy, wz));
+                invoke_jog_callback(Eigen::Vector3d(vx, vy, wz));
             },
             zenoh::closures::none
         );
 
-        qDebug() << "[" << MODULE_NAME << "] Jog subscriber registered:" << QString::fromStdString(topic_jog);
+        log_info("Jog subscriber registered: {}", topic_jog);
 
         // 6. RPC Queryables
 
@@ -311,28 +314,34 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
-                QString goal_id = QString::fromStdString(req->goal_id() ? req->goal_id()->str() : "");
-                QString goal_name = QString::fromStdString(req->goal_name() ? req->goal_name()->str() : "");
-                QString method = QString::fromStdString(req->method() ? req->method()->str() : "pp");
+                std::string id = req->id() ? req->id()->str() : "";
+                std::string goal_id = req->goal_id() ? req->goal_id()->str() : "";
+                std::string goal_name = req->goal_name() ? req->goal_name()->str() : "";
+                std::string method = req->method() ? req->method()->str() : "pp";
                 int preset = req->preset();
 
+                // Get modules
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                MOBILE* mobile_ptr = get_mobile();
+
                 // Validate
-                if (!unimap || !loc || !ctrl || !mobile)
+                if (!unimap_ptr || !loc_ptr || !ctrl_ptr || !mobile_ptr)
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                if (!loc->get_is_loc())
+                if (!loc_ptr->get_is_loc())
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "not localized");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -341,16 +350,19 @@ void COMM_ZENOH::move_loop()
 
                 // Resolve goal
                 NODE* node = nullptr;
-                if (!goal_id.isEmpty())
+                QString goal_id_q = QString::fromStdString(goal_id);
+                QString goal_name_q = QString::fromStdString(goal_name);
+
+                if (!goal_id.empty())
                 {
-                    node = unimap->get_node_by_id(goal_id);
+                    node = unimap_ptr->get_node_by_id(goal_id_q);
                 }
-                else if (!goal_name.isEmpty())
+                else if (!goal_name.empty())
                 {
-                    node = unimap->get_node_by_name(goal_name);
+                    node = unimap_ptr->get_node_by_name(goal_name_q);
                     if (node)
                     {
-                        goal_id = node->id;
+                        goal_id = node->id.toStdString();
                     }
                 }
 
@@ -361,18 +373,18 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                if (goal_name.isEmpty())
+                if (goal_name.empty())
                 {
-                    goal_name = node->name;
+                    goal_name = node->name.toStdString();
                 }
 
-                // Build DATA_MOVE and emit signal
+                // Build DATA_MOVE and invoke callback
                 DATA_MOVE msg;
-                msg.id = id;
+                msg.id = QString::fromStdString(id);
                 msg.command = "goal";
-                msg.goal_node_id = goal_id;
-                msg.goal_node_name = goal_name;
-                msg.method = method;
+                msg.goal_node_id = QString::fromStdString(goal_id);
+                msg.goal_node_name = QString::fromStdString(goal_name);
+                msg.method = QString::fromStdString(method);
                 msg.preset = preset;
 
                 Eigen::Vector3d xi = TF_to_se2(node->tf);
@@ -381,17 +393,17 @@ void COMM_ZENOH::move_loop()
                 msg.tgt_pose_vec[2] = node->tf(2, 3);
                 msg.tgt_pose_vec[3] = xi[2];
 
-                Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+                Eigen::Matrix4d cur_tf = loc_ptr->get_cur_tf();
                 msg.cur_pos = cur_tf.block(0, 3, 3, 1);
 
-                mobile->move(0, 0, 0);
+                mobile_ptr->move(0, 0, 0);
 
                 // Response
                 auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                // Emit move signal
-                Q_EMIT ctrl->signal_move(msg);
+                // Invoke move callback
+                ctrl_ptr->invoke_move(msg);
 
                 // Publish result
                 auto result_buf = build_move_result(id, "success", "goal accepted");
@@ -399,7 +411,7 @@ void COMM_ZENOH::move_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_goal);
+        log_info("Queryable registered: {}", topic_goal);
 
         // ---- move/target ----
         auto q_target = session.declare_queryable(
@@ -425,8 +437,8 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
-                QString method = QString::fromStdString(req->method() ? req->method()->str() : "pp");
+                std::string id = req->id() ? req->id()->str() : "";
+                std::string method = req->method() ? req->method()->str() : "pp";
                 int preset = req->preset();
 
                 auto goal_pose = req->goal_pose();
@@ -437,22 +449,30 @@ void COMM_ZENOH::move_loop()
 
                 SLAMNAV::MovePose resp_pose(x, y, z, rz);
 
+                // Get modules
+                UNIMAP* unimap_ptr = get_unimap();
+                LOCALIZATION* loc_ptr = get_localization();
+                OBSMAP* obsmap_ptr = get_obsmap();
+                CONFIG* config_ptr = get_config();
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                MOBILE* mobile_ptr = get_mobile();
+
                 // Validate
-                if (!unimap || !loc || !obsmap || !config || !ctrl || !mobile)
+                if (!unimap_ptr || !loc_ptr || !obsmap_ptr || !config_ptr || !ctrl_ptr || !mobile_ptr)
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "module not ready");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                if (unimap->get_is_loaded() != MAP_LOADED)
+                if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "map not loaded");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
                     return;
                 }
 
-                if (!loc->get_is_loc())
+                if (!loc_ptr->get_is_loc())
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "not localized");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -460,8 +480,8 @@ void COMM_ZENOH::move_loop()
                 }
 
                 // Check bounds
-                if (x < unimap->get_map_min_x() || x > unimap->get_map_max_x() ||
-                    y < unimap->get_map_min_y() || y > unimap->get_map_max_y())
+                if (x < unimap_ptr->get_map_min_x() || x > unimap_ptr->get_map_max_x() ||
+                    y < unimap_ptr->get_map_min_y() || y > unimap_ptr->get_map_max_y())
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "out of bounds");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -471,7 +491,7 @@ void COMM_ZENOH::move_loop()
                 // Check collision
                 Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(x, y, static_cast<double>(rz) * D2R));
                 goal_tf(2, 3) = z;
-                if (obsmap->is_tf_collision(goal_tf))
+                if (obsmap_ptr->is_tf_collision(goal_tf))
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "collision");
                     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
@@ -480,30 +500,30 @@ void COMM_ZENOH::move_loop()
 
                 // Build DATA_MOVE
                 DATA_MOVE msg;
-                msg.id = id;
+                msg.id = QString::fromStdString(id);
                 msg.command = "target";
-                msg.method = method;
+                msg.method = QString::fromStdString(method);
                 msg.preset = preset;
                 msg.tgt_pose_vec[0] = x;
                 msg.tgt_pose_vec[1] = y;
                 msg.tgt_pose_vec[2] = z;
                 msg.tgt_pose_vec[3] = rz;
 
-                Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+                Eigen::Matrix4d cur_tf = loc_ptr->get_cur_tf();
                 msg.cur_pos = cur_tf.block(0, 3, 3, 1);
 
                 // Response
                 auto resp = build_response_target(id, method, &resp_pose, preset, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                Q_EMIT ctrl->signal_move(msg);
+                ctrl_ptr->invoke_move(msg);
 
                 auto result_buf = build_move_result(id, "success", "target accepted");
                 pub_result.put(zenoh::Bytes::serialize(result_buf));
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_target);
+        log_info("Queryable registered: {}", topic_target);
 
         // ---- move/stop ----
         auto q_stop = session.declare_queryable(
@@ -511,7 +531,7 @@ void COMM_ZENOH::move_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -519,21 +539,21 @@ void COMM_ZENOH::move_loop()
                     auto req = SLAMNAV::GetRequest_Move_Stop(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
                 auto resp = build_response_stop(id, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                Q_EMIT signal_auto_move_stop();
+                invoke_move_stop_callback();
 
                 auto result_buf = build_move_result(id, "success", "stop executed");
                 pub_result.put(zenoh::Bytes::serialize(result_buf));
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_stop);
+        log_info("Queryable registered: {}", topic_stop);
 
         // ---- move/pause ----
         auto q_pause = session.declare_queryable(
@@ -541,7 +561,7 @@ void COMM_ZENOH::move_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -549,13 +569,14 @@ void COMM_ZENOH::move_loop()
                     auto req = SLAMNAV::GetRequest_Move_Pause(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
-                if (ctrl)
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (ctrl_ptr)
                 {
-                    ctrl->set_is_pause(true);
+                    ctrl_ptr->set_is_pause(true);
                 }
 
                 auto resp = build_response_pause(id, "accept", "");
@@ -566,7 +587,7 @@ void COMM_ZENOH::move_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_pause);
+        log_info("Queryable registered: {}", topic_pause);
 
         // ---- move/resume ----
         auto q_resume = session.declare_queryable(
@@ -574,7 +595,7 @@ void COMM_ZENOH::move_loop()
             [this, &pub_result](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
-                QString id = "";
+                std::string id;
 
                 if (payload.has_value())
                 {
@@ -582,13 +603,14 @@ void COMM_ZENOH::move_loop()
                     auto req = SLAMNAV::GetRequest_Move_Resume(bytes.data());
                     if (req && req->id())
                     {
-                        id = QString::fromStdString(req->id()->str());
+                        id = req->id()->str();
                     }
                 }
 
-                if (ctrl)
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (ctrl_ptr)
                 {
-                    ctrl->set_is_pause(false);
+                    ctrl_ptr->set_is_pause(false);
                 }
 
                 auto resp = build_response_resume(id, "accept", "");
@@ -599,7 +621,7 @@ void COMM_ZENOH::move_loop()
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_resume);
+        log_info("Queryable registered: {}", topic_resume);
 
         // ---- move/xLinear ----
         auto q_xlinear = session.declare_queryable(
@@ -623,7 +645,7 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
                 float target = req->target();
                 float speed = req->speed();
 
@@ -636,7 +658,7 @@ void COMM_ZENOH::move_loop()
                 }
 
                 DATA_MOVE msg;
-                msg.id = id;
+                msg.id = QString::fromStdString(id);
                 msg.command = "xLinear";
                 msg.target = target;
                 msg.speed = speed;
@@ -644,14 +666,14 @@ void COMM_ZENOH::move_loop()
                 auto resp = build_response_xlinear(id, target, speed, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                Q_EMIT signal_auto_profile_move(msg);
+                invoke_profile_move_callback(msg);
 
                 auto result_buf = build_move_result(id, "success", "xLinear started");
                 pub_result.put(zenoh::Bytes::serialize(result_buf));
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_xlinear);
+        log_info("Queryable registered: {}", topic_xlinear);
 
         // ---- move/circular ----
         auto q_circular = session.declare_queryable(
@@ -675,10 +697,10 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
                 float target = req->target();
                 float speed = req->speed();
-                QString direction = QString::fromStdString(req->direction() ? req->direction()->str() : "");
+                std::string direction = req->direction() ? req->direction()->str() : "";
 
                 // Validate (target in degrees)
                 if (fabs(target) > 360.0f || fabs(speed) > 60.0f)
@@ -689,23 +711,23 @@ void COMM_ZENOH::move_loop()
                 }
 
                 DATA_MOVE msg;
-                msg.id = id;
+                msg.id = QString::fromStdString(id);
                 msg.command = "circular";
                 msg.target = target * D2R;
                 msg.speed = speed * D2R;
-                msg.direction = direction;
+                msg.direction = QString::fromStdString(direction);
 
                 auto resp = build_response_circular(id, target, speed, direction, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                Q_EMIT signal_auto_profile_move(msg);
+                invoke_profile_move_callback(msg);
 
                 auto result_buf = build_move_result(id, "success", "circular started");
                 pub_result.put(zenoh::Bytes::serialize(result_buf));
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_circular);
+        log_info("Queryable registered: {}", topic_circular);
 
         // ---- move/rotate ----
         auto q_rotate = session.declare_queryable(
@@ -729,7 +751,7 @@ void COMM_ZENOH::move_loop()
                     return;
                 }
 
-                QString id = QString::fromStdString(req->id() ? req->id()->str() : "");
+                std::string id = req->id() ? req->id()->str() : "";
                 float target = req->target();
                 float speed = req->speed();
 
@@ -742,7 +764,7 @@ void COMM_ZENOH::move_loop()
                 }
 
                 DATA_MOVE msg;
-                msg.id = id;
+                msg.id = QString::fromStdString(id);
                 msg.command = "rotate";
                 msg.target = target * D2R;
                 msg.speed = speed * D2R;
@@ -750,14 +772,14 @@ void COMM_ZENOH::move_loop()
                 auto resp = build_response_rotate(id, target, speed, "accept", "");
                 query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
 
-                Q_EMIT signal_auto_profile_move(msg);
+                invoke_profile_move_callback(msg);
 
                 auto result_buf = build_move_result(id, "success", "rotate started");
                 pub_result.put(zenoh::Bytes::serialize(result_buf));
             },
             zenoh::closures::none
         );
-        qDebug() << "[" << MODULE_NAME << "] Queryable registered:" << QString::fromStdString(topic_rotate);
+        log_info("Queryable registered: {}", topic_rotate);
 
         // 7. Main loop - keep alive
         while (is_move_running_.load())
@@ -765,16 +787,16 @@ void COMM_ZENOH::move_loop()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        qDebug() << "[" << MODULE_NAME << "] move_loop ending, resources will be released";
+        log_info("move_loop ending, resources will be released");
     }
     catch (const zenoh::ZException& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Zenoh exception:" << e.what();
+        log_error("move_loop Zenoh exception: {}", e.what());
     }
     catch (const std::exception& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Exception:" << e.what();
+        log_error("move_loop exception: {}", e.what());
     }
 
-    qDebug() << "[" << MODULE_NAME << "] move_loop ended";
+    log_info("move_loop ended");
 }

@@ -6,61 +6,55 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 9 &&
+              FLATBUFFERS_VERSION_REVISION == 23,
+             "Non-compatible flatbuffers version included");
+
 namespace SLAMNAV {
 
 struct LocalizationPose;
 
 struct Request_Localization_Init;
 struct Request_Localization_InitBuilder;
-struct Request_Localization_InitT;
 
 struct Response_Localization_Init;
 struct Response_Localization_InitBuilder;
-struct Response_Localization_InitT;
 
 struct Request_Localization_RandomInit;
 struct Request_Localization_RandomInitBuilder;
-struct Request_Localization_RandomInitT;
 
 struct Response_Localization_RandomInit;
 struct Response_Localization_RandomInitBuilder;
-struct Response_Localization_RandomInitT;
 
 struct Request_Localization_AutoInit;
 struct Request_Localization_AutoInitBuilder;
-struct Request_Localization_AutoInitT;
 
 struct Response_Localization_AutoInit;
 struct Response_Localization_AutoInitBuilder;
-struct Response_Localization_AutoInitT;
 
 struct Request_Localization_SemiAutoInit;
 struct Request_Localization_SemiAutoInitBuilder;
-struct Request_Localization_SemiAutoInitT;
 
 struct Response_Localization_SemiAutoInit;
 struct Response_Localization_SemiAutoInitBuilder;
-struct Response_Localization_SemiAutoInitT;
 
 struct Request_Localization_Start;
 struct Request_Localization_StartBuilder;
-struct Request_Localization_StartT;
 
 struct Response_Localization_Start;
 struct Response_Localization_StartBuilder;
-struct Response_Localization_StartT;
 
 struct Request_Localization_Stop;
 struct Request_Localization_StopBuilder;
-struct Request_Localization_StopT;
 
 struct Response_Localization_Stop;
 struct Response_Localization_StopBuilder;
-struct Response_Localization_StopT;
 
-struct Localization_Result;
-struct Localization_ResultBuilder;
-struct Localization_ResultT;
+struct Result_Localization_Init;
+struct Result_Localization_InitBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) LocalizationPose FLATBUFFERS_FINAL_CLASS {
  private:
@@ -77,112 +71,82 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) LocalizationPose FLATBUFFERS_FINAL_CLASS 
         rz_(0) {
   }
   LocalizationPose(float _x, float _y, float _z, float _rz)
-      : x_(flatbuffers::EndianScalar(_x)),
-        y_(flatbuffers::EndianScalar(_y)),
-        z_(flatbuffers::EndianScalar(_z)),
-        rz_(flatbuffers::EndianScalar(_rz)) {
+      : x_(::flatbuffers::EndianScalar(_x)),
+        y_(::flatbuffers::EndianScalar(_y)),
+        z_(::flatbuffers::EndianScalar(_z)),
+        rz_(::flatbuffers::EndianScalar(_rz)) {
   }
   float x() const {
-    return flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    flatbuffers::WriteScalar(&x_, _x);
+    return ::flatbuffers::EndianScalar(x_);
   }
   float y() const {
-    return flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    flatbuffers::WriteScalar(&y_, _y);
+    return ::flatbuffers::EndianScalar(y_);
   }
   float z() const {
-    return flatbuffers::EndianScalar(z_);
-  }
-  void mutate_z(float _z) {
-    flatbuffers::WriteScalar(&z_, _z);
+    return ::flatbuffers::EndianScalar(z_);
   }
   float rz() const {
-    return flatbuffers::EndianScalar(rz_);
-  }
-  void mutate_rz(float _rz) {
-    flatbuffers::WriteScalar(&rz_, _rz);
+    return ::flatbuffers::EndianScalar(rz_);
   }
 };
 FLATBUFFERS_STRUCT_END(LocalizationPose, 16);
 
-struct Request_Localization_InitT : public flatbuffers::NativeTable {
-  typedef Request_Localization_Init TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  Request_Localization_InitT() {
-  }
-};
-
-struct Request_Localization_Init FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_InitT NativeTableType;
+struct Request_Localization_Init FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_InitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_POSE = 6
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            verifier.EndTable();
   }
-  Request_Localization_InitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_InitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_Init> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_InitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_InitBuilder {
   typedef Request_Localization_Init Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_Init::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Request_Localization_Init::VT_POSE, pose);
   }
-  explicit Request_Localization_InitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_InitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_Init> Finish() {
+  ::flatbuffers::Offset<Request_Localization_Init> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_Init>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_Init>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_Init(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0) {
+inline ::flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_Init(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr) {
   Request_Localization_InitBuilder builder_(_fbb);
   builder_.add_pose(pose);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_InitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_InitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0) {
+    const SLAMNAV::LocalizationPose *pose = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Localization_Init(
       _fbb,
@@ -190,20 +154,7 @@ inline flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization
       pose);
 }
 
-flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_Init(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_InitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_InitT : public flatbuffers::NativeTable {
-  typedef Response_Localization_Init TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_InitT() {
-  }
-};
-
-struct Response_Localization_Init FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_InitT NativeTableType;
+struct Response_Localization_Init FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_InitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -211,79 +162,64 @@ struct Response_Localization_Init FLATBUFFERS_FINAL_CLASS : private flatbuffers:
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_InitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_InitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_Init> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_InitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_InitBuilder {
   typedef Response_Localization_Init Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_Init::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_Init::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_Init::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_Init::VT_MESSAGE, message);
   }
-  explicit Response_Localization_InitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_InitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_Init> Finish() {
+  ::flatbuffers::Offset<Response_Localization_Init> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_Init>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_Init>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_Init(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_Init(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_InitBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -292,10 +228,10 @@ inline flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localizati
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_InitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_InitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -309,288 +245,192 @@ inline flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localizati
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_Init(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_InitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Localization_RandomInitT : public flatbuffers::NativeTable {
-  typedef Request_Localization_RandomInit TableType;
-  std::string id;
-  std::string random_seed;
-  Request_Localization_RandomInitT() {
-  }
-};
-
-struct Request_Localization_RandomInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_RandomInitT NativeTableType;
+struct Request_Localization_RandomInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_RandomInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_RANDOM_SEED = 6
+    VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  const flatbuffers::String *random_seed() const {
-    return GetPointer<const flatbuffers::String *>(VT_RANDOM_SEED);
-  }
-  flatbuffers::String *mutable_random_seed() {
-    return GetPointer<flatbuffers::String *>(VT_RANDOM_SEED);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_RANDOM_SEED) &&
-           verifier.VerifyString(random_seed()) &&
            verifier.EndTable();
   }
-  Request_Localization_RandomInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_RandomInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_RandomInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_RandomInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_RandomInitBuilder {
   typedef Request_Localization_RandomInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_RandomInit::VT_ID, id);
   }
-  void add_random_seed(flatbuffers::Offset<flatbuffers::String> random_seed) {
-    fbb_.AddOffset(Request_Localization_RandomInit::VT_RANDOM_SEED, random_seed);
-  }
-  explicit Request_Localization_RandomInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_RandomInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_RandomInit> Finish() {
+  ::flatbuffers::Offset<Request_Localization_RandomInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_RandomInit>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_RandomInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> random_seed = 0) {
+inline ::flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Localization_RandomInitBuilder builder_(_fbb);
-  builder_.add_random_seed(random_seed);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *random_seed = nullptr) {
+inline ::flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto random_seed__ = random_seed ? _fbb.CreateString(random_seed) : 0;
   return SLAMNAV::CreateRequest_Localization_RandomInit(
       _fbb,
-      id__,
-      random_seed__);
+      id__);
 }
 
-flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_RandomInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_RandomInitT : public flatbuffers::NativeTable {
-  typedef Response_Localization_RandomInit TableType;
-  std::string id;
-  std::string random_seed;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_RandomInitT() {
-  }
-};
-
-struct Response_Localization_RandomInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_RandomInitT NativeTableType;
+struct Response_Localization_RandomInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_RandomInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_RANDOM_SEED = 6,
-    VT_POSE = 8,
-    VT_RESULT = 10,
-    VT_MESSAGE = 12
+    VT_POSE = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  const flatbuffers::String *random_seed() const {
-    return GetPointer<const flatbuffers::String *>(VT_RANDOM_SEED);
-  }
-  flatbuffers::String *mutable_random_seed() {
-    return GetPointer<flatbuffers::String *>(VT_RANDOM_SEED);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_RANDOM_SEED) &&
-           verifier.VerifyString(random_seed()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_RandomInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_RandomInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_RandomInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_RandomInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_RandomInitBuilder {
   typedef Response_Localization_RandomInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_RandomInit::VT_ID, id);
-  }
-  void add_random_seed(flatbuffers::Offset<flatbuffers::String> random_seed) {
-    fbb_.AddOffset(Response_Localization_RandomInit::VT_RANDOM_SEED, random_seed);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_RandomInit::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_RandomInit::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_RandomInit::VT_MESSAGE, message);
   }
-  explicit Response_Localization_RandomInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_RandomInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_RandomInit> Finish() {
+  ::flatbuffers::Offset<Response_Localization_RandomInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_RandomInit>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_RandomInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> random_seed = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_RandomInitBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_pose(pose);
-  builder_.add_random_seed(random_seed);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *random_seed = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto random_seed__ = random_seed ? _fbb.CreateString(random_seed) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
   return SLAMNAV::CreateResponse_Localization_RandomInit(
       _fbb,
       id__,
-      random_seed__,
       pose,
       result__,
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_RandomInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Localization_AutoInitT : public flatbuffers::NativeTable {
-  typedef Request_Localization_AutoInit TableType;
-  std::string id;
-  Request_Localization_AutoInitT() {
-  }
-};
-
-struct Request_Localization_AutoInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_AutoInitT NativeTableType;
+struct Request_Localization_AutoInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_AutoInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Localization_AutoInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_AutoInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_AutoInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_AutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_AutoInitBuilder {
   typedef Request_Localization_AutoInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_AutoInit::VT_ID, id);
   }
-  explicit Request_Localization_AutoInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_AutoInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_AutoInit> Finish() {
+  ::flatbuffers::Offset<Request_Localization_AutoInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_AutoInit>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_AutoInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Localization_AutoInitBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Localization_AutoInit(
@@ -598,20 +438,7 @@ inline flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localiza
       id__);
 }
 
-flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_AutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_AutoInitT : public flatbuffers::NativeTable {
-  typedef Response_Localization_AutoInit TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_AutoInitT() {
-  }
-};
-
-struct Response_Localization_AutoInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_AutoInitT NativeTableType;
+struct Response_Localization_AutoInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_AutoInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -619,79 +446,64 @@ struct Response_Localization_AutoInit FLATBUFFERS_FINAL_CLASS : private flatbuff
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_AutoInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_AutoInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_AutoInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_AutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_AutoInitBuilder {
   typedef Response_Localization_AutoInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_AutoInit::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_AutoInit::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_AutoInit::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_AutoInit::VT_MESSAGE, message);
   }
-  explicit Response_Localization_AutoInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_AutoInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_AutoInit> Finish() {
+  ::flatbuffers::Offset<Response_Localization_AutoInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_AutoInit>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_AutoInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_AutoInitBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -700,10 +512,10 @@ inline flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Locali
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -717,66 +529,50 @@ inline flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Locali
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_AutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Localization_SemiAutoInitT : public flatbuffers::NativeTable {
-  typedef Request_Localization_SemiAutoInit TableType;
-  std::string id;
-  Request_Localization_SemiAutoInitT() {
-  }
-};
-
-struct Request_Localization_SemiAutoInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_SemiAutoInitT NativeTableType;
+struct Request_Localization_SemiAutoInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_SemiAutoInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Localization_SemiAutoInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_SemiAutoInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_SemiAutoInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_SemiAutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_SemiAutoInitBuilder {
   typedef Request_Localization_SemiAutoInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_SemiAutoInit::VT_ID, id);
   }
-  explicit Request_Localization_SemiAutoInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_SemiAutoInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_SemiAutoInit> Finish() {
+  ::flatbuffers::Offset<Request_Localization_SemiAutoInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_SemiAutoInit>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_SemiAutoInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Localization_SemiAutoInitBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Localization_SemiAutoInit(
@@ -784,20 +580,7 @@ inline flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Loca
       id__);
 }
 
-flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_SemiAutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_SemiAutoInitT : public flatbuffers::NativeTable {
-  typedef Response_Localization_SemiAutoInit TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_SemiAutoInitT() {
-  }
-};
-
-struct Response_Localization_SemiAutoInit FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_SemiAutoInitT NativeTableType;
+struct Response_Localization_SemiAutoInit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_SemiAutoInitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -805,79 +588,64 @@ struct Response_Localization_SemiAutoInit FLATBUFFERS_FINAL_CLASS : private flat
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_SemiAutoInitT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_SemiAutoInitT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_SemiAutoInit> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_SemiAutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_SemiAutoInitBuilder {
   typedef Response_Localization_SemiAutoInit Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_SemiAutoInit::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_SemiAutoInit::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_SemiAutoInit::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_SemiAutoInit::VT_MESSAGE, message);
   }
-  explicit Response_Localization_SemiAutoInitBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_SemiAutoInitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_SemiAutoInit> Finish() {
+  ::flatbuffers::Offset<Response_Localization_SemiAutoInit> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_SemiAutoInit>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_SemiAutoInit>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInit(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_SemiAutoInitBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -886,10 +654,10 @@ inline flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Lo
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInitDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -903,66 +671,50 @@ inline flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Lo
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_SemiAutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Localization_StartT : public flatbuffers::NativeTable {
-  typedef Request_Localization_Start TableType;
-  std::string id;
-  Request_Localization_StartT() {
-  }
-};
-
-struct Request_Localization_Start FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_StartT NativeTableType;
+struct Request_Localization_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_StartBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Localization_StartT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_StartT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_Start> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StartT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_StartBuilder {
   typedef Request_Localization_Start Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_Start::VT_ID, id);
   }
-  explicit Request_Localization_StartBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_StartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_Start> Finish() {
+  ::flatbuffers::Offset<Request_Localization_Start> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_Start>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_Start>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_Start(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_Start(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Localization_StartBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_StartDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_StartDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Localization_Start(
@@ -970,20 +722,7 @@ inline flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localizatio
       id__);
 }
 
-flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_Start(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StartT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_StartT : public flatbuffers::NativeTable {
-  typedef Response_Localization_Start TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_StartT() {
-  }
-};
-
-struct Response_Localization_Start FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_StartT NativeTableType;
+struct Response_Localization_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_StartBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -991,79 +730,64 @@ struct Response_Localization_Start FLATBUFFERS_FINAL_CLASS : private flatbuffers
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_StartT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_StartT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_Start> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StartT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_StartBuilder {
   typedef Response_Localization_Start Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_Start::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_Start::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_Start::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_Start::VT_MESSAGE, message);
   }
-  explicit Response_Localization_StartBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_StartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_Start> Finish() {
+  ::flatbuffers::Offset<Response_Localization_Start> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_Start>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_Start>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_Start(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_Start(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_StartBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -1072,10 +796,10 @@ inline flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localizat
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_StartDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_StartDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -1089,66 +813,50 @@ inline flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localizat
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_Start(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StartT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Localization_StopT : public flatbuffers::NativeTable {
-  typedef Request_Localization_Stop TableType;
-  std::string id;
-  Request_Localization_StopT() {
-  }
-};
-
-struct Request_Localization_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Localization_StopT NativeTableType;
+struct Request_Localization_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Localization_StopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Localization_StopT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Localization_StopT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Localization_Stop> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Localization_StopBuilder {
   typedef Request_Localization_Stop Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Localization_Stop::VT_ID, id);
   }
-  explicit Request_Localization_StopBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Localization_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Localization_Stop> Finish() {
+  ::flatbuffers::Offset<Request_Localization_Stop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Localization_Stop>(end);
+    auto o = ::flatbuffers::Offset<Request_Localization_Stop>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_Stop(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_Stop(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Localization_StopBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_StopDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_StopDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Localization_Stop(
@@ -1156,20 +864,7 @@ inline flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization
       id__);
 }
 
-flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Localization_StopT : public flatbuffers::NativeTable {
-  typedef Response_Localization_Stop TableType;
-  std::string id;
-  std::unique_ptr<SLAMNAV::LocalizationPose> pose;
-  std::string result;
-  std::string message;
-  Response_Localization_StopT() {
-  }
-};
-
-struct Response_Localization_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Localization_StopT NativeTableType;
+struct Response_Localization_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Localization_StopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -1177,79 +872,64 @@ struct Response_Localization_Stop FLATBUFFERS_FINAL_CLASS : private flatbuffers:
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const SLAMNAV::LocalizationPose *pose() const {
     return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  SLAMNAV::LocalizationPose *mutable_pose() {
-    return GetStruct<SLAMNAV::LocalizationPose *>(VT_POSE);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Localization_StopT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Localization_StopT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Localization_Stop> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Localization_StopBuilder {
   typedef Response_Localization_Stop Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Localization_Stop::VT_ID, id);
   }
   void add_pose(const SLAMNAV::LocalizationPose *pose) {
     fbb_.AddStruct(Response_Localization_Stop::VT_POSE, pose);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Localization_Stop::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Localization_Stop::VT_MESSAGE, message);
   }
-  explicit Response_Localization_StopBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Localization_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Localization_Stop> Finish() {
+  ::flatbuffers::Offset<Response_Localization_Stop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Localization_Stop>(end);
+    auto o = ::flatbuffers::Offset<Response_Localization_Stop>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_Stop(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    const SLAMNAV::LocalizationPose *pose = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_Stop(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Localization_StopBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -1258,10 +938,10 @@ inline flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localizati
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_StopDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_StopDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const SLAMNAV::LocalizationPose *pose = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
@@ -1275,516 +955,95 @@ inline flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localizati
       message__);
 }
 
-flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Localization_ResultT : public flatbuffers::NativeTable {
-  typedef Localization_Result TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Localization_ResultT() {
-  }
-};
-
-struct Localization_Result FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Localization_ResultT NativeTableType;
-  typedef Localization_ResultBuilder Builder;
+struct Result_Localization_Init FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Result_Localization_InitBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_RESULT = 6,
-    VT_MESSAGE = 8
+    VT_POSE = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const SLAMNAV::LocalizationPose *pose() const {
+    return GetStruct<const SLAMNAV::LocalizationPose *>(VT_POSE);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
+           VerifyField<SLAMNAV::LocalizationPose>(verifier, VT_POSE, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Localization_ResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Localization_ResultT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Localization_Result> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Localization_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct Localization_ResultBuilder {
-  typedef Localization_Result Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Localization_Result::VT_ID, id);
+struct Result_Localization_InitBuilder {
+  typedef Result_Localization_Init Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Result_Localization_Init::VT_ID, id);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(Localization_Result::VT_RESULT, result);
+  void add_pose(const SLAMNAV::LocalizationPose *pose) {
+    fbb_.AddStruct(Result_Localization_Init::VT_POSE, pose);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(Localization_Result::VT_MESSAGE, message);
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(Result_Localization_Init::VT_RESULT, result);
   }
-  explicit Localization_ResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(Result_Localization_Init::VT_MESSAGE, message);
+  }
+  explicit Result_Localization_InitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Localization_Result> Finish() {
+  ::flatbuffers::Offset<Result_Localization_Init> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Localization_Result>(end);
+    auto o = ::flatbuffers::Offset<Result_Localization_Init>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Localization_Result> CreateLocalization_Result(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
-  Localization_ResultBuilder builder_(_fbb);
+inline ::flatbuffers::Offset<Result_Localization_Init> CreateResult_Localization_Init(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  Result_Localization_InitBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
+  builder_.add_pose(pose);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Localization_Result> CreateLocalization_ResultDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Result_Localization_Init> CreateResult_Localization_InitDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
+    const SLAMNAV::LocalizationPose *pose = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateLocalization_Result(
+  return SLAMNAV::CreateResult_Localization_Init(
       _fbb,
       id__,
+      pose,
       result__,
       message__);
-}
-
-flatbuffers::Offset<Localization_Result> CreateLocalization_Result(flatbuffers::FlatBufferBuilder &_fbb, const Localization_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-inline Request_Localization_InitT *Request_Localization_Init::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_InitT> _o = std::unique_ptr<SLAMNAV::Request_Localization_InitT>(new Request_Localization_InitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_Init::UnPackTo(Request_Localization_InitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-}
-
-inline flatbuffers::Offset<Request_Localization_Init> Request_Localization_Init::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_InitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_Init(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_Init> CreateRequest_Localization_Init(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_InitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_InitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  return SLAMNAV::CreateRequest_Localization_Init(
-      _fbb,
-      _id,
-      _pose);
-}
-
-inline Response_Localization_InitT *Response_Localization_Init::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_InitT> _o = std::unique_ptr<SLAMNAV::Response_Localization_InitT>(new Response_Localization_InitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_Init::UnPackTo(Response_Localization_InitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_Init> Response_Localization_Init::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_InitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_Init(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_Init> CreateResponse_Localization_Init(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_InitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_InitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_Init(
-      _fbb,
-      _id,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Request_Localization_RandomInitT *Request_Localization_RandomInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_RandomInitT> _o = std::unique_ptr<SLAMNAV::Request_Localization_RandomInitT>(new Request_Localization_RandomInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_RandomInit::UnPackTo(Request_Localization_RandomInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = random_seed(); if (_e) _o->random_seed = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Localization_RandomInit> Request_Localization_RandomInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_RandomInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_RandomInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_RandomInit> CreateRequest_Localization_RandomInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_RandomInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_RandomInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _random_seed = _o->random_seed.empty() ? 0 : _fbb.CreateString(_o->random_seed);
-  return SLAMNAV::CreateRequest_Localization_RandomInit(
-      _fbb,
-      _id,
-      _random_seed);
-}
-
-inline Response_Localization_RandomInitT *Response_Localization_RandomInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_RandomInitT> _o = std::unique_ptr<SLAMNAV::Response_Localization_RandomInitT>(new Response_Localization_RandomInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_RandomInit::UnPackTo(Response_Localization_RandomInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = random_seed(); if (_e) _o->random_seed = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_RandomInit> Response_Localization_RandomInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_RandomInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_RandomInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_RandomInit> CreateResponse_Localization_RandomInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_RandomInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_RandomInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _random_seed = _o->random_seed.empty() ? 0 : _fbb.CreateString(_o->random_seed);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_RandomInit(
-      _fbb,
-      _id,
-      _random_seed,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Request_Localization_AutoInitT *Request_Localization_AutoInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_AutoInitT> _o = std::unique_ptr<SLAMNAV::Request_Localization_AutoInitT>(new Request_Localization_AutoInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_AutoInit::UnPackTo(Request_Localization_AutoInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Localization_AutoInit> Request_Localization_AutoInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_AutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_AutoInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_AutoInit> CreateRequest_Localization_AutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_AutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_AutoInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Localization_AutoInit(
-      _fbb,
-      _id);
-}
-
-inline Response_Localization_AutoInitT *Response_Localization_AutoInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_AutoInitT> _o = std::unique_ptr<SLAMNAV::Response_Localization_AutoInitT>(new Response_Localization_AutoInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_AutoInit::UnPackTo(Response_Localization_AutoInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_AutoInit> Response_Localization_AutoInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_AutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_AutoInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_AutoInit> CreateResponse_Localization_AutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_AutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_AutoInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_AutoInit(
-      _fbb,
-      _id,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Request_Localization_SemiAutoInitT *Request_Localization_SemiAutoInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_SemiAutoInitT> _o = std::unique_ptr<SLAMNAV::Request_Localization_SemiAutoInitT>(new Request_Localization_SemiAutoInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_SemiAutoInit::UnPackTo(Request_Localization_SemiAutoInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Localization_SemiAutoInit> Request_Localization_SemiAutoInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_SemiAutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_SemiAutoInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_SemiAutoInit> CreateRequest_Localization_SemiAutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_SemiAutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_SemiAutoInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Localization_SemiAutoInit(
-      _fbb,
-      _id);
-}
-
-inline Response_Localization_SemiAutoInitT *Response_Localization_SemiAutoInit::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_SemiAutoInitT> _o = std::unique_ptr<SLAMNAV::Response_Localization_SemiAutoInitT>(new Response_Localization_SemiAutoInitT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_SemiAutoInit::UnPackTo(Response_Localization_SemiAutoInitT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_SemiAutoInit> Response_Localization_SemiAutoInit::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_SemiAutoInitT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_SemiAutoInit(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_SemiAutoInit> CreateResponse_Localization_SemiAutoInit(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_SemiAutoInitT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_SemiAutoInitT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_SemiAutoInit(
-      _fbb,
-      _id,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Request_Localization_StartT *Request_Localization_Start::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_StartT> _o = std::unique_ptr<SLAMNAV::Request_Localization_StartT>(new Request_Localization_StartT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_Start::UnPackTo(Request_Localization_StartT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Localization_Start> Request_Localization_Start::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StartT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_Start(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_Start> CreateRequest_Localization_Start(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StartT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_StartT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Localization_Start(
-      _fbb,
-      _id);
-}
-
-inline Response_Localization_StartT *Response_Localization_Start::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_StartT> _o = std::unique_ptr<SLAMNAV::Response_Localization_StartT>(new Response_Localization_StartT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_Start::UnPackTo(Response_Localization_StartT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_Start> Response_Localization_Start::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StartT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_Start(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_Start> CreateResponse_Localization_Start(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StartT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_StartT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_Start(
-      _fbb,
-      _id,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Request_Localization_StopT *Request_Localization_Stop::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Localization_StopT> _o = std::unique_ptr<SLAMNAV::Request_Localization_StopT>(new Request_Localization_StopT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Localization_Stop::UnPackTo(Request_Localization_StopT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Localization_Stop> Request_Localization_Stop::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Localization_Stop(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Localization_Stop> CreateRequest_Localization_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Request_Localization_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Localization_StopT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Localization_Stop(
-      _fbb,
-      _id);
-}
-
-inline Response_Localization_StopT *Response_Localization_Stop::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Localization_StopT> _o = std::unique_ptr<SLAMNAV::Response_Localization_StopT>(new Response_Localization_StopT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Localization_Stop::UnPackTo(Response_Localization_StopT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::LocalizationPose>(new SLAMNAV::LocalizationPose(*_e)); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Localization_Stop> Response_Localization_Stop::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StopT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Localization_Stop(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Localization_Stop> CreateResponse_Localization_Stop(flatbuffers::FlatBufferBuilder &_fbb, const Response_Localization_StopT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Localization_StopT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Localization_Stop(
-      _fbb,
-      _id,
-      _pose,
-      _result,
-      _message);
-}
-
-inline Localization_ResultT *Localization_Result::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Localization_ResultT> _o = std::unique_ptr<SLAMNAV::Localization_ResultT>(new Localization_ResultT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Localization_Result::UnPackTo(Localization_ResultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Localization_Result> Localization_Result::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Localization_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateLocalization_Result(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Localization_Result> CreateLocalization_Result(flatbuffers::FlatBufferBuilder &_fbb, const Localization_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Localization_ResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateLocalization_Result(
-      _fbb,
-      _id,
-      _result,
-      _message);
 }
 
 }  // namespace SLAMNAV

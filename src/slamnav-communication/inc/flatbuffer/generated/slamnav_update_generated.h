@@ -6,64 +6,47 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 9 &&
+              FLATBUFFERS_VERSION_REVISION == 23,
+             "Non-compatible flatbuffers version included");
+
 namespace SLAMNAV {
 
 struct Request_Update;
 struct Request_UpdateBuilder;
-struct Request_UpdateT;
 
 struct Response_Update;
 struct Response_UpdateBuilder;
-struct Response_UpdateT;
 
 struct Request_Current_Version;
 struct Request_Current_VersionBuilder;
-struct Request_Current_VersionT;
 
 struct Response_Current_Version;
 struct Response_Current_VersionBuilder;
-struct Response_Current_VersionT;
 
-struct Update_Result;
-struct Update_ResultBuilder;
-struct Update_ResultT;
+struct Result_Update;
+struct Result_UpdateBuilder;
 
-struct Request_UpdateT : public flatbuffers::NativeTable {
-  typedef Request_Update TableType;
-  std::string id;
-  std::string branch;
-  std::string version;
-  Request_UpdateT() {
-  }
-};
-
-struct Request_Update FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_UpdateT NativeTableType;
+struct Request_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_UpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_BRANCH = 6,
     VT_VERSION = 8
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *branch() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_BRANCH);
   }
-  const flatbuffers::String *branch() const {
-    return GetPointer<const flatbuffers::String *>(VT_BRANCH);
+  const ::flatbuffers::String *version() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VERSION);
   }
-  flatbuffers::String *mutable_branch() {
-    return GetPointer<flatbuffers::String *>(VT_BRANCH);
-  }
-  const flatbuffers::String *version() const {
-    return GetPointer<const flatbuffers::String *>(VT_VERSION);
-  }
-  flatbuffers::String *mutable_version() {
-    return GetPointer<flatbuffers::String *>(VT_VERSION);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -73,40 +56,37 @@ struct Request_Update FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(version()) &&
            verifier.EndTable();
   }
-  Request_UpdateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_UpdateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Update> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_UpdateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_UpdateBuilder {
   typedef Request_Update Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Update::VT_ID, id);
   }
-  void add_branch(flatbuffers::Offset<flatbuffers::String> branch) {
+  void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
     fbb_.AddOffset(Request_Update::VT_BRANCH, branch);
   }
-  void add_version(flatbuffers::Offset<flatbuffers::String> version) {
+  void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
     fbb_.AddOffset(Request_Update::VT_VERSION, version);
   }
-  explicit Request_UpdateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Update> Finish() {
+  ::flatbuffers::Offset<Request_Update> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Update>(end);
+    auto o = ::flatbuffers::Offset<Request_Update>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Update> CreateRequest_Update(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> branch = 0,
-    flatbuffers::Offset<flatbuffers::String> version = 0) {
+inline ::flatbuffers::Offset<Request_Update> CreateRequest_Update(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> version = 0) {
   Request_UpdateBuilder builder_(_fbb);
   builder_.add_version(version);
   builder_.add_branch(branch);
@@ -114,8 +94,8 @@ inline flatbuffers::Offset<Request_Update> CreateRequest_Update(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Update> CreateRequest_UpdateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Update> CreateRequest_UpdateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *branch = nullptr,
     const char *version = nullptr) {
@@ -129,21 +109,7 @@ inline flatbuffers::Offset<Request_Update> CreateRequest_UpdateDirect(
       version__);
 }
 
-flatbuffers::Offset<Request_Update> CreateRequest_Update(flatbuffers::FlatBufferBuilder &_fbb, const Request_UpdateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_UpdateT : public flatbuffers::NativeTable {
-  typedef Response_Update TableType;
-  std::string id;
-  std::string branch;
-  std::string version;
-  std::string result;
-  std::string message;
-  Response_UpdateT() {
-  }
-};
-
-struct Response_Update FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_UpdateT NativeTableType;
+struct Response_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_UpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -152,37 +118,22 @@ struct Response_Update FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RESULT = 10,
     VT_MESSAGE = 12
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *branch() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_BRANCH);
   }
-  const flatbuffers::String *branch() const {
-    return GetPointer<const flatbuffers::String *>(VT_BRANCH);
+  const ::flatbuffers::String *version() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VERSION);
   }
-  flatbuffers::String *mutable_branch() {
-    return GetPointer<flatbuffers::String *>(VT_BRANCH);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *version() const {
-    return GetPointer<const flatbuffers::String *>(VT_VERSION);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_version() {
-    return GetPointer<flatbuffers::String *>(VT_VERSION);
-  }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -196,48 +147,45 @@ struct Response_Update FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_UpdateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_UpdateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Update> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_UpdateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_UpdateBuilder {
   typedef Response_Update Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Update::VT_ID, id);
   }
-  void add_branch(flatbuffers::Offset<flatbuffers::String> branch) {
+  void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
     fbb_.AddOffset(Response_Update::VT_BRANCH, branch);
   }
-  void add_version(flatbuffers::Offset<flatbuffers::String> version) {
+  void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
     fbb_.AddOffset(Response_Update::VT_VERSION, version);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Update::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Update::VT_MESSAGE, message);
   }
-  explicit Response_UpdateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Update> Finish() {
+  ::flatbuffers::Offset<Response_Update> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Update>(end);
+    auto o = ::flatbuffers::Offset<Response_Update>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Update> CreateResponse_Update(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> branch = 0,
-    flatbuffers::Offset<flatbuffers::String> version = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Update> CreateResponse_Update(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> version = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_UpdateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -247,8 +195,8 @@ inline flatbuffers::Offset<Response_Update> CreateResponse_Update(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *branch = nullptr,
     const char *version = nullptr,
@@ -268,66 +216,50 @@ inline flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
       message__);
 }
 
-flatbuffers::Offset<Response_Update> CreateResponse_Update(flatbuffers::FlatBufferBuilder &_fbb, const Response_UpdateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Request_Current_VersionT : public flatbuffers::NativeTable {
-  typedef Request_Current_Version TableType;
-  std::string id;
-  Request_Current_VersionT() {
-  }
-};
-
-struct Request_Current_Version FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Request_Current_VersionT NativeTableType;
+struct Request_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Request_Current_VersionBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
-  Request_Current_VersionT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Request_Current_VersionT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Request_Current_Version> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Current_VersionT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Request_Current_VersionBuilder {
   typedef Request_Current_Version Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Request_Current_Version::VT_ID, id);
   }
-  explicit Request_Current_VersionBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Request_Current_VersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Request_Current_Version> Finish() {
+  ::flatbuffers::Offset<Request_Current_Version> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Request_Current_Version>(end);
+    auto o = ::flatbuffers::Offset<Request_Current_Version>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Version(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0) {
+inline ::flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Version(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   Request_Current_VersionBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_VersionDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_VersionDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequest_Current_Version(
@@ -335,20 +267,7 @@ inline flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Versio
       id__);
 }
 
-flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Version(flatbuffers::FlatBufferBuilder &_fbb, const Request_Current_VersionT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Response_Current_VersionT : public flatbuffers::NativeTable {
-  typedef Response_Current_Version TableType;
-  std::string id;
-  std::string version;
-  std::string result;
-  std::string message;
-  Response_Current_VersionT() {
-  }
-};
-
-struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Response_Current_VersionT NativeTableType;
+struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Response_Current_VersionBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -356,31 +275,19 @@ struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private flatbuffers::T
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *version() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VERSION);
   }
-  const flatbuffers::String *version() const {
-    return GetPointer<const flatbuffers::String *>(VT_VERSION);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  flatbuffers::String *mutable_version() {
-    return GetPointer<flatbuffers::String *>(VT_VERSION);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
@@ -392,44 +299,41 @@ struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private flatbuffers::T
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Response_Current_VersionT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Response_Current_VersionT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Response_Current_Version> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Current_VersionT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Response_Current_VersionBuilder {
   typedef Response_Current_Version Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(Response_Current_Version::VT_ID, id);
   }
-  void add_version(flatbuffers::Offset<flatbuffers::String> version) {
+  void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
     fbb_.AddOffset(Response_Current_Version::VT_VERSION, version);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
     fbb_.AddOffset(Response_Current_Version::VT_RESULT, result);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
     fbb_.AddOffset(Response_Current_Version::VT_MESSAGE, message);
   }
-  explicit Response_Current_VersionBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Response_Current_VersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Response_Current_Version> Finish() {
+  ::flatbuffers::Offset<Response_Current_Version> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Response_Current_Version>(end);
+    auto o = ::flatbuffers::Offset<Response_Current_Version>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Version(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> version = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
+inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Version(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> version = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   Response_Current_VersionBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
@@ -438,8 +342,8 @@ inline flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Vers
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_VersionDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_VersionDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *version = nullptr,
     const char *result = nullptr,
@@ -456,272 +360,111 @@ inline flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Vers
       message__);
 }
 
-flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Version(flatbuffers::FlatBufferBuilder &_fbb, const Response_Current_VersionT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Update_ResultT : public flatbuffers::NativeTable {
-  typedef Update_Result TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Update_ResultT() {
-  }
-};
-
-struct Update_Result FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Update_ResultT NativeTableType;
-  typedef Update_ResultBuilder Builder;
+struct Result_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Result_UpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_RESULT = 6,
-    VT_MESSAGE = 8
+    VT_BRANCH = 6,
+    VT_VERSION = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
   };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
+  const ::flatbuffers::String *branch() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_BRANCH);
   }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *version() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VERSION);
   }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
   }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
   }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_BRANCH) &&
+           verifier.VerifyString(branch()) &&
+           VerifyOffset(verifier, VT_VERSION) &&
+           verifier.VerifyString(version()) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
-  Update_ResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Update_ResultT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Update_Result> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Update_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct Update_ResultBuilder {
-  typedef Update_Result Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Update_Result::VT_ID, id);
+struct Result_UpdateBuilder {
+  typedef Result_Update Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Result_Update::VT_ID, id);
   }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(Update_Result::VT_RESULT, result);
+  void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
+    fbb_.AddOffset(Result_Update::VT_BRANCH, branch);
   }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(Update_Result::VT_MESSAGE, message);
+  void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
+    fbb_.AddOffset(Result_Update::VT_VERSION, version);
   }
-  explicit Update_ResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(Result_Update::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(Result_Update::VT_MESSAGE, message);
+  }
+  explicit Result_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Update_Result> Finish() {
+  ::flatbuffers::Offset<Result_Update> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Update_Result>(end);
+    auto o = ::flatbuffers::Offset<Result_Update>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Update_Result> CreateUpdate_Result(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
-  Update_ResultBuilder builder_(_fbb);
+inline ::flatbuffers::Offset<Result_Update> CreateResult_Update(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> version = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  Result_UpdateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
+  builder_.add_version(version);
+  builder_.add_branch(branch);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Update_Result> CreateUpdate_ResultDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<Result_Update> CreateResult_UpdateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
+    const char *branch = nullptr,
+    const char *version = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto branch__ = branch ? _fbb.CreateString(branch) : 0;
+  auto version__ = version ? _fbb.CreateString(version) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateUpdate_Result(
+  return SLAMNAV::CreateResult_Update(
       _fbb,
       id__,
+      branch__,
+      version__,
       result__,
       message__);
-}
-
-flatbuffers::Offset<Update_Result> CreateUpdate_Result(flatbuffers::FlatBufferBuilder &_fbb, const Update_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-inline Request_UpdateT *Request_Update::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_UpdateT> _o = std::unique_ptr<SLAMNAV::Request_UpdateT>(new Request_UpdateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Update::UnPackTo(Request_UpdateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = branch(); if (_e) _o->branch = _e->str(); }
-  { auto _e = version(); if (_e) _o->version = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Update> Request_Update::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_UpdateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Update(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Update> CreateRequest_Update(flatbuffers::FlatBufferBuilder &_fbb, const Request_UpdateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_UpdateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _branch = _o->branch.empty() ? 0 : _fbb.CreateString(_o->branch);
-  auto _version = _o->version.empty() ? 0 : _fbb.CreateString(_o->version);
-  return SLAMNAV::CreateRequest_Update(
-      _fbb,
-      _id,
-      _branch,
-      _version);
-}
-
-inline Response_UpdateT *Response_Update::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_UpdateT> _o = std::unique_ptr<SLAMNAV::Response_UpdateT>(new Response_UpdateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Update::UnPackTo(Response_UpdateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = branch(); if (_e) _o->branch = _e->str(); }
-  { auto _e = version(); if (_e) _o->version = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Update> Response_Update::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_UpdateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Update(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Update> CreateResponse_Update(flatbuffers::FlatBufferBuilder &_fbb, const Response_UpdateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_UpdateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _branch = _o->branch.empty() ? 0 : _fbb.CreateString(_o->branch);
-  auto _version = _o->version.empty() ? 0 : _fbb.CreateString(_o->version);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Update(
-      _fbb,
-      _id,
-      _branch,
-      _version,
-      _result,
-      _message);
-}
-
-inline Request_Current_VersionT *Request_Current_Version::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Request_Current_VersionT> _o = std::unique_ptr<SLAMNAV::Request_Current_VersionT>(new Request_Current_VersionT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Request_Current_Version::UnPackTo(Request_Current_VersionT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-}
-
-inline flatbuffers::Offset<Request_Current_Version> Request_Current_Version::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Request_Current_VersionT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateRequest_Current_Version(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Version(flatbuffers::FlatBufferBuilder &_fbb, const Request_Current_VersionT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Request_Current_VersionT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  return SLAMNAV::CreateRequest_Current_Version(
-      _fbb,
-      _id);
-}
-
-inline Response_Current_VersionT *Response_Current_Version::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Response_Current_VersionT> _o = std::unique_ptr<SLAMNAV::Response_Current_VersionT>(new Response_Current_VersionT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Response_Current_Version::UnPackTo(Response_Current_VersionT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = version(); if (_e) _o->version = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Response_Current_Version> Response_Current_Version::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Response_Current_VersionT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateResponse_Current_Version(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Version(flatbuffers::FlatBufferBuilder &_fbb, const Response_Current_VersionT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Response_Current_VersionT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _version = _o->version.empty() ? 0 : _fbb.CreateString(_o->version);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateResponse_Current_Version(
-      _fbb,
-      _id,
-      _version,
-      _result,
-      _message);
-}
-
-inline Update_ResultT *Update_Result::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Update_ResultT> _o = std::unique_ptr<SLAMNAV::Update_ResultT>(new Update_ResultT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Update_Result::UnPackTo(Update_ResultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Update_Result> Update_Result::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Update_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateUpdate_Result(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Update_Result> CreateUpdate_Result(flatbuffers::FlatBufferBuilder &_fbb, const Update_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Update_ResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateUpdate_Result(
-      _fbb,
-      _id,
-      _result,
-      _message);
 }
 
 }  // namespace SLAMNAV

@@ -1,51 +1,32 @@
 #include "comm_zenoh.h"
 #include "global_defines.h"
 
-#include <iostream>
-#include <QDebug>
-
 namespace
 {
-    const char* MODULE_NAME = "COMM_ZENOH";
+    constexpr const char* MODULE_NAME = "ZENOH";
 }
 
-// =============================================================================
-// Singleton Instance
-// =============================================================================
-COMM_ZENOH* COMM_ZENOH::instance(QObject* parent)
+COMM_ZENOH* COMM_ZENOH::instance()
 {
     static COMM_ZENOH* inst = nullptr;
-    if (!inst && parent)
+    if (!inst)
     {
-        inst = new COMM_ZENOH(parent);
-    }
-    else if (inst && parent && inst->parent() == nullptr)
-    {
-        inst->setParent(parent);
+        inst = new COMM_ZENOH();
     }
     return inst;
 }
 
-// =============================================================================
-// 생성자 / 소멸자
-// =============================================================================
-COMM_ZENOH::COMM_ZENOH(QObject* parent)
-    : QObject(parent)
+COMM_ZENOH::COMM_ZENOH()
 {
-    qDebug() << "[" << MODULE_NAME << "] Constructor called";
     open_session();
 }
 
 COMM_ZENOH::~COMM_ZENOH()
 {
-    qDebug() << "[" << MODULE_NAME << "] Destructor called";
     stop_all_thread();
     close_session();
 }
 
-// =============================================================================
-// Zenoh Session 관리
-// =============================================================================
 void COMM_ZENOH::open_session()
 {
     std::unique_lock<std::shared_mutex> lock(session_mtx_);
@@ -54,11 +35,11 @@ void COMM_ZENOH::open_session()
         zenoh::Config config = zenoh::Config::create_default();
         session_ = zenoh::Session::open(std::move(config));
         is_connected_ = true;
-        qDebug() << "[" << MODULE_NAME << "] Zenoh session opened";
+        log_info("Zenoh session opened");
     }
     catch (const zenoh::ZException& e)
     {
-        qDebug() << "[" << MODULE_NAME << "] Failed to open Zenoh session:" << e.what();
+        log_error("Failed to open Zenoh session: {}", e.what());
         is_connected_ = false;
     }
 }
@@ -70,7 +51,7 @@ void COMM_ZENOH::close_session()
     {
         session_.reset();
         is_connected_ = false;
-        qDebug() << "[" << MODULE_NAME << "] Zenoh session closed";
+        log_info("Zenoh session closed");
     }
 }
 
@@ -95,25 +76,15 @@ bool COMM_ZENOH::get_is_connected() const
     return is_connected_.load();
 }
 
-// =============================================================================
-// robotType 관리
-// =============================================================================
+// get robotType
 void COMM_ZENOH::set_robot_type(const std::string& type)
 {
-    qDebug() << "[" << MODULE_NAME << "] set_robot_type called:" << QString::fromStdString(type);
-
-    // 1. 모든 스레드 종료
+    log_info("robotType set to: {}", type);
     stop_all_thread();
-
-    // 2. robotType 저장
     {
         std::unique_lock<std::shared_mutex> lock(robot_type_mtx_);
         robot_type_ = type;
     }
-
-    qDebug() << "[" << MODULE_NAME << "] robotType set to:" << QString::fromStdString(type);
-
-    // 3. 모든 스레드 재시작 (각 스레드에서 init 처리)
     start_all_thread();
 }
 
@@ -123,9 +94,6 @@ std::string COMM_ZENOH::get_robot_type() const
     return robot_type_;
 }
 
-// =============================================================================
-// Topic 헬퍼
-// =============================================================================
 std::string COMM_ZENOH::make_topic(const char* suffix) const
 {
     std::shared_lock<std::shared_mutex> lock(robot_type_mtx_);
@@ -136,120 +104,7 @@ std::string COMM_ZENOH::make_topic(const char* suffix) const
     return robot_type_ + "/" + suffix;
 }
 
-// =============================================================================
-// 모듈 주입
-// =============================================================================
-void COMM_ZENOH::set_config_module(CONFIG* _config)
-{
-    if (_config)
-    {
-        config = _config;
-        qDebug() << "[" << MODULE_NAME << "] CONFIG module set";
-    }
-}
 
-void COMM_ZENOH::set_logger_module(LOGGER* _logger)
-{
-    if (_logger)
-    {
-        logger = _logger;
-        qDebug() << "[" << MODULE_NAME << "] LOGGER module set";
-    }
-}
-
-void COMM_ZENOH::set_mobile_module(MOBILE* _mobile)
-{
-    if (_mobile)
-    {
-        mobile = _mobile;
-        qDebug() << "[" << MODULE_NAME << "] MOBILE module set";
-    }
-}
-
-void COMM_ZENOH::set_lidar_2d_module(LIDAR_2D* _lidar_2d)
-{
-    if (_lidar_2d)
-    {
-        lidar_2d = _lidar_2d;
-        qDebug() << "[" << MODULE_NAME << "] LIDAR_2D module set";
-    }
-}
-
-void COMM_ZENOH::set_lidar_3d_module(LIDAR_3D* _lidar_3d)
-{
-    if (_lidar_3d)
-    {
-        lidar_3d = _lidar_3d;
-        qDebug() << "[" << MODULE_NAME << "] LIDAR_3D module set";
-    }
-}
-
-void COMM_ZENOH::set_cam_module(CAM* _cam)
-{
-    if (_cam)
-    {
-        cam = _cam;
-        qDebug() << "[" << MODULE_NAME << "] CAM module set";
-    }
-}
-
-void COMM_ZENOH::set_unimap_module(UNIMAP* _unimap)
-{
-    if (_unimap)
-    {
-        unimap = _unimap;
-        qDebug() << "[" << MODULE_NAME << "] UNIMAP module set";
-    }
-}
-
-void COMM_ZENOH::set_obsmap_module(OBSMAP* _obsmap)
-{
-    if (_obsmap)
-    {
-        obsmap = _obsmap;
-        qDebug() << "[" << MODULE_NAME << "] OBSMAP module set";
-    }
-}
-
-void COMM_ZENOH::set_autocontrol_module(AUTOCONTROL* _ctrl)
-{
-    if (_ctrl)
-    {
-        ctrl = _ctrl;
-        qDebug() << "[" << MODULE_NAME << "] AUTOCONTROL module set";
-    }
-}
-
-void COMM_ZENOH::set_dockcontrol_module(DOCKCONTROL* _dctrl)
-{
-    if (_dctrl)
-    {
-        dctrl = _dctrl;
-        qDebug() << "[" << MODULE_NAME << "] DOCKCONTROL module set";
-    }
-}
-
-void COMM_ZENOH::set_localization_module(LOCALIZATION* _loc)
-{
-    if (_loc)
-    {
-        loc = _loc;
-        qDebug() << "[" << MODULE_NAME << "] LOCALIZATION module set";
-    }
-}
-
-void COMM_ZENOH::set_mapping_module(MAPPING* _mapping)
-{
-    if (_mapping)
-    {
-        mapping = _mapping;
-        qDebug() << "[" << MODULE_NAME << "] MAPPING module set";
-    }
-}
-
-// =============================================================================
-// 경로 업데이트 플래그
-// =============================================================================
 void COMM_ZENOH::set_global_path_update()
 {
     is_global_path_update_ = true;
@@ -280,13 +135,8 @@ void COMM_ZENOH::clear_local_path_update()
     is_local_path_update_ = false;
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 전체
-// =============================================================================
 void COMM_ZENOH::start_all_thread()
 {
-    qDebug() << "[" << MODULE_NAME << "] Starting all threads...";
-
     start_move_thread();
     start_control_thread();
     start_localization_thread();
@@ -295,15 +145,14 @@ void COMM_ZENOH::start_all_thread()
     start_update_thread();
     start_path_thread();
     start_status_thread();
+    start_move_status_thread();
     start_sensor_thread();
 
-    qDebug() << "[" << MODULE_NAME << "] All threads started";
+    log_info("All threads started");
 }
 
 void COMM_ZENOH::stop_all_thread()
 {
-    qDebug() << "[" << MODULE_NAME << "] Stopping all threads...";
-
     stop_move_thread();
     stop_control_thread();
     stop_localization_thread();
@@ -312,27 +161,25 @@ void COMM_ZENOH::stop_all_thread()
     stop_update_thread();
     stop_path_thread();
     stop_status_thread();
+    stop_move_status_thread();
     stop_sensor_thread();
 
-    qDebug() << "[" << MODULE_NAME << "] All threads stopped";
+    log_info("All threads stopped");
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Move)
-// =============================================================================
+// move thread
 void COMM_ZENOH::start_move_thread()
 {
     if (is_move_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Move thread already running";
+        log_warn("Move thread already running");
         return;
     }
 
     is_move_running_ = true;
     move_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::move_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Move thread started";
+    log_info("Move thread started");
 }
-
 void COMM_ZENOH::stop_move_thread()
 {
     if (!is_move_running_.load())
@@ -345,26 +192,23 @@ void COMM_ZENOH::stop_move_thread()
     {
         move_thread_->join();
         move_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Move thread stopped";
+        log_info("Move thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Control)
-// =============================================================================
+// control thread
 void COMM_ZENOH::start_control_thread()
 {
     if (is_control_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Control thread already running";
+        log_warn("Control thread already running");
         return;
     }
 
     is_control_running_ = true;
     control_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::control_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Control thread started";
+    log_info("Control thread started");
 }
-
 void COMM_ZENOH::stop_control_thread()
 {
     if (!is_control_running_.load())
@@ -377,26 +221,23 @@ void COMM_ZENOH::stop_control_thread()
     {
         control_thread_->join();
         control_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Control thread stopped";
+        log_info("Control thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Localization)
-// =============================================================================
+// localization thread
 void COMM_ZENOH::start_localization_thread()
 {
     if (is_localization_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Localization thread already running";
+        log_warn("Localization thread already running");
         return;
     }
 
     is_localization_running_ = true;
     localization_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::localization_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Localization thread started";
+    log_info("Localization thread started");
 }
-
 void COMM_ZENOH::stop_localization_thread()
 {
     if (!is_localization_running_.load())
@@ -409,26 +250,23 @@ void COMM_ZENOH::stop_localization_thread()
     {
         localization_thread_->join();
         localization_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Localization thread stopped";
+        log_info("Localization thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Map)
-// =============================================================================
+// map theead
 void COMM_ZENOH::start_map_thread()
 {
     if (is_map_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Map thread already running";
+        log_warn("Map thread already running");
         return;
     }
 
     is_map_running_ = true;
     map_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::map_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Map thread started";
+    log_info("Map thread started");
 }
-
 void COMM_ZENOH::stop_map_thread()
 {
     if (!is_map_running_.load())
@@ -441,26 +279,23 @@ void COMM_ZENOH::stop_map_thread()
     {
         map_thread_->join();
         map_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Map thread stopped";
+        log_info("Map thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Setting)
-// =============================================================================
+// setting thread
 void COMM_ZENOH::start_setting_thread()
 {
     if (is_setting_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Setting thread already running";
+        log_warn("Setting thread already running");
         return;
     }
 
     is_setting_running_ = true;
     setting_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::setting_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Setting thread started";
+    log_info("Setting thread started");
 }
-
 void COMM_ZENOH::stop_setting_thread()
 {
     if (!is_setting_running_.load())
@@ -473,26 +308,23 @@ void COMM_ZENOH::stop_setting_thread()
     {
         setting_thread_->join();
         setting_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Setting thread stopped";
+        log_info("Setting thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Update)
-// =============================================================================
+// update thread
 void COMM_ZENOH::start_update_thread()
 {
     if (is_update_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Update thread already running";
+        log_warn("Update thread already running");
         return;
     }
 
     is_update_running_ = true;
     update_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::update_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Update thread started";
+    log_info("Update thread started");
 }
-
 void COMM_ZENOH::stop_update_thread()
 {
     if (!is_update_running_.load())
@@ -505,26 +337,23 @@ void COMM_ZENOH::stop_update_thread()
     {
         update_thread_->join();
         update_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Update thread stopped";
+        log_info("Update thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Path)
-// =============================================================================
+// path thread
 void COMM_ZENOH::start_path_thread()
 {
     if (is_path_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Path thread already running";
+        log_warn("Path thread already running");
         return;
     }
 
     is_path_running_ = true;
     path_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::path_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Path thread started";
+    log_info("Path thread started");
 }
-
 void COMM_ZENOH::stop_path_thread()
 {
     if (!is_path_running_.load())
@@ -537,26 +366,23 @@ void COMM_ZENOH::stop_path_thread()
     {
         path_thread_->join();
         path_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Path thread stopped";
+        log_info("Path thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Status)
-// =============================================================================
+// status thread
 void COMM_ZENOH::start_status_thread()
 {
     if (is_status_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Status thread already running";
+        log_warn("Status thread already running");
         return;
     }
 
     is_status_running_ = true;
     status_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::status_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Status thread started";
+    log_info("Status thread started");
 }
-
 void COMM_ZENOH::stop_status_thread()
 {
     if (!is_status_running_.load())
@@ -569,26 +395,52 @@ void COMM_ZENOH::stop_status_thread()
     {
         status_thread_->join();
         status_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Status thread stopped";
+        log_info("Status thread stopped");
     }
 }
 
-// =============================================================================
-// 스레드 생명주기 관리 - 개별 (Sensor)
-// =============================================================================
+// move_status thread
+void COMM_ZENOH::start_move_status_thread()
+{
+    if (is_move_status_running_.load())
+    {
+        log_warn("MoveStatus thread already running");
+        return;
+    }
+
+    is_move_status_running_ = true;
+    move_status_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::move_status_loop, this);
+    log_info("MoveStatus thread started");
+}
+void COMM_ZENOH::stop_move_status_thread()
+{
+    if (!is_move_status_running_.load())
+    {
+        return;
+    }
+
+    is_move_status_running_ = false;
+    if (move_status_thread_ && move_status_thread_->joinable())
+    {
+        move_status_thread_->join();
+        move_status_thread_.reset();
+        log_info("MoveStatus thread stopped");
+    }
+}
+
+// sensor thread
 void COMM_ZENOH::start_sensor_thread()
 {
     if (is_sensor_running_.load())
     {
-        qDebug() << "[" << MODULE_NAME << "] Sensor thread already running";
+        log_warn("Sensor thread already running");
         return;
     }
 
     is_sensor_running_ = true;
     sensor_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::sensor_loop, this);
-    qDebug() << "[" << MODULE_NAME << "] Sensor thread started";
+    log_info("Sensor thread started");
 }
-
 void COMM_ZENOH::stop_sensor_thread()
 {
     if (!is_sensor_running_.load())
@@ -601,7 +453,7 @@ void COMM_ZENOH::stop_sensor_thread()
     {
         sensor_thread_->join();
         sensor_thread_.reset();
-        qDebug() << "[" << MODULE_NAME << "] Sensor thread stopped";
+        log_info("Sensor thread stopped");
     }
 }
 
@@ -619,7 +471,7 @@ void COMM_ZENOH::stop_sensor_thread()
 
 void COMM_ZENOH::setting_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] setting_loop started (placeholder)";
+    log_info("setting_loop started (placeholder)");
 
     while (is_setting_running_.load())
     {
@@ -627,12 +479,12 @@ void COMM_ZENOH::setting_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    qDebug() << "[" << MODULE_NAME << "] setting_loop ended";
+    log_info("setting_loop ended");
 }
 
 void COMM_ZENOH::update_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] update_loop started (placeholder)";
+    log_info("update_loop started (placeholder)");
 
     while (is_update_running_.load())
     {
@@ -640,12 +492,12 @@ void COMM_ZENOH::update_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    qDebug() << "[" << MODULE_NAME << "] update_loop ended";
+    log_info("update_loop ended");
 }
 
 void COMM_ZENOH::path_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] path_loop started (placeholder)";
+    log_info("path_loop started (placeholder)");
 
     while (is_path_running_.load())
     {
@@ -653,14 +505,16 @@ void COMM_ZENOH::path_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    qDebug() << "[" << MODULE_NAME << "] path_loop ended";
+    log_info("path_loop ended");
 }
 
 // status_loop()는 zenoh_command/comm_zenoh_status.cpp에서 구현
 
+// move_status_loop()는 zenoh_command/comm_zenoh_moveStatus.cpp에서 구현
+
 void COMM_ZENOH::sensor_loop()
 {
-    qDebug() << "[" << MODULE_NAME << "] sensor_loop started (placeholder)";
+    log_info("sensor_loop started (placeholder)");
 
     while (is_sensor_running_.load())
     {
@@ -669,5 +523,251 @@ void COMM_ZENOH::sensor_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    qDebug() << "[" << MODULE_NAME << "] sensor_loop ended";
+    log_info("sensor_loop ended");
+}
+
+// callback function
+void COMM_ZENOH::set_jog_callback(ZenohCallback::JogUpdate cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    jog_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_move_stop_callback(ZenohCallback::MoveStop cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    move_stop_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_map_build_start_callback(ZenohCallback::MapBuildStart cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    map_build_start_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_map_build_stop_callback(ZenohCallback::MapBuildStop cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    map_build_stop_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_map_save_callback(ZenohCallback::MapSave cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    map_save_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_docking_start_callback(ZenohCallback::DockingStart cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    docking_start_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_undocking_start_callback(ZenohCallback::UndockingStart cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    undocking_start_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_docking_stop_callback(ZenohCallback::DockingStop cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    docking_stop_callback_ = std::move(cb);
+}
+
+void COMM_ZENOH::set_ui_all_update_callback(ZenohCallback::UiAllUpdate cb)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    ui_all_update_callback_ = std::move(cb);
+}
+
+// invoke callback
+void COMM_ZENOH::invoke_jog_callback(const Eigen::Vector3d& vel)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (jog_callback_)
+    {
+        jog_callback_(vel);
+    }
+}
+
+void COMM_ZENOH::invoke_move_stop_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (move_stop_callback_)
+    {
+        move_stop_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_map_build_start_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (map_build_start_callback_)
+    {
+        map_build_start_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_map_build_stop_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (map_build_stop_callback_)
+    {
+        map_build_stop_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_map_save_callback(const std::string& map_name)
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (map_save_callback_)
+    {
+        map_save_callback_(map_name);
+    }
+}
+
+void COMM_ZENOH::invoke_docking_start_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (docking_start_callback_)
+    {
+        docking_start_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_undocking_start_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (undocking_start_callback_)
+    {
+        undocking_start_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_docking_stop_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (docking_stop_callback_)
+    {
+        docking_stop_callback_();
+    }
+}
+
+void COMM_ZENOH::invoke_ui_all_update_callback()
+{
+    std::lock_guard<std::mutex> lock(callback_mtx_);
+    if (ui_all_update_callback_)
+    {
+        ui_all_update_callback_();
+    }
+}
+
+// set modules
+void COMM_ZENOH::set_config_module(CONFIG* _config)
+{
+    if (_config)
+    {
+        config = _config;
+        log_debug("CONFIG module set");
+    }
+}
+
+void COMM_ZENOH::set_logger_module(LOGGER* _logger)
+{
+    if (_logger)
+    {
+        logger = _logger;
+        log_debug("LOGGER module set");
+    }
+}
+
+void COMM_ZENOH::set_mobile_module(MOBILE* _mobile)
+{
+    if (_mobile)
+    {
+        mobile = _mobile;
+        log_debug("MOBILE module set");
+    }
+}
+
+void COMM_ZENOH::set_lidar_2d_module(LIDAR_2D* _lidar_2d)
+{
+    if (_lidar_2d)
+    {
+        lidar_2d = _lidar_2d;
+        log_debug("LIDAR_2D module set");
+    }
+}
+
+void COMM_ZENOH::set_lidar_3d_module(LIDAR_3D* _lidar_3d)
+{
+    if (_lidar_3d)
+    {
+        lidar_3d = _lidar_3d;
+        log_debug("LIDAR_3D module set");
+    }
+}
+
+void COMM_ZENOH::set_cam_module(CAM* _cam)
+{
+    if (_cam)
+    {
+        cam = _cam;
+        log_debug("CAM module set");
+    }
+}
+
+void COMM_ZENOH::set_unimap_module(UNIMAP* _unimap)
+{
+    if (_unimap)
+    {
+        unimap = _unimap;
+        log_debug("UNIMAP module set");
+    }
+}
+
+void COMM_ZENOH::set_obsmap_module(OBSMAP* _obsmap)
+{
+    if (_obsmap)
+    {
+        obsmap = _obsmap;
+        log_debug("OBSMAP module set");
+    }
+}
+
+void COMM_ZENOH::set_autocontrol_module(AUTOCONTROL* _ctrl)
+{
+    if (_ctrl)
+    {
+        ctrl = _ctrl;
+        log_debug("AUTOCONTROL module set");
+    }
+}
+
+void COMM_ZENOH::set_dockcontrol_module(DOCKCONTROL* _dctrl)
+{
+    if (_dctrl)
+    {
+        dctrl = _dctrl;
+        log_debug("DOCKCONTROL module set");
+    }
+}
+
+void COMM_ZENOH::set_localization_module(LOCALIZATION* _loc)
+{
+    if (_loc)
+    {
+        loc = _loc;
+        log_debug("LOCALIZATION module set");
+    }
+}
+
+void COMM_ZENOH::set_mapping_module(MAPPING* _mapping)
+{
+    if (_mapping)
+    {
+        mapping = _mapping;
+        log_debug("MAPPING module set");
+    }
 }

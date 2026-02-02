@@ -6,6 +6,13 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 9 &&
+              FLATBUFFERS_VERSION_REVISION == 23,
+             "Non-compatible flatbuffers version included");
+
 namespace SLAMNAV {
 
 struct StatusImu;
@@ -16,45 +23,33 @@ struct StatusCondition;
 
 struct StatusRobotState;
 struct StatusRobotStateBuilder;
-struct StatusRobotStateT;
 
 struct StatusRobotSafetyIoState;
 struct StatusRobotSafetyIoStateBuilder;
-struct StatusRobotSafetyIoStateT;
 
 struct StatusPower;
 
 struct StatusSetting;
 struct StatusSettingBuilder;
-struct StatusSettingT;
 
 struct StatusMap;
 struct StatusMapBuilder;
-struct StatusMapT;
 
 struct Status;
 struct StatusBuilder;
-struct StatusT;
 
-struct MoveStatusMoveState;
-struct MoveStatusMoveStateBuilder;
-struct MoveStatusMoveStateT;
+struct StatusMoveState;
+struct StatusMoveStateBuilder;
 
-struct MoveStatusPose;
+struct StatusPose;
 
-struct MoveStatusVel;
+struct StatusVel;
 
-struct MoveStatusNode;
-struct MoveStatusNodeBuilder;
-struct MoveStatusNodeT;
+struct StatusNode;
+struct StatusNodeBuilder;
 
 struct Move_Status;
 struct Move_StatusBuilder;
-struct Move_StatusT;
-
-struct Status_Result;
-struct Status_ResultBuilder;
-struct Status_ResultT;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusImu FLATBUFFERS_FINAL_CLASS {
  private:
@@ -81,69 +76,42 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusImu FLATBUFFERS_FINAL_CLASS {
         imu_rz_(0) {
   }
   StatusImu(float _acc_x, float _acc_y, float _acc_z, float _gyr_x, float _gyr_y, float _gyr_z, float _imu_rx, float _imu_ry, float _imu_rz)
-      : acc_x_(flatbuffers::EndianScalar(_acc_x)),
-        acc_y_(flatbuffers::EndianScalar(_acc_y)),
-        acc_z_(flatbuffers::EndianScalar(_acc_z)),
-        gyr_x_(flatbuffers::EndianScalar(_gyr_x)),
-        gyr_y_(flatbuffers::EndianScalar(_gyr_y)),
-        gyr_z_(flatbuffers::EndianScalar(_gyr_z)),
-        imu_rx_(flatbuffers::EndianScalar(_imu_rx)),
-        imu_ry_(flatbuffers::EndianScalar(_imu_ry)),
-        imu_rz_(flatbuffers::EndianScalar(_imu_rz)) {
+      : acc_x_(::flatbuffers::EndianScalar(_acc_x)),
+        acc_y_(::flatbuffers::EndianScalar(_acc_y)),
+        acc_z_(::flatbuffers::EndianScalar(_acc_z)),
+        gyr_x_(::flatbuffers::EndianScalar(_gyr_x)),
+        gyr_y_(::flatbuffers::EndianScalar(_gyr_y)),
+        gyr_z_(::flatbuffers::EndianScalar(_gyr_z)),
+        imu_rx_(::flatbuffers::EndianScalar(_imu_rx)),
+        imu_ry_(::flatbuffers::EndianScalar(_imu_ry)),
+        imu_rz_(::flatbuffers::EndianScalar(_imu_rz)) {
   }
   float acc_x() const {
-    return flatbuffers::EndianScalar(acc_x_);
-  }
-  void mutate_acc_x(float _acc_x) {
-    flatbuffers::WriteScalar(&acc_x_, _acc_x);
+    return ::flatbuffers::EndianScalar(acc_x_);
   }
   float acc_y() const {
-    return flatbuffers::EndianScalar(acc_y_);
-  }
-  void mutate_acc_y(float _acc_y) {
-    flatbuffers::WriteScalar(&acc_y_, _acc_y);
+    return ::flatbuffers::EndianScalar(acc_y_);
   }
   float acc_z() const {
-    return flatbuffers::EndianScalar(acc_z_);
-  }
-  void mutate_acc_z(float _acc_z) {
-    flatbuffers::WriteScalar(&acc_z_, _acc_z);
+    return ::flatbuffers::EndianScalar(acc_z_);
   }
   float gyr_x() const {
-    return flatbuffers::EndianScalar(gyr_x_);
-  }
-  void mutate_gyr_x(float _gyr_x) {
-    flatbuffers::WriteScalar(&gyr_x_, _gyr_x);
+    return ::flatbuffers::EndianScalar(gyr_x_);
   }
   float gyr_y() const {
-    return flatbuffers::EndianScalar(gyr_y_);
-  }
-  void mutate_gyr_y(float _gyr_y) {
-    flatbuffers::WriteScalar(&gyr_y_, _gyr_y);
+    return ::flatbuffers::EndianScalar(gyr_y_);
   }
   float gyr_z() const {
-    return flatbuffers::EndianScalar(gyr_z_);
-  }
-  void mutate_gyr_z(float _gyr_z) {
-    flatbuffers::WriteScalar(&gyr_z_, _gyr_z);
+    return ::flatbuffers::EndianScalar(gyr_z_);
   }
   float imu_rx() const {
-    return flatbuffers::EndianScalar(imu_rx_);
-  }
-  void mutate_imu_rx(float _imu_rx) {
-    flatbuffers::WriteScalar(&imu_rx_, _imu_rx);
+    return ::flatbuffers::EndianScalar(imu_rx_);
   }
   float imu_ry() const {
-    return flatbuffers::EndianScalar(imu_ry_);
-  }
-  void mutate_imu_ry(float _imu_ry) {
-    flatbuffers::WriteScalar(&imu_ry_, _imu_ry);
+    return ::flatbuffers::EndianScalar(imu_ry_);
   }
   float imu_rz() const {
-    return flatbuffers::EndianScalar(imu_rz_);
-  }
-  void mutate_imu_rz(float _imu_rz) {
-    flatbuffers::WriteScalar(&imu_rz_, _imu_rz);
+    return ::flatbuffers::EndianScalar(imu_rz_);
   }
 };
 FLATBUFFERS_STRUCT_END(StatusImu, 36);
@@ -168,36 +136,26 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusMotor FLATBUFFERS_FINAL_CLASS {
     (void)padding1__;
   }
   StatusMotor(bool _connection, int32_t _status, float _temp, float _current)
-      : connection_(flatbuffers::EndianScalar(static_cast<uint8_t>(_connection))),
+      : connection_(::flatbuffers::EndianScalar(static_cast<uint8_t>(_connection))),
         padding0__(0),
         padding1__(0),
-        status_(flatbuffers::EndianScalar(_status)),
-        temp_(flatbuffers::EndianScalar(_temp)),
-        current_(flatbuffers::EndianScalar(_current)) {
+        status_(::flatbuffers::EndianScalar(_status)),
+        temp_(::flatbuffers::EndianScalar(_temp)),
+        current_(::flatbuffers::EndianScalar(_current)) {
+    (void)padding0__;
+    (void)padding1__;
   }
   bool connection() const {
-    return flatbuffers::EndianScalar(connection_) != 0;
-  }
-  void mutate_connection(bool _connection) {
-    flatbuffers::WriteScalar(&connection_, static_cast<uint8_t>(_connection));
+    return ::flatbuffers::EndianScalar(connection_) != 0;
   }
   int32_t status() const {
-    return flatbuffers::EndianScalar(status_);
-  }
-  void mutate_status(int32_t _status) {
-    flatbuffers::WriteScalar(&status_, _status);
+    return ::flatbuffers::EndianScalar(status_);
   }
   float temp() const {
-    return flatbuffers::EndianScalar(temp_);
-  }
-  void mutate_temp(float _temp) {
-    flatbuffers::WriteScalar(&temp_, _temp);
+    return ::flatbuffers::EndianScalar(temp_);
   }
   float current() const {
-    return flatbuffers::EndianScalar(current_);
-  }
-  void mutate_current(float _current) {
-    flatbuffers::WriteScalar(&current_, _current);
+    return ::flatbuffers::EndianScalar(current_);
   }
 };
 FLATBUFFERS_STRUCT_END(StatusMotor, 16);
@@ -217,34 +175,22 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusCondition FLATBUFFERS_FINAL_CLASS {
         mapping_ratio_(0) {
   }
   StatusCondition(float _inlier_error, float _inlier_ratio, float _mapping_error, float _mapping_ratio)
-      : inlier_error_(flatbuffers::EndianScalar(_inlier_error)),
-        inlier_ratio_(flatbuffers::EndianScalar(_inlier_ratio)),
-        mapping_error_(flatbuffers::EndianScalar(_mapping_error)),
-        mapping_ratio_(flatbuffers::EndianScalar(_mapping_ratio)) {
+      : inlier_error_(::flatbuffers::EndianScalar(_inlier_error)),
+        inlier_ratio_(::flatbuffers::EndianScalar(_inlier_ratio)),
+        mapping_error_(::flatbuffers::EndianScalar(_mapping_error)),
+        mapping_ratio_(::flatbuffers::EndianScalar(_mapping_ratio)) {
   }
   float inlier_error() const {
-    return flatbuffers::EndianScalar(inlier_error_);
-  }
-  void mutate_inlier_error(float _inlier_error) {
-    flatbuffers::WriteScalar(&inlier_error_, _inlier_error);
+    return ::flatbuffers::EndianScalar(inlier_error_);
   }
   float inlier_ratio() const {
-    return flatbuffers::EndianScalar(inlier_ratio_);
-  }
-  void mutate_inlier_ratio(float _inlier_ratio) {
-    flatbuffers::WriteScalar(&inlier_ratio_, _inlier_ratio);
+    return ::flatbuffers::EndianScalar(inlier_ratio_);
   }
   float mapping_error() const {
-    return flatbuffers::EndianScalar(mapping_error_);
-  }
-  void mutate_mapping_error(float _mapping_error) {
-    flatbuffers::WriteScalar(&mapping_error_, _mapping_error);
+    return ::flatbuffers::EndianScalar(mapping_error_);
   }
   float mapping_ratio() const {
-    return flatbuffers::EndianScalar(mapping_ratio_);
-  }
-  void mutate_mapping_ratio(float _mapping_ratio) {
-    flatbuffers::WriteScalar(&mapping_ratio_, _mapping_ratio);
+    return ::flatbuffers::EndianScalar(mapping_ratio_);
   }
 };
 FLATBUFFERS_STRUCT_END(StatusCondition, 16);
@@ -292,137 +238,83 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusPower FLATBUFFERS_FINAL_CLASS {
         contact_voltage_(0) {
   }
   StatusPower(float _bat_in, float _bat_out, float _bat_current, float _total_power, float _power, float _bat_percent, float _tabos_voltage, float _tabos_current, float _tabos_status, float _tabos_ttf, float _tabos_tte, float _tabos_soc, float _tabos_soh, float _tabos_temp, float _tabos_rc, float _tabos_ae, float _charge_current, float _contact_voltage)
-      : bat_in_(flatbuffers::EndianScalar(_bat_in)),
-        bat_out_(flatbuffers::EndianScalar(_bat_out)),
-        bat_current_(flatbuffers::EndianScalar(_bat_current)),
-        total_power_(flatbuffers::EndianScalar(_total_power)),
-        power_(flatbuffers::EndianScalar(_power)),
-        bat_percent_(flatbuffers::EndianScalar(_bat_percent)),
-        tabos_voltage_(flatbuffers::EndianScalar(_tabos_voltage)),
-        tabos_current_(flatbuffers::EndianScalar(_tabos_current)),
-        tabos_status_(flatbuffers::EndianScalar(_tabos_status)),
-        tabos_ttf_(flatbuffers::EndianScalar(_tabos_ttf)),
-        tabos_tte_(flatbuffers::EndianScalar(_tabos_tte)),
-        tabos_soc_(flatbuffers::EndianScalar(_tabos_soc)),
-        tabos_soh_(flatbuffers::EndianScalar(_tabos_soh)),
-        tabos_temp_(flatbuffers::EndianScalar(_tabos_temp)),
-        tabos_rc_(flatbuffers::EndianScalar(_tabos_rc)),
-        tabos_ae_(flatbuffers::EndianScalar(_tabos_ae)),
-        charge_current_(flatbuffers::EndianScalar(_charge_current)),
-        contact_voltage_(flatbuffers::EndianScalar(_contact_voltage)) {
+      : bat_in_(::flatbuffers::EndianScalar(_bat_in)),
+        bat_out_(::flatbuffers::EndianScalar(_bat_out)),
+        bat_current_(::flatbuffers::EndianScalar(_bat_current)),
+        total_power_(::flatbuffers::EndianScalar(_total_power)),
+        power_(::flatbuffers::EndianScalar(_power)),
+        bat_percent_(::flatbuffers::EndianScalar(_bat_percent)),
+        tabos_voltage_(::flatbuffers::EndianScalar(_tabos_voltage)),
+        tabos_current_(::flatbuffers::EndianScalar(_tabos_current)),
+        tabos_status_(::flatbuffers::EndianScalar(_tabos_status)),
+        tabos_ttf_(::flatbuffers::EndianScalar(_tabos_ttf)),
+        tabos_tte_(::flatbuffers::EndianScalar(_tabos_tte)),
+        tabos_soc_(::flatbuffers::EndianScalar(_tabos_soc)),
+        tabos_soh_(::flatbuffers::EndianScalar(_tabos_soh)),
+        tabos_temp_(::flatbuffers::EndianScalar(_tabos_temp)),
+        tabos_rc_(::flatbuffers::EndianScalar(_tabos_rc)),
+        tabos_ae_(::flatbuffers::EndianScalar(_tabos_ae)),
+        charge_current_(::flatbuffers::EndianScalar(_charge_current)),
+        contact_voltage_(::flatbuffers::EndianScalar(_contact_voltage)) {
   }
   float bat_in() const {
-    return flatbuffers::EndianScalar(bat_in_);
-  }
-  void mutate_bat_in(float _bat_in) {
-    flatbuffers::WriteScalar(&bat_in_, _bat_in);
+    return ::flatbuffers::EndianScalar(bat_in_);
   }
   float bat_out() const {
-    return flatbuffers::EndianScalar(bat_out_);
-  }
-  void mutate_bat_out(float _bat_out) {
-    flatbuffers::WriteScalar(&bat_out_, _bat_out);
+    return ::flatbuffers::EndianScalar(bat_out_);
   }
   float bat_current() const {
-    return flatbuffers::EndianScalar(bat_current_);
-  }
-  void mutate_bat_current(float _bat_current) {
-    flatbuffers::WriteScalar(&bat_current_, _bat_current);
+    return ::flatbuffers::EndianScalar(bat_current_);
   }
   float total_power() const {
-    return flatbuffers::EndianScalar(total_power_);
-  }
-  void mutate_total_power(float _total_power) {
-    flatbuffers::WriteScalar(&total_power_, _total_power);
+    return ::flatbuffers::EndianScalar(total_power_);
   }
   float power() const {
-    return flatbuffers::EndianScalar(power_);
-  }
-  void mutate_power(float _power) {
-    flatbuffers::WriteScalar(&power_, _power);
+    return ::flatbuffers::EndianScalar(power_);
   }
   float bat_percent() const {
-    return flatbuffers::EndianScalar(bat_percent_);
-  }
-  void mutate_bat_percent(float _bat_percent) {
-    flatbuffers::WriteScalar(&bat_percent_, _bat_percent);
+    return ::flatbuffers::EndianScalar(bat_percent_);
   }
   float tabos_voltage() const {
-    return flatbuffers::EndianScalar(tabos_voltage_);
-  }
-  void mutate_tabos_voltage(float _tabos_voltage) {
-    flatbuffers::WriteScalar(&tabos_voltage_, _tabos_voltage);
+    return ::flatbuffers::EndianScalar(tabos_voltage_);
   }
   float tabos_current() const {
-    return flatbuffers::EndianScalar(tabos_current_);
-  }
-  void mutate_tabos_current(float _tabos_current) {
-    flatbuffers::WriteScalar(&tabos_current_, _tabos_current);
+    return ::flatbuffers::EndianScalar(tabos_current_);
   }
   float tabos_status() const {
-    return flatbuffers::EndianScalar(tabos_status_);
-  }
-  void mutate_tabos_status(float _tabos_status) {
-    flatbuffers::WriteScalar(&tabos_status_, _tabos_status);
+    return ::flatbuffers::EndianScalar(tabos_status_);
   }
   float tabos_ttf() const {
-    return flatbuffers::EndianScalar(tabos_ttf_);
-  }
-  void mutate_tabos_ttf(float _tabos_ttf) {
-    flatbuffers::WriteScalar(&tabos_ttf_, _tabos_ttf);
+    return ::flatbuffers::EndianScalar(tabos_ttf_);
   }
   float tabos_tte() const {
-    return flatbuffers::EndianScalar(tabos_tte_);
-  }
-  void mutate_tabos_tte(float _tabos_tte) {
-    flatbuffers::WriteScalar(&tabos_tte_, _tabos_tte);
+    return ::flatbuffers::EndianScalar(tabos_tte_);
   }
   float tabos_soc() const {
-    return flatbuffers::EndianScalar(tabos_soc_);
-  }
-  void mutate_tabos_soc(float _tabos_soc) {
-    flatbuffers::WriteScalar(&tabos_soc_, _tabos_soc);
+    return ::flatbuffers::EndianScalar(tabos_soc_);
   }
   float tabos_soh() const {
-    return flatbuffers::EndianScalar(tabos_soh_);
-  }
-  void mutate_tabos_soh(float _tabos_soh) {
-    flatbuffers::WriteScalar(&tabos_soh_, _tabos_soh);
+    return ::flatbuffers::EndianScalar(tabos_soh_);
   }
   float tabos_temp() const {
-    return flatbuffers::EndianScalar(tabos_temp_);
-  }
-  void mutate_tabos_temp(float _tabos_temp) {
-    flatbuffers::WriteScalar(&tabos_temp_, _tabos_temp);
+    return ::flatbuffers::EndianScalar(tabos_temp_);
   }
   float tabos_rc() const {
-    return flatbuffers::EndianScalar(tabos_rc_);
-  }
-  void mutate_tabos_rc(float _tabos_rc) {
-    flatbuffers::WriteScalar(&tabos_rc_, _tabos_rc);
+    return ::flatbuffers::EndianScalar(tabos_rc_);
   }
   float tabos_ae() const {
-    return flatbuffers::EndianScalar(tabos_ae_);
-  }
-  void mutate_tabos_ae(float _tabos_ae) {
-    flatbuffers::WriteScalar(&tabos_ae_, _tabos_ae);
+    return ::flatbuffers::EndianScalar(tabos_ae_);
   }
   float charge_current() const {
-    return flatbuffers::EndianScalar(charge_current_);
-  }
-  void mutate_charge_current(float _charge_current) {
-    flatbuffers::WriteScalar(&charge_current_, _charge_current);
+    return ::flatbuffers::EndianScalar(charge_current_);
   }
   float contact_voltage() const {
-    return flatbuffers::EndianScalar(contact_voltage_);
-  }
-  void mutate_contact_voltage(float _contact_voltage) {
-    flatbuffers::WriteScalar(&contact_voltage_, _contact_voltage);
+    return ::flatbuffers::EndianScalar(contact_voltage_);
   }
 };
 FLATBUFFERS_STRUCT_END(StatusPower, 72);
 
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MoveStatusPose FLATBUFFERS_FINAL_CLASS {
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusPose FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
   float y_;
@@ -430,113 +322,63 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MoveStatusPose FLATBUFFERS_FINAL_CLASS {
   float rz_;
 
  public:
-  MoveStatusPose()
+  StatusPose()
       : x_(0),
         y_(0),
         z_(0),
         rz_(0) {
   }
-  MoveStatusPose(float _x, float _y, float _z, float _rz)
-      : x_(flatbuffers::EndianScalar(_x)),
-        y_(flatbuffers::EndianScalar(_y)),
-        z_(flatbuffers::EndianScalar(_z)),
-        rz_(flatbuffers::EndianScalar(_rz)) {
+  StatusPose(float _x, float _y, float _z, float _rz)
+      : x_(::flatbuffers::EndianScalar(_x)),
+        y_(::flatbuffers::EndianScalar(_y)),
+        z_(::flatbuffers::EndianScalar(_z)),
+        rz_(::flatbuffers::EndianScalar(_rz)) {
   }
   float x() const {
-    return flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    flatbuffers::WriteScalar(&x_, _x);
+    return ::flatbuffers::EndianScalar(x_);
   }
   float y() const {
-    return flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    flatbuffers::WriteScalar(&y_, _y);
+    return ::flatbuffers::EndianScalar(y_);
   }
   float z() const {
-    return flatbuffers::EndianScalar(z_);
-  }
-  void mutate_z(float _z) {
-    flatbuffers::WriteScalar(&z_, _z);
+    return ::flatbuffers::EndianScalar(z_);
   }
   float rz() const {
-    return flatbuffers::EndianScalar(rz_);
-  }
-  void mutate_rz(float _rz) {
-    flatbuffers::WriteScalar(&rz_, _rz);
+    return ::flatbuffers::EndianScalar(rz_);
   }
 };
-FLATBUFFERS_STRUCT_END(MoveStatusPose, 16);
+FLATBUFFERS_STRUCT_END(StatusPose, 16);
 
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MoveStatusVel FLATBUFFERS_FINAL_CLASS {
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusVel FLATBUFFERS_FINAL_CLASS {
  private:
   float vx_;
   float vy_;
   float wz_;
 
  public:
-  MoveStatusVel()
+  StatusVel()
       : vx_(0),
         vy_(0),
         wz_(0) {
   }
-  MoveStatusVel(float _vx, float _vy, float _wz)
-      : vx_(flatbuffers::EndianScalar(_vx)),
-        vy_(flatbuffers::EndianScalar(_vy)),
-        wz_(flatbuffers::EndianScalar(_wz)) {
+  StatusVel(float _vx, float _vy, float _wz)
+      : vx_(::flatbuffers::EndianScalar(_vx)),
+        vy_(::flatbuffers::EndianScalar(_vy)),
+        wz_(::flatbuffers::EndianScalar(_wz)) {
   }
   float vx() const {
-    return flatbuffers::EndianScalar(vx_);
-  }
-  void mutate_vx(float _vx) {
-    flatbuffers::WriteScalar(&vx_, _vx);
+    return ::flatbuffers::EndianScalar(vx_);
   }
   float vy() const {
-    return flatbuffers::EndianScalar(vy_);
-  }
-  void mutate_vy(float _vy) {
-    flatbuffers::WriteScalar(&vy_, _vy);
+    return ::flatbuffers::EndianScalar(vy_);
   }
   float wz() const {
-    return flatbuffers::EndianScalar(wz_);
-  }
-  void mutate_wz(float _wz) {
-    flatbuffers::WriteScalar(&wz_, _wz);
+    return ::flatbuffers::EndianScalar(wz_);
   }
 };
-FLATBUFFERS_STRUCT_END(MoveStatusVel, 12);
+FLATBUFFERS_STRUCT_END(StatusVel, 12);
 
-struct StatusRobotStateT : public flatbuffers::NativeTable {
-  typedef StatusRobotState TableType;
-  std::string charge;
-  bool dock;
-  bool emo;
-  std::string localization;
-  bool power;
-  bool sss_recovery;
-  bool sw_reset;
-  bool sw_stop;
-  bool sw_start;
-  bool sf_bumper_detect;
-  bool sf_obs_detect;
-  bool sf_operational_stop;
-  StatusRobotStateT()
-      : dock(false),
-        emo(false),
-        power(false),
-        sss_recovery(false),
-        sw_reset(false),
-        sw_stop(false),
-        sw_start(false),
-        sf_bumper_detect(false),
-        sf_obs_detect(false),
-        sf_operational_stop(false) {
-  }
-};
-
-struct StatusRobotState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StatusRobotStateT NativeTableType;
+struct StatusRobotState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusRobotStateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CHARGE = 4,
@@ -552,106 +394,67 @@ struct StatusRobotState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_SF_OBS_DETECT = 24,
     VT_SF_OPERATIONAL_STOP = 26
   };
-  const flatbuffers::String *charge() const {
-    return GetPointer<const flatbuffers::String *>(VT_CHARGE);
-  }
-  flatbuffers::String *mutable_charge() {
-    return GetPointer<flatbuffers::String *>(VT_CHARGE);
+  const ::flatbuffers::String *charge() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_CHARGE);
   }
   bool dock() const {
     return GetField<uint8_t>(VT_DOCK, 0) != 0;
   }
-  bool mutate_dock(bool _dock) {
-    return SetField<uint8_t>(VT_DOCK, static_cast<uint8_t>(_dock), 0);
-  }
   bool emo() const {
     return GetField<uint8_t>(VT_EMO, 0) != 0;
   }
-  bool mutate_emo(bool _emo) {
-    return SetField<uint8_t>(VT_EMO, static_cast<uint8_t>(_emo), 0);
-  }
-  const flatbuffers::String *localization() const {
-    return GetPointer<const flatbuffers::String *>(VT_LOCALIZATION);
-  }
-  flatbuffers::String *mutable_localization() {
-    return GetPointer<flatbuffers::String *>(VT_LOCALIZATION);
+  const ::flatbuffers::String *localization() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_LOCALIZATION);
   }
   bool power() const {
     return GetField<uint8_t>(VT_POWER, 0) != 0;
   }
-  bool mutate_power(bool _power) {
-    return SetField<uint8_t>(VT_POWER, static_cast<uint8_t>(_power), 0);
-  }
   bool sss_recovery() const {
     return GetField<uint8_t>(VT_SSS_RECOVERY, 0) != 0;
-  }
-  bool mutate_sss_recovery(bool _sss_recovery) {
-    return SetField<uint8_t>(VT_SSS_RECOVERY, static_cast<uint8_t>(_sss_recovery), 0);
   }
   bool sw_reset() const {
     return GetField<uint8_t>(VT_SW_RESET, 0) != 0;
   }
-  bool mutate_sw_reset(bool _sw_reset) {
-    return SetField<uint8_t>(VT_SW_RESET, static_cast<uint8_t>(_sw_reset), 0);
-  }
   bool sw_stop() const {
     return GetField<uint8_t>(VT_SW_STOP, 0) != 0;
-  }
-  bool mutate_sw_stop(bool _sw_stop) {
-    return SetField<uint8_t>(VT_SW_STOP, static_cast<uint8_t>(_sw_stop), 0);
   }
   bool sw_start() const {
     return GetField<uint8_t>(VT_SW_START, 0) != 0;
   }
-  bool mutate_sw_start(bool _sw_start) {
-    return SetField<uint8_t>(VT_SW_START, static_cast<uint8_t>(_sw_start), 0);
-  }
   bool sf_bumper_detect() const {
     return GetField<uint8_t>(VT_SF_BUMPER_DETECT, 0) != 0;
-  }
-  bool mutate_sf_bumper_detect(bool _sf_bumper_detect) {
-    return SetField<uint8_t>(VT_SF_BUMPER_DETECT, static_cast<uint8_t>(_sf_bumper_detect), 0);
   }
   bool sf_obs_detect() const {
     return GetField<uint8_t>(VT_SF_OBS_DETECT, 0) != 0;
   }
-  bool mutate_sf_obs_detect(bool _sf_obs_detect) {
-    return SetField<uint8_t>(VT_SF_OBS_DETECT, static_cast<uint8_t>(_sf_obs_detect), 0);
-  }
   bool sf_operational_stop() const {
     return GetField<uint8_t>(VT_SF_OPERATIONAL_STOP, 0) != 0;
   }
-  bool mutate_sf_operational_stop(bool _sf_operational_stop) {
-    return SetField<uint8_t>(VT_SF_OPERATIONAL_STOP, static_cast<uint8_t>(_sf_operational_stop), 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_CHARGE) &&
            verifier.VerifyString(charge()) &&
-           VerifyField<uint8_t>(verifier, VT_DOCK) &&
-           VerifyField<uint8_t>(verifier, VT_EMO) &&
+           VerifyField<uint8_t>(verifier, VT_DOCK, 1) &&
+           VerifyField<uint8_t>(verifier, VT_EMO, 1) &&
            VerifyOffset(verifier, VT_LOCALIZATION) &&
            verifier.VerifyString(localization()) &&
-           VerifyField<uint8_t>(verifier, VT_POWER) &&
-           VerifyField<uint8_t>(verifier, VT_SSS_RECOVERY) &&
-           VerifyField<uint8_t>(verifier, VT_SW_RESET) &&
-           VerifyField<uint8_t>(verifier, VT_SW_STOP) &&
-           VerifyField<uint8_t>(verifier, VT_SW_START) &&
-           VerifyField<uint8_t>(verifier, VT_SF_BUMPER_DETECT) &&
-           VerifyField<uint8_t>(verifier, VT_SF_OBS_DETECT) &&
-           VerifyField<uint8_t>(verifier, VT_SF_OPERATIONAL_STOP) &&
+           VerifyField<uint8_t>(verifier, VT_POWER, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SSS_RECOVERY, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SW_RESET, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SW_STOP, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SW_START, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SF_BUMPER_DETECT, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SF_OBS_DETECT, 1) &&
+           VerifyField<uint8_t>(verifier, VT_SF_OPERATIONAL_STOP, 1) &&
            verifier.EndTable();
   }
-  StatusRobotStateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StatusRobotStateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<StatusRobotState> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotStateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StatusRobotStateBuilder {
   typedef StatusRobotState Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_charge(flatbuffers::Offset<flatbuffers::String> charge) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_charge(::flatbuffers::Offset<::flatbuffers::String> charge) {
     fbb_.AddOffset(StatusRobotState::VT_CHARGE, charge);
   }
   void add_dock(bool dock) {
@@ -660,7 +463,7 @@ struct StatusRobotStateBuilder {
   void add_emo(bool emo) {
     fbb_.AddElement<uint8_t>(StatusRobotState::VT_EMO, static_cast<uint8_t>(emo), 0);
   }
-  void add_localization(flatbuffers::Offset<flatbuffers::String> localization) {
+  void add_localization(::flatbuffers::Offset<::flatbuffers::String> localization) {
     fbb_.AddOffset(StatusRobotState::VT_LOCALIZATION, localization);
   }
   void add_power(bool power) {
@@ -687,23 +490,23 @@ struct StatusRobotStateBuilder {
   void add_sf_operational_stop(bool sf_operational_stop) {
     fbb_.AddElement<uint8_t>(StatusRobotState::VT_SF_OPERATIONAL_STOP, static_cast<uint8_t>(sf_operational_stop), 0);
   }
-  explicit StatusRobotStateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusRobotStateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<StatusRobotState> Finish() {
+  ::flatbuffers::Offset<StatusRobotState> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StatusRobotState>(end);
+    auto o = ::flatbuffers::Offset<StatusRobotState>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<StatusRobotState> CreateStatusRobotState(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> charge = 0,
+inline ::flatbuffers::Offset<StatusRobotState> CreateStatusRobotState(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> charge = 0,
     bool dock = false,
     bool emo = false,
-    flatbuffers::Offset<flatbuffers::String> localization = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> localization = 0,
     bool power = false,
     bool sss_recovery = false,
     bool sw_reset = false,
@@ -728,8 +531,8 @@ inline flatbuffers::Offset<StatusRobotState> CreateStatusRobotState(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<StatusRobotState> CreateStatusRobotStateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusRobotState> CreateStatusRobotStateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *charge = nullptr,
     bool dock = false,
     bool emo = false,
@@ -760,20 +563,7 @@ inline flatbuffers::Offset<StatusRobotState> CreateStatusRobotStateDirect(
       sf_operational_stop);
 }
 
-flatbuffers::Offset<StatusRobotState> CreateStatusRobotState(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotStateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct StatusRobotSafetyIoStateT : public flatbuffers::NativeTable {
-  typedef StatusRobotSafetyIoState TableType;
-  std::vector<bool> mcu0_dio;
-  std::vector<bool> mcu1_dio;
-  std::vector<bool> mcu0_din;
-  std::vector<bool> mcu1_din;
-  StatusRobotSafetyIoStateT() {
-  }
-};
-
-struct StatusRobotSafetyIoState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StatusRobotSafetyIoStateT NativeTableType;
+struct StatusRobotSafetyIoState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusRobotSafetyIoStateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MCU0_DIO = 4,
@@ -781,31 +571,19 @@ struct StatusRobotSafetyIoState FLATBUFFERS_FINAL_CLASS : private flatbuffers::T
     VT_MCU0_DIN = 8,
     VT_MCU1_DIN = 10
   };
-  const flatbuffers::Vector<uint8_t> *mcu0_dio() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIO);
+  const ::flatbuffers::Vector<uint8_t> *mcu0_dio() const {
+    return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIO);
   }
-  flatbuffers::Vector<uint8_t> *mutable_mcu0_dio() {
-    return GetPointer<flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIO);
+  const ::flatbuffers::Vector<uint8_t> *mcu1_dio() const {
+    return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIO);
   }
-  const flatbuffers::Vector<uint8_t> *mcu1_dio() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIO);
+  const ::flatbuffers::Vector<uint8_t> *mcu0_din() const {
+    return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIN);
   }
-  flatbuffers::Vector<uint8_t> *mutable_mcu1_dio() {
-    return GetPointer<flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIO);
+  const ::flatbuffers::Vector<uint8_t> *mcu1_din() const {
+    return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIN);
   }
-  const flatbuffers::Vector<uint8_t> *mcu0_din() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIN);
-  }
-  flatbuffers::Vector<uint8_t> *mutable_mcu0_din() {
-    return GetPointer<flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIN);
-  }
-  const flatbuffers::Vector<uint8_t> *mcu1_din() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIN);
-  }
-  flatbuffers::Vector<uint8_t> *mutable_mcu1_din() {
-    return GetPointer<flatbuffers::Vector<uint8_t> *>(VT_MCU1_DIN);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_MCU0_DIO) &&
            verifier.VerifyVector(mcu0_dio()) &&
@@ -817,44 +595,41 @@ struct StatusRobotSafetyIoState FLATBUFFERS_FINAL_CLASS : private flatbuffers::T
            verifier.VerifyVector(mcu1_din()) &&
            verifier.EndTable();
   }
-  StatusRobotSafetyIoStateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StatusRobotSafetyIoStateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<StatusRobotSafetyIoState> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotSafetyIoStateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StatusRobotSafetyIoStateBuilder {
   typedef StatusRobotSafetyIoState Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_mcu0_dio(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu0_dio) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_mcu0_dio(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_dio) {
     fbb_.AddOffset(StatusRobotSafetyIoState::VT_MCU0_DIO, mcu0_dio);
   }
-  void add_mcu1_dio(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu1_dio) {
+  void add_mcu1_dio(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_dio) {
     fbb_.AddOffset(StatusRobotSafetyIoState::VT_MCU1_DIO, mcu1_dio);
   }
-  void add_mcu0_din(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu0_din) {
+  void add_mcu0_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din) {
     fbb_.AddOffset(StatusRobotSafetyIoState::VT_MCU0_DIN, mcu0_din);
   }
-  void add_mcu1_din(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu1_din) {
+  void add_mcu1_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din) {
     fbb_.AddOffset(StatusRobotSafetyIoState::VT_MCU1_DIN, mcu1_din);
   }
-  explicit StatusRobotSafetyIoStateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusRobotSafetyIoStateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<StatusRobotSafetyIoState> Finish() {
+  ::flatbuffers::Offset<StatusRobotSafetyIoState> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StatusRobotSafetyIoState>(end);
+    auto o = ::flatbuffers::Offset<StatusRobotSafetyIoState>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoState(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu0_dio = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu1_dio = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu0_din = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> mcu1_din = 0) {
+inline ::flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoState(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_dio = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_dio = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din = 0) {
   StatusRobotSafetyIoStateBuilder builder_(_fbb);
   builder_.add_mcu1_din(mcu1_din);
   builder_.add_mcu0_din(mcu0_din);
@@ -863,8 +638,8 @@ inline flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoSt
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoStateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoStateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<uint8_t> *mcu0_dio = nullptr,
     const std::vector<uint8_t> *mcu1_dio = nullptr,
     const std::vector<uint8_t> *mcu0_din = nullptr,
@@ -881,36 +656,19 @@ inline flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoSt
       mcu1_din__);
 }
 
-flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoState(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotSafetyIoStateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct StatusSettingT : public flatbuffers::NativeTable {
-  typedef StatusSetting TableType;
-  std::string platform_type;
-  std::string platform_name;
-  StatusSettingT() {
-  }
-};
-
-struct StatusSetting FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StatusSettingT NativeTableType;
+struct StatusSetting FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusSettingBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PLATFORM_TYPE = 4,
     VT_PLATFORM_NAME = 6
   };
-  const flatbuffers::String *platform_type() const {
-    return GetPointer<const flatbuffers::String *>(VT_PLATFORM_TYPE);
+  const ::flatbuffers::String *platform_type() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_PLATFORM_TYPE);
   }
-  flatbuffers::String *mutable_platform_type() {
-    return GetPointer<flatbuffers::String *>(VT_PLATFORM_TYPE);
+  const ::flatbuffers::String *platform_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_PLATFORM_NAME);
   }
-  const flatbuffers::String *platform_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_PLATFORM_NAME);
-  }
-  flatbuffers::String *mutable_platform_name() {
-    return GetPointer<flatbuffers::String *>(VT_PLATFORM_NAME);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_PLATFORM_TYPE) &&
            verifier.VerifyString(platform_type()) &&
@@ -918,44 +676,41 @@ struct StatusSetting FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(platform_name()) &&
            verifier.EndTable();
   }
-  StatusSettingT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StatusSettingT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<StatusSetting> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusSettingT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StatusSettingBuilder {
   typedef StatusSetting Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_platform_type(flatbuffers::Offset<flatbuffers::String> platform_type) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_platform_type(::flatbuffers::Offset<::flatbuffers::String> platform_type) {
     fbb_.AddOffset(StatusSetting::VT_PLATFORM_TYPE, platform_type);
   }
-  void add_platform_name(flatbuffers::Offset<flatbuffers::String> platform_name) {
+  void add_platform_name(::flatbuffers::Offset<::flatbuffers::String> platform_name) {
     fbb_.AddOffset(StatusSetting::VT_PLATFORM_NAME, platform_name);
   }
-  explicit StatusSettingBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusSettingBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<StatusSetting> Finish() {
+  ::flatbuffers::Offset<StatusSetting> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StatusSetting>(end);
+    auto o = ::flatbuffers::Offset<StatusSetting>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<StatusSetting> CreateStatusSetting(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> platform_type = 0,
-    flatbuffers::Offset<flatbuffers::String> platform_name = 0) {
+inline ::flatbuffers::Offset<StatusSetting> CreateStatusSetting(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> platform_type = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> platform_name = 0) {
   StatusSettingBuilder builder_(_fbb);
   builder_.add_platform_name(platform_name);
   builder_.add_platform_type(platform_type);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<StatusSetting> CreateStatusSettingDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusSetting> CreateStatusSettingDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *platform_type = nullptr,
     const char *platform_name = nullptr) {
   auto platform_type__ = platform_type ? _fbb.CreateString(platform_type) : 0;
@@ -966,36 +721,19 @@ inline flatbuffers::Offset<StatusSetting> CreateStatusSettingDirect(
       platform_name__);
 }
 
-flatbuffers::Offset<StatusSetting> CreateStatusSetting(flatbuffers::FlatBufferBuilder &_fbb, const StatusSettingT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct StatusMapT : public flatbuffers::NativeTable {
-  typedef StatusMap TableType;
-  std::string map_name;
-  std::string map_status;
-  StatusMapT() {
-  }
-};
-
-struct StatusMap FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StatusMapT NativeTableType;
+struct StatusMap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusMapBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MAP_NAME = 4,
     VT_MAP_STATUS = 6
   };
-  const flatbuffers::String *map_name() const {
-    return GetPointer<const flatbuffers::String *>(VT_MAP_NAME);
+  const ::flatbuffers::String *map_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
   }
-  flatbuffers::String *mutable_map_name() {
-    return GetPointer<flatbuffers::String *>(VT_MAP_NAME);
+  const ::flatbuffers::String *map_status() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MAP_STATUS);
   }
-  const flatbuffers::String *map_status() const {
-    return GetPointer<const flatbuffers::String *>(VT_MAP_STATUS);
-  }
-  flatbuffers::String *mutable_map_status() {
-    return GetPointer<flatbuffers::String *>(VT_MAP_STATUS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_MAP_NAME) &&
            verifier.VerifyString(map_name()) &&
@@ -1003,44 +741,41 @@ struct StatusMap FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(map_status()) &&
            verifier.EndTable();
   }
-  StatusMapT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StatusMapT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<StatusMap> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusMapT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StatusMapBuilder {
   typedef StatusMap Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_map_name(flatbuffers::Offset<flatbuffers::String> map_name) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
     fbb_.AddOffset(StatusMap::VT_MAP_NAME, map_name);
   }
-  void add_map_status(flatbuffers::Offset<flatbuffers::String> map_status) {
+  void add_map_status(::flatbuffers::Offset<::flatbuffers::String> map_status) {
     fbb_.AddOffset(StatusMap::VT_MAP_STATUS, map_status);
   }
-  explicit StatusMapBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusMapBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<StatusMap> Finish() {
+  ::flatbuffers::Offset<StatusMap> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StatusMap>(end);
+    auto o = ::flatbuffers::Offset<StatusMap>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<StatusMap> CreateStatusMap(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> map_name = 0,
-    flatbuffers::Offset<flatbuffers::String> map_status = 0) {
+inline ::flatbuffers::Offset<StatusMap> CreateStatusMap(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> map_status = 0) {
   StatusMapBuilder builder_(_fbb);
   builder_.add_map_status(map_status);
   builder_.add_map_name(map_name);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<StatusMap> CreateStatusMapDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusMap> CreateStatusMapDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *map_name = nullptr,
     const char *map_status = nullptr) {
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
@@ -1051,98 +786,49 @@ inline flatbuffers::Offset<StatusMap> CreateStatusMapDirect(
       map_status__);
 }
 
-flatbuffers::Offset<StatusMap> CreateStatusMap(flatbuffers::FlatBufferBuilder &_fbb, const StatusMapT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct StatusT : public flatbuffers::NativeTable {
-  typedef Status TableType;
-  std::unique_ptr<SLAMNAV::StatusCondition> condition;
-  std::unique_ptr<SLAMNAV::StatusImu> imu;
-  std::unique_ptr<SLAMNAV::StatusMotor> motor0;
-  std::unique_ptr<SLAMNAV::StatusMotor> motor1;
-  std::unique_ptr<SLAMNAV::StatusPower> power;
-  std::unique_ptr<SLAMNAV::StatusRobotStateT> robot_state;
-  std::unique_ptr<SLAMNAV::StatusRobotSafetyIoStateT> robot_safety_io_state;
-  std::unique_ptr<SLAMNAV::StatusSettingT> setting;
-  std::unique_ptr<SLAMNAV::StatusMapT> map;
-  StatusT() {
-  }
-};
-
-struct Status FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StatusT NativeTableType;
+struct Status FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CONDITION = 4,
     VT_IMU = 6,
-    VT_MOTOR0 = 8,
-    VT_MOTOR1 = 10,
-    VT_POWER = 12,
-    VT_ROBOT_STATE = 14,
-    VT_ROBOT_SAFETY_IO_STATE = 16,
-    VT_SETTING = 18,
-    VT_MAP = 20
+    VT_MOTOR = 8,
+    VT_POWER = 10,
+    VT_ROBOT_STATE = 12,
+    VT_ROBOT_SAFETY_IO_STATE = 14,
+    VT_SETTING = 16,
+    VT_MAP = 18
   };
   const SLAMNAV::StatusCondition *condition() const {
     return GetStruct<const SLAMNAV::StatusCondition *>(VT_CONDITION);
   }
-  SLAMNAV::StatusCondition *mutable_condition() {
-    return GetStruct<SLAMNAV::StatusCondition *>(VT_CONDITION);
-  }
   const SLAMNAV::StatusImu *imu() const {
     return GetStruct<const SLAMNAV::StatusImu *>(VT_IMU);
   }
-  SLAMNAV::StatusImu *mutable_imu() {
-    return GetStruct<SLAMNAV::StatusImu *>(VT_IMU);
-  }
-  const SLAMNAV::StatusMotor *motor0() const {
-    return GetStruct<const SLAMNAV::StatusMotor *>(VT_MOTOR0);
-  }
-  SLAMNAV::StatusMotor *mutable_motor0() {
-    return GetStruct<SLAMNAV::StatusMotor *>(VT_MOTOR0);
-  }
-  const SLAMNAV::StatusMotor *motor1() const {
-    return GetStruct<const SLAMNAV::StatusMotor *>(VT_MOTOR1);
-  }
-  SLAMNAV::StatusMotor *mutable_motor1() {
-    return GetStruct<SLAMNAV::StatusMotor *>(VT_MOTOR1);
+  const ::flatbuffers::Vector<const SLAMNAV::StatusMotor *> *motor() const {
+    return GetPointer<const ::flatbuffers::Vector<const SLAMNAV::StatusMotor *> *>(VT_MOTOR);
   }
   const SLAMNAV::StatusPower *power() const {
     return GetStruct<const SLAMNAV::StatusPower *>(VT_POWER);
   }
-  SLAMNAV::StatusPower *mutable_power() {
-    return GetStruct<SLAMNAV::StatusPower *>(VT_POWER);
-  }
   const SLAMNAV::StatusRobotState *robot_state() const {
     return GetPointer<const SLAMNAV::StatusRobotState *>(VT_ROBOT_STATE);
-  }
-  SLAMNAV::StatusRobotState *mutable_robot_state() {
-    return GetPointer<SLAMNAV::StatusRobotState *>(VT_ROBOT_STATE);
   }
   const SLAMNAV::StatusRobotSafetyIoState *robot_safety_io_state() const {
     return GetPointer<const SLAMNAV::StatusRobotSafetyIoState *>(VT_ROBOT_SAFETY_IO_STATE);
   }
-  SLAMNAV::StatusRobotSafetyIoState *mutable_robot_safety_io_state() {
-    return GetPointer<SLAMNAV::StatusRobotSafetyIoState *>(VT_ROBOT_SAFETY_IO_STATE);
-  }
   const SLAMNAV::StatusSetting *setting() const {
     return GetPointer<const SLAMNAV::StatusSetting *>(VT_SETTING);
-  }
-  SLAMNAV::StatusSetting *mutable_setting() {
-    return GetPointer<SLAMNAV::StatusSetting *>(VT_SETTING);
   }
   const SLAMNAV::StatusMap *map() const {
     return GetPointer<const SLAMNAV::StatusMap *>(VT_MAP);
   }
-  SLAMNAV::StatusMap *mutable_map() {
-    return GetPointer<SLAMNAV::StatusMap *>(VT_MAP);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<SLAMNAV::StatusCondition>(verifier, VT_CONDITION) &&
-           VerifyField<SLAMNAV::StatusImu>(verifier, VT_IMU) &&
-           VerifyField<SLAMNAV::StatusMotor>(verifier, VT_MOTOR0) &&
-           VerifyField<SLAMNAV::StatusMotor>(verifier, VT_MOTOR1) &&
-           VerifyField<SLAMNAV::StatusPower>(verifier, VT_POWER) &&
+           VerifyField<SLAMNAV::StatusCondition>(verifier, VT_CONDITION, 4) &&
+           VerifyField<SLAMNAV::StatusImu>(verifier, VT_IMU, 4) &&
+           VerifyOffset(verifier, VT_MOTOR) &&
+           verifier.VerifyVector(motor()) &&
+           VerifyField<SLAMNAV::StatusPower>(verifier, VT_POWER, 4) &&
            VerifyOffset(verifier, VT_ROBOT_STATE) &&
            verifier.VerifyTable(robot_state()) &&
            VerifyOffset(verifier, VT_ROBOT_SAFETY_IO_STATE) &&
@@ -1153,93 +839,94 @@ struct Status FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyTable(map()) &&
            verifier.EndTable();
   }
-  StatusT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StatusT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Status> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StatusBuilder {
   typedef Status Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
   void add_condition(const SLAMNAV::StatusCondition *condition) {
     fbb_.AddStruct(Status::VT_CONDITION, condition);
   }
   void add_imu(const SLAMNAV::StatusImu *imu) {
     fbb_.AddStruct(Status::VT_IMU, imu);
   }
-  void add_motor0(const SLAMNAV::StatusMotor *motor0) {
-    fbb_.AddStruct(Status::VT_MOTOR0, motor0);
-  }
-  void add_motor1(const SLAMNAV::StatusMotor *motor1) {
-    fbb_.AddStruct(Status::VT_MOTOR1, motor1);
+  void add_motor(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::StatusMotor *>> motor) {
+    fbb_.AddOffset(Status::VT_MOTOR, motor);
   }
   void add_power(const SLAMNAV::StatusPower *power) {
     fbb_.AddStruct(Status::VT_POWER, power);
   }
-  void add_robot_state(flatbuffers::Offset<SLAMNAV::StatusRobotState> robot_state) {
+  void add_robot_state(::flatbuffers::Offset<SLAMNAV::StatusRobotState> robot_state) {
     fbb_.AddOffset(Status::VT_ROBOT_STATE, robot_state);
   }
-  void add_robot_safety_io_state(flatbuffers::Offset<SLAMNAV::StatusRobotSafetyIoState> robot_safety_io_state) {
+  void add_robot_safety_io_state(::flatbuffers::Offset<SLAMNAV::StatusRobotSafetyIoState> robot_safety_io_state) {
     fbb_.AddOffset(Status::VT_ROBOT_SAFETY_IO_STATE, robot_safety_io_state);
   }
-  void add_setting(flatbuffers::Offset<SLAMNAV::StatusSetting> setting) {
+  void add_setting(::flatbuffers::Offset<SLAMNAV::StatusSetting> setting) {
     fbb_.AddOffset(Status::VT_SETTING, setting);
   }
-  void add_map(flatbuffers::Offset<SLAMNAV::StatusMap> map) {
+  void add_map(::flatbuffers::Offset<SLAMNAV::StatusMap> map) {
     fbb_.AddOffset(Status::VT_MAP, map);
   }
-  explicit StatusBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Status> Finish() {
+  ::flatbuffers::Offset<Status> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Status>(end);
+    auto o = ::flatbuffers::Offset<Status>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Status> CreateStatus(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const SLAMNAV::StatusCondition *condition = 0,
-    const SLAMNAV::StatusImu *imu = 0,
-    const SLAMNAV::StatusMotor *motor0 = 0,
-    const SLAMNAV::StatusMotor *motor1 = 0,
-    const SLAMNAV::StatusPower *power = 0,
-    flatbuffers::Offset<SLAMNAV::StatusRobotState> robot_state = 0,
-    flatbuffers::Offset<SLAMNAV::StatusRobotSafetyIoState> robot_safety_io_state = 0,
-    flatbuffers::Offset<SLAMNAV::StatusSetting> setting = 0,
-    flatbuffers::Offset<SLAMNAV::StatusMap> map = 0) {
+inline ::flatbuffers::Offset<Status> CreateStatus(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const SLAMNAV::StatusCondition *condition = nullptr,
+    const SLAMNAV::StatusImu *imu = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::StatusMotor *>> motor = 0,
+    const SLAMNAV::StatusPower *power = nullptr,
+    ::flatbuffers::Offset<SLAMNAV::StatusRobotState> robot_state = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusRobotSafetyIoState> robot_safety_io_state = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusSetting> setting = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusMap> map = 0) {
   StatusBuilder builder_(_fbb);
   builder_.add_map(map);
   builder_.add_setting(setting);
   builder_.add_robot_safety_io_state(robot_safety_io_state);
   builder_.add_robot_state(robot_state);
   builder_.add_power(power);
-  builder_.add_motor1(motor1);
-  builder_.add_motor0(motor0);
+  builder_.add_motor(motor);
   builder_.add_imu(imu);
   builder_.add_condition(condition);
   return builder_.Finish();
 }
 
-flatbuffers::Offset<Status> CreateStatus(flatbuffers::FlatBufferBuilder &_fbb, const StatusT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+inline ::flatbuffers::Offset<Status> CreateStatusDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const SLAMNAV::StatusCondition *condition = nullptr,
+    const SLAMNAV::StatusImu *imu = nullptr,
+    const std::vector<SLAMNAV::StatusMotor> *motor = nullptr,
+    const SLAMNAV::StatusPower *power = nullptr,
+    ::flatbuffers::Offset<SLAMNAV::StatusRobotState> robot_state = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusRobotSafetyIoState> robot_safety_io_state = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusSetting> setting = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusMap> map = 0) {
+  auto motor__ = motor ? _fbb.CreateVectorOfStructs<SLAMNAV::StatusMotor>(*motor) : 0;
+  return SLAMNAV::CreateStatus(
+      _fbb,
+      condition,
+      imu,
+      motor__,
+      power,
+      robot_state,
+      robot_safety_io_state,
+      setting,
+      map);
+}
 
-struct MoveStatusMoveStateT : public flatbuffers::NativeTable {
-  typedef MoveStatusMoveState TableType;
-  std::string auto_move;
-  std::string dock_move;
-  std::string jog_move;
-  std::string obs;
-  std::string path;
-  MoveStatusMoveStateT() {
-  }
-};
-
-struct MoveStatusMoveState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef MoveStatusMoveStateT NativeTableType;
-  typedef MoveStatusMoveStateBuilder Builder;
+struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef StatusMoveStateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_AUTO_MOVE = 4,
     VT_DOCK_MOVE = 6,
@@ -1247,37 +934,22 @@ struct MoveStatusMoveState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
     VT_OBS = 10,
     VT_PATH = 12
   };
-  const flatbuffers::String *auto_move() const {
-    return GetPointer<const flatbuffers::String *>(VT_AUTO_MOVE);
+  const ::flatbuffers::String *auto_move() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_AUTO_MOVE);
   }
-  flatbuffers::String *mutable_auto_move() {
-    return GetPointer<flatbuffers::String *>(VT_AUTO_MOVE);
+  const ::flatbuffers::String *dock_move() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_DOCK_MOVE);
   }
-  const flatbuffers::String *dock_move() const {
-    return GetPointer<const flatbuffers::String *>(VT_DOCK_MOVE);
+  const ::flatbuffers::String *jog_move() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_JOG_MOVE);
   }
-  flatbuffers::String *mutable_dock_move() {
-    return GetPointer<flatbuffers::String *>(VT_DOCK_MOVE);
+  const ::flatbuffers::String *obs() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_OBS);
   }
-  const flatbuffers::String *jog_move() const {
-    return GetPointer<const flatbuffers::String *>(VT_JOG_MOVE);
+  const ::flatbuffers::String *path() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_PATH);
   }
-  flatbuffers::String *mutable_jog_move() {
-    return GetPointer<flatbuffers::String *>(VT_JOG_MOVE);
-  }
-  const flatbuffers::String *obs() const {
-    return GetPointer<const flatbuffers::String *>(VT_OBS);
-  }
-  flatbuffers::String *mutable_obs() {
-    return GetPointer<flatbuffers::String *>(VT_OBS);
-  }
-  const flatbuffers::String *path() const {
-    return GetPointer<const flatbuffers::String *>(VT_PATH);
-  }
-  flatbuffers::String *mutable_path() {
-    return GetPointer<flatbuffers::String *>(VT_PATH);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_AUTO_MOVE) &&
            verifier.VerifyString(auto_move()) &&
@@ -1291,49 +963,46 @@ struct MoveStatusMoveState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
            verifier.VerifyString(path()) &&
            verifier.EndTable();
   }
-  MoveStatusMoveStateT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(MoveStatusMoveStateT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<MoveStatusMoveState> Pack(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusMoveStateT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct MoveStatusMoveStateBuilder {
-  typedef MoveStatusMoveState Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_auto_move(flatbuffers::Offset<flatbuffers::String> auto_move) {
-    fbb_.AddOffset(MoveStatusMoveState::VT_AUTO_MOVE, auto_move);
+struct StatusMoveStateBuilder {
+  typedef StatusMoveState Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_auto_move(::flatbuffers::Offset<::flatbuffers::String> auto_move) {
+    fbb_.AddOffset(StatusMoveState::VT_AUTO_MOVE, auto_move);
   }
-  void add_dock_move(flatbuffers::Offset<flatbuffers::String> dock_move) {
-    fbb_.AddOffset(MoveStatusMoveState::VT_DOCK_MOVE, dock_move);
+  void add_dock_move(::flatbuffers::Offset<::flatbuffers::String> dock_move) {
+    fbb_.AddOffset(StatusMoveState::VT_DOCK_MOVE, dock_move);
   }
-  void add_jog_move(flatbuffers::Offset<flatbuffers::String> jog_move) {
-    fbb_.AddOffset(MoveStatusMoveState::VT_JOG_MOVE, jog_move);
+  void add_jog_move(::flatbuffers::Offset<::flatbuffers::String> jog_move) {
+    fbb_.AddOffset(StatusMoveState::VT_JOG_MOVE, jog_move);
   }
-  void add_obs(flatbuffers::Offset<flatbuffers::String> obs) {
-    fbb_.AddOffset(MoveStatusMoveState::VT_OBS, obs);
+  void add_obs(::flatbuffers::Offset<::flatbuffers::String> obs) {
+    fbb_.AddOffset(StatusMoveState::VT_OBS, obs);
   }
-  void add_path(flatbuffers::Offset<flatbuffers::String> path) {
-    fbb_.AddOffset(MoveStatusMoveState::VT_PATH, path);
+  void add_path(::flatbuffers::Offset<::flatbuffers::String> path) {
+    fbb_.AddOffset(StatusMoveState::VT_PATH, path);
   }
-  explicit MoveStatusMoveStateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusMoveStateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<MoveStatusMoveState> Finish() {
+  ::flatbuffers::Offset<StatusMoveState> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<MoveStatusMoveState>(end);
+    auto o = ::flatbuffers::Offset<StatusMoveState>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveState(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> auto_move = 0,
-    flatbuffers::Offset<flatbuffers::String> dock_move = 0,
-    flatbuffers::Offset<flatbuffers::String> jog_move = 0,
-    flatbuffers::Offset<flatbuffers::String> obs = 0,
-    flatbuffers::Offset<flatbuffers::String> path = 0) {
-  MoveStatusMoveStateBuilder builder_(_fbb);
+inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveState(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> auto_move = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> dock_move = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> jog_move = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> obs = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> path = 0) {
+  StatusMoveStateBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_obs(obs);
   builder_.add_jog_move(jog_move);
@@ -1342,8 +1011,8 @@ inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveState(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveStateDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveStateDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *auto_move = nullptr,
     const char *dock_move = nullptr,
     const char *jog_move = nullptr,
@@ -1354,7 +1023,7 @@ inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveStateDirect(
   auto jog_move__ = jog_move ? _fbb.CreateString(jog_move) : 0;
   auto obs__ = obs ? _fbb.CreateString(obs) : 0;
   auto path__ = path ? _fbb.CreateString(path) : 0;
-  return SLAMNAV::CreateMoveStatusMoveState(
+  return SLAMNAV::CreateStatusMoveState(
       _fbb,
       auto_move__,
       dock_move__,
@@ -1363,26 +1032,8 @@ inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveStateDirect(
       path__);
 }
 
-flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveState(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusMoveStateT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct MoveStatusNodeT : public flatbuffers::NativeTable {
-  typedef MoveStatusNode TableType;
-  std::string node_id;
-  std::string name;
-  std::string state;
-  float x;
-  float y;
-  float rz;
-  MoveStatusNodeT()
-      : x(0.0f),
-        y(0.0f),
-        rz(0.0f) {
-  }
-};
-
-struct MoveStatusNode FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef MoveStatusNodeT NativeTableType;
-  typedef MoveStatusNodeBuilder Builder;
+struct StatusNode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef StatusNodeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NODE_ID = 4,
     VT_NAME = 6,
@@ -1391,43 +1042,25 @@ struct MoveStatusNode FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_Y = 12,
     VT_RZ = 14
   };
-  const flatbuffers::String *node_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_NODE_ID);
+  const ::flatbuffers::String *node_id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NODE_ID);
   }
-  flatbuffers::String *mutable_node_id() {
-    return GetPointer<flatbuffers::String *>(VT_NODE_ID);
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  const flatbuffers::String *name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NAME);
-  }
-  flatbuffers::String *mutable_name() {
-    return GetPointer<flatbuffers::String *>(VT_NAME);
-  }
-  const flatbuffers::String *state() const {
-    return GetPointer<const flatbuffers::String *>(VT_STATE);
-  }
-  flatbuffers::String *mutable_state() {
-    return GetPointer<flatbuffers::String *>(VT_STATE);
+  const ::flatbuffers::String *state() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_STATE);
   }
   float x() const {
     return GetField<float>(VT_X, 0.0f);
   }
-  bool mutate_x(float _x) {
-    return SetField<float>(VT_X, _x, 0.0f);
-  }
   float y() const {
     return GetField<float>(VT_Y, 0.0f);
-  }
-  bool mutate_y(float _y) {
-    return SetField<float>(VT_Y, _y, 0.0f);
   }
   float rz() const {
     return GetField<float>(VT_RZ, 0.0f);
   }
-  bool mutate_rz(float _rz) {
-    return SetField<float>(VT_RZ, _rz, 0.0f);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NODE_ID) &&
            verifier.VerifyString(node_id()) &&
@@ -1435,58 +1068,55 @@ struct MoveStatusNode FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_STATE) &&
            verifier.VerifyString(state()) &&
-           VerifyField<float>(verifier, VT_X) &&
-           VerifyField<float>(verifier, VT_Y) &&
-           VerifyField<float>(verifier, VT_RZ) &&
+           VerifyField<float>(verifier, VT_X, 4) &&
+           VerifyField<float>(verifier, VT_Y, 4) &&
+           VerifyField<float>(verifier, VT_RZ, 4) &&
            verifier.EndTable();
   }
-  MoveStatusNodeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(MoveStatusNodeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<MoveStatusNode> Pack(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusNodeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
-struct MoveStatusNodeBuilder {
-  typedef MoveStatusNode Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_node_id(flatbuffers::Offset<flatbuffers::String> node_id) {
-    fbb_.AddOffset(MoveStatusNode::VT_NODE_ID, node_id);
+struct StatusNodeBuilder {
+  typedef StatusNode Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_node_id(::flatbuffers::Offset<::flatbuffers::String> node_id) {
+    fbb_.AddOffset(StatusNode::VT_NODE_ID, node_id);
   }
-  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
-    fbb_.AddOffset(MoveStatusNode::VT_NAME, name);
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
+    fbb_.AddOffset(StatusNode::VT_NAME, name);
   }
-  void add_state(flatbuffers::Offset<flatbuffers::String> state) {
-    fbb_.AddOffset(MoveStatusNode::VT_STATE, state);
+  void add_state(::flatbuffers::Offset<::flatbuffers::String> state) {
+    fbb_.AddOffset(StatusNode::VT_STATE, state);
   }
   void add_x(float x) {
-    fbb_.AddElement<float>(MoveStatusNode::VT_X, x, 0.0f);
+    fbb_.AddElement<float>(StatusNode::VT_X, x, 0.0f);
   }
   void add_y(float y) {
-    fbb_.AddElement<float>(MoveStatusNode::VT_Y, y, 0.0f);
+    fbb_.AddElement<float>(StatusNode::VT_Y, y, 0.0f);
   }
   void add_rz(float rz) {
-    fbb_.AddElement<float>(MoveStatusNode::VT_RZ, rz, 0.0f);
+    fbb_.AddElement<float>(StatusNode::VT_RZ, rz, 0.0f);
   }
-  explicit MoveStatusNodeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StatusNodeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<MoveStatusNode> Finish() {
+  ::flatbuffers::Offset<StatusNode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<MoveStatusNode>(end);
+    auto o = ::flatbuffers::Offset<StatusNode>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNode(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> node_id = 0,
-    flatbuffers::Offset<flatbuffers::String> name = 0,
-    flatbuffers::Offset<flatbuffers::String> state = 0,
+inline ::flatbuffers::Offset<StatusNode> CreateStatusNode(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> node_id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> state = 0,
     float x = 0.0f,
     float y = 0.0f,
     float rz = 0.0f) {
-  MoveStatusNodeBuilder builder_(_fbb);
+  StatusNodeBuilder builder_(_fbb);
   builder_.add_rz(rz);
   builder_.add_y(y);
   builder_.add_x(x);
@@ -1496,8 +1126,8 @@ inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNode(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNodeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StatusNode> CreateStatusNodeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *node_id = nullptr,
     const char *name = nullptr,
     const char *state = nullptr,
@@ -1507,7 +1137,7 @@ inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNodeDirect(
   auto node_id__ = node_id ? _fbb.CreateString(node_id) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
   auto state__ = state ? _fbb.CreateString(state) : 0;
-  return SLAMNAV::CreateMoveStatusNode(
+  return SLAMNAV::CreateStatusNode(
       _fbb,
       node_id__,
       name__,
@@ -1517,21 +1147,7 @@ inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNodeDirect(
       rz);
 }
 
-flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNode(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusNodeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Move_StatusT : public flatbuffers::NativeTable {
-  typedef Move_Status TableType;
-  std::unique_ptr<SLAMNAV::MoveStatusNodeT> cur_node;
-  std::unique_ptr<SLAMNAV::MoveStatusNodeT> goal_node;
-  std::unique_ptr<SLAMNAV::MoveStatusMoveStateT> move_state;
-  std::unique_ptr<SLAMNAV::MoveStatusPose> pose;
-  std::unique_ptr<SLAMNAV::MoveStatusVel> vel;
-  Move_StatusT() {
-  }
-};
-
-struct Move_Status FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Move_StatusT NativeTableType;
+struct Move_Status FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef Move_StatusBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CUR_NODE = 4,
@@ -1540,37 +1156,22 @@ struct Move_Status FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_POSE = 10,
     VT_VEL = 12
   };
-  const SLAMNAV::MoveStatusNode *cur_node() const {
-    return GetPointer<const SLAMNAV::MoveStatusNode *>(VT_CUR_NODE);
+  const SLAMNAV::StatusNode *cur_node() const {
+    return GetPointer<const SLAMNAV::StatusNode *>(VT_CUR_NODE);
   }
-  SLAMNAV::MoveStatusNode *mutable_cur_node() {
-    return GetPointer<SLAMNAV::MoveStatusNode *>(VT_CUR_NODE);
+  const SLAMNAV::StatusNode *goal_node() const {
+    return GetPointer<const SLAMNAV::StatusNode *>(VT_GOAL_NODE);
   }
-  const SLAMNAV::MoveStatusNode *goal_node() const {
-    return GetPointer<const SLAMNAV::MoveStatusNode *>(VT_GOAL_NODE);
+  const SLAMNAV::StatusMoveState *move_state() const {
+    return GetPointer<const SLAMNAV::StatusMoveState *>(VT_MOVE_STATE);
   }
-  SLAMNAV::MoveStatusNode *mutable_goal_node() {
-    return GetPointer<SLAMNAV::MoveStatusNode *>(VT_GOAL_NODE);
+  const SLAMNAV::StatusPose *pose() const {
+    return GetStruct<const SLAMNAV::StatusPose *>(VT_POSE);
   }
-  const SLAMNAV::MoveStatusMoveState *move_state() const {
-    return GetPointer<const SLAMNAV::MoveStatusMoveState *>(VT_MOVE_STATE);
+  const SLAMNAV::StatusVel *vel() const {
+    return GetStruct<const SLAMNAV::StatusVel *>(VT_VEL);
   }
-  SLAMNAV::MoveStatusMoveState *mutable_move_state() {
-    return GetPointer<SLAMNAV::MoveStatusMoveState *>(VT_MOVE_STATE);
-  }
-  const SLAMNAV::MoveStatusPose *pose() const {
-    return GetStruct<const SLAMNAV::MoveStatusPose *>(VT_POSE);
-  }
-  SLAMNAV::MoveStatusPose *mutable_pose() {
-    return GetStruct<SLAMNAV::MoveStatusPose *>(VT_POSE);
-  }
-  const SLAMNAV::MoveStatusVel *vel() const {
-    return GetStruct<const SLAMNAV::MoveStatusVel *>(VT_VEL);
-  }
-  SLAMNAV::MoveStatusVel *mutable_vel() {
-    return GetStruct<SLAMNAV::MoveStatusVel *>(VT_VEL);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_CUR_NODE) &&
            verifier.VerifyTable(cur_node()) &&
@@ -1578,52 +1179,49 @@ struct Move_Status FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyTable(goal_node()) &&
            VerifyOffset(verifier, VT_MOVE_STATE) &&
            verifier.VerifyTable(move_state()) &&
-           VerifyField<SLAMNAV::MoveStatusPose>(verifier, VT_POSE) &&
-           VerifyField<SLAMNAV::MoveStatusVel>(verifier, VT_VEL) &&
+           VerifyField<SLAMNAV::StatusPose>(verifier, VT_POSE, 4) &&
+           VerifyField<SLAMNAV::StatusVel>(verifier, VT_VEL, 4) &&
            verifier.EndTable();
   }
-  Move_StatusT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Move_StatusT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Move_Status> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_StatusT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct Move_StatusBuilder {
   typedef Move_Status Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_cur_node(flatbuffers::Offset<SLAMNAV::MoveStatusNode> cur_node) {
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_cur_node(::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node) {
     fbb_.AddOffset(Move_Status::VT_CUR_NODE, cur_node);
   }
-  void add_goal_node(flatbuffers::Offset<SLAMNAV::MoveStatusNode> goal_node) {
+  void add_goal_node(::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node) {
     fbb_.AddOffset(Move_Status::VT_GOAL_NODE, goal_node);
   }
-  void add_move_state(flatbuffers::Offset<SLAMNAV::MoveStatusMoveState> move_state) {
+  void add_move_state(::flatbuffers::Offset<SLAMNAV::StatusMoveState> move_state) {
     fbb_.AddOffset(Move_Status::VT_MOVE_STATE, move_state);
   }
-  void add_pose(const SLAMNAV::MoveStatusPose *pose) {
+  void add_pose(const SLAMNAV::StatusPose *pose) {
     fbb_.AddStruct(Move_Status::VT_POSE, pose);
   }
-  void add_vel(const SLAMNAV::MoveStatusVel *vel) {
+  void add_vel(const SLAMNAV::StatusVel *vel) {
     fbb_.AddStruct(Move_Status::VT_VEL, vel);
   }
-  explicit Move_StatusBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit Move_StatusBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Move_Status> Finish() {
+  ::flatbuffers::Offset<Move_Status> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Move_Status>(end);
+    auto o = ::flatbuffers::Offset<Move_Status>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Move_Status> CreateMove_Status(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<SLAMNAV::MoveStatusNode> cur_node = 0,
-    flatbuffers::Offset<SLAMNAV::MoveStatusNode> goal_node = 0,
-    flatbuffers::Offset<SLAMNAV::MoveStatusMoveState> move_state = 0,
-    const SLAMNAV::MoveStatusPose *pose = 0,
-    const SLAMNAV::MoveStatusVel *vel = 0) {
+inline ::flatbuffers::Offset<Move_Status> CreateMove_Status(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusMoveState> move_state = 0,
+    const SLAMNAV::StatusPose *pose = nullptr,
+    const SLAMNAV::StatusVel *vel = nullptr) {
   Move_StatusBuilder builder_(_fbb);
   builder_.add_vel(vel);
   builder_.add_pose(pose);
@@ -1631,462 +1229,6 @@ inline flatbuffers::Offset<Move_Status> CreateMove_Status(
   builder_.add_goal_node(goal_node);
   builder_.add_cur_node(cur_node);
   return builder_.Finish();
-}
-
-flatbuffers::Offset<Move_Status> CreateMove_Status(flatbuffers::FlatBufferBuilder &_fbb, const Move_StatusT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-struct Status_ResultT : public flatbuffers::NativeTable {
-  typedef Status_Result TableType;
-  std::string id;
-  std::string result;
-  std::string message;
-  Status_ResultT() {
-  }
-};
-
-struct Status_Result FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Status_ResultT NativeTableType;
-  typedef Status_ResultBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_RESULT = 6,
-    VT_MESSAGE = 8
-  };
-  const flatbuffers::String *id() const {
-    return GetPointer<const flatbuffers::String *>(VT_ID);
-  }
-  flatbuffers::String *mutable_id() {
-    return GetPointer<flatbuffers::String *>(VT_ID);
-  }
-  const flatbuffers::String *result() const {
-    return GetPointer<const flatbuffers::String *>(VT_RESULT);
-  }
-  flatbuffers::String *mutable_result() {
-    return GetPointer<flatbuffers::String *>(VT_RESULT);
-  }
-  const flatbuffers::String *message() const {
-    return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
-  }
-  flatbuffers::String *mutable_message() {
-    return GetPointer<flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-  Status_ResultT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(Status_ResultT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<Status_Result> Pack(flatbuffers::FlatBufferBuilder &_fbb, const Status_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-};
-
-struct Status_ResultBuilder {
-  typedef Status_Result Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(Status_Result::VT_ID, id);
-  }
-  void add_result(flatbuffers::Offset<flatbuffers::String> result) {
-    fbb_.AddOffset(Status_Result::VT_RESULT, result);
-  }
-  void add_message(flatbuffers::Offset<flatbuffers::String> message) {
-    fbb_.AddOffset(Status_Result::VT_MESSAGE, message);
-  }
-  explicit Status_ResultBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<Status_Result> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Status_Result>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Status_Result> CreateStatus_Result(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> id = 0,
-    flatbuffers::Offset<flatbuffers::String> result = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0) {
-  Status_ResultBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Status_Result> CreateStatus_ResultDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateStatus_Result(
-      _fbb,
-      id__,
-      result__,
-      message__);
-}
-
-flatbuffers::Offset<Status_Result> CreateStatus_Result(flatbuffers::FlatBufferBuilder &_fbb, const Status_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
-
-inline StatusRobotStateT *StatusRobotState::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::StatusRobotStateT> _o = std::unique_ptr<SLAMNAV::StatusRobotStateT>(new StatusRobotStateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void StatusRobotState::UnPackTo(StatusRobotStateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = charge(); if (_e) _o->charge = _e->str(); }
-  { auto _e = dock(); _o->dock = _e; }
-  { auto _e = emo(); _o->emo = _e; }
-  { auto _e = localization(); if (_e) _o->localization = _e->str(); }
-  { auto _e = power(); _o->power = _e; }
-  { auto _e = sss_recovery(); _o->sss_recovery = _e; }
-  { auto _e = sw_reset(); _o->sw_reset = _e; }
-  { auto _e = sw_stop(); _o->sw_stop = _e; }
-  { auto _e = sw_start(); _o->sw_start = _e; }
-  { auto _e = sf_bumper_detect(); _o->sf_bumper_detect = _e; }
-  { auto _e = sf_obs_detect(); _o->sf_obs_detect = _e; }
-  { auto _e = sf_operational_stop(); _o->sf_operational_stop = _e; }
-}
-
-inline flatbuffers::Offset<StatusRobotState> StatusRobotState::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotStateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatusRobotState(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<StatusRobotState> CreateStatusRobotState(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotStateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StatusRobotStateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _charge = _o->charge.empty() ? 0 : _fbb.CreateString(_o->charge);
-  auto _dock = _o->dock;
-  auto _emo = _o->emo;
-  auto _localization = _o->localization.empty() ? 0 : _fbb.CreateString(_o->localization);
-  auto _power = _o->power;
-  auto _sss_recovery = _o->sss_recovery;
-  auto _sw_reset = _o->sw_reset;
-  auto _sw_stop = _o->sw_stop;
-  auto _sw_start = _o->sw_start;
-  auto _sf_bumper_detect = _o->sf_bumper_detect;
-  auto _sf_obs_detect = _o->sf_obs_detect;
-  auto _sf_operational_stop = _o->sf_operational_stop;
-  return SLAMNAV::CreateStatusRobotState(
-      _fbb,
-      _charge,
-      _dock,
-      _emo,
-      _localization,
-      _power,
-      _sss_recovery,
-      _sw_reset,
-      _sw_stop,
-      _sw_start,
-      _sf_bumper_detect,
-      _sf_obs_detect,
-      _sf_operational_stop);
-}
-
-inline StatusRobotSafetyIoStateT *StatusRobotSafetyIoState::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::StatusRobotSafetyIoStateT> _o = std::unique_ptr<SLAMNAV::StatusRobotSafetyIoStateT>(new StatusRobotSafetyIoStateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void StatusRobotSafetyIoState::UnPackTo(StatusRobotSafetyIoStateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = mcu0_dio(); if (_e) { _o->mcu0_dio.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->mcu0_dio[_i] = _e->Get(_i) != 0; } } }
-  { auto _e = mcu1_dio(); if (_e) { _o->mcu1_dio.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->mcu1_dio[_i] = _e->Get(_i) != 0; } } }
-  { auto _e = mcu0_din(); if (_e) { _o->mcu0_din.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->mcu0_din[_i] = _e->Get(_i) != 0; } } }
-  { auto _e = mcu1_din(); if (_e) { _o->mcu1_din.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->mcu1_din[_i] = _e->Get(_i) != 0; } } }
-}
-
-inline flatbuffers::Offset<StatusRobotSafetyIoState> StatusRobotSafetyIoState::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotSafetyIoStateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatusRobotSafetyIoState(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<StatusRobotSafetyIoState> CreateStatusRobotSafetyIoState(flatbuffers::FlatBufferBuilder &_fbb, const StatusRobotSafetyIoStateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StatusRobotSafetyIoStateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _mcu0_dio = _o->mcu0_dio.size() ? _fbb.CreateVector(_o->mcu0_dio) : 0;
-  auto _mcu1_dio = _o->mcu1_dio.size() ? _fbb.CreateVector(_o->mcu1_dio) : 0;
-  auto _mcu0_din = _o->mcu0_din.size() ? _fbb.CreateVector(_o->mcu0_din) : 0;
-  auto _mcu1_din = _o->mcu1_din.size() ? _fbb.CreateVector(_o->mcu1_din) : 0;
-  return SLAMNAV::CreateStatusRobotSafetyIoState(
-      _fbb,
-      _mcu0_dio,
-      _mcu1_dio,
-      _mcu0_din,
-      _mcu1_din);
-}
-
-inline StatusSettingT *StatusSetting::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::StatusSettingT> _o = std::unique_ptr<SLAMNAV::StatusSettingT>(new StatusSettingT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void StatusSetting::UnPackTo(StatusSettingT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = platform_type(); if (_e) _o->platform_type = _e->str(); }
-  { auto _e = platform_name(); if (_e) _o->platform_name = _e->str(); }
-}
-
-inline flatbuffers::Offset<StatusSetting> StatusSetting::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusSettingT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatusSetting(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<StatusSetting> CreateStatusSetting(flatbuffers::FlatBufferBuilder &_fbb, const StatusSettingT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StatusSettingT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _platform_type = _o->platform_type.empty() ? 0 : _fbb.CreateString(_o->platform_type);
-  auto _platform_name = _o->platform_name.empty() ? 0 : _fbb.CreateString(_o->platform_name);
-  return SLAMNAV::CreateStatusSetting(
-      _fbb,
-      _platform_type,
-      _platform_name);
-}
-
-inline StatusMapT *StatusMap::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::StatusMapT> _o = std::unique_ptr<SLAMNAV::StatusMapT>(new StatusMapT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void StatusMap::UnPackTo(StatusMapT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = map_name(); if (_e) _o->map_name = _e->str(); }
-  { auto _e = map_status(); if (_e) _o->map_status = _e->str(); }
-}
-
-inline flatbuffers::Offset<StatusMap> StatusMap::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusMapT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatusMap(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<StatusMap> CreateStatusMap(flatbuffers::FlatBufferBuilder &_fbb, const StatusMapT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StatusMapT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _map_name = _o->map_name.empty() ? 0 : _fbb.CreateString(_o->map_name);
-  auto _map_status = _o->map_status.empty() ? 0 : _fbb.CreateString(_o->map_status);
-  return SLAMNAV::CreateStatusMap(
-      _fbb,
-      _map_name,
-      _map_status);
-}
-
-inline StatusT *Status::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::StatusT> _o = std::unique_ptr<SLAMNAV::StatusT>(new StatusT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Status::UnPackTo(StatusT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = condition(); if (_e) _o->condition = std::unique_ptr<SLAMNAV::StatusCondition>(new SLAMNAV::StatusCondition(*_e)); }
-  { auto _e = imu(); if (_e) _o->imu = std::unique_ptr<SLAMNAV::StatusImu>(new SLAMNAV::StatusImu(*_e)); }
-  { auto _e = motor0(); if (_e) _o->motor0 = std::unique_ptr<SLAMNAV::StatusMotor>(new SLAMNAV::StatusMotor(*_e)); }
-  { auto _e = motor1(); if (_e) _o->motor1 = std::unique_ptr<SLAMNAV::StatusMotor>(new SLAMNAV::StatusMotor(*_e)); }
-  { auto _e = power(); if (_e) _o->power = std::unique_ptr<SLAMNAV::StatusPower>(new SLAMNAV::StatusPower(*_e)); }
-  { auto _e = robot_state(); if (_e) _o->robot_state = std::unique_ptr<SLAMNAV::StatusRobotStateT>(_e->UnPack(_resolver)); }
-  { auto _e = robot_safety_io_state(); if (_e) _o->robot_safety_io_state = std::unique_ptr<SLAMNAV::StatusRobotSafetyIoStateT>(_e->UnPack(_resolver)); }
-  { auto _e = setting(); if (_e) _o->setting = std::unique_ptr<SLAMNAV::StatusSettingT>(_e->UnPack(_resolver)); }
-  { auto _e = map(); if (_e) _o->map = std::unique_ptr<SLAMNAV::StatusMapT>(_e->UnPack(_resolver)); }
-}
-
-inline flatbuffers::Offset<Status> Status::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StatusT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatus(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Status> CreateStatus(flatbuffers::FlatBufferBuilder &_fbb, const StatusT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const StatusT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _condition = _o->condition ? _o->condition.get() : 0;
-  auto _imu = _o->imu ? _o->imu.get() : 0;
-  auto _motor0 = _o->motor0 ? _o->motor0.get() : 0;
-  auto _motor1 = _o->motor1 ? _o->motor1.get() : 0;
-  auto _power = _o->power ? _o->power.get() : 0;
-  auto _robot_state = _o->robot_state ? CreateStatusRobotState(_fbb, _o->robot_state.get(), _rehasher) : 0;
-  auto _robot_safety_io_state = _o->robot_safety_io_state ? CreateStatusRobotSafetyIoState(_fbb, _o->robot_safety_io_state.get(), _rehasher) : 0;
-  auto _setting = _o->setting ? CreateStatusSetting(_fbb, _o->setting.get(), _rehasher) : 0;
-  auto _map = _o->map ? CreateStatusMap(_fbb, _o->map.get(), _rehasher) : 0;
-  return SLAMNAV::CreateStatus(
-      _fbb,
-      _condition,
-      _imu,
-      _motor0,
-      _motor1,
-      _power,
-      _robot_state,
-      _robot_safety_io_state,
-      _setting,
-      _map);
-}
-
-inline MoveStatusMoveStateT *MoveStatusMoveState::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::MoveStatusMoveStateT> _o = std::unique_ptr<SLAMNAV::MoveStatusMoveStateT>(new MoveStatusMoveStateT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void MoveStatusMoveState::UnPackTo(MoveStatusMoveStateT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = auto_move(); if (_e) _o->auto_move = _e->str(); }
-  { auto _e = dock_move(); if (_e) _o->dock_move = _e->str(); }
-  { auto _e = jog_move(); if (_e) _o->jog_move = _e->str(); }
-  { auto _e = obs(); if (_e) _o->obs = _e->str(); }
-  { auto _e = path(); if (_e) _o->path = _e->str(); }
-}
-
-inline flatbuffers::Offset<MoveStatusMoveState> MoveStatusMoveState::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusMoveStateT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMoveStatusMoveState(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<MoveStatusMoveState> CreateMoveStatusMoveState(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusMoveStateT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const MoveStatusMoveStateT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _auto_move = _o->auto_move.empty() ? 0 : _fbb.CreateString(_o->auto_move);
-  auto _dock_move = _o->dock_move.empty() ? 0 : _fbb.CreateString(_o->dock_move);
-  auto _jog_move = _o->jog_move.empty() ? 0 : _fbb.CreateString(_o->jog_move);
-  auto _obs = _o->obs.empty() ? 0 : _fbb.CreateString(_o->obs);
-  auto _path = _o->path.empty() ? 0 : _fbb.CreateString(_o->path);
-  return SLAMNAV::CreateMoveStatusMoveState(
-      _fbb,
-      _auto_move,
-      _dock_move,
-      _jog_move,
-      _obs,
-      _path);
-}
-
-inline MoveStatusNodeT *MoveStatusNode::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::MoveStatusNodeT> _o = std::unique_ptr<SLAMNAV::MoveStatusNodeT>(new MoveStatusNodeT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void MoveStatusNode::UnPackTo(MoveStatusNodeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = node_id(); if (_e) _o->node_id = _e->str(); }
-  { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = state(); if (_e) _o->state = _e->str(); }
-  { auto _e = x(); _o->x = _e; }
-  { auto _e = y(); _o->y = _e; }
-  { auto _e = rz(); _o->rz = _e; }
-}
-
-inline flatbuffers::Offset<MoveStatusNode> MoveStatusNode::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusNodeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMoveStatusNode(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<MoveStatusNode> CreateMoveStatusNode(flatbuffers::FlatBufferBuilder &_fbb, const MoveStatusNodeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const MoveStatusNodeT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _node_id = _o->node_id.empty() ? 0 : _fbb.CreateString(_o->node_id);
-  auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _state = _o->state.empty() ? 0 : _fbb.CreateString(_o->state);
-  auto _x = _o->x;
-  auto _y = _o->y;
-  auto _rz = _o->rz;
-  return SLAMNAV::CreateMoveStatusNode(
-      _fbb,
-      _node_id,
-      _name,
-      _state,
-      _x,
-      _y,
-      _rz);
-}
-
-inline Move_StatusT *Move_Status::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Move_StatusT> _o = std::unique_ptr<SLAMNAV::Move_StatusT>(new Move_StatusT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Move_Status::UnPackTo(Move_StatusT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = cur_node(); if (_e) _o->cur_node = std::unique_ptr<SLAMNAV::MoveStatusNodeT>(_e->UnPack(_resolver)); }
-  { auto _e = goal_node(); if (_e) _o->goal_node = std::unique_ptr<SLAMNAV::MoveStatusNodeT>(_e->UnPack(_resolver)); }
-  { auto _e = move_state(); if (_e) _o->move_state = std::unique_ptr<SLAMNAV::MoveStatusMoveStateT>(_e->UnPack(_resolver)); }
-  { auto _e = pose(); if (_e) _o->pose = std::unique_ptr<SLAMNAV::MoveStatusPose>(new SLAMNAV::MoveStatusPose(*_e)); }
-  { auto _e = vel(); if (_e) _o->vel = std::unique_ptr<SLAMNAV::MoveStatusVel>(new SLAMNAV::MoveStatusVel(*_e)); }
-}
-
-inline flatbuffers::Offset<Move_Status> Move_Status::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Move_StatusT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateMove_Status(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Move_Status> CreateMove_Status(flatbuffers::FlatBufferBuilder &_fbb, const Move_StatusT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Move_StatusT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _cur_node = _o->cur_node ? CreateMoveStatusNode(_fbb, _o->cur_node.get(), _rehasher) : 0;
-  auto _goal_node = _o->goal_node ? CreateMoveStatusNode(_fbb, _o->goal_node.get(), _rehasher) : 0;
-  auto _move_state = _o->move_state ? CreateMoveStatusMoveState(_fbb, _o->move_state.get(), _rehasher) : 0;
-  auto _pose = _o->pose ? _o->pose.get() : 0;
-  auto _vel = _o->vel ? _o->vel.get() : 0;
-  return SLAMNAV::CreateMove_Status(
-      _fbb,
-      _cur_node,
-      _goal_node,
-      _move_state,
-      _pose,
-      _vel);
-}
-
-inline Status_ResultT *Status_Result::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  std::unique_ptr<SLAMNAV::Status_ResultT> _o = std::unique_ptr<SLAMNAV::Status_ResultT>(new Status_ResultT());
-  UnPackTo(_o.get(), _resolver);
-  return _o.release();
-}
-
-inline void Status_Result::UnPackTo(Status_ResultT *_o, const flatbuffers::resolver_function_t *_resolver) const {
-  (void)_o;
-  (void)_resolver;
-  { auto _e = id(); if (_e) _o->id = _e->str(); }
-  { auto _e = result(); if (_e) _o->result = _e->str(); }
-  { auto _e = message(); if (_e) _o->message = _e->str(); }
-}
-
-inline flatbuffers::Offset<Status_Result> Status_Result::Pack(flatbuffers::FlatBufferBuilder &_fbb, const Status_ResultT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
-  return CreateStatus_Result(_fbb, _o, _rehasher);
-}
-
-inline flatbuffers::Offset<Status_Result> CreateStatus_Result(flatbuffers::FlatBufferBuilder &_fbb, const Status_ResultT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
-  (void)_rehasher;
-  (void)_o;
-  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const Status_ResultT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _id = _o->id.empty() ? 0 : _fbb.CreateString(_o->id);
-  auto _result = _o->result.empty() ? 0 : _fbb.CreateString(_o->result);
-  auto _message = _o->message.empty() ? 0 : _fbb.CreateString(_o->message);
-  return SLAMNAV::CreateStatus_Result(
-      _fbb,
-      _id,
-      _result,
-      _message);
 }
 
 }  // namespace SLAMNAV
