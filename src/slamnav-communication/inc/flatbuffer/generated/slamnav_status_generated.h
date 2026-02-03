@@ -48,8 +48,8 @@ struct StatusVel;
 struct StatusNode;
 struct StatusNodeBuilder;
 
-struct Move_Status;
-struct Move_StatusBuilder;
+struct MoveStatus;
+struct MoveStatusBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusImu FLATBUFFERS_FINAL_CLASS {
  private:
@@ -318,20 +318,17 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusPose FLATBUFFERS_FINAL_CLASS {
  private:
   float x_;
   float y_;
-  float z_;
   float rz_;
 
  public:
   StatusPose()
       : x_(0),
         y_(0),
-        z_(0),
         rz_(0) {
   }
-  StatusPose(float _x, float _y, float _z, float _rz)
+  StatusPose(float _x, float _y, float _rz)
       : x_(::flatbuffers::EndianScalar(_x)),
         y_(::flatbuffers::EndianScalar(_y)),
-        z_(::flatbuffers::EndianScalar(_z)),
         rz_(::flatbuffers::EndianScalar(_rz)) {
   }
   float x() const {
@@ -340,14 +337,11 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusPose FLATBUFFERS_FINAL_CLASS {
   float y() const {
     return ::flatbuffers::EndianScalar(y_);
   }
-  float z() const {
-    return ::flatbuffers::EndianScalar(z_);
-  }
   float rz() const {
     return ::flatbuffers::EndianScalar(rz_);
   }
 };
-FLATBUFFERS_STRUCT_END(StatusPose, 16);
+FLATBUFFERS_STRUCT_END(StatusPose, 12);
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) StatusVel FLATBUFFERS_FINAL_CLASS {
  private:
@@ -932,7 +926,10 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_DOCK_MOVE = 6,
     VT_JOG_MOVE = 8,
     VT_OBS = 10,
-    VT_PATH = 12
+    VT_PATH_STATE = 12,
+    VT_PATH_T = 14,
+    VT_STEP = 16,
+    VT_MULTI_STATE = 18
   };
   const ::flatbuffers::String *auto_move() const {
     return GetPointer<const ::flatbuffers::String *>(VT_AUTO_MOVE);
@@ -946,8 +943,17 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::String *obs() const {
     return GetPointer<const ::flatbuffers::String *>(VT_OBS);
   }
-  const ::flatbuffers::String *path() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_PATH);
+  const ::flatbuffers::String *path_state() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_PATH_STATE);
+  }
+  double path_t() const {
+    return GetField<double>(VT_PATH_T, 0.0);
+  }
+  int32_t step() const {
+    return GetField<int32_t>(VT_STEP, 0);
+  }
+  const ::flatbuffers::String *multi_state() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MULTI_STATE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -959,8 +965,12 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyString(jog_move()) &&
            VerifyOffset(verifier, VT_OBS) &&
            verifier.VerifyString(obs()) &&
-           VerifyOffset(verifier, VT_PATH) &&
-           verifier.VerifyString(path()) &&
+           VerifyOffset(verifier, VT_PATH_STATE) &&
+           verifier.VerifyString(path_state()) &&
+           VerifyField<double>(verifier, VT_PATH_T, 8) &&
+           VerifyField<int32_t>(verifier, VT_STEP, 4) &&
+           VerifyOffset(verifier, VT_MULTI_STATE) &&
+           verifier.VerifyString(multi_state()) &&
            verifier.EndTable();
   }
 };
@@ -981,8 +991,17 @@ struct StatusMoveStateBuilder {
   void add_obs(::flatbuffers::Offset<::flatbuffers::String> obs) {
     fbb_.AddOffset(StatusMoveState::VT_OBS, obs);
   }
-  void add_path(::flatbuffers::Offset<::flatbuffers::String> path) {
-    fbb_.AddOffset(StatusMoveState::VT_PATH, path);
+  void add_path_state(::flatbuffers::Offset<::flatbuffers::String> path_state) {
+    fbb_.AddOffset(StatusMoveState::VT_PATH_STATE, path_state);
+  }
+  void add_path_t(double path_t) {
+    fbb_.AddElement<double>(StatusMoveState::VT_PATH_T, path_t, 0.0);
+  }
+  void add_step(int32_t step) {
+    fbb_.AddElement<int32_t>(StatusMoveState::VT_STEP, step, 0);
+  }
+  void add_multi_state(::flatbuffers::Offset<::flatbuffers::String> multi_state) {
+    fbb_.AddOffset(StatusMoveState::VT_MULTI_STATE, multi_state);
   }
   explicit StatusMoveStateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1001,9 +1020,15 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveState(
     ::flatbuffers::Offset<::flatbuffers::String> dock_move = 0,
     ::flatbuffers::Offset<::flatbuffers::String> jog_move = 0,
     ::flatbuffers::Offset<::flatbuffers::String> obs = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> path = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> path_state = 0,
+    double path_t = 0.0,
+    int32_t step = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> multi_state = 0) {
   StatusMoveStateBuilder builder_(_fbb);
-  builder_.add_path(path);
+  builder_.add_path_t(path_t);
+  builder_.add_multi_state(multi_state);
+  builder_.add_step(step);
+  builder_.add_path_state(path_state);
   builder_.add_obs(obs);
   builder_.add_jog_move(jog_move);
   builder_.add_dock_move(dock_move);
@@ -1017,60 +1042,51 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveStateDirect(
     const char *dock_move = nullptr,
     const char *jog_move = nullptr,
     const char *obs = nullptr,
-    const char *path = nullptr) {
+    const char *path_state = nullptr,
+    double path_t = 0.0,
+    int32_t step = 0,
+    const char *multi_state = nullptr) {
   auto auto_move__ = auto_move ? _fbb.CreateString(auto_move) : 0;
   auto dock_move__ = dock_move ? _fbb.CreateString(dock_move) : 0;
   auto jog_move__ = jog_move ? _fbb.CreateString(jog_move) : 0;
   auto obs__ = obs ? _fbb.CreateString(obs) : 0;
-  auto path__ = path ? _fbb.CreateString(path) : 0;
+  auto path_state__ = path_state ? _fbb.CreateString(path_state) : 0;
+  auto multi_state__ = multi_state ? _fbb.CreateString(multi_state) : 0;
   return SLAMNAV::CreateStatusMoveState(
       _fbb,
       auto_move__,
       dock_move__,
       jog_move__,
       obs__,
-      path__);
+      path_state__,
+      path_t,
+      step,
+      multi_state__);
 }
 
 struct StatusNode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StatusNodeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_NODE_ID = 4,
+    VT_ID = 4,
     VT_NAME = 6,
-    VT_STATE = 8,
-    VT_X = 10,
-    VT_Y = 12,
-    VT_RZ = 14
+    VT_POSE = 8
   };
-  const ::flatbuffers::String *node_id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_NODE_ID);
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  const ::flatbuffers::String *state() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_STATE);
-  }
-  float x() const {
-    return GetField<float>(VT_X, 0.0f);
-  }
-  float y() const {
-    return GetField<float>(VT_Y, 0.0f);
-  }
-  float rz() const {
-    return GetField<float>(VT_RZ, 0.0f);
+  const SLAMNAV::StatusPose *pose() const {
+    return GetStruct<const SLAMNAV::StatusPose *>(VT_POSE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_NODE_ID) &&
-           verifier.VerifyString(node_id()) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyOffset(verifier, VT_STATE) &&
-           verifier.VerifyString(state()) &&
-           VerifyField<float>(verifier, VT_X, 4) &&
-           VerifyField<float>(verifier, VT_Y, 4) &&
-           VerifyField<float>(verifier, VT_RZ, 4) &&
+           VerifyField<SLAMNAV::StatusPose>(verifier, VT_POSE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1079,23 +1095,14 @@ struct StatusNodeBuilder {
   typedef StatusNode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_node_id(::flatbuffers::Offset<::flatbuffers::String> node_id) {
-    fbb_.AddOffset(StatusNode::VT_NODE_ID, node_id);
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(StatusNode::VT_ID, id);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(StatusNode::VT_NAME, name);
   }
-  void add_state(::flatbuffers::Offset<::flatbuffers::String> state) {
-    fbb_.AddOffset(StatusNode::VT_STATE, state);
-  }
-  void add_x(float x) {
-    fbb_.AddElement<float>(StatusNode::VT_X, x, 0.0f);
-  }
-  void add_y(float y) {
-    fbb_.AddElement<float>(StatusNode::VT_Y, y, 0.0f);
-  }
-  void add_rz(float rz) {
-    fbb_.AddElement<float>(StatusNode::VT_RZ, rz, 0.0f);
+  void add_pose(const SLAMNAV::StatusPose *pose) {
+    fbb_.AddStruct(StatusNode::VT_POSE, pose);
   }
   explicit StatusNodeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1110,58 +1117,39 @@ struct StatusNodeBuilder {
 
 inline ::flatbuffers::Offset<StatusNode> CreateStatusNode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> node_id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> state = 0,
-    float x = 0.0f,
-    float y = 0.0f,
-    float rz = 0.0f) {
+    const SLAMNAV::StatusPose *pose = nullptr) {
   StatusNodeBuilder builder_(_fbb);
-  builder_.add_rz(rz);
-  builder_.add_y(y);
-  builder_.add_x(x);
-  builder_.add_state(state);
+  builder_.add_pose(pose);
   builder_.add_name(name);
-  builder_.add_node_id(node_id);
+  builder_.add_id(id);
   return builder_.Finish();
 }
 
 inline ::flatbuffers::Offset<StatusNode> CreateStatusNodeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *node_id = nullptr,
+    const char *id = nullptr,
     const char *name = nullptr,
-    const char *state = nullptr,
-    float x = 0.0f,
-    float y = 0.0f,
-    float rz = 0.0f) {
-  auto node_id__ = node_id ? _fbb.CreateString(node_id) : 0;
+    const SLAMNAV::StatusPose *pose = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
-  auto state__ = state ? _fbb.CreateString(state) : 0;
   return SLAMNAV::CreateStatusNode(
       _fbb,
-      node_id__,
+      id__,
       name__,
-      state__,
-      x,
-      y,
-      rz);
+      pose);
 }
 
-struct Move_Status FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Move_StatusBuilder Builder;
+struct MoveStatus FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MoveStatusBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CUR_NODE = 4,
-    VT_GOAL_NODE = 6,
-    VT_MOVE_STATE = 8,
-    VT_POSE = 10,
-    VT_VEL = 12
+    VT_MOVE_STATE = 4,
+    VT_POSE = 6,
+    VT_VEL = 8,
+    VT_CUR_NODE = 10,
+    VT_GOAL_NODE = 12
   };
-  const SLAMNAV::StatusNode *cur_node() const {
-    return GetPointer<const SLAMNAV::StatusNode *>(VT_CUR_NODE);
-  }
-  const SLAMNAV::StatusNode *goal_node() const {
-    return GetPointer<const SLAMNAV::StatusNode *>(VT_GOAL_NODE);
-  }
   const SLAMNAV::StatusMoveState *move_state() const {
     return GetPointer<const SLAMNAV::StatusMoveState *>(VT_MOVE_STATE);
   }
@@ -1171,63 +1159,69 @@ struct Move_Status FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const SLAMNAV::StatusVel *vel() const {
     return GetStruct<const SLAMNAV::StatusVel *>(VT_VEL);
   }
+  const SLAMNAV::StatusNode *cur_node() const {
+    return GetPointer<const SLAMNAV::StatusNode *>(VT_CUR_NODE);
+  }
+  const SLAMNAV::StatusNode *goal_node() const {
+    return GetPointer<const SLAMNAV::StatusNode *>(VT_GOAL_NODE);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_CUR_NODE) &&
-           verifier.VerifyTable(cur_node()) &&
-           VerifyOffset(verifier, VT_GOAL_NODE) &&
-           verifier.VerifyTable(goal_node()) &&
            VerifyOffset(verifier, VT_MOVE_STATE) &&
            verifier.VerifyTable(move_state()) &&
            VerifyField<SLAMNAV::StatusPose>(verifier, VT_POSE, 4) &&
            VerifyField<SLAMNAV::StatusVel>(verifier, VT_VEL, 4) &&
+           VerifyOffset(verifier, VT_CUR_NODE) &&
+           verifier.VerifyTable(cur_node()) &&
+           VerifyOffset(verifier, VT_GOAL_NODE) &&
+           verifier.VerifyTable(goal_node()) &&
            verifier.EndTable();
   }
 };
 
-struct Move_StatusBuilder {
-  typedef Move_Status Table;
+struct MoveStatusBuilder {
+  typedef MoveStatus Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_cur_node(::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node) {
-    fbb_.AddOffset(Move_Status::VT_CUR_NODE, cur_node);
-  }
-  void add_goal_node(::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node) {
-    fbb_.AddOffset(Move_Status::VT_GOAL_NODE, goal_node);
-  }
   void add_move_state(::flatbuffers::Offset<SLAMNAV::StatusMoveState> move_state) {
-    fbb_.AddOffset(Move_Status::VT_MOVE_STATE, move_state);
+    fbb_.AddOffset(MoveStatus::VT_MOVE_STATE, move_state);
   }
   void add_pose(const SLAMNAV::StatusPose *pose) {
-    fbb_.AddStruct(Move_Status::VT_POSE, pose);
+    fbb_.AddStruct(MoveStatus::VT_POSE, pose);
   }
   void add_vel(const SLAMNAV::StatusVel *vel) {
-    fbb_.AddStruct(Move_Status::VT_VEL, vel);
+    fbb_.AddStruct(MoveStatus::VT_VEL, vel);
   }
-  explicit Move_StatusBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  void add_cur_node(::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node) {
+    fbb_.AddOffset(MoveStatus::VT_CUR_NODE, cur_node);
+  }
+  void add_goal_node(::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node) {
+    fbb_.AddOffset(MoveStatus::VT_GOAL_NODE, goal_node);
+  }
+  explicit MoveStatusBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Move_Status> Finish() {
+  ::flatbuffers::Offset<MoveStatus> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Move_Status>(end);
+    auto o = ::flatbuffers::Offset<MoveStatus>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Move_Status> CreateMove_Status(
+inline ::flatbuffers::Offset<MoveStatus> CreateMoveStatus(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node = 0,
-    ::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node = 0,
     ::flatbuffers::Offset<SLAMNAV::StatusMoveState> move_state = 0,
     const SLAMNAV::StatusPose *pose = nullptr,
-    const SLAMNAV::StatusVel *vel = nullptr) {
-  Move_StatusBuilder builder_(_fbb);
+    const SLAMNAV::StatusVel *vel = nullptr,
+    ::flatbuffers::Offset<SLAMNAV::StatusNode> cur_node = 0,
+    ::flatbuffers::Offset<SLAMNAV::StatusNode> goal_node = 0) {
+  MoveStatusBuilder builder_(_fbb);
+  builder_.add_goal_node(goal_node);
+  builder_.add_cur_node(cur_node);
   builder_.add_vel(vel);
   builder_.add_pose(pose);
   builder_.add_move_state(move_state);
-  builder_.add_goal_node(goal_node);
-  builder_.add_cur_node(cur_node);
   return builder_.Finish();
 }
 

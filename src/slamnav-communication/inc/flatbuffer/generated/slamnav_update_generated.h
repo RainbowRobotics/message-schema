@@ -15,23 +15,23 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace SLAMNAV {
 
-struct Request_Update;
-struct Request_UpdateBuilder;
+struct RequestUpdate;
+struct RequestUpdateBuilder;
 
-struct Response_Update;
-struct Response_UpdateBuilder;
+struct ResponseUpdate;
+struct ResponseUpdateBuilder;
 
-struct Request_Current_Version;
-struct Request_Current_VersionBuilder;
+struct RequestCurrentVersion;
+struct RequestCurrentVersionBuilder;
 
-struct Response_Current_Version;
-struct Response_Current_VersionBuilder;
+struct ResponseCurrentVersion;
+struct ResponseCurrentVersionBuilder;
 
-struct Result_Update;
-struct Result_UpdateBuilder;
+struct ResultUpdate;
+struct ResultUpdateBuilder;
 
-struct Request_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_UpdateBuilder Builder;
+struct RequestUpdate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestUpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_BRANCH = 6,
@@ -58,43 +58,43 @@ struct Request_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Request_UpdateBuilder {
-  typedef Request_Update Table;
+struct RequestUpdateBuilder {
+  typedef RequestUpdate Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Update::VT_ID, id);
+    fbb_.AddOffset(RequestUpdate::VT_ID, id);
   }
   void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
-    fbb_.AddOffset(Request_Update::VT_BRANCH, branch);
+    fbb_.AddOffset(RequestUpdate::VT_BRANCH, branch);
   }
   void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
-    fbb_.AddOffset(Request_Update::VT_VERSION, version);
+    fbb_.AddOffset(RequestUpdate::VT_VERSION, version);
   }
-  explicit Request_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestUpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Update> Finish() {
+  ::flatbuffers::Offset<RequestUpdate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Update>(end);
+    auto o = ::flatbuffers::Offset<RequestUpdate>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Update> CreateRequest_Update(
+inline ::flatbuffers::Offset<RequestUpdate> CreateRequestUpdate(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
     ::flatbuffers::Offset<::flatbuffers::String> version = 0) {
-  Request_UpdateBuilder builder_(_fbb);
+  RequestUpdateBuilder builder_(_fbb);
   builder_.add_version(version);
   builder_.add_branch(branch);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Update> CreateRequest_UpdateDirect(
+inline ::flatbuffers::Offset<RequestUpdate> CreateRequestUpdateDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *branch = nullptr,
@@ -102,15 +102,15 @@ inline ::flatbuffers::Offset<Request_Update> CreateRequest_UpdateDirect(
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto branch__ = branch ? _fbb.CreateString(branch) : 0;
   auto version__ = version ? _fbb.CreateString(version) : 0;
-  return SLAMNAV::CreateRequest_Update(
+  return SLAMNAV::CreateRequestUpdate(
       _fbb,
       id__,
       branch__,
       version__);
 }
 
-struct Response_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_UpdateBuilder Builder;
+struct ResponseUpdate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseUpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_BRANCH = 6,
@@ -149,44 +149,44 @@ struct Response_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Response_UpdateBuilder {
-  typedef Response_Update Table;
+struct ResponseUpdateBuilder {
+  typedef ResponseUpdate Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Update::VT_ID, id);
+    fbb_.AddOffset(ResponseUpdate::VT_ID, id);
   }
   void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
-    fbb_.AddOffset(Response_Update::VT_BRANCH, branch);
+    fbb_.AddOffset(ResponseUpdate::VT_BRANCH, branch);
   }
   void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
-    fbb_.AddOffset(Response_Update::VT_VERSION, version);
+    fbb_.AddOffset(ResponseUpdate::VT_VERSION, version);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Update::VT_RESULT, result);
+    fbb_.AddOffset(ResponseUpdate::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Update::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseUpdate::VT_MESSAGE, message);
   }
-  explicit Response_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseUpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Update> Finish() {
+  ::flatbuffers::Offset<ResponseUpdate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Update>(end);
+    auto o = ::flatbuffers::Offset<ResponseUpdate>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Update> CreateResponse_Update(
+inline ::flatbuffers::Offset<ResponseUpdate> CreateResponseUpdate(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
     ::flatbuffers::Offset<::flatbuffers::String> version = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_UpdateBuilder builder_(_fbb);
+  ResponseUpdateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_version(version);
@@ -195,7 +195,7 @@ inline ::flatbuffers::Offset<Response_Update> CreateResponse_Update(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
+inline ::flatbuffers::Offset<ResponseUpdate> CreateResponseUpdateDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *branch = nullptr,
@@ -207,7 +207,7 @@ inline ::flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
   auto version__ = version ? _fbb.CreateString(version) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Update(
+  return SLAMNAV::CreateResponseUpdate(
       _fbb,
       id__,
       branch__,
@@ -216,8 +216,8 @@ inline ::flatbuffers::Offset<Response_Update> CreateResponse_UpdateDirect(
       message__);
 }
 
-struct Request_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Current_VersionBuilder Builder;
+struct RequestCurrentVersion FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestCurrentVersionBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -232,43 +232,43 @@ struct Request_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::
   }
 };
 
-struct Request_Current_VersionBuilder {
-  typedef Request_Current_Version Table;
+struct RequestCurrentVersionBuilder {
+  typedef RequestCurrentVersion Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Current_Version::VT_ID, id);
+    fbb_.AddOffset(RequestCurrentVersion::VT_ID, id);
   }
-  explicit Request_Current_VersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestCurrentVersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Current_Version> Finish() {
+  ::flatbuffers::Offset<RequestCurrentVersion> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Current_Version>(end);
+    auto o = ::flatbuffers::Offset<RequestCurrentVersion>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_Version(
+inline ::flatbuffers::Offset<RequestCurrentVersion> CreateRequestCurrentVersion(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Current_VersionBuilder builder_(_fbb);
+  RequestCurrentVersionBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Current_Version> CreateRequest_Current_VersionDirect(
+inline ::flatbuffers::Offset<RequestCurrentVersion> CreateRequestCurrentVersionDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Current_Version(
+  return SLAMNAV::CreateRequestCurrentVersion(
       _fbb,
       id__);
 }
 
-struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Current_VersionBuilder Builder;
+struct ResponseCurrentVersion FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseCurrentVersionBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_VERSION = 6,
@@ -301,40 +301,40 @@ struct Response_Current_Version FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Response_Current_VersionBuilder {
-  typedef Response_Current_Version Table;
+struct ResponseCurrentVersionBuilder {
+  typedef ResponseCurrentVersion Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Current_Version::VT_ID, id);
+    fbb_.AddOffset(ResponseCurrentVersion::VT_ID, id);
   }
   void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
-    fbb_.AddOffset(Response_Current_Version::VT_VERSION, version);
+    fbb_.AddOffset(ResponseCurrentVersion::VT_VERSION, version);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Current_Version::VT_RESULT, result);
+    fbb_.AddOffset(ResponseCurrentVersion::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Current_Version::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseCurrentVersion::VT_MESSAGE, message);
   }
-  explicit Response_Current_VersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseCurrentVersionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Current_Version> Finish() {
+  ::flatbuffers::Offset<ResponseCurrentVersion> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Current_Version>(end);
+    auto o = ::flatbuffers::Offset<ResponseCurrentVersion>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Version(
+inline ::flatbuffers::Offset<ResponseCurrentVersion> CreateResponseCurrentVersion(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> version = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Current_VersionBuilder builder_(_fbb);
+  ResponseCurrentVersionBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_version(version);
@@ -342,7 +342,7 @@ inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Ve
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_VersionDirect(
+inline ::flatbuffers::Offset<ResponseCurrentVersion> CreateResponseCurrentVersionDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *version = nullptr,
@@ -352,7 +352,7 @@ inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Ve
   auto version__ = version ? _fbb.CreateString(version) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Current_Version(
+  return SLAMNAV::CreateResponseCurrentVersion(
       _fbb,
       id__,
       version__,
@@ -360,8 +360,8 @@ inline ::flatbuffers::Offset<Response_Current_Version> CreateResponse_Current_Ve
       message__);
 }
 
-struct Result_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_UpdateBuilder Builder;
+struct ResultUpdate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultUpdateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_BRANCH = 6,
@@ -400,44 +400,44 @@ struct Result_Update FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Result_UpdateBuilder {
-  typedef Result_Update Table;
+struct ResultUpdateBuilder {
+  typedef ResultUpdate Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Update::VT_ID, id);
+    fbb_.AddOffset(ResultUpdate::VT_ID, id);
   }
   void add_branch(::flatbuffers::Offset<::flatbuffers::String> branch) {
-    fbb_.AddOffset(Result_Update::VT_BRANCH, branch);
+    fbb_.AddOffset(ResultUpdate::VT_BRANCH, branch);
   }
   void add_version(::flatbuffers::Offset<::flatbuffers::String> version) {
-    fbb_.AddOffset(Result_Update::VT_VERSION, version);
+    fbb_.AddOffset(ResultUpdate::VT_VERSION, version);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Update::VT_RESULT, result);
+    fbb_.AddOffset(ResultUpdate::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Update::VT_MESSAGE, message);
+    fbb_.AddOffset(ResultUpdate::VT_MESSAGE, message);
   }
-  explicit Result_UpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResultUpdateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Update> Finish() {
+  ::flatbuffers::Offset<ResultUpdate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Update>(end);
+    auto o = ::flatbuffers::Offset<ResultUpdate>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Update> CreateResult_Update(
+inline ::flatbuffers::Offset<ResultUpdate> CreateResultUpdate(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> branch = 0,
     ::flatbuffers::Offset<::flatbuffers::String> version = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_UpdateBuilder builder_(_fbb);
+  ResultUpdateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_version(version);
@@ -446,7 +446,7 @@ inline ::flatbuffers::Offset<Result_Update> CreateResult_Update(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Update> CreateResult_UpdateDirect(
+inline ::flatbuffers::Offset<ResultUpdate> CreateResultUpdateDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *branch = nullptr,
@@ -458,7 +458,7 @@ inline ::flatbuffers::Offset<Result_Update> CreateResult_UpdateDirect(
   auto version__ = version ? _fbb.CreateString(version) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Update(
+  return SLAMNAV::CreateResultUpdate(
       _fbb,
       id__,
       branch__,

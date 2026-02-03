@@ -15,373 +15,71 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace SLAMNAV {
 
-struct Request_Get_Robot_Type;
-struct Request_Get_Robot_TypeBuilder;
-
-struct Response_Get_Robot_Type;
-struct Response_Get_Robot_TypeBuilder;
-
-struct Request_Set_Robot_Type;
-struct Request_Set_Robot_TypeBuilder;
-
-struct Response_Set_Robot_Type;
-struct Response_Set_Robot_TypeBuilder;
-
 struct SettingParam;
 struct SettingParamBuilder;
-
-struct Request_Get_Pdu_Param;
-struct Request_Get_Pdu_ParamBuilder;
-
-struct Response_Get_Pdu_Param;
-struct Response_Get_Pdu_ParamBuilder;
-
-struct Request_Set_Pdu_Param;
-struct Request_Set_Pdu_ParamBuilder;
-
-struct Response_Set_Pdu_Param;
-struct Response_Set_Pdu_ParamBuilder;
-
-struct Request_Get_Drive_Param;
-struct Request_Get_Drive_ParamBuilder;
-
-struct Response_Get_Drive_Param;
-struct Response_Get_Drive_ParamBuilder;
 
 struct SensorInfo;
 struct SensorInfoBuilder;
 
-struct Request_Get_Sensor_Info;
-struct Request_Get_Sensor_InfoBuilder;
+struct RequestGetRobotType;
+struct RequestGetRobotTypeBuilder;
 
-struct Response_Get_Sensor_Info;
-struct Response_Get_Sensor_InfoBuilder;
+struct ResponseGetRobotType;
+struct ResponseGetRobotTypeBuilder;
 
-struct Request_Set_Sensor_Index;
-struct Request_Set_Sensor_IndexBuilder;
+struct RequestSetRobotType;
+struct RequestSetRobotTypeBuilder;
 
-struct Response_Set_Sensor_Index;
-struct Response_Set_Sensor_IndexBuilder;
+struct ResponseSetRobotType;
+struct ResponseSetRobotTypeBuilder;
 
-struct Request_Get_Sensor_Control;
-struct Request_Get_Sensor_ControlBuilder;
+struct RequestGetPduParam;
+struct RequestGetPduParamBuilder;
 
-struct Response_Get_Sensor_Control;
-struct Response_Get_Sensor_ControlBuilder;
+struct ResponseGetPduParam;
+struct ResponseGetPduParamBuilder;
 
-struct Request_Set_Sensor_Control;
-struct Request_Set_Sensor_ControlBuilder;
+struct RequestSetPduParam;
+struct RequestSetPduParamBuilder;
 
-struct Response_Set_Sensor_Control;
-struct Response_Set_Sensor_ControlBuilder;
+struct ResponseSetPduParam;
+struct ResponseSetPduParamBuilder;
 
-struct Result_Setting_Param;
-struct Result_Setting_ParamBuilder;
+struct RequestGetDriveParam;
+struct RequestGetDriveParamBuilder;
 
-struct Result_Setting_Sensor;
-struct Result_Setting_SensorBuilder;
+struct ResponseGetDriveParam;
+struct ResponseGetDriveParamBuilder;
 
-struct Request_Get_Robot_Type FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Robot_TypeBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           verifier.EndTable();
-  }
-};
+struct RequestGetSensorInfo;
+struct RequestGetSensorInfoBuilder;
 
-struct Request_Get_Robot_TypeBuilder {
-  typedef Request_Get_Robot_Type Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Robot_Type::VT_ID, id);
-  }
-  explicit Request_Get_Robot_TypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Get_Robot_Type> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Robot_Type>(end);
-    return o;
-  }
-};
+struct ResponseGetSensorInfo;
+struct ResponseGetSensorInfoBuilder;
 
-inline ::flatbuffers::Offset<Request_Get_Robot_Type> CreateRequest_Get_Robot_Type(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Robot_TypeBuilder builder_(_fbb);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
+struct RequestSetSensorIndex;
+struct RequestSetSensorIndexBuilder;
 
-inline ::flatbuffers::Offset<Request_Get_Robot_Type> CreateRequest_Get_Robot_TypeDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Robot_Type(
-      _fbb,
-      id__);
-}
+struct ResponseSetSensorIndex;
+struct ResponseSetSensorIndexBuilder;
 
-struct Response_Get_Robot_Type FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Robot_TypeBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_ROBOT_TYPE = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *robot_type() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
-           verifier.VerifyString(robot_type()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
+struct RequestGetSensorControl;
+struct RequestGetSensorControlBuilder;
 
-struct Response_Get_Robot_TypeBuilder {
-  typedef Response_Get_Robot_Type Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Robot_Type::VT_ID, id);
-  }
-  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
-    fbb_.AddOffset(Response_Get_Robot_Type::VT_ROBOT_TYPE, robot_type);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Robot_Type::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Robot_Type::VT_MESSAGE, message);
-  }
-  explicit Response_Get_Robot_TypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Get_Robot_Type> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Robot_Type>(end);
-    return o;
-  }
-};
+struct ResponseGetSensorControl;
+struct ResponseGetSensorControlBuilder;
 
-inline ::flatbuffers::Offset<Response_Get_Robot_Type> CreateResponse_Get_Robot_Type(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Robot_TypeBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_robot_type(robot_type);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
+struct RequestSetSensorControl;
+struct RequestSetSensorControlBuilder;
 
-inline ::flatbuffers::Offset<Response_Get_Robot_Type> CreateResponse_Get_Robot_TypeDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *robot_type = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Robot_Type(
-      _fbb,
-      id__,
-      robot_type__,
-      result__,
-      message__);
-}
+struct ResponseSetSensorControl;
+struct ResponseSetSensorControlBuilder;
 
-struct Request_Set_Robot_Type FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Robot_TypeBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_ROBOT_TYPE = 6
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *robot_type() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
-           verifier.VerifyString(robot_type()) &&
-           verifier.EndTable();
-  }
-};
+struct ResultSettingParam;
+struct ResultSettingParamBuilder;
 
-struct Request_Set_Robot_TypeBuilder {
-  typedef Request_Set_Robot_Type Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Robot_Type::VT_ID, id);
-  }
-  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
-    fbb_.AddOffset(Request_Set_Robot_Type::VT_ROBOT_TYPE, robot_type);
-  }
-  explicit Request_Set_Robot_TypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Set_Robot_Type> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Robot_Type>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Set_Robot_Type> CreateRequest_Set_Robot_Type(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0) {
-  Request_Set_Robot_TypeBuilder builder_(_fbb);
-  builder_.add_robot_type(robot_type);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Set_Robot_Type> CreateRequest_Set_Robot_TypeDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *robot_type = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
-  return SLAMNAV::CreateRequest_Set_Robot_Type(
-      _fbb,
-      id__,
-      robot_type__);
-}
-
-struct Response_Set_Robot_Type FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Robot_TypeBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_ROBOT_TYPE = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *robot_type() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
-           verifier.VerifyString(robot_type()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Set_Robot_TypeBuilder {
-  typedef Response_Set_Robot_Type Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Robot_Type::VT_ID, id);
-  }
-  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
-    fbb_.AddOffset(Response_Set_Robot_Type::VT_ROBOT_TYPE, robot_type);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Robot_Type::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Robot_Type::VT_MESSAGE, message);
-  }
-  explicit Response_Set_Robot_TypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Set_Robot_Type> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Robot_Type>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Set_Robot_Type> CreateResponse_Set_Robot_Type(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Robot_TypeBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_robot_type(robot_type);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Set_Robot_Type> CreateResponse_Set_Robot_TypeDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *robot_type = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Robot_Type(
-      _fbb,
-      id__,
-      robot_type__,
-      result__,
-      message__);
-}
+struct ResultSettingSensor;
+struct ResultSettingSensorBuilder;
 
 struct SettingParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef SettingParamBuilder Builder;
@@ -462,456 +160,6 @@ inline ::flatbuffers::Offset<SettingParam> CreateSettingParamDirect(
       value__);
 }
 
-struct Request_Get_Pdu_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Pdu_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Get_Pdu_ParamBuilder {
-  typedef Request_Get_Pdu_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Pdu_Param::VT_ID, id);
-  }
-  explicit Request_Get_Pdu_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Get_Pdu_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Pdu_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Get_Pdu_Param> CreateRequest_Get_Pdu_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Pdu_ParamBuilder builder_(_fbb);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Get_Pdu_Param> CreateRequest_Get_Pdu_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Pdu_Param(
-      _fbb,
-      id__);
-}
-
-struct Response_Get_Pdu_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Pdu_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_PARAMS = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_PARAMS) &&
-           verifier.VerifyVector(params()) &&
-           verifier.VerifyVectorOfTables(params()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Get_Pdu_ParamBuilder {
-  typedef Response_Get_Pdu_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Pdu_Param::VT_ID, id);
-  }
-  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
-    fbb_.AddOffset(Response_Get_Pdu_Param::VT_PARAMS, params);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Pdu_Param::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Pdu_Param::VT_MESSAGE, message);
-  }
-  explicit Response_Get_Pdu_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Get_Pdu_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Pdu_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Get_Pdu_Param> CreateResponse_Get_Pdu_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Pdu_ParamBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_params(params);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Get_Pdu_Param> CreateResponse_Get_Pdu_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Pdu_Param(
-      _fbb,
-      id__,
-      params__,
-      result__,
-      message__);
-}
-
-struct Request_Set_Pdu_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Pdu_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_PARAMS = 6
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_PARAMS) &&
-           verifier.VerifyVector(params()) &&
-           verifier.VerifyVectorOfTables(params()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Set_Pdu_ParamBuilder {
-  typedef Request_Set_Pdu_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Pdu_Param::VT_ID, id);
-  }
-  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
-    fbb_.AddOffset(Request_Set_Pdu_Param::VT_PARAMS, params);
-  }
-  explicit Request_Set_Pdu_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Set_Pdu_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Pdu_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Set_Pdu_Param> CreateRequest_Set_Pdu_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0) {
-  Request_Set_Pdu_ParamBuilder builder_(_fbb);
-  builder_.add_params(params);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Set_Pdu_Param> CreateRequest_Set_Pdu_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
-  return SLAMNAV::CreateRequest_Set_Pdu_Param(
-      _fbb,
-      id__,
-      params__);
-}
-
-struct Response_Set_Pdu_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Pdu_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_PARAMS = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_PARAMS) &&
-           verifier.VerifyVector(params()) &&
-           verifier.VerifyVectorOfTables(params()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Set_Pdu_ParamBuilder {
-  typedef Response_Set_Pdu_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Pdu_Param::VT_ID, id);
-  }
-  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
-    fbb_.AddOffset(Response_Set_Pdu_Param::VT_PARAMS, params);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Pdu_Param::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Pdu_Param::VT_MESSAGE, message);
-  }
-  explicit Response_Set_Pdu_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Set_Pdu_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Pdu_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Set_Pdu_Param> CreateResponse_Set_Pdu_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Pdu_ParamBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_params(params);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Set_Pdu_Param> CreateResponse_Set_Pdu_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Pdu_Param(
-      _fbb,
-      id__,
-      params__,
-      result__,
-      message__);
-}
-
-struct Request_Get_Drive_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Drive_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Get_Drive_ParamBuilder {
-  typedef Request_Get_Drive_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Drive_Param::VT_ID, id);
-  }
-  explicit Request_Get_Drive_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Get_Drive_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Drive_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Get_Drive_Param> CreateRequest_Get_Drive_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Drive_ParamBuilder builder_(_fbb);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Get_Drive_Param> CreateRequest_Get_Drive_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Drive_Param(
-      _fbb,
-      id__);
-}
-
-struct Response_Get_Drive_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Drive_ParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_PARAMS = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_PARAMS) &&
-           verifier.VerifyVector(params()) &&
-           verifier.VerifyVectorOfTables(params()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Get_Drive_ParamBuilder {
-  typedef Response_Get_Drive_Param Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Drive_Param::VT_ID, id);
-  }
-  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
-    fbb_.AddOffset(Response_Get_Drive_Param::VT_PARAMS, params);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Drive_Param::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Drive_Param::VT_MESSAGE, message);
-  }
-  explicit Response_Get_Drive_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Get_Drive_Param> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Drive_Param>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Get_Drive_Param> CreateResponse_Get_Drive_Param(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Drive_ParamBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_params(params);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Get_Drive_Param> CreateResponse_Get_Drive_ParamDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Drive_Param(
-      _fbb,
-      id__,
-      params__,
-      result__,
-      message__);
-}
-
 struct SensorInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef SensorInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -975,88 +223,70 @@ inline ::flatbuffers::Offset<SensorInfo> CreateSensorInfoDirect(
       serial__);
 }
 
-struct Request_Get_Sensor_Info FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Sensor_InfoBuilder Builder;
+struct RequestGetRobotType FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetRobotTypeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TARGET = 6
+    VT_ID = 4
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Get_Sensor_InfoBuilder {
-  typedef Request_Get_Sensor_Info Table;
+struct RequestGetRobotTypeBuilder {
+  typedef RequestGetRobotType Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Sensor_Info::VT_ID, id);
+    fbb_.AddOffset(RequestGetRobotType::VT_ID, id);
   }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Request_Get_Sensor_Info::VT_TARGET, target);
-  }
-  explicit Request_Get_Sensor_InfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetRobotTypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Sensor_Info> Finish() {
+  ::flatbuffers::Offset<RequestGetRobotType> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Sensor_Info>(end);
+    auto o = ::flatbuffers::Offset<RequestGetRobotType>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Sensor_Info> CreateRequest_Get_Sensor_Info(
+inline ::flatbuffers::Offset<RequestGetRobotType> CreateRequestGetRobotType(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0) {
-  Request_Get_Sensor_InfoBuilder builder_(_fbb);
-  builder_.add_target(target);
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
+  RequestGetRobotTypeBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Sensor_Info> CreateRequest_Get_Sensor_InfoDirect(
+inline ::flatbuffers::Offset<RequestGetRobotType> CreateRequestGetRobotTypeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *target = nullptr) {
+    const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  return SLAMNAV::CreateRequest_Get_Sensor_Info(
+  return SLAMNAV::CreateRequestGetRobotType(
       _fbb,
-      id__,
-      target__);
+      id__);
 }
 
-struct Response_Get_Sensor_Info FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Sensor_InfoBuilder Builder;
+struct ResponseGetRobotType FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetRobotTypeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_TARGET = 6,
-    VT_INDEX = 8,
-    VT_RESULT = 10,
-    VT_MESSAGE = 12
+    VT_ROBOT_TYPE = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  const ::flatbuffers::String *robot_type() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -1068,11 +298,8 @@ struct Response_Get_Sensor_Info FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyOffset(verifier, VT_INDEX) &&
-           verifier.VerifyVector(index()) &&
-           verifier.VerifyVectorOfTables(index()) &&
+           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
+           verifier.VerifyString(robot_type()) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -1081,170 +308,143 @@ struct Response_Get_Sensor_Info FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Response_Get_Sensor_InfoBuilder {
-  typedef Response_Get_Sensor_Info Table;
+struct ResponseGetRobotTypeBuilder {
+  typedef ResponseGetRobotType Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Sensor_Info::VT_ID, id);
+    fbb_.AddOffset(ResponseGetRobotType::VT_ID, id);
   }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Response_Get_Sensor_Info::VT_TARGET, target);
-  }
-  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(Response_Get_Sensor_Info::VT_INDEX, index);
+  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
+    fbb_.AddOffset(ResponseGetRobotType::VT_ROBOT_TYPE, robot_type);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Sensor_Info::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetRobotType::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Sensor_Info::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetRobotType::VT_MESSAGE, message);
   }
-  explicit Response_Get_Sensor_InfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetRobotTypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Sensor_Info> Finish() {
+  ::flatbuffers::Offset<ResponseGetRobotType> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Sensor_Info>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetRobotType>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Sensor_Info> CreateResponse_Get_Sensor_Info(
+inline ::flatbuffers::Offset<ResponseGetRobotType> CreateResponseGetRobotType(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Sensor_InfoBuilder builder_(_fbb);
+  ResponseGetRobotTypeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
-  builder_.add_index(index);
-  builder_.add_target(target);
+  builder_.add_robot_type(robot_type);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Sensor_Info> CreateResponse_Get_Sensor_InfoDirect(
+inline ::flatbuffers::Offset<ResponseGetRobotType> CreateResponseGetRobotTypeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *target = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr,
+    const char *robot_type = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
+  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Sensor_Info(
+  return SLAMNAV::CreateResponseGetRobotType(
       _fbb,
       id__,
-      target__,
-      index__,
+      robot_type__,
       result__,
       message__);
 }
 
-struct Request_Set_Sensor_Index FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Sensor_IndexBuilder Builder;
+struct RequestSetRobotType FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetRobotTypeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_TARGET = 6,
-    VT_INDEX = 8
+    VT_ROBOT_TYPE = 6
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  const ::flatbuffers::String *robot_type() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyOffset(verifier, VT_INDEX) &&
-           verifier.VerifyVector(index()) &&
-           verifier.VerifyVectorOfTables(index()) &&
+           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
+           verifier.VerifyString(robot_type()) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Set_Sensor_IndexBuilder {
-  typedef Request_Set_Sensor_Index Table;
+struct RequestSetRobotTypeBuilder {
+  typedef RequestSetRobotType Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Sensor_Index::VT_ID, id);
+    fbb_.AddOffset(RequestSetRobotType::VT_ID, id);
   }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Request_Set_Sensor_Index::VT_TARGET, target);
+  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
+    fbb_.AddOffset(RequestSetRobotType::VT_ROBOT_TYPE, robot_type);
   }
-  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(Request_Set_Sensor_Index::VT_INDEX, index);
-  }
-  explicit Request_Set_Sensor_IndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetRobotTypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Sensor_Index> Finish() {
+  ::flatbuffers::Offset<RequestSetRobotType> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Sensor_Index>(end);
+    auto o = ::flatbuffers::Offset<RequestSetRobotType>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Sensor_Index> CreateRequest_Set_Sensor_Index(
+inline ::flatbuffers::Offset<RequestSetRobotType> CreateRequestSetRobotType(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0) {
-  Request_Set_Sensor_IndexBuilder builder_(_fbb);
-  builder_.add_index(index);
-  builder_.add_target(target);
+    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0) {
+  RequestSetRobotTypeBuilder builder_(_fbb);
+  builder_.add_robot_type(robot_type);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Sensor_Index> CreateRequest_Set_Sensor_IndexDirect(
+inline ::flatbuffers::Offset<RequestSetRobotType> CreateRequestSetRobotTypeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *target = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr) {
+    const char *robot_type = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
-  return SLAMNAV::CreateRequest_Set_Sensor_Index(
+  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
+  return SLAMNAV::CreateRequestSetRobotType(
       _fbb,
       id__,
-      target__,
-      index__);
+      robot_type__);
 }
 
-struct Response_Set_Sensor_Index FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Sensor_IndexBuilder Builder;
+struct ResponseSetRobotType FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetRobotTypeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_TARGET = 6,
-    VT_INDEX = 8,
-    VT_RESULT = 10,
-    VT_MESSAGE = 12
+    VT_ROBOT_TYPE = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  const ::flatbuffers::String *robot_type() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ROBOT_TYPE);
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -1256,11 +456,8 @@ struct Response_Set_Sensor_Index FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyOffset(verifier, VT_INDEX) &&
-           verifier.VerifyVector(index()) &&
-           verifier.VerifyVectorOfTables(index()) &&
+           VerifyOffset(verifier, VT_ROBOT_TYPE) &&
+           verifier.VerifyString(robot_type()) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -1269,439 +466,118 @@ struct Response_Set_Sensor_Index FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
   }
 };
 
-struct Response_Set_Sensor_IndexBuilder {
-  typedef Response_Set_Sensor_Index Table;
+struct ResponseSetRobotTypeBuilder {
+  typedef ResponseSetRobotType Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Sensor_Index::VT_ID, id);
+    fbb_.AddOffset(ResponseSetRobotType::VT_ID, id);
   }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Response_Set_Sensor_Index::VT_TARGET, target);
-  }
-  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(Response_Set_Sensor_Index::VT_INDEX, index);
+  void add_robot_type(::flatbuffers::Offset<::flatbuffers::String> robot_type) {
+    fbb_.AddOffset(ResponseSetRobotType::VT_ROBOT_TYPE, robot_type);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Sensor_Index::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetRobotType::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Sensor_Index::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetRobotType::VT_MESSAGE, message);
   }
-  explicit Response_Set_Sensor_IndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetRobotTypeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Sensor_Index> Finish() {
+  ::flatbuffers::Offset<ResponseSetRobotType> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Sensor_Index>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetRobotType>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Sensor_Index> CreateResponse_Set_Sensor_Index(
+inline ::flatbuffers::Offset<ResponseSetRobotType> CreateResponseSetRobotType(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> robot_type = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Sensor_IndexBuilder builder_(_fbb);
+  ResponseSetRobotTypeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
-  builder_.add_index(index);
-  builder_.add_target(target);
+  builder_.add_robot_type(robot_type);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Sensor_Index> CreateResponse_Set_Sensor_IndexDirect(
+inline ::flatbuffers::Offset<ResponseSetRobotType> CreateResponseSetRobotTypeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *target = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr,
+    const char *robot_type = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
+  auto robot_type__ = robot_type ? _fbb.CreateString(robot_type) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Sensor_Index(
+  return SLAMNAV::CreateResponseSetRobotType(
       _fbb,
       id__,
-      target__,
-      index__,
+      robot_type__,
       result__,
       message__);
 }
 
-struct Request_Get_Sensor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Sensor_ControlBuilder Builder;
+struct RequestGetPduParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetPduParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TARGET = 6,
-    VT_CONTROL = 8
+    VT_ID = 4
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  bool control() const {
-    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Get_Sensor_ControlBuilder {
-  typedef Request_Get_Sensor_Control Table;
+struct RequestGetPduParamBuilder {
+  typedef RequestGetPduParam Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Sensor_Control::VT_ID, id);
+    fbb_.AddOffset(RequestGetPduParam::VT_ID, id);
   }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Request_Get_Sensor_Control::VT_TARGET, target);
-  }
-  void add_control(bool control) {
-    fbb_.AddElement<uint8_t>(Request_Get_Sensor_Control::VT_CONTROL, static_cast<uint8_t>(control), 0);
-  }
-  explicit Request_Get_Sensor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetPduParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Sensor_Control> Finish() {
+  ::flatbuffers::Offset<RequestGetPduParam> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Sensor_Control>(end);
+    auto o = ::flatbuffers::Offset<RequestGetPduParam>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Sensor_Control> CreateRequest_Get_Sensor_Control(
+inline ::flatbuffers::Offset<RequestGetPduParam> CreateRequestGetPduParam(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    bool control = false) {
-  Request_Get_Sensor_ControlBuilder builder_(_fbb);
-  builder_.add_target(target);
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
+  RequestGetPduParamBuilder builder_(_fbb);
   builder_.add_id(id);
-  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Sensor_Control> CreateRequest_Get_Sensor_ControlDirect(
+inline ::flatbuffers::Offset<RequestGetPduParam> CreateRequestGetPduParamDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *target = nullptr,
-    bool control = false) {
+    const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  return SLAMNAV::CreateRequest_Get_Sensor_Control(
+  return SLAMNAV::CreateRequestGetPduParam(
       _fbb,
-      id__,
-      target__,
-      control);
+      id__);
 }
 
-struct Response_Get_Sensor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Sensor_ControlBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TARGET = 6,
-    VT_CONTROL = 8,
-    VT_RESULT = 10,
-    VT_MESSAGE = 12
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  bool control() const {
-    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Get_Sensor_ControlBuilder {
-  typedef Response_Get_Sensor_Control Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Sensor_Control::VT_ID, id);
-  }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Response_Get_Sensor_Control::VT_TARGET, target);
-  }
-  void add_control(bool control) {
-    fbb_.AddElement<uint8_t>(Response_Get_Sensor_Control::VT_CONTROL, static_cast<uint8_t>(control), 0);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Sensor_Control::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Sensor_Control::VT_MESSAGE, message);
-  }
-  explicit Response_Get_Sensor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Get_Sensor_Control> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Sensor_Control>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Get_Sensor_Control> CreateResponse_Get_Sensor_Control(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    bool control = false,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Sensor_ControlBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_target(target);
-  builder_.add_id(id);
-  builder_.add_control(control);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Get_Sensor_Control> CreateResponse_Get_Sensor_ControlDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *target = nullptr,
-    bool control = false,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Sensor_Control(
-      _fbb,
-      id__,
-      target__,
-      control,
-      result__,
-      message__);
-}
-
-struct Request_Set_Sensor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Sensor_ControlBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TARGET = 6,
-    VT_CONTROL = 8
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  bool control() const {
-    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Set_Sensor_ControlBuilder {
-  typedef Request_Set_Sensor_Control Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Sensor_Control::VT_ID, id);
-  }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Request_Set_Sensor_Control::VT_TARGET, target);
-  }
-  void add_control(bool control) {
-    fbb_.AddElement<uint8_t>(Request_Set_Sensor_Control::VT_CONTROL, static_cast<uint8_t>(control), 0);
-  }
-  explicit Request_Set_Sensor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Set_Sensor_Control> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Sensor_Control>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Set_Sensor_Control> CreateRequest_Set_Sensor_Control(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    bool control = false) {
-  Request_Set_Sensor_ControlBuilder builder_(_fbb);
-  builder_.add_target(target);
-  builder_.add_id(id);
-  builder_.add_control(control);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Set_Sensor_Control> CreateRequest_Set_Sensor_ControlDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *target = nullptr,
-    bool control = false) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  return SLAMNAV::CreateRequest_Set_Sensor_Control(
-      _fbb,
-      id__,
-      target__,
-      control);
-}
-
-struct Response_Set_Sensor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Sensor_ControlBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_TARGET = 6,
-    VT_CONTROL = 8,
-    VT_RESULT = 10,
-    VT_MESSAGE = 12
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *target() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
-  }
-  bool control() const {
-    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_TARGET) &&
-           verifier.VerifyString(target()) &&
-           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Set_Sensor_ControlBuilder {
-  typedef Response_Set_Sensor_Control Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Sensor_Control::VT_ID, id);
-  }
-  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Response_Set_Sensor_Control::VT_TARGET, target);
-  }
-  void add_control(bool control) {
-    fbb_.AddElement<uint8_t>(Response_Set_Sensor_Control::VT_CONTROL, static_cast<uint8_t>(control), 0);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Sensor_Control::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Sensor_Control::VT_MESSAGE, message);
-  }
-  explicit Response_Set_Sensor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Set_Sensor_Control> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Sensor_Control>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Set_Sensor_Control> CreateResponse_Set_Sensor_Control(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
-    bool control = false,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Sensor_ControlBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_target(target);
-  builder_.add_id(id);
-  builder_.add_control(control);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Set_Sensor_Control> CreateResponse_Set_Sensor_ControlDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *target = nullptr,
-    bool control = false,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto target__ = target ? _fbb.CreateString(target) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Sensor_Control(
-      _fbb,
-      id__,
-      target__,
-      control,
-      result__,
-      message__);
-}
-
-struct Result_Setting_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_Setting_ParamBuilder Builder;
+struct ResponseGetPduParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetPduParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PARAMS = 6,
@@ -1735,40 +611,40 @@ struct Result_Setting_Param FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Result_Setting_ParamBuilder {
-  typedef Result_Setting_Param Table;
+struct ResponseGetPduParamBuilder {
+  typedef ResponseGetPduParam Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Setting_Param::VT_ID, id);
+    fbb_.AddOffset(ResponseGetPduParam::VT_ID, id);
   }
   void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
-    fbb_.AddOffset(Result_Setting_Param::VT_PARAMS, params);
+    fbb_.AddOffset(ResponseGetPduParam::VT_PARAMS, params);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Setting_Param::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetPduParam::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Setting_Param::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetPduParam::VT_MESSAGE, message);
   }
-  explicit Result_Setting_ParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetPduParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Setting_Param> Finish() {
+  ::flatbuffers::Offset<ResponseGetPduParam> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Setting_Param>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetPduParam>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Setting_Param> CreateResult_Setting_Param(
+inline ::flatbuffers::Offset<ResponseGetPduParam> CreateResponseGetPduParam(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_Setting_ParamBuilder builder_(_fbb);
+  ResponseGetPduParamBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_params(params);
@@ -1776,7 +652,7 @@ inline ::flatbuffers::Offset<Result_Setting_Param> CreateResult_Setting_Param(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Setting_Param> CreateResult_Setting_ParamDirect(
+inline ::flatbuffers::Offset<ResponseGetPduParam> CreateResponseGetPduParamDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
@@ -1786,7 +662,7 @@ inline ::flatbuffers::Offset<Result_Setting_Param> CreateResult_Setting_ParamDir
   auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Setting_Param(
+  return SLAMNAV::CreateResponseGetPduParam(
       _fbb,
       id__,
       params__,
@@ -1794,8 +670,1132 @@ inline ::flatbuffers::Offset<Result_Setting_Param> CreateResult_Setting_ParamDir
       message__);
 }
 
-struct Result_Setting_Sensor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_Setting_SensorBuilder Builder;
+struct RequestSetPduParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetPduParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_PARAMS = 6
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_PARAMS) &&
+           verifier.VerifyVector(params()) &&
+           verifier.VerifyVectorOfTables(params()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestSetPduParamBuilder {
+  typedef RequestSetPduParam Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestSetPduParam::VT_ID, id);
+  }
+  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
+    fbb_.AddOffset(RequestSetPduParam::VT_PARAMS, params);
+  }
+  explicit RequestSetPduParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestSetPduParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestSetPduParam>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestSetPduParam> CreateRequestSetPduParam(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0) {
+  RequestSetPduParamBuilder builder_(_fbb);
+  builder_.add_params(params);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestSetPduParam> CreateRequestSetPduParamDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
+  return SLAMNAV::CreateRequestSetPduParam(
+      _fbb,
+      id__,
+      params__);
+}
+
+struct ResponseSetPduParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetPduParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_PARAMS = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_PARAMS) &&
+           verifier.VerifyVector(params()) &&
+           verifier.VerifyVectorOfTables(params()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseSetPduParamBuilder {
+  typedef ResponseSetPduParam Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseSetPduParam::VT_ID, id);
+  }
+  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
+    fbb_.AddOffset(ResponseSetPduParam::VT_PARAMS, params);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseSetPduParam::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseSetPduParam::VT_MESSAGE, message);
+  }
+  explicit ResponseSetPduParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseSetPduParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseSetPduParam>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseSetPduParam> CreateResponseSetPduParam(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseSetPduParamBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_params(params);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseSetPduParam> CreateResponseSetPduParamDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseSetPduParam(
+      _fbb,
+      id__,
+      params__,
+      result__,
+      message__);
+}
+
+struct RequestGetDriveParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetDriveParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestGetDriveParamBuilder {
+  typedef RequestGetDriveParam Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestGetDriveParam::VT_ID, id);
+  }
+  explicit RequestGetDriveParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestGetDriveParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestGetDriveParam>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestGetDriveParam> CreateRequestGetDriveParam(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
+  RequestGetDriveParamBuilder builder_(_fbb);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestGetDriveParam> CreateRequestGetDriveParamDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequestGetDriveParam(
+      _fbb,
+      id__);
+}
+
+struct ResponseGetDriveParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetDriveParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_PARAMS = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_PARAMS) &&
+           verifier.VerifyVector(params()) &&
+           verifier.VerifyVectorOfTables(params()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseGetDriveParamBuilder {
+  typedef ResponseGetDriveParam Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseGetDriveParam::VT_ID, id);
+  }
+  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
+    fbb_.AddOffset(ResponseGetDriveParam::VT_PARAMS, params);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseGetDriveParam::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseGetDriveParam::VT_MESSAGE, message);
+  }
+  explicit ResponseGetDriveParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseGetDriveParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseGetDriveParam>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseGetDriveParam> CreateResponseGetDriveParam(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseGetDriveParamBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_params(params);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseGetDriveParam> CreateResponseGetDriveParamDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseGetDriveParam(
+      _fbb,
+      id__,
+      params__,
+      result__,
+      message__);
+}
+
+struct RequestGetSensorInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetSensorInfoBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestGetSensorInfoBuilder {
+  typedef RequestGetSensorInfo Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestGetSensorInfo::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(RequestGetSensorInfo::VT_TARGET, target);
+  }
+  explicit RequestGetSensorInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestGetSensorInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestGetSensorInfo>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestGetSensorInfo> CreateRequestGetSensorInfo(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0) {
+  RequestGetSensorInfoBuilder builder_(_fbb);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestGetSensorInfo> CreateRequestGetSensorInfoDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return SLAMNAV::CreateRequestGetSensorInfo(
+      _fbb,
+      id__,
+      target__);
+}
+
+struct ResponseGetSensorInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetSensorInfoBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_INDEX = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyOffset(verifier, VT_INDEX) &&
+           verifier.VerifyVector(index()) &&
+           verifier.VerifyVectorOfTables(index()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseGetSensorInfoBuilder {
+  typedef ResponseGetSensorInfo Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseGetSensorInfo::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(ResponseGetSensorInfo::VT_TARGET, target);
+  }
+  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
+    fbb_.AddOffset(ResponseGetSensorInfo::VT_INDEX, index);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseGetSensorInfo::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseGetSensorInfo::VT_MESSAGE, message);
+  }
+  explicit ResponseGetSensorInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseGetSensorInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseGetSensorInfo>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseGetSensorInfo> CreateResponseGetSensorInfo(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseGetSensorInfoBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_index(index);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseGetSensorInfo> CreateResponseGetSensorInfoDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseGetSensorInfo(
+      _fbb,
+      id__,
+      target__,
+      index__,
+      result__,
+      message__);
+}
+
+struct RequestSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSensorIndexBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_INDEX = 8
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyOffset(verifier, VT_INDEX) &&
+           verifier.VerifyVector(index()) &&
+           verifier.VerifyVectorOfTables(index()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestSetSensorIndexBuilder {
+  typedef RequestSetSensorIndex Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestSetSensorIndex::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(RequestSetSensorIndex::VT_TARGET, target);
+  }
+  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
+    fbb_.AddOffset(RequestSetSensorIndex::VT_INDEX, index);
+  }
+  explicit RequestSetSensorIndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestSetSensorIndex> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestSetSensorIndex>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestSetSensorIndex> CreateRequestSetSensorIndex(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0) {
+  RequestSetSensorIndexBuilder builder_(_fbb);
+  builder_.add_index(index);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestSetSensorIndex> CreateRequestSetSensorIndexDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
+  return SLAMNAV::CreateRequestSetSensorIndex(
+      _fbb,
+      id__,
+      target__,
+      index__);
+}
+
+struct ResponseSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSensorIndexBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_INDEX = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *>(VT_INDEX);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyOffset(verifier, VT_INDEX) &&
+           verifier.VerifyVector(index()) &&
+           verifier.VerifyVectorOfTables(index()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseSetSensorIndexBuilder {
+  typedef ResponseSetSensorIndex Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseSetSensorIndex::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(ResponseSetSensorIndex::VT_TARGET, target);
+  }
+  void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
+    fbb_.AddOffset(ResponseSetSensorIndex::VT_INDEX, index);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseSetSensorIndex::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseSetSensorIndex::VT_MESSAGE, message);
+  }
+  explicit ResponseSetSensorIndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseSetSensorIndex> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseSetSensorIndex>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorIndex(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseSetSensorIndexBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_index(index);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorIndexDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>> *index = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseSetSensorIndex(
+      _fbb,
+      id__,
+      target__,
+      index__,
+      result__,
+      message__);
+}
+
+struct RequestGetSensorControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetSensorControlBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_CONTROL = 8
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestGetSensorControlBuilder {
+  typedef RequestGetSensorControl Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestGetSensorControl::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(RequestGetSensorControl::VT_TARGET, target);
+  }
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestGetSensorControl::VT_CONTROL, static_cast<uint8_t>(control), 0);
+  }
+  explicit RequestGetSensorControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestGetSensorControl> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestGetSensorControl>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestGetSensorControl> CreateRequestGetSensorControl(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    bool control = false) {
+  RequestGetSensorControlBuilder builder_(_fbb);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  builder_.add_control(control);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestGetSensorControl> CreateRequestGetSensorControlDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    bool control = false) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return SLAMNAV::CreateRequestGetSensorControl(
+      _fbb,
+      id__,
+      target__,
+      control);
+}
+
+struct ResponseGetSensorControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetSensorControlBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_CONTROL = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseGetSensorControlBuilder {
+  typedef ResponseGetSensorControl Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseGetSensorControl::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(ResponseGetSensorControl::VT_TARGET, target);
+  }
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseGetSensorControl::VT_CONTROL, static_cast<uint8_t>(control), 0);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseGetSensorControl::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseGetSensorControl::VT_MESSAGE, message);
+  }
+  explicit ResponseGetSensorControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseGetSensorControl> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseGetSensorControl>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseGetSensorControl> CreateResponseGetSensorControl(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    bool control = false,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseGetSensorControlBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  builder_.add_control(control);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseGetSensorControl> CreateResponseGetSensorControlDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    bool control = false,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseGetSensorControl(
+      _fbb,
+      id__,
+      target__,
+      control,
+      result__,
+      message__);
+}
+
+struct RequestSetSensorControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSensorControlBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_CONTROL = 8
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestSetSensorControlBuilder {
+  typedef RequestSetSensorControl Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestSetSensorControl::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(RequestSetSensorControl::VT_TARGET, target);
+  }
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestSetSensorControl::VT_CONTROL, static_cast<uint8_t>(control), 0);
+  }
+  explicit RequestSetSensorControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestSetSensorControl> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestSetSensorControl>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestSetSensorControl> CreateRequestSetSensorControl(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    bool control = false) {
+  RequestSetSensorControlBuilder builder_(_fbb);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  builder_.add_control(control);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestSetSensorControl> CreateRequestSetSensorControlDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    bool control = false) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  return SLAMNAV::CreateRequestSetSensorControl(
+      _fbb,
+      id__,
+      target__,
+      control);
+}
+
+struct ResponseSetSensorControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSensorControlBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_TARGET = 6,
+    VT_CONTROL = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *target() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TARGET);
+  }
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyString(target()) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseSetSensorControlBuilder {
+  typedef ResponseSetSensorControl Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseSetSensorControl::VT_ID, id);
+  }
+  void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
+    fbb_.AddOffset(ResponseSetSensorControl::VT_TARGET, target);
+  }
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseSetSensorControl::VT_CONTROL, static_cast<uint8_t>(control), 0);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseSetSensorControl::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseSetSensorControl::VT_MESSAGE, message);
+  }
+  explicit ResponseSetSensorControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseSetSensorControl> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseSetSensorControl>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseSetSensorControl> CreateResponseSetSensorControl(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> target = 0,
+    bool control = false,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseSetSensorControlBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_target(target);
+  builder_.add_id(id);
+  builder_.add_control(control);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseSetSensorControl> CreateResponseSetSensorControlDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *target = nullptr,
+    bool control = false,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto target__ = target ? _fbb.CreateString(target) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseSetSensorControl(
+      _fbb,
+      id__,
+      target__,
+      control,
+      result__,
+      message__);
+}
+
+struct ResultSettingParam FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultSettingParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_PARAMS = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *>(VT_PARAMS);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_PARAMS) &&
+           verifier.VerifyVector(params()) &&
+           verifier.VerifyVectorOfTables(params()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResultSettingParamBuilder {
+  typedef ResultSettingParam Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResultSettingParam::VT_ID, id);
+  }
+  void add_params(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params) {
+    fbb_.AddOffset(ResultSettingParam::VT_PARAMS, params);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResultSettingParam::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResultSettingParam::VT_MESSAGE, message);
+  }
+  explicit ResultSettingParamBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResultSettingParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResultSettingParam>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResultSettingParam> CreateResultSettingParam(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SettingParam>>> params = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResultSettingParamBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_params(params);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResultSettingParam> CreateResultSettingParamDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::SettingParam>> *params = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto params__ = params ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SettingParam>>(*params) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResultSettingParam(
+      _fbb,
+      id__,
+      params__,
+      result__,
+      message__);
+}
+
+struct ResultSettingSensor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultSettingSensorBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1840,40 +1840,40 @@ struct Result_Setting_Sensor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Result_Setting_SensorBuilder {
-  typedef Result_Setting_Sensor Table;
+struct ResultSettingSensorBuilder {
+  typedef ResultSettingSensor Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Setting_Sensor::VT_ID, id);
+    fbb_.AddOffset(ResultSettingSensor::VT_ID, id);
   }
   void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(Result_Setting_Sensor::VT_TARGET, target);
+    fbb_.AddOffset(ResultSettingSensor::VT_TARGET, target);
   }
   void add_control(bool control) {
-    fbb_.AddElement<uint8_t>(Result_Setting_Sensor::VT_CONTROL, static_cast<uint8_t>(control), 0);
+    fbb_.AddElement<uint8_t>(ResultSettingSensor::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(Result_Setting_Sensor::VT_INDEX, index);
+    fbb_.AddOffset(ResultSettingSensor::VT_INDEX, index);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Setting_Sensor::VT_RESULT, result);
+    fbb_.AddOffset(ResultSettingSensor::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Setting_Sensor::VT_MESSAGE, message);
+    fbb_.AddOffset(ResultSettingSensor::VT_MESSAGE, message);
   }
-  explicit Result_Setting_SensorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResultSettingSensorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Setting_Sensor> Finish() {
+  ::flatbuffers::Offset<ResultSettingSensor> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Setting_Sensor>(end);
+    auto o = ::flatbuffers::Offset<ResultSettingSensor>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Setting_Sensor> CreateResult_Setting_Sensor(
+inline ::flatbuffers::Offset<ResultSettingSensor> CreateResultSettingSensor(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> target = 0,
@@ -1881,7 +1881,7 @@ inline ::flatbuffers::Offset<Result_Setting_Sensor> CreateResult_Setting_Sensor(
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_Setting_SensorBuilder builder_(_fbb);
+  ResultSettingSensorBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_index(index);
@@ -1891,7 +1891,7 @@ inline ::flatbuffers::Offset<Result_Setting_Sensor> CreateResult_Setting_Sensor(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Setting_Sensor> CreateResult_Setting_SensorDirect(
+inline ::flatbuffers::Offset<ResultSettingSensor> CreateResultSettingSensorDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *target = nullptr,
@@ -1904,7 +1904,7 @@ inline ::flatbuffers::Offset<Result_Setting_Sensor> CreateResult_Setting_SensorD
   auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Setting_Sensor(
+  return SLAMNAV::CreateResultSettingSensor(
       _fbb,
       id__,
       target__,

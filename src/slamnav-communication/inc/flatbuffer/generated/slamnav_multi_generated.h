@@ -15,20 +15,20 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace SLAMNAV {
 
-struct Request_Multi_Path;
-struct Request_Multi_PathBuilder;
+struct RequestMultiPath;
+struct RequestMultiPathBuilder;
 
-struct Response_Multi_Path;
-struct Response_Multi_PathBuilder;
+struct ResponseMultiPath;
+struct ResponseMultiPathBuilder;
 
-struct Request_Multi_Vobs;
-struct Request_Multi_VobsBuilder;
+struct RequestMultiVobs;
+struct RequestMultiVobsBuilder;
 
-struct Response_Multi_Vobs;
-struct Response_Multi_VobsBuilder;
+struct ResponseMultiVobs;
+struct ResponseMultiVobsBuilder;
 
-struct Request_Multi_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Multi_PathBuilder Builder;
+struct RequestMultiPath FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMultiPathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6
@@ -50,51 +50,51 @@ struct Request_Multi_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
 };
 
-struct Request_Multi_PathBuilder {
-  typedef Request_Multi_Path Table;
+struct RequestMultiPathBuilder {
+  typedef RequestMultiPath Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Multi_Path::VT_ID, id);
+    fbb_.AddOffset(RequestMultiPath::VT_ID, id);
   }
   void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
-    fbb_.AddOffset(Request_Multi_Path::VT_PATH, path);
+    fbb_.AddOffset(RequestMultiPath::VT_PATH, path);
   }
-  explicit Request_Multi_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMultiPathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Multi_Path> Finish() {
+  ::flatbuffers::Offset<RequestMultiPath> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Multi_Path>(end);
+    auto o = ::flatbuffers::Offset<RequestMultiPath>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Multi_Path> CreateRequest_Multi_Path(
+inline ::flatbuffers::Offset<RequestMultiPath> CreateRequestMultiPath(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0) {
-  Request_Multi_PathBuilder builder_(_fbb);
+  RequestMultiPathBuilder builder_(_fbb);
   builder_.add_path(path);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Multi_Path> CreateRequest_Multi_PathDirect(
+inline ::flatbuffers::Offset<RequestMultiPath> CreateRequestMultiPathDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
-  return SLAMNAV::CreateRequest_Multi_Path(
+  return SLAMNAV::CreateRequestMultiPath(
       _fbb,
       id__,
       path__);
 }
 
-struct Response_Multi_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Multi_PathBuilder Builder;
+struct ResponseMultiPath FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMultiPathBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_PATH = 6,
@@ -128,40 +128,40 @@ struct Response_Multi_Path FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Response_Multi_PathBuilder {
-  typedef Response_Multi_Path Table;
+struct ResponseMultiPathBuilder {
+  typedef ResponseMultiPath Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Multi_Path::VT_ID, id);
+    fbb_.AddOffset(ResponseMultiPath::VT_ID, id);
   }
   void add_path(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path) {
-    fbb_.AddOffset(Response_Multi_Path::VT_PATH, path);
+    fbb_.AddOffset(ResponseMultiPath::VT_PATH, path);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Multi_Path::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMultiPath::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Multi_Path::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMultiPath::VT_MESSAGE, message);
   }
-  explicit Response_Multi_PathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMultiPathBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Multi_Path> Finish() {
+  ::flatbuffers::Offset<ResponseMultiPath> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Multi_Path>(end);
+    auto o = ::flatbuffers::Offset<ResponseMultiPath>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Multi_Path> CreateResponse_Multi_Path(
+inline ::flatbuffers::Offset<ResponseMultiPath> CreateResponseMultiPath(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> path = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Multi_PathBuilder builder_(_fbb);
+  ResponseMultiPathBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_path(path);
@@ -169,7 +169,7 @@ inline ::flatbuffers::Offset<Response_Multi_Path> CreateResponse_Multi_Path(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Multi_Path> CreateResponse_Multi_PathDirect(
+inline ::flatbuffers::Offset<ResponseMultiPath> CreateResponseMultiPathDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *path = nullptr,
@@ -179,7 +179,7 @@ inline ::flatbuffers::Offset<Response_Multi_Path> CreateResponse_Multi_PathDirec
   auto path__ = path ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*path) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Multi_Path(
+  return SLAMNAV::CreateResponseMultiPath(
       _fbb,
       id__,
       path__,
@@ -187,13 +187,13 @@ inline ::flatbuffers::Offset<Response_Multi_Path> CreateResponse_Multi_PathDirec
       message__);
 }
 
-struct Request_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Multi_VobsBuilder Builder;
+struct RequestMultiVobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMultiVobsBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_VOBS_ROBOTS = 6,
     VT_VOBS_CLOSURES = 8,
-    VT_IS_VOBS_CLOSURES_CHANGE = 10
+    VT_IS_VOBS_C = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
@@ -204,8 +204,8 @@ struct Request_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_closures() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_VOBS_CLOSURES);
   }
-  const ::flatbuffers::String *is_vobs_closures_change() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_IS_VOBS_CLOSURES_CHANGE);
+  const ::flatbuffers::String *is_vobs_c() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_IS_VOBS_C);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -217,78 +217,78 @@ struct Request_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
            VerifyOffset(verifier, VT_VOBS_CLOSURES) &&
            verifier.VerifyVector(vobs_closures()) &&
            verifier.VerifyVectorOfStrings(vobs_closures()) &&
-           VerifyOffset(verifier, VT_IS_VOBS_CLOSURES_CHANGE) &&
-           verifier.VerifyString(is_vobs_closures_change()) &&
+           VerifyOffset(verifier, VT_IS_VOBS_C) &&
+           verifier.VerifyString(is_vobs_c()) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Multi_VobsBuilder {
-  typedef Request_Multi_Vobs Table;
+struct RequestMultiVobsBuilder {
+  typedef RequestMultiVobs Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Multi_Vobs::VT_ID, id);
+    fbb_.AddOffset(RequestMultiVobs::VT_ID, id);
   }
   void add_vobs_robots(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_robots) {
-    fbb_.AddOffset(Request_Multi_Vobs::VT_VOBS_ROBOTS, vobs_robots);
+    fbb_.AddOffset(RequestMultiVobs::VT_VOBS_ROBOTS, vobs_robots);
   }
   void add_vobs_closures(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_closures) {
-    fbb_.AddOffset(Request_Multi_Vobs::VT_VOBS_CLOSURES, vobs_closures);
+    fbb_.AddOffset(RequestMultiVobs::VT_VOBS_CLOSURES, vobs_closures);
   }
-  void add_is_vobs_closures_change(::flatbuffers::Offset<::flatbuffers::String> is_vobs_closures_change) {
-    fbb_.AddOffset(Request_Multi_Vobs::VT_IS_VOBS_CLOSURES_CHANGE, is_vobs_closures_change);
+  void add_is_vobs_c(::flatbuffers::Offset<::flatbuffers::String> is_vobs_c) {
+    fbb_.AddOffset(RequestMultiVobs::VT_IS_VOBS_C, is_vobs_c);
   }
-  explicit Request_Multi_VobsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMultiVobsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Multi_Vobs> Finish() {
+  ::flatbuffers::Offset<RequestMultiVobs> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Multi_Vobs>(end);
+    auto o = ::flatbuffers::Offset<RequestMultiVobs>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Multi_Vobs> CreateRequest_Multi_Vobs(
+inline ::flatbuffers::Offset<RequestMultiVobs> CreateRequestMultiVobs(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_robots = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_closures = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> is_vobs_closures_change = 0) {
-  Request_Multi_VobsBuilder builder_(_fbb);
-  builder_.add_is_vobs_closures_change(is_vobs_closures_change);
+    ::flatbuffers::Offset<::flatbuffers::String> is_vobs_c = 0) {
+  RequestMultiVobsBuilder builder_(_fbb);
+  builder_.add_is_vobs_c(is_vobs_c);
   builder_.add_vobs_closures(vobs_closures);
   builder_.add_vobs_robots(vobs_robots);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Multi_Vobs> CreateRequest_Multi_VobsDirect(
+inline ::flatbuffers::Offset<RequestMultiVobs> CreateRequestMultiVobsDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_robots = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_closures = nullptr,
-    const char *is_vobs_closures_change = nullptr) {
+    const char *is_vobs_c = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto vobs_robots__ = vobs_robots ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*vobs_robots) : 0;
   auto vobs_closures__ = vobs_closures ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*vobs_closures) : 0;
-  auto is_vobs_closures_change__ = is_vobs_closures_change ? _fbb.CreateString(is_vobs_closures_change) : 0;
-  return SLAMNAV::CreateRequest_Multi_Vobs(
+  auto is_vobs_c__ = is_vobs_c ? _fbb.CreateString(is_vobs_c) : 0;
+  return SLAMNAV::CreateRequestMultiVobs(
       _fbb,
       id__,
       vobs_robots__,
       vobs_closures__,
-      is_vobs_closures_change__);
+      is_vobs_c__);
 }
 
-struct Response_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Multi_VobsBuilder Builder;
+struct ResponseMultiVobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMultiVobsBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_VOBS_ROBOTS = 6,
     VT_VOBS_CLOSURES = 8,
-    VT_IS_VOBS_CLOSURES_CHANGE = 10,
+    VT_IS_VOBS_C = 10,
     VT_RESULT = 12,
     VT_MESSAGE = 14
   };
@@ -301,8 +301,8 @@ struct Response_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_closures() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_VOBS_CLOSURES);
   }
-  const ::flatbuffers::String *is_vobs_closures_change() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_IS_VOBS_CLOSURES_CHANGE);
+  const ::flatbuffers::String *is_vobs_c() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_IS_VOBS_C);
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -320,8 +320,8 @@ struct Response_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
            VerifyOffset(verifier, VT_VOBS_CLOSURES) &&
            verifier.VerifyVector(vobs_closures()) &&
            verifier.VerifyVectorOfStrings(vobs_closures()) &&
-           VerifyOffset(verifier, VT_IS_VOBS_CLOSURES_CHANGE) &&
-           verifier.VerifyString(is_vobs_closures_change()) &&
+           VerifyOffset(verifier, VT_IS_VOBS_C) &&
+           verifier.VerifyString(is_vobs_c()) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -330,77 +330,77 @@ struct Response_Multi_Vobs FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Response_Multi_VobsBuilder {
-  typedef Response_Multi_Vobs Table;
+struct ResponseMultiVobsBuilder {
+  typedef ResponseMultiVobs Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_ID, id);
+    fbb_.AddOffset(ResponseMultiVobs::VT_ID, id);
   }
   void add_vobs_robots(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_robots) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_VOBS_ROBOTS, vobs_robots);
+    fbb_.AddOffset(ResponseMultiVobs::VT_VOBS_ROBOTS, vobs_robots);
   }
   void add_vobs_closures(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_closures) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_VOBS_CLOSURES, vobs_closures);
+    fbb_.AddOffset(ResponseMultiVobs::VT_VOBS_CLOSURES, vobs_closures);
   }
-  void add_is_vobs_closures_change(::flatbuffers::Offset<::flatbuffers::String> is_vobs_closures_change) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_IS_VOBS_CLOSURES_CHANGE, is_vobs_closures_change);
+  void add_is_vobs_c(::flatbuffers::Offset<::flatbuffers::String> is_vobs_c) {
+    fbb_.AddOffset(ResponseMultiVobs::VT_IS_VOBS_C, is_vobs_c);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMultiVobs::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Multi_Vobs::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMultiVobs::VT_MESSAGE, message);
   }
-  explicit Response_Multi_VobsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMultiVobsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Multi_Vobs> Finish() {
+  ::flatbuffers::Offset<ResponseMultiVobs> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Multi_Vobs>(end);
+    auto o = ::flatbuffers::Offset<ResponseMultiVobs>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Multi_Vobs> CreateResponse_Multi_Vobs(
+inline ::flatbuffers::Offset<ResponseMultiVobs> CreateResponseMultiVobs(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_robots = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> vobs_closures = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> is_vobs_closures_change = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> is_vobs_c = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Multi_VobsBuilder builder_(_fbb);
+  ResponseMultiVobsBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
-  builder_.add_is_vobs_closures_change(is_vobs_closures_change);
+  builder_.add_is_vobs_c(is_vobs_c);
   builder_.add_vobs_closures(vobs_closures);
   builder_.add_vobs_robots(vobs_robots);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Multi_Vobs> CreateResponse_Multi_VobsDirect(
+inline ::flatbuffers::Offset<ResponseMultiVobs> CreateResponseMultiVobsDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_robots = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *vobs_closures = nullptr,
-    const char *is_vobs_closures_change = nullptr,
+    const char *is_vobs_c = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto vobs_robots__ = vobs_robots ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*vobs_robots) : 0;
   auto vobs_closures__ = vobs_closures ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*vobs_closures) : 0;
-  auto is_vobs_closures_change__ = is_vobs_closures_change ? _fbb.CreateString(is_vobs_closures_change) : 0;
+  auto is_vobs_c__ = is_vobs_c ? _fbb.CreateString(is_vobs_c) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Multi_Vobs(
+  return SLAMNAV::CreateResponseMultiVobs(
       _fbb,
       id__,
       vobs_robots__,
       vobs_closures__,
-      is_vobs_closures_change__,
+      is_vobs_c__,
       result__,
       message__);
 }

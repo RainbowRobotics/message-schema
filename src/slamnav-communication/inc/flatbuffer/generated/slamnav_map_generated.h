@@ -15,73 +15,17 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace SLAMNAV {
 
-struct Request_Map_Load;
-struct Request_Map_LoadBuilder;
-
-struct Response_Map_Load;
-struct Response_Map_LoadBuilder;
-
-struct Request_Topo_Load;
-struct Request_Topo_LoadBuilder;
-
-struct Response_Topo_Load;
-struct Response_Topo_LoadBuilder;
-
 struct MapFileInfo;
 struct MapFileInfoBuilder;
 
 struct MapFile;
 struct MapFileBuilder;
 
-struct Request_Map_List;
-struct Request_Map_ListBuilder;
+struct NodePose;
+struct NodePoseBuilder;
 
-struct Response_Map_List;
-struct Response_Map_ListBuilder;
-
-struct Request_Map_Delete;
-struct Request_Map_DeleteBuilder;
-
-struct Response_Map_Delete;
-struct Response_Map_DeleteBuilder;
-
-struct Request_Map_Current;
-struct Request_Map_CurrentBuilder;
-
-struct Response_Map_Current;
-struct Response_Map_CurrentBuilder;
-
-struct CloudData;
-
-struct Request_Get_Map_File;
-struct Request_Get_Map_FileBuilder;
-
-struct Response_Get_Map_File;
-struct Response_Get_Map_FileBuilder;
-
-struct Request_Get_Map_Cloud;
-struct Request_Get_Map_CloudBuilder;
-
-struct Response_Get_Map_Cloud;
-struct Response_Get_Map_CloudBuilder;
-
-struct Request_Set_Map_Cloud;
-struct Request_Set_Map_CloudBuilder;
-
-struct Response_Set_Map_Cloud;
-struct Response_Set_Map_CloudBuilder;
-
-struct Request_Get_Map_pipe;
-struct Request_Get_Map_pipeBuilder;
-
-struct Response_Get_Map_pipe;
-struct Response_Get_Map_pipeBuilder;
-
-struct Request_Get_Map_Tiles;
-struct Request_Get_Map_TilesBuilder;
-
-struct Response_Get_Map_Tiles;
-struct Response_Get_Map_TilesBuilder;
+struct NodeSize;
+struct NodeSizeBuilder;
 
 struct Link;
 struct LinkBuilder;
@@ -89,44 +33,106 @@ struct LinkBuilder;
 struct Node;
 struct NodeBuilder;
 
-struct Request_Set_Map_Topology;
-struct Request_Set_Map_TopologyBuilder;
+struct CloudData;
 
-struct Response_Set_Map_Topology;
-struct Response_Set_Map_TopologyBuilder;
+struct RequestMapLoad;
+struct RequestMapLoadBuilder;
 
-struct Request_Get_Map_Topology;
-struct Request_Get_Map_TopologyBuilder;
+struct ResponseMapLoad;
+struct ResponseMapLoadBuilder;
 
-struct Response_Get_Map_Topology;
-struct Response_Get_Map_TopologyBuilder;
+struct RequestTopoLoad;
+struct RequestTopoLoadBuilder;
 
-struct Request_Mapping_Start;
-struct Request_Mapping_StartBuilder;
+struct ResponseTopoLoad;
+struct ResponseTopoLoadBuilder;
 
-struct Response_Mapping_Start;
-struct Response_Mapping_StartBuilder;
+struct RequestMapList;
+struct RequestMapListBuilder;
 
-struct Request_Mapping_Stop;
-struct Request_Mapping_StopBuilder;
+struct ResponseMapList;
+struct ResponseMapListBuilder;
 
-struct Response_Mapping_Stop;
-struct Response_Mapping_StopBuilder;
+struct RequestMapDelete;
+struct RequestMapDeleteBuilder;
 
-struct Request_Mapping_Save;
-struct Request_Mapping_SaveBuilder;
+struct ResponseMapDelete;
+struct ResponseMapDeleteBuilder;
 
-struct Response_Mapping_Save;
-struct Response_Mapping_SaveBuilder;
+struct RequestMapCurrent;
+struct RequestMapCurrentBuilder;
 
-struct Request_Mapping_Cloud_Reload;
-struct Request_Mapping_Cloud_ReloadBuilder;
+struct ResponseMapCurrent;
+struct ResponseMapCurrentBuilder;
 
-struct Response_Mapping_Cloud_Reload;
-struct Response_Mapping_Cloud_ReloadBuilder;
+struct RequestGetMapFile;
+struct RequestGetMapFileBuilder;
 
-struct Result_Map_Load;
-struct Result_Map_LoadBuilder;
+struct ResponseGetMapFile;
+struct ResponseGetMapFileBuilder;
+
+struct RequestGetMapCloud;
+struct RequestGetMapCloudBuilder;
+
+struct ResponseGetMapCloud;
+struct ResponseGetMapCloudBuilder;
+
+struct RequestSetMapCloud;
+struct RequestSetMapCloudBuilder;
+
+struct ResponseSetMapCloud;
+struct ResponseSetMapCloudBuilder;
+
+struct RequestGetMapPipe;
+struct RequestGetMapPipeBuilder;
+
+struct ResponseGetMapPipe;
+struct ResponseGetMapPipeBuilder;
+
+struct RequestGetMapTiles;
+struct RequestGetMapTilesBuilder;
+
+struct ResponseGetMapTiles;
+struct ResponseGetMapTilesBuilder;
+
+struct RequestSetMapTopology;
+struct RequestSetMapTopologyBuilder;
+
+struct ResponseSetMapTopology;
+struct ResponseSetMapTopologyBuilder;
+
+struct RequestGetMapTopology;
+struct RequestGetMapTopologyBuilder;
+
+struct ResponseGetMapTopology;
+struct ResponseGetMapTopologyBuilder;
+
+struct RequestMappingStart;
+struct RequestMappingStartBuilder;
+
+struct ResponseMappingStart;
+struct ResponseMappingStartBuilder;
+
+struct RequestMappingStop;
+struct RequestMappingStopBuilder;
+
+struct ResponseMappingStop;
+struct ResponseMappingStopBuilder;
+
+struct RequestMappingSave;
+struct RequestMappingSaveBuilder;
+
+struct ResponseMappingSave;
+struct ResponseMappingSaveBuilder;
+
+struct RequestMappingCloudReload;
+struct RequestMappingCloudReloadBuilder;
+
+struct ResponseMappingCloudReload;
+struct ResponseMappingCloudReloadBuilder;
+
+struct ResultMapLoad;
+struct ResultMapLoadBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) CloudData FLATBUFFERS_FINAL_CLASS {
  private:
@@ -162,308 +168,6 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) CloudData FLATBUFFERS_FINAL_CLASS {
   }
 };
 FLATBUFFERS_STRUCT_END(CloudData, 16);
-
-struct Request_Map_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Map_LoadBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_MAP_NAME = 6
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *map_name() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_MAP_NAME) &&
-           verifier.VerifyString(map_name()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Map_LoadBuilder {
-  typedef Request_Map_Load Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Map_Load::VT_ID, id);
-  }
-  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Map_Load::VT_MAP_NAME, map_name);
-  }
-  explicit Request_Map_LoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Map_Load> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Map_Load>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Map_Load> CreateRequest_Map_Load(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0) {
-  Request_Map_LoadBuilder builder_(_fbb);
-  builder_.add_map_name(map_name);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Map_Load> CreateRequest_Map_LoadDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *map_name = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  return SLAMNAV::CreateRequest_Map_Load(
-      _fbb,
-      id__,
-      map_name__);
-}
-
-struct Response_Map_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Map_LoadBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_MAP_NAME = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *map_name() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_MAP_NAME) &&
-           verifier.VerifyString(map_name()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Map_LoadBuilder {
-  typedef Response_Map_Load Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Map_Load::VT_ID, id);
-  }
-  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Map_Load::VT_MAP_NAME, map_name);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Map_Load::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Map_Load::VT_MESSAGE, message);
-  }
-  explicit Response_Map_LoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Map_Load> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Map_Load>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Map_Load> CreateResponse_Map_Load(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Map_LoadBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_map_name(map_name);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Map_Load> CreateResponse_Map_LoadDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *map_name = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Map_Load(
-      _fbb,
-      id__,
-      map_name__,
-      result__,
-      message__);
-}
-
-struct Request_Topo_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Topo_LoadBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Topo_LoadBuilder {
-  typedef Request_Topo_Load Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Topo_Load::VT_ID, id);
-  }
-  explicit Request_Topo_LoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Topo_Load> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Topo_Load>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Topo_Load> CreateRequest_Topo_Load(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Topo_LoadBuilder builder_(_fbb);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Topo_Load> CreateRequest_Topo_LoadDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Topo_Load(
-      _fbb,
-      id__);
-}
-
-struct Response_Topo_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Topo_LoadBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_MAP_NAME = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *map_name() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_MAP_NAME) &&
-           verifier.VerifyString(map_name()) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Topo_LoadBuilder {
-  typedef Response_Topo_Load Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Topo_Load::VT_ID, id);
-  }
-  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Topo_Load::VT_MAP_NAME, map_name);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Topo_Load::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Topo_Load::VT_MESSAGE, message);
-  }
-  explicit Response_Topo_LoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Topo_Load> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Topo_Load>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Topo_Load> CreateResponse_Topo_Load(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Topo_LoadBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_map_name(map_name);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Topo_Load> CreateResponse_Topo_LoadDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *map_name = nullptr,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Topo_Load(
-      _fbb,
-      id__,
-      map_name__,
-      result__,
-      message__);
-}
 
 struct MapFileInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef MapFileInfoBuilder Builder;
@@ -689,8 +393,569 @@ inline ::flatbuffers::Offset<MapFile> CreateMapFileDirect(
       topo_info);
 }
 
-struct Request_Map_List FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Map_ListBuilder Builder;
+struct NodePose FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef NodePoseBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X = 4,
+    VT_Y = 6,
+    VT_Z = 8,
+    VT_ROLL = 10,
+    VT_PITCH = 12,
+    VT_YAW = 14
+  };
+  float x() const {
+    return GetField<float>(VT_X, 0.0f);
+  }
+  float y() const {
+    return GetField<float>(VT_Y, 0.0f);
+  }
+  float z() const {
+    return GetField<float>(VT_Z, 0.0f);
+  }
+  float roll() const {
+    return GetField<float>(VT_ROLL, 0.0f);
+  }
+  float pitch() const {
+    return GetField<float>(VT_PITCH, 0.0f);
+  }
+  float yaw() const {
+    return GetField<float>(VT_YAW, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_X, 4) &&
+           VerifyField<float>(verifier, VT_Y, 4) &&
+           VerifyField<float>(verifier, VT_Z, 4) &&
+           VerifyField<float>(verifier, VT_ROLL, 4) &&
+           VerifyField<float>(verifier, VT_PITCH, 4) &&
+           VerifyField<float>(verifier, VT_YAW, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct NodePoseBuilder {
+  typedef NodePose Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x(float x) {
+    fbb_.AddElement<float>(NodePose::VT_X, x, 0.0f);
+  }
+  void add_y(float y) {
+    fbb_.AddElement<float>(NodePose::VT_Y, y, 0.0f);
+  }
+  void add_z(float z) {
+    fbb_.AddElement<float>(NodePose::VT_Z, z, 0.0f);
+  }
+  void add_roll(float roll) {
+    fbb_.AddElement<float>(NodePose::VT_ROLL, roll, 0.0f);
+  }
+  void add_pitch(float pitch) {
+    fbb_.AddElement<float>(NodePose::VT_PITCH, pitch, 0.0f);
+  }
+  void add_yaw(float yaw) {
+    fbb_.AddElement<float>(NodePose::VT_YAW, yaw, 0.0f);
+  }
+  explicit NodePoseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<NodePose> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<NodePose>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<NodePose> CreateNodePose(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float x = 0.0f,
+    float y = 0.0f,
+    float z = 0.0f,
+    float roll = 0.0f,
+    float pitch = 0.0f,
+    float yaw = 0.0f) {
+  NodePoseBuilder builder_(_fbb);
+  builder_.add_yaw(yaw);
+  builder_.add_pitch(pitch);
+  builder_.add_roll(roll);
+  builder_.add_z(z);
+  builder_.add_y(y);
+  builder_.add_x(x);
+  return builder_.Finish();
+}
+
+struct NodeSize FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef NodeSizeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X_SIZE = 4,
+    VT_Y_SIZE = 6,
+    VT_Z_SIZE = 8
+  };
+  float x_size() const {
+    return GetField<float>(VT_X_SIZE, 0.0f);
+  }
+  float y_size() const {
+    return GetField<float>(VT_Y_SIZE, 0.0f);
+  }
+  float z_size() const {
+    return GetField<float>(VT_Z_SIZE, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_X_SIZE, 4) &&
+           VerifyField<float>(verifier, VT_Y_SIZE, 4) &&
+           VerifyField<float>(verifier, VT_Z_SIZE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct NodeSizeBuilder {
+  typedef NodeSize Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x_size(float x_size) {
+    fbb_.AddElement<float>(NodeSize::VT_X_SIZE, x_size, 0.0f);
+  }
+  void add_y_size(float y_size) {
+    fbb_.AddElement<float>(NodeSize::VT_Y_SIZE, y_size, 0.0f);
+  }
+  void add_z_size(float z_size) {
+    fbb_.AddElement<float>(NodeSize::VT_Z_SIZE, z_size, 0.0f);
+  }
+  explicit NodeSizeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<NodeSize> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<NodeSize>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<NodeSize> CreateNodeSize(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float x_size = 0.0f,
+    float y_size = 0.0f,
+    float z_size = 0.0f) {
+  NodeSizeBuilder builder_(_fbb);
+  builder_.add_z_size(z_size);
+  builder_.add_y_size(y_size);
+  builder_.add_x_size(x_size);
+  return builder_.Finish();
+}
+
+struct Link FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef LinkBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_DIR = 6,
+    VT_METHOD = 8,
+    VT_SPEED = 10,
+    VT_SAFETY_FIELD = 12
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *dir() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_DIR);
+  }
+  const ::flatbuffers::String *method() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
+  }
+  float speed() const {
+    return GetField<float>(VT_SPEED, 0.0f);
+  }
+  int32_t safety_field() const {
+    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_DIR) &&
+           verifier.VerifyString(dir()) &&
+           VerifyOffset(verifier, VT_METHOD) &&
+           verifier.VerifyString(method()) &&
+           VerifyField<float>(verifier, VT_SPEED, 4) &&
+           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct LinkBuilder {
+  typedef Link Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Link::VT_ID, id);
+  }
+  void add_dir(::flatbuffers::Offset<::flatbuffers::String> dir) {
+    fbb_.AddOffset(Link::VT_DIR, dir);
+  }
+  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
+    fbb_.AddOffset(Link::VT_METHOD, method);
+  }
+  void add_speed(float speed) {
+    fbb_.AddElement<float>(Link::VT_SPEED, speed, 0.0f);
+  }
+  void add_safety_field(int32_t safety_field) {
+    fbb_.AddElement<int32_t>(Link::VT_SAFETY_FIELD, safety_field, 0);
+  }
+  explicit LinkBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Link> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Link>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Link> CreateLink(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> dir = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
+    float speed = 0.0f,
+    int32_t safety_field = 0) {
+  LinkBuilder builder_(_fbb);
+  builder_.add_safety_field(safety_field);
+  builder_.add_speed(speed);
+  builder_.add_method(method);
+  builder_.add_dir(dir);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Link> CreateLinkDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *dir = nullptr,
+    const char *method = nullptr,
+    float speed = 0.0f,
+    int32_t safety_field = 0) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto dir__ = dir ? _fbb.CreateString(dir) : 0;
+  auto method__ = method ? _fbb.CreateString(method) : 0;
+  return SLAMNAV::CreateLink(
+      _fbb,
+      id__,
+      dir__,
+      method__,
+      speed,
+      safety_field);
+}
+
+struct Node FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef NodeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CONTEXT = 4,
+    VT_ID = 6,
+    VT_LINKS = 8,
+    VT_NAME = 10,
+    VT_POSE = 12,
+    VT_ROLE = 14,
+    VT_SIZE = 16,
+    VT_TYPE = 18
+  };
+  const ::flatbuffers::String *context() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_CONTEXT);
+  }
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>> *links() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>> *>(VT_LINKS);
+  }
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
+  }
+  const SLAMNAV::NodePose *pose() const {
+    return GetPointer<const SLAMNAV::NodePose *>(VT_POSE);
+  }
+  const ::flatbuffers::String *role() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ROLE);
+  }
+  const SLAMNAV::NodeSize *size() const {
+    return GetPointer<const SLAMNAV::NodeSize *>(VT_SIZE);
+  }
+  const ::flatbuffers::String *type() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TYPE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_CONTEXT) &&
+           verifier.VerifyString(context()) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_LINKS) &&
+           verifier.VerifyVector(links()) &&
+           verifier.VerifyVectorOfTables(links()) &&
+           VerifyOffset(verifier, VT_NAME) &&
+           verifier.VerifyString(name()) &&
+           VerifyOffset(verifier, VT_POSE) &&
+           verifier.VerifyTable(pose()) &&
+           VerifyOffset(verifier, VT_ROLE) &&
+           verifier.VerifyString(role()) &&
+           VerifyOffset(verifier, VT_SIZE) &&
+           verifier.VerifyTable(size()) &&
+           VerifyOffset(verifier, VT_TYPE) &&
+           verifier.VerifyString(type()) &&
+           verifier.EndTable();
+  }
+};
+
+struct NodeBuilder {
+  typedef Node Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_context(::flatbuffers::Offset<::flatbuffers::String> context) {
+    fbb_.AddOffset(Node::VT_CONTEXT, context);
+  }
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(Node::VT_ID, id);
+  }
+  void add_links(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>>> links) {
+    fbb_.AddOffset(Node::VT_LINKS, links);
+  }
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
+    fbb_.AddOffset(Node::VT_NAME, name);
+  }
+  void add_pose(::flatbuffers::Offset<SLAMNAV::NodePose> pose) {
+    fbb_.AddOffset(Node::VT_POSE, pose);
+  }
+  void add_role(::flatbuffers::Offset<::flatbuffers::String> role) {
+    fbb_.AddOffset(Node::VT_ROLE, role);
+  }
+  void add_size(::flatbuffers::Offset<SLAMNAV::NodeSize> size) {
+    fbb_.AddOffset(Node::VT_SIZE, size);
+  }
+  void add_type(::flatbuffers::Offset<::flatbuffers::String> type) {
+    fbb_.AddOffset(Node::VT_TYPE, type);
+  }
+  explicit NodeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Node> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Node>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Node> CreateNode(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> context = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>>> links = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
+    ::flatbuffers::Offset<SLAMNAV::NodePose> pose = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> role = 0,
+    ::flatbuffers::Offset<SLAMNAV::NodeSize> size = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> type = 0) {
+  NodeBuilder builder_(_fbb);
+  builder_.add_type(type);
+  builder_.add_size(size);
+  builder_.add_role(role);
+  builder_.add_pose(pose);
+  builder_.add_name(name);
+  builder_.add_links(links);
+  builder_.add_id(id);
+  builder_.add_context(context);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Node> CreateNodeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *context = nullptr,
+    const char *id = nullptr,
+    const std::vector<::flatbuffers::Offset<SLAMNAV::Link>> *links = nullptr,
+    const char *name = nullptr,
+    ::flatbuffers::Offset<SLAMNAV::NodePose> pose = 0,
+    const char *role = nullptr,
+    ::flatbuffers::Offset<SLAMNAV::NodeSize> size = 0,
+    const char *type = nullptr) {
+  auto context__ = context ? _fbb.CreateString(context) : 0;
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto links__ = links ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::Link>>(*links) : 0;
+  auto name__ = name ? _fbb.CreateString(name) : 0;
+  auto role__ = role ? _fbb.CreateString(role) : 0;
+  auto type__ = type ? _fbb.CreateString(type) : 0;
+  return SLAMNAV::CreateNode(
+      _fbb,
+      context__,
+      id__,
+      links__,
+      name__,
+      pose,
+      role__,
+      size,
+      type__);
+}
+
+struct RequestMapLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMapLoadBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_MAP_NAME = 6
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *map_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_MAP_NAME) &&
+           verifier.VerifyString(map_name()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestMapLoadBuilder {
+  typedef RequestMapLoad Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestMapLoad::VT_ID, id);
+  }
+  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
+    fbb_.AddOffset(RequestMapLoad::VT_MAP_NAME, map_name);
+  }
+  explicit RequestMapLoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestMapLoad> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestMapLoad>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestMapLoad> CreateRequestMapLoad(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0) {
+  RequestMapLoadBuilder builder_(_fbb);
+  builder_.add_map_name(map_name);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestMapLoad> CreateRequestMapLoadDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *map_name = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
+  return SLAMNAV::CreateRequestMapLoad(
+      _fbb,
+      id__,
+      map_name__);
+}
+
+struct ResponseMapLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMapLoadBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_MAP_NAME = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *map_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_MAP_NAME) &&
+           verifier.VerifyString(map_name()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseMapLoadBuilder {
+  typedef ResponseMapLoad Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseMapLoad::VT_ID, id);
+  }
+  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
+    fbb_.AddOffset(ResponseMapLoad::VT_MAP_NAME, map_name);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseMapLoad::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseMapLoad::VT_MESSAGE, message);
+  }
+  explicit ResponseMapLoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseMapLoad> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseMapLoad>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseMapLoad> CreateResponseMapLoad(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseMapLoadBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_map_name(map_name);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseMapLoad> CreateResponseMapLoadDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *map_name = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseMapLoad(
+      _fbb,
+      id__,
+      map_name__,
+      result__,
+      message__);
+}
+
+struct RequestTopoLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestTopoLoadBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -705,43 +970,187 @@ struct Request_Map_List FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Request_Map_ListBuilder {
-  typedef Request_Map_List Table;
+struct RequestTopoLoadBuilder {
+  typedef RequestTopoLoad Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Map_List::VT_ID, id);
+    fbb_.AddOffset(RequestTopoLoad::VT_ID, id);
   }
-  explicit Request_Map_ListBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestTopoLoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Map_List> Finish() {
+  ::flatbuffers::Offset<RequestTopoLoad> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Map_List>(end);
+    auto o = ::flatbuffers::Offset<RequestTopoLoad>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Map_List> CreateRequest_Map_List(
+inline ::flatbuffers::Offset<RequestTopoLoad> CreateRequestTopoLoad(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Map_ListBuilder builder_(_fbb);
+  RequestTopoLoadBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Map_List> CreateRequest_Map_ListDirect(
+inline ::flatbuffers::Offset<RequestTopoLoad> CreateRequestTopoLoadDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Map_List(
+  return SLAMNAV::CreateRequestTopoLoad(
       _fbb,
       id__);
 }
 
-struct Response_Map_List FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Map_ListBuilder Builder;
+struct ResponseTopoLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseTopoLoadBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_MAP_NAME = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *map_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MAP_NAME);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_MAP_NAME) &&
+           verifier.VerifyString(map_name()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseTopoLoadBuilder {
+  typedef ResponseTopoLoad Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseTopoLoad::VT_ID, id);
+  }
+  void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
+    fbb_.AddOffset(ResponseTopoLoad::VT_MAP_NAME, map_name);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseTopoLoad::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseTopoLoad::VT_MESSAGE, message);
+  }
+  explicit ResponseTopoLoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseTopoLoad> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseTopoLoad>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseTopoLoad> CreateResponseTopoLoad(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseTopoLoadBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_map_name(map_name);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseTopoLoad> CreateResponseTopoLoadDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *map_name = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseTopoLoad(
+      _fbb,
+      id__,
+      map_name__,
+      result__,
+      message__);
+}
+
+struct RequestMapList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMapListBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestMapListBuilder {
+  typedef RequestMapList Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestMapList::VT_ID, id);
+  }
+  explicit RequestMapListBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestMapList> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestMapList>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestMapList> CreateRequestMapList(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
+  RequestMapListBuilder builder_(_fbb);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestMapList> CreateRequestMapListDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequestMapList(
+      _fbb,
+      id__);
+}
+
+struct ResponseMapList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMapListBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_LIST = 6,
@@ -775,40 +1184,40 @@ struct Response_Map_List FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   }
 };
 
-struct Response_Map_ListBuilder {
-  typedef Response_Map_List Table;
+struct ResponseMapListBuilder {
+  typedef ResponseMapList Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Map_List::VT_ID, id);
+    fbb_.AddOffset(ResponseMapList::VT_ID, id);
   }
   void add_list(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::MapFile>>> list) {
-    fbb_.AddOffset(Response_Map_List::VT_LIST, list);
+    fbb_.AddOffset(ResponseMapList::VT_LIST, list);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Map_List::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMapList::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Map_List::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMapList::VT_MESSAGE, message);
   }
-  explicit Response_Map_ListBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMapListBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Map_List> Finish() {
+  ::flatbuffers::Offset<ResponseMapList> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Map_List>(end);
+    auto o = ::flatbuffers::Offset<ResponseMapList>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Map_List> CreateResponse_Map_List(
+inline ::flatbuffers::Offset<ResponseMapList> CreateResponseMapList(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::MapFile>>> list = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Map_ListBuilder builder_(_fbb);
+  ResponseMapListBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_list(list);
@@ -816,7 +1225,7 @@ inline ::flatbuffers::Offset<Response_Map_List> CreateResponse_Map_List(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Map_List> CreateResponse_Map_ListDirect(
+inline ::flatbuffers::Offset<ResponseMapList> CreateResponseMapListDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<SLAMNAV::MapFile>> *list = nullptr,
@@ -826,7 +1235,7 @@ inline ::flatbuffers::Offset<Response_Map_List> CreateResponse_Map_ListDirect(
   auto list__ = list ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::MapFile>>(*list) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Map_List(
+  return SLAMNAV::CreateResponseMapList(
       _fbb,
       id__,
       list__,
@@ -834,8 +1243,8 @@ inline ::flatbuffers::Offset<Response_Map_List> CreateResponse_Map_ListDirect(
       message__);
 }
 
-struct Request_Map_Delete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Map_DeleteBuilder Builder;
+struct RequestMapDelete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMapDeleteBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6
@@ -856,51 +1265,51 @@ struct Request_Map_Delete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
 };
 
-struct Request_Map_DeleteBuilder {
-  typedef Request_Map_Delete Table;
+struct RequestMapDeleteBuilder {
+  typedef RequestMapDelete Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Map_Delete::VT_ID, id);
+    fbb_.AddOffset(RequestMapDelete::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Map_Delete::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestMapDelete::VT_MAP_NAME, map_name);
   }
-  explicit Request_Map_DeleteBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMapDeleteBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Map_Delete> Finish() {
+  ::flatbuffers::Offset<RequestMapDelete> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Map_Delete>(end);
+    auto o = ::flatbuffers::Offset<RequestMapDelete>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Map_Delete> CreateRequest_Map_Delete(
+inline ::flatbuffers::Offset<RequestMapDelete> CreateRequestMapDelete(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0) {
-  Request_Map_DeleteBuilder builder_(_fbb);
+  RequestMapDeleteBuilder builder_(_fbb);
   builder_.add_map_name(map_name);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Map_Delete> CreateRequest_Map_DeleteDirect(
+inline ::flatbuffers::Offset<RequestMapDelete> CreateRequestMapDeleteDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  return SLAMNAV::CreateRequest_Map_Delete(
+  return SLAMNAV::CreateRequestMapDelete(
       _fbb,
       id__,
       map_name__);
 }
 
-struct Response_Map_Delete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Map_DeleteBuilder Builder;
+struct ResponseMapDelete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMapDeleteBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -933,40 +1342,40 @@ struct Response_Map_Delete FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Response_Map_DeleteBuilder {
-  typedef Response_Map_Delete Table;
+struct ResponseMapDeleteBuilder {
+  typedef ResponseMapDelete Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Map_Delete::VT_ID, id);
+    fbb_.AddOffset(ResponseMapDelete::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Map_Delete::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseMapDelete::VT_MAP_NAME, map_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Map_Delete::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMapDelete::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Map_Delete::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMapDelete::VT_MESSAGE, message);
   }
-  explicit Response_Map_DeleteBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMapDeleteBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Map_Delete> Finish() {
+  ::flatbuffers::Offset<ResponseMapDelete> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Map_Delete>(end);
+    auto o = ::flatbuffers::Offset<ResponseMapDelete>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Map_Delete> CreateResponse_Map_Delete(
+inline ::flatbuffers::Offset<ResponseMapDelete> CreateResponseMapDelete(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Map_DeleteBuilder builder_(_fbb);
+  ResponseMapDeleteBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_map_name(map_name);
@@ -974,7 +1383,7 @@ inline ::flatbuffers::Offset<Response_Map_Delete> CreateResponse_Map_Delete(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Map_Delete> CreateResponse_Map_DeleteDirect(
+inline ::flatbuffers::Offset<ResponseMapDelete> CreateResponseMapDeleteDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -984,7 +1393,7 @@ inline ::flatbuffers::Offset<Response_Map_Delete> CreateResponse_Map_DeleteDirec
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Map_Delete(
+  return SLAMNAV::CreateResponseMapDelete(
       _fbb,
       id__,
       map_name__,
@@ -992,8 +1401,8 @@ inline ::flatbuffers::Offset<Response_Map_Delete> CreateResponse_Map_DeleteDirec
       message__);
 }
 
-struct Request_Map_Current FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Map_CurrentBuilder Builder;
+struct RequestMapCurrent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMapCurrentBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -1008,43 +1417,43 @@ struct Request_Map_Current FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Map_CurrentBuilder {
-  typedef Request_Map_Current Table;
+struct RequestMapCurrentBuilder {
+  typedef RequestMapCurrent Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Map_Current::VT_ID, id);
+    fbb_.AddOffset(RequestMapCurrent::VT_ID, id);
   }
-  explicit Request_Map_CurrentBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMapCurrentBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Map_Current> Finish() {
+  ::flatbuffers::Offset<RequestMapCurrent> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Map_Current>(end);
+    auto o = ::flatbuffers::Offset<RequestMapCurrent>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Map_Current> CreateRequest_Map_Current(
+inline ::flatbuffers::Offset<RequestMapCurrent> CreateRequestMapCurrent(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Map_CurrentBuilder builder_(_fbb);
+  RequestMapCurrentBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Map_Current> CreateRequest_Map_CurrentDirect(
+inline ::flatbuffers::Offset<RequestMapCurrent> CreateRequestMapCurrentDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Map_Current(
+  return SLAMNAV::CreateRequestMapCurrent(
       _fbb,
       id__);
 }
 
-struct Response_Map_Current FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Map_CurrentBuilder Builder;
+struct ResponseMapCurrent FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMapCurrentBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1077,40 +1486,40 @@ struct Response_Map_Current FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Map_CurrentBuilder {
-  typedef Response_Map_Current Table;
+struct ResponseMapCurrentBuilder {
+  typedef ResponseMapCurrent Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Map_Current::VT_ID, id);
+    fbb_.AddOffset(ResponseMapCurrent::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Map_Current::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseMapCurrent::VT_MAP_NAME, map_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Map_Current::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMapCurrent::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Map_Current::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMapCurrent::VT_MESSAGE, message);
   }
-  explicit Response_Map_CurrentBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMapCurrentBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Map_Current> Finish() {
+  ::flatbuffers::Offset<ResponseMapCurrent> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Map_Current>(end);
+    auto o = ::flatbuffers::Offset<ResponseMapCurrent>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Map_Current> CreateResponse_Map_Current(
+inline ::flatbuffers::Offset<ResponseMapCurrent> CreateResponseMapCurrent(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Map_CurrentBuilder builder_(_fbb);
+  ResponseMapCurrentBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_map_name(map_name);
@@ -1118,7 +1527,7 @@ inline ::flatbuffers::Offset<Response_Map_Current> CreateResponse_Map_Current(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Map_Current> CreateResponse_Map_CurrentDirect(
+inline ::flatbuffers::Offset<ResponseMapCurrent> CreateResponseMapCurrentDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1128,7 +1537,7 @@ inline ::flatbuffers::Offset<Response_Map_Current> CreateResponse_Map_CurrentDir
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Map_Current(
+  return SLAMNAV::CreateResponseMapCurrent(
       _fbb,
       id__,
       map_name__,
@@ -1136,8 +1545,8 @@ inline ::flatbuffers::Offset<Response_Map_Current> CreateResponse_Map_CurrentDir
       message__);
 }
 
-struct Request_Get_Map_File FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Map_FileBuilder Builder;
+struct RequestGetMapFile FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetMapFileBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1164,43 +1573,43 @@ struct Request_Get_Map_File FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Get_Map_FileBuilder {
-  typedef Request_Get_Map_File Table;
+struct RequestGetMapFileBuilder {
+  typedef RequestGetMapFile Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Map_File::VT_ID, id);
+    fbb_.AddOffset(RequestGetMapFile::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Get_Map_File::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestGetMapFile::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Request_Get_Map_File::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(RequestGetMapFile::VT_FILE_NAME, file_name);
   }
-  explicit Request_Get_Map_FileBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetMapFileBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Map_File> Finish() {
+  ::flatbuffers::Offset<RequestGetMapFile> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Map_File>(end);
+    auto o = ::flatbuffers::Offset<RequestGetMapFile>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Map_File> CreateRequest_Get_Map_File(
+inline ::flatbuffers::Offset<RequestGetMapFile> CreateRequestGetMapFile(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> file_name = 0) {
-  Request_Get_Map_FileBuilder builder_(_fbb);
+  RequestGetMapFileBuilder builder_(_fbb);
   builder_.add_file_name(file_name);
   builder_.add_map_name(map_name);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Map_File> CreateRequest_Get_Map_FileDirect(
+inline ::flatbuffers::Offset<RequestGetMapFile> CreateRequestGetMapFileDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1208,15 +1617,15 @@ inline ::flatbuffers::Offset<Request_Get_Map_File> CreateRequest_Get_Map_FileDir
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto file_name__ = file_name ? _fbb.CreateString(file_name) : 0;
-  return SLAMNAV::CreateRequest_Get_Map_File(
+  return SLAMNAV::CreateRequestGetMapFile(
       _fbb,
       id__,
       map_name__,
       file_name__);
 }
 
-struct Response_Get_Map_File FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Map_FileBuilder Builder;
+struct ResponseGetMapFile FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetMapFileBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1266,43 +1675,43 @@ struct Response_Get_Map_File FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Get_Map_FileBuilder {
-  typedef Response_Get_Map_File Table;
+struct ResponseGetMapFileBuilder {
+  typedef ResponseGetMapFile Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_ID, id);
+    fbb_.AddOffset(ResponseGetMapFile::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseGetMapFile::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(ResponseGetMapFile::VT_FILE_NAME, file_name);
   }
   void add_size(uint32_t size) {
-    fbb_.AddElement<uint32_t>(Response_Get_Map_File::VT_SIZE, size, 0);
+    fbb_.AddElement<uint32_t>(ResponseGetMapFile::VT_SIZE, size, 0);
   }
   void add_data(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_DATA, data);
+    fbb_.AddOffset(ResponseGetMapFile::VT_DATA, data);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetMapFile::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Map_File::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetMapFile::VT_MESSAGE, message);
   }
-  explicit Response_Get_Map_FileBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetMapFileBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Map_File> Finish() {
+  ::flatbuffers::Offset<ResponseGetMapFile> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Map_File>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetMapFile>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_File(
+inline ::flatbuffers::Offset<ResponseGetMapFile> CreateResponseGetMapFile(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
@@ -1311,7 +1720,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_File(
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Map_FileBuilder builder_(_fbb);
+  ResponseGetMapFileBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_data(data);
@@ -1322,7 +1731,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_File(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_FileDirect(
+inline ::flatbuffers::Offset<ResponseGetMapFile> CreateResponseGetMapFileDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1337,7 +1746,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_FileD
   auto data__ = data ? _fbb.CreateVectorOfStructs<SLAMNAV::CloudData>(*data) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Map_File(
+  return SLAMNAV::CreateResponseGetMapFile(
       _fbb,
       id__,
       map_name__,
@@ -1348,8 +1757,8 @@ inline ::flatbuffers::Offset<Response_Get_Map_File> CreateResponse_Get_Map_FileD
       message__);
 }
 
-struct Request_Get_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Map_CloudBuilder Builder;
+struct RequestGetMapCloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetMapCloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1376,43 +1785,43 @@ struct Request_Get_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Get_Map_CloudBuilder {
-  typedef Request_Get_Map_Cloud Table;
+struct RequestGetMapCloudBuilder {
+  typedef RequestGetMapCloud Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Map_Cloud::VT_ID, id);
+    fbb_.AddOffset(RequestGetMapCloud::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Get_Map_Cloud::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestGetMapCloud::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Request_Get_Map_Cloud::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(RequestGetMapCloud::VT_FILE_NAME, file_name);
   }
-  explicit Request_Get_Map_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetMapCloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Map_Cloud> Finish() {
+  ::flatbuffers::Offset<RequestGetMapCloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Map_Cloud>(end);
+    auto o = ::flatbuffers::Offset<RequestGetMapCloud>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Map_Cloud> CreateRequest_Get_Map_Cloud(
+inline ::flatbuffers::Offset<RequestGetMapCloud> CreateRequestGetMapCloud(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> file_name = 0) {
-  Request_Get_Map_CloudBuilder builder_(_fbb);
+  RequestGetMapCloudBuilder builder_(_fbb);
   builder_.add_file_name(file_name);
   builder_.add_map_name(map_name);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Map_Cloud> CreateRequest_Get_Map_CloudDirect(
+inline ::flatbuffers::Offset<RequestGetMapCloud> CreateRequestGetMapCloudDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1420,15 +1829,15 @@ inline ::flatbuffers::Offset<Request_Get_Map_Cloud> CreateRequest_Get_Map_CloudD
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto file_name__ = file_name ? _fbb.CreateString(file_name) : 0;
-  return SLAMNAV::CreateRequest_Get_Map_Cloud(
+  return SLAMNAV::CreateRequestGetMapCloud(
       _fbb,
       id__,
       map_name__,
       file_name__);
 }
 
-struct Response_Get_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Map_CloudBuilder Builder;
+struct ResponseGetMapCloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetMapCloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1478,43 +1887,43 @@ struct Response_Get_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Get_Map_CloudBuilder {
-  typedef Response_Get_Map_Cloud Table;
+struct ResponseGetMapCloudBuilder {
+  typedef ResponseGetMapCloud Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_ID, id);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_FILE_NAME, file_name);
   }
   void add_size(uint32_t size) {
-    fbb_.AddElement<uint32_t>(Response_Get_Map_Cloud::VT_SIZE, size, 0);
+    fbb_.AddElement<uint32_t>(ResponseGetMapCloud::VT_SIZE, size, 0);
   }
   void add_data(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_DATA, data);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_DATA, data);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Map_Cloud::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetMapCloud::VT_MESSAGE, message);
   }
-  explicit Response_Get_Map_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetMapCloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Map_Cloud> Finish() {
+  ::flatbuffers::Offset<ResponseGetMapCloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Map_Cloud>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetMapCloud>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_Cloud(
+inline ::flatbuffers::Offset<ResponseGetMapCloud> CreateResponseGetMapCloud(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
@@ -1523,7 +1932,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_Clou
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Map_CloudBuilder builder_(_fbb);
+  ResponseGetMapCloudBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_data(data);
@@ -1534,7 +1943,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_Clou
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_CloudDirect(
+inline ::flatbuffers::Offset<ResponseGetMapCloud> CreateResponseGetMapCloudDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1549,7 +1958,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_Clou
   auto data__ = data ? _fbb.CreateVectorOfStructs<SLAMNAV::CloudData>(*data) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Map_Cloud(
+  return SLAMNAV::CreateResponseGetMapCloud(
       _fbb,
       id__,
       map_name__,
@@ -1560,8 +1969,8 @@ inline ::flatbuffers::Offset<Response_Get_Map_Cloud> CreateResponse_Get_Map_Clou
       message__);
 }
 
-struct Request_Set_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Map_CloudBuilder Builder;
+struct RequestSetMapCloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetMapCloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1599,44 +2008,44 @@ struct Request_Set_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Set_Map_CloudBuilder {
-  typedef Request_Set_Map_Cloud Table;
+struct RequestSetMapCloudBuilder {
+  typedef RequestSetMapCloud Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Map_Cloud::VT_ID, id);
+    fbb_.AddOffset(RequestSetMapCloud::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Set_Map_Cloud::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestSetMapCloud::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Request_Set_Map_Cloud::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(RequestSetMapCloud::VT_FILE_NAME, file_name);
   }
   void add_size(uint32_t size) {
-    fbb_.AddElement<uint32_t>(Request_Set_Map_Cloud::VT_SIZE, size, 0);
+    fbb_.AddElement<uint32_t>(RequestSetMapCloud::VT_SIZE, size, 0);
   }
   void add_data(::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data) {
-    fbb_.AddOffset(Request_Set_Map_Cloud::VT_DATA, data);
+    fbb_.AddOffset(RequestSetMapCloud::VT_DATA, data);
   }
-  explicit Request_Set_Map_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetMapCloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Map_Cloud> Finish() {
+  ::flatbuffers::Offset<RequestSetMapCloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Map_Cloud>(end);
+    auto o = ::flatbuffers::Offset<RequestSetMapCloud>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Map_Cloud> CreateRequest_Set_Map_Cloud(
+inline ::flatbuffers::Offset<RequestSetMapCloud> CreateRequestSetMapCloud(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> file_name = 0,
     uint32_t size = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<const SLAMNAV::CloudData *>> data = 0) {
-  Request_Set_Map_CloudBuilder builder_(_fbb);
+  RequestSetMapCloudBuilder builder_(_fbb);
   builder_.add_data(data);
   builder_.add_size(size);
   builder_.add_file_name(file_name);
@@ -1645,7 +2054,7 @@ inline ::flatbuffers::Offset<Request_Set_Map_Cloud> CreateRequest_Set_Map_Cloud(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Map_Cloud> CreateRequest_Set_Map_CloudDirect(
+inline ::flatbuffers::Offset<RequestSetMapCloud> CreateRequestSetMapCloudDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1656,7 +2065,7 @@ inline ::flatbuffers::Offset<Request_Set_Map_Cloud> CreateRequest_Set_Map_CloudD
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto file_name__ = file_name ? _fbb.CreateString(file_name) : 0;
   auto data__ = data ? _fbb.CreateVectorOfStructs<SLAMNAV::CloudData>(*data) : 0;
-  return SLAMNAV::CreateRequest_Set_Map_Cloud(
+  return SLAMNAV::CreateRequestSetMapCloud(
       _fbb,
       id__,
       map_name__,
@@ -1665,8 +2074,8 @@ inline ::flatbuffers::Offset<Request_Set_Map_Cloud> CreateRequest_Set_Map_CloudD
       data__);
 }
 
-struct Response_Set_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Map_CloudBuilder Builder;
+struct ResponseSetMapCloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetMapCloudBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -1705,44 +2114,44 @@ struct Response_Set_Map_Cloud FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Set_Map_CloudBuilder {
-  typedef Response_Set_Map_Cloud Table;
+struct ResponseSetMapCloudBuilder {
+  typedef ResponseSetMapCloud Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Map_Cloud::VT_ID, id);
+    fbb_.AddOffset(ResponseSetMapCloud::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Set_Map_Cloud::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseSetMapCloud::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Response_Set_Map_Cloud::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(ResponseSetMapCloud::VT_FILE_NAME, file_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Map_Cloud::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetMapCloud::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Map_Cloud::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetMapCloud::VT_MESSAGE, message);
   }
-  explicit Response_Set_Map_CloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetMapCloudBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Map_Cloud> Finish() {
+  ::flatbuffers::Offset<ResponseSetMapCloud> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Map_Cloud>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetMapCloud>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Map_Cloud> CreateResponse_Set_Map_Cloud(
+inline ::flatbuffers::Offset<ResponseSetMapCloud> CreateResponseSetMapCloud(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> file_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Map_CloudBuilder builder_(_fbb);
+  ResponseSetMapCloudBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_file_name(file_name);
@@ -1751,7 +2160,7 @@ inline ::flatbuffers::Offset<Response_Set_Map_Cloud> CreateResponse_Set_Map_Clou
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Map_Cloud> CreateResponse_Set_Map_CloudDirect(
+inline ::flatbuffers::Offset<ResponseSetMapCloud> CreateResponseSetMapCloudDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -1763,7 +2172,7 @@ inline ::flatbuffers::Offset<Response_Set_Map_Cloud> CreateResponse_Set_Map_Clou
   auto file_name__ = file_name ? _fbb.CreateString(file_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Map_Cloud(
+  return SLAMNAV::CreateResponseSetMapCloud(
       _fbb,
       id__,
       map_name__,
@@ -1772,349 +2181,124 @@ inline ::flatbuffers::Offset<Response_Set_Map_Cloud> CreateResponse_Set_Map_Clou
       message__);
 }
 
-struct Request_Get_Map_pipe FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Map_pipeBuilder Builder;
+struct RequestGetMapPipe FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetMapPipeBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Get_Map_pipeBuilder {
-  typedef Request_Get_Map_pipe Table;
+struct RequestGetMapPipeBuilder {
+  typedef RequestGetMapPipe Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Request_Get_Map_pipeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetMapPipeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Map_pipe> Finish() {
+  ::flatbuffers::Offset<RequestGetMapPipe> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Map_pipe>(end);
+    auto o = ::flatbuffers::Offset<RequestGetMapPipe>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Map_pipe> CreateRequest_Get_Map_pipe(
+inline ::flatbuffers::Offset<RequestGetMapPipe> CreateRequestGetMapPipe(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Request_Get_Map_pipeBuilder builder_(_fbb);
+  RequestGetMapPipeBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Response_Get_Map_pipe FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Map_pipeBuilder Builder;
+struct ResponseGetMapPipe FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetMapPipeBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Response_Get_Map_pipeBuilder {
-  typedef Response_Get_Map_pipe Table;
+struct ResponseGetMapPipeBuilder {
+  typedef ResponseGetMapPipe Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Response_Get_Map_pipeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetMapPipeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Map_pipe> Finish() {
+  ::flatbuffers::Offset<ResponseGetMapPipe> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Map_pipe>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetMapPipe>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Map_pipe> CreateResponse_Get_Map_pipe(
+inline ::flatbuffers::Offset<ResponseGetMapPipe> CreateResponseGetMapPipe(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Response_Get_Map_pipeBuilder builder_(_fbb);
+  ResponseGetMapPipeBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Request_Get_Map_Tiles FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Map_TilesBuilder Builder;
+struct RequestGetMapTiles FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetMapTilesBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Get_Map_TilesBuilder {
-  typedef Request_Get_Map_Tiles Table;
+struct RequestGetMapTilesBuilder {
+  typedef RequestGetMapTiles Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Request_Get_Map_TilesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetMapTilesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Map_Tiles> Finish() {
+  ::flatbuffers::Offset<RequestGetMapTiles> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Map_Tiles>(end);
+    auto o = ::flatbuffers::Offset<RequestGetMapTiles>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Map_Tiles> CreateRequest_Get_Map_Tiles(
+inline ::flatbuffers::Offset<RequestGetMapTiles> CreateRequestGetMapTiles(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Request_Get_Map_TilesBuilder builder_(_fbb);
+  RequestGetMapTilesBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Response_Get_Map_Tiles FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Map_TilesBuilder Builder;
+struct ResponseGetMapTiles FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetMapTilesBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Response_Get_Map_TilesBuilder {
-  typedef Response_Get_Map_Tiles Table;
+struct ResponseGetMapTilesBuilder {
+  typedef ResponseGetMapTiles Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Response_Get_Map_TilesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetMapTilesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Map_Tiles> Finish() {
+  ::flatbuffers::Offset<ResponseGetMapTiles> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Map_Tiles>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetMapTiles>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Map_Tiles> CreateResponse_Get_Map_Tiles(
+inline ::flatbuffers::Offset<ResponseGetMapTiles> CreateResponseGetMapTiles(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Response_Get_Map_TilesBuilder builder_(_fbb);
+  ResponseGetMapTilesBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Link FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef LinkBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_INFO = 6,
-    VT_SPEED = 8,
-    VT_METHOD = 10,
-    VT_SAFETY_FIELD = 12
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *info() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_INFO);
-  }
-  float speed() const {
-    return GetField<float>(VT_SPEED, 0.0f);
-  }
-  const ::flatbuffers::String *method() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_METHOD);
-  }
-  int32_t safety_field() const {
-    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_INFO) &&
-           verifier.VerifyString(info()) &&
-           VerifyField<float>(verifier, VT_SPEED, 4) &&
-           VerifyOffset(verifier, VT_METHOD) &&
-           verifier.VerifyString(method()) &&
-           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
-           verifier.EndTable();
-  }
-};
-
-struct LinkBuilder {
-  typedef Link Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Link::VT_ID, id);
-  }
-  void add_info(::flatbuffers::Offset<::flatbuffers::String> info) {
-    fbb_.AddOffset(Link::VT_INFO, info);
-  }
-  void add_speed(float speed) {
-    fbb_.AddElement<float>(Link::VT_SPEED, speed, 0.0f);
-  }
-  void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Link::VT_METHOD, method);
-  }
-  void add_safety_field(int32_t safety_field) {
-    fbb_.AddElement<int32_t>(Link::VT_SAFETY_FIELD, safety_field, 0);
-  }
-  explicit LinkBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Link> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Link>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Link> CreateLink(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> info = 0,
-    float speed = 0.0f,
-    ::flatbuffers::Offset<::flatbuffers::String> method = 0,
-    int32_t safety_field = 0) {
-  LinkBuilder builder_(_fbb);
-  builder_.add_safety_field(safety_field);
-  builder_.add_method(method);
-  builder_.add_speed(speed);
-  builder_.add_info(info);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Link> CreateLinkDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *info = nullptr,
-    float speed = 0.0f,
-    const char *method = nullptr,
-    int32_t safety_field = 0) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto info__ = info ? _fbb.CreateString(info) : 0;
-  auto method__ = method ? _fbb.CreateString(method) : 0;
-  return SLAMNAV::CreateLink(
-      _fbb,
-      id__,
-      info__,
-      speed,
-      method__,
-      safety_field);
-}
-
-struct Node FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef NodeBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_NAME = 6,
-    VT_POSE = 8,
-    VT_INFO = 10,
-    VT_LINKS = 12,
-    VT_TYPE = 14
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *name() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
-  }
-  const ::flatbuffers::Vector<float> *pose() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_POSE);
-  }
-  const ::flatbuffers::String *info() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_INFO);
-  }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>> *links() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>> *>(VT_LINKS);
-  }
-  const ::flatbuffers::String *type() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_TYPE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_NAME) &&
-           verifier.VerifyString(name()) &&
-           VerifyOffset(verifier, VT_POSE) &&
-           verifier.VerifyVector(pose()) &&
-           VerifyOffset(verifier, VT_INFO) &&
-           verifier.VerifyString(info()) &&
-           VerifyOffset(verifier, VT_LINKS) &&
-           verifier.VerifyVector(links()) &&
-           verifier.VerifyVectorOfTables(links()) &&
-           VerifyOffset(verifier, VT_TYPE) &&
-           verifier.VerifyString(type()) &&
-           verifier.EndTable();
-  }
-};
-
-struct NodeBuilder {
-  typedef Node Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Node::VT_ID, id);
-  }
-  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
-    fbb_.AddOffset(Node::VT_NAME, name);
-  }
-  void add_pose(::flatbuffers::Offset<::flatbuffers::Vector<float>> pose) {
-    fbb_.AddOffset(Node::VT_POSE, pose);
-  }
-  void add_info(::flatbuffers::Offset<::flatbuffers::String> info) {
-    fbb_.AddOffset(Node::VT_INFO, info);
-  }
-  void add_links(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>>> links) {
-    fbb_.AddOffset(Node::VT_LINKS, links);
-  }
-  void add_type(::flatbuffers::Offset<::flatbuffers::String> type) {
-    fbb_.AddOffset(Node::VT_TYPE, type);
-  }
-  explicit NodeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Node> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Node>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Node> CreateNode(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> pose = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> info = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Link>>> links = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> type = 0) {
-  NodeBuilder builder_(_fbb);
-  builder_.add_type(type);
-  builder_.add_links(links);
-  builder_.add_info(info);
-  builder_.add_pose(pose);
-  builder_.add_name(name);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Node> CreateNodeDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const char *name = nullptr,
-    const std::vector<float> *pose = nullptr,
-    const char *info = nullptr,
-    const std::vector<::flatbuffers::Offset<SLAMNAV::Link>> *links = nullptr,
-    const char *type = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto name__ = name ? _fbb.CreateString(name) : 0;
-  auto pose__ = pose ? _fbb.CreateVector<float>(*pose) : 0;
-  auto info__ = info ? _fbb.CreateString(info) : 0;
-  auto links__ = links ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::Link>>(*links) : 0;
-  auto type__ = type ? _fbb.CreateString(type) : 0;
-  return SLAMNAV::CreateNode(
-      _fbb,
-      id__,
-      name__,
-      pose__,
-      info__,
-      links__,
-      type__);
-}
-
-struct Request_Set_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Map_TopologyBuilder Builder;
+struct RequestSetMapTopology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetMapTopologyBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -2142,43 +2326,43 @@ struct Request_Set_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Request_Set_Map_TopologyBuilder {
-  typedef Request_Set_Map_Topology Table;
+struct RequestSetMapTopologyBuilder {
+  typedef RequestSetMapTopology Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Map_Topology::VT_ID, id);
+    fbb_.AddOffset(RequestSetMapTopology::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Set_Map_Topology::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestSetMapTopology::VT_MAP_NAME, map_name);
   }
   void add_data(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Node>>> data) {
-    fbb_.AddOffset(Request_Set_Map_Topology::VT_DATA, data);
+    fbb_.AddOffset(RequestSetMapTopology::VT_DATA, data);
   }
-  explicit Request_Set_Map_TopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetMapTopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Map_Topology> Finish() {
+  ::flatbuffers::Offset<RequestSetMapTopology> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Map_Topology>(end);
+    auto o = ::flatbuffers::Offset<RequestSetMapTopology>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Map_Topology> CreateRequest_Set_Map_Topology(
+inline ::flatbuffers::Offset<RequestSetMapTopology> CreateRequestSetMapTopology(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Node>>> data = 0) {
-  Request_Set_Map_TopologyBuilder builder_(_fbb);
+  RequestSetMapTopologyBuilder builder_(_fbb);
   builder_.add_data(data);
   builder_.add_map_name(map_name);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Map_Topology> CreateRequest_Set_Map_TopologyDirect(
+inline ::flatbuffers::Offset<RequestSetMapTopology> CreateRequestSetMapTopologyDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -2186,15 +2370,15 @@ inline ::flatbuffers::Offset<Request_Set_Map_Topology> CreateRequest_Set_Map_Top
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto data__ = data ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::Node>>(*data) : 0;
-  return SLAMNAV::CreateRequest_Set_Map_Topology(
+  return SLAMNAV::CreateRequestSetMapTopology(
       _fbb,
       id__,
       map_name__,
       data__);
 }
 
-struct Response_Set_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Map_TopologyBuilder Builder;
+struct ResponseSetMapTopology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetMapTopologyBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -2227,40 +2411,40 @@ struct Response_Set_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
   }
 };
 
-struct Response_Set_Map_TopologyBuilder {
-  typedef Response_Set_Map_Topology Table;
+struct ResponseSetMapTopologyBuilder {
+  typedef ResponseSetMapTopology Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Map_Topology::VT_ID, id);
+    fbb_.AddOffset(ResponseSetMapTopology::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Set_Map_Topology::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseSetMapTopology::VT_MAP_NAME, map_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Map_Topology::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetMapTopology::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Map_Topology::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetMapTopology::VT_MESSAGE, message);
   }
-  explicit Response_Set_Map_TopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetMapTopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Map_Topology> Finish() {
+  ::flatbuffers::Offset<ResponseSetMapTopology> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Map_Topology>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetMapTopology>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Map_Topology> CreateResponse_Set_Map_Topology(
+inline ::flatbuffers::Offset<ResponseSetMapTopology> CreateResponseSetMapTopology(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Map_TopologyBuilder builder_(_fbb);
+  ResponseSetMapTopologyBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_map_name(map_name);
@@ -2268,7 +2452,7 @@ inline ::flatbuffers::Offset<Response_Set_Map_Topology> CreateResponse_Set_Map_T
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Map_Topology> CreateResponse_Set_Map_TopologyDirect(
+inline ::flatbuffers::Offset<ResponseSetMapTopology> CreateResponseSetMapTopologyDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -2278,7 +2462,7 @@ inline ::flatbuffers::Offset<Response_Set_Map_Topology> CreateResponse_Set_Map_T
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Map_Topology(
+  return SLAMNAV::CreateResponseSetMapTopology(
       _fbb,
       id__,
       map_name__,
@@ -2286,8 +2470,8 @@ inline ::flatbuffers::Offset<Response_Set_Map_Topology> CreateResponse_Set_Map_T
       message__);
 }
 
-struct Request_Get_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Map_TopologyBuilder Builder;
+struct RequestGetMapTopology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetMapTopologyBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -2353,52 +2537,52 @@ struct Request_Get_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Request_Get_Map_TopologyBuilder {
-  typedef Request_Get_Map_Topology Table;
+struct RequestGetMapTopologyBuilder {
+  typedef RequestGetMapTopology Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_ID, id);
+    fbb_.AddOffset(RequestGetMapTopology::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestGetMapTopology::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(RequestGetMapTopology::VT_FILE_NAME, file_name);
   }
   void add_page_no(int32_t page_no) {
-    fbb_.AddElement<int32_t>(Request_Get_Map_Topology::VT_PAGE_NO, page_no, 0);
+    fbb_.AddElement<int32_t>(RequestGetMapTopology::VT_PAGE_NO, page_no, 0);
   }
   void add_page_size(int32_t page_size) {
-    fbb_.AddElement<int32_t>(Request_Get_Map_Topology::VT_PAGE_SIZE, page_size, 0);
+    fbb_.AddElement<int32_t>(RequestGetMapTopology::VT_PAGE_SIZE, page_size, 0);
   }
   void add_total_page(int32_t total_page) {
-    fbb_.AddElement<int32_t>(Request_Get_Map_Topology::VT_TOTAL_PAGE, total_page, 0);
+    fbb_.AddElement<int32_t>(RequestGetMapTopology::VT_TOTAL_PAGE, total_page, 0);
   }
   void add_node_type(::flatbuffers::Offset<::flatbuffers::String> node_type) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_NODE_TYPE, node_type);
+    fbb_.AddOffset(RequestGetMapTopology::VT_NODE_TYPE, node_type);
   }
   void add_search_text(::flatbuffers::Offset<::flatbuffers::String> search_text) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_SEARCH_TEXT, search_text);
+    fbb_.AddOffset(RequestGetMapTopology::VT_SEARCH_TEXT, search_text);
   }
   void add_sort_option(::flatbuffers::Offset<::flatbuffers::String> sort_option) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_SORT_OPTION, sort_option);
+    fbb_.AddOffset(RequestGetMapTopology::VT_SORT_OPTION, sort_option);
   }
   void add_sort_direction(::flatbuffers::Offset<::flatbuffers::String> sort_direction) {
-    fbb_.AddOffset(Request_Get_Map_Topology::VT_SORT_DIRECTION, sort_direction);
+    fbb_.AddOffset(RequestGetMapTopology::VT_SORT_DIRECTION, sort_direction);
   }
-  explicit Request_Get_Map_TopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetMapTopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Map_Topology> Finish() {
+  ::flatbuffers::Offset<RequestGetMapTopology> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Map_Topology>(end);
+    auto o = ::flatbuffers::Offset<RequestGetMapTopology>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_Topology(
+inline ::flatbuffers::Offset<RequestGetMapTopology> CreateRequestGetMapTopology(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
@@ -2410,7 +2594,7 @@ inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_Top
     ::flatbuffers::Offset<::flatbuffers::String> search_text = 0,
     ::flatbuffers::Offset<::flatbuffers::String> sort_option = 0,
     ::flatbuffers::Offset<::flatbuffers::String> sort_direction = 0) {
-  Request_Get_Map_TopologyBuilder builder_(_fbb);
+  RequestGetMapTopologyBuilder builder_(_fbb);
   builder_.add_sort_direction(sort_direction);
   builder_.add_sort_option(sort_option);
   builder_.add_search_text(search_text);
@@ -2424,7 +2608,7 @@ inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_Top
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_TopologyDirect(
+inline ::flatbuffers::Offset<RequestGetMapTopology> CreateRequestGetMapTopologyDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -2443,7 +2627,7 @@ inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_Top
   auto search_text__ = search_text ? _fbb.CreateString(search_text) : 0;
   auto sort_option__ = sort_option ? _fbb.CreateString(sort_option) : 0;
   auto sort_direction__ = sort_direction ? _fbb.CreateString(sort_direction) : 0;
-  return SLAMNAV::CreateRequest_Get_Map_Topology(
+  return SLAMNAV::CreateRequestGetMapTopology(
       _fbb,
       id__,
       map_name__,
@@ -2457,8 +2641,8 @@ inline ::flatbuffers::Offset<Request_Get_Map_Topology> CreateRequest_Get_Map_Top
       sort_direction__);
 }
 
-struct Response_Get_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Map_TopologyBuilder Builder;
+struct ResponseGetMapTopology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetMapTopologyBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -2543,61 +2727,61 @@ struct Response_Get_Map_Topology FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
   }
 };
 
-struct Response_Get_Map_TopologyBuilder {
-  typedef Response_Get_Map_Topology Table;
+struct ResponseGetMapTopologyBuilder {
+  typedef ResponseGetMapTopology Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_ID, id);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_MAP_NAME, map_name);
   }
   void add_file_name(::flatbuffers::Offset<::flatbuffers::String> file_name) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_FILE_NAME, file_name);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_FILE_NAME, file_name);
   }
   void add_page_no(int32_t page_no) {
-    fbb_.AddElement<int32_t>(Response_Get_Map_Topology::VT_PAGE_NO, page_no, 0);
+    fbb_.AddElement<int32_t>(ResponseGetMapTopology::VT_PAGE_NO, page_no, 0);
   }
   void add_page_size(int32_t page_size) {
-    fbb_.AddElement<int32_t>(Response_Get_Map_Topology::VT_PAGE_SIZE, page_size, 0);
+    fbb_.AddElement<int32_t>(ResponseGetMapTopology::VT_PAGE_SIZE, page_size, 0);
   }
   void add_total_page(int32_t total_page) {
-    fbb_.AddElement<int32_t>(Response_Get_Map_Topology::VT_TOTAL_PAGE, total_page, 0);
+    fbb_.AddElement<int32_t>(ResponseGetMapTopology::VT_TOTAL_PAGE, total_page, 0);
   }
   void add_node_type(::flatbuffers::Offset<::flatbuffers::String> node_type) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_NODE_TYPE, node_type);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_NODE_TYPE, node_type);
   }
   void add_search_text(::flatbuffers::Offset<::flatbuffers::String> search_text) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_SEARCH_TEXT, search_text);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_SEARCH_TEXT, search_text);
   }
   void add_sort_option(::flatbuffers::Offset<::flatbuffers::String> sort_option) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_SORT_OPTION, sort_option);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_SORT_OPTION, sort_option);
   }
   void add_sort_direction(::flatbuffers::Offset<::flatbuffers::String> sort_direction) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_SORT_DIRECTION, sort_direction);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_SORT_DIRECTION, sort_direction);
   }
   void add_data(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Node>>> data) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_DATA, data);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_DATA, data);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Map_Topology::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetMapTopology::VT_MESSAGE, message);
   }
-  explicit Response_Get_Map_TopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetMapTopologyBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Map_Topology> Finish() {
+  ::flatbuffers::Offset<ResponseGetMapTopology> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Map_Topology>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetMapTopology>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_Topology(
+inline ::flatbuffers::Offset<ResponseGetMapTopology> CreateResponseGetMapTopology(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
@@ -2612,7 +2796,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_T
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::Node>>> data = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Map_TopologyBuilder builder_(_fbb);
+  ResponseGetMapTopologyBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_data(data);
@@ -2629,7 +2813,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_T
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_TopologyDirect(
+inline ::flatbuffers::Offset<ResponseGetMapTopology> CreateResponseGetMapTopologyDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -2654,7 +2838,7 @@ inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_T
   auto data__ = data ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::Node>>(*data) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Map_Topology(
+  return SLAMNAV::CreateResponseGetMapTopology(
       _fbb,
       id__,
       map_name__,
@@ -2671,8 +2855,8 @@ inline ::flatbuffers::Offset<Response_Get_Map_Topology> CreateResponse_Get_Map_T
       message__);
 }
 
-struct Request_Mapping_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Mapping_StartBuilder Builder;
+struct RequestMappingStart FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMappingStartBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -2687,43 +2871,43 @@ struct Request_Mapping_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Mapping_StartBuilder {
-  typedef Request_Mapping_Start Table;
+struct RequestMappingStartBuilder {
+  typedef RequestMappingStart Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Mapping_Start::VT_ID, id);
+    fbb_.AddOffset(RequestMappingStart::VT_ID, id);
   }
-  explicit Request_Mapping_StartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMappingStartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Mapping_Start> Finish() {
+  ::flatbuffers::Offset<RequestMappingStart> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Mapping_Start>(end);
+    auto o = ::flatbuffers::Offset<RequestMappingStart>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Mapping_Start> CreateRequest_Mapping_Start(
+inline ::flatbuffers::Offset<RequestMappingStart> CreateRequestMappingStart(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Mapping_StartBuilder builder_(_fbb);
+  RequestMappingStartBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Mapping_Start> CreateRequest_Mapping_StartDirect(
+inline ::flatbuffers::Offset<RequestMappingStart> CreateRequestMappingStartDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Mapping_Start(
+  return SLAMNAV::CreateRequestMappingStart(
       _fbb,
       id__);
 }
 
-struct Response_Mapping_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Mapping_StartBuilder Builder;
+struct ResponseMappingStart FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMappingStartBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
@@ -2750,43 +2934,43 @@ struct Response_Mapping_Start FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Mapping_StartBuilder {
-  typedef Response_Mapping_Start Table;
+struct ResponseMappingStartBuilder {
+  typedef ResponseMappingStart Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Mapping_Start::VT_ID, id);
+    fbb_.AddOffset(ResponseMappingStart::VT_ID, id);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Mapping_Start::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMappingStart::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Mapping_Start::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMappingStart::VT_MESSAGE, message);
   }
-  explicit Response_Mapping_StartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMappingStartBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Mapping_Start> Finish() {
+  ::flatbuffers::Offset<ResponseMappingStart> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Mapping_Start>(end);
+    auto o = ::flatbuffers::Offset<ResponseMappingStart>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Mapping_Start> CreateResponse_Mapping_Start(
+inline ::flatbuffers::Offset<ResponseMappingStart> CreateResponseMappingStart(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Mapping_StartBuilder builder_(_fbb);
+  ResponseMappingStartBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Mapping_Start> CreateResponse_Mapping_StartDirect(
+inline ::flatbuffers::Offset<ResponseMappingStart> CreateResponseMappingStartDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
@@ -2794,15 +2978,15 @@ inline ::flatbuffers::Offset<Response_Mapping_Start> CreateResponse_Mapping_Star
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Mapping_Start(
+  return SLAMNAV::CreateResponseMappingStart(
       _fbb,
       id__,
       result__,
       message__);
 }
 
-struct Request_Mapping_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Mapping_StopBuilder Builder;
+struct RequestMappingStop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMappingStopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -2817,43 +3001,43 @@ struct Request_Mapping_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Mapping_StopBuilder {
-  typedef Request_Mapping_Stop Table;
+struct RequestMappingStopBuilder {
+  typedef RequestMappingStop Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Mapping_Stop::VT_ID, id);
+    fbb_.AddOffset(RequestMappingStop::VT_ID, id);
   }
-  explicit Request_Mapping_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMappingStopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Mapping_Stop> Finish() {
+  ::flatbuffers::Offset<RequestMappingStop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Mapping_Stop>(end);
+    auto o = ::flatbuffers::Offset<RequestMappingStop>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Mapping_Stop> CreateRequest_Mapping_Stop(
+inline ::flatbuffers::Offset<RequestMappingStop> CreateRequestMappingStop(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Mapping_StopBuilder builder_(_fbb);
+  RequestMappingStopBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Mapping_Stop> CreateRequest_Mapping_StopDirect(
+inline ::flatbuffers::Offset<RequestMappingStop> CreateRequestMappingStopDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Mapping_Stop(
+  return SLAMNAV::CreateRequestMappingStop(
       _fbb,
       id__);
 }
 
-struct Response_Mapping_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Mapping_StopBuilder Builder;
+struct ResponseMappingStop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMappingStopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
@@ -2880,43 +3064,43 @@ struct Response_Mapping_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Mapping_StopBuilder {
-  typedef Response_Mapping_Stop Table;
+struct ResponseMappingStopBuilder {
+  typedef ResponseMappingStop Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Mapping_Stop::VT_ID, id);
+    fbb_.AddOffset(ResponseMappingStop::VT_ID, id);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Mapping_Stop::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMappingStop::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Mapping_Stop::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMappingStop::VT_MESSAGE, message);
   }
-  explicit Response_Mapping_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMappingStopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Mapping_Stop> Finish() {
+  ::flatbuffers::Offset<ResponseMappingStop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Mapping_Stop>(end);
+    auto o = ::flatbuffers::Offset<ResponseMappingStop>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Mapping_Stop> CreateResponse_Mapping_Stop(
+inline ::flatbuffers::Offset<ResponseMappingStop> CreateResponseMappingStop(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Mapping_StopBuilder builder_(_fbb);
+  ResponseMappingStopBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Mapping_Stop> CreateResponse_Mapping_StopDirect(
+inline ::flatbuffers::Offset<ResponseMappingStop> CreateResponseMappingStopDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
@@ -2924,15 +3108,15 @@ inline ::flatbuffers::Offset<Response_Mapping_Stop> CreateResponse_Mapping_StopD
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Mapping_Stop(
+  return SLAMNAV::CreateResponseMappingStop(
       _fbb,
       id__,
       result__,
       message__);
 }
 
-struct Request_Mapping_Save FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Mapping_SaveBuilder Builder;
+struct RequestMappingSave FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMappingSaveBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6
@@ -2953,51 +3137,51 @@ struct Request_Mapping_Save FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Mapping_SaveBuilder {
-  typedef Request_Mapping_Save Table;
+struct RequestMappingSaveBuilder {
+  typedef RequestMappingSave Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Mapping_Save::VT_ID, id);
+    fbb_.AddOffset(RequestMappingSave::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Request_Mapping_Save::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(RequestMappingSave::VT_MAP_NAME, map_name);
   }
-  explicit Request_Mapping_SaveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMappingSaveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Mapping_Save> Finish() {
+  ::flatbuffers::Offset<RequestMappingSave> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Mapping_Save>(end);
+    auto o = ::flatbuffers::Offset<RequestMappingSave>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Mapping_Save> CreateRequest_Mapping_Save(
+inline ::flatbuffers::Offset<RequestMappingSave> CreateRequestMappingSave(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0) {
-  Request_Mapping_SaveBuilder builder_(_fbb);
+  RequestMappingSaveBuilder builder_(_fbb);
   builder_.add_map_name(map_name);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Mapping_Save> CreateRequest_Mapping_SaveDirect(
+inline ::flatbuffers::Offset<RequestMappingSave> CreateRequestMappingSaveDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
-  return SLAMNAV::CreateRequest_Mapping_Save(
+  return SLAMNAV::CreateRequestMappingSave(
       _fbb,
       id__,
       map_name__);
 }
 
-struct Response_Mapping_Save FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Mapping_SaveBuilder Builder;
+struct ResponseMappingSave FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMappingSaveBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -3030,40 +3214,40 @@ struct Response_Mapping_Save FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Mapping_SaveBuilder {
-  typedef Response_Mapping_Save Table;
+struct ResponseMappingSaveBuilder {
+  typedef ResponseMappingSave Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Mapping_Save::VT_ID, id);
+    fbb_.AddOffset(ResponseMappingSave::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Response_Mapping_Save::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResponseMappingSave::VT_MAP_NAME, map_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Mapping_Save::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMappingSave::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Mapping_Save::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMappingSave::VT_MESSAGE, message);
   }
-  explicit Response_Mapping_SaveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMappingSaveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Mapping_Save> Finish() {
+  ::flatbuffers::Offset<ResponseMappingSave> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Mapping_Save>(end);
+    auto o = ::flatbuffers::Offset<ResponseMappingSave>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Mapping_Save> CreateResponse_Mapping_Save(
+inline ::flatbuffers::Offset<ResponseMappingSave> CreateResponseMappingSave(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Mapping_SaveBuilder builder_(_fbb);
+  ResponseMappingSaveBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_map_name(map_name);
@@ -3071,7 +3255,7 @@ inline ::flatbuffers::Offset<Response_Mapping_Save> CreateResponse_Mapping_Save(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Mapping_Save> CreateResponse_Mapping_SaveDirect(
+inline ::flatbuffers::Offset<ResponseMappingSave> CreateResponseMappingSaveDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -3081,7 +3265,7 @@ inline ::flatbuffers::Offset<Response_Mapping_Save> CreateResponse_Mapping_SaveD
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Mapping_Save(
+  return SLAMNAV::CreateResponseMappingSave(
       _fbb,
       id__,
       map_name__,
@@ -3089,66 +3273,66 @@ inline ::flatbuffers::Offset<Response_Mapping_Save> CreateResponse_Mapping_SaveD
       message__);
 }
 
-struct Request_Mapping_Cloud_Reload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Mapping_Cloud_ReloadBuilder Builder;
+struct RequestMappingCloudReload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMappingCloudReloadBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Mapping_Cloud_ReloadBuilder {
-  typedef Request_Mapping_Cloud_Reload Table;
+struct RequestMappingCloudReloadBuilder {
+  typedef RequestMappingCloudReload Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Request_Mapping_Cloud_ReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMappingCloudReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Mapping_Cloud_Reload> Finish() {
+  ::flatbuffers::Offset<RequestMappingCloudReload> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Mapping_Cloud_Reload>(end);
+    auto o = ::flatbuffers::Offset<RequestMappingCloudReload>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Mapping_Cloud_Reload> CreateRequest_Mapping_Cloud_Reload(
+inline ::flatbuffers::Offset<RequestMappingCloudReload> CreateRequestMappingCloudReload(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Request_Mapping_Cloud_ReloadBuilder builder_(_fbb);
+  RequestMappingCloudReloadBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Response_Mapping_Cloud_Reload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Mapping_Cloud_ReloadBuilder Builder;
+struct ResponseMappingCloudReload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMappingCloudReloadBuilder Builder;
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            verifier.EndTable();
   }
 };
 
-struct Response_Mapping_Cloud_ReloadBuilder {
-  typedef Response_Mapping_Cloud_Reload Table;
+struct ResponseMappingCloudReloadBuilder {
+  typedef ResponseMappingCloudReload Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  explicit Response_Mapping_Cloud_ReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMappingCloudReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Mapping_Cloud_Reload> Finish() {
+  ::flatbuffers::Offset<ResponseMappingCloudReload> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Mapping_Cloud_Reload>(end);
+    auto o = ::flatbuffers::Offset<ResponseMappingCloudReload>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Mapping_Cloud_Reload> CreateResponse_Mapping_Cloud_Reload(
+inline ::flatbuffers::Offset<ResponseMappingCloudReload> CreateResponseMappingCloudReload(
     ::flatbuffers::FlatBufferBuilder &_fbb) {
-  Response_Mapping_Cloud_ReloadBuilder builder_(_fbb);
+  ResponseMappingCloudReloadBuilder builder_(_fbb);
   return builder_.Finish();
 }
 
-struct Result_Map_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_Map_LoadBuilder Builder;
+struct ResultMapLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultMapLoadBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MAP_NAME = 6,
@@ -3181,40 +3365,40 @@ struct Result_Map_Load FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Result_Map_LoadBuilder {
-  typedef Result_Map_Load Table;
+struct ResultMapLoadBuilder {
+  typedef ResultMapLoad Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Map_Load::VT_ID, id);
+    fbb_.AddOffset(ResultMapLoad::VT_ID, id);
   }
   void add_map_name(::flatbuffers::Offset<::flatbuffers::String> map_name) {
-    fbb_.AddOffset(Result_Map_Load::VT_MAP_NAME, map_name);
+    fbb_.AddOffset(ResultMapLoad::VT_MAP_NAME, map_name);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Map_Load::VT_RESULT, result);
+    fbb_.AddOffset(ResultMapLoad::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Map_Load::VT_MESSAGE, message);
+    fbb_.AddOffset(ResultMapLoad::VT_MESSAGE, message);
   }
-  explicit Result_Map_LoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResultMapLoadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Map_Load> Finish() {
+  ::flatbuffers::Offset<ResultMapLoad> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Map_Load>(end);
+    auto o = ::flatbuffers::Offset<ResultMapLoad>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Map_Load> CreateResult_Map_Load(
+inline ::flatbuffers::Offset<ResultMapLoad> CreateResultMapLoad(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> map_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_Map_LoadBuilder builder_(_fbb);
+  ResultMapLoadBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_map_name(map_name);
@@ -3222,7 +3406,7 @@ inline ::flatbuffers::Offset<Result_Map_Load> CreateResult_Map_Load(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Map_Load> CreateResult_Map_LoadDirect(
+inline ::flatbuffers::Offset<ResultMapLoad> CreateResultMapLoadDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *map_name = nullptr,
@@ -3232,7 +3416,7 @@ inline ::flatbuffers::Offset<Result_Map_Load> CreateResult_Map_LoadDirect(
   auto map_name__ = map_name ? _fbb.CreateString(map_name) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Map_Load(
+  return SLAMNAV::CreateResultMapLoad(
       _fbb,
       id__,
       map_name__,

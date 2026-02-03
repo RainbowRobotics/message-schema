@@ -134,6 +134,10 @@ static void publish_status(COMM_ZENOH* zenoh)
         );
 
         // 3. StatusMotor (struct) - motor0, motor1
+        std::vector<flatbuffers::Offset<SLAMNAV::StatusMotor>> motor_offsets;
+        // for(const auto* motor : motors)
+
+
         SLAMNAV::StatusMotor motor0(
             ms.connection_m0 == 1,
             ms.status_m0,

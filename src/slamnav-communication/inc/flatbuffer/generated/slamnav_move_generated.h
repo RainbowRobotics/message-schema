@@ -17,65 +17,65 @@ namespace SLAMNAV {
 
 struct MovePose;
 
-struct Request_Move_Goal;
-struct Request_Move_GoalBuilder;
+struct RequestMoveGoal;
+struct RequestMoveGoalBuilder;
 
-struct Response_Move_Goal;
-struct Response_Move_GoalBuilder;
+struct ResponseMoveGoal;
+struct ResponseMoveGoalBuilder;
 
-struct Request_Move_Target;
-struct Request_Move_TargetBuilder;
+struct RequestMoveTarget;
+struct RequestMoveTargetBuilder;
 
-struct Response_Move_Target;
-struct Response_Move_TargetBuilder;
+struct ResponseMoveTarget;
+struct ResponseMoveTargetBuilder;
 
-struct Move_Jog;
-struct Move_JogBuilder;
+struct RequestMoveStop;
+struct RequestMoveStopBuilder;
 
-struct Request_Move_Stop;
-struct Request_Move_StopBuilder;
+struct ResponseMoveStop;
+struct ResponseMoveStopBuilder;
 
-struct Response_Move_Stop;
-struct Response_Move_StopBuilder;
+struct RequestMovePause;
+struct RequestMovePauseBuilder;
 
-struct Request_Move_Pause;
-struct Request_Move_PauseBuilder;
+struct ResponseMovePause;
+struct ResponseMovePauseBuilder;
 
-struct Response_Move_Pause;
-struct Response_Move_PauseBuilder;
+struct RequestMoveResume;
+struct RequestMoveResumeBuilder;
 
-struct Request_Move_Resume;
-struct Request_Move_ResumeBuilder;
+struct ResponseMoveResume;
+struct ResponseMoveResumeBuilder;
 
-struct Response_Move_Resume;
-struct Response_Move_ResumeBuilder;
+struct RequestMoveXLinear;
+struct RequestMoveXLinearBuilder;
 
-struct Request_Move_xLinear;
-struct Request_Move_xLinearBuilder;
+struct ResponseMoveXLinear;
+struct ResponseMoveXLinearBuilder;
 
-struct Response_Move_xLinear;
-struct Response_Move_xLinearBuilder;
+struct RequestMoveYLinear;
+struct RequestMoveYLinearBuilder;
 
-struct Request_Move_yLinear;
-struct Request_Move_yLinearBuilder;
+struct ResponseMoveYLinear;
+struct ResponseMoveYLinearBuilder;
 
-struct Response_Move_yLinear;
-struct Response_Move_yLinearBuilder;
+struct RequestMoveCircular;
+struct RequestMoveCircularBuilder;
 
-struct Request_Move_Circular;
-struct Request_Move_CircularBuilder;
+struct ResponseMoveCircular;
+struct ResponseMoveCircularBuilder;
 
-struct Response_Move_Circular;
-struct Response_Move_CircularBuilder;
+struct RequestMoveRotate;
+struct RequestMoveRotateBuilder;
 
-struct Request_Move_Rotate;
-struct Request_Move_RotateBuilder;
+struct ResponseMoveRotate;
+struct ResponseMoveRotateBuilder;
 
-struct Response_Move_Rotate;
-struct Response_Move_RotateBuilder;
+struct MoveJog;
+struct MoveJogBuilder;
 
-struct Result_Move;
-struct Result_MoveBuilder;
+struct ResultMove;
+struct ResultMoveBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MovePose FLATBUFFERS_FINAL_CLASS {
  private:
@@ -112,8 +112,8 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) MovePose FLATBUFFERS_FINAL_CLASS {
 };
 FLATBUFFERS_STRUCT_END(MovePose, 16);
 
-struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_GoalBuilder Builder;
+struct RequestMoveGoal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveGoalBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_GOAL_ID = 6,
@@ -151,44 +151,44 @@ struct Request_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   }
 };
 
-struct Request_Move_GoalBuilder {
-  typedef Request_Move_Goal Table;
+struct RequestMoveGoalBuilder {
+  typedef RequestMoveGoal Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Goal::VT_ID, id);
+    fbb_.AddOffset(RequestMoveGoal::VT_ID, id);
   }
   void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
-    fbb_.AddOffset(Request_Move_Goal::VT_GOAL_ID, goal_id);
+    fbb_.AddOffset(RequestMoveGoal::VT_GOAL_ID, goal_id);
   }
   void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
-    fbb_.AddOffset(Request_Move_Goal::VT_GOAL_NAME, goal_name);
+    fbb_.AddOffset(RequestMoveGoal::VT_GOAL_NAME, goal_name);
   }
   void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Request_Move_Goal::VT_METHOD, method);
+    fbb_.AddOffset(RequestMoveGoal::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(Request_Move_Goal::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(RequestMoveGoal::VT_PRESET, preset, 0);
   }
-  explicit Request_Move_GoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveGoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Goal> Finish() {
+  ::flatbuffers::Offset<RequestMoveGoal> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Goal>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveGoal>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(
+inline ::flatbuffers::Offset<RequestMoveGoal> CreateRequestMoveGoal(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> goal_name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0) {
-  Request_Move_GoalBuilder builder_(_fbb);
+  RequestMoveGoalBuilder builder_(_fbb);
   builder_.add_preset(preset);
   builder_.add_method(method);
   builder_.add_goal_name(goal_name);
@@ -197,7 +197,7 @@ inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_Goal(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
+inline ::flatbuffers::Offset<RequestMoveGoal> CreateRequestMoveGoalDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *goal_id = nullptr,
@@ -208,7 +208,7 @@ inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
   auto goal_id__ = goal_id ? _fbb.CreateString(goal_id) : 0;
   auto goal_name__ = goal_name ? _fbb.CreateString(goal_name) : 0;
   auto method__ = method ? _fbb.CreateString(method) : 0;
-  return SLAMNAV::CreateRequest_Move_Goal(
+  return SLAMNAV::CreateRequestMoveGoal(
       _fbb,
       id__,
       goal_id__,
@@ -217,8 +217,8 @@ inline ::flatbuffers::Offset<Request_Move_Goal> CreateRequest_Move_GoalDirect(
       preset);
 }
 
-struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_GoalBuilder Builder;
+struct ResponseMoveGoal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveGoalBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_GOAL_ID = 6,
@@ -268,43 +268,43 @@ struct Response_Move_Goal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
 };
 
-struct Response_Move_GoalBuilder {
-  typedef Response_Move_Goal Table;
+struct ResponseMoveGoalBuilder {
+  typedef ResponseMoveGoal Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Goal::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveGoal::VT_ID, id);
   }
   void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
-    fbb_.AddOffset(Response_Move_Goal::VT_GOAL_ID, goal_id);
+    fbb_.AddOffset(ResponseMoveGoal::VT_GOAL_ID, goal_id);
   }
   void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
-    fbb_.AddOffset(Response_Move_Goal::VT_GOAL_NAME, goal_name);
+    fbb_.AddOffset(ResponseMoveGoal::VT_GOAL_NAME, goal_name);
   }
   void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Response_Move_Goal::VT_METHOD, method);
+    fbb_.AddOffset(ResponseMoveGoal::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(Response_Move_Goal::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(ResponseMoveGoal::VT_PRESET, preset, 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Goal::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveGoal::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Goal::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveGoal::VT_MESSAGE, message);
   }
-  explicit Response_Move_GoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveGoalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Goal> Finish() {
+  ::flatbuffers::Offset<ResponseMoveGoal> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Goal>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveGoal>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
+inline ::flatbuffers::Offset<ResponseMoveGoal> CreateResponseMoveGoal(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
@@ -313,7 +313,7 @@ inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
     int32_t preset = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_GoalBuilder builder_(_fbb);
+  ResponseMoveGoalBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_preset(preset);
@@ -324,7 +324,7 @@ inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_Goal(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
+inline ::flatbuffers::Offset<ResponseMoveGoal> CreateResponseMoveGoalDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *goal_id = nullptr,
@@ -339,7 +339,7 @@ inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
   auto method__ = method ? _fbb.CreateString(method) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Goal(
+  return SLAMNAV::CreateResponseMoveGoal(
       _fbb,
       id__,
       goal_id__,
@@ -350,8 +350,8 @@ inline ::flatbuffers::Offset<Response_Move_Goal> CreateResponse_Move_GoalDirect(
       message__);
 }
 
-struct Request_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_TargetBuilder Builder;
+struct RequestMoveTarget FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveTargetBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_GOAL_POSE = 6,
@@ -382,40 +382,40 @@ struct Request_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Move_TargetBuilder {
-  typedef Request_Move_Target Table;
+struct RequestMoveTargetBuilder {
+  typedef RequestMoveTarget Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Target::VT_ID, id);
+    fbb_.AddOffset(RequestMoveTarget::VT_ID, id);
   }
   void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
-    fbb_.AddStruct(Request_Move_Target::VT_GOAL_POSE, goal_pose);
+    fbb_.AddStruct(RequestMoveTarget::VT_GOAL_POSE, goal_pose);
   }
   void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Request_Move_Target::VT_METHOD, method);
+    fbb_.AddOffset(RequestMoveTarget::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(Request_Move_Target::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(RequestMoveTarget::VT_PRESET, preset, 0);
   }
-  explicit Request_Move_TargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveTargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Target> Finish() {
+  ::flatbuffers::Offset<RequestMoveTarget> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Target>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveTarget>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(
+inline ::flatbuffers::Offset<RequestMoveTarget> CreateRequestMoveTarget(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     const SLAMNAV::MovePose *goal_pose = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> method = 0,
     int32_t preset = 0) {
-  Request_Move_TargetBuilder builder_(_fbb);
+  RequestMoveTargetBuilder builder_(_fbb);
   builder_.add_preset(preset);
   builder_.add_method(method);
   builder_.add_goal_pose(goal_pose);
@@ -423,7 +423,7 @@ inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_Target(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirect(
+inline ::flatbuffers::Offset<RequestMoveTarget> CreateRequestMoveTargetDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const SLAMNAV::MovePose *goal_pose = nullptr,
@@ -431,7 +431,7 @@ inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirec
     int32_t preset = 0) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto method__ = method ? _fbb.CreateString(method) : 0;
-  return SLAMNAV::CreateRequest_Move_Target(
+  return SLAMNAV::CreateRequestMoveTarget(
       _fbb,
       id__,
       goal_pose,
@@ -439,8 +439,8 @@ inline ::flatbuffers::Offset<Request_Move_Target> CreateRequest_Move_TargetDirec
       preset);
 }
 
-struct Response_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_TargetBuilder Builder;
+struct ResponseMoveTarget FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveTargetBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_METHOD = 6,
@@ -483,40 +483,40 @@ struct Response_Move_Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Move_TargetBuilder {
-  typedef Response_Move_Target Table;
+struct ResponseMoveTargetBuilder {
+  typedef ResponseMoveTarget Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Target::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveTarget::VT_ID, id);
   }
   void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Response_Move_Target::VT_METHOD, method);
+    fbb_.AddOffset(ResponseMoveTarget::VT_METHOD, method);
   }
   void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
-    fbb_.AddStruct(Response_Move_Target::VT_GOAL_POSE, goal_pose);
+    fbb_.AddStruct(ResponseMoveTarget::VT_GOAL_POSE, goal_pose);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(Response_Move_Target::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(ResponseMoveTarget::VT_PRESET, preset, 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Target::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveTarget::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Target::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveTarget::VT_MESSAGE, message);
   }
-  explicit Response_Move_TargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveTargetBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Target> Finish() {
+  ::flatbuffers::Offset<ResponseMoveTarget> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Target>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveTarget>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
+inline ::flatbuffers::Offset<ResponseMoveTarget> CreateResponseMoveTarget(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> method = 0,
@@ -524,7 +524,7 @@ inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
     int32_t preset = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_TargetBuilder builder_(_fbb);
+  ResponseMoveTargetBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_preset(preset);
@@ -534,7 +534,7 @@ inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_Target(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDirect(
+inline ::flatbuffers::Offset<ResponseMoveTarget> CreateResponseMoveTargetDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *method = nullptr,
@@ -546,7 +546,7 @@ inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDir
   auto method__ = method ? _fbb.CreateString(method) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Target(
+  return SLAMNAV::CreateResponseMoveTarget(
       _fbb,
       id__,
       method__,
@@ -556,69 +556,8 @@ inline ::flatbuffers::Offset<Response_Move_Target> CreateResponse_Move_TargetDir
       message__);
 }
 
-struct Move_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Move_JogBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_VX = 4,
-    VT_VY = 6,
-    VT_WZ = 8
-  };
-  float vx() const {
-    return GetField<float>(VT_VX, 0.0f);
-  }
-  float vy() const {
-    return GetField<float>(VT_VY, 0.0f);
-  }
-  float wz() const {
-    return GetField<float>(VT_WZ, 0.0f);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_VX, 4) &&
-           VerifyField<float>(verifier, VT_VY, 4) &&
-           VerifyField<float>(verifier, VT_WZ, 4) &&
-           verifier.EndTable();
-  }
-};
-
-struct Move_JogBuilder {
-  typedef Move_Jog Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_vx(float vx) {
-    fbb_.AddElement<float>(Move_Jog::VT_VX, vx, 0.0f);
-  }
-  void add_vy(float vy) {
-    fbb_.AddElement<float>(Move_Jog::VT_VY, vy, 0.0f);
-  }
-  void add_wz(float wz) {
-    fbb_.AddElement<float>(Move_Jog::VT_WZ, wz, 0.0f);
-  }
-  explicit Move_JogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Move_Jog> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Move_Jog>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Move_Jog> CreateMove_Jog(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    float vx = 0.0f,
-    float vy = 0.0f,
-    float wz = 0.0f) {
-  Move_JogBuilder builder_(_fbb);
-  builder_.add_wz(wz);
-  builder_.add_vy(vy);
-  builder_.add_vx(vx);
-  return builder_.Finish();
-}
-
-struct Request_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_StopBuilder Builder;
+struct RequestMoveStop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveStopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -633,43 +572,43 @@ struct Request_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   }
 };
 
-struct Request_Move_StopBuilder {
-  typedef Request_Move_Stop Table;
+struct RequestMoveStopBuilder {
+  typedef RequestMoveStop Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Stop::VT_ID, id);
+    fbb_.AddOffset(RequestMoveStop::VT_ID, id);
   }
-  explicit Request_Move_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveStopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Stop> Finish() {
+  ::flatbuffers::Offset<RequestMoveStop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Stop>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveStop>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_Stop(
+inline ::flatbuffers::Offset<RequestMoveStop> CreateRequestMoveStop(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Move_StopBuilder builder_(_fbb);
+  RequestMoveStopBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Stop> CreateRequest_Move_StopDirect(
+inline ::flatbuffers::Offset<RequestMoveStop> CreateRequestMoveStopDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_Stop(
+  return SLAMNAV::CreateRequestMoveStop(
       _fbb,
       id__);
 }
 
-struct Response_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_StopBuilder Builder;
+struct ResponseMoveStop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveStopBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
@@ -696,43 +635,43 @@ struct Response_Move_Stop FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
 };
 
-struct Response_Move_StopBuilder {
-  typedef Response_Move_Stop Table;
+struct ResponseMoveStopBuilder {
+  typedef ResponseMoveStop Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Stop::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveStop::VT_ID, id);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Stop::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveStop::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Stop::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveStop::VT_MESSAGE, message);
   }
-  explicit Response_Move_StopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveStopBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Stop> Finish() {
+  ::flatbuffers::Offset<ResponseMoveStop> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Stop>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveStop>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_Stop(
+inline ::flatbuffers::Offset<ResponseMoveStop> CreateResponseMoveStop(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_StopBuilder builder_(_fbb);
+  ResponseMoveStopBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_StopDirect(
+inline ::flatbuffers::Offset<ResponseMoveStop> CreateResponseMoveStopDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
@@ -740,15 +679,15 @@ inline ::flatbuffers::Offset<Response_Move_Stop> CreateResponse_Move_StopDirect(
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Stop(
+  return SLAMNAV::CreateResponseMoveStop(
       _fbb,
       id__,
       result__,
       message__);
 }
 
-struct Request_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_PauseBuilder Builder;
+struct RequestMovePause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMovePauseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -763,43 +702,43 @@ struct Request_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
 };
 
-struct Request_Move_PauseBuilder {
-  typedef Request_Move_Pause Table;
+struct RequestMovePauseBuilder {
+  typedef RequestMovePause Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Pause::VT_ID, id);
+    fbb_.AddOffset(RequestMovePause::VT_ID, id);
   }
-  explicit Request_Move_PauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMovePauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Pause> Finish() {
+  ::flatbuffers::Offset<RequestMovePause> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Pause>(end);
+    auto o = ::flatbuffers::Offset<RequestMovePause>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_Pause(
+inline ::flatbuffers::Offset<RequestMovePause> CreateRequestMovePause(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Move_PauseBuilder builder_(_fbb);
+  RequestMovePauseBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Pause> CreateRequest_Move_PauseDirect(
+inline ::flatbuffers::Offset<RequestMovePause> CreateRequestMovePauseDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_Pause(
+  return SLAMNAV::CreateRequestMovePause(
       _fbb,
       id__);
 }
 
-struct Response_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_PauseBuilder Builder;
+struct ResponseMovePause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMovePauseBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
@@ -826,43 +765,43 @@ struct Response_Move_Pause FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Response_Move_PauseBuilder {
-  typedef Response_Move_Pause Table;
+struct ResponseMovePauseBuilder {
+  typedef ResponseMovePause Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Pause::VT_ID, id);
+    fbb_.AddOffset(ResponseMovePause::VT_ID, id);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Pause::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMovePause::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Pause::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMovePause::VT_MESSAGE, message);
   }
-  explicit Response_Move_PauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMovePauseBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Pause> Finish() {
+  ::flatbuffers::Offset<ResponseMovePause> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Pause>(end);
+    auto o = ::flatbuffers::Offset<ResponseMovePause>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_Pause(
+inline ::flatbuffers::Offset<ResponseMovePause> CreateResponseMovePause(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_PauseBuilder builder_(_fbb);
+  ResponseMovePauseBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_PauseDirect(
+inline ::flatbuffers::Offset<ResponseMovePause> CreateResponseMovePauseDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
@@ -870,15 +809,15 @@ inline ::flatbuffers::Offset<Response_Move_Pause> CreateResponse_Move_PauseDirec
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Pause(
+  return SLAMNAV::CreateResponseMovePause(
       _fbb,
       id__,
       result__,
       message__);
 }
 
-struct Request_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_ResumeBuilder Builder;
+struct RequestMoveResume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveResumeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -893,43 +832,43 @@ struct Request_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Move_ResumeBuilder {
-  typedef Request_Move_Resume Table;
+struct RequestMoveResumeBuilder {
+  typedef RequestMoveResume Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Resume::VT_ID, id);
+    fbb_.AddOffset(RequestMoveResume::VT_ID, id);
   }
-  explicit Request_Move_ResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Resume> Finish() {
+  ::flatbuffers::Offset<RequestMoveResume> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Resume>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveResume>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_Resume(
+inline ::flatbuffers::Offset<RequestMoveResume> CreateRequestMoveResume(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Move_ResumeBuilder builder_(_fbb);
+  RequestMoveResumeBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Resume> CreateRequest_Move_ResumeDirect(
+inline ::flatbuffers::Offset<RequestMoveResume> CreateRequestMoveResumeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_Resume(
+  return SLAMNAV::CreateRequestMoveResume(
       _fbb,
       id__);
 }
 
-struct Response_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_ResumeBuilder Builder;
+struct ResponseMoveResume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveResumeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESULT = 6,
@@ -956,43 +895,43 @@ struct Response_Move_Resume FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Move_ResumeBuilder {
-  typedef Response_Move_Resume Table;
+struct ResponseMoveResumeBuilder {
+  typedef ResponseMoveResume Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Resume::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveResume::VT_ID, id);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Resume::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveResume::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Resume::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveResume::VT_MESSAGE, message);
   }
-  explicit Response_Move_ResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveResumeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Resume> Finish() {
+  ::flatbuffers::Offset<ResponseMoveResume> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Resume>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveResume>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_Resume(
+inline ::flatbuffers::Offset<ResponseMoveResume> CreateResponseMoveResume(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_ResumeBuilder builder_(_fbb);
+  ResponseMoveResumeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_ResumeDirect(
+inline ::flatbuffers::Offset<ResponseMoveResume> CreateResponseMoveResumeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *result = nullptr,
@@ -1000,15 +939,15 @@ inline ::flatbuffers::Offset<Response_Move_Resume> CreateResponse_Move_ResumeDir
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Resume(
+  return SLAMNAV::CreateResponseMoveResume(
       _fbb,
       id__,
       result__,
       message__);
 }
 
-struct Request_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_xLinearBuilder Builder;
+struct RequestMoveXLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveXLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1033,57 +972,57 @@ struct Request_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Move_xLinearBuilder {
-  typedef Request_Move_xLinear Table;
+struct RequestMoveXLinearBuilder {
+  typedef RequestMoveXLinear Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_xLinear::VT_ID, id);
+    fbb_.AddOffset(RequestMoveXLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Request_Move_xLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(RequestMoveXLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Request_Move_xLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(RequestMoveXLinear::VT_SPEED, speed, 0.0f);
   }
-  explicit Request_Move_xLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveXLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_xLinear> Finish() {
+  ::flatbuffers::Offset<RequestMoveXLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_xLinear>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveXLinear>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_xLinear> CreateRequest_Move_xLinear(
+inline ::flatbuffers::Offset<RequestMoveXLinear> CreateRequestMoveXLinear(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f) {
-  Request_Move_xLinearBuilder builder_(_fbb);
+  RequestMoveXLinearBuilder builder_(_fbb);
   builder_.add_speed(speed);
   builder_.add_target(target);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_xLinear> CreateRequest_Move_xLinearDirect(
+inline ::flatbuffers::Offset<RequestMoveXLinear> CreateRequestMoveXLinearDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_xLinear(
+  return SLAMNAV::CreateRequestMoveXLinear(
       _fbb,
       id__,
       target,
       speed);
 }
 
-struct Response_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_xLinearBuilder Builder;
+struct ResponseMoveXLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveXLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1120,44 +1059,44 @@ struct Response_Move_xLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Move_xLinearBuilder {
-  typedef Response_Move_xLinear Table;
+struct ResponseMoveXLinearBuilder {
+  typedef ResponseMoveXLinear Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_xLinear::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveXLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Response_Move_xLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveXLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Response_Move_xLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveXLinear::VT_SPEED, speed, 0.0f);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_xLinear::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveXLinear::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_xLinear::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveXLinear::VT_MESSAGE, message);
   }
-  explicit Response_Move_xLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveXLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_xLinear> Finish() {
+  ::flatbuffers::Offset<ResponseMoveXLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_xLinear>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveXLinear>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinear(
+inline ::flatbuffers::Offset<ResponseMoveXLinear> CreateResponseMoveXLinear(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_xLinearBuilder builder_(_fbb);
+  ResponseMoveXLinearBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_speed(speed);
@@ -1166,7 +1105,7 @@ inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinear(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinearDirect(
+inline ::flatbuffers::Offset<ResponseMoveXLinear> CreateResponseMoveXLinearDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
@@ -1176,7 +1115,7 @@ inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinearD
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_xLinear(
+  return SLAMNAV::CreateResponseMoveXLinear(
       _fbb,
       id__,
       target,
@@ -1185,8 +1124,8 @@ inline ::flatbuffers::Offset<Response_Move_xLinear> CreateResponse_Move_xLinearD
       message__);
 }
 
-struct Request_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_yLinearBuilder Builder;
+struct RequestMoveYLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveYLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1211,57 +1150,57 @@ struct Request_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Move_yLinearBuilder {
-  typedef Request_Move_yLinear Table;
+struct RequestMoveYLinearBuilder {
+  typedef RequestMoveYLinear Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_yLinear::VT_ID, id);
+    fbb_.AddOffset(RequestMoveYLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Request_Move_yLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(RequestMoveYLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Request_Move_yLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(RequestMoveYLinear::VT_SPEED, speed, 0.0f);
   }
-  explicit Request_Move_yLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveYLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_yLinear> Finish() {
+  ::flatbuffers::Offset<RequestMoveYLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_yLinear>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveYLinear>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_yLinear> CreateRequest_Move_yLinear(
+inline ::flatbuffers::Offset<RequestMoveYLinear> CreateRequestMoveYLinear(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f) {
-  Request_Move_yLinearBuilder builder_(_fbb);
+  RequestMoveYLinearBuilder builder_(_fbb);
   builder_.add_speed(speed);
   builder_.add_target(target);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_yLinear> CreateRequest_Move_yLinearDirect(
+inline ::flatbuffers::Offset<RequestMoveYLinear> CreateRequestMoveYLinearDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_yLinear(
+  return SLAMNAV::CreateRequestMoveYLinear(
       _fbb,
       id__,
       target,
       speed);
 }
 
-struct Response_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_yLinearBuilder Builder;
+struct ResponseMoveYLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveYLinearBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1298,44 +1237,44 @@ struct Response_Move_yLinear FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Move_yLinearBuilder {
-  typedef Response_Move_yLinear Table;
+struct ResponseMoveYLinearBuilder {
+  typedef ResponseMoveYLinear Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_yLinear::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveYLinear::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Response_Move_yLinear::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveYLinear::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Response_Move_yLinear::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveYLinear::VT_SPEED, speed, 0.0f);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_yLinear::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveYLinear::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_yLinear::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveYLinear::VT_MESSAGE, message);
   }
-  explicit Response_Move_yLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveYLinearBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_yLinear> Finish() {
+  ::flatbuffers::Offset<ResponseMoveYLinear> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_yLinear>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveYLinear>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinear(
+inline ::flatbuffers::Offset<ResponseMoveYLinear> CreateResponseMoveYLinear(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_yLinearBuilder builder_(_fbb);
+  ResponseMoveYLinearBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_speed(speed);
@@ -1344,7 +1283,7 @@ inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinear(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinearDirect(
+inline ::flatbuffers::Offset<ResponseMoveYLinear> CreateResponseMoveYLinearDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
@@ -1354,7 +1293,7 @@ inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinearD
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_yLinear(
+  return SLAMNAV::CreateResponseMoveYLinear(
       _fbb,
       id__,
       target,
@@ -1363,8 +1302,8 @@ inline ::flatbuffers::Offset<Response_Move_yLinear> CreateResponse_Move_yLinearD
       message__);
 }
 
-struct Request_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_CircularBuilder Builder;
+struct RequestMoveCircular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveCircularBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1395,40 +1334,40 @@ struct Request_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Move_CircularBuilder {
-  typedef Request_Move_Circular Table;
+struct RequestMoveCircularBuilder {
+  typedef RequestMoveCircular Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Circular::VT_ID, id);
+    fbb_.AddOffset(RequestMoveCircular::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Request_Move_Circular::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(RequestMoveCircular::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Request_Move_Circular::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(RequestMoveCircular::VT_SPEED, speed, 0.0f);
   }
   void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
-    fbb_.AddOffset(Request_Move_Circular::VT_DIRECTION, direction);
+    fbb_.AddOffset(RequestMoveCircular::VT_DIRECTION, direction);
   }
-  explicit Request_Move_CircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveCircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Circular> Finish() {
+  ::flatbuffers::Offset<RequestMoveCircular> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Circular>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveCircular>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(
+inline ::flatbuffers::Offset<RequestMoveCircular> CreateRequestMoveCircular(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> direction = 0) {
-  Request_Move_CircularBuilder builder_(_fbb);
+  RequestMoveCircularBuilder builder_(_fbb);
   builder_.add_direction(direction);
   builder_.add_speed(speed);
   builder_.add_target(target);
@@ -1436,7 +1375,7 @@ inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_Circular(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularDirect(
+inline ::flatbuffers::Offset<RequestMoveCircular> CreateRequestMoveCircularDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
@@ -1444,7 +1383,7 @@ inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularD
     const char *direction = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto direction__ = direction ? _fbb.CreateString(direction) : 0;
-  return SLAMNAV::CreateRequest_Move_Circular(
+  return SLAMNAV::CreateRequestMoveCircular(
       _fbb,
       id__,
       target,
@@ -1452,8 +1391,8 @@ inline ::flatbuffers::Offset<Request_Move_Circular> CreateRequest_Move_CircularD
       direction__);
 }
 
-struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_CircularBuilder Builder;
+struct ResponseMoveCircular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveCircularBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1496,40 +1435,40 @@ struct Response_Move_Circular FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Move_CircularBuilder {
-  typedef Response_Move_Circular Table;
+struct ResponseMoveCircularBuilder {
+  typedef ResponseMoveCircular Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Circular::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveCircular::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Response_Move_Circular::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveCircular::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Response_Move_Circular::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveCircular::VT_SPEED, speed, 0.0f);
   }
   void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
-    fbb_.AddOffset(Response_Move_Circular::VT_DIRECTION, direction);
+    fbb_.AddOffset(ResponseMoveCircular::VT_DIRECTION, direction);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Circular::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveCircular::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Circular::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveCircular::VT_MESSAGE, message);
   }
-  explicit Response_Move_CircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveCircularBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Circular> Finish() {
+  ::flatbuffers::Offset<ResponseMoveCircular> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Circular>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveCircular>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circular(
+inline ::flatbuffers::Offset<ResponseMoveCircular> CreateResponseMoveCircular(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
@@ -1537,7 +1476,7 @@ inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circula
     ::flatbuffers::Offset<::flatbuffers::String> direction = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_CircularBuilder builder_(_fbb);
+  ResponseMoveCircularBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_direction(direction);
@@ -1547,7 +1486,7 @@ inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circula
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_CircularDirect(
+inline ::flatbuffers::Offset<ResponseMoveCircular> CreateResponseMoveCircularDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
@@ -1559,7 +1498,7 @@ inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circula
   auto direction__ = direction ? _fbb.CreateString(direction) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Circular(
+  return SLAMNAV::CreateResponseMoveCircular(
       _fbb,
       id__,
       target,
@@ -1569,8 +1508,8 @@ inline ::flatbuffers::Offset<Response_Move_Circular> CreateResponse_Move_Circula
       message__);
 }
 
-struct Request_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Move_RotateBuilder Builder;
+struct RequestMoveRotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMoveRotateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1595,57 +1534,57 @@ struct Request_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Move_RotateBuilder {
-  typedef Request_Move_Rotate Table;
+struct RequestMoveRotateBuilder {
+  typedef RequestMoveRotate Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Move_Rotate::VT_ID, id);
+    fbb_.AddOffset(RequestMoveRotate::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Request_Move_Rotate::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(RequestMoveRotate::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Request_Move_Rotate::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(RequestMoveRotate::VT_SPEED, speed, 0.0f);
   }
-  explicit Request_Move_RotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMoveRotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Move_Rotate> Finish() {
+  ::flatbuffers::Offset<RequestMoveRotate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Move_Rotate>(end);
+    auto o = ::flatbuffers::Offset<RequestMoveRotate>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_Rotate(
+inline ::flatbuffers::Offset<RequestMoveRotate> CreateRequestMoveRotate(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f) {
-  Request_Move_RotateBuilder builder_(_fbb);
+  RequestMoveRotateBuilder builder_(_fbb);
   builder_.add_speed(speed);
   builder_.add_target(target);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Move_Rotate> CreateRequest_Move_RotateDirect(
+inline ::flatbuffers::Offset<RequestMoveRotate> CreateRequestMoveRotateDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
     float speed = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Move_Rotate(
+  return SLAMNAV::CreateRequestMoveRotate(
       _fbb,
       id__,
       target,
       speed);
 }
 
-struct Response_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Move_RotateBuilder Builder;
+struct ResponseMoveRotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMoveRotateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1682,44 +1621,44 @@ struct Response_Move_Rotate FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Move_RotateBuilder {
-  typedef Response_Move_Rotate Table;
+struct ResponseMoveRotateBuilder {
+  typedef ResponseMoveRotate Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Move_Rotate::VT_ID, id);
+    fbb_.AddOffset(ResponseMoveRotate::VT_ID, id);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Response_Move_Rotate::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveRotate::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Response_Move_Rotate::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(ResponseMoveRotate::VT_SPEED, speed, 0.0f);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Move_Rotate::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMoveRotate::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Move_Rotate::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMoveRotate::VT_MESSAGE, message);
   }
-  explicit Response_Move_RotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMoveRotateBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Move_Rotate> Finish() {
+  ::flatbuffers::Offset<ResponseMoveRotate> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Move_Rotate>(end);
+    auto o = ::flatbuffers::Offset<ResponseMoveRotate>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(
+inline ::flatbuffers::Offset<ResponseMoveRotate> CreateResponseMoveRotate(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     float target = 0.0f,
     float speed = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Move_RotateBuilder builder_(_fbb);
+  ResponseMoveRotateBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_speed(speed);
@@ -1728,7 +1667,7 @@ inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_Rotate(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDirect(
+inline ::flatbuffers::Offset<ResponseMoveRotate> CreateResponseMoveRotateDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     float target = 0.0f,
@@ -1738,7 +1677,7 @@ inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDir
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Move_Rotate(
+  return SLAMNAV::CreateResponseMoveRotate(
       _fbb,
       id__,
       target,
@@ -1747,8 +1686,69 @@ inline ::flatbuffers::Offset<Response_Move_Rotate> CreateResponse_Move_RotateDir
       message__);
 }
 
-struct Result_Move FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_MoveBuilder Builder;
+struct MoveJog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef MoveJogBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_VX = 4,
+    VT_VY = 6,
+    VT_WZ = 8
+  };
+  float vx() const {
+    return GetField<float>(VT_VX, 0.0f);
+  }
+  float vy() const {
+    return GetField<float>(VT_VY, 0.0f);
+  }
+  float wz() const {
+    return GetField<float>(VT_WZ, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_VX, 4) &&
+           VerifyField<float>(verifier, VT_VY, 4) &&
+           VerifyField<float>(verifier, VT_WZ, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct MoveJogBuilder {
+  typedef MoveJog Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_vx(float vx) {
+    fbb_.AddElement<float>(MoveJog::VT_VX, vx, 0.0f);
+  }
+  void add_vy(float vy) {
+    fbb_.AddElement<float>(MoveJog::VT_VY, vy, 0.0f);
+  }
+  void add_wz(float wz) {
+    fbb_.AddElement<float>(MoveJog::VT_WZ, wz, 0.0f);
+  }
+  explicit MoveJogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<MoveJog> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<MoveJog>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<MoveJog> CreateMoveJog(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float vx = 0.0f,
+    float vy = 0.0f,
+    float wz = 0.0f) {
+  MoveJogBuilder builder_(_fbb);
+  builder_.add_wz(wz);
+  builder_.add_vy(vy);
+  builder_.add_vx(vx);
+  return builder_.Finish();
+}
+
+struct ResultMove FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultMoveBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_GOAL_ID = 6,
@@ -1819,55 +1819,55 @@ struct Result_Move FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Result_MoveBuilder {
-  typedef Result_Move Table;
+struct ResultMoveBuilder {
+  typedef ResultMove Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Move::VT_ID, id);
+    fbb_.AddOffset(ResultMove::VT_ID, id);
   }
   void add_goal_id(::flatbuffers::Offset<::flatbuffers::String> goal_id) {
-    fbb_.AddOffset(Result_Move::VT_GOAL_ID, goal_id);
+    fbb_.AddOffset(ResultMove::VT_GOAL_ID, goal_id);
   }
   void add_goal_name(::flatbuffers::Offset<::flatbuffers::String> goal_name) {
-    fbb_.AddOffset(Result_Move::VT_GOAL_NAME, goal_name);
+    fbb_.AddOffset(ResultMove::VT_GOAL_NAME, goal_name);
   }
   void add_method(::flatbuffers::Offset<::flatbuffers::String> method) {
-    fbb_.AddOffset(Result_Move::VT_METHOD, method);
+    fbb_.AddOffset(ResultMove::VT_METHOD, method);
   }
   void add_preset(int32_t preset) {
-    fbb_.AddElement<int32_t>(Result_Move::VT_PRESET, preset, 0);
+    fbb_.AddElement<int32_t>(ResultMove::VT_PRESET, preset, 0);
   }
   void add_goal_pose(const SLAMNAV::MovePose *goal_pose) {
-    fbb_.AddStruct(Result_Move::VT_GOAL_POSE, goal_pose);
+    fbb_.AddStruct(ResultMove::VT_GOAL_POSE, goal_pose);
   }
   void add_target(float target) {
-    fbb_.AddElement<float>(Result_Move::VT_TARGET, target, 0.0f);
+    fbb_.AddElement<float>(ResultMove::VT_TARGET, target, 0.0f);
   }
   void add_speed(float speed) {
-    fbb_.AddElement<float>(Result_Move::VT_SPEED, speed, 0.0f);
+    fbb_.AddElement<float>(ResultMove::VT_SPEED, speed, 0.0f);
   }
   void add_direction(::flatbuffers::Offset<::flatbuffers::String> direction) {
-    fbb_.AddOffset(Result_Move::VT_DIRECTION, direction);
+    fbb_.AddOffset(ResultMove::VT_DIRECTION, direction);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Move::VT_RESULT, result);
+    fbb_.AddOffset(ResultMove::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Move::VT_MESSAGE, message);
+    fbb_.AddOffset(ResultMove::VT_MESSAGE, message);
   }
-  explicit Result_MoveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResultMoveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Move> Finish() {
+  ::flatbuffers::Offset<ResultMove> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Move>(end);
+    auto o = ::flatbuffers::Offset<ResultMove>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Move> CreateResult_Move(
+inline ::flatbuffers::Offset<ResultMove> CreateResultMove(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> goal_id = 0,
@@ -1880,7 +1880,7 @@ inline ::flatbuffers::Offset<Result_Move> CreateResult_Move(
     ::flatbuffers::Offset<::flatbuffers::String> direction = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_MoveBuilder builder_(_fbb);
+  ResultMoveBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_direction(direction);
@@ -1895,7 +1895,7 @@ inline ::flatbuffers::Offset<Result_Move> CreateResult_Move(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Move> CreateResult_MoveDirect(
+inline ::flatbuffers::Offset<ResultMove> CreateResultMoveDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *goal_id = nullptr,
@@ -1915,7 +1915,7 @@ inline ::flatbuffers::Offset<Result_Move> CreateResult_MoveDirect(
   auto direction__ = direction ? _fbb.CreateString(direction) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Move(
+  return SLAMNAV::CreateResultMove(
       _fbb,
       id__,
       goal_id__,

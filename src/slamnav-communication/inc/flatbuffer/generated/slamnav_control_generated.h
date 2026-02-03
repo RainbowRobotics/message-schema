@@ -15,109 +15,109 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
 
 namespace SLAMNAV {
 
-struct Request_Get_Safety_Field;
-struct Request_Get_Safety_FieldBuilder;
-
-struct Response_Get_Safety_Field;
-struct Response_Get_Safety_FieldBuilder;
-
-struct Request_Set_Safety_Field;
-struct Request_Set_Safety_FieldBuilder;
-
-struct Response_Set_Safety_Field;
-struct Response_Set_Safety_FieldBuilder;
-
 struct SafetyFlag;
 struct SafetyFlagBuilder;
 
-struct Request_Get_Safety_Flag;
-struct Request_Get_Safety_FlagBuilder;
-
-struct Response_Get_Safety_Flag;
-struct Response_Get_Safety_FlagBuilder;
-
-struct Request_Set_Safety_Flag;
-struct Request_Set_Safety_FlagBuilder;
-
-struct Response_Set_Safety_Flag;
-struct Response_Set_Safety_FlagBuilder;
-
-struct Request_Get_Safety_Io;
-struct Request_Get_Safety_IoBuilder;
-
-struct Response_Get_Safety_Io;
-struct Response_Get_Safety_IoBuilder;
-
-struct Request_Set_Safety_Io;
-struct Request_Set_Safety_IoBuilder;
-
-struct Response_Set_Safety_Io;
-struct Response_Set_Safety_IoBuilder;
-
-struct Request_Dock_Control;
-struct Request_Dock_ControlBuilder;
-
-struct Response_Dock_Control;
-struct Response_Dock_ControlBuilder;
-
-struct Request_Charge_Trigger;
-struct Request_Charge_TriggerBuilder;
-
-struct Response_Charge_Trigger;
-struct Response_Charge_TriggerBuilder;
-
 struct ObsBox;
 
-struct Request_Get_Obs_Box;
-struct Request_Get_Obs_BoxBuilder;
+struct RequestGetSafetyField;
+struct RequestGetSafetyFieldBuilder;
 
-struct Response_Get_Obs_Box;
-struct Response_Get_Obs_BoxBuilder;
+struct ResponseGetSafetyField;
+struct ResponseGetSafetyFieldBuilder;
 
-struct Request_Set_Obs_Box;
-struct Request_Set_Obs_BoxBuilder;
+struct RequestSetSafetyField;
+struct RequestSetSafetyFieldBuilder;
 
-struct Response_Set_Obs_Box;
-struct Response_Set_Obs_BoxBuilder;
+struct ResponseSetSafetyField;
+struct ResponseSetSafetyFieldBuilder;
 
-struct Request_Led_Control;
-struct Request_Led_ControlBuilder;
+struct RequestGetSafetyFlag;
+struct RequestGetSafetyFlagBuilder;
 
-struct Response_Led_Control;
-struct Response_Led_ControlBuilder;
+struct ResponseGetSafetyFlag;
+struct ResponseGetSafetyFlagBuilder;
 
-struct Request_Motor_Control;
-struct Request_Motor_ControlBuilder;
+struct RequestSetSafetyFlag;
+struct RequestSetSafetyFlagBuilder;
 
-struct Response_Motor_Control;
-struct Response_Motor_ControlBuilder;
+struct ResponseSetSafetyFlag;
+struct ResponseSetSafetyFlagBuilder;
 
-struct Request_Jog;
-struct Request_JogBuilder;
+struct RequestGetSafetyIo;
+struct RequestGetSafetyIoBuilder;
 
-struct Response_Jog;
-struct Response_JogBuilder;
+struct ResponseGetSafetyIo;
+struct ResponseGetSafetyIoBuilder;
 
-struct Request_Sensor_Socket;
-struct Request_Sensor_SocketBuilder;
+struct RequestSetSafetyIo;
+struct RequestSetSafetyIoBuilder;
 
-struct Response_Sensor_Socket;
-struct Response_Sensor_SocketBuilder;
+struct ResponseSetSafetyIo;
+struct ResponseSetSafetyIoBuilder;
 
-struct Request_Path_Socket;
-struct Request_Path_SocketBuilder;
+struct RequestDockControl;
+struct RequestDockControlBuilder;
 
-struct Response_Path_Socket;
-struct Response_Path_SocketBuilder;
+struct ResponseDockControl;
+struct ResponseDockControlBuilder;
 
-struct Request_Detect_Marker;
-struct Request_Detect_MarkerBuilder;
+struct RequestChargeTrigger;
+struct RequestChargeTriggerBuilder;
 
-struct Response_Detect_Marker;
-struct Response_Detect_MarkerBuilder;
+struct ResponseChargeTrigger;
+struct ResponseChargeTriggerBuilder;
 
-struct Result_Control_Dock;
-struct Result_Control_DockBuilder;
+struct RequestGetObsBox;
+struct RequestGetObsBoxBuilder;
+
+struct ResponseGetObsBox;
+struct ResponseGetObsBoxBuilder;
+
+struct RequestSetObsBox;
+struct RequestSetObsBoxBuilder;
+
+struct ResponseSetObsBox;
+struct ResponseSetObsBoxBuilder;
+
+struct RequestLedMode;
+struct RequestLedModeBuilder;
+
+struct ResponseLedMode;
+struct ResponseLedModeBuilder;
+
+struct RequestMotorMode;
+struct RequestMotorModeBuilder;
+
+struct ResponseMotorMode;
+struct ResponseMotorModeBuilder;
+
+struct RequestJog;
+struct RequestJogBuilder;
+
+struct ResponseJog;
+struct ResponseJogBuilder;
+
+struct RequestSensorMode;
+struct RequestSensorModeBuilder;
+
+struct ResponseSensorMode;
+struct ResponseSensorModeBuilder;
+
+struct RequestPathMode;
+struct RequestPathModeBuilder;
+
+struct ResponsePathMode;
+struct ResponsePathModeBuilder;
+
+struct RequestDetectMarker;
+struct RequestDetectMarkerBuilder;
+
+struct ResponseDetectMarker;
+struct ResponseDetectMarkerBuilder;
+
+struct ResultControlDock;
+struct ResultControlDockBuilder;
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) ObsBox FLATBUFFERS_FINAL_CLASS {
  private:
@@ -147,302 +147,6 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) ObsBox FLATBUFFERS_FINAL_CLASS {
   }
 };
 FLATBUFFERS_STRUCT_END(ObsBox, 12);
-
-struct Request_Get_Safety_Field FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Safety_FieldBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Get_Safety_FieldBuilder {
-  typedef Request_Get_Safety_Field Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Safety_Field::VT_ID, id);
-  }
-  explicit Request_Get_Safety_FieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Get_Safety_Field> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Safety_Field>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Get_Safety_Field> CreateRequest_Get_Safety_Field(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Safety_FieldBuilder builder_(_fbb);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Get_Safety_Field> CreateRequest_Get_Safety_FieldDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Safety_Field(
-      _fbb,
-      id__);
-}
-
-struct Response_Get_Safety_Field FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Safety_FieldBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_SAFETY_FIELD = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  int32_t safety_field() const {
-    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Get_Safety_FieldBuilder {
-  typedef Response_Get_Safety_Field Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Safety_Field::VT_ID, id);
-  }
-  void add_safety_field(int32_t safety_field) {
-    fbb_.AddElement<int32_t>(Response_Get_Safety_Field::VT_SAFETY_FIELD, safety_field, 0);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Safety_Field::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Safety_Field::VT_MESSAGE, message);
-  }
-  explicit Response_Get_Safety_FieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Get_Safety_Field> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Safety_Field>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Get_Safety_Field> CreateResponse_Get_Safety_Field(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    int32_t safety_field = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Safety_FieldBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_safety_field(safety_field);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Get_Safety_Field> CreateResponse_Get_Safety_FieldDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    int32_t safety_field = 0,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Safety_Field(
-      _fbb,
-      id__,
-      safety_field,
-      result__,
-      message__);
-}
-
-struct Request_Set_Safety_Field FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Safety_FieldBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_SAFETY_FIELD = 6
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  int32_t safety_field() const {
-    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
-           verifier.EndTable();
-  }
-};
-
-struct Request_Set_Safety_FieldBuilder {
-  typedef Request_Set_Safety_Field Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Safety_Field::VT_ID, id);
-  }
-  void add_safety_field(int32_t safety_field) {
-    fbb_.AddElement<int32_t>(Request_Set_Safety_Field::VT_SAFETY_FIELD, safety_field, 0);
-  }
-  explicit Request_Set_Safety_FieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Request_Set_Safety_Field> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Safety_Field>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Request_Set_Safety_Field> CreateRequest_Set_Safety_Field(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    int32_t safety_field = 0) {
-  Request_Set_Safety_FieldBuilder builder_(_fbb);
-  builder_.add_safety_field(safety_field);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Request_Set_Safety_Field> CreateRequest_Set_Safety_FieldDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    int32_t safety_field = 0) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Set_Safety_Field(
-      _fbb,
-      id__,
-      safety_field);
-}
-
-struct Response_Set_Safety_Field FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Safety_FieldBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_SAFETY_FIELD = 6,
-    VT_RESULT = 8,
-    VT_MESSAGE = 10
-  };
-  const ::flatbuffers::String *id() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  int32_t safety_field() const {
-    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
-  }
-  const ::flatbuffers::String *result() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
-  }
-  const ::flatbuffers::String *message() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
-  }
-  bool Verify(::flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_ID) &&
-           verifier.VerifyString(id()) &&
-           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
-           VerifyOffset(verifier, VT_RESULT) &&
-           verifier.VerifyString(result()) &&
-           VerifyOffset(verifier, VT_MESSAGE) &&
-           verifier.VerifyString(message()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Response_Set_Safety_FieldBuilder {
-  typedef Response_Set_Safety_Field Table;
-  ::flatbuffers::FlatBufferBuilder &fbb_;
-  ::flatbuffers::uoffset_t start_;
-  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Safety_Field::VT_ID, id);
-  }
-  void add_safety_field(int32_t safety_field) {
-    fbb_.AddElement<int32_t>(Response_Set_Safety_Field::VT_SAFETY_FIELD, safety_field, 0);
-  }
-  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Safety_Field::VT_RESULT, result);
-  }
-  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Safety_Field::VT_MESSAGE, message);
-  }
-  explicit Response_Set_Safety_FieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  ::flatbuffers::Offset<Response_Set_Safety_Field> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Safety_Field>(end);
-    return o;
-  }
-};
-
-inline ::flatbuffers::Offset<Response_Set_Safety_Field> CreateResponse_Set_Safety_Field(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    int32_t safety_field = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Safety_FieldBuilder builder_(_fbb);
-  builder_.add_message(message);
-  builder_.add_result(result);
-  builder_.add_safety_field(safety_field);
-  builder_.add_id(id);
-  return builder_.Finish();
-}
-
-inline ::flatbuffers::Offset<Response_Set_Safety_Field> CreateResponse_Set_Safety_FieldDirect(
-    ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    int32_t safety_field = 0,
-    const char *result = nullptr,
-    const char *message = nullptr) {
-  auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto result__ = result ? _fbb.CreateString(result) : 0;
-  auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Safety_Field(
-      _fbb,
-      id__,
-      safety_field,
-      result__,
-      message__);
-}
 
 struct SafetyFlag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef SafetyFlagBuilder Builder;
@@ -507,8 +211,8 @@ inline ::flatbuffers::Offset<SafetyFlag> CreateSafetyFlagDirect(
       value);
 }
 
-struct Request_Get_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Safety_FlagBuilder Builder;
+struct RequestGetSafetyField FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetSafetyFieldBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -523,43 +227,339 @@ struct Request_Get_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::
   }
 };
 
-struct Request_Get_Safety_FlagBuilder {
-  typedef Request_Get_Safety_Flag Table;
+struct RequestGetSafetyFieldBuilder {
+  typedef RequestGetSafetyField Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Safety_Flag::VT_ID, id);
+    fbb_.AddOffset(RequestGetSafetyField::VT_ID, id);
   }
-  explicit Request_Get_Safety_FlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetSafetyFieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Safety_Flag> Finish() {
+  ::flatbuffers::Offset<RequestGetSafetyField> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Safety_Flag>(end);
+    auto o = ::flatbuffers::Offset<RequestGetSafetyField>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Safety_Flag> CreateRequest_Get_Safety_Flag(
+inline ::flatbuffers::Offset<RequestGetSafetyField> CreateRequestGetSafetyField(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Safety_FlagBuilder builder_(_fbb);
+  RequestGetSafetyFieldBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Safety_Flag> CreateRequest_Get_Safety_FlagDirect(
+inline ::flatbuffers::Offset<RequestGetSafetyField> CreateRequestGetSafetyFieldDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Safety_Flag(
+  return SLAMNAV::CreateRequestGetSafetyField(
       _fbb,
       id__);
 }
 
-struct Response_Get_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Safety_FlagBuilder Builder;
+struct ResponseGetSafetyField FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetSafetyFieldBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_SAFETY_FIELD = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  int32_t safety_field() const {
+    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseGetSafetyFieldBuilder {
+  typedef ResponseGetSafetyField Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseGetSafetyField::VT_ID, id);
+  }
+  void add_safety_field(int32_t safety_field) {
+    fbb_.AddElement<int32_t>(ResponseGetSafetyField::VT_SAFETY_FIELD, safety_field, 0);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseGetSafetyField::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseGetSafetyField::VT_MESSAGE, message);
+  }
+  explicit ResponseGetSafetyFieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseGetSafetyField> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseGetSafetyField>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseGetSafetyField> CreateResponseGetSafetyField(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    int32_t safety_field = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseGetSafetyFieldBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_safety_field(safety_field);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseGetSafetyField> CreateResponseGetSafetyFieldDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    int32_t safety_field = 0,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseGetSafetyField(
+      _fbb,
+      id__,
+      safety_field,
+      result__,
+      message__);
+}
+
+struct RequestSetSafetyField FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSafetyFieldBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_SAFETY_FIELD = 6
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  int32_t safety_field() const {
+    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestSetSafetyFieldBuilder {
+  typedef RequestSetSafetyField Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestSetSafetyField::VT_ID, id);
+  }
+  void add_safety_field(int32_t safety_field) {
+    fbb_.AddElement<int32_t>(RequestSetSafetyField::VT_SAFETY_FIELD, safety_field, 0);
+  }
+  explicit RequestSetSafetyFieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestSetSafetyField> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestSetSafetyField>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestSetSafetyField> CreateRequestSetSafetyField(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    int32_t safety_field = 0) {
+  RequestSetSafetyFieldBuilder builder_(_fbb);
+  builder_.add_safety_field(safety_field);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestSetSafetyField> CreateRequestSetSafetyFieldDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    int32_t safety_field = 0) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequestSetSafetyField(
+      _fbb,
+      id__,
+      safety_field);
+}
+
+struct ResponseSetSafetyField FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSafetyFieldBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_SAFETY_FIELD = 6,
+    VT_RESULT = 8,
+    VT_MESSAGE = 10
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  int32_t safety_field() const {
+    return GetField<int32_t>(VT_SAFETY_FIELD, 0);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<int32_t>(verifier, VT_SAFETY_FIELD, 4) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResponseSetSafetyFieldBuilder {
+  typedef ResponseSetSafetyField Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseSetSafetyField::VT_ID, id);
+  }
+  void add_safety_field(int32_t safety_field) {
+    fbb_.AddElement<int32_t>(ResponseSetSafetyField::VT_SAFETY_FIELD, safety_field, 0);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseSetSafetyField::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseSetSafetyField::VT_MESSAGE, message);
+  }
+  explicit ResponseSetSafetyFieldBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ResponseSetSafetyField> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ResponseSetSafetyField>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ResponseSetSafetyField> CreateResponseSetSafetyField(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    int32_t safety_field = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
+  ResponseSetSafetyFieldBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_safety_field(safety_field);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseSetSafetyField> CreateResponseSetSafetyFieldDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    int32_t safety_field = 0,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseSetSafetyField(
+      _fbb,
+      id__,
+      safety_field,
+      result__,
+      message__);
+}
+
+struct RequestGetSafetyFlag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetSafetyFlagBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RequestGetSafetyFlagBuilder {
+  typedef RequestGetSafetyFlag Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestGetSafetyFlag::VT_ID, id);
+  }
+  explicit RequestGetSafetyFlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RequestGetSafetyFlag> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RequestGetSafetyFlag>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RequestGetSafetyFlag> CreateRequestGetSafetyFlag(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
+  RequestGetSafetyFlagBuilder builder_(_fbb);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestGetSafetyFlag> CreateRequestGetSafetyFlagDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequestGetSafetyFlag(
+      _fbb,
+      id__);
+}
+
+struct ResponseGetSafetyFlag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetSafetyFlagBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_SAFETY_FLAG = 6,
@@ -593,40 +593,40 @@ struct Response_Get_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Response_Get_Safety_FlagBuilder {
-  typedef Response_Get_Safety_Flag Table;
+struct ResponseGetSafetyFlagBuilder {
+  typedef ResponseGetSafetyFlag Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Safety_Flag::VT_ID, id);
+    fbb_.AddOffset(ResponseGetSafetyFlag::VT_ID, id);
   }
   void add_safety_flag(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> safety_flag) {
-    fbb_.AddOffset(Response_Get_Safety_Flag::VT_SAFETY_FLAG, safety_flag);
+    fbb_.AddOffset(ResponseGetSafetyFlag::VT_SAFETY_FLAG, safety_flag);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Safety_Flag::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetSafetyFlag::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Safety_Flag::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetSafetyFlag::VT_MESSAGE, message);
   }
-  explicit Response_Get_Safety_FlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetSafetyFlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Safety_Flag> Finish() {
+  ::flatbuffers::Offset<ResponseGetSafetyFlag> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Safety_Flag>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetSafetyFlag>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Safety_Flag> CreateResponse_Get_Safety_Flag(
+inline ::flatbuffers::Offset<ResponseGetSafetyFlag> CreateResponseGetSafetyFlag(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> safety_flag = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Safety_FlagBuilder builder_(_fbb);
+  ResponseGetSafetyFlagBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_safety_flag(safety_flag);
@@ -634,7 +634,7 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Flag> CreateResponse_Get_Safety
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Safety_Flag> CreateResponse_Get_Safety_FlagDirect(
+inline ::flatbuffers::Offset<ResponseGetSafetyFlag> CreateResponseGetSafetyFlagDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>> *safety_flag = nullptr,
@@ -644,7 +644,7 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Flag> CreateResponse_Get_Safety
   auto safety_flag__ = safety_flag ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>(*safety_flag) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Safety_Flag(
+  return SLAMNAV::CreateResponseGetSafetyFlag(
       _fbb,
       id__,
       safety_flag__,
@@ -652,8 +652,8 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Flag> CreateResponse_Get_Safety
       message__);
 }
 
-struct Request_Set_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Safety_FlagBuilder Builder;
+struct RequestSetSafetyFlag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSafetyFlagBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESET_FLAG = 6
@@ -675,51 +675,51 @@ struct Request_Set_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::
   }
 };
 
-struct Request_Set_Safety_FlagBuilder {
-  typedef Request_Set_Safety_Flag Table;
+struct RequestSetSafetyFlagBuilder {
+  typedef RequestSetSafetyFlag Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Safety_Flag::VT_ID, id);
+    fbb_.AddOffset(RequestSetSafetyFlag::VT_ID, id);
   }
   void add_reset_flag(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> reset_flag) {
-    fbb_.AddOffset(Request_Set_Safety_Flag::VT_RESET_FLAG, reset_flag);
+    fbb_.AddOffset(RequestSetSafetyFlag::VT_RESET_FLAG, reset_flag);
   }
-  explicit Request_Set_Safety_FlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetSafetyFlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Safety_Flag> Finish() {
+  ::flatbuffers::Offset<RequestSetSafetyFlag> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Safety_Flag>(end);
+    auto o = ::flatbuffers::Offset<RequestSetSafetyFlag>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Safety_Flag> CreateRequest_Set_Safety_Flag(
+inline ::flatbuffers::Offset<RequestSetSafetyFlag> CreateRequestSetSafetyFlag(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> reset_flag = 0) {
-  Request_Set_Safety_FlagBuilder builder_(_fbb);
+  RequestSetSafetyFlagBuilder builder_(_fbb);
   builder_.add_reset_flag(reset_flag);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Safety_Flag> CreateRequest_Set_Safety_FlagDirect(
+inline ::flatbuffers::Offset<RequestSetSafetyFlag> CreateRequestSetSafetyFlagDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>> *reset_flag = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto reset_flag__ = reset_flag ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>(*reset_flag) : 0;
-  return SLAMNAV::CreateRequest_Set_Safety_Flag(
+  return SLAMNAV::CreateRequestSetSafetyFlag(
       _fbb,
       id__,
       reset_flag__);
 }
 
-struct Response_Set_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Safety_FlagBuilder Builder;
+struct ResponseSetSafetyFlag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSafetyFlagBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_RESET_FLAG = 6,
@@ -753,40 +753,40 @@ struct Response_Set_Safety_Flag FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   }
 };
 
-struct Response_Set_Safety_FlagBuilder {
-  typedef Response_Set_Safety_Flag Table;
+struct ResponseSetSafetyFlagBuilder {
+  typedef ResponseSetSafetyFlag Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Safety_Flag::VT_ID, id);
+    fbb_.AddOffset(ResponseSetSafetyFlag::VT_ID, id);
   }
   void add_reset_flag(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> reset_flag) {
-    fbb_.AddOffset(Response_Set_Safety_Flag::VT_RESET_FLAG, reset_flag);
+    fbb_.AddOffset(ResponseSetSafetyFlag::VT_RESET_FLAG, reset_flag);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Safety_Flag::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetSafetyFlag::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Safety_Flag::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetSafetyFlag::VT_MESSAGE, message);
   }
-  explicit Response_Set_Safety_FlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetSafetyFlagBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Safety_Flag> Finish() {
+  ::flatbuffers::Offset<ResponseSetSafetyFlag> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Safety_Flag>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetSafetyFlag>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Safety_Flag> CreateResponse_Set_Safety_Flag(
+inline ::flatbuffers::Offset<ResponseSetSafetyFlag> CreateResponseSetSafetyFlag(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>> reset_flag = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Safety_FlagBuilder builder_(_fbb);
+  ResponseSetSafetyFlagBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_reset_flag(reset_flag);
@@ -794,7 +794,7 @@ inline ::flatbuffers::Offset<Response_Set_Safety_Flag> CreateResponse_Set_Safety
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Safety_Flag> CreateResponse_Set_Safety_FlagDirect(
+inline ::flatbuffers::Offset<ResponseSetSafetyFlag> CreateResponseSetSafetyFlagDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>> *reset_flag = nullptr,
@@ -804,7 +804,7 @@ inline ::flatbuffers::Offset<Response_Set_Safety_Flag> CreateResponse_Set_Safety
   auto reset_flag__ = reset_flag ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SafetyFlag>>(*reset_flag) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Safety_Flag(
+  return SLAMNAV::CreateResponseSetSafetyFlag(
       _fbb,
       id__,
       reset_flag__,
@@ -812,8 +812,8 @@ inline ::flatbuffers::Offset<Response_Set_Safety_Flag> CreateResponse_Set_Safety
       message__);
 }
 
-struct Request_Get_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Safety_IoBuilder Builder;
+struct RequestGetSafetyIo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetSafetyIoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4
   };
@@ -828,43 +828,43 @@ struct Request_Get_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Get_Safety_IoBuilder {
-  typedef Request_Get_Safety_Io Table;
+struct RequestGetSafetyIoBuilder {
+  typedef RequestGetSafetyIo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Safety_Io::VT_ID, id);
+    fbb_.AddOffset(RequestGetSafetyIo::VT_ID, id);
   }
-  explicit Request_Get_Safety_IoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetSafetyIoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Safety_Io> Finish() {
+  ::flatbuffers::Offset<RequestGetSafetyIo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Safety_Io>(end);
+    auto o = ::flatbuffers::Offset<RequestGetSafetyIo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Safety_Io> CreateRequest_Get_Safety_Io(
+inline ::flatbuffers::Offset<RequestGetSafetyIo> CreateRequestGetSafetyIo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
-  Request_Get_Safety_IoBuilder builder_(_fbb);
+  RequestGetSafetyIoBuilder builder_(_fbb);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Safety_Io> CreateRequest_Get_Safety_IoDirect(
+inline ::flatbuffers::Offset<RequestGetSafetyIo> CreateRequestGetSafetyIoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Get_Safety_Io(
+  return SLAMNAV::CreateRequestGetSafetyIo(
       _fbb,
       id__);
 }
 
-struct Response_Get_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Safety_IoBuilder Builder;
+struct ResponseGetSafetyIo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetSafetyIoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_MCU0_DIO = 6,
@@ -915,43 +915,43 @@ struct Response_Get_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Get_Safety_IoBuilder {
-  typedef Response_Get_Safety_Io Table;
+struct ResponseGetSafetyIoBuilder {
+  typedef ResponseGetSafetyIo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_ID, id);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_ID, id);
   }
   void add_mcu0_dio(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_dio) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_MCU0_DIO, mcu0_dio);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_MCU0_DIO, mcu0_dio);
   }
   void add_mcu1_dio(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_dio) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_MCU1_DIO, mcu1_dio);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_MCU1_DIO, mcu1_dio);
   }
   void add_mcu0_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_MCU0_DIN, mcu0_din);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_MCU0_DIN, mcu0_din);
   }
   void add_mcu1_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_MCU1_DIN, mcu1_din);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_MCU1_DIN, mcu1_din);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Safety_Io::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetSafetyIo::VT_MESSAGE, message);
   }
-  explicit Response_Get_Safety_IoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetSafetyIoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Safety_Io> Finish() {
+  ::flatbuffers::Offset<ResponseGetSafetyIo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Safety_Io>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetSafetyIo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_Io(
+inline ::flatbuffers::Offset<ResponseGetSafetyIo> CreateResponseGetSafetyIo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_dio = 0,
@@ -960,7 +960,7 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_I
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Safety_IoBuilder builder_(_fbb);
+  ResponseGetSafetyIoBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_mcu1_din(mcu1_din);
@@ -971,7 +971,7 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_I
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_IoDirect(
+inline ::flatbuffers::Offset<ResponseGetSafetyIo> CreateResponseGetSafetyIoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<uint8_t> *mcu0_dio = nullptr,
@@ -987,7 +987,7 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_I
   auto mcu1_din__ = mcu1_din ? _fbb.CreateVector<uint8_t>(*mcu1_din) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Safety_Io(
+  return SLAMNAV::CreateResponseGetSafetyIo(
       _fbb,
       id__,
       mcu0_dio__,
@@ -998,19 +998,15 @@ inline ::flatbuffers::Offset<Response_Get_Safety_Io> CreateResponse_Get_Safety_I
       message__);
 }
 
-struct Request_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Safety_IoBuilder Builder;
+struct RequestSetSafetyIo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSafetyIoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MCU0_DIN = 8,
-    VT_MCU1_DIN = 10
+    VT_MCU0_DIN = 6,
+    VT_MCU1_DIN = 8
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const ::flatbuffers::Vector<uint8_t> *mcu0_din() const {
     return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIN);
@@ -1022,8 +1018,6 @@ struct Request_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyOffset(verifier, VT_MCU0_DIN) &&
            verifier.VerifyVector(mcu0_din()) &&
            VerifyOffset(verifier, VT_MCU1_DIN) &&
@@ -1032,80 +1026,68 @@ struct Request_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Request_Set_Safety_IoBuilder {
-  typedef Request_Set_Safety_Io Table;
+struct RequestSetSafetyIoBuilder {
+  typedef RequestSetSafetyIo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Safety_Io::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Set_Safety_Io::VT_COMMAND, command);
+    fbb_.AddOffset(RequestSetSafetyIo::VT_ID, id);
   }
   void add_mcu0_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din) {
-    fbb_.AddOffset(Request_Set_Safety_Io::VT_MCU0_DIN, mcu0_din);
+    fbb_.AddOffset(RequestSetSafetyIo::VT_MCU0_DIN, mcu0_din);
   }
   void add_mcu1_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din) {
-    fbb_.AddOffset(Request_Set_Safety_Io::VT_MCU1_DIN, mcu1_din);
+    fbb_.AddOffset(RequestSetSafetyIo::VT_MCU1_DIN, mcu1_din);
   }
-  explicit Request_Set_Safety_IoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetSafetyIoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Safety_Io> Finish() {
+  ::flatbuffers::Offset<RequestSetSafetyIo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Safety_Io>(end);
+    auto o = ::flatbuffers::Offset<RequestSetSafetyIo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Safety_Io> CreateRequest_Set_Safety_Io(
+inline ::flatbuffers::Offset<RequestSetSafetyIo> CreateRequestSetSafetyIo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din = 0) {
-  Request_Set_Safety_IoBuilder builder_(_fbb);
+  RequestSetSafetyIoBuilder builder_(_fbb);
   builder_.add_mcu1_din(mcu1_din);
   builder_.add_mcu0_din(mcu0_din);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Safety_Io> CreateRequest_Set_Safety_IoDirect(
+inline ::flatbuffers::Offset<RequestSetSafetyIo> CreateRequestSetSafetyIoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const std::vector<uint8_t> *mcu0_din = nullptr,
     const std::vector<uint8_t> *mcu1_din = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
   auto mcu0_din__ = mcu0_din ? _fbb.CreateVector<uint8_t>(*mcu0_din) : 0;
   auto mcu1_din__ = mcu1_din ? _fbb.CreateVector<uint8_t>(*mcu1_din) : 0;
-  return SLAMNAV::CreateRequest_Set_Safety_Io(
+  return SLAMNAV::CreateRequestSetSafetyIo(
       _fbb,
       id__,
-      command__,
       mcu0_din__,
       mcu1_din__);
 }
 
-struct Response_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Safety_IoBuilder Builder;
+struct ResponseSetSafetyIo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSafetyIoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MCU0_DIN = 8,
-    VT_MCU1_DIN = 10,
-    VT_RESULT = 12,
-    VT_MESSAGE = 14
+    VT_MCU0_DIN = 6,
+    VT_MCU1_DIN = 8,
+    VT_RESULT = 10,
+    VT_MESSAGE = 12
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const ::flatbuffers::Vector<uint8_t> *mcu0_din() const {
     return GetPointer<const ::flatbuffers::Vector<uint8_t> *>(VT_MCU0_DIN);
@@ -1123,8 +1105,6 @@ struct Response_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyOffset(verifier, VT_MCU0_DIN) &&
            verifier.VerifyVector(mcu0_din()) &&
            VerifyOffset(verifier, VT_MCU1_DIN) &&
@@ -1137,83 +1117,75 @@ struct Response_Set_Safety_Io FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Set_Safety_IoBuilder {
-  typedef Response_Set_Safety_Io Table;
+struct ResponseSetSafetyIoBuilder {
+  typedef ResponseSetSafetyIo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_COMMAND, command);
+    fbb_.AddOffset(ResponseSetSafetyIo::VT_ID, id);
   }
   void add_mcu0_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_MCU0_DIN, mcu0_din);
+    fbb_.AddOffset(ResponseSetSafetyIo::VT_MCU0_DIN, mcu0_din);
   }
   void add_mcu1_din(::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_MCU1_DIN, mcu1_din);
+    fbb_.AddOffset(ResponseSetSafetyIo::VT_MCU1_DIN, mcu1_din);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetSafetyIo::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Safety_Io::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetSafetyIo::VT_MESSAGE, message);
   }
-  explicit Response_Set_Safety_IoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetSafetyIoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Safety_Io> Finish() {
+  ::flatbuffers::Offset<ResponseSetSafetyIo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Safety_Io>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetSafetyIo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Safety_Io> CreateResponse_Set_Safety_Io(
+inline ::flatbuffers::Offset<ResponseSetSafetyIo> CreateResponseSetSafetyIo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu0_din = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint8_t>> mcu1_din = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Safety_IoBuilder builder_(_fbb);
+  ResponseSetSafetyIoBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_mcu1_din(mcu1_din);
   builder_.add_mcu0_din(mcu0_din);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Safety_Io> CreateResponse_Set_Safety_IoDirect(
+inline ::flatbuffers::Offset<ResponseSetSafetyIo> CreateResponseSetSafetyIoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const std::vector<uint8_t> *mcu0_din = nullptr,
     const std::vector<uint8_t> *mcu1_din = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
   auto mcu0_din__ = mcu0_din ? _fbb.CreateVector<uint8_t>(*mcu0_din) : 0;
   auto mcu1_din__ = mcu1_din ? _fbb.CreateVector<uint8_t>(*mcu1_din) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Safety_Io(
+  return SLAMNAV::CreateResponseSetSafetyIo(
       _fbb,
       id__,
-      command__,
       mcu0_din__,
       mcu1_din__,
       result__,
       message__);
 }
 
-struct Request_Dock_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Dock_ControlBuilder Builder;
+struct RequestDockControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestDockControlBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_COMMAND = 6
@@ -1234,51 +1206,51 @@ struct Request_Dock_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Request_Dock_ControlBuilder {
-  typedef Request_Dock_Control Table;
+struct RequestDockControlBuilder {
+  typedef RequestDockControl Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Dock_Control::VT_ID, id);
+    fbb_.AddOffset(RequestDockControl::VT_ID, id);
   }
   void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Dock_Control::VT_COMMAND, command);
+    fbb_.AddOffset(RequestDockControl::VT_COMMAND, command);
   }
-  explicit Request_Dock_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestDockControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Dock_Control> Finish() {
+  ::flatbuffers::Offset<RequestDockControl> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Dock_Control>(end);
+    auto o = ::flatbuffers::Offset<RequestDockControl>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Dock_Control> CreateRequest_Dock_Control(
+inline ::flatbuffers::Offset<RequestDockControl> CreateRequestDockControl(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> command = 0) {
-  Request_Dock_ControlBuilder builder_(_fbb);
+  RequestDockControlBuilder builder_(_fbb);
   builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Dock_Control> CreateRequest_Dock_ControlDirect(
+inline ::flatbuffers::Offset<RequestDockControl> CreateRequestDockControlDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *command = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto command__ = command ? _fbb.CreateString(command) : 0;
-  return SLAMNAV::CreateRequest_Dock_Control(
+  return SLAMNAV::CreateRequestDockControl(
       _fbb,
       id__,
       command__);
 }
 
-struct Response_Dock_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Dock_ControlBuilder Builder;
+struct ResponseDockControl FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseDockControlBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_COMMAND = 6,
@@ -1311,40 +1283,40 @@ struct Response_Dock_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct Response_Dock_ControlBuilder {
-  typedef Response_Dock_Control Table;
+struct ResponseDockControlBuilder {
+  typedef ResponseDockControl Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Dock_Control::VT_ID, id);
+    fbb_.AddOffset(ResponseDockControl::VT_ID, id);
   }
   void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Dock_Control::VT_COMMAND, command);
+    fbb_.AddOffset(ResponseDockControl::VT_COMMAND, command);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Dock_Control::VT_RESULT, result);
+    fbb_.AddOffset(ResponseDockControl::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Dock_Control::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseDockControl::VT_MESSAGE, message);
   }
-  explicit Response_Dock_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseDockControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Dock_Control> Finish() {
+  ::flatbuffers::Offset<ResponseDockControl> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Dock_Control>(end);
+    auto o = ::flatbuffers::Offset<ResponseDockControl>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Dock_Control> CreateResponse_Dock_Control(
+inline ::flatbuffers::Offset<ResponseDockControl> CreateResponseDockControl(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Dock_ControlBuilder builder_(_fbb);
+  ResponseDockControlBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_command(command);
@@ -1352,7 +1324,7 @@ inline ::flatbuffers::Offset<Response_Dock_Control> CreateResponse_Dock_Control(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Dock_Control> CreateResponse_Dock_ControlDirect(
+inline ::flatbuffers::Offset<ResponseDockControl> CreateResponseDockControlDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *command = nullptr,
@@ -1362,7 +1334,7 @@ inline ::flatbuffers::Offset<Response_Dock_Control> CreateResponse_Dock_ControlD
   auto command__ = command ? _fbb.CreateString(command) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Dock_Control(
+  return SLAMNAV::CreateResponseDockControl(
       _fbb,
       id__,
       command__,
@@ -1370,82 +1342,82 @@ inline ::flatbuffers::Offset<Response_Dock_Control> CreateResponse_Dock_ControlD
       message__);
 }
 
-struct Request_Charge_Trigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Charge_TriggerBuilder Builder;
+struct RequestChargeTrigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestChargeTriggerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6
+    VT_CONTROL = 6
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Charge_TriggerBuilder {
-  typedef Request_Charge_Trigger Table;
+struct RequestChargeTriggerBuilder {
+  typedef RequestChargeTrigger Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Charge_Trigger::VT_ID, id);
+    fbb_.AddOffset(RequestChargeTrigger::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Charge_Trigger::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestChargeTrigger::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
-  explicit Request_Charge_TriggerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestChargeTriggerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Charge_Trigger> Finish() {
+  ::flatbuffers::Offset<RequestChargeTrigger> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Charge_Trigger>(end);
+    auto o = ::flatbuffers::Offset<RequestChargeTrigger>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Charge_Trigger> CreateRequest_Charge_Trigger(
+inline ::flatbuffers::Offset<RequestChargeTrigger> CreateRequestChargeTrigger(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false) {
-  Request_Charge_TriggerBuilder builder_(_fbb);
+    bool control = false) {
+  RequestChargeTriggerBuilder builder_(_fbb);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Charge_Trigger> CreateRequest_Charge_TriggerDirect(
+inline ::flatbuffers::Offset<RequestChargeTrigger> CreateRequestChargeTriggerDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false) {
+    bool control = false) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Charge_Trigger(
+  return SLAMNAV::CreateRequestChargeTrigger(
       _fbb,
       id__,
-      onoff);
+      control);
 }
 
-struct Response_Charge_Trigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Charge_TriggerBuilder Builder;
+struct ResponseChargeTrigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseChargeTriggerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -1457,7 +1429,7 @@ struct Response_Charge_Trigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -1466,78 +1438,74 @@ struct Response_Charge_Trigger FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::
   }
 };
 
-struct Response_Charge_TriggerBuilder {
-  typedef Response_Charge_Trigger Table;
+struct ResponseChargeTriggerBuilder {
+  typedef ResponseChargeTrigger Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Charge_Trigger::VT_ID, id);
+    fbb_.AddOffset(ResponseChargeTrigger::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Charge_Trigger::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseChargeTrigger::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Charge_Trigger::VT_RESULT, result);
+    fbb_.AddOffset(ResponseChargeTrigger::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Charge_Trigger::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseChargeTrigger::VT_MESSAGE, message);
   }
-  explicit Response_Charge_TriggerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseChargeTriggerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Charge_Trigger> Finish() {
+  ::flatbuffers::Offset<ResponseChargeTrigger> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Charge_Trigger>(end);
+    auto o = ::flatbuffers::Offset<ResponseChargeTrigger>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Charge_Trigger> CreateResponse_Charge_Trigger(
+inline ::flatbuffers::Offset<ResponseChargeTrigger> CreateResponseChargeTrigger(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Charge_TriggerBuilder builder_(_fbb);
+  ResponseChargeTriggerBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Charge_Trigger> CreateResponse_Charge_TriggerDirect(
+inline ::flatbuffers::Offset<ResponseChargeTrigger> CreateResponseChargeTriggerDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Charge_Trigger(
+  return SLAMNAV::CreateResponseChargeTrigger(
       _fbb,
       id__,
-      onoff,
+      control,
       result__,
       message__);
 }
 
-struct Request_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Get_Obs_BoxBuilder Builder;
+struct RequestGetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestGetObsBoxBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MIN = 8,
-    VT_MAX = 10,
-    VT_RANGE = 12
+    VT_MIN = 6,
+    VT_MAX = 8,
+    VT_RANGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const SLAMNAV::ObsBox *min() const {
     return GetStruct<const SLAMNAV::ObsBox *>(VT_MIN);
@@ -1552,8 +1520,6 @@ struct Request_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MIN, 4) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MAX, 4) &&
            VerifyField<float>(verifier, VT_RANGE, 4) &&
@@ -1561,86 +1527,74 @@ struct Request_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Get_Obs_BoxBuilder {
-  typedef Request_Get_Obs_Box Table;
+struct RequestGetObsBoxBuilder {
+  typedef RequestGetObsBox Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Get_Obs_Box::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Get_Obs_Box::VT_COMMAND, command);
+    fbb_.AddOffset(RequestGetObsBox::VT_ID, id);
   }
   void add_min(const SLAMNAV::ObsBox *min) {
-    fbb_.AddStruct(Request_Get_Obs_Box::VT_MIN, min);
+    fbb_.AddStruct(RequestGetObsBox::VT_MIN, min);
   }
   void add_max(const SLAMNAV::ObsBox *max) {
-    fbb_.AddStruct(Request_Get_Obs_Box::VT_MAX, max);
+    fbb_.AddStruct(RequestGetObsBox::VT_MAX, max);
   }
   void add_range(float range) {
-    fbb_.AddElement<float>(Request_Get_Obs_Box::VT_RANGE, range, 0.0f);
+    fbb_.AddElement<float>(RequestGetObsBox::VT_RANGE, range, 0.0f);
   }
-  explicit Request_Get_Obs_BoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestGetObsBoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Get_Obs_Box> Finish() {
+  ::flatbuffers::Offset<RequestGetObsBox> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Get_Obs_Box>(end);
+    auto o = ::flatbuffers::Offset<RequestGetObsBox>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Get_Obs_Box> CreateRequest_Get_Obs_Box(
+inline ::flatbuffers::Offset<RequestGetObsBox> CreateRequestGetObsBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f) {
-  Request_Get_Obs_BoxBuilder builder_(_fbb);
+  RequestGetObsBoxBuilder builder_(_fbb);
   builder_.add_range(range);
   builder_.add_max(max);
   builder_.add_min(min);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Get_Obs_Box> CreateRequest_Get_Obs_BoxDirect(
+inline ::flatbuffers::Offset<RequestGetObsBox> CreateRequestGetObsBoxDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
-  return SLAMNAV::CreateRequest_Get_Obs_Box(
+  return SLAMNAV::CreateRequestGetObsBox(
       _fbb,
       id__,
-      command__,
       min,
       max,
       range);
 }
 
-struct Response_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Get_Obs_BoxBuilder Builder;
+struct ResponseGetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseGetObsBoxBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MIN = 8,
-    VT_MAX = 10,
-    VT_RANGE = 12,
-    VT_RESULT = 14,
-    VT_MESSAGE = 16
+    VT_MIN = 6,
+    VT_MAX = 8,
+    VT_RANGE = 10,
+    VT_RESULT = 12,
+    VT_MESSAGE = 14
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const SLAMNAV::ObsBox *min() const {
     return GetStruct<const SLAMNAV::ObsBox *>(VT_MIN);
@@ -1661,8 +1615,6 @@ struct Response_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MIN, 4) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MAX, 4) &&
            VerifyField<float>(verifier, VT_RANGE, 4) &&
@@ -1674,79 +1626,71 @@ struct Response_Get_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Get_Obs_BoxBuilder {
-  typedef Response_Get_Obs_Box Table;
+struct ResponseGetObsBoxBuilder {
+  typedef ResponseGetObsBox Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Get_Obs_Box::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Get_Obs_Box::VT_COMMAND, command);
+    fbb_.AddOffset(ResponseGetObsBox::VT_ID, id);
   }
   void add_min(const SLAMNAV::ObsBox *min) {
-    fbb_.AddStruct(Response_Get_Obs_Box::VT_MIN, min);
+    fbb_.AddStruct(ResponseGetObsBox::VT_MIN, min);
   }
   void add_max(const SLAMNAV::ObsBox *max) {
-    fbb_.AddStruct(Response_Get_Obs_Box::VT_MAX, max);
+    fbb_.AddStruct(ResponseGetObsBox::VT_MAX, max);
   }
   void add_range(float range) {
-    fbb_.AddElement<float>(Response_Get_Obs_Box::VT_RANGE, range, 0.0f);
+    fbb_.AddElement<float>(ResponseGetObsBox::VT_RANGE, range, 0.0f);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Get_Obs_Box::VT_RESULT, result);
+    fbb_.AddOffset(ResponseGetObsBox::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Get_Obs_Box::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseGetObsBox::VT_MESSAGE, message);
   }
-  explicit Response_Get_Obs_BoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseGetObsBoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Get_Obs_Box> Finish() {
+  ::flatbuffers::Offset<ResponseGetObsBox> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Get_Obs_Box>(end);
+    auto o = ::flatbuffers::Offset<ResponseGetObsBox>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Get_Obs_Box> CreateResponse_Get_Obs_Box(
+inline ::flatbuffers::Offset<ResponseGetObsBox> CreateResponseGetObsBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Get_Obs_BoxBuilder builder_(_fbb);
+  ResponseGetObsBoxBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_range(range);
   builder_.add_max(max);
   builder_.add_min(min);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Get_Obs_Box> CreateResponse_Get_Obs_BoxDirect(
+inline ::flatbuffers::Offset<ResponseGetObsBox> CreateResponseGetObsBoxDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Get_Obs_Box(
+  return SLAMNAV::CreateResponseGetObsBox(
       _fbb,
       id__,
-      command__,
       min,
       max,
       range,
@@ -1754,20 +1698,16 @@ inline ::flatbuffers::Offset<Response_Get_Obs_Box> CreateResponse_Get_Obs_BoxDir
       message__);
 }
 
-struct Request_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Set_Obs_BoxBuilder Builder;
+struct RequestSetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetObsBoxBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MIN = 8,
-    VT_MAX = 10,
-    VT_RANGE = 12
+    VT_MIN = 6,
+    VT_MAX = 8,
+    VT_RANGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const SLAMNAV::ObsBox *min() const {
     return GetStruct<const SLAMNAV::ObsBox *>(VT_MIN);
@@ -1782,8 +1722,6 @@ struct Request_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MIN, 4) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MAX, 4) &&
            VerifyField<float>(verifier, VT_RANGE, 4) &&
@@ -1791,86 +1729,74 @@ struct Request_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Request_Set_Obs_BoxBuilder {
-  typedef Request_Set_Obs_Box Table;
+struct RequestSetObsBoxBuilder {
+  typedef RequestSetObsBox Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Set_Obs_Box::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Set_Obs_Box::VT_COMMAND, command);
+    fbb_.AddOffset(RequestSetObsBox::VT_ID, id);
   }
   void add_min(const SLAMNAV::ObsBox *min) {
-    fbb_.AddStruct(Request_Set_Obs_Box::VT_MIN, min);
+    fbb_.AddStruct(RequestSetObsBox::VT_MIN, min);
   }
   void add_max(const SLAMNAV::ObsBox *max) {
-    fbb_.AddStruct(Request_Set_Obs_Box::VT_MAX, max);
+    fbb_.AddStruct(RequestSetObsBox::VT_MAX, max);
   }
   void add_range(float range) {
-    fbb_.AddElement<float>(Request_Set_Obs_Box::VT_RANGE, range, 0.0f);
+    fbb_.AddElement<float>(RequestSetObsBox::VT_RANGE, range, 0.0f);
   }
-  explicit Request_Set_Obs_BoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetObsBoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Set_Obs_Box> Finish() {
+  ::flatbuffers::Offset<RequestSetObsBox> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Set_Obs_Box>(end);
+    auto o = ::flatbuffers::Offset<RequestSetObsBox>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Set_Obs_Box> CreateRequest_Set_Obs_Box(
+inline ::flatbuffers::Offset<RequestSetObsBox> CreateRequestSetObsBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f) {
-  Request_Set_Obs_BoxBuilder builder_(_fbb);
+  RequestSetObsBoxBuilder builder_(_fbb);
   builder_.add_range(range);
   builder_.add_max(max);
   builder_.add_min(min);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Set_Obs_Box> CreateRequest_Set_Obs_BoxDirect(
+inline ::flatbuffers::Offset<RequestSetObsBox> CreateRequestSetObsBoxDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
-  return SLAMNAV::CreateRequest_Set_Obs_Box(
+  return SLAMNAV::CreateRequestSetObsBox(
       _fbb,
       id__,
-      command__,
       min,
       max,
       range);
 }
 
-struct Response_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Set_Obs_BoxBuilder Builder;
+struct ResponseSetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetObsBoxBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_MIN = 8,
-    VT_MAX = 10,
-    VT_RANGE = 12,
-    VT_RESULT = 14,
-    VT_MESSAGE = 16
+    VT_MIN = 6,
+    VT_MAX = 8,
+    VT_RANGE = 10,
+    VT_RESULT = 12,
+    VT_MESSAGE = 14
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
   const SLAMNAV::ObsBox *min() const {
     return GetStruct<const SLAMNAV::ObsBox *>(VT_MIN);
@@ -1891,8 +1817,6 @@ struct Response_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MIN, 4) &&
            VerifyField<SLAMNAV::ObsBox>(verifier, VT_MAX, 4) &&
            VerifyField<float>(verifier, VT_RANGE, 4) &&
@@ -1904,79 +1828,71 @@ struct Response_Set_Obs_Box FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Set_Obs_BoxBuilder {
-  typedef Response_Set_Obs_Box Table;
+struct ResponseSetObsBoxBuilder {
+  typedef ResponseSetObsBox Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Set_Obs_Box::VT_ID, id);
-  }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Set_Obs_Box::VT_COMMAND, command);
+    fbb_.AddOffset(ResponseSetObsBox::VT_ID, id);
   }
   void add_min(const SLAMNAV::ObsBox *min) {
-    fbb_.AddStruct(Response_Set_Obs_Box::VT_MIN, min);
+    fbb_.AddStruct(ResponseSetObsBox::VT_MIN, min);
   }
   void add_max(const SLAMNAV::ObsBox *max) {
-    fbb_.AddStruct(Response_Set_Obs_Box::VT_MAX, max);
+    fbb_.AddStruct(ResponseSetObsBox::VT_MAX, max);
   }
   void add_range(float range) {
-    fbb_.AddElement<float>(Response_Set_Obs_Box::VT_RANGE, range, 0.0f);
+    fbb_.AddElement<float>(ResponseSetObsBox::VT_RANGE, range, 0.0f);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Set_Obs_Box::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetObsBox::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Set_Obs_Box::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetObsBox::VT_MESSAGE, message);
   }
-  explicit Response_Set_Obs_BoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetObsBoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Set_Obs_Box> Finish() {
+  ::flatbuffers::Offset<ResponseSetObsBox> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Set_Obs_Box>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetObsBox>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Set_Obs_Box> CreateResponse_Set_Obs_Box(
+inline ::flatbuffers::Offset<ResponseSetObsBox> CreateResponseSetObsBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Set_Obs_BoxBuilder builder_(_fbb);
+  ResponseSetObsBoxBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_range(range);
   builder_.add_max(max);
   builder_.add_min(min);
-  builder_.add_command(command);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Set_Obs_Box> CreateResponse_Set_Obs_BoxDirect(
+inline ::flatbuffers::Offset<ResponseSetObsBox> CreateResponseSetObsBoxDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
     const SLAMNAV::ObsBox *min = nullptr,
     const SLAMNAV::ObsBox *max = nullptr,
     float range = 0.0f,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Set_Obs_Box(
+  return SLAMNAV::CreateResponseSetObsBox(
       _fbb,
       id__,
-      command__,
       min,
       max,
       range,
@@ -1984,18 +1900,18 @@ inline ::flatbuffers::Offset<Response_Set_Obs_Box> CreateResponse_Set_Obs_BoxDir
       message__);
 }
 
-struct Request_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Led_ControlBuilder Builder;
+struct RequestLedMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestLedModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_COLOR = 8
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   const ::flatbuffers::String *color() const {
     return GetPointer<const ::flatbuffers::String *>(VT_COLOR);
@@ -2004,68 +1920,68 @@ struct Request_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyOffset(verifier, VT_COLOR) &&
            verifier.VerifyString(color()) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Led_ControlBuilder {
-  typedef Request_Led_Control Table;
+struct RequestLedModeBuilder {
+  typedef RequestLedMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Led_Control::VT_ID, id);
+    fbb_.AddOffset(RequestLedMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Led_Control::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestLedMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_color(::flatbuffers::Offset<::flatbuffers::String> color) {
-    fbb_.AddOffset(Request_Led_Control::VT_COLOR, color);
+    fbb_.AddOffset(RequestLedMode::VT_COLOR, color);
   }
-  explicit Request_Led_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestLedModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Led_Control> Finish() {
+  ::flatbuffers::Offset<RequestLedMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Led_Control>(end);
+    auto o = ::flatbuffers::Offset<RequestLedMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Led_Control> CreateRequest_Led_Control(
+inline ::flatbuffers::Offset<RequestLedMode> CreateRequestLedMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     ::flatbuffers::Offset<::flatbuffers::String> color = 0) {
-  Request_Led_ControlBuilder builder_(_fbb);
+  RequestLedModeBuilder builder_(_fbb);
   builder_.add_color(color);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Led_Control> CreateRequest_Led_ControlDirect(
+inline ::flatbuffers::Offset<RequestLedMode> CreateRequestLedModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     const char *color = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto color__ = color ? _fbb.CreateString(color) : 0;
-  return SLAMNAV::CreateRequest_Led_Control(
+  return SLAMNAV::CreateRequestLedMode(
       _fbb,
       id__,
-      onoff,
+      control,
       color__);
 }
 
-struct Response_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Led_ControlBuilder Builder;
+struct ResponseLedMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseLedModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_COLOR = 8,
     VT_RESULT = 10,
     VT_MESSAGE = 12
@@ -2073,8 +1989,8 @@ struct Response_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   const ::flatbuffers::String *color() const {
     return GetPointer<const ::flatbuffers::String *>(VT_COLOR);
@@ -2089,7 +2005,7 @@ struct Response_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyOffset(verifier, VT_COLOR) &&
            verifier.VerifyString(color()) &&
            VerifyOffset(verifier, VT_RESULT) &&
@@ -2100,56 +2016,56 @@ struct Response_Led_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Led_ControlBuilder {
-  typedef Response_Led_Control Table;
+struct ResponseLedModeBuilder {
+  typedef ResponseLedMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Led_Control::VT_ID, id);
+    fbb_.AddOffset(ResponseLedMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Led_Control::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseLedMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_color(::flatbuffers::Offset<::flatbuffers::String> color) {
-    fbb_.AddOffset(Response_Led_Control::VT_COLOR, color);
+    fbb_.AddOffset(ResponseLedMode::VT_COLOR, color);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Led_Control::VT_RESULT, result);
+    fbb_.AddOffset(ResponseLedMode::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Led_Control::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseLedMode::VT_MESSAGE, message);
   }
-  explicit Response_Led_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseLedModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Led_Control> Finish() {
+  ::flatbuffers::Offset<ResponseLedMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Led_Control>(end);
+    auto o = ::flatbuffers::Offset<ResponseLedMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Led_Control> CreateResponse_Led_Control(
+inline ::flatbuffers::Offset<ResponseLedMode> CreateResponseLedMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     ::flatbuffers::Offset<::flatbuffers::String> color = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Led_ControlBuilder builder_(_fbb);
+  ResponseLedModeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_color(color);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Led_Control> CreateResponse_Led_ControlDirect(
+inline ::flatbuffers::Offset<ResponseLedMode> CreateResponseLedModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     const char *color = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -2157,91 +2073,91 @@ inline ::flatbuffers::Offset<Response_Led_Control> CreateResponse_Led_ControlDir
   auto color__ = color ? _fbb.CreateString(color) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Led_Control(
+  return SLAMNAV::CreateResponseLedMode(
       _fbb,
       id__,
-      onoff,
+      control,
       color__,
       result__,
       message__);
 }
 
-struct Request_Motor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Motor_ControlBuilder Builder;
+struct RequestMotorMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestMotorModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6
+    VT_CONTROL = 6
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Motor_ControlBuilder {
-  typedef Request_Motor_Control Table;
+struct RequestMotorModeBuilder {
+  typedef RequestMotorMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Motor_Control::VT_ID, id);
+    fbb_.AddOffset(RequestMotorMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Motor_Control::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestMotorMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
-  explicit Request_Motor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestMotorModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Motor_Control> Finish() {
+  ::flatbuffers::Offset<RequestMotorMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Motor_Control>(end);
+    auto o = ::flatbuffers::Offset<RequestMotorMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Motor_Control> CreateRequest_Motor_Control(
+inline ::flatbuffers::Offset<RequestMotorMode> CreateRequestMotorMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false) {
-  Request_Motor_ControlBuilder builder_(_fbb);
+    bool control = false) {
+  RequestMotorModeBuilder builder_(_fbb);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Motor_Control> CreateRequest_Motor_ControlDirect(
+inline ::flatbuffers::Offset<RequestMotorMode> CreateRequestMotorModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false) {
+    bool control = false) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Motor_Control(
+  return SLAMNAV::CreateRequestMotorMode(
       _fbb,
       id__,
-      onoff);
+      control);
 }
 
-struct Response_Motor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Motor_ControlBuilder Builder;
+struct ResponseMotorMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseMotorModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -2253,7 +2169,7 @@ struct Response_Motor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -2262,140 +2178,140 @@ struct Response_Motor_Control FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Motor_ControlBuilder {
-  typedef Response_Motor_Control Table;
+struct ResponseMotorModeBuilder {
+  typedef ResponseMotorMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Motor_Control::VT_ID, id);
+    fbb_.AddOffset(ResponseMotorMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Motor_Control::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseMotorMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Motor_Control::VT_RESULT, result);
+    fbb_.AddOffset(ResponseMotorMode::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Motor_Control::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseMotorMode::VT_MESSAGE, message);
   }
-  explicit Response_Motor_ControlBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseMotorModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Motor_Control> Finish() {
+  ::flatbuffers::Offset<ResponseMotorMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Motor_Control>(end);
+    auto o = ::flatbuffers::Offset<ResponseMotorMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Motor_Control> CreateResponse_Motor_Control(
+inline ::flatbuffers::Offset<ResponseMotorMode> CreateResponseMotorMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Motor_ControlBuilder builder_(_fbb);
+  ResponseMotorModeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Motor_Control> CreateResponse_Motor_ControlDirect(
+inline ::flatbuffers::Offset<ResponseMotorMode> CreateResponseMotorModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Motor_Control(
+  return SLAMNAV::CreateResponseMotorMode(
       _fbb,
       id__,
-      onoff,
+      control,
       result__,
       message__);
 }
 
-struct Request_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_JogBuilder Builder;
+struct RequestJog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestJogBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6
+    VT_CONTROL = 6
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            verifier.EndTable();
   }
 };
 
-struct Request_JogBuilder {
-  typedef Request_Jog Table;
+struct RequestJogBuilder {
+  typedef RequestJog Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Jog::VT_ID, id);
+    fbb_.AddOffset(RequestJog::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Jog::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestJog::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
-  explicit Request_JogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestJogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Jog> Finish() {
+  ::flatbuffers::Offset<RequestJog> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Jog>(end);
+    auto o = ::flatbuffers::Offset<RequestJog>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Jog> CreateRequest_Jog(
+inline ::flatbuffers::Offset<RequestJog> CreateRequestJog(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false) {
-  Request_JogBuilder builder_(_fbb);
+    bool control = false) {
+  RequestJogBuilder builder_(_fbb);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Jog> CreateRequest_JogDirect(
+inline ::flatbuffers::Offset<RequestJog> CreateRequestJogDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false) {
+    bool control = false) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Jog(
+  return SLAMNAV::CreateRequestJog(
       _fbb,
       id__,
-      onoff);
+      control);
 }
 
-struct Response_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_JogBuilder Builder;
+struct ResponseJog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseJogBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_RESULT = 8,
     VT_MESSAGE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   const ::flatbuffers::String *result() const {
     return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
@@ -2407,7 +2323,7 @@ struct Response_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
@@ -2416,70 +2332,70 @@ struct Response_Jog FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
 };
 
-struct Response_JogBuilder {
-  typedef Response_Jog Table;
+struct ResponseJogBuilder {
+  typedef ResponseJog Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Jog::VT_ID, id);
+    fbb_.AddOffset(ResponseJog::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Jog::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseJog::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Jog::VT_RESULT, result);
+    fbb_.AddOffset(ResponseJog::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Jog::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseJog::VT_MESSAGE, message);
   }
-  explicit Response_JogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseJogBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Jog> Finish() {
+  ::flatbuffers::Offset<ResponseJog> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Jog>(end);
+    auto o = ::flatbuffers::Offset<ResponseJog>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Jog> CreateResponse_Jog(
+inline ::flatbuffers::Offset<ResponseJog> CreateResponseJog(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_JogBuilder builder_(_fbb);
+  ResponseJogBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Jog> CreateResponse_JogDirect(
+inline ::flatbuffers::Offset<ResponseJog> CreateResponseJogDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Jog(
+  return SLAMNAV::CreateResponseJog(
       _fbb,
       id__,
-      onoff,
+      control,
       result__,
       message__);
 }
 
-struct Request_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Sensor_SocketBuilder Builder;
+struct RequestSensorMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSensorModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_COMMAND = 6,
-    VT_ONOFF = 8,
+    VT_CONTROL = 8,
     VT_FREQUENCY = 10
   };
   const ::flatbuffers::String *id() const {
@@ -2488,8 +2404,8 @@ struct Request_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   const ::flatbuffers::String *command() const {
     return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   int32_t frequency() const {
     return GetField<int32_t>(VT_FREQUENCY, 0);
@@ -2500,75 +2416,75 @@ struct Request_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
            verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_COMMAND) &&
            verifier.VerifyString(command()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyField<int32_t>(verifier, VT_FREQUENCY, 4) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Sensor_SocketBuilder {
-  typedef Request_Sensor_Socket Table;
+struct RequestSensorModeBuilder {
+  typedef RequestSensorMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Sensor_Socket::VT_ID, id);
+    fbb_.AddOffset(RequestSensorMode::VT_ID, id);
   }
   void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Sensor_Socket::VT_COMMAND, command);
+    fbb_.AddOffset(RequestSensorMode::VT_COMMAND, command);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Sensor_Socket::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestSensorMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_frequency(int32_t frequency) {
-    fbb_.AddElement<int32_t>(Request_Sensor_Socket::VT_FREQUENCY, frequency, 0);
+    fbb_.AddElement<int32_t>(RequestSensorMode::VT_FREQUENCY, frequency, 0);
   }
-  explicit Request_Sensor_SocketBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSensorModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Sensor_Socket> Finish() {
+  ::flatbuffers::Offset<RequestSensorMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Sensor_Socket>(end);
+    auto o = ::flatbuffers::Offset<RequestSensorMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Sensor_Socket> CreateRequest_Sensor_Socket(
+inline ::flatbuffers::Offset<RequestSensorMode> CreateRequestSensorMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> command = 0,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0) {
-  Request_Sensor_SocketBuilder builder_(_fbb);
+  RequestSensorModeBuilder builder_(_fbb);
   builder_.add_frequency(frequency);
   builder_.add_command(command);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Sensor_Socket> CreateRequest_Sensor_SocketDirect(
+inline ::flatbuffers::Offset<RequestSensorMode> CreateRequestSensorModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *command = nullptr,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto command__ = command ? _fbb.CreateString(command) : 0;
-  return SLAMNAV::CreateRequest_Sensor_Socket(
+  return SLAMNAV::CreateRequestSensorMode(
       _fbb,
       id__,
       command__,
-      onoff,
+      control,
       frequency);
 }
 
-struct Response_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Sensor_SocketBuilder Builder;
+struct ResponseSensorMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSensorModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_COMMAND = 6,
-    VT_ONOFF = 8,
+    VT_CONTROL = 8,
     VT_FREQUENCY = 10,
     VT_RESULT = 12,
     VT_MESSAGE = 14
@@ -2579,8 +2495,8 @@ struct Response_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   const ::flatbuffers::String *command() const {
     return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   int32_t frequency() const {
     return GetField<int32_t>(VT_FREQUENCY, 0);
@@ -2597,7 +2513,7 @@ struct Response_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
            verifier.VerifyString(id()) &&
            VerifyOffset(verifier, VT_COMMAND) &&
            verifier.VerifyString(command()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyField<int32_t>(verifier, VT_FREQUENCY, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
@@ -2607,62 +2523,62 @@ struct Response_Sensor_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Sensor_SocketBuilder {
-  typedef Response_Sensor_Socket Table;
+struct ResponseSensorModeBuilder {
+  typedef ResponseSensorMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Sensor_Socket::VT_ID, id);
+    fbb_.AddOffset(ResponseSensorMode::VT_ID, id);
   }
   void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Sensor_Socket::VT_COMMAND, command);
+    fbb_.AddOffset(ResponseSensorMode::VT_COMMAND, command);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Sensor_Socket::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponseSensorMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_frequency(int32_t frequency) {
-    fbb_.AddElement<int32_t>(Response_Sensor_Socket::VT_FREQUENCY, frequency, 0);
+    fbb_.AddElement<int32_t>(ResponseSensorMode::VT_FREQUENCY, frequency, 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Sensor_Socket::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSensorMode::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Sensor_Socket::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSensorMode::VT_MESSAGE, message);
   }
-  explicit Response_Sensor_SocketBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSensorModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Sensor_Socket> Finish() {
+  ::flatbuffers::Offset<ResponseSensorMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Sensor_Socket>(end);
+    auto o = ::flatbuffers::Offset<ResponseSensorMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Sensor_Socket> CreateResponse_Sensor_Socket(
+inline ::flatbuffers::Offset<ResponseSensorMode> CreateResponseSensorMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> command = 0,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Sensor_SocketBuilder builder_(_fbb);
+  ResponseSensorModeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_frequency(frequency);
   builder_.add_command(command);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Sensor_Socket> CreateResponse_Sensor_SocketDirect(
+inline ::flatbuffers::Offset<ResponseSensorMode> CreateResponseSensorModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *command = nullptr,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0,
     const char *result = nullptr,
     const char *message = nullptr) {
@@ -2670,28 +2586,28 @@ inline ::flatbuffers::Offset<Response_Sensor_Socket> CreateResponse_Sensor_Socke
   auto command__ = command ? _fbb.CreateString(command) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Sensor_Socket(
+  return SLAMNAV::CreateResponseSensorMode(
       _fbb,
       id__,
       command__,
-      onoff,
+      control,
       frequency,
       result__,
       message__);
 }
 
-struct Request_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Path_SocketBuilder Builder;
+struct RequestPathMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestPathModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_FREQUENCY = 8
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   int32_t frequency() const {
     return GetField<int32_t>(VT_FREQUENCY, 0);
@@ -2700,66 +2616,66 @@ struct Request_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyField<int32_t>(verifier, VT_FREQUENCY, 4) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Path_SocketBuilder {
-  typedef Request_Path_Socket Table;
+struct RequestPathModeBuilder {
+  typedef RequestPathMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Path_Socket::VT_ID, id);
+    fbb_.AddOffset(RequestPathMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Request_Path_Socket::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(RequestPathMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_frequency(int32_t frequency) {
-    fbb_.AddElement<int32_t>(Request_Path_Socket::VT_FREQUENCY, frequency, 0);
+    fbb_.AddElement<int32_t>(RequestPathMode::VT_FREQUENCY, frequency, 0);
   }
-  explicit Request_Path_SocketBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestPathModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Path_Socket> Finish() {
+  ::flatbuffers::Offset<RequestPathMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Path_Socket>(end);
+    auto o = ::flatbuffers::Offset<RequestPathMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Path_Socket> CreateRequest_Path_Socket(
+inline ::flatbuffers::Offset<RequestPathMode> CreateRequestPathMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0) {
-  Request_Path_SocketBuilder builder_(_fbb);
+  RequestPathModeBuilder builder_(_fbb);
   builder_.add_frequency(frequency);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Path_Socket> CreateRequest_Path_SocketDirect(
+inline ::flatbuffers::Offset<RequestPathMode> CreateRequestPathModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  return SLAMNAV::CreateRequest_Path_Socket(
+  return SLAMNAV::CreateRequestPathMode(
       _fbb,
       id__,
-      onoff,
+      control,
       frequency);
 }
 
-struct Response_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Path_SocketBuilder Builder;
+struct ResponsePathMode FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponsePathModeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_ONOFF = 6,
+    VT_CONTROL = 6,
     VT_FREQUENCY = 8,
     VT_RESULT = 10,
     VT_MESSAGE = 12
@@ -2767,8 +2683,8 @@ struct Response_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  bool onoff() const {
-    return GetField<uint8_t>(VT_ONOFF, 0) != 0;
+  bool control() const {
+    return GetField<uint8_t>(VT_CONTROL, 0) != 0;
   }
   int32_t frequency() const {
     return GetField<int32_t>(VT_FREQUENCY, 0);
@@ -2783,7 +2699,7 @@ struct Response_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<uint8_t>(verifier, VT_ONOFF, 1) &&
+           VerifyField<uint8_t>(verifier, VT_CONTROL, 1) &&
            VerifyField<int32_t>(verifier, VT_FREQUENCY, 4) &&
            VerifyOffset(verifier, VT_RESULT) &&
            verifier.VerifyString(result()) &&
@@ -2793,200 +2709,182 @@ struct Response_Path_Socket FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tab
   }
 };
 
-struct Response_Path_SocketBuilder {
-  typedef Response_Path_Socket Table;
+struct ResponsePathModeBuilder {
+  typedef ResponsePathMode Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Path_Socket::VT_ID, id);
+    fbb_.AddOffset(ResponsePathMode::VT_ID, id);
   }
-  void add_onoff(bool onoff) {
-    fbb_.AddElement<uint8_t>(Response_Path_Socket::VT_ONOFF, static_cast<uint8_t>(onoff), 0);
+  void add_control(bool control) {
+    fbb_.AddElement<uint8_t>(ResponsePathMode::VT_CONTROL, static_cast<uint8_t>(control), 0);
   }
   void add_frequency(int32_t frequency) {
-    fbb_.AddElement<int32_t>(Response_Path_Socket::VT_FREQUENCY, frequency, 0);
+    fbb_.AddElement<int32_t>(ResponsePathMode::VT_FREQUENCY, frequency, 0);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Path_Socket::VT_RESULT, result);
+    fbb_.AddOffset(ResponsePathMode::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Path_Socket::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponsePathMode::VT_MESSAGE, message);
   }
-  explicit Response_Path_SocketBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponsePathModeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Path_Socket> Finish() {
+  ::flatbuffers::Offset<ResponsePathMode> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Path_Socket>(end);
+    auto o = ::flatbuffers::Offset<ResponsePathMode>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Path_Socket> CreateResponse_Path_Socket(
+inline ::flatbuffers::Offset<ResponsePathMode> CreateResponsePathMode(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Path_SocketBuilder builder_(_fbb);
+  ResponsePathModeBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_frequency(frequency);
   builder_.add_id(id);
-  builder_.add_onoff(onoff);
+  builder_.add_control(control);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Path_Socket> CreateResponse_Path_SocketDirect(
+inline ::flatbuffers::Offset<ResponsePathMode> CreateResponsePathModeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    bool onoff = false,
+    bool control = false,
     int32_t frequency = 0,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Path_Socket(
+  return SLAMNAV::CreateResponsePathMode(
       _fbb,
       id__,
-      onoff,
+      control,
       frequency,
       result__,
       message__);
 }
 
-struct Request_Detect_Marker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Request_Detect_MarkerBuilder Builder;
+struct RequestDetectMarker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestDetectMarkerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_CAMERA_NUMBER = 8,
-    VT_CAMERA_SERIAL = 10,
-    VT_MARKER_SIZE = 12
+    VT_NUMBER = 6,
+    VT_SERIAL = 8,
+    VT_M_SIZE = 10
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
+  int32_t number() const {
+    return GetField<int32_t>(VT_NUMBER, 0);
   }
-  int32_t camera_number() const {
-    return GetField<int32_t>(VT_CAMERA_NUMBER, 0);
+  const ::flatbuffers::String *serial() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_SERIAL);
   }
-  const ::flatbuffers::String *camera_serial() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_CAMERA_SERIAL);
-  }
-  float marker_size() const {
-    return GetField<float>(VT_MARKER_SIZE, 0.0f);
+  float m_size() const {
+    return GetField<float>(VT_M_SIZE, 0.0f);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
-           VerifyField<int32_t>(verifier, VT_CAMERA_NUMBER, 4) &&
-           VerifyOffset(verifier, VT_CAMERA_SERIAL) &&
-           verifier.VerifyString(camera_serial()) &&
-           VerifyField<float>(verifier, VT_MARKER_SIZE, 4) &&
+           VerifyField<int32_t>(verifier, VT_NUMBER, 4) &&
+           VerifyOffset(verifier, VT_SERIAL) &&
+           verifier.VerifyString(serial()) &&
+           VerifyField<float>(verifier, VT_M_SIZE, 4) &&
            verifier.EndTable();
   }
 };
 
-struct Request_Detect_MarkerBuilder {
-  typedef Request_Detect_Marker Table;
+struct RequestDetectMarkerBuilder {
+  typedef RequestDetectMarker Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Request_Detect_Marker::VT_ID, id);
+    fbb_.AddOffset(RequestDetectMarker::VT_ID, id);
   }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Request_Detect_Marker::VT_COMMAND, command);
+  void add_number(int32_t number) {
+    fbb_.AddElement<int32_t>(RequestDetectMarker::VT_NUMBER, number, 0);
   }
-  void add_camera_number(int32_t camera_number) {
-    fbb_.AddElement<int32_t>(Request_Detect_Marker::VT_CAMERA_NUMBER, camera_number, 0);
+  void add_serial(::flatbuffers::Offset<::flatbuffers::String> serial) {
+    fbb_.AddOffset(RequestDetectMarker::VT_SERIAL, serial);
   }
-  void add_camera_serial(::flatbuffers::Offset<::flatbuffers::String> camera_serial) {
-    fbb_.AddOffset(Request_Detect_Marker::VT_CAMERA_SERIAL, camera_serial);
+  void add_m_size(float m_size) {
+    fbb_.AddElement<float>(RequestDetectMarker::VT_M_SIZE, m_size, 0.0f);
   }
-  void add_marker_size(float marker_size) {
-    fbb_.AddElement<float>(Request_Detect_Marker::VT_MARKER_SIZE, marker_size, 0.0f);
-  }
-  explicit Request_Detect_MarkerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestDetectMarkerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Request_Detect_Marker> Finish() {
+  ::flatbuffers::Offset<RequestDetectMarker> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Request_Detect_Marker>(end);
+    auto o = ::flatbuffers::Offset<RequestDetectMarker>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Request_Detect_Marker> CreateRequest_Detect_Marker(
+inline ::flatbuffers::Offset<RequestDetectMarker> CreateRequestDetectMarker(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
-    int32_t camera_number = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> camera_serial = 0,
-    float marker_size = 0.0f) {
-  Request_Detect_MarkerBuilder builder_(_fbb);
-  builder_.add_marker_size(marker_size);
-  builder_.add_camera_serial(camera_serial);
-  builder_.add_camera_number(camera_number);
-  builder_.add_command(command);
+    int32_t number = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> serial = 0,
+    float m_size = 0.0f) {
+  RequestDetectMarkerBuilder builder_(_fbb);
+  builder_.add_m_size(m_size);
+  builder_.add_serial(serial);
+  builder_.add_number(number);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Request_Detect_Marker> CreateRequest_Detect_MarkerDirect(
+inline ::flatbuffers::Offset<RequestDetectMarker> CreateRequestDetectMarkerDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
-    int32_t camera_number = 0,
-    const char *camera_serial = nullptr,
-    float marker_size = 0.0f) {
+    int32_t number = 0,
+    const char *serial = nullptr,
+    float m_size = 0.0f) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
-  auto camera_serial__ = camera_serial ? _fbb.CreateString(camera_serial) : 0;
-  return SLAMNAV::CreateRequest_Detect_Marker(
+  auto serial__ = serial ? _fbb.CreateString(serial) : 0;
+  return SLAMNAV::CreateRequestDetectMarker(
       _fbb,
       id__,
-      command__,
-      camera_number,
-      camera_serial__,
-      marker_size);
+      number,
+      serial__,
+      m_size);
 }
 
-struct Response_Detect_Marker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Response_Detect_MarkerBuilder Builder;
+struct ResponseDetectMarker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseDetectMarkerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_COMMAND = 6,
-    VT_CAMERA_NUMBER = 8,
-    VT_CAMERA_SERIAL = 10,
-    VT_MARKER_SIZE = 12,
-    VT_TF = 14,
-    VT_RESULT = 16,
-    VT_MESSAGE = 18
+    VT_NUMBER = 6,
+    VT_SERIAL = 8,
+    VT_M_SIZE = 10,
+    VT_TF = 12,
+    VT_RESULT = 14,
+    VT_MESSAGE = 16
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
   }
-  const ::flatbuffers::String *command() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_COMMAND);
+  int32_t number() const {
+    return GetField<int32_t>(VT_NUMBER, 0);
   }
-  int32_t camera_number() const {
-    return GetField<int32_t>(VT_CAMERA_NUMBER, 0);
+  const ::flatbuffers::String *serial() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_SERIAL);
   }
-  const ::flatbuffers::String *camera_serial() const {
-    return GetPointer<const ::flatbuffers::String *>(VT_CAMERA_SERIAL);
-  }
-  float marker_size() const {
-    return GetField<float>(VT_MARKER_SIZE, 0.0f);
+  float m_size() const {
+    return GetField<float>(VT_M_SIZE, 0.0f);
   }
   const ::flatbuffers::Vector<float> *tf() const {
     return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TF);
@@ -3001,12 +2899,10 @@ struct Response_Detect_Marker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyOffset(verifier, VT_COMMAND) &&
-           verifier.VerifyString(command()) &&
-           VerifyField<int32_t>(verifier, VT_CAMERA_NUMBER, 4) &&
-           VerifyOffset(verifier, VT_CAMERA_SERIAL) &&
-           verifier.VerifyString(camera_serial()) &&
-           VerifyField<float>(verifier, VT_MARKER_SIZE, 4) &&
+           VerifyField<int32_t>(verifier, VT_NUMBER, 4) &&
+           VerifyOffset(verifier, VT_SERIAL) &&
+           verifier.VerifyString(serial()) &&
+           VerifyField<float>(verifier, VT_M_SIZE, 4) &&
            VerifyOffset(verifier, VT_TF) &&
            verifier.VerifyVector(tf()) &&
            VerifyOffset(verifier, VT_RESULT) &&
@@ -3017,97 +2913,89 @@ struct Response_Detect_Marker FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct Response_Detect_MarkerBuilder {
-  typedef Response_Detect_Marker Table;
+struct ResponseDetectMarkerBuilder {
+  typedef ResponseDetectMarker Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_ID, id);
+    fbb_.AddOffset(ResponseDetectMarker::VT_ID, id);
   }
-  void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_COMMAND, command);
+  void add_number(int32_t number) {
+    fbb_.AddElement<int32_t>(ResponseDetectMarker::VT_NUMBER, number, 0);
   }
-  void add_camera_number(int32_t camera_number) {
-    fbb_.AddElement<int32_t>(Response_Detect_Marker::VT_CAMERA_NUMBER, camera_number, 0);
+  void add_serial(::flatbuffers::Offset<::flatbuffers::String> serial) {
+    fbb_.AddOffset(ResponseDetectMarker::VT_SERIAL, serial);
   }
-  void add_camera_serial(::flatbuffers::Offset<::flatbuffers::String> camera_serial) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_CAMERA_SERIAL, camera_serial);
-  }
-  void add_marker_size(float marker_size) {
-    fbb_.AddElement<float>(Response_Detect_Marker::VT_MARKER_SIZE, marker_size, 0.0f);
+  void add_m_size(float m_size) {
+    fbb_.AddElement<float>(ResponseDetectMarker::VT_M_SIZE, m_size, 0.0f);
   }
   void add_tf(::flatbuffers::Offset<::flatbuffers::Vector<float>> tf) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_TF, tf);
+    fbb_.AddOffset(ResponseDetectMarker::VT_TF, tf);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_RESULT, result);
+    fbb_.AddOffset(ResponseDetectMarker::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Response_Detect_Marker::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseDetectMarker::VT_MESSAGE, message);
   }
-  explicit Response_Detect_MarkerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseDetectMarkerBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Response_Detect_Marker> Finish() {
+  ::flatbuffers::Offset<ResponseDetectMarker> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Response_Detect_Marker>(end);
+    auto o = ::flatbuffers::Offset<ResponseDetectMarker>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Response_Detect_Marker> CreateResponse_Detect_Marker(
+inline ::flatbuffers::Offset<ResponseDetectMarker> CreateResponseDetectMarker(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> command = 0,
-    int32_t camera_number = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> camera_serial = 0,
-    float marker_size = 0.0f,
+    int32_t number = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> serial = 0,
+    float m_size = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::Vector<float>> tf = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Response_Detect_MarkerBuilder builder_(_fbb);
+  ResponseDetectMarkerBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_tf(tf);
-  builder_.add_marker_size(marker_size);
-  builder_.add_camera_serial(camera_serial);
-  builder_.add_camera_number(camera_number);
-  builder_.add_command(command);
+  builder_.add_m_size(m_size);
+  builder_.add_serial(serial);
+  builder_.add_number(number);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Response_Detect_Marker> CreateResponse_Detect_MarkerDirect(
+inline ::flatbuffers::Offset<ResponseDetectMarker> CreateResponseDetectMarkerDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
-    const char *command = nullptr,
-    int32_t camera_number = 0,
-    const char *camera_serial = nullptr,
-    float marker_size = 0.0f,
+    int32_t number = 0,
+    const char *serial = nullptr,
+    float m_size = 0.0f,
     const std::vector<float> *tf = nullptr,
     const char *result = nullptr,
     const char *message = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
-  auto command__ = command ? _fbb.CreateString(command) : 0;
-  auto camera_serial__ = camera_serial ? _fbb.CreateString(camera_serial) : 0;
+  auto serial__ = serial ? _fbb.CreateString(serial) : 0;
   auto tf__ = tf ? _fbb.CreateVector<float>(*tf) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponse_Detect_Marker(
+  return SLAMNAV::CreateResponseDetectMarker(
       _fbb,
       id__,
-      command__,
-      camera_number,
-      camera_serial__,
-      marker_size,
+      number,
+      serial__,
+      m_size,
       tf__,
       result__,
       message__);
 }
 
-struct Result_Control_Dock FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef Result_Control_DockBuilder Builder;
+struct ResultControlDock FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResultControlDockBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_COMMAND = 6,
@@ -3140,40 +3028,40 @@ struct Result_Control_Dock FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
 };
 
-struct Result_Control_DockBuilder {
-  typedef Result_Control_Dock Table;
+struct ResultControlDockBuilder {
+  typedef ResultControlDock Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(Result_Control_Dock::VT_ID, id);
+    fbb_.AddOffset(ResultControlDock::VT_ID, id);
   }
   void add_command(::flatbuffers::Offset<::flatbuffers::String> command) {
-    fbb_.AddOffset(Result_Control_Dock::VT_COMMAND, command);
+    fbb_.AddOffset(ResultControlDock::VT_COMMAND, command);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(Result_Control_Dock::VT_RESULT, result);
+    fbb_.AddOffset(ResultControlDock::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(Result_Control_Dock::VT_MESSAGE, message);
+    fbb_.AddOffset(ResultControlDock::VT_MESSAGE, message);
   }
-  explicit Result_Control_DockBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResultControlDockBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<Result_Control_Dock> Finish() {
+  ::flatbuffers::Offset<ResultControlDock> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<Result_Control_Dock>(end);
+    auto o = ::flatbuffers::Offset<ResultControlDock>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<Result_Control_Dock> CreateResult_Control_Dock(
+inline ::flatbuffers::Offset<ResultControlDock> CreateResultControlDock(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> command = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  Result_Control_DockBuilder builder_(_fbb);
+  ResultControlDockBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_command(command);
@@ -3181,7 +3069,7 @@ inline ::flatbuffers::Offset<Result_Control_Dock> CreateResult_Control_Dock(
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<Result_Control_Dock> CreateResult_Control_DockDirect(
+inline ::flatbuffers::Offset<ResultControlDock> CreateResultControlDockDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *command = nullptr,
@@ -3191,7 +3079,7 @@ inline ::flatbuffers::Offset<Result_Control_Dock> CreateResult_Control_DockDirec
   auto command__ = command ? _fbb.CreateString(command) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResult_Control_Dock(
+  return SLAMNAV::CreateResultControlDock(
       _fbb,
       id__,
       command__,
