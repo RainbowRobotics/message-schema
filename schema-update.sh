@@ -220,6 +220,8 @@ else
 
     # 브랜치 삭제 전 worktree 정리 (이 브랜치만!)
     if git show-ref --verify --quiet "refs/heads/$BR"; then
+        print_string "info" "Branch $BR exists, checking worktrees..."
+
         # 이 브랜치를 사용하는 worktree들 찾기
         WORKTREES_TO_REMOVE=$(git worktree list --porcelain | grep -A 3 "branch refs/heads/$BR" | grep "^worktree" | cut -d' ' -f2)
 
@@ -232,32 +234,48 @@ else
                 fi
             done
             git worktree prune
+            print_string "success" "Worktrees cleaned"
+        else
+            print_string "info" "No worktrees found for this branch"
         fi
 
         # 브랜치 삭제 시도
-        if ! git branch -D "$BR" 2>/dev/null; then
+        print_string "info" "Attempting to delete branch $BR..."
+        if git branch -D "$BR" 2>&1; then
+            print_string "success" "Branch deleted"
+        else
             # 실패하면 한 번 더 정리 후 재시도
-            print_string "warning" "Retrying after cleanup..."
+            print_string "warning" "First delete failed, retrying..."
             git worktree prune
             sleep 0.3
-            if ! git branch -D "$BR" 2>/dev/null; then
+            if git branch -D "$BR" 2>&1; then
+                print_string "success" "Branch deleted on retry"
+            else
                 print_string "error" "Cannot delete branch $BR"
                 print_string "info" "Current worktrees:"
                 git worktree list
+                echo ""
+                print_string "info" "Branch info:"
+                git branch -vv | grep "$BR" || echo "Branch not in list"
                 exit 1
             fi
         fi
     fi
 
+    print_string "info" "Creating temporary branch $TMP..."
     TMP="$BR-tmp"
     git branch -D "$TMP" 2>/dev/null || true
     git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
+
+    print_string "info" "Pushing to remote..."
     if ! git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
-        print_string "error" "Failed"
+        print_string "error" "Push failed"
         git branch -D "$TMP" 2>/dev/null || true
         exit 1
     fi
+
     git branch -D "$TMP"
+    print_string "success" "Branch $BR created successfully"
 fi
 
 print_string "success" "Complete"
