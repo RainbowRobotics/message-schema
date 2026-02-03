@@ -1,0 +1,140 @@
+namespace SLAMNAV;
+
+struct StatusImu {
+    acc_x: float;
+    acc_y: float;
+    acc_z: float;
+    gyr_x: float;
+    gyr_y: float;
+    gyr_z: float;
+    imu_rx: float;
+    imu_ry: float;
+    imu_rz: float;
+}
+
+struct StatusMotor {
+    connection: bool;
+    status: int;
+    temp: float;
+    current: float;
+}
+
+struct StatusCondition {
+    inlier_error: float;
+    inlier_ratio: float;
+    mapping_error: float;
+    mapping_ratio: float;
+}
+
+table StatusRobotState {
+    charge: string;
+    dock: bool;
+    emo: bool;
+    localization: string;
+    power: bool;
+    sss_recovery: bool;
+    sw_reset: bool;
+    sw_stop: bool;
+    sw_start: bool;
+    sf_bumper_detect: bool;
+    sf_obs_detect: bool;
+    sf_operational_stop: bool;
+}
+
+table StatusRobotSafetyIoState {
+    mcu0_dio: [bool];   // vector(8)
+    mcu1_dio: [bool];   // vector(8)
+    mcu0_din: [bool];   // vector(8)
+    mcu1_din: [bool];   // vector(8)
+}
+
+struct StatusPower {
+    bat_in: float;
+    bat_out: float;
+    bat_current: float;
+    total_power: float;
+    power: float;
+    bat_percent: float;
+    tabos_voltage: float;
+    tabos_current: float;
+    tabos_status: float;
+    tabos_ttf: float;
+    tabos_tte: float;
+    tabos_soc: float;
+    tabos_soh: float;
+    tabos_temp: float;
+    tabos_rc: float;
+    tabos_ae: float;
+    charge_current: float;
+    contact_voltage: float;
+}
+
+table StatusSetting {
+    platform_type: string;
+    platform_name: string;
+}
+
+table StatusMap {
+    map_name: string;
+    map_status: string;
+}
+
+table Status {
+    condition: StatusCondition;
+    imu: StatusImu;
+    motor0: StatusMotor;
+    motor1: StatusMotor;
+    power: StatusPower;
+    robot_state: StatusRobotState;
+    robot_safety_io_state: StatusRobotSafetyIoState;
+    setting: StatusSetting;
+    map: StatusMap;
+}
+
+//--------------------------------------------
+
+table MoveStatusMoveState {
+    auto_move: string;
+    dock_move: string;
+    jog_move: string;
+    obs: string;
+    path: string;
+}
+
+struct MoveStatusPose {
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+
+struct MoveStatusVel {
+    vx: float;
+    vy: float;
+    wz: float;
+}
+
+table MoveStatusNode {
+    node_id: string;
+    name: string;
+    state: string;
+    x: float;
+    y: float;
+    rz: float;
+}
+
+table Move_Status {
+    cur_node: MoveStatusNode;
+    goal_node: MoveStatusNode;
+    move_state: MoveStatusMoveState;
+    pose: MoveStatusPose;
+    vel: MoveStatusVel;
+}
+
+//--------------------------------------------
+//--------------------------------------------
+table Status_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
+}
