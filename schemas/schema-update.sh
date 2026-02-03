@@ -107,6 +107,12 @@ else
     print_string "warning" "New changes found in message-schema"
     echo ""
 
+    # subtree pull 전에 working tree가 clean한지 확인
+    if ! git diff-index --quiet HEAD --; then
+        print_string "error" "Working tree has modifications. Please commit all changes first."
+        exit 1
+    fi
+
     print_string "info" "Running subtree pull..."
 
     if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
