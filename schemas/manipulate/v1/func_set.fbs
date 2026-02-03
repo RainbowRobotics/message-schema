@@ -70,3 +70,8 @@ table Request_Set_User_Frame_3Points {
   point_3_y: float;
   point_3_z: float;
 }
+
+// "set_master_mode"
+table Request_Set_Master_Mode {
+  mode: int;
+}
