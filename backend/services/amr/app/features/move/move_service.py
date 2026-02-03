@@ -94,6 +94,7 @@ class AmrMoveService:
                 robot_model=model.robot_model,
                 req_id=model.id,
                 goal_id=model.goal_id,
+                goal_name=model.goal_name,
                 method=model.method,
                 preset=model.preset
             )
@@ -609,11 +610,11 @@ class AmrMoveService:
     # 내부 함수
     #########################################################
 
-    async def move_state_change(self, topic:str, obj:dict):
+    async def move_result(self, topic:str, obj:dict):
         """
         [AMR 이동 상태 변경 처리]
         """
-        rb_log.info(f"[amr_move_service] move_state_change : {obj.get('id')}, {obj.get('command')}, {obj.get('result')}")
+        rb_log.info(f"[amr_move_service] move_result : {obj.get('id')}, {obj.get('command')}, {obj.get('result')}")
         _id = obj.get("id")
         if not _id:
             return

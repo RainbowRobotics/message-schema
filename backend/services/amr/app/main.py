@@ -10,7 +10,7 @@ from app.features.move.move_api import amr_move_router
 from app.features.move.move_zenoh import move_zenoh_router
 
 from .features.control.src.adapters.input.amr_control_api import amr_control_router
-from .features.gateway.amr_zenoh import (
+from app.socket.socket_zenoh import (
     amr_zenoh_router,
 )
 from .socket.socket_client import (
