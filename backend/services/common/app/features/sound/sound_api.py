@@ -7,9 +7,10 @@
 from fastapi import APIRouter
 from rb_modules.log import RBLog
 
-from app.features.sound.sound_schema import Request_Sound_PlayPD
-from app.features.sound.sound_schema import Request_Sound_StopPD
-from app.features.sound.sound_schema import Request_Sound_GetStatusPD
+from app.features.sound.sound_schema import (
+    Request_Sound_PlayPD,
+)
+
 from .sound_module import (
     SoundService,
 )

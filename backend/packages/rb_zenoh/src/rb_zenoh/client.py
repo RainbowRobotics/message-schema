@@ -1,10 +1,12 @@
 # zenoh_client.py
 import asyncio
 import contextlib
+import glob
 import inspect
 import json
 import os
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -122,7 +124,54 @@ class ZenohClient:
 
         self._fb_stats: dict[tuple[str, str], dict[str, float]] = {}
 
+        self._transport_log_cache = set()
+
         self.connect()
+
+    def _log_transport_info(self, operation: str, topic: str):
+        """통신 방식 로그 출력"""
+
+        if not IS_DEV:
+            return
+
+        pid = os.getpid()
+
+        # /dev/shm 파일 확인
+        shm_files = glob.glob("/dev/shm/*.zenoh")
+        shm_file_count = len(shm_files)
+
+        # 현재 프로세스의 .zenoh fd 확인
+        zenoh_fd_count = 0
+        fd_dir = f"/proc/{pid}/fd"
+        if os.path.exists(fd_dir):
+            for fd in os.listdir(fd_dir):
+                try:
+                    link = os.readlink(os.path.join(fd_dir, fd))
+                    if '.zenoh' in link:
+                        zenoh_fd_count += 1
+                except Exception:
+                    pass
+
+        # 네트워크 연결 확인
+        net_connections = 0
+        try:
+            result = subprocess.run(
+                f"netstat -tn 2>/dev/null | grep {pid} | grep :7447 | wc -l",
+                shell=True, capture_output=True, text=True, check=False
+            )
+            net_connections = int(result.stdout.strip() or 0)
+        except Exception:
+            pass
+
+        # 전송 방식 판단
+        if zenoh_fd_count > 0:
+            transport = "✅ SHM"
+        elif net_connections > 0:
+            transport = "🌐 Network (TCP)"
+        else:
+            transport = "❓ Unknown"
+
+        print(f"[{operation}] {topic} → {transport} (SHM files: {shm_file_count}, SHM fds: {zenoh_fd_count}, Net: {net_connections})", flush=True)
 
     def connect(self):
         if self.session is None:
@@ -256,6 +305,8 @@ class ZenohClient:
             self.connect()
         # if "/" not in topic:
         #     raise ValueError("토픽이 명확하지 않습니다. ex) 'telemetry/imu'")
+
+        self._log_transport_info("SUBSCRIBE", topic)
 
         key = self._cb_key(callback)
         lst = self._cb_entries.get(topic, [])
@@ -623,6 +674,8 @@ class ZenohClient:
     ) -> Iterator[QueryResult[T] | QueryResult[None]]:
         if self.session is None:
             self.connect()
+
+        self._log_transport_info("QUERY", keyexpr)
 
         if flatbuffer_req_obj is not None:
             if flatbuffer_buf_size is None:

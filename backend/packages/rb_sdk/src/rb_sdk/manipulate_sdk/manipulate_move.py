@@ -62,7 +62,7 @@ class RBManipulateMoveSDK(RBBaseSDK):
                         break
 
                     _, _, obj, _ = await self.zenoh_client.receive_one(
-                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT, timeout=0.1
                     )
 
                     if variable_name is not None and obj is not None:
@@ -179,8 +179,6 @@ class RBManipulateMoveSDK(RBBaseSDK):
 
         if res["obj_payload"] is None:
             raise RuntimeError("Move J failed: obj_payload is None")
-
-        print("flow_manager_args", flow_manager_args, flush=True)
 
         self._run_coro_blocking(
             self._move_flow_manager_solver(

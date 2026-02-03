@@ -49,6 +49,9 @@ class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
     #         batPercent=dt.get("batPercent") if dt.get("batPercent") else dt.get("bat_percent"),
     #     )
 
+    # def __init__(self):
+    #     super().__init__(server="amr")
+
     async def send_move_goal(self, robot_model: str, req_id: str, goal_id: str, method: str, preset: int) -> Response_Move_GoalT:
         """
         [Move Goal 전송]
@@ -74,6 +77,8 @@ class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
         # 3) 결과 처리 및 반환
         if result["obj_payload"] is None:
             raise RuntimeError("Call Move Target failed: obj_payload is None")
+
+        self.robot_uid
 
         return result["obj_payload"]
 

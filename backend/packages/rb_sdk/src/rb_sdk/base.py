@@ -134,7 +134,7 @@ class RBBaseSDK:
                 instance._initialized = False
             return cls._instances[key]
 
-    def __init__(self):
+    def __init__(self, *, server: Literal["amr", "manipulate"] | None = None):
         # 이미 초기화 됐으면 스킵
         if getattr(self, "_initialized", False):
             return
@@ -142,6 +142,8 @@ class RBBaseSDK:
         self._is_alive = True
         self._initialized = True
         self._pid = os.getpid()
+
+        self.robot_uid = self._get_robot_uid(server=server)
 
         # # 이벤트 루프 & task set
         # self.loop = asyncio.new_event_loop()
@@ -173,6 +175,21 @@ class RBBaseSDK:
     #     if loop is None:
     #         raise RuntimeError("target loop is not set")
     #     return loop
+
+    def _get_robot_uid(self, *, server: Literal["amr", "manipulate"]) -> str | None:
+        """
+        server_type 기준으로 robot_uid를 질의해서 가져온다.
+        없으면 None.
+        """
+        result = self.zenoh_client.query_one(
+            f"rrs/{server}/robot_uid",
+            payload={},  # 또는 flatbuffer_req_obj=req
+        )
+
+        dt = result.get("dict_payload") or {}
+        robot_uid = dt.get("robot_uid")
+
+        return robot_uid
 
     def _run_coro_blocking(self, coro, *, timeout: float | None = None):
         try:
