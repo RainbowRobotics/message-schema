@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# 컬러 출력 함수
 function print_string(){
   local RED='\033[0;31m'
   local GREEN='\033[0;32m'
   local YELLOW='\033[1;33m'
   local BLUE='\033[0;34m'
   local NC='\033[0m'
+
   case "$1" in
     "error") echo -e "${RED}${2}${NC}" ;;
     "success") echo -e "${GREEN}${2}${NC}" ;;
@@ -15,61 +17,47 @@ function print_string(){
   esac
 }
 
+# 기본값
 SCHEMA_DIR="schemas"
 REMOTE_NAME="message-schema"
 
+# 옵션 처리
 while [[ $# -gt 0 ]]; do
     case $1 in
         --dir) SCHEMA_DIR="$2"; shift 2 ;;
         --remote) REMOTE_NAME="$2"; shift 2 ;;
-        -h|--help)
-            echo "Usage: $0 [OPTIONS]"
-            exit 0
-            ;;
-        *) print_string "error" "Unknown option: $1"; exit 1 ;;
+        *) print_string "error" "알 수 없는 옵션: $1"; exit 1 ;;
     esac
 done
 
+# 메인 레포 루트
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-print_string "info" "=== Environment Check ==="
-
+# 서브트리로 포함되었는지 확인
 if [ "$MAIN_REPO" != "$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo '')" ]; then
-    print_string "error" "This script must be run from a subtree"
+    print_string "error" "이 스크립트는 서브트리로 포함된 상태에서만 실행해야 합니다."
     exit 1
 fi
 
+# SCHEMA_DIR 디렉토리 확인
 if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
-    print_string "error" "Directory '$SCHEMA_DIR' not found"
+    print_string "error" "'$SCHEMA_DIR' 디렉토리를 찾을 수 없습니다."
     exit 1
 fi
 
 cd "$MAIN_REPO"
 
-if ! git remote get-url "$REMOTE_NAME" >/dev/null 2>&1; then
-    print_string "error" "Remote '$REMOTE_NAME' not found"
-    exit 1
-fi
-
-print_string "success" "Environment check passed"
-echo ""
-
-print_string "info" "=== Commit main repo changes first ==="
-
+# SCHEMA_DIR 디렉토리에 변경사항이 있으면 자동 커밋
 if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
   || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
   || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
-
-    print_string "warning" "Changes detected in $SCHEMA_DIR"
-    echo ""
-    git status --short -- "$SCHEMA_DIR"
-    echo ""
+    print_string "info" "schemas 디렉토리에 변경사항 감지. 메인 레포에 커밋합니다..."
 
     git add "$SCHEMA_DIR"
 
     if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
-        print_string "error" "Other files are staged besides $SCHEMA_DIR"
+        print_string "warning" "$SCHEMA_DIR 외 다른 staged 파일도 있습니다. 커밋을 취소합니다."
         git reset HEAD "$SCHEMA_DIR"
         exit 1
     fi
@@ -77,244 +65,105 @@ if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
     git commit -m "Update schemas"
 
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "메인 레포 푸시: $CURRENT_BRANCH"
+
     if ! git push origin "$CURRENT_BRANCH"; then
-        print_string "error" "Failed to push main repo"
-        exit 1
-    fi
-
-    print_string "success" "Main repo committed and pushed"
-else
-    print_string "info" "No uncommitted changes in $SCHEMA_DIR"
-fi
-
-echo ""
-
-print_string "info" "=== STEP 1: Pull from message-schema ==="
-
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-print_string "info" "Fetching message-schema/main..."
-git fetch "$REMOTE_NAME" "main"
-
-REMOTE_TREE=$(git rev-parse "refs/remotes/$REMOTE_NAME/main:$SCHEMA_DIR" 2>/dev/null || echo "")
-LOCAL_TREE=$(git rev-parse "HEAD:$SCHEMA_DIR" 2>/dev/null || echo "")
-
-if [ -z "$REMOTE_TREE" ]; then
-    print_string "warning" "No schemas directory in message-schema"
-elif [ "$REMOTE_TREE" = "$LOCAL_TREE" ]; then
-    print_string "success" "Already up to date"
-else
-    print_string "warning" "New changes found in message-schema"
-    echo ""
-
-    # schemas 디렉토리는 clean해야 함
-    if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
-      || ! git diff --cached --quiet -- "$SCHEMA_DIR"; then
-        print_string "error" "Uncommitted changes in $SCHEMA_DIR. This should not happen."
-        exit 1
-    fi
-
-    # 다른 파일의 변경사항이 있으면 임시로 stash
-    NEED_STASH=false
-    if ! git diff-index --quiet HEAD --; then
-        print_string "info" "Other files have changes, stashing temporarily..."
-        git stash push -m "temp-for-schema-update" -- . ":!$SCHEMA_DIR"
-        NEED_STASH=true
-    fi
-
-    print_string "info" "Running subtree pull..."
-
-    SUBTREE_FAILED=false
-    if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
-        print_string "success" "Pulled changes from message-schema"
-
-        if git push origin "$CURRENT_BRANCH"; then
-            print_string "success" "Pushed to main repo"
-        else
-            print_string "warning" "Failed to push to main repo"
-        fi
-    else
-        SUBTREE_FAILED=true
-        print_string "error" "Subtree pull 실패 (충돌 발생)"
-        echo ""
-
-        print_string "warning" "충돌을 자동으로 처리합니다..."
-
-        # 충돌 상태 취소
-        git merge --abort 2>/dev/null || true
-
-        print_string "info" "충돌 발생으로 merge를 취소했습니다"
-        echo ""
-
-        # stash 복원
-        if [ "$NEED_STASH" = true ]; then
-            print_string "info" "임시 저장한 작업을 복원합니다..."
-            if git stash pop; then
-                print_string "success" "작업 복원 완료"
-            else
-                print_string "warning" "작업 복원 실패. 수동으로 복원하세요: git stash pop"
-            fi
-        fi
-
-        echo ""
-        print_string "error" "=== message-schema와 충돌이 있습니다 ==="
-        echo ""
-        print_string "info" "해결 방법:"
-        echo "1. message-schema에서 삭제/수정된 파일이 메인 레포에 있습니다"
-        echo "2. 메인 레포에서 해당 파일을 삭제하거나 수정하세요"
-        echo "3. 다시 실행하세요: make schema-update"
-        echo ""
-        print_string "info" "충돌 파일:"
-        echo "  - schemas/amr/v1/slamnav_control.fbs"
-        echo "  - schemas/amr/v1/slamnav_status.fbs"
-        echo "  - schemas/manipulate/v1/func_move.fbs"
-        echo ""
-    fi
-
-    # stash 복원 (충돌 없을 때만)
-    if [ "$NEED_STASH" = true ] && [ "$SUBTREE_FAILED" = false ]; then
-        print_string "info" "Restoring stashed changes..."
-        git stash pop
-    fi
-
-    # 실패 시 종료
-    if [ "$SUBTREE_FAILED" = true ]; then
+        print_string "error" "메인 레포 push 실패. 충돌을 해결하고 다시 시도하세요."
         exit 1
     fi
 fi
 
-echo ""
-
-print_string "info" "=== STEP 2: Update message-schema branch ==="
-
-USER_EMAIL=$(git config --get user.email)
-USER_PREFIX=$(echo "$USER_EMAIL" | sed 's/@.*//' | tr -cd '[:alnum:]')
-
-if [ -z "$USER_PREFIX" ]; then
-    print_string "error" "Cannot determine user email"
+# 개인 브랜치명 생성
+BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
+if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
+    print_string "error" "브랜치 이름을 결정할 수 없습니다."
     exit 1
 fi
+echo "schema branch => $BR"
 
-MY_BRANCH="schema/from-${USER_PREFIX}"
-MAIN_COMMIT=$(git rev-parse --short HEAD)
+# 현재 상태
+LOCAL_TREE=$(git -C "$MAIN_REPO" rev-parse "HEAD:$SCHEMA_DIR")
+MAIN_COMMIT=$(git -C "$MAIN_REPO" rev-parse --short HEAD)
 
-echo "User          : $USER_PREFIX"
-echo "Target branch : $MY_BRANCH"
-echo "Main commit   : $MAIN_COMMIT"
-echo ""
+print_string "info" "local  tree => $LOCAL_TREE"
+print_string "info" "main commit => $MAIN_COMMIT"
 
-git fetch "$REMOTE_NAME"
-
-BRANCH_EXISTS=false
-if git show-ref --verify --quiet "refs/remotes/$REMOTE_NAME/$MY_BRANCH"; then
-    BRANCH_EXISTS=true
-    print_string "info" "Found existing branch: $MY_BRANCH"
-else
-    print_string "info" "No existing branch, will create new one"
-fi
-
-echo ""
-
-print_string "info" "=== Prepare worktree ==="
-
-WORK_DIR=$(mktemp -d)
-trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true; rm -rf '$WORK_DIR'" EXIT
-
-if [ "$BRANCH_EXISTS" = true ]; then
-    git worktree add "$WORK_DIR" "$REMOTE_NAME/$MY_BRANCH"
-    print_string "success" "Checked out existing branch"
-else
-    # 로컬에 같은 이름의 브랜치가 있는지 확인
-    if git show-ref --verify --quiet "refs/heads/$MY_BRANCH"; then
-        print_string "warning" "로컬 브랜치 '$MY_BRANCH'가 이미 존재합니다. 삭제합니다..."
-        git branch -D "$MY_BRANCH"
-    fi
-
-    git worktree add --detach "$WORK_DIR" "refs/remotes/$REMOTE_NAME/main"
-    (
-        cd "$WORK_DIR"
-        git checkout -b "$MY_BRANCH"
-    )
-    print_string "success" "Created new branch"
-fi
-
-echo ""
-
-print_string "info" "=== Update schemas directory ==="
-
-(
-    cd "$WORK_DIR"
-
-    TEMP_EXTRACT=$(mktemp -d)
-    trap "rm -rf '$TEMP_EXTRACT'" EXIT
-
-    LOCAL_TREE=$(git -C "$MAIN_REPO" rev-parse "HEAD:$SCHEMA_DIR")
-
-    print_string "info" "Extracting schemas from main repo..."
-    git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
-
-    print_string "info" "Updating schemas..."
-
-    mkdir -p schemas
-
-    rsync -av --delete \
-        "$TEMP_EXTRACT/" \
-        ./schemas/
-
-    rm -rf "$TEMP_EXTRACT"
-
-    git add schemas/
-
-    if git diff --staged --quiet; then
-        print_string "info" "No changes in schemas"
-        exit 0
-    fi
-
-    echo ""
-    print_string "info" "Changes in schemas:"
-    git diff --staged --stat -- schemas/
-    echo ""
-
-    COMMIT_MSG="Update schemas from main repo
-
-Source commit: $MAIN_COMMIT
-Updated at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-
-    git commit -m "$COMMIT_MSG"
-    print_string "success" "Committed"
-    echo ""
-
-    print_string "info" "Pushing to $REMOTE_NAME/$MY_BRANCH..."
-
-    if git push "$REMOTE_NAME" "$MY_BRANCH"; then
-        print_string "success" "Push complete!"
-        echo ""
-
-        REMOTE_URL=$(git remote get-url "$REMOTE_NAME" 2>/dev/null || echo "")
-        if [[ "$REMOTE_URL" =~ github\.com ]]; then
-            REPO_URL=$(echo "$REMOTE_URL" | sed -E 's|git@github\.com:|https://github.com/|; s|\.git$||')
-
-            if [ "$BRANCH_EXISTS" = true ]; then
-                print_string "info" "Existing PR updated"
-            else
-                print_string "info" "Create PR:"
-                echo "$REPO_URL/compare/main...$MY_BRANCH"
-            fi
-        fi
-    else
-        print_string "error" "Push failed"
-        exit 1
-    fi
-) || {
-    exit_code=$?
-    if [ $exit_code -eq 0 ]; then
-        exit 0
-    fi
-    print_string "error" "Update failed"
+# remote 확인
+git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
+    print_string "error" "'$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
     exit 1
 }
 
-echo ""
-print_string "success" "========================================="
-print_string "success" "Sync complete!"
-print_string "success" "========================================="
+# 원격 브랜치 fetch
+git -C "$MAIN_REPO" fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
+
+REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
+
+# 기존 브랜치가 있는 경우
+if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
+    REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
+    print_string "info" "remote tree => $REMOTE_TREE"
+
+    if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
+        print_string "info" "변경사항 없음."
+        exit 0
+    fi
+
+    WORK_DIR=$(mktemp -d)
+    trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+
+    git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
+
+    # 작업 디렉토리로 이동하여 처리
+    (
+        cd "$WORK_DIR"
+
+        print_string "info" "스키마 파일 갱신 중 (다른 사람 파일 보존)..."
+
+        # 메인 레포의 schemas 내용을 임시 디렉토리에 추출
+        TEMP_EXTRACT=$(mktemp -d)
+        trap "rm -rf '$TEMP_EXTRACT'" EXIT
+
+        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
+
+        # rsync로 메인 레포의 파일만 덮어쓰기 (삭제 없음!)
+        # 메인 레포에 있는 파일만 업데이트하고, 나머지는 그대로 유지
+        rsync -av \
+            "$TEMP_EXTRACT/" \
+            ./
+
+        rm -rf "$TEMP_EXTRACT"
+
+        # 변경사항이 있는지 확인 후 커밋
+        git add -A
+        if git diff --staged --quiet; then
+            print_string "info" "실질적인 변경사항이 없습니다."
+        else
+            print_string "info" "변경된 파일:"
+            git diff --staged --name-status
+            echo ""
+
+            git commit -m "Update schemas from main repo @ $MAIN_COMMIT"
+            git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
+        fi
+    ) || {
+        print_string "error" "message-schema 푸시 실패"
+        exit 1
+    }
+else
+    print_string "info" "새 브랜치 생성: $BR"
+    TMP="$BR-tmp"
+
+    git -C "$MAIN_REPO" branch -D "$TMP" 2>/dev/null || true
+    git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
+
+    if ! git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
+        print_string "error" "message-schema 초기 브랜치 생성 실패"
+        git branch -D "$TMP" 2>/dev/null || true
+        exit 1
+    fi
+
+    git -C "$MAIN_REPO" branch -D "$TMP"
+fi
+
+print_string "success" "$REMOTE_NAME/$BR 푸시 완료"
