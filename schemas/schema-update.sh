@@ -107,10 +107,19 @@ else
     print_string "warning" "New changes found in message-schema"
     echo ""
 
-    # subtree pull 전에 working tree가 clean한지 확인
-    if ! git diff-index --quiet HEAD --; then
-        print_string "error" "Working tree has modifications. Please commit all changes first."
+    # schemas 디렉토리는 clean해야 함
+    if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
+      || ! git diff --cached --quiet -- "$SCHEMA_DIR"; then
+        print_string "error" "Uncommitted changes in $SCHEMA_DIR. This should not happen."
         exit 1
+    fi
+
+    # 다른 파일의 변경사항이 있으면 임시로 stash
+    NEED_STASH=false
+    if ! git diff-index --quiet HEAD --; then
+        print_string "info" "Other files have changes, stashing temporarily..."
+        git stash push -m "temp-for-schema-update" -- . ":!$SCHEMA_DIR"
+        NEED_STASH=true
     fi
 
     print_string "info" "Running subtree pull..."
@@ -125,7 +134,20 @@ else
         fi
     else
         print_string "error" "Subtree pull failed"
+
+        # stash 복원
+        if [ "$NEED_STASH" = true ]; then
+            print_string "info" "Restoring stashed changes..."
+            git stash pop
+        fi
+
         exit 1
+    fi
+
+    # stash 복원
+    if [ "$NEED_STASH" = true ]; then
+        print_string "info" "Restoring stashed changes..."
+        git stash pop
     fi
 fi
 
