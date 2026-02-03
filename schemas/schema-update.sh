@@ -155,7 +155,6 @@ else
     print_string "info" "No changes in working tree"
 fi
 
-# STEP 3는 SCHEMA_COMMITTED가 true일 때만 실행
 if [ "$SCHEMA_COMMITTED" = false ]; then
     print_string "info" "No schemas commits, skipping STEP 3"
     print_string "success" "Done"
@@ -179,113 +178,73 @@ echo "Tree: $LOCAL_TREE"
 echo "Commit: $MAIN_COMMIT"
 echo ""
 
+# 원격 브랜치 존재 여부 확인
 git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
-
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 if git show-ref --verify --quiet "$REMOTE_REF"; then
+    # 원격 브랜치가 존재하는 경우 - 업데이트
     REMOTE_TREE="$(git rev-parse "$REMOTE_NAME/$BR^{tree}")"
     echo "Remote tree: $REMOTE_TREE"
+
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
         print_string "info" "No changes"
         exit 0
     fi
+
+    print_string "info" "Updating existing remote branch..."
     WORK_DIR="$(mktemp -d)"
     trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+
     git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
     (
         cd "$WORK_DIR"
-        print_string "info" "Updating..."
+        print_string "info" "Extracting changes..."
         TEMP_EXTRACT="$(mktemp -d)"
         trap "rm -rf '$TEMP_EXTRACT'" EXIT
+
         git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
         rsync -av "$TEMP_EXTRACT/" ./
         rm -rf "$TEMP_EXTRACT"
+
         git add -A
         if git diff --staged --quiet; then
-            print_string "info" "No changes"
+            print_string "info" "No changes to commit"
         else
-            echo "Changed:"
+            echo "Changed files:"
             git diff --staged --name-status
             echo ""
             git commit -m "Update schemas from main @ $MAIN_COMMIT"
             git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
+            print_string "success" "Updated remote branch"
         fi
     ) || {
-        print_string "error" "Push failed"
+        print_string "error" "Update failed"
         exit 1
     }
 else
-    print_string "info" "Creating branch"
+    # 원격 브랜치가 없는 경우 - 새로 생성
+    print_string "info" "Creating new remote branch..."
 
-    # 브랜치 삭제 전 worktree 정리 (이 브랜치만!)
-    if git show-ref --verify --quiet "refs/heads/$BR"; then
-        print_string "info" "Branch $BR exists, checking worktrees..."
-
-        # 이 브랜치를 사용하는 worktree들 찾기 (set +e로 에러 무시)
-        set +e
-        WORKTREES_TO_REMOVE=$(git worktree list --porcelain 2>/dev/null | grep -A 3 "branch refs/heads/$BR" | grep "^worktree" | cut -d' ' -f2)
-        set -e
-
-        if [ -n "$WORKTREES_TO_REMOVE" ]; then
-            print_string "warning" "Found worktrees, removing..."
-            echo "$WORKTREES_TO_REMOVE" | while read -r wt; do
-                if [ -n "$wt" ]; then
-                    print_string "info" "  Removing: $wt"
-                    git worktree remove --force "$wt" 2>/dev/null || true
-                fi
-            done
-            git worktree prune 2>/dev/null || true
-            print_string "success" "Worktrees cleaned"
-        else
-            print_string "info" "No worktrees found"
-        fi
-
-        # 브랜치 삭제 시도
-        print_string "info" "Deleting branch $BR..."
-        set +e
-        DELETE_OUTPUT=$(git branch -D "$BR" 2>&1)
-        DELETE_STATUS=$?
-        set -e
-
-        if [ $DELETE_STATUS -eq 0 ]; then
-            print_string "success" "Branch deleted"
-        else
-            print_string "warning" "Delete failed: $DELETE_OUTPUT"
-            print_string "warning" "Retrying after cleanup..."
-            git worktree prune 2>/dev/null || true
-            sleep 0.5
-
-            set +e
-            DELETE_OUTPUT=$(git branch -D "$BR" 2>&1)
-            DELETE_STATUS=$?
-            set -e
-
-            if [ $DELETE_STATUS -ne 0 ]; then
-                print_string "error" "Cannot delete branch $BR"
-                echo "$DELETE_OUTPUT"
-                print_string "info" "Current worktrees:"
-                git worktree list || true
-                exit 1
-            fi
-            print_string "success" "Branch deleted on retry"
-        fi
-    fi
-
-    print_string "info" "Creating temporary branch..."
     TMP="$BR-tmp"
+
+    # 임시 브랜치가 있으면 삭제
     git branch -D "$TMP" 2>/dev/null || true
+
+    print_string "info" "Splitting subtree..."
     git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
 
-    print_string "info" "Pushing to remote..."
-    if ! git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
+    print_string "info" "Pushing to $REMOTE_NAME/$BR..."
+    if git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
+        print_string "success" "Remote branch created"
+    else
         print_string "error" "Push failed"
         git branch -D "$TMP" 2>/dev/null || true
         exit 1
     fi
 
-    git branch -D "$TMP"
-    print_string "success" "Branch created"
+    # 임시 브랜치 정리
+    git branch -D "$TMP" 2>/dev/null || true
 fi
 
 print_string "success" "Complete"
