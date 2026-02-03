@@ -1,14 +1,32 @@
 {
-  "mode": "peer",
-  "scouting": { 
-    "multicast": { "enabled": true, "ttl": 1 },
+  mode: "peer",
+  scouting: {
+    multicast: {
+      enabled: true,
+      ttl: 1
+    }
   },
-  "connect": { 
-    "endpoints": []
+  connect: {
+    endpoints: [
+      "tcp/192.168.100.3:7447",
+      "tcp/192.168.100.34:7447",
+      "tcp/192.168.100.31:7447",
+      "tcp/127.0.0.1:7447",
+      "tcp/[::1]:7447"
+    ],
+    timeout_ms: {
+      "peer": -1
+    }
   },
-  "listen": { 
-    "endpoints": { "peer": ["tcp/0.0.0.0:7447"] },
-    "exit_on_failure": false
+  listen: {
+    endpoints: {
+      peer: ["tcp/0.0.0.0:0", "tcp/[::]:0"]
+    },
+    exit_on_failure: false
   },
-  "transport": { "shared_memory": { "enabled": true } }
+  transport: {
+    shared_memory: {
+      enabled: true
+    }
+  }
 }

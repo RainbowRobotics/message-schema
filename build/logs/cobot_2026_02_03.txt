@@ -157,3 +157,133 @@ W 10:04:34.429   [MOTOR]        MOTOR DISCON 3
 W 10:04:34.439   [MOTOR]        MOTOR DISCON 6
 W 10:04:34.439   [SYSTEM]       MSG:100/MSG_SYSTEM_POWER_OFF
 I 10:04:34.440   [SYSTEM]       STATE POWER DIS-ENGAGED
+I 11:27:12.041   [SYSTEM]       Servo Call: 1/1
+I 11:27:12.041   [SYSTEM]       CMD Power On
+I 11:27:12.130   [TOOLFLANGE]   TFB RST 92 0 1 0 145
+I 11:27:12.141   [SYSTEM]       STATE POWER ENGAGED
+I 11:27:12.811   [MOTOR]        BNO 5 TYP:145 MDR:0 BLM:0 SEN:1 SLE:14.631396
+I 11:27:12.811   [MOTOR]        BNO 6 TYP:487 MDR:0 BLM:0 SEN:1 SLE:-0.000000
+I 11:27:12.811   [MOTOR]        BNO 3 TYP:205 MDR:0 BLM:0 SEN:1 SLE:-95.605420
+I 11:27:12.815   [MOTOR]        BNO 0 TYP:255 MDR:1 BLM:0 SEN:1 SLE:9.306616
+I 11:27:12.817   [MOTOR]        BNO 1 TYP:255 MDR:0 BLM:0 SEN:1 SLE:-1.712779
+I 11:27:12.821   [MOTOR]        BNO 2 TYP:205 MDR:1 BLM:0 SEN:1 SLE:0.103119
+I 11:27:12.825   [MOTOR]        BNO 4 TYP:145 MDR:1 BLM:0 SEN:1 SLE:-3.837601
+I 11:27:13.153   [SYSTEM]       ServoState: 1
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 0 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 1 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 2 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 3 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 4 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 5 : 1251116
+I 11:27:13.284   [SYSTEM]       Motor Firmware: 6 : 1250407
+I 11:27:13.284   [SYSTEM]       ToolFlange Firmware : 92
+I 11:27:13.284   [SYSTEM]       Motor PGain: 0 : 330/60/600
+I 11:27:13.284   [SYSTEM]       Motor CGain: 0 : 1200/50
+I 11:27:13.284   [SYSTEM]       Motor PGain: 1 : 330/60/600
+I 11:27:13.284   [SYSTEM]       Motor CGain: 1 : 1200/50
+I 11:27:13.284   [SYSTEM]       Motor PGain: 2 : 80/15/200
+I 11:27:13.284   [SYSTEM]       Motor CGain: 2 : 2070/90
+I 11:27:13.284   [SYSTEM]       Motor PGain: 3 : 80/15/200
+I 11:27:13.284   [SYSTEM]       Motor CGain: 3 : 2070/90
+I 11:27:13.284   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 11:27:13.284   [SYSTEM]       Motor CGain: 4 : 5800/110
+I 11:27:13.284   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 11:27:13.284   [SYSTEM]       Motor CGain: 5 : 5800/110
+I 11:27:13.284   [SYSTEM]       Motor PGain: 6 : 100/5/150
+I 11:27:13.284   [SYSTEM]       Motor CGain: 6 : 1200/500
+I 11:27:13.284   [SYSTEM]       ServoState: 2
+I 11:27:13.284   [SYSTEM]       ServoState: 3
+I 11:27:14.696   [SYSTEM]       Motor Acts: 0[-0.169690,0.167079/0.174041]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 1[-0.170125,0.170125/0.174041]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 2[-0.139233,0.132271/0.217551]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 3[-0.099203,0.123787/0.217551]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 4[-0.085933,0.089849/0.130531]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 5[-0.035678,0.000653/0.130531]
+I 11:27:14.696   [SYSTEM]       Motor Acts: 6[0.000000,0.000870/0.261061]
+I 11:27:14.696   [SYSTEM]       ServoState: 4
+I 11:27:14.696   [SYSTEM]       ServoState: 5
+I 11:27:14.696   [SYSTEM]       ServoState: 6
+I 11:27:14.696   [SYSTEM]       Reference On
+I 11:27:32.821   [SYSTEM]       RUN DT Mode
+I 11:27:33.079   [SYSTEM]       STOP DT Mode
+I 11:27:33.711   [SYSTEM]       RUN DT Mode
+I 11:27:36.229   [SYSTEM]       STOP DT Mode
+I 11:28:18.891   [SYSTEM]       RUN DT Mode
+I 11:28:22.639   [SYSTEM]       STOP DT Mode
+I 11:28:53.925   [MOTION]       Motion Mode Changed: 0->7
+I 11:29:21.901   [MOTION]       Motion-Time Done
+I 11:29:21.902   [MOTION]       Motion Mode Changed: 7->0
+I 11:29:25.397   [MOTION]       Motion Mode Changed: 0->8
+I 11:30:06.397   [MOTION]       Motion-Time Done
+I 11:30:06.398   [MOTION]       Motion Mode Changed: 8->0
+I 11:30:27.831   [SYSTEM]       RUN DT Mode
+I 11:30:29.709   [SYSTEM]       STOP DT Mode
+W 12:16:48.617   [LAN2CAN]      Header footer not match
+I 12:45:01.270   [MAIN]         System Version: 1.0.0
+I 12:45:01.779   [LAN2CAN]      Succeed to create socket: 
+I 12:45:02.282   [DAEMON]       Succeed to start read thread
+I 12:45:02.282   [DAEMON]       Succeed to start real-time thread
+I 12:45:02.780   [LAN2CAN]      Succeed to connect l2c
+I 12:45:02.834   [SCB_V1]       SCB CON 1
+I 12:45:02.859   [SCB_V1]       SCB CON 0
+I 12:45:02.871   [SYSTEM]       SCB CONFIG DONE
+W 12:45:04.776   [SYSTEM]       System General Thread Jitter High: 132386 ns
+I 12:45:05.795   [MAIN]         SYSTEM STARTING
+W 12:45:06.782   [SYSTEM]       System General Thread Jitter High: 68058 ns
+W 12:47:11.132   [SYSTEM]       System General Thread Jitter High: 205845 ns
+I 12:50:27.513   [MAIN]         System Version: 1.0.0
+I 12:50:28.022   [LAN2CAN]      Succeed to create socket: 
+I 12:50:28.525   [DAEMON]       Succeed to start read thread
+I 12:50:28.525   [DAEMON]       Succeed to start real-time thread
+I 12:50:29.022   [LAN2CAN]      Succeed to connect l2c
+I 12:50:29.037   [SCB_V1]       SCB CON 1
+I 12:50:29.060   [SCB_V1]       SCB CON 0
+I 12:50:29.077   [SYSTEM]       SCB CONFIG DONE
+W 12:50:31.023   [SYSTEM]       System General Thread Jitter High: 118464 ns
+I 12:50:32.037   [MAIN]         SYSTEM STARTING
+I 12:51:03.313   [MAIN]         System Version: 1.0.0
+I 12:51:03.823   [LAN2CAN]      Succeed to create socket: 
+I 12:51:04.326   [DAEMON]       Succeed to start read thread
+I 12:51:04.326   [DAEMON]       Succeed to start real-time thread
+I 12:51:04.823   [LAN2CAN]      Succeed to connect l2c
+I 12:51:04.837   [SCB_V1]       SCB CON 1
+I 12:51:04.861   [SCB_V1]       SCB CON 0
+I 12:51:04.878   [SYSTEM]       SCB CONFIG DONE
+W 12:51:06.824   [SYSTEM]       System General Thread Jitter High: 228372 ns
+I 12:51:07.839   [MAIN]         SYSTEM STARTING
+I 12:51:31.063   [MAIN]         System Version: 1.0.0
+I 12:51:31.574   [LAN2CAN]      Succeed to create socket: 
+I 12:51:32.077   [DAEMON]       Succeed to start read thread
+I 12:51:32.077   [DAEMON]       Succeed to start real-time thread
+I 12:51:32.574   [LAN2CAN]      Succeed to connect l2c
+I 12:51:32.637   [SCB_V1]       SCB CON 1
+I 12:51:32.661   [SCB_V1]       SCB CON 0
+I 12:51:32.689   [SYSTEM]       SCB CONFIG DONE
+W 12:51:34.575   [SYSTEM]       System General Thread Jitter High: 297203 ns
+I 12:51:35.589   [MAIN]         SYSTEM STARTING
+I 12:52:45.879   [MAIN]         System Version: 1.0.0
+I 12:52:46.389   [LAN2CAN]      Succeed to create socket: 
+I 12:52:46.891   [DAEMON]       Succeed to start read thread
+I 12:52:46.891   [DAEMON]       Succeed to start real-time thread
+I 12:52:47.389   [LAN2CAN]      Succeed to connect l2c
+I 12:52:47.438   [SCB_V1]       SCB CON 1
+I 12:52:47.461   [SCB_V1]       SCB CON 0
+I 12:52:47.482   [SYSTEM]       SCB CONFIG DONE
+W 12:52:49.388   [SYSTEM]       System General Thread Jitter High: 58698 ns
+I 12:52:50.404   [MAIN]         SYSTEM STARTING
+I 12:54:06.768   [MAIN]         System Version: 1.0.0
+I 12:54:07.277   [LAN2CAN]      Succeed to create socket: 
+I 12:54:07.781   [DAEMON]       Succeed to start read thread
+I 12:54:07.781   [DAEMON]       Succeed to start real-time thread
+I 12:54:08.278   [LAN2CAN]      Succeed to connect l2c
+I 12:54:08.438   [SCB_V1]       SCB CON 1
+I 12:54:08.461   [SCB_V1]       SCB CON 0
+I 12:54:08.489   [SYSTEM]       SCB CONFIG DONE
+I 12:54:51.421   [MAIN]         System Version: 1.0.0
+I 12:54:51.930   [LAN2CAN]      Succeed to create socket: 
+I 12:54:52.433   [DAEMON]       Succeed to start read thread
+I 12:54:52.433   [DAEMON]       Succeed to start real-time thread
+I 12:54:52.930   [LAN2CAN]      Succeed to connect l2c
+I 12:54:53.038   [SCB_V1]       SCB CON 1
+I 12:54:53.061   [SCB_V1]       SCB CON 0
+I 12:54:53.082   [SYSTEM]       SCB CONFIG DONE
