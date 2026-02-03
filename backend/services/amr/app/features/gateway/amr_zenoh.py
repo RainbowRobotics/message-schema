@@ -1,9 +1,4 @@
-from rb_flat_buffers.SLAMNAV.MoveStatus import (
-    MoveStatusT,
-)
-from rb_flat_buffers.SLAMNAV.Path import (
-    PathT,
-)
+
 from rb_flat_buffers.SLAMNAV.Status import (
     StatusT,
 )
