@@ -3,6 +3,9 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+table NullSpace{
+}
+
 table Request_MotionSpeedBar {
   alpha: float;
 }
@@ -22,7 +25,6 @@ table Request_MotionHalt {
 table Request_ProgramBefore {
   option: int;
 }
-
 table Request_ProgramAfter {
   option: int;
 }

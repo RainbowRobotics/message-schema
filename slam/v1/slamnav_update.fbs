@@ -1,0 +1,71 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/update/upgrade
+    usage       :       소프트웨어 업데이트
+    field
+        - branch        :       업데이트 브랜치
+        - version       :       업데이트 버전
+*/
+table RequestUpdate {
+    id: string;
+    branch: string;
+    version: string;
+}
+table ResponseUpdate {
+    id: string;
+    branch: string;
+    version: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/update/curVersion
+    usage       :       현재 버전 조회
+    field
+        - version       :       현재 버전
+*/
+table RequestCurrentVersion {
+    id: string;
+}
+table ResponseCurrentVersion {
+    id: string;
+    version: string;
+    result: string;
+    message: string;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Result
+    topic       :       {robotType}/update/result
+    usage       :       업데이트 결과 응답
+    field
+        - branch        :       업데이트 브랜치
+        - version       :       업데이트 버전
+        - result        :       결과 상태
+        - message       :       결과 메시지
+*/
+table ResultUpdate {
+    id: string;
+    branch: string;
+    version: string;
+    result: string;
+    message: string;
+}

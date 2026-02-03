@@ -3,11 +3,13 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "save_robot_code"
 table Request_Save_Robot_Code {
   code: int;
   option: int;
 }
 
+// "save_area_parameter"
 table Request_Save_Area_Para {
     area_no: int;
     
@@ -25,6 +27,7 @@ table Request_Save_Area_Para {
     area_para_2: float;
 }
 
+// "save_user_frame_parameter"
 table Request_Save_User_Frame {
     userf_no: int;
 
@@ -37,13 +40,19 @@ table Request_Save_User_Frame {
     userf_rz: float;
 }
 
+// "save_user_script"
+table Request_Save_User_Script {
+  script_no: int;
+  script_txt: string;
+}
+
 table Request_Save_SideDin_SpecialFunc {
-  port_num: int;
+  port_num:         int;
   desired_function: int;
 }
 
 table Request_Save_SideDout_SpecialFunc {
-  port_num: int;
+  port_num:         int;
   desired_function: int;
 }
 
