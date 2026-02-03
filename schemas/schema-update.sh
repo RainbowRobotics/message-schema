@@ -7,7 +7,6 @@ function print_string(){
   local YELLOW='\033[1;33m'
   local BLUE='\033[0;34m'
   local NC='\033[0m'
-
   case "$1" in
     "error") echo -e "${RED}${2}${NC}" ;;
     "success") echo -e "${GREEN}${2}${NC}" ;;
@@ -25,10 +24,6 @@ while [[ $# -gt 0 ]]; do
         --remote) REMOTE_NAME="$2"; shift 2 ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --dir DIR      Schema directory (default: schemas)"
-            echo "  --remote NAME  Remote name (default: message-schema)"
             exit 0
             ;;
         *) print_string "error" "Unknown option: $1"; exit 1 ;;
@@ -62,7 +57,6 @@ echo ""
 
 print_string "info" "=== Commit main repo changes first ==="
 
-# 메인 레포에 변경사항이 있으면 먼저 커밋
 if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
   || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
   || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
@@ -99,12 +93,10 @@ print_string "info" "=== STEP 1: Pull from message-schema ==="
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# 이제 커밋되었으므로 clean해야 함
-
 print_string "info" "Fetching message-schema/main..."
 git fetch "$REMOTE_NAME" "main"
 
-REMOTE_TREE=$(git rev-parse "$REMOTE_NAME/main:$SCHEMA_DIR" 2>/dev/null || echo "")
+REMOTE_TREE=$(git rev-parse "refs/remotes/$REMOTE_NAME/main:$SCHEMA_DIR" 2>/dev/null || echo "")
 LOCAL_TREE=$(git rev-parse "HEAD:$SCHEMA_DIR" 2>/dev/null || echo "")
 
 if [ -z "$REMOTE_TREE" ]; then
@@ -115,34 +107,19 @@ else
     print_string "warning" "New changes found in message-schema"
     echo ""
 
-    TEMP_REMOTE=$(mktemp -d)
-    trap "rm -rf '$TEMP_REMOTE'" EXIT
+    print_string "info" "Running subtree pull..."
 
-    git archive "$REMOTE_NAME/main:$SCHEMA_DIR" | tar -x -C "$TEMP_REMOTE" 2>/dev/null || {
-        print_string "warning" "Cannot extract remote schemas"
-        rm -rf "$TEMP_REMOTE"
-    }
+    if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
+        print_string "success" "Pulled changes from message-schema"
 
-    if [ -d "$TEMP_REMOTE" ] && [ "$(ls -A $TEMP_REMOTE)" ]; then
-        echo "Changes from remote:"
-        diff -qr "$SCHEMA_DIR" "$TEMP_REMOTE" 2>/dev/null | grep -E "differ|Only in $TEMP_REMOTE" || echo "  (none)"
-        echo ""
-
-        print_string "info" "Running subtree pull..."
-
-        if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
-            print_string "success" "Pulled changes from message-schema"
-
-            if git push origin "$CURRENT_BRANCH"; then
-                print_string "success" "Pushed to main repo"
-            else
-                print_string "warning" "Failed to push to main repo"
-            fi
+        if git push origin "$CURRENT_BRANCH"; then
+            print_string "success" "Pushed to main repo"
         else
-            print_string "error" "Subtree pull failed"
-            print_string "info" "Resolve conflicts and try again"
-            exit 1
+            print_string "warning" "Failed to push to main repo"
         fi
+    else
+        print_string "error" "Subtree pull failed"
+        exit 1
     fi
 fi
 
@@ -169,11 +146,11 @@ echo ""
 git fetch "$REMOTE_NAME"
 
 BRANCH_EXISTS=false
-if git ls-remote --heads "$REMOTE_NAME" "$MY_BRANCH" | grep -q "$MY_BRANCH"; then
+if git show-ref --verify --quiet "refs/remotes/$REMOTE_NAME/$MY_BRANCH"; then
     BRANCH_EXISTS=true
     print_string "info" "Found existing branch: $MY_BRANCH"
 else
-    print_string "info" "Creating new branch"
+    print_string "info" "No existing branch, will create new one"
 fi
 
 echo ""
@@ -187,7 +164,7 @@ if [ "$BRANCH_EXISTS" = true ]; then
     git worktree add "$WORK_DIR" "$REMOTE_NAME/$MY_BRANCH"
     print_string "success" "Checked out existing branch"
 else
-    git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/main"
+    git worktree add --detach "$WORK_DIR" "refs/remotes/$REMOTE_NAME/main"
     (
         cd "$WORK_DIR"
         git checkout -b "$MY_BRANCH"
