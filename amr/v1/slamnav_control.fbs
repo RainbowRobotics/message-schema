@@ -203,9 +203,6 @@ table ResponseChargeTrigger {
 */
 table RequestGetObsBox {
     id: string;
-    min: ObsBox;
-    max: ObsBox;
-    range: float;
 }
 table ResponseGetObsBox {
     id: string;
@@ -354,7 +351,7 @@ table ResponsePathMode {
     topic       :       {robotType}/control/detectMarker
     usage       :       마커 감지 제어
     field
-        - command       :       감지 명령   ( "charuco" / "aruco" )
+        - command       :       감지 명령   ( "charuco" / "aruco" ) (현재 미구현이나, 추후 마커 종류를 구분할 경우 추가예정.)
         - number        :       카메라 번호
         - serial        :       카메라 시리얼
         - m_size        :       마커 크기
