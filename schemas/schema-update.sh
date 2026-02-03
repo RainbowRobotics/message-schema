@@ -224,6 +224,12 @@ if [ "$BRANCH_EXISTS" = true ]; then
     git worktree add "$WORK_DIR" "$REMOTE_NAME/$MY_BRANCH"
     print_string "success" "Checked out existing branch"
 else
+    # 로컬에 같은 이름의 브랜치가 있는지 확인
+    if git show-ref --verify --quiet "refs/heads/$MY_BRANCH"; then
+        print_string "warning" "로컬 브랜치 '$MY_BRANCH'가 이미 존재합니다. 삭제합니다..."
+        git branch -D "$MY_BRANCH"
+    fi
+
     git worktree add --detach "$WORK_DIR" "refs/remotes/$REMOTE_NAME/main"
     (
         cd "$WORK_DIR"
