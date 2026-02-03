@@ -389,6 +389,19 @@ table ResponseGetMapTopology {
     message: string;
 }
 
+table Request_Get_Map_Topology {
+    id: string;
+    map_name: string;
+}
+table Response_Get_Map_Topology {
+    id: string;
+    map_name: string;
+    data: [Node];
+    result: string;
+    message: string;
+}
+
+//------------------------------------
 
 /*
     category    :       RPC

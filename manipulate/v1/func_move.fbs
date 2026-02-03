@@ -27,6 +27,23 @@ table Request_Move_TickJogL {
     speed:          MoveInput_Speed;
 }
 //---------------------------------------------------------------
+// Appoach
+//---------------------------------------------------------------
+// "call_approach_j" // 기존의 call_move_j과 보내는 하위 fbs는 같습니다. (호출자만 다름)
+table Request_Move_ApproachJ {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+// "call_approach_l" // 기존의 call_move_l과 보내는 하위 fbs는 같습니다. (호출자만 다름)
+table Request_Move_ApproachL {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+// "call_approach_stop" // 기존의 call_smoothjog_stop과 보내는 하위 fbs는 같습니다. (호출자만 다름)
+table Request_Move_AppraochStop{
+    stoptime:       float;
+}
+//---------------------------------------------------------------
 // Move J
 //---------------------------------------------------------------
 table Request_Move_J {
@@ -98,3 +115,21 @@ table Request_Servo_L {
     filter:         float;
 }
 //---------------------------------------------------------------
+// Approach Move
+//---------------------------------------------------------------
+// "call_approach_j"
+table Request_Move_ApproachJ {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+
+// "call_approach_l"
+table Request_Move_ApproachL {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+
+// "call_approach_stop"
+table Request_Move_ApproachStop {
+    stoptime:       float;
+}

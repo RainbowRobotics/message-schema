@@ -281,3 +281,11 @@ table ResultMove {
     // remaining_dist: float;
     // bat_percent: int;
 }
+
+//--------------------------------------------
+//--------------------------------------------
+table Move_Result {
+    id: string;     // Response ID
+    result: string; // success / fail
+    message: string;    // reason
+}
