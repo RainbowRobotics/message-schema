@@ -118,25 +118,31 @@ else
         print_string "error" "Subtree pull failed (conflict)"
         echo ""
 
-        git merge --abort 2>/dev/null || true
-        print_string "info" "Merge aborted"
+        print_string "warning" "=== 충돌이 발생했습니다 ==="
+        echo ""
+        print_string "info" "충돌 파일 목록:"
+        git status --short | grep "^UU\|^AA\|^DD"
+        echo ""
+
+        print_string "info" "VSCode에서 충돌을 해결하세요:"
+        echo "1. VSCode Source Control 탭에서 충돌 파일 확인"
+        echo "2. 각 파일을 열면 충돌 마커가 보입니다:"
+        echo "   <<<<<<< HEAD (메인 레포 버전)"
+        echo "   ======="
+        echo "   >>>>>>> (message-schema 버전)"
+        echo "3. 'Accept Current Change' / 'Accept Incoming Change' 선택"
+        echo "4. 모든 충돌 해결 후:"
+        echo "   git add schemas/"
+        echo "   git commit"
+        echo "   git push origin $CURRENT_BRANCH"
+        echo "5. 다시 실행: make schema-update"
         echo ""
 
         if [ "$NEED_STASH" = true ]; then
-            print_string "info" "Restoring stashed changes..."
-            git stash pop
+            print_string "warning" "주의: 다른 파일들이 stash되어 있습니다"
+            print_string "info" "충돌 해결 후 복원: git stash pop"
         fi
 
-        echo ""
-        print_string "error" "=== Conflict with $REMOTE_NAME ==="
-        echo ""
-        print_string "info" "Resolve and retry:"
-        echo "1. Check: git status"
-        echo "2. Resolve conflicts"
-        echo "3. git add $SCHEMA_DIR"
-        echo "4. git commit"
-        echo "5. git push origin $CURRENT_BRANCH"
-        echo "6. Retry: make schema-update"
         exit 1
     fi
 
