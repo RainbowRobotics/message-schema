@@ -48,6 +48,8 @@ git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
 
 print_string "info" "=== Auto-commit ==="
 
+SCHEMA_COMMITTED=false
+
 if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR" || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
     print_string "info" "Changes in $SCHEMA_DIR"
     echo ""
@@ -66,6 +68,7 @@ if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$
         exit 1
     fi
     print_string "success" "Committed and pushed"
+    SCHEMA_COMMITTED=true
 else
     print_string "info" "No changes"
 fi
@@ -101,6 +104,7 @@ else
         else
             print_string "warning" "Push failed"
         fi
+        SCHEMA_COMMITTED=true
     else
         print_string "error" "Conflict"
         echo ""
@@ -146,8 +150,14 @@ if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$
         exit 1
     fi
     print_string "success" "Committed"
+    SCHEMA_COMMITTED=true
 else
-    print_string "info" "No changes"
+    print_string "info" "No changes in working tree"
+fi
+
+# STEP 3는 SCHEMA_COMMITTED가 true일 때만 실행
+if [ "$SCHEMA_COMMITTED" = false ]; then
+    print_string "info" "No schemas commits, skipping STEP 3"
     print_string "success" "Done"
     exit 0
 fi
