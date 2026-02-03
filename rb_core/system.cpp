@@ -1324,6 +1324,12 @@ namespace rb_system {
         std::string s_alias = parameter_robot.arm_name;
         return {s_category, s_model, s_version, s_alias};
     }
+    int Print_System_Basic_Info(){
+        auto [s_category, s_model, s_version, s_alias] = rb_system::Get_System_Basic_Info();
+        std::cout<<"s_category: "<<s_category<<std::endl;
+        std::cout<<"s_model: "<<s_model<<std::endl;
+        return MSG_OK;
+    }
 
     int Save_Robot_Code(int t_code, int option){
         // auto [temp_valid, temp_para] = rb_config::READ_Robot_Parameter(t_code);

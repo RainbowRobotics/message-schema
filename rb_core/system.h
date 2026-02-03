@@ -128,6 +128,7 @@ namespace rb_system {
     };
 
     std::tuple<std::string, std::string, std::string, std::string> Get_System_Basic_Info();
+    int Print_System_Basic_Info();
 
     
     // Robot Parameter

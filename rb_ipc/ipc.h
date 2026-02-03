@@ -27,6 +27,7 @@ namespace rb_ipc {
     void toPyFM_FlowControl(int option);
     int toFriend_ServoJ(std::string friend_domain, std::array<float, NO_OF_JOINT> &target_angles, float t1, float t2, float gain, float filter);
     int toFriend_ServoL(std::string friend_domain, std::array<float, NO_OF_CARTE> &target_cartes, float t1, float t2, float gain, float filter);
+    int toFriend_PrintInfo(std::string friend_domain);
 }
 
 #endif // IPC_H

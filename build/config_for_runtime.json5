@@ -2,10 +2,6 @@
   "mode": "peer",
   "scouting": { 
     "multicast": { "enabled": true, "ttl": 1 },
-    "gossip": { 
-      "enabled": true,
-      "multihop": true,
-    }
   },
   "connect": { 
     "endpoints": []

@@ -2047,3 +2047,12 @@ I 19:21:07.316   [SCB_V1]       SCB CON 0
 I 19:21:07.336   [SCB_V1]       SCB CON 1
 I 19:21:07.355   [SYSTEM]       SCB CONFIG DONE
 I 19:21:10.175   [MAIN]         SYSTEM STARTING
+I 20:04:40.831   [MAIN]         System Version: 1.0.0
+I 20:04:41.340   [LAN2CAN]      Succeed to create socket: 
+I 20:04:41.843   [DAEMON]       Succeed to start read thread
+I 20:04:41.843   [DAEMON]       Succeed to start real-time thread
+I 20:04:42.341   [LAN2CAN]      Succeed to connect l2c
+I 20:04:42.348   [SCB_V1]       SCB CON 1
+I 20:04:42.522   [SCB_V1]       SCB CON 0
+I 20:04:42.536   [SYSTEM]       SCB CONFIG DONE
+I 20:04:45.354   [MAIN]         SYSTEM STARTING

@@ -295,6 +295,9 @@ namespace rb_ipc {
             // -----------------------------------------------------------------------
             // Config call
             // -----------------------------------------------------------------------
+            ADD_SERVE_SIMPLE("print_info", IPC::Request_PrintInfo, IPC::Response_Functions, {
+                return_int = rb_system::Print_System_Basic_Info();
+            });
             ADD_SERVE_BLANK("call_whoami", IPC::Request_CallWhoAmI, IPC::Response_CallWhoamI, {
                 auto [ts_category, ts_model, ts_version, ts_alias] = rb_system::Get_System_Basic_Info();
 
@@ -476,6 +479,21 @@ namespace rb_ipc {
             // Set Call
             // -----------------------------------------------------------------------
             ADD_SERVE_SIMPLE("set_toollist_num", IPC::Request_Set_Tool_List, IPC::Response_Functions, {
+                std::cout<<"toFriend_PrintInfo 1: "<<toFriend_PrintInfo("SMBC")<<std::endl;
+
+                std::cout<<"-------------------------------------------------------"<<std::endl;
+                auto t0 = std::chrono::steady_clock::now();
+                int print_ret = toFriend_PrintInfo("C501880");
+                auto t1 = std::chrono::steady_clock::now();
+                auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+                std::cout << "toFriend_ServoJ elapsed: "<< elapsed_us << " us" << std::endl;
+                std::cout<<"print_ret : "<<print_ret<<std::endl;
+                std::cout<<"-------------------------------------------------------"<<std::endl;
+
+
+
+                
+
                 return_int = rb_system::Change_Tool_Number(req->target_tool_num());
             });
             ADD_SERVE_SIMPLE("set_userframe_num", IPC::Request_Set_User_Frame, IPC::Response_Functions, {
@@ -1232,6 +1250,37 @@ namespace rb_ipc {
                 function_response = res->return_value();
             },
             1  // 타임아웃(ms)
+        );
+
+        if (call_ret != 0) {
+            std::cerr << "Fail Call ::"<<call_ret << std::endl;
+            return -1;
+        }else{
+            //std::cout << "Success Call"<<function_response << std::endl;
+            return function_response;
+        }
+    }
+
+    int toFriend_PrintInfo(std::string friend_domain){
+        if (!session_tx) {
+            std::cerr << "[toFriend_PrintInfo] session_tx not initialized!" << std::endl;
+            return -1;
+        }
+
+        std::string TX_MSG = friend_domain + "/print_info";
+        int function_response = MSG_OK;  // 바깥 변수 선언
+        int call_ret = session_tx->CallWith<IPC::Request_PrintInfo, IPC::Response_Functions>(
+            TX_MSG,  // 상대방 Zenoh 리소스 이름
+            [](flatbuffers::FlatBufferBuilder& fbb) -> flatbuffers::Offset<IPC::Request_PrintInfo> {
+                IPC::Request_PrintInfoT reqT;
+                return IPC::Request_PrintInfo::Pack(fbb, &reqT);
+            },
+            [&function_response](const IPC::Response_Functions* res) {
+                // 응답 콜백
+                // 필요하면 res 확인 가능
+                function_response = res->return_value();
+            },
+            100  // 타임아웃(ms)
         );
 
         if (call_ret != 0) {

@@ -19,6 +19,10 @@ struct Response_Functions;
 struct Response_FunctionsBuilder;
 struct Response_FunctionsT;
 
+struct Request_PrintInfo;
+struct Request_PrintInfoBuilder;
+struct Request_PrintInfoT;
+
 struct Response_FunctionsT : public ::flatbuffers::NativeTable {
   typedef Response_Functions TableType;
   int32_t return_value = 0;
@@ -71,6 +75,45 @@ inline ::flatbuffers::Offset<Response_Functions> CreateResponse_Functions(
 
 ::flatbuffers::Offset<Response_Functions> CreateResponse_Functions(::flatbuffers::FlatBufferBuilder &_fbb, const Response_FunctionsT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_PrintInfoT : public ::flatbuffers::NativeTable {
+  typedef Request_PrintInfo TableType;
+};
+
+struct Request_PrintInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_PrintInfoT NativeTableType;
+  typedef Request_PrintInfoBuilder Builder;
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+  Request_PrintInfoT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_PrintInfoT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_PrintInfo> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_PrintInfoT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_PrintInfoBuilder {
+  typedef Request_PrintInfo Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit Request_PrintInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_PrintInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_PrintInfo>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_PrintInfo> CreateRequest_PrintInfo(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  Request_PrintInfoBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_PrintInfo> CreateRequest_PrintInfo(::flatbuffers::FlatBufferBuilder &_fbb, const Request_PrintInfoT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Response_FunctionsT *Response_Functions::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Response_FunctionsT>(new Response_FunctionsT());
   UnPackTo(_o.get(), _resolver);
@@ -95,6 +138,29 @@ inline ::flatbuffers::Offset<Response_Functions> CreateResponse_Functions(::flat
   return IPC::CreateResponse_Functions(
       _fbb,
       _return_value);
+}
+
+inline Request_PrintInfoT *Request_PrintInfo::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_PrintInfoT>(new Request_PrintInfoT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_PrintInfo::UnPackTo(Request_PrintInfoT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+}
+
+inline ::flatbuffers::Offset<Request_PrintInfo> Request_PrintInfo::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_PrintInfoT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_PrintInfo(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_PrintInfo> CreateRequest_PrintInfo(::flatbuffers::FlatBufferBuilder &_fbb, const Request_PrintInfoT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_PrintInfoT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  return IPC::CreateRequest_PrintInfo(
+      _fbb);
 }
 
 }  // namespace IPC
