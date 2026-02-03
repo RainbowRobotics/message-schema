@@ -1,0 +1,53 @@
+namespace IPC;
+
+struct N_INPUT_f {
+  f: [float: 7];
+}
+struct N_JOINT_f {
+  f: [float: 7];
+}
+struct N_CARTE_f {
+  f: [float: 7];
+}
+struct N_DIN_u {
+  u: [ubyte: 16];
+}
+struct N_DOUT_u {
+  u: [ubyte: 16];
+}
+struct N_DIN_b {
+  b: [byte: 16];
+}
+struct N_DOUT_b {
+  b: [byte: 16];
+}
+struct N_AIN_f {
+  f: [float: 4];
+}
+struct N_AOUT_f {
+  f: [float: 4];
+}
+struct Vec3f {
+  v:[float:3];
+}
+struct Mat3f {
+  m:[float:9];
+}
+struct FloatArray32 {
+  arr:[float:32];
+}
+
+table MoveInput_Target {
+    tar_values:     N_INPUT_f;
+    tar_frame:      int;
+    tar_unit:       int;
+}
+table MoveInput_Type{
+    pnt_type:       int;
+    pnt_para:       float;
+}
+table MoveInput_Speed {
+    spd_mode:       int;
+    spd_vel_para:   float;
+    spd_acc_para:   float;
+}
