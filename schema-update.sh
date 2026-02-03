@@ -217,9 +217,29 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
     }
 else
     print_string "info" "Creating branch"
+
+    # 이 브랜치만 타겟팅해서 정리
     if git show-ref --verify --quiet "refs/heads/$BR"; then
-        git branch -D "$BR"
+        # 이 브랜치를 사용하는 worktree만 찾아서 제거
+        BRANCH_WORKTREES=$(git worktree list --porcelain | grep -A 3 "branch refs/heads/$BR" | grep "^worktree" | cut -d' ' -f2 || true)
+        if [ -n "$BRANCH_WORKTREES" ]; then
+            print_string "warning" "Found worktrees using branch $BR, cleaning up..."
+            echo "$BRANCH_WORKTREES" | while read -r wt; do
+                if [ -n "$wt" ]; then
+                    print_string "info" "Removing: $wt"
+                    git worktree remove --force "$wt" 2>/dev/null || true
+                fi
+            done
+        fi
+        # 브랜치 삭제 재시도
+        if ! git branch -D "$BR" 2>/dev/null; then
+            print_string "error" "Cannot delete branch $BR"
+            print_string "info" "Please run: git worktree list"
+            print_string "info" "And manually remove worktrees if needed"
+            exit 1
+        fi
     fi
+
     TMP="$BR-tmp"
     git branch -D "$TMP" 2>/dev/null || true
     git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
