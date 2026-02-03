@@ -436,9 +436,20 @@ table ResponseMappingSave {
     message: string;
 }
 
-// TODO: 함수 용도 확인 필요
-table RequestMappingCloudReload {}
-table ResponseMappingCloudReload {}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/mapping/cloudReload
+    usage       :       Request 시, MappingCloud 에 모든 데이트를 쌓아서 publish
+*/
+table RequestMappingCloudReload {
+    id: string;
+}
+table ResponseMappingCloudReload {
+    id: string;
+    result: string;
+    message: string;
+}
 
 
 // -------------------------------------------------

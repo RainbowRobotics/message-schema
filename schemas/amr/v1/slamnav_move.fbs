@@ -226,6 +226,7 @@ table ResponseMoveRotate {
 
 /*
     category    :       Pub / Sub
+    topic       :       {robotType}/move/jog
     usage       :       조그 이동 속도
     field
         - vx            :       X축 선속도

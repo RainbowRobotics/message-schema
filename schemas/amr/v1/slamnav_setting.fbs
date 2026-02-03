@@ -193,18 +193,18 @@ table ResponseGetSensorInfo {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/setting/setSensorIndex
-    usage       :       센서 인덱스 설정
+    topic       :       {robotType}/setting/setSensorInfo
+    usage       :       센서 정보 설정
     field
         - target        :       센서 대상
         - index         :       센서 정보 목록
 */
-table RequestSetSensorIndex {
+table RequestSetSensorInfo {
     id: string;
     target: string;
     index: [SensorInfo];
 }
-table ResponseSetSensorIndex {
+table ResponseSetSensorInfo {
     id: string;
     target: string;
     index: [SensorInfo];
