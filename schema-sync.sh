@@ -52,15 +52,25 @@ print_string "info" "$REMOTE_NAME/main을 가져오는 중..."
 git fetch "$REMOTE_NAME" main
 
 # schemas 디렉토리 완전 삭제
-print_string "info" "$SCHEMA_DIR 디렉토리 삭제 중..."
-git rm -rf "$SCHEMA_DIR"
-git commit -m "Remove schemas for re-initialization"
+print_string "info" "$SCHEMA_DIR 디렉토리 정리 중..."
+rm -rf "$SCHEMA_DIR"
+git add "$SCHEMA_DIR"
+git commit -m "Clean schemas directory for sync"
 
-# subtree add로 다시 추가
-print_string "info" "$REMOTE_NAME/main에서 $SCHEMA_DIR 다시 추가 중..."
-git subtree add --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash
+# subtree pull로 최신 내용 가져오기 (add 대신 pull 사용)
+print_string "info" "$REMOTE_NAME/main에서 $SCHEMA_DIR 동기화 중..."
+if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash; then
+  print_string "success" "동기화 완료!"
+else
+  print_string "warning" "subtree pull 실패. subtree add 시도 중..."
+  if git subtree add --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash; then
+    print_string "success" "동기화 완료!"
+  else
+    print_string "error" "동기화 실패. 수동으로 처리가 필요합니다."
+    exit 1
+  fi
+fi
 
-print_string "success" "동기화 완료!"
 print_string "info" "origin에 푸시 중..."
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
