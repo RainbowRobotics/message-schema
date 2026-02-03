@@ -18,7 +18,7 @@ function print_string(){
 SCHEMA_DIR="schemas"
 REMOTE_NAME="message-schema"
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case $1 in
         --dir) SCHEMA_DIR="$2"; shift 2 ;;
         --remote) REMOTE_NAME="$2"; shift 2 ;;
@@ -30,12 +30,12 @@ MAIN_REPO="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ "$MAIN_REPO" != "$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo '')" ]; then
-    print_string "error" "This script must be run from a subtree"
+    print_string "error" "Run from subtree only"
     exit 1
 fi
 
 if [ ! -d "$MAIN_REPO/$SCHEMA_DIR" ]; then
-    print_string "error" "Directory not found: $SCHEMA_DIR"
+    print_string "error" "Not found: $SCHEMA_DIR"
     exit 1
 fi
 
@@ -46,162 +46,127 @@ git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
     exit 1
 }
 
-print_string "info" "=== Auto-commit main repo changes ==="
+print_string "info" "=== Auto-commit ==="
 
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
-  || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
-  || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
-    print_string "info" "Changes detected in $SCHEMA_DIR"
+if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR" || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
+    print_string "info" "Changes in $SCHEMA_DIR"
     echo ""
     git status --short -- "$SCHEMA_DIR"
     echo ""
-
     git add "$SCHEMA_DIR"
-
     if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
-        print_string "warning" "Other files staged. Aborting."
+        print_string "warning" "Other files staged"
         git reset HEAD "$SCHEMA_DIR"
         exit 1
     fi
-
     git commit -m "Update schemas"
-
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
     if ! git push origin "$CURRENT_BRANCH"; then
         print_string "error" "Push failed"
         exit 1
     fi
-
-    print_string "success" "Main repo committed and pushed"
+    print_string "success" "Committed and pushed"
 else
-    print_string "info" "No changes in $SCHEMA_DIR"
+    print_string "info" "No changes"
 fi
 
 echo ""
+print_string "info" "=== STEP 1: Pull ==="
 
-print_string "info" "=== STEP 1: Pull from message-schema ==="
-
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-print_string "info" "Fetching $REMOTE_NAME/main..."
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+print_string "info" "Fetching..."
 git fetch "$REMOTE_NAME" "main"
 
-REMOTE_TREE=$(git rev-parse "refs/remotes/$REMOTE_NAME/main:$SCHEMA_DIR" 2>/dev/null || echo "")
-LOCAL_TREE=$(git rev-parse "HEAD:$SCHEMA_DIR" 2>/dev/null || echo "")
+REMOTE_TREE="$(git rev-parse "refs/remotes/$REMOTE_NAME/main:$SCHEMA_DIR" 2>/dev/null || echo "")"
+LOCAL_TREE="$(git rev-parse "HEAD:$SCHEMA_DIR" 2>/dev/null || echo "")"
 
 if [ -z "$REMOTE_TREE" ]; then
-    print_string "warning" "No $SCHEMA_DIR in $REMOTE_NAME"
+    print_string "warning" "No remote schemas"
 elif [ "$REMOTE_TREE" = "$LOCAL_TREE" ]; then
-    print_string "success" "Already up to date"
+    print_string "success" "Up to date"
 else
-    print_string "warning" "New changes found in $REMOTE_NAME"
+    print_string "warning" "New changes"
     echo ""
-
     NEED_STASH=false
     if ! git diff-index --quiet HEAD --; then
-        print_string "info" "Stashing other changes..."
-        git stash push -m "auto-stash-schema-update" -- . ":!$SCHEMA_DIR"
+        print_string "info" "Stashing..."
+        git stash push -m "auto-stash" -- . ":!$SCHEMA_DIR"
         NEED_STASH=true
     fi
-
-    print_string "info" "Running subtree pull..."
-
+    print_string "info" "Pulling..."
     if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
-        print_string "success" "Pulled from $REMOTE_NAME"
-
+        print_string "success" "Pulled"
         if git push origin "$CURRENT_BRANCH"; then
-            print_string "success" "Pushed to main repo"
+            print_string "success" "Pushed"
         else
             print_string "warning" "Push failed"
         fi
     else
-        print_string "error" "Subtree pull failed (conflict)"
+        print_string "error" "Conflict"
         echo ""
-
-        print_string "warning" "=== 충돌이 발생했습니다 ==="
+        print_string "warning" "=== Resolve in VSCode ==="
+        git status --short | grep "^UU\|^AA\|^DD" || echo ""
         echo ""
-        print_string "info" "충돌 파일 목록:"
-        git status --short | grep "^UU\|^AA\|^DD"
+        echo "1. Open VSCode Source Control"
+        echo "2. Resolve conflicts"
+        echo "3. git add schemas/"
+        echo "4. git commit"
+        echo "5. git push origin $CURRENT_BRANCH"
+        echo "6. Run again: make schema-update"
         echo ""
-
-        print_string "info" "VSCode에서 충돌을 해결하세요:"
-        echo "1. VSCode Source Control 탭에서 충돌 파일 확인"
-        echo "2. 각 파일을 열면 충돌 마커가 보입니다:"
-        echo "   <<<<<<< HEAD (메인 레포 버전)"
-        echo "   ======="
-        echo "   >>>>>>> (message-schema 버전)"
-        echo "3. 'Accept Current Change' / 'Accept Incoming Change' 선택"
-        echo "4. 모든 충돌 해결 후:"
-        echo "   git add schemas/"
-        echo "   git commit"
-        echo "   git push origin $CURRENT_BRANCH"
-        echo "5. 다시 실행: make schema-update"
-        echo ""
-
         if [ "$NEED_STASH" = true ]; then
-            print_string "warning" "주의: 다른 파일들이 stash되어 있습니다"
-            print_string "info" "충돌 해결 후 복원: git stash pop"
+            print_string "warning" "Stashed changes exist"
+            print_string "info" "Restore: git stash pop"
         fi
-
         exit 1
     fi
-
     if [ "$NEED_STASH" = true ]; then
-        print_string "info" "Restoring stashed changes..."
+        print_string "info" "Restoring..."
         git stash pop
     fi
 fi
 
 echo ""
+print_string "info" "=== STEP 2: Commit ==="
 
-print_string "info" "=== STEP 2: Commit main repo changes ==="
-
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" \
-  || ! git diff --cached --quiet -- "$SCHEMA_DIR" \
-  || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
-    print_string "info" "Changes in $SCHEMA_DIR"
+if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR" || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
+    print_string "info" "Changes detected"
     echo ""
     git status --short -- "$SCHEMA_DIR"
     echo ""
-
     git add "$SCHEMA_DIR"
-
     if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
-        print_string "warning" "Other files staged. Aborting."
+        print_string "warning" "Other files staged"
         git reset HEAD "$SCHEMA_DIR"
         exit 1
     fi
-
     git commit -m "Update schemas"
-
     if ! git push origin "$CURRENT_BRANCH"; then
         print_string "error" "Push failed"
         exit 1
     fi
-
-    print_string "success" "Main repo committed"
+    print_string "success" "Committed"
 else
-    print_string "info" "No changes in $SCHEMA_DIR"
-    print_string "success" "Done (nothing to push)"
+    print_string "info" "No changes"
+    print_string "success" "Done"
     exit 0
 fi
 
 echo ""
-
-print_string "info" "=== STEP 3: Update message-schema branch ==="
+print_string "info" "=== STEP 3: Update branch ==="
 
 BR="schema/from-$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
-    print_string "error" "Cannot determine branch name"
+    print_string "error" "Cannot determine branch"
     exit 1
 fi
 
-LOCAL_TREE=$(git rev-parse "HEAD:$SCHEMA_DIR")
-MAIN_COMMIT=$(git rev-parse --short HEAD)
+LOCAL_TREE="$(git rev-parse "HEAD:$SCHEMA_DIR")"
+MAIN_COMMIT="$(git rev-parse --short HEAD)"
 
-echo "schema branch => $BR"
-print_string "info" "local  tree => $LOCAL_TREE"
-print_string "info" "main commit => $MAIN_COMMIT"
+echo "Branch: $BR"
+echo "Tree: $LOCAL_TREE"
+echo "Commit: $MAIN_COMMIT"
 echo ""
 
 git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
@@ -209,70 +174,51 @@ git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 if git show-ref --verify --quiet "$REMOTE_REF"; then
-    REMOTE_TREE=$(git rev-parse "$REMOTE_NAME/$BR^{tree}")
-    print_string "info" "remote tree => $REMOTE_TREE"
-
+    REMOTE_TREE="$(git rev-parse "$REMOTE_NAME/$BR^{tree}")"
+    echo "Remote tree: $REMOTE_TREE"
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
         print_string "info" "No changes"
         exit 0
     fi
-
-    WORK_DIR=$(mktemp -d)
+    WORK_DIR="$(mktemp -d)"
     trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
-
     git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
-
     (
         cd "$WORK_DIR"
-
-        print_string "info" "Updating schemas..."
-
-        TEMP_EXTRACT=$(mktemp -d)
+        print_string "info" "Updating..."
+        TEMP_EXTRACT="$(mktemp -d)"
         trap "rm -rf '$TEMP_EXTRACT'" EXIT
-
         git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
-
-        rsync -av \
-            "$TEMP_EXTRACT/" \
-            ./
-
+        rsync -av "$TEMP_EXTRACT/" ./
         rm -rf "$TEMP_EXTRACT"
-
         git add -A
         if git diff --staged --quiet; then
             print_string "info" "No changes"
         else
-            print_string "info" "Changed files:"
+            echo "Changed:"
             git diff --staged --name-status
             echo ""
-
-            git commit -m "Update schemas from main repo @ $MAIN_COMMIT"
+            git commit -m "Update schemas from main @ $MAIN_COMMIT"
             git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
         fi
     ) || {
-        print_string "error" "Push to $REMOTE_NAME failed"
+        print_string "error" "Push failed"
         exit 1
     }
 else
-    print_string "info" "Creating new branch: $BR"
-
+    print_string "info" "Creating branch"
     if git show-ref --verify --quiet "refs/heads/$BR"; then
-        print_string "warning" "Local branch exists. Deleting..."
         git branch -D "$BR"
     fi
-
     TMP="$BR-tmp"
-
     git branch -D "$TMP" 2>/dev/null || true
     git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
-
     if ! git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
-        print_string "error" "Failed to create branch"
+        print_string "error" "Failed"
         git branch -D "$TMP" 2>/dev/null || true
         exit 1
     fi
-
     git branch -D "$TMP"
 fi
 
-print_string "success" "Push to $REMOTE_NAME/$BR complete"
+print_string "success" "Complete"
