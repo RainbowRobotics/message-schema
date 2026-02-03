@@ -220,34 +220,30 @@ else
 
     # 브랜치 삭제 전 worktree 정리 (이 브랜치만!)
     if git show-ref --verify --quiet "refs/heads/$BR"; then
-        # 이 브랜치를 사용하는 worktree 제거
-        REMOVED_ANY=false
-        git worktree list --porcelain | grep -A 3 "branch refs/heads/$BR" | grep "^worktree" | cut -d' ' -f2 | while read -r wt; do
-            if [ -n "$wt" ]; then
-                print_string "warning" "Removing worktree: $wt"
-                git worktree remove --force "$wt" 2>/dev/null || true
-                REMOVED_ANY=true
-            fi
-        done
+        # 이 브랜치를 사용하는 worktree들 찾기
+        WORKTREES_TO_REMOVE=$(git worktree list --porcelain | grep -A 3 "branch refs/heads/$BR" | grep "^worktree" | cut -d' ' -f2)
 
-        # worktree를 제거했으면 prune 실행
-        git worktree prune
+        if [ -n "$WORKTREES_TO_REMOVE" ]; then
+            print_string "warning" "Removing worktrees for branch $BR..."
+            echo "$WORKTREES_TO_REMOVE" | while read -r wt; do
+                if [ -n "$wt" ]; then
+                    print_string "info" "  Removing: $wt"
+                    git worktree remove --force "$wt" 2>/dev/null || true
+                fi
+            done
+            git worktree prune
+        fi
 
         # 브랜치 삭제 시도
         if ! git branch -D "$BR" 2>/dev/null; then
-            # 실패하면 한 번 더 prune 후 재시도
-            print_string "warning" "First delete failed, cleaning up..."
+            # 실패하면 한 번 더 정리 후 재시도
+            print_string "warning" "Retrying after cleanup..."
             git worktree prune
-            sleep 0.2
+            sleep 0.3
             if ! git branch -D "$BR" 2>/dev/null; then
                 print_string "error" "Cannot delete branch $BR"
-                print_string "info" "Worktrees still referencing this branch:"
-                git worktree list | grep "$BR" || echo "  (none found)"
-                echo ""
-                print_string "info" "Manual fix:"
-                echo "  git worktree prune"
-                echo "  git worktree list"
-                echo "  git branch -D $BR"
+                print_string "info" "Current worktrees:"
+                git worktree list
                 exit 1
             fi
         fi
