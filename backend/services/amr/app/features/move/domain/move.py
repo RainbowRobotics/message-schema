@@ -18,12 +18,12 @@ from rb_utils.service_exception import (
 )
 
 from app.schema.amr import AmrResponseStatusEnum
-from app.features.move.amr_move_schema import Request_Move_GoalPD
-from app.features.move.amr_move_schema import Request_Move_TargetPD
-from app.features.move.amr_move_schema import Request_Move_JogPD
-from app.features.move.amr_move_schema import Request_Move_XLinearPD
-from app.features.move.amr_move_schema import Request_Move_CircularPD
-from app.features.move.amr_move_schema import Request_Move_RotatePD
+from app.features.move.move_schema import Request_Move_GoalPD
+from app.features.move.move_schema import Request_Move_TargetPD
+from app.features.move.move_schema import Request_Move_JogPD
+from app.features.move.move_schema import Request_Move_XLinearPD
+from app.features.move.move_schema import Request_Move_CircularPD
+from app.features.move.move_schema import Request_Move_RotatePD
 
 
 # === Enums ==========================================================
@@ -68,6 +68,7 @@ class MoveModel:
 
     # moveGoal
     goal_id: str | None = None
+    goal_name: str | None = None
 
     # moveTarget
     goal_pose: list[float] | None = None
@@ -86,7 +87,6 @@ class MoveModel:
     cur_pose: list[float] | None = None
     cur_vel: list[float] | None = None
     remaining_time: float | None = None
-    goal_name: str | None = None
     bat_percent: int | None = None
     map_name: str | None = None
 
@@ -105,6 +105,7 @@ class MoveModel:
         self.method = req.method if req.method is not None else AmrMoveMethodEnum.PP.value
         self.preset = req.preset if req.preset is not None else 0
         self.goal_id = req.goalId
+        self.goal_name = req.goalName
         self.update_at = datetime.now(UTC)
 
     def set_move_target(self, req: Request_Move_TargetPD):
@@ -220,7 +221,8 @@ class MoveModel:
             raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
         if self.command == AmrMoveCommandEnum.MOVE_GOAL:
             if self.goal_id == "":
-                raise ServiceException("goal_id 값이 없습니다", status_code=400)
+                if self.goal_name is None:
+                    raise ServiceException("goal_id 또는 goal_name 값이 필요합니다", status_code=400)
 
         elif self.command == AmrMoveCommandEnum.MOVE_TARGET:
             if self.goal_pose is None:

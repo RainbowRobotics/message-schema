@@ -17,7 +17,8 @@ from rb_utils.pagination import (
 
 
 class Request_Move_GoalPD(BaseModel):
-    goalId: str = Field(..., description="이동할 목표 지점의 ID", example="N_1734940733829")
+    goalId: str | None = Field(None, description="이동할 목표 지점의 ID", example="N_1734940733829")
+    goalName: str | None = Field(None, description="이동할 목표 지점의 이름", example="")
     method: str = Field(..., description="이동 방식", example="pp")
     preset: int = Field(..., description="사전 설정된 이동 프로파일 번호", example=0)
 
