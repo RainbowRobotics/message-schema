@@ -124,6 +124,7 @@ else
 
     print_string "info" "Running subtree pull..."
 
+    SUBTREE_FAILED=false
     if git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" "main" --squash; then
         print_string "success" "Pulled changes from message-schema"
 
@@ -133,21 +134,52 @@ else
             print_string "warning" "Failed to push to main repo"
         fi
     else
-        print_string "error" "Subtree pull failed"
+        SUBTREE_FAILED=true
+        print_string "error" "Subtree pull 실패 (충돌 발생)"
+        echo ""
+
+        print_string "warning" "충돌을 자동으로 처리합니다..."
+
+        # 충돌 상태 취소
+        git merge --abort 2>/dev/null || true
+
+        print_string "info" "충돌 발생으로 merge를 취소했습니다"
+        echo ""
 
         # stash 복원
         if [ "$NEED_STASH" = true ]; then
-            print_string "info" "Restoring stashed changes..."
-            git stash pop
+            print_string "info" "임시 저장한 작업을 복원합니다..."
+            if git stash pop; then
+                print_string "success" "작업 복원 완료"
+            else
+                print_string "warning" "작업 복원 실패. 수동으로 복원하세요: git stash pop"
+            fi
         fi
 
-        exit 1
+        echo ""
+        print_string "error" "=== message-schema와 충돌이 있습니다 ==="
+        echo ""
+        print_string "info" "해결 방법:"
+        echo "1. message-schema에서 삭제/수정된 파일이 메인 레포에 있습니다"
+        echo "2. 메인 레포에서 해당 파일을 삭제하거나 수정하세요"
+        echo "3. 다시 실행하세요: make schema-update"
+        echo ""
+        print_string "info" "충돌 파일:"
+        echo "  - schemas/amr/v1/slamnav_control.fbs"
+        echo "  - schemas/amr/v1/slamnav_status.fbs"
+        echo "  - schemas/manipulate/v1/func_move.fbs"
+        echo ""
     fi
 
-    # stash 복원
-    if [ "$NEED_STASH" = true ]; then
+    # stash 복원 (충돌 없을 때만)
+    if [ "$NEED_STASH" = true ] && [ "$SUBTREE_FAILED" = false ]; then
         print_string "info" "Restoring stashed changes..."
         git stash pop
+    fi
+
+    # 실패 시 종료
+    if [ "$SUBTREE_FAILED" = true ]; then
+        exit 1
     fi
 fi
 
