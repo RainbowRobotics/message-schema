@@ -61,11 +61,11 @@ class Response_Move_ResumePD(BaseModel):
     result: str = Field(..., description="이동 재개 명령 처리 결과", example="accept")
     message: str | None = Field(None, description="상태 메시지", example="")
 
-class Request_Move_XLinearPD(BaseModel):
+class Request_Move_LinearPD(BaseModel):
     target: float = Field(..., description="이동 목표 좌표 [m]", example=3.5)
     speed: float = Field(..., description="이동 속도 [m/s]", example=0.5)
 
-class Response_Move_XLinearPD(BaseModel):
+class Response_Move_LinearPD(BaseModel):
     target: float = Field(..., description="이동 목표 좌표 [m]", example=3.5)
     speed: float = Field(..., description="이동 속도 [m/s]", example=0.5)
     result: str = Field(..., description="이동 선형 명령 처리 결과", example="accept")

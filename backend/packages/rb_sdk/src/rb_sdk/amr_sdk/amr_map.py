@@ -1,24 +1,4 @@
 
-from rb_flat_buffers.SLAMNAV.Node import NodeT
-from rb_flat_buffers.SLAMNAV.Request_Get_Map_Cloud import Request_Get_Map_CloudT
-from rb_flat_buffers.SLAMNAV.Request_Get_Map_File import Request_Get_Map_FileT
-from rb_flat_buffers.SLAMNAV.Request_Get_Map_Topology import Request_Get_Map_TopologyT
-from rb_flat_buffers.SLAMNAV.Request_Map_List import Request_Map_ListT
-from rb_flat_buffers.SLAMNAV.Request_Map_Load import Request_Map_LoadT
-from rb_flat_buffers.SLAMNAV.Request_Mapping_Save import Request_Mapping_SaveT
-from rb_flat_buffers.SLAMNAV.Request_Mapping_Start import Request_Mapping_StartT
-from rb_flat_buffers.SLAMNAV.Request_Mapping_Stop import Request_Mapping_StopT
-from rb_flat_buffers.SLAMNAV.Request_Set_Map_Cloud import Request_Set_Map_CloudT
-from rb_flat_buffers.SLAMNAV.Response_Get_Map_Cloud import Response_Get_Map_CloudT
-from rb_flat_buffers.SLAMNAV.Response_Get_Map_File import Response_Get_Map_FileT
-from rb_flat_buffers.SLAMNAV.Response_Get_Map_Topology import Response_Get_Map_TopologyT
-from rb_flat_buffers.SLAMNAV.Response_Map_List import Response_Map_ListT
-from rb_flat_buffers.SLAMNAV.Response_Map_Load import Response_Map_LoadT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Save import Response_Mapping_SaveT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Start import Response_Mapping_StartT
-from rb_flat_buffers.SLAMNAV.Response_Mapping_Stop import Response_Mapping_StopT
-from rb_flat_buffers.SLAMNAV.Response_Set_Map_Cloud import Response_Set_Map_CloudT
-from rb_flat_buffers.SLAMNAV.Response_Set_Map_Topology import Response_Set_Map_TopologyT
 
 from ..base import RBBaseSDK
 from .schema.amr_map_schema import SlamnavMapPort

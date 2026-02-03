@@ -30,6 +30,7 @@ from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_GoalPD,
     Request_Move_JogPD,
+    Request_Move_LinearPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
     Request_Move_XLinearPD,
@@ -38,6 +39,7 @@ from app.features.move.move_schema import (
     Request_Move_LogsPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
+    Response_Move_LinearPD,
     Response_Move_LogsPD,
     Response_Move_PausePD,
     Response_Move_ResumePD,
@@ -144,7 +146,10 @@ class AmrMoveService:
             result = await rb_amr_sdk.move.send_move_target(
                 robot_model=model.robot_model,
                 req_id=model.id,
-                goal_pose=model.goal_pose,
+                x=model.goal_pose[0],
+                y=model.goal_pose[1],
+                z=model.goal_pose[2],
+                rz=model.goal_pose[3],
                 method=model.method,
                 preset=model.preset
             )
@@ -329,13 +334,13 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_linear(self, robot_model: str, req: Request_Move_XLinearPD, model: MoveModel | None = None) -> Response_Move_XLinearPD:
+    async def move_x_linear(self, robot_model: str, req: Request_Move_LinearPD, model: MoveModel | None = None) -> Response_Move_LinearPD:
         """
         [AMR 선형 이동]
         """
         model = MoveModel()
         try:
-            rb_log.info(f"[amr_move_service] moveLinear : {robot_model} {req.model_dump()}")
+            rb_log.info(f"[amr_move_service] move xLinear : {robot_model} {req.model_dump()}")
             # 1) moveModel 객체 생성
             model.set_robot_model(robot_model)
             model.set_move_x_linear(req)
@@ -344,13 +349,13 @@ class AmrMoveService:
             try:
                 await self.database_port.upsert(model.to_dict())
             except Exception as e:  # pylint: disable=broad-exception-caught
-                print("[moveLinear] DB Exception : ", e)
+                print("[move xLinear] DB Exception : ", e)
 
             # 3) 요청 검사
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_linear(
+            result = await rb_amr_sdk.move.send_move_x_linear(
                 robot_model=model.robot_model,
                 req_id=model.id,
                 target=model.target,
@@ -364,7 +369,53 @@ class AmrMoveService:
             try:
                 await self.database_port.upsert(model.to_dict())
             except Exception as e:  # pylint: disable=broad-exception-caught
-                print("[moveLinear] DB Exception : ", e)
+                print("[move xLinear] DB Exception : ", e)
+
+            return model.to_dict()
+        except ServiceException as e:
+            print("[move xLinear] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            await self.database_port.upsert(model.to_dict())
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def move_y_linear(self, robot_model: str, req: Request_Move_LinearPD, model: MoveModel | None = None) -> Response_Move_LinearPD:
+        """
+        [AMR 선형 이동]
+        """
+        model = MoveModel()
+        try:
+            rb_log.info(f"[amr_move_service] move yLinear : {robot_model} {req.model_dump()}")
+
+            # 1) moveModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.set_move_y_linear(req)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[move yLinear] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.move.send_move_y_linear(
+                robot_model=model.robot_model,
+                req_id=model.id,
+                target=model.target,
+                speed=model.speed
+                )
+
+            model.result_change(result.result)
+            model.message = result.message
+            model.status_change(result.result)
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[move yLinear] DB Exception : ", e)
 
             return model.to_dict()
         except ServiceException as e:

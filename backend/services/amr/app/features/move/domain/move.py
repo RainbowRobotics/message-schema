@@ -18,10 +18,9 @@ from rb_utils.service_exception import (
 )
 
 from app.schema.amr import AmrResponseStatusEnum
-from app.features.move.move_schema import Request_Move_GoalPD
+from app.features.move.move_schema import Request_Move_GoalPD, Request_Move_LinearPD
 from app.features.move.move_schema import Request_Move_TargetPD
 from app.features.move.move_schema import Request_Move_JogPD
-from app.features.move.move_schema import Request_Move_XLinearPD
 from app.features.move.move_schema import Request_Move_CircularPD
 from app.features.move.move_schema import Request_Move_RotatePD
 
@@ -44,7 +43,8 @@ class AmrMoveCommandEnum(str, Enum):
     MOVE_STOP     = "stop"
     MOVE_PAUSE    = "pause"
     MOVE_RESUME   = "resume"
-    MOVE_X_LINEAR  = "xlinear"
+    MOVE_X_LINEAR  = "xLinear"
+    MOVE_Y_LINEAR  = "yLinear"
     MOVE_CIRCULAR = "circular"
     MOVE_ROTATE   = "rotate"
 
@@ -130,12 +130,22 @@ class MoveModel:
         self.wz = req.wz if req.wz is not None else 0
         self.update_at = datetime.now(UTC)
 
-    def set_move_x_linear(self, req: Request_Move_XLinearPD):
+    def set_move_x_linear(self, req: Request_Move_LinearPD):
         """
         - req: Request_Move_XLinearPD
         - return: None
         """
         self.command = AmrMoveCommandEnum.MOVE_X_LINEAR
+        self.target = req.target
+        self.speed = req.speed
+        self.update_at = datetime.now(UTC)
+
+    def set_move_y_linear(self, req: Request_Move_LinearPD):
+        """
+        - req: Request_Move_XLinearPD
+        - return: None
+        """
+        self.command = AmrMoveCommandEnum.MOVE_Y_LINEAR
         self.target = req.target
         self.speed = req.speed
         self.update_at = datetime.now(UTC)

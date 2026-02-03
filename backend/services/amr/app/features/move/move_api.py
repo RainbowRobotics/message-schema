@@ -33,7 +33,6 @@ amr_move_router = APIRouter(
 
 amr_move_service = AmrMoveService()
 
-
 @amr_move_router.post(
     "/{robot_model}/move/goal",
     summary="목표 지점으로 이동",
@@ -375,6 +374,7 @@ SLAMNAV로 회전 명령을 전달합니다.
   )
 async def slamnav_move_rotate(robot_model: str, request: Request_Move_RotatePD) -> Response_Move_RotatePD:
     return await amr_move_service.move_rotate(robot_model, request)
+
 
 @amr_move_router.post(
     "/logs",

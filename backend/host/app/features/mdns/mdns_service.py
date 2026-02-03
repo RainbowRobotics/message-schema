@@ -12,6 +12,8 @@ class MdnsService:
         [Mdns 서비스 시작]
         """
 
+        # 1)
+
         # 1) robotSerial 조회
         robot_serial = await self.get_robot_serial()
         robot_model = await self.get_robot_model()
