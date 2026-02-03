@@ -48,7 +48,7 @@ table State_Core {
   tool_voltage_output: float;
 
   motion_mode: ubyte;
-  motion_execution_result: ubyte;//<-----------------------
+  motion_execution_result: ubyte;
   motion_speed_bar: float;
   motion_is_pause : ubyte;
 
