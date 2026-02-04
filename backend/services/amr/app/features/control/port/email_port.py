@@ -8,7 +8,7 @@ from typing import (
 
 
 @runtime_checkable
-class ControlEmailPort(Protocol):
+class EmailPort(Protocol):
     """
     [AMR 이동 이메일 아웃풋 포트]
     """

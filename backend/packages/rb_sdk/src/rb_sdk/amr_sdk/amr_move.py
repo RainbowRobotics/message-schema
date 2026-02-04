@@ -1,28 +1,29 @@
 
-from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
-from rb_flat_buffers.SLAMNAV.ResponseMoveGoal import ResponseMoveGoalT
-from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
-from rb_flat_buffers.SLAMNAV.RequestMoveTarget import RequestMoveTargetT
-from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
-from rb_flat_buffers.SLAMNAV.RequestMoveStop import RequestMoveStopT
-from rb_flat_buffers.SLAMNAV.ResponseMoveStop import ResponseMoveStopT
-from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
-from rb_flat_buffers.SLAMNAV.ResponseMovePause import ResponseMovePauseT
-from rb_flat_buffers.SLAMNAV.RequestMoveResume import RequestMoveResumeT
-from rb_flat_buffers.SLAMNAV.ResponseMoveResume import ResponseMoveResumeT
-from rb_flat_buffers.SLAMNAV.RequestMoveXLinear import RequestMoveXLinearT
-from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
-from rb_flat_buffers.SLAMNAV.RequestMoveYLinear import RequestMoveYLinearT
-from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
-from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
-from rb_flat_buffers.SLAMNAV.ResponseMoveCircular import ResponseMoveCircularT
-from rb_flat_buffers.SLAMNAV.RequestMoveRotate import RequestMoveRotateT
-from rb_flat_buffers.SLAMNAV.ResponseMoveRotate import ResponseMoveRotateT
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
-from ..base import RBBaseSDK
-from .schema.amr_move_schema import SlamnavMovePort
+from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
+from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
+from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
+from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
+from rb_flat_buffers.SLAMNAV.RequestMoveResume import RequestMoveResumeT
+from rb_flat_buffers.SLAMNAV.RequestMoveRotate import RequestMoveRotateT
+from rb_flat_buffers.SLAMNAV.RequestMoveStop import RequestMoveStopT
+from rb_flat_buffers.SLAMNAV.RequestMoveTarget import RequestMoveTargetT
+from rb_flat_buffers.SLAMNAV.RequestMoveXLinear import RequestMoveXLinearT
+from rb_flat_buffers.SLAMNAV.RequestMoveYLinear import RequestMoveYLinearT
+from rb_flat_buffers.SLAMNAV.ResponseMoveCircular import ResponseMoveCircularT
+from rb_flat_buffers.SLAMNAV.ResponseMoveGoal import ResponseMoveGoalT
+from rb_flat_buffers.SLAMNAV.ResponseMovePause import ResponseMovePauseT
+from rb_flat_buffers.SLAMNAV.ResponseMoveResume import ResponseMoveResumeT
+from rb_flat_buffers.SLAMNAV.ResponseMoveRotate import ResponseMoveRotateT
+from rb_flat_buffers.SLAMNAV.ResponseMoveStop import ResponseMoveStopT
+from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
+from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
+from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
 
-class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
+from ..base import RBBaseSDK
+
+
+class RBAmrMoveSDK(RBBaseSDK):
     """Rainbow Robotics AMR Move SDK"""
 
     async def send_move_goal(

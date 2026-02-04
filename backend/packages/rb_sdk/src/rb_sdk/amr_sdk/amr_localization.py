@@ -1,21 +1,22 @@
-from rb_flat_buffers.SLAMNAV.RequestLocalizationInit import RequestLocalizationInitT
-from rb_flat_buffers.SLAMNAV.ResponseLocalizationInit import ResponseLocalizationInitT
-from rb_flat_buffers.SLAMNAV.RequestLocalizationSemiAutoInit import RequestLocalizationSemiAutoInitT
-from rb_flat_buffers.SLAMNAV.ResponseLocalizationSemiAutoInit import ResponseLocalizationSemiAutoInitT
 from rb_flat_buffers.SLAMNAV.RequestLocalizationAutoInit import RequestLocalizationAutoInitT
-from rb_flat_buffers.SLAMNAV.ResponseLocalizationAutoInit import ResponseLocalizationAutoInitT
-from rb_flat_buffers.SLAMNAV.RequestLocalizationStart import RequestLocalizationStartT
-from rb_flat_buffers.SLAMNAV.ResponseLocalizationStart import ResponseLocalizationStartT
-from rb_flat_buffers.SLAMNAV.RequestLocalizationStop import RequestLocalizationStopT
-from rb_flat_buffers.SLAMNAV.ResponseLocalizationStop import ResponseLocalizationStopT
+from rb_flat_buffers.SLAMNAV.RequestLocalizationInit import RequestLocalizationInitT
 from rb_flat_buffers.SLAMNAV.RequestLocalizationRandomInit import RequestLocalizationRandomInitT
+from rb_flat_buffers.SLAMNAV.RequestLocalizationSemiAutoInit import RequestLocalizationSemiAutoInitT
+from rb_flat_buffers.SLAMNAV.RequestLocalizationStart import RequestLocalizationStartT
+from rb_flat_buffers.SLAMNAV.RequestLocalizationStop import RequestLocalizationStopT
+from rb_flat_buffers.SLAMNAV.ResponseLocalizationAutoInit import ResponseLocalizationAutoInitT
+from rb_flat_buffers.SLAMNAV.ResponseLocalizationInit import ResponseLocalizationInitT
 from rb_flat_buffers.SLAMNAV.ResponseLocalizationRandomInit import ResponseLocalizationRandomInitT
+from rb_flat_buffers.SLAMNAV.ResponseLocalizationSemiAutoInit import (
+    ResponseLocalizationSemiAutoInitT,
+)
+from rb_flat_buffers.SLAMNAV.ResponseLocalizationStart import ResponseLocalizationStartT
+from rb_flat_buffers.SLAMNAV.ResponseLocalizationStop import ResponseLocalizationStopT
 
 from ..base import RBBaseSDK
-from .schema.amr_localization_schema import SlamnavLocalizationPort
 
 
-class RBAmrLocalizationSDK(RBBaseSDK,SlamnavLocalizationPort):
+class RBAmrLocalizationSDK(RBBaseSDK):
     """Rainbow Robotics AMR Localization SDK"""
 
     async def localization_init(self, robot_model: str, req_id: str, x: float, y: float, z: float, rz: float) -> ResponseLocalizationInitT:

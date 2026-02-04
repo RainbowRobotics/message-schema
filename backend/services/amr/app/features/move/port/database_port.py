@@ -13,7 +13,7 @@ from typing import (
 
 
 @runtime_checkable
-class MoveDatabasePort(Protocol):
+class DatabasePort(Protocol):
     """
     [AMR 이동 데이터베이스 아웃풋 포트]
     """

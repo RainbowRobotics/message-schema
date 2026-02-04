@@ -32,9 +32,10 @@ from rb_utils.service_exception import (
     ServiceException,
 )
 
-from app.features.move.port.move_database_port import MoveDatabasePort
+from app.features.move.port.database_port import DatabasePort
 
-class MoveMongoDatabaseAdapter(MoveDatabasePort):
+
+class MoveMongoDatabaseAdapter(DatabasePort):
     """
     [Move MongoDB 어댑터 초기화]
     """

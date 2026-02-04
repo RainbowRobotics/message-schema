@@ -4,27 +4,26 @@
 
 from fastapi import APIRouter, BackgroundTasks
 
+from app.features.move.move_schema import (
+    Request_Move_ArchiveLogPD,
+    Request_Move_CircularPD,
+    Request_Move_ExportLogPD,
+    Request_Move_GoalPD,
+    Request_Move_LinearPD,
+    Request_Move_LogsPD,
+    Request_Move_RotatePD,
+    Request_Move_TargetPD,
+    Response_Move_CircularPD,
+    Response_Move_GoalPD,
+    Response_Move_LinearPD,
+    Response_Move_LogsPD,
+    Response_Move_PausePD,
+    Response_Move_ResumePD,
+    Response_Move_RotatePD,
+    Response_Move_StopPD,
+    Response_Move_TargetPD,
+)
 from app.features.move.move_service import AmrMoveService
-from app.features.move.move_schema import Request_Move_GoalPD
-from app.features.move.move_schema import Request_Move_TargetPD
-from app.features.move.move_schema import Request_Move_XLinearPD
-from app.features.move.move_schema import Request_Move_CircularPD
-from app.features.move.move_schema import Request_Move_RotatePD
-from app.features.move.move_schema import Request_Move_ArchiveLogPD
-from app.features.move.move_schema import Request_Move_ExportLogPD
-from app.features.move.move_schema import Request_Move_LogsPD
-
-from app.features.move.move_schema import Response_Move_StopPD
-from app.features.move.move_schema import Response_Move_PausePD
-from app.features.move.move_schema import Response_Move_ResumePD
-from app.features.move.move_schema import Response_Move_XLinearPD
-from app.features.move.move_schema import Response_Move_CircularPD
-from app.features.move.move_schema import Response_Move_RotatePD
-from app.features.move.move_schema import Response_Move_LogsPD
-from app.features.move.move_schema import Response_Move_GoalPD
-from app.features.move.move_schema import Response_Move_TargetPD
-from app.features.move.move_schema import Response_Move_LogsPD
-
 
 amr_move_router = APIRouter(
     tags=["AMR 이동"],
@@ -241,10 +240,10 @@ async def slamnav_move_resume(robot_model: str) -> Response_Move_ResumePD:
 
 
 @amr_move_router.post(
-    "/{robot_model}/move/linear",
-    summary="선형 이동 명령",
+    "/{robot_model}/move/xLinear",
+    summary="X축 선형 이동 명령",
     description="""
-SLAMNAV로 선형 이동 명령을 전달합니다.
+SLAMNAV로 X축 선형 이동 명령을 전달합니다.
 
 ## 📌 기능 설명
 - 자율주행이 아닌 일정 거리만큼 직진주행합니다.
@@ -253,7 +252,7 @@ SLAMNAV로 선형 이동 명령을 전달합니다.
 
 | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
 |-|-|-|-|-|-|
-| target | number | ✅ | m | 목표 위치를 입력하세요. | 1.3 |
+| target | number | ✅ | m | X축 목표 위치를 입력하세요. | 1.3 |
 | speed | number | ✅ | m/s | 주행 속도를 입력하세요. | 1.3 |
 
 ## 📌 응답 바디(JSON)
@@ -281,8 +280,53 @@ SLAMNAV로 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_linear(robot_model: str, request: Request_Move_XLinearPD) -> Response_Move_XLinearPD:
-    return await amr_move_service.move_linear(robot_model, request)
+async def slamnav_move_linear(robot_model: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+    return await amr_move_service.move_x_linear(robot_model, request)
+
+
+@amr_move_router.post(
+    "/{robot_model}/move/yLinear",
+    summary="Y축 선형 이동 명령",
+    description="""
+SLAMNAV로 Y축 선형 이동 명령을 전달합니다.
+
+## 📌 기능 설명
+- 자율주행이 아닌 일정 거리만큼 직진주행합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| target | number | ✅ | m | Y축 목표 위치를 입력하세요. | 1.3 |
+| speed | number | ✅ | m/s | 주행 속도를 입력하세요. | 1.3 |
+
+## 📌 응답 바디(JSON)
+
+| 필드명       | 타입    | 설명                          | 예시 |
+|-------------|---------|-------------------------------|--------|
+| target | number | - | m | 목표 위치를 입력하세요. | 1.3 |
+| speed | number | - | m/s | 주행 속도를 입력하세요. | 1.3 |
+| result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
+| message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 요청한 명령이 지원하지 않는 명령일 때
+  - 파라메터가 없거나 잘못된 값일 때
+### **409** CONFLICT
+  - 요청한 명령을 수행할 수 없을 때
+  - SLAMNAV에서 거절했을 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+### **502** BAD_GATEWAY
+  - SLAMNAV와 연결되지 않았을 때
+### **504** DEADLINE_EXCEEDED
+  - SLAMNAV로부터 응답을 받지 못했을 때
+    """,
+    response_description="프로필 이동 명령 처리 결과 반환"
+  )
+async def slamnav_move_y_linear(robot_model: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+    return await amr_move_service.move_y_linear(robot_model, request)
 
 
 @amr_move_router.post(

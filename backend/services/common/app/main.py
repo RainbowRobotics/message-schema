@@ -11,12 +11,12 @@ from app.features.config.config_socket import config_socket_router
 from app.features.email.adapter.input.email_api import (
     email_router,
 )
-from app.features.sound.sound_api import sound_router
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.network.network_api import network_router
 from app.features.program.program_api import program_router
 from app.features.program.program_zenoh import zenoh_program_router
+from app.features.sound.sound_api import sound_router
 from app.features.state.state_api import state_router
 from app.features.state.state_module import StateService
 from app.features.state.state_socket import state_socket_router

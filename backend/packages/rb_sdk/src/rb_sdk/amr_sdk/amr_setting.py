@@ -1,26 +1,26 @@
 
+from pydantic import BaseModel
+from rb_flat_buffers.SLAMNAV.RequestGetDriveParam import RequestGetDriveParamT
+from rb_flat_buffers.SLAMNAV.RequestGetPduParam import RequestGetPduParamT
 from rb_flat_buffers.SLAMNAV.RequestGetRobotType import RequestGetRobotTypeT
-from rb_flat_buffers.SLAMNAV.ResponseGetRobotType import ResponseGetRobotTypeT
+from rb_flat_buffers.SLAMNAV.RequestSetPduParam import RequestSetPduParamT
 from rb_flat_buffers.SLAMNAV.RequestSetRobotType import RequestSetRobotTypeT
+from rb_flat_buffers.SLAMNAV.ResponseGetDriveParam import ResponseGetDriveParamT
+from rb_flat_buffers.SLAMNAV.ResponseGetPduParam import ResponseGetPduParamT
+from rb_flat_buffers.SLAMNAV.ResponseGetRobotType import ResponseGetRobotTypeT
+from rb_flat_buffers.SLAMNAV.ResponseSetPduParam import ResponseSetPduParamT
 from rb_flat_buffers.SLAMNAV.ResponseSetRobotType import ResponseSetRobotTypeT
 from rb_flat_buffers.SLAMNAV.SettingParam import SettingParamT
-from rb_flat_buffers.SLAMNAV.RequestGetPduParam import RequestGetPduParamT
-from rb_flat_buffers.SLAMNAV.ResponseGetPduParam import ResponseGetPduParamT
-from rb_flat_buffers.SLAMNAV.RequestSetPduParam import RequestSetPduParamT
-from rb_flat_buffers.SLAMNAV.ResponseSetPduParam import ResponseSetPduParamT
-from rb_flat_buffers.SLAMNAV.RequestGetDriveParam import RequestGetDriveParamT
-from rb_flat_buffers.SLAMNAV.ResponseGetDriveParam import ResponseGetDriveParamT
 
-from pydantic import BaseModel
 from ..base import RBBaseSDK
-from .schema.amr_setting_schema import SlamnavSettingPort
+
 
 class SettingParam(BaseModel):
     key: str
     type: str
     value: str
 
-class RBAmrSettingSDK(RBBaseSDK,SlamnavSettingPort):
+class RBAmrSettingSDK(RBBaseSDK):
     """Rainbow Robotics AMR Setting SDK"""
 
     async def get_robot_type(self, robot_model: str, req_id: str) -> ResponseGetRobotTypeT:

@@ -17,12 +17,15 @@ from rb_utils.service_exception import (
     ServiceException,
 )
 
+from app.features.move.move_schema import (
+    Request_Move_CircularPD,
+    Request_Move_GoalPD,
+    Request_Move_JogPD,
+    Request_Move_LinearPD,
+    Request_Move_RotatePD,
+    Request_Move_TargetPD,
+)
 from app.schema.amr import AmrResponseStatusEnum
-from app.features.move.move_schema import Request_Move_GoalPD, Request_Move_LinearPD
-from app.features.move.move_schema import Request_Move_TargetPD
-from app.features.move.move_schema import Request_Move_JogPD
-from app.features.move.move_schema import Request_Move_CircularPD
-from app.features.move.move_schema import Request_Move_RotatePD
 
 
 # === Enums ==========================================================
@@ -229,10 +232,13 @@ class MoveModel:
         """
         if self.robot_model is None:
             raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
+
         if self.command == AmrMoveCommandEnum.MOVE_GOAL:
-            if self.goal_id == "":
-                if self.goal_name is None:
+            if self.goal_id is None or self.goal_id == "":
+                if self.goal_name is None or self.goal_name == "":
                     raise ServiceException("goal_id 또는 goal_name 값이 필요합니다", status_code=400)
+            else:
+                pass
 
         elif self.command == AmrMoveCommandEnum.MOVE_TARGET:
             if self.goal_pose is None:

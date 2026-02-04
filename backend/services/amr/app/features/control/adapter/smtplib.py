@@ -2,10 +2,10 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from app.features.control.src.port.email_output import ControlEmailPort
+from app.features.control.port.email_port import EmailPort
 
 
-class ControlSmtpLibEmailAdapter(ControlEmailPort):
+class ControlSmtpLibEmailAdapter(EmailPort):
     """
     [AMR 이동 이메일 아웃풋 포트]
     """

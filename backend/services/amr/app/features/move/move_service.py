@@ -26,17 +26,23 @@ from rb_utils.service_exception import (
     ServiceException,  # pylint: disable=import-error,no-name-in-module
 )
 
+from app.features.move.adapter.mongo import (
+    MoveMongoDatabaseAdapter,
+)
+from app.features.move.adapter.smtplib import (
+    MoveSmtpLibEmailAdapter,
+)
+from app.features.move.domain.move import MoveModel
 from app.features.move.move_schema import (
+    Request_Move_ArchiveLogPD,
     Request_Move_CircularPD,
+    Request_Move_ExportLogPD,
     Request_Move_GoalPD,
     Request_Move_JogPD,
     Request_Move_LinearPD,
+    Request_Move_LogsPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
-    Request_Move_XLinearPD,
-    Request_Move_ArchiveLogPD,
-    Request_Move_ExportLogPD,
-    Request_Move_LogsPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LinearPD,
@@ -46,19 +52,9 @@ from app.features.move.move_schema import (
     Response_Move_RotatePD,
     Response_Move_StopPD,
     Response_Move_TargetPD,
-    Response_Move_XLinearPD,
 )
-from app.features.move.adapter.mongo import (
-    MoveMongoDatabaseAdapter,
-)
-from app.features.move.adapter.smtplib import (
-    MoveSmtpLibEmailAdapter,
-)
-from app.features.move.domain.move import MoveModel
 from app.schema.amr import AmrResponseStatusEnum
-from app.socket.socket_client import (
-    socket_client,
-)
+from app.socket.socket_client import socket_client
 
 rb_amr_sdk = RBAmrSDK()
 class AmrMoveService:

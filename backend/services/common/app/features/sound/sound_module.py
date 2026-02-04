@@ -2,17 +2,17 @@ import json
 
 from fastapi.responses import JSONResponse
 from rb_flat_buffers.IPC.Request_Sound_Play import Request_Sound_PlayT
+from rb_flat_buffers.IPC.Response_Sound_GetStatus import Response_Sound_GetStatusT
+from rb_flat_buffers.IPC.Response_Sound_Pause_Toggle import Response_Sound_Pause_ToggleT
 from rb_flat_buffers.IPC.Response_Sound_Play import Response_Sound_PlayT
 from rb_flat_buffers.IPC.Response_Sound_Stop import Response_Sound_StopT
-from rb_flat_buffers.IPC.Response_Sound_Pause_Toggle import Response_Sound_Pause_ToggleT
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
-from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 
-from rb_flat_buffers.IPC.Response_Sound_GetStatus import Response_Sound_GetStatusT
-
-from app.features.sound.sound_schema import Request_Sound_PlayPD, Response_Sound_PlayPD, Response_Sound_StopPD
+from app.features.sound.sound_schema import (
+    Request_Sound_PlayPD,
+)
 
 zenoh_client = ZenohClient()
 

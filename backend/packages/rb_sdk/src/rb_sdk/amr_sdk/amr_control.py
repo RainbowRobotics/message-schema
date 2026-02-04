@@ -1,48 +1,47 @@
 from pydantic import BaseModel
-from rb_flat_buffers.SLAMNAV.SafetyFlag import SafetyFlagT
 from rb_flat_buffers.SLAMNAV.ObsBox import ObsBoxT
-from rb_flat_buffers.SLAMNAV.RequestGetSafetyField import RequestGetSafetyFieldT
-from rb_flat_buffers.SLAMNAV.ResponseGetSafetyField import ResponseGetSafetyFieldT
-from rb_flat_buffers.SLAMNAV.RequestSetSafetyField import RequestSetSafetyFieldT
-from rb_flat_buffers.SLAMNAV.ResponseSetSafetyField import ResponseSetSafetyFieldT
-from rb_flat_buffers.SLAMNAV.RequestGetSafetyFlag import RequestGetSafetyFlagT
-from rb_flat_buffers.SLAMNAV.ResponseGetSafetyFlag import ResponseGetSafetyFlagT
-from rb_flat_buffers.SLAMNAV.RequestSetSafetyFlag import RequestSetSafetyFlagT
-from rb_flat_buffers.SLAMNAV.ResponseSetSafetyFlag import ResponseSetSafetyFlagT
-from rb_flat_buffers.SLAMNAV.RequestGetSafetyIo import RequestGetSafetyIoT
-from rb_flat_buffers.SLAMNAV.ResponseGetSafetyIo import ResponseGetSafetyIoT
-from rb_flat_buffers.SLAMNAV.RequestSetSafetyIo import RequestSetSafetyIoT
-from rb_flat_buffers.SLAMNAV.ResponseSetSafetyIo import ResponseSetSafetyIoT
-from rb_flat_buffers.SLAMNAV.RequestDockControl import RequestDockControlT
-from rb_flat_buffers.SLAMNAV.ResponseDockControl import ResponseDockControlT
 from rb_flat_buffers.SLAMNAV.RequestChargeTrigger import RequestChargeTriggerT
-from rb_flat_buffers.SLAMNAV.ResponseChargeTrigger import ResponseChargeTriggerT
-from rb_flat_buffers.SLAMNAV.RequestGetObsBox import RequestGetObsBoxT
-from rb_flat_buffers.SLAMNAV.ResponseGetObsBox import ResponseGetObsBoxT
-from rb_flat_buffers.SLAMNAV.RequestSetObsBox import RequestSetObsBoxT
-from rb_flat_buffers.SLAMNAV.ResponseSetObsBox import ResponseSetObsBoxT
-from rb_flat_buffers.SLAMNAV.RequestLedMode import RequestLedModeT
-from rb_flat_buffers.SLAMNAV.ResponseLedMode import ResponseLedModeT
-from rb_flat_buffers.SLAMNAV.RequestMotorMode import RequestMotorModeT
-from rb_flat_buffers.SLAMNAV.ResponseMotorMode import ResponseMotorModeT
-from rb_flat_buffers.SLAMNAV.RequestJog import RequestJogT
-from rb_flat_buffers.SLAMNAV.ResponseJog import ResponseJogT
-from rb_flat_buffers.SLAMNAV.RequestSensorMode import RequestSensorModeT
-from rb_flat_buffers.SLAMNAV.ResponseSensorMode import ResponseSensorModeT
-from rb_flat_buffers.SLAMNAV.RequestPathMode import RequestPathModeT
-from rb_flat_buffers.SLAMNAV.ResponsePathMode import ResponsePathModeT
 from rb_flat_buffers.SLAMNAV.RequestDetectMarker import RequestDetectMarkerT
+from rb_flat_buffers.SLAMNAV.RequestDockControl import RequestDockControlT
+from rb_flat_buffers.SLAMNAV.RequestGetObsBox import RequestGetObsBoxT
+from rb_flat_buffers.SLAMNAV.RequestGetSafetyField import RequestGetSafetyFieldT
+from rb_flat_buffers.SLAMNAV.RequestGetSafetyFlag import RequestGetSafetyFlagT
+from rb_flat_buffers.SLAMNAV.RequestGetSafetyIo import RequestGetSafetyIoT
+from rb_flat_buffers.SLAMNAV.RequestJog import RequestJogT
+from rb_flat_buffers.SLAMNAV.RequestLedMode import RequestLedModeT
+from rb_flat_buffers.SLAMNAV.RequestMotorMode import RequestMotorModeT
+from rb_flat_buffers.SLAMNAV.RequestPathMode import RequestPathModeT
+from rb_flat_buffers.SLAMNAV.RequestSensorMode import RequestSensorModeT
+from rb_flat_buffers.SLAMNAV.RequestSetObsBox import RequestSetObsBoxT
+from rb_flat_buffers.SLAMNAV.RequestSetSafetyField import RequestSetSafetyFieldT
+from rb_flat_buffers.SLAMNAV.RequestSetSafetyFlag import RequestSetSafetyFlagT
+from rb_flat_buffers.SLAMNAV.RequestSetSafetyIo import RequestSetSafetyIoT
+from rb_flat_buffers.SLAMNAV.ResponseChargeTrigger import ResponseChargeTriggerT
 from rb_flat_buffers.SLAMNAV.ResponseDetectMarker import ResponseDetectMarkerT
-
+from rb_flat_buffers.SLAMNAV.ResponseDockControl import ResponseDockControlT
+from rb_flat_buffers.SLAMNAV.ResponseGetObsBox import ResponseGetObsBoxT
+from rb_flat_buffers.SLAMNAV.ResponseGetSafetyField import ResponseGetSafetyFieldT
+from rb_flat_buffers.SLAMNAV.ResponseGetSafetyFlag import ResponseGetSafetyFlagT
+from rb_flat_buffers.SLAMNAV.ResponseGetSafetyIo import ResponseGetSafetyIoT
+from rb_flat_buffers.SLAMNAV.ResponseJog import ResponseJogT
+from rb_flat_buffers.SLAMNAV.ResponseLedMode import ResponseLedModeT
+from rb_flat_buffers.SLAMNAV.ResponseMotorMode import ResponseMotorModeT
+from rb_flat_buffers.SLAMNAV.ResponsePathMode import ResponsePathModeT
+from rb_flat_buffers.SLAMNAV.ResponseSensorMode import ResponseSensorModeT
+from rb_flat_buffers.SLAMNAV.ResponseSetObsBox import ResponseSetObsBoxT
+from rb_flat_buffers.SLAMNAV.ResponseSetSafetyField import ResponseSetSafetyFieldT
+from rb_flat_buffers.SLAMNAV.ResponseSetSafetyFlag import ResponseSetSafetyFlagT
+from rb_flat_buffers.SLAMNAV.ResponseSetSafetyIo import ResponseSetSafetyIoT
+from rb_flat_buffers.SLAMNAV.SafetyFlag import SafetyFlagT
 
 from ..base import RBBaseSDK
-from .schema.amr_control_schema import SlamnavControlPort
+
 
 class SafetyFlag(BaseModel):
     name: str
     value: bool
 
-class RBAmrControlSDK(RBBaseSDK,SlamnavControlPort):
+class RBAmrControlSDK(RBBaseSDK):
     """Rainbow Robotics AMR Control SDK"""
 
     async def control_get_safety_field(self, robot_model: str, req_id: str) -> ResponseGetSafetyFieldT:

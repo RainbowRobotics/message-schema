@@ -20,10 +20,10 @@ from rb_utils.date import convert_dt
 from rb_utils.pagination import LogsResponse
 from rb_utils.service_exception import ServiceException
 
-from app.features.control.src.port.database_output import ControlDatabasePort
+from app.features.control.port.database_port import DatabasePort
 
 
-class ControlMongoDatabaseAdapter(ControlDatabasePort):
+class ControlMongoDatabaseAdapter(DatabasePort):
     """
     [Control MongoDB 어댑터 초기화]
     """

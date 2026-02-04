@@ -2,12 +2,10 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from app.features.move.port.move_email_port import (
-    MoveEmailPort,
-)
+from app.features.move.port.email_port import EmailPort
 
 
-class MoveSmtpLibEmailAdapter(MoveEmailPort):
+class MoveSmtpLibEmailAdapter(EmailPort):
     """
     [AMR 이동 이메일 아웃풋 포트]
     """

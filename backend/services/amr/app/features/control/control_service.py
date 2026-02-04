@@ -5,18 +5,20 @@ from rb_modules.log import rb_log
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.service_exception import ServiceException
 
-from app.features.control.schema.control_api import (
+from app.schema.amr import AmrResponseStatusEnum
+
+from .adapter.mongo import ControlMongoDatabaseAdapter
+from .adapter.smtplib import ControlSmtpLibEmailAdapter
+from .control_schema import (
     Request_Control_DetectPD,
     Request_Control_LEDPD,
     Request_Control_ObsBoxPD,
+    Request_Control_DockPD,
     Request_Control_SafetyFieldPD,
     Request_Control_SafetyFlagPD,
     Request_Control_SafetyIOPD,
 )
-from app.features.control.src.adapters.output.mongo import ControlMongoDatabaseAdapter
-from app.features.control.src.adapters.output.smtplib import ControlSmtpLibEmailAdapter
-from app.features.control.src.domain.control_model import ControlModel
-from app.schema.amr import AmrResponseStatusEnum
+from .domain.control import ControlModel
 
 rb_amr_sdk = RBAmrSDK()
 class AmrControlService:
@@ -27,15 +29,17 @@ class AmrControlService:
         self._locks = defaultdict(asyncio.Lock)
 
 
-    async def control_dock(self, robot_model: str):
+    async def control_dock(self, robot_model: str, request:Request_Control_DockPD):
         """
+        [도킹 명령 전송]
+        * robot_model : 명령을 전송할 로봇 모델
         """
         model = ControlModel()
         try:
-            rb_log.info(f"[amr_control_service] control_dock : {robot_model}")
+            rb_log.info(f"[amr_control_service] control_dock : {robot_model}, {request.command}")
             # 1) controlModel 객체 생성
             model.set_robot_model(robot_model)
-            model.control_dock()
+            model.control_dock(request)
 
             # 2) DB 저장
             try:
@@ -49,6 +53,7 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_dock(
                 robot_model=model.robot_model,
+                command=model.command,
                 req_id=model.id
             )
 
@@ -71,12 +76,6 @@ class AmrControlService:
             model.status_change(AmrResponseStatusEnum.FAIL)
             model.message = str(e.message)
             return model.to_dict()
-
-    async def control_undock(self, robot_model: str):
-        pass
-
-    async def control_dockStop(self, robot_model: str):
-        pass
 
     async def control_chargeTrigger(self, robot_model: str):
         pass

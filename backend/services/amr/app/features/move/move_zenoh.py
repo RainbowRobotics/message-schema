@@ -5,7 +5,9 @@ from rb_flat_buffers.SLAMNAV.ResultMove import ResultMoveT
 from rb_zenoh.router import (
     ZenohRouter,
 )
+
 from .move_api import amr_move_service
+
 move_zenoh_router = ZenohRouter()
 
 @move_zenoh_router.subscribe(

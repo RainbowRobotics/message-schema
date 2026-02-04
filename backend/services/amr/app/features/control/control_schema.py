@@ -5,6 +5,13 @@ from pydantic import (
 )
 
 
+class ControlLEDResponse(BaseModel):
+    id: str
+    onoff: bool
+    color: str
+    result: str | None = None
+    message: str | None = None
+
 class Request_Control_FrequencyPD(BaseModel):
     robot_model: str = Field(..., description="로봇 모델", example="test")
     target: str = Field(None, example="lidar")
@@ -25,9 +32,11 @@ class Response_Control_OnOffPD(BaseModel):
     message: str | None = Field(None, example="")
 
 class Request_Control_WorkPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
     command: str = Field(..., description="명령", example="lidarOnOff")
     work: str = Field(..., description="작업", example="lidarOn")
+
+class Request_Control_DockPD(BaseModel):
+    command: str = Field(..., description="도킹 명령", example="dock")
 
 class Response_Control_WorkPD(BaseModel):
     command: str = Field(..., description="명령", example="lidarOnOff")
