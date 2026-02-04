@@ -32,7 +32,7 @@ _STRPTIME_FORMATS = (
 
 def is_valid_date(d: date | str | int):
     """
-    - d: 날짜 문자열 또는 정수
+    - d: 날짜 문자열 또는 정수 또는 date
     - 날짜 형식 검증
     """
     if isinstance(d, int):
@@ -40,14 +40,16 @@ def is_valid_date(d: date | str | int):
             sec = timestamp_ms_to_seconds(int(d))
             if sec <= 0:
                 return False
-
             datetime.fromtimestamp(sec, tz=UTC)
             return True
         except (ValueError, OverflowError, OSError):
             return False
 
-    if isinstance(date, str):
-        s = date.strip()
+    if isinstance(d, str):
+        s = d.strip()
+        if not s:
+            return False
+
         try:
             s2 = s[:-1] + "+00:00" if s.endswith("Z") else s
             datetime.fromisoformat(s2)
@@ -63,7 +65,7 @@ def is_valid_date(d: date | str | int):
                 continue
         return False
 
-    return False
+    return bool(isinstance(d, date))
 
 def timestamp_ms_to_seconds(timestamp: int, *, tz: timezone = UTC):
     """
@@ -91,7 +93,7 @@ def parse_date_with_time(
     mode: Literal["start", "end"], d: str | int | datetime, *, tz: timezone = UTC
 ):
     """
-    - mode: 날짜 타입 (기본: "start")
+    - mode: 날짜 타입
     - d: 날짜 문자열 또는 정수 또는 datetime
     - tz: 타임존 (기본: UTC)
     - 날짜 문자열 또는 정수 또는 datetime를 datetime 객체로 변환

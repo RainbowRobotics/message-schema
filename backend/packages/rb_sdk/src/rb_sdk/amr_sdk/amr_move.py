@@ -65,6 +65,8 @@ class RBAmrMoveSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Move Target failed: obj_payload is None")
 
+        self.robot_uid
+
         return result["obj_payload"]
 
     async def send_move_target(self, robot_model: str, req_id: str, x: float, y: float, z: float, rz: float, method: str = "pp", preset: int = 0) -> ResponseMoveTargetT:

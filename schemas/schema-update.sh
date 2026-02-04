@@ -149,86 +149,95 @@ if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$
         print_string "error" "Push failed"
         exit 1
     fi
-    print_string "success" "Committed"
-    SCHEMA_COMMITTED=true
-else
-    print_string "info" "No changes in working tree"
 fi
 
-# STEP 3는 SCHEMA_COMMITTED가 true일 때만 실행
-if [ "$SCHEMA_COMMITTED" = false ]; then
-    print_string "info" "No schemas commits, skipping STEP 3"
-    print_string "success" "Done"
-    exit 0
-fi
 
-echo ""
-print_string "info" "=== STEP 3: Update branch ==="
-
-BR="schema/from-$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
+# 개인 브랜치명 생성
+BR="schema/from-$(git -C "$MAIN_REPO" config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
     print_string "error" "Cannot determine branch"
     exit 1
 fi
+echo "schema branch => $BR"
 
-LOCAL_TREE="$(git rev-parse "HEAD:$SCHEMA_DIR")"
-MAIN_COMMIT="$(git rev-parse --short HEAD)"
+# 현재 상태
+LOCAL_TREE=$(git -C "$MAIN_REPO" rev-parse "HEAD:$SCHEMA_DIR")
+MAIN_COMMIT=$(git -C "$MAIN_REPO" rev-parse --short HEAD)
 
-echo "Branch: $BR"
-echo "Tree: $LOCAL_TREE"
-echo "Commit: $MAIN_COMMIT"
-echo ""
+print_string "info" "local  tree => $LOCAL_TREE"
+print_string "info" "main commit => $MAIN_COMMIT"
 
-git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
+# remote 확인
+git -C "$MAIN_REPO" remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
+    print_string "error" "'$REMOTE_NAME' 원격 레포지토리를 찾을 수 없습니다."
+    print_string "info" "message-schema 레포지토리에서 README.md에 초기 1회 세팅을 참고하세요."
+    exit 1
+}
+
+# 원격 브랜치 fetch
+git -C "$MAIN_REPO" fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
 
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
-if git show-ref --verify --quiet "$REMOTE_REF"; then
-    REMOTE_TREE="$(git rev-parse "$REMOTE_NAME/$BR^{tree}")"
-    echo "Remote tree: $REMOTE_TREE"
+# 기존 브랜치가 있는 경우
+if git -C "$MAIN_REPO" show-ref --verify --quiet "$REMOTE_REF"; then
+    REMOTE_TREE=$(git -C "$MAIN_REPO" rev-parse "$REMOTE_NAME/$BR^{tree}")
+    print_string "info" "remote tree => $REMOTE_TREE"
+
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
         print_string "info" "No changes"
         exit 0
     fi
-    WORK_DIR="$(mktemp -d)"
-    trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
-    git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
+
+    WORK_DIR=$(mktemp -d)
+    trap "git -C '$MAIN_REPO' worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+
+    git -C "$MAIN_REPO" worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
+
+    # 작업 디렉토리로 이동하여 처리
     (
         cd "$WORK_DIR"
-        print_string "info" "Updating..."
-        TEMP_EXTRACT="$(mktemp -d)"
-        trap "rm -rf '$TEMP_EXTRACT'" EXIT
-        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
-        rsync -av "$TEMP_EXTRACT/" ./
-        rm -rf "$TEMP_EXTRACT"
+
+        # [수정 포인트 1] 삭제 대상에서 제외할 목록 정의
+        # .git은 당연히 제외, README와 .github도 명시적으로 제외함
+        print_string "info" "스키마 파일 갱신 중 (메타 파일 보존)..."
+        find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name 'README.md' \
+            ! -name '.gitignore' \
+            -exec rm -rf {} +
+
+        # [수정 포인트 2] 메인 레포의 SCHEMA_DIR 내용물만 가져오기
+        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x
+
+        # 변경사항이 있는지 확인 후 커밋
         git add -A
         if git diff --staged --quiet; then
-            print_string "info" "No changes"
+            print_string "info" "실질적인 변경사항이 없습니다."
         else
-            echo "Changed:"
-            git diff --staged --name-status
-            echo ""
-            git commit -m "Update schemas from main @ $MAIN_COMMIT"
+            git commit -m "Update schemas from main repo @ $MAIN_COMMIT"
             git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
+            print_string "success" "Updated remote branch"
         fi
     ) || {
-        print_string "error" "Push failed"
+        print_string "error" "message-schema 푸시 실패"
         exit 1
     }
 else
-    print_string "info" "Creating branch"
-    if git show-ref --verify --quiet "refs/heads/$BR"; then
-        git branch -D "$BR"
-    fi
+    print_string "info" "새 브랜치 생성: $BR"
     TMP="$BR-tmp"
-    git branch -D "$TMP" 2>/dev/null || true
-    git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
-    if ! git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
-        print_string "error" "Failed"
+
+    git -C "$MAIN_REPO" branch -D "$TMP" 2>/dev/null || true
+    git -C "$MAIN_REPO" subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
+
+    if ! git -C "$MAIN_REPO" push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
+        print_string "error" "message-schema 초기 브랜치 생성 실패"
         git branch -D "$TMP" 2>/dev/null || true
         exit 1
     fi
-    git branch -D "$TMP"
+
+    git -C "$MAIN_REPO" branch -D "$TMP"
 fi
 
 print_string "success" "Complete"
