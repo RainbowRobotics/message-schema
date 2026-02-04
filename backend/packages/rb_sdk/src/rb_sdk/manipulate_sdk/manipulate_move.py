@@ -5,9 +5,9 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_TypeT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
+from rb_flat_buffers.IPC.Request_Move_AppraochStop import Request_Move_AppraochStopT
 from rb_flat_buffers.IPC.Request_Move_ApproachJ import Request_Move_ApproachJT
 from rb_flat_buffers.IPC.Request_Move_ApproachL import Request_Move_ApproachLT
-from rb_flat_buffers.IPC.Request_Move_ApproachStop import Request_Move_ApproachStopT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from rb_flat_buffers.IPC.Request_Move_JB_ADD import Request_Move_JB_ADDT
 from rb_flat_buffers.IPC.Request_Move_JB_CLR import Request_Move_JB_CLRT
@@ -930,7 +930,7 @@ class RBManipulateMoveSDK(RBBaseSDK):
             stop_time: 정지 시간
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
-        req = Request_Move_ApproachStopT()
+        req = Request_Move_AppraochStopT()
         req.stoptime = float(stop_time)
 
         res = self.zenoh_client.query_one(
