@@ -11,9 +11,9 @@ from .adapter.mongo import ControlMongoDatabaseAdapter
 from .adapter.smtplib import ControlSmtpLibEmailAdapter
 from .control_schema import (
     Request_Control_DetectPD,
+    Request_Control_DockPD,
     Request_Control_LEDPD,
     Request_Control_ObsBoxPD,
-    Request_Control_DockPD,
     Request_Control_SafetyFieldPD,
     Request_Control_SafetyFlagPD,
     Request_Control_SafetyIOPD,
