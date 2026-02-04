@@ -78,7 +78,6 @@ class RBAmrMoveSDK(RBBaseSDK,SlamnavMovePort):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Move Target failed: obj_payload is None")
 
-        self.robot_uid
 
         return result["obj_payload"]
 

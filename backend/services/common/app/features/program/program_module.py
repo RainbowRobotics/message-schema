@@ -1128,7 +1128,7 @@ class ProgramService(BaseService):
                         self.write_script_context(task["taskId"], db), name="write_script_context"
                     )
 
-            return tasks
+            return { "tasks": tasks }
         except Exception as e:
             if tasks:
                 await tasks_col.delete_many(
@@ -1371,7 +1371,7 @@ class ProgramService(BaseService):
 
             all_steps: dict[str, list[dict]] = {}
 
-            for task in tasks_res:
+            for task in tasks_res.get("tasks", []):
                 all_steps[task["taskId"]] = []
 
             return {
