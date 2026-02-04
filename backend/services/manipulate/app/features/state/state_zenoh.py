@@ -14,5 +14,5 @@ zenoh_state_router = ZenohRouter()
     flatbuffer_obj_t=State_CoreT,
     opts=SubscribeOptions(dispatch="queue", overflow=OverflowPolicy.LATEST_ONLY),
 )
-def on_zenoh_sub_state(*, topic, mv, obj, attachment):
+async def on_zenoh_sub_state(*, topic, mv, obj, attachment):
     fire_and_log(socket_client.emit(topic, obj))

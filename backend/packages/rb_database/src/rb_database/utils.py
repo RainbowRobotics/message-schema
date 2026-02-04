@@ -24,35 +24,60 @@ def make_check_search_text_query(
     return query
 
 
-def make_check_include_query(key: str, values: Any, *, map: dict | None = None, query: dict):
-    if values is not None:
-        # 리스트인 경우 각각 처리
-        if isinstance(values, list | tuple):
-            print("values", values, flush=True)
-            vals = []
-            for v in values:
-                if isinstance(v, int | float):
-                    vals.append(v)
-                elif isinstance(v, str):
-                    if v.isdigit():
-                        vals.append(int(v))
-                    elif map and v in map:
-                        vals.append(int(map[v]))
-                    else:
-                        vals.append(int(v))
-            if vals:
-                query[key] = {"$in": vals}
+def make_check_include_query(key: str, values: Any, *, list_map: dict | None = None, query: dict):
+    if values is None:
+        return query
+
+    if isinstance(values, list | tuple):
+        vals = []
+
+        for v in values:
+            # 숫자는 그대로
+            if isinstance(v, int | float):
+                vals.append(v)
+                continue
+
+            if isinstance(v, str):
+                s = v.strip()
+
+                # 숫자 문자열 → int
+                if s.isdigit():
+                    vals.append(int(s))
+                    continue
+
+                # 매핑 있으면 매핑값
+                if list_map and s in list_map:
+                    vals.append(list_map[s])
+                    continue
+
+                # 숫자 변환 안 되면 문자열 그대로
+                vals.append(s)
+                continue
+
+            # 그 외 타입도 그대로
+            vals.append(v)
+
+        if vals:
+            query[key] = {"$in": vals}
+
+        return query
+
+    # 단일 값
+    if isinstance(values, int | float):
+        query[key] = values
+    elif isinstance(values, str):
+        s = values.strip()
+        if s.isdigit():
+            query[key] = int(s)
+        elif list_map and s in list_map:
+            query[key] = list_map[s]
         else:
-            # 단일 값
-            if isinstance(values, int):
-                query[key] = values
-            elif isinstance(values, str):
-                if values.isdigit():
-                    query[key] = int(values)
-                else:
-                    query[key] = values
+            query[key] = s
+    else:
+        query[key] = values
 
     return query
+
 
 
 def make_check_date_range_query(key: str, range: RangeDict, *, query: dict):

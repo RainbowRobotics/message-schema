@@ -15,6 +15,7 @@ from .program_module import (
 from .program_schema import (
     Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
+    Request_Create_Multiple_TaskPD,
     Request_Create_ProgramPD,
     Request_Delete_StepsPD,
     Request_Get_Script_ContextPD,
@@ -27,6 +28,7 @@ from .program_schema import (
     Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
     Response_Clone_ProgramPD,
+    Response_Create_Multiple_TaskPD,
     Response_Create_Program_And_TasksPD,
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
@@ -136,6 +138,11 @@ async def get_task_info(task_id: str, db: MongoDB):
 @program_router.get("/program/task/{task_id}/state", response_model=Response_Get_TaskStatePD)
 async def get_task_state(task_id: str):
     res = await program_service.get_task_state(task_id=task_id)
+    return JSONResponse(res)
+
+@program_router.post("/program/tasks/create", response_model=Response_Create_Multiple_TaskPD)
+async def create_tasks(request: Request_Create_Multiple_TaskPD, db: MongoDB):
+    res = await program_service.create_tasks(request=request, db=db)
     return JSONResponse(res)
 
 @program_router.post("/program/tasks/update", response_model=Response_Update_Multiple_TaskPD)

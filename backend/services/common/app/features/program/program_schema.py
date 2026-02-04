@@ -174,6 +174,8 @@ class Request_Update_TaskPD(Pick(Task_Base, "taskId")):
 class Request_Create_Multiple_TaskPD(BaseModel):
     tasks: list[Request_Create_TaskPD]
 
+class Response_Create_Multiple_TaskPD(BaseModel):
+    tasks: list[Task_Base]
 
 class Request_Update_Multiple_TaskPD(BaseModel):
     tasks: list[Request_Update_TaskPD]

@@ -165,7 +165,7 @@ class ZenohClient:
 
         # 전송 방식 판단
         if zenoh_fd_count > 0:
-            transport = "✅ SHM"
+            transport = "SHM"
         elif net_connections > 0:
             transport = "🌐 Network (TCP)"
         else:
@@ -733,7 +733,7 @@ class ZenohClient:
                         for k, v in [seg.split("=", 1)]
                     )
 
-                    # ✅ FlatBuffer 응답: obj_payload 타입이 T로 따라옴
+                    # FlatBuffer 응답: obj_payload 타입이 T로 따라옴
                     # if flatbuffer_req_obj is not None and flatbuffer_res_T_class is not None:
                     if flatbuffer_res_T_class is not None:
                         obj_payload = flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)  # T
@@ -752,7 +752,7 @@ class ZenohClient:
                         }
                         yield ok_result_fb
 
-                    # ✅ Raw 응답
+                    # Raw 응답
                     else:
                         ok_result_raw: QueryResult[None] = {
                             "key": samp.key_expr,
@@ -848,17 +848,43 @@ class ZenohClient:
         except StopIteration:
             raise ZenohNoReply(timeout) from None
 
+    @overload
+    def query_all(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 3,
+        flatbuffer_req_obj: FBPackable,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> list[QueryResult[T]]: ...
+
+    @overload
+    def query_all(
+        self,
+        keyexpr: str,
+        *,
+        timeout: int = 3,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: None = None,
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ) -> list[QueryResult[None]]: ...
+
     def query_all(
         self,
         keyexpr: str,
         *,
         timeout: int = 3,
         flatbuffer_req_obj: FBPackable | None = None,
-        flatbuffer_res_T_class: FBRootReadable | None = None,
+        flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
-    ):
+    ) -> list[QueryResult[T]] | list[QueryResult[None]]:
         res = list(
             self.query(
                 keyexpr,
@@ -871,13 +897,13 @@ class ZenohClient:
             )
         )
 
+        # payload 필드만 제거 (dict_payload는 유지)
+        # obj_payload는 그대로 두어서 타입 추론 가능
         for r in res:
-            if flatbuffer_req_obj is not None:
+            if "payload" in r:
                 del r["payload"]
-            else:
-                del r["dict_payload"]
 
-        return t_to_dict(res)
+        return res  # 그대로 반환 (t_to_dict 제거)
 
     async def _cancel_and_drain(self, tasks):
         for t in tasks:

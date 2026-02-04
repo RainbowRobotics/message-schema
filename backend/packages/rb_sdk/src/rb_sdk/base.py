@@ -6,6 +6,7 @@ import os
 import sys
 import threading
 import time as time_module
+from collections.abc import Callable
 from typing import Any, ClassVar, Literal, TypeVar
 
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
@@ -15,8 +16,9 @@ from rb_flow_manager.exception import FlowControlException
 from rb_modules.log import rb_log
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import make_builtins_allow_most, safe_eval_expr
-from rb_zenoh.client import ZenohClient
+from rb_zenoh.client import FBRootReadable, ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
+from rb_zenoh.schema import SubscribeOptions
 
 from .schema.base_schema import SetVariableDTO
 
@@ -53,11 +55,19 @@ class VariablesProxy:
 
 T = TypeVar("T", bound="RBBaseSDK")
 
+
 class RBBaseSDK:
-    """프로세스별 싱글톤 + 공통 Zenoh/루프 관리"""
+    """프로세스별 싱글톤 + 공통 Zenoh/루프 관리 + 참조 카운팅"""
 
     # (pid, cls) 기준으로 인스턴스 관리
     _instances: ClassVar[dict[tuple[int, type["RBBaseSDK"]], "RBBaseSDK"]] = {}
+
+    # PID별 전체 SDK 참조 카운트 (모든 SDK 클래스 통합)
+    _total_ref_counts: ClassVar[dict[int, int]] = {}
+
+    # PID별 ZenohClient 인스턴스
+    _zenoh_clients: ClassVar[dict[int, ZenohClient]] = {}
+
     _lock: ClassVar[threading.Lock] = threading.Lock()
 
     # 공통 예외 핸들링: 서브클래스 메서드 자동 래핑
@@ -67,7 +77,6 @@ class RBBaseSDK:
         super().__init_subclass__(**kwargs)
 
         for name, attr in list(cls.__dict__.items()):
-            # _로 시작하는 메서드는 내부용이니까 건드리지 X
             if name.startswith("_"):
                 continue
 
@@ -127,12 +136,29 @@ class RBBaseSDK:
         pid = os.getpid()
         key = (pid, cls)
 
-        with cls._lock:
-            if key not in cls._instances:
+        with RBBaseSDK._lock:
+            if key not in RBBaseSDK._instances:
                 instance = super().__new__(cls)
-                cls._instances[key] = instance
+                RBBaseSDK._instances[key] = instance
                 instance._initialized = False
-            return cls._instances[key]
+
+                # ✅ 데코레이터보다 먼저 초기화
+                instance._zenoh_subscribers = []
+                instance._zenoh_queryables = []
+                instance._pid = pid
+                instance._closing = False
+
+                # 카운트 증가
+                RBBaseSDK._total_ref_counts[pid] = RBBaseSDK._total_ref_counts.get(pid, 0) + 1
+
+                # ZenohClient 생성 및 설정
+                if pid not in RBBaseSDK._zenoh_clients:
+                    RBBaseSDK._zenoh_clients[pid] = ZenohClient()
+
+                # ✅ 즉시 설정
+                instance.zenoh_client = RBBaseSDK._zenoh_clients[pid]
+
+            return RBBaseSDK._instances[key]
 
     def __init__(self, *, server: Literal["amr", "manipulate"] | None = None):
         # 이미 초기화 됐으면 스킵
@@ -140,56 +166,131 @@ class RBBaseSDK:
             return
 
         self._is_alive = True
-        self._initialized = True
         self._pid = os.getpid()
+        self._closing = False
 
-        self.robot_uid = self._get_robot_uid(server=server)
+        # 리스트 초기화 (데코레이터가 먼저 실행될 수 있음)
+        if not hasattr(self, "_zenoh_queryables"):
+            self._zenoh_queryables = []
+        if not hasattr(self, "_zenoh_subscribers"):
+            self._zenoh_subscribers = []
 
-        # # 이벤트 루프 & task set
-        # self.loop = asyncio.new_event_loop()
-        self._tasks: set[asyncio.Task] = set()
+        # 공유 ZenohClient 사용
+        with RBBaseSDK._lock:
+            self.zenoh_client = RBBaseSDK._zenoh_clients[self._pid]
 
-        # # 루프를 돌릴 백그라운드 스레드
-        # self._loop_thread = threading.Thread(
-        #     target=self._run_loop, name=f"rb-sdk-loop-{self._pid}", daemon=True
-        # )
-        # self._loop_thread.start()
+        self.robot_uids = self._get_robot_uids(server=server) if server is not None else {}
 
-        # zenoh client 생성 + 루프 설정
-        # self.zenoh_client = ZenohManager.get_client(self.loop)
-        self.zenoh_client = ZenohClient()
+        self._initialized = True
 
-        # self.zenoh_client.set_loop(self.loop)
+        print(f"[SDK Base] Initialized {self.__class__.__name__} for PID {self._pid} (total refs: {RBBaseSDK._total_ref_counts[self._pid]})", flush=True)
 
-        print(f"[SDK Base] Initialized for PID {self._pid} ({self.__class__.__name__})")
-
-    # def _run_loop(self):
-        # asyncio.set_event_loop(self.loop)
-        # self.loop.run_forever()
-
-    # def _target_loop(self) -> asyncio.AbstractEventLoop:
-    #     # ZenohClient가 붙어있는 loop를 최우선으로 사용
-    #     loop = getattr(self.zenoh_client, "_loop", None)
-    #     if loop is None:
-    #         loop = self.loop
-    #     if loop is None:
-    #         raise RuntimeError("target loop is not set")
-    #     return loop
-
-    def _get_robot_uid(self, *, server: Literal["amr", "manipulate"]) -> str | None:
+    def _get_robot_uids(self, *, server: Literal["amr", "manipulate"]) -> dict[str, str]:
         """
         server_type 기준으로 robot_uid를 질의해서 가져온다.
         없으면 None.
         """
-        result = self.zenoh_client.query_one(
-            f"rrs/{server}/robot_uid",
-            payload={},  # 또는 flatbuffer_req_obj=req
-        )
+        try:
+            result = self.zenoh_client.query_all(
+                f"rrs/{server}/robot_uid",
+                payload={},
+                timeout=0.1,
+            )
 
-        dt = result.get("dict_payload") or {}
-        robot_uid = dt.get("robot_uid")
 
-        return robot_uid
+            return result.get("dict_payload") or {}
+        except Exception as e:
+            self.log(content=f"[SDK Base] Error getting robot uid: {e}", robot_model="RRS", level="ERROR")
+            return {}
+
+    def register_zenoh_queryable(self, keyexpr: str, queryable):
+        """Queryable 등록 (keyexpr와 함께 저장)"""
+        self._zenoh_queryables.append((keyexpr, queryable))
+        return queryable
+
+    def register_zenoh_subscriber(self, subscriber):
+        """Subscriber 등록 (정리를 위해)"""
+        self._zenoh_subscribers.append(subscriber)
+        return subscriber
+
+    def zenoh_subscribe(
+        self,
+        topic: str,
+        *,
+        flatbuffer_obj_t: FBRootReadable | None = None,
+        opts: SubscribeOptions | None = None,
+    ):
+        """데코레이터: Subscribe 자동 등록 및 정리"""
+        def decorator(callback: Callable):
+            # ✅ _initialized 체크 제거
+
+            handle = self.zenoh_client.subscribe(
+                topic=topic,
+                callback=callback,
+                flatbuffer_obj_t=flatbuffer_obj_t,
+                options=opts,
+            )
+
+            # 리스트가 없으면 생성
+            if not hasattr(self, "_zenoh_subscribers"):
+                self._zenoh_subscribers = []
+
+            self._zenoh_subscribers.append(handle)
+            return callback
+        return decorator
+
+    def zenoh_queryable(
+        self,
+        keyexpr: str,
+        *,
+        flatbuffer_req_T_class: FBRootReadable | None = None,
+        flatbuffer_res_buf_size: int | None = None,
+    ):
+        """데코레이터: Queryable 자동 등록 및 정리"""
+        def decorator(handler: Callable):
+            # ✅ _initialized 체크 제거
+
+            # 중복 체크
+            if keyexpr in self.zenoh_client._queryables:
+                print(f"⚠️  Queryable already declared: {keyexpr}", flush=True)
+                return handler  # 중복이면 그냥 반환
+
+            # Queryable 등록
+            qbl = self.zenoh_client.queryable(
+                keyexpr=keyexpr,
+                handler=handler,
+                flatbuffer_req_T_class=flatbuffer_req_T_class,
+                flatbuffer_res_buf_size=flatbuffer_res_buf_size,
+            )
+
+            # 리스트가 없으면 생성
+            if not hasattr(self, "_zenoh_queryables"):
+                self._zenoh_queryables = []
+
+            self._zenoh_queryables.append((keyexpr, qbl))
+
+            return handler
+        return decorator
+
+    def _cleanup_resources(self):
+        """이 SDK 인스턴스의 Zenoh 리소스 정리"""
+        print(f"[SDK Base] Cleaning up resources for {self.__class__.__name__}", flush=True)
+
+        # Queryable 정리
+        for keyexpr, _ in self._zenoh_queryables:
+            try:
+                self.zenoh_client.undeclare_queryable(keyexpr)
+            except Exception as e:
+                print(f"[SDK Base] Error undeclaring queryable {keyexpr}: {e}", flush=True)
+        self._zenoh_queryables.clear()
+
+        # Subscriber 정리
+        for zenoh_subscriber in self._zenoh_subscribers:
+            try:
+                zenoh_subscriber.close()
+            except Exception as e:
+                print(f"[SDK Base] Error closing subscriber: {e}", flush=True)
+        self._zenoh_subscribers.clear()
 
     def _run_coro_blocking(self, coro, *, timeout: float | None = None):
         try:
@@ -206,44 +307,6 @@ class RBBaseSDK:
                 return await asyncio.wait_for(coro, timeout=timeout)
 
             return asyncio.run(_with_timeout())
-
-    # async def _run_on_sdk_loop(self, coro, *, timeout: float | None = None):
-    #     """
-    #     ✅ 절대 `await coro`로 fallback 하지 않는다.
-    #     ✅ 항상 target loop(zenoh loop)로 run_coroutine_threadsafe
-    #     """
-    #     loop = self._target_loop()
-
-    #     # 현재 running loop가 target loop면 그냥 await
-    #     try:
-    #         running = asyncio.get_running_loop()
-    #         if running is loop:
-    #             if timeout is None:
-    #                 return await coro
-    #             return await asyncio.wait_for(coro, timeout=timeout)
-    #     except RuntimeError:
-    #         pass
-
-    #     # 다른 loop면 thread-safe로 던지고 현재 loop에서 await
-    #     cfut = asyncio.run_coroutine_threadsafe(coro, loop)
-    #     afut = asyncio.wrap_future(cfut)
-    #     if timeout is not None:
-    #         return await asyncio.wait_for(afut, timeout=timeout)
-    #     return await afut
-
-    # def _submit(self, coro):
-    #     """이벤트 루프에 코루틴 제출하고 future 반환"""
-
-    #     async def _wrap():
-    #         task = asyncio.current_task()
-    #         if task is not None:
-    #             self._tasks.add(task)
-    #             try:
-    #                 return await coro
-    #             finally:
-    #                 self._tasks.discard(task)
-
-    #     return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
 
     def set_variables(self, *, variables: list[SetVariableDTO], flow_manager_args: FlowManagerArgs | None = None):
         """변수 설정"""
@@ -282,7 +345,6 @@ class RBBaseSDK:
                 raise RuntimeError("contents is required")
 
             code = compile(contents, "<custom_script>", "exec")
-
 
             merged_variables = VariablesProxy(flow_manager_args.ctx)
 
@@ -340,7 +402,6 @@ class RBBaseSDK:
         if flow_manager_args is not None:
             flow_manager_args.done()
 
-
     def all_pause(self, *, flow_manager_args: FlowManagerArgs | None = None):
         """모든 프로세스 일시정지"""
         self.zenoh_client.query_one("rrs/pause", payload={})
@@ -368,7 +429,6 @@ class RBBaseSDK:
             flatbuffer_req_obj=req,
             flatbuffer_buf_size=256,
         )
-
 
         if flow_manager_args is not None:
             flow_manager_args.done()
@@ -407,52 +467,72 @@ class RBBaseSDK:
         if flow_manager_args is not None:
             flow_manager_args.done()
 
-
     def close(self):
-        """SDK 종료 (현재 프로세스 + 현재 클래스용 인스턴스만)"""
-        try:
-            # zenoh client 닫기
-            if hasattr(self, "zenoh_client") and self.zenoh_client is not None:
-                with contextlib.suppress(Exception, TimeoutError):
-                    self.zenoh_client.close()
-            # ZenohManager.close_local()
+        """SDK 종료 (전체 참조 카운트 기반으로 ZenohClient 정리 여부 결정)"""
+        if os.getpid() != getattr(self, "_pid", os.getpid()):
+            return
 
-            # # 루프 위에서 돌고 있는 task 취소
-            # if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
+        pid = self._pid
+        key = (pid, self.__class__)
 
-            #     async def _cancel_all():
-            #         tasks = list(self._tasks)
-            #         for t in tasks:
-            #             t.cancel()
-            #         if tasks:
-            #             await asyncio.gather(*tasks, return_exceptions=True)
+        should_close_zenoh = False
+        should_cleanup_resources = False
 
-            #     fut = asyncio.run_coroutine_threadsafe(_cancel_all(), self.loop)
-            #     with contextlib.suppress(Exception):
-            #         fut.result(timeout=2)
+        with RBBaseSDK._lock:
+            # 중복 close 방지
+            if getattr(self, "_closing", False):
+                self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) close already in progress", robot_model="RRS", level="DEBUG")
+                return
 
-            #     # 루프 정지
-            #     self.loop.call_soon_threadsafe(self.loop.stop)
+            # 이미 제거된 인스턴스는 건너뜀 (카운트 감소 X)
+            if key not in RBBaseSDK._instances:
+                self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) already removed, skipping", robot_model="RRS", level="DEBUG")
+                return
 
-            # # 스레드 join
-            # if getattr(self, "_loop_thread", None) and self._loop_thread.is_alive():
-            #     self._loop_thread.join(timeout=2)
+            self._closing = True
 
-            # # 루프 close
-            # if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
-            #     self.loop.close()
+            # 전체 참조 카운트 감소
+            if pid in RBBaseSDK._total_ref_counts:
+                RBBaseSDK._total_ref_counts[pid] -= 1
+                remaining = RBBaseSDK._total_ref_counts[pid]
 
-        except Exception as e:
-            print(f"[SDK Base] Close error: {e}", flush=True)
-        finally:
-            print(f"[SDK Base] Closed for PID {self._pid} ({self.__class__.__name__})", flush=True)
+                self.log(content=f"[SDK Base] Closing {self.__class__.__name__} (PID {pid}), remaining SDKs: {remaining}", robot_model="RRS", level="DEBUG")
 
-            self._is_alive = False
-            cls = self.__class__
-            key = (self._pid, cls)
-            with cls._lock:
-                if cls._instances.get(key) is self:
-                    cls._instances.pop(key, None)
+                # 이 클래스의 인스턴스가 정리될 때 리소스 정리
+                if key in RBBaseSDK._instances:
+                    should_cleanup_resources = True
+                    RBBaseSDK._instances.pop(key, None)
+
+                # 모든 SDK가 정리되었으면 ZenohClient도 닫기
+                if remaining <= 0:
+                    should_close_zenoh = True
+                    RBBaseSDK._total_ref_counts.pop(pid, None)
+                    self.log(content=f"[SDK Base] ✅ All SDKs closed for PID {pid}, will close ZenohClient", robot_model="RRS", level="DEBUG")
+
+        # Lock 밖에서 리소스 정리 (deadlock 방지)
+        if should_cleanup_resources:
+            try:
+                self._cleanup_resources()
+                self.log(content=f"[SDK Base] ✅ Resources cleaned for {self.__class__.__name__}", robot_model="RRS", level="DEBUG")
+            except Exception as e:
+                self.log(content=f"[SDK Base] Error cleaning up resources: {e}", robot_model="RRS", level="ERROR")
+
+        # Lock 밖에서 ZenohClient 정리 (deadlock 방지)
+        if should_close_zenoh:
+            try:
+                with RBBaseSDK._lock:
+                    zenoh_client = RBBaseSDK._zenoh_clients.pop(pid, None)
+
+                if zenoh_client is not None:
+                    self.log(content=f"[SDK Base] ✅ ZenohClient closed for PID {pid}", robot_model="RRS", level="DEBUG")
+                    with contextlib.suppress(Exception, TimeoutError):
+                        zenoh_client.close()
+
+            except Exception as e:
+                print(f"[SDK Base] Error closing ZenohClient: {e}", flush=True)
+
+        self._is_alive = False
+        self._closing = False
 
     def __del__(self):
         """GC 시 안전 종료 (파이썬 종료 중이면 무시)"""
