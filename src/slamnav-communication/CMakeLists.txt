@@ -70,11 +70,11 @@ target_link_libraries(${PROJECT_NAME}
         slamnav-slam
         slamnav-navigation
         Qt${QT_VERSION_MAJOR}::WebSockets
+        zenohcxx::zenohc
     PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
         ${SIOCLIENT_LIB}
         ${SIOCLIENT_TLS_LIB}
-        zenohcxx::zenohc
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "slamnav_communication")

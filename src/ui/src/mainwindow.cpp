@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   COMM_MSA::instance(this);
   COMM_FMS::instance(this);
   ARUCO::instance(this);
+  COMM_ZENOH::instance(this);
 
   // for 3d viewer
   connect(ui->cb_ViewType,  SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -639,6 +640,28 @@ void MainWindow::init_modules()
       ui->cb_LivoxSwitch->setEnabled(false);
     }
   }
+  
+  
+  
+  
+  // zenoh module init
+  {
+    COMM_ZENOH::instance()->set_config_module(CONFIG::instance());
+    COMM_ZENOH::instance()->set_logger_module(LOGGER::instance());
+    COMM_ZENOH::instance()->set_mobile_module(MOBILE::instance());
+    COMM_ZENOH::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+    COMM_ZENOH::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+    COMM_ZENOH::instance()->set_cam_module(CAM::instance());
+    COMM_ZENOH::instance()->set_unimap_module(UNIMAP::instance());
+    COMM_ZENOH::instance()->set_obsmap_module(OBSMAP::instance());
+    COMM_ZENOH::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+    COMM_ZENOH::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+    COMM_ZENOH::instance()->set_localization_module(LOCALIZATION::instance());
+    COMM_ZENOH::instance()->set_mapping_module(MAPPING::instance());
+    COMM_ZENOH::instance()->set_robot_type("test");
+  }
+  
+  
 
   // start watchdog loop
   watch_flag = true;

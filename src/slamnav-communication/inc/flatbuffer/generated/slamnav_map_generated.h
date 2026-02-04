@@ -3275,8 +3275,16 @@ inline ::flatbuffers::Offset<ResponseMappingSave> CreateResponseMappingSaveDirec
 
 struct RequestMappingCloudReload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef RequestMappingCloudReloadBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
            verifier.EndTable();
   }
 };
@@ -3285,6 +3293,9 @@ struct RequestMappingCloudReloadBuilder {
   typedef RequestMappingCloudReload Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(RequestMappingCloudReload::VT_ID, id);
+  }
   explicit RequestMappingCloudReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -3297,15 +3308,46 @@ struct RequestMappingCloudReloadBuilder {
 };
 
 inline ::flatbuffers::Offset<RequestMappingCloudReload> CreateRequestMappingCloudReload(
-    ::flatbuffers::FlatBufferBuilder &_fbb) {
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   RequestMappingCloudReloadBuilder builder_(_fbb);
+  builder_.add_id(id);
   return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<RequestMappingCloudReload> CreateRequestMappingCloudReloadDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  return SLAMNAV::CreateRequestMappingCloudReload(
+      _fbb,
+      id__);
 }
 
 struct ResponseMappingCloudReload FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef ResponseMappingCloudReloadBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_RESULT = 6,
+    VT_MESSAGE = 8
+  };
+  const ::flatbuffers::String *id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_ID);
+  }
+  const ::flatbuffers::String *result() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_RESULT);
+  }
+  const ::flatbuffers::String *message() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MESSAGE);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffset(verifier, VT_RESULT) &&
+           verifier.VerifyString(result()) &&
+           VerifyOffset(verifier, VT_MESSAGE) &&
+           verifier.VerifyString(message()) &&
            verifier.EndTable();
   }
 };
@@ -3314,6 +3356,15 @@ struct ResponseMappingCloudReloadBuilder {
   typedef ResponseMappingCloudReload Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
+  void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
+    fbb_.AddOffset(ResponseMappingCloudReload::VT_ID, id);
+  }
+  void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
+    fbb_.AddOffset(ResponseMappingCloudReload::VT_RESULT, result);
+  }
+  void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
+    fbb_.AddOffset(ResponseMappingCloudReload::VT_MESSAGE, message);
+  }
   explicit ResponseMappingCloudReloadBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -3326,9 +3377,30 @@ struct ResponseMappingCloudReloadBuilder {
 };
 
 inline ::flatbuffers::Offset<ResponseMappingCloudReload> CreateResponseMappingCloudReload(
-    ::flatbuffers::FlatBufferBuilder &_fbb) {
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> result = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
   ResponseMappingCloudReloadBuilder builder_(_fbb);
+  builder_.add_message(message);
+  builder_.add_result(result);
+  builder_.add_id(id);
   return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<ResponseMappingCloudReload> CreateResponseMappingCloudReloadDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *result = nullptr,
+    const char *message = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto result__ = result ? _fbb.CreateString(result) : 0;
+  auto message__ = message ? _fbb.CreateString(message) : 0;
+  return SLAMNAV::CreateResponseMappingCloudReload(
+      _fbb,
+      id__,
+      result__,
+      message__);
 }
 
 struct ResultMapLoad FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {

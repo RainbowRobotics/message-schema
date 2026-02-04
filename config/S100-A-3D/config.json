@@ -135,7 +135,7 @@
         "LOG_LEVEL": "info"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/251208_test_map"
+        "MAP_PATH": "/data/maps/260127_ssecret"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",

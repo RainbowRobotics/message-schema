@@ -4,7 +4,7 @@
  *
  * RPC (Queryable):
  *   - move/goal, move/target, move/stop, move/pause, move/resume
- *   - move/xLinear, move/circular, move/rotate
+ *   - move/xLinear, move/yLinear, move/circular, move/rotate
  *
  * Subscriber:
  *   - move/jog
@@ -14,28 +14,53 @@
  */
 
 #include "comm_zenoh.h"
-#include "global_defines.h"
 #include "flatbuffer/generated/slamnav_move_generated.h"
-
-#include <chrono>
 
 namespace
 {
-    constexpr const char* MODULE_NAME = "MOVE";
-    constexpr double D2R = M_PI / 180.0;
+    constexpr const char* MODULE_NAME = "ZENOH_MOVE";
 
-    // =========================================================================
-    // Helper: DATA_MOVE -> Move_Result FlatBuffer
-    // =========================================================================
-    std::vector<uint8_t> build_move_result(const std::string& id,
+    // // result data buffer
+    // static std::vector<uint8_t> result_data_buffer;
+
+    // // result 읽기 함수
+    // std::vector<uint8_t> get_data() const {
+    //     std::shared_lock lock(move_mtx);
+    //     return result_data_buffer;
+    // }
+
+    // // result 쓰기 함수
+    // void set_data(std::vector<uint8_t> new_data) {
+    //     std::unique_lock lock(move_mtx);
+    //     result_data_buffer = std::move(new_data);
+    // }
+
+
+    std::vector<uint8_t> build_result_move(const std::string& id,
+                                           const std::string& goal_id,
+                                           const std::string& goal_name,
+                                           const std::string& method,
+                                           int preset,
+                                           const SLAMNAV::MovePose* goal_pose,
+                                           float target,
+                                           float speed,
+                                           const std::string& direction,
                                            const std::string& result,
                                            const std::string& message)
     {
-        flatbuffers::FlatBufferBuilder fbb(256);
+        flatbuffers::FlatBufferBuilder fbb(512);
 
-        auto fb_result = SLAMNAV::CreateMove_Result(
+        auto fb_result = SLAMNAV::CreateResultMove(
             fbb,
             fbb.CreateString(id),
+            fbb.CreateString(goal_id),
+            fbb.CreateString(goal_name),
+            fbb.CreateString(method),
+            preset,
+            goal_pose,
+            target,
+            speed,
+            fbb.CreateString(direction),
             fbb.CreateString(result),
             fbb.CreateString(message)
         );
@@ -45,11 +70,16 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // =========================================================================
-    // Helper: Build Response FlatBuffers
-    // =========================================================================
+    // Simple result helper (for stop/pause/resume)
+    std::vector<uint8_t> build_simple_result(const std::string& id,
+                                              const std::string& result,
+                                              const std::string& message)
+    {
+        SLAMNAV::MovePose empty_pose(0, 0, 0, 0);
+        return build_result_move(id, "", "", "", 0, &empty_pose, 0, 0, "", result, message);
+    }
 
-    // Response_Move_Goal
+    // ResponseMoveGoal
     std::vector<uint8_t> build_response_goal(const std::string& id,
                                              const std::string& goal_id,
                                              const std::string& goal_name,
@@ -59,7 +89,7 @@ namespace
                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(512);
-        auto resp = SLAMNAV::CreateResponse_Move_Goal(
+        auto resp = SLAMNAV::CreateResponseMoveGoal(
             fbb,
             fbb.CreateString(id),
             fbb.CreateString(goal_id),
@@ -74,7 +104,7 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Target
+    // ResponseMoveTarget
     std::vector<uint8_t> build_response_target(const std::string& id,
                                                const std::string& method,
                                                const SLAMNAV::MovePose* goal_pose,
@@ -83,7 +113,7 @@ namespace
                                                const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(512);
-        auto resp = SLAMNAV::CreateResponse_Move_Target(
+        auto resp = SLAMNAV::CreateResponseMoveTarget(
             fbb,
             fbb.CreateString(id),
             fbb.CreateString(method),
@@ -97,13 +127,13 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Stop
+    // ResponseMoveStop
     std::vector<uint8_t> build_response_stop(const std::string& id,
                                              const std::string& result,
                                              const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_Stop(
+        auto resp = SLAMNAV::CreateResponseMoveStop(
             fbb,
             fbb.CreateString(id),
             fbb.CreateString(result),
@@ -114,13 +144,13 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Pause
+    // ResponseMovePause
     std::vector<uint8_t> build_response_pause(const std::string& id,
                                               const std::string& result,
                                               const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_Pause(
+        auto resp = SLAMNAV::CreateResponseMovePause(
             fbb,
             fbb.CreateString(id),
             fbb.CreateString(result),
@@ -131,13 +161,13 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Resume
+    // ResponseMoveResume
     std::vector<uint8_t> build_response_resume(const std::string& id,
                                                const std::string& result,
                                                const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_Resume(
+        auto resp = SLAMNAV::CreateResponseMoveResume(
             fbb,
             fbb.CreateString(id),
             fbb.CreateString(result),
@@ -148,7 +178,7 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_XLinear
+    // ResponseMoveXLinear
     std::vector<uint8_t> build_response_xlinear(const std::string& id,
                                                 float target,
                                                 float speed,
@@ -156,7 +186,7 @@ namespace
                                                 const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_XLinear(
+        auto resp = SLAMNAV::CreateResponseMoveXLinear(
             fbb,
             fbb.CreateString(id),
             target,
@@ -169,7 +199,28 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Circular
+    // ResponseMoveYLinear
+    std::vector<uint8_t> build_response_ylinear(const std::string& id,
+                                                float target,
+                                                float speed,
+                                                const std::string& result,
+                                                const std::string& message)
+    {
+        flatbuffers::FlatBufferBuilder fbb(256);
+        auto resp = SLAMNAV::CreateResponseMoveYLinear(
+            fbb,
+            fbb.CreateString(id),
+            target,
+            speed,
+            fbb.CreateString(result),
+            fbb.CreateString(message)
+        );
+        fbb.Finish(resp);
+        const uint8_t* buf = fbb.GetBufferPointer();
+        return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+    }
+
+    // ResponseMoveCircular
     std::vector<uint8_t> build_response_circular(const std::string& id,
                                                  float target,
                                                  float speed,
@@ -178,7 +229,7 @@ namespace
                                                  const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_Circular(
+        auto resp = SLAMNAV::CreateResponseMoveCircular(
             fbb,
             fbb.CreateString(id),
             target,
@@ -192,7 +243,7 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-    // Response_Move_Rotate
+    // ResponseMoveRotate
     std::vector<uint8_t> build_response_rotate(const std::string& id,
                                                float target,
                                                float speed,
@@ -200,7 +251,7 @@ namespace
                                                const std::string& message)
     {
         flatbuffers::FlatBufferBuilder fbb(256);
-        auto resp = SLAMNAV::CreateResponse_Move_Rotate(
+        auto resp = SLAMNAV::CreateResponseMoveRotate(
             fbb,
             fbb.CreateString(id),
             target,
@@ -213,29 +264,17 @@ namespace
         return std::vector<uint8_t>(buf, buf + fbb.GetSize());
     }
 
-} // anonymous namespace
-
-// =============================================================================
-// Move Loop Implementation
-// =============================================================================
+}
 
 void COMM_ZENOH::move_loop()
 {
     log_info("move_loop started");
 
-    // 1. robotType이 설정될 때까지 대기
     while (is_move_running_.load() && get_robot_type().empty())
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    if (!is_move_running_.load())
-    {
-        log_info("move_loop ended (stopped before init)");
-        return;
-    }
-
-    // 2. Session 유효성 확인
     if (!is_session_valid())
     {
         log_error("move_loop aborted: session invalid");
@@ -248,13 +287,14 @@ void COMM_ZENOH::move_loop()
     {
         zenoh::Session& session = get_session();
 
-        // 3. Topic 생성
+        // 4. Topic 생성
         std::string topic_goal     = make_topic("move/goal");
         std::string topic_target   = make_topic("move/target");
         std::string topic_stop     = make_topic("move/stop");
         std::string topic_pause    = make_topic("move/pause");
         std::string topic_resume   = make_topic("move/resume");
         std::string topic_xlinear  = make_topic("move/xLinear");
+        std::string topic_ylinear  = make_topic("move/yLinear");
         std::string topic_circular = make_topic("move/circular");
         std::string topic_rotate   = make_topic("move/rotate");
         std::string topic_jog      = make_topic("move/jog");
@@ -262,10 +302,10 @@ void COMM_ZENOH::move_loop()
 
         log_info("move_loop registering topics with prefix: {}", get_robot_type());
 
-        // 4. Result Publisher
+
         auto pub_result = session.declare_publisher(zenoh::KeyExpr(topic_result));
 
-        // 5. Jog Subscriber
+        // 6. Jog Subscriber
         auto sub_jog = session.declare_subscriber(
             zenoh::KeyExpr(topic_jog),
             [this](const zenoh::Sample& sample)
@@ -276,43 +316,67 @@ void COMM_ZENOH::move_loop()
                 const auto& payload = sample.get_payload();
                 auto bytes = payload.as_vector();
 
-                auto jog = SLAMNAV::GetMove_Jog(bytes.data());
+                auto jog = flatbuffers::GetRoot<SLAMNAV::MoveJog>(bytes.data());
                 if (!jog) return;
 
                 double vx = static_cast<double>(jog->vx());
                 double vy = static_cast<double>(jog->vy());
                 double wz = static_cast<double>(jog->wz()) * D2R;
 
-                invoke_jog_callback(Eigen::Vector3d(vx, vy, wz));
+                mobile_ptr->slot_jog_update(Eigen::Vector3d(vx, vy, wz));
             },
             zenoh::closures::none
         );
 
         log_info("Jog subscriber registered: {}", topic_jog);
 
-        // 6. RPC Queryables
-
         // ---- move/goal ----
         auto q_goal = session.declare_queryable(
             zenoh::KeyExpr(topic_goal),
-            [this, &pub_result](const zenoh::Query& query)
+            [this](const zenoh::Query& query)
             {
                 const auto& payload = query.get_payload();
+
                 if (!payload.has_value())
                 {
                     auto resp = build_response_goal("", "", "", "", 0, "reject", "no payload");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
+                
+                auto bytes = payload->get().as_vector();
+                const uint8_t* buf = bytes.data();
+                size_t size = bytes.size();
 
-                auto bytes = payload->as_vector();
-                auto req = SLAMNAV::GetRequest_Move_Goal(bytes.data());
-                if (!req)
-                {
-                    auto resp = build_response_goal("", "", "", "", 0, "reject", "invalid request");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                flatbuffers::Verifier verifier(buf, size);
+                if (!verifier.VerifyBuffer<SLAMNAV::RequestMoveGoal>(nullptr)) { 
+                    std::cerr << "!!! Verifier Failed !!! - Size: " << size << std::endl;
+                    auto resp = build_response_goal("", "", "", "", 0, "reject", "invalid flatbuffer structure");
+                    query.reply(query.get_keyexpr(), zenoh::Bytes(std::move(resp)));
                     return;
                 }
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveGoal>(buf);
+
+                // const auto& payload = query.get_payload();
+
+                // if (!payload.has_value())
+                // {
+                //     auto resp = build_response_goal("", "", "", "", 0, "reject", "no payload");
+                //     query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                //     return;
+                // }
+                
+                // auto slice = payload->get().as_slice();
+                // const uint8_t* buf = slice.data();
+                // size_t size = bytes.size();
+
+                // flatbuffers::Verifier verifier(buf, size);
+                // if (!verifier.VerifyBuffer<SLAMNAV::RequestMoveGoal>(nullptr)) { 
+                //     auto resp = build_response_goal("", "", "", "", 0, "reject", "invalid flatbuffer structure");
+                //     query.reply(query.get_keyexpr(), zenoh::Bytes(std::move(resp)));
+                //     return;
+                // }
+                // auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveGoal>(buf);
 
                 std::string id = req->id() ? req->id()->str() : "";
                 std::string goal_id = req->goal_id() ? req->goal_id()->str() : "";
@@ -320,46 +384,45 @@ void COMM_ZENOH::move_loop()
                 std::string method = req->method() ? req->method()->str() : "pp";
                 int preset = req->preset();
 
-                // Get modules
+                // modules
                 UNIMAP* unimap_ptr = get_unimap();
                 LOCALIZATION* loc_ptr = get_localization();
                 AUTOCONTROL* ctrl_ptr = get_autocontrol();
                 MOBILE* mobile_ptr = get_mobile();
 
-                // Validate
                 if (!unimap_ptr || !loc_ptr || !ctrl_ptr || !mobile_ptr)
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "module not ready");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
                 if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "map not loaded");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
                 if (!loc_ptr->get_is_loc())
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "not localized");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
                 // Resolve goal
                 NODE* node = nullptr;
-                QString goal_id_q = QString::fromStdString(goal_id);
-                QString goal_name_q = QString::fromStdString(goal_name);
+                QString qstr_goal_id = QString::fromStdString(goal_id);
+                QString qstr_goal_name = QString::fromStdString(goal_name);
 
                 if (!goal_id.empty())
                 {
-                    node = unimap_ptr->get_node_by_id(goal_id_q);
+                    node = unimap_ptr->get_node_by_id(qstr_goal_id);
                 }
                 else if (!goal_name.empty())
                 {
-                    node = unimap_ptr->get_node_by_name(goal_name_q);
+                    node = unimap_ptr->get_node_by_name(qstr_goal_name);
                     if (node)
                     {
                         goal_id = node->id.toStdString();
@@ -369,7 +432,7 @@ void COMM_ZENOH::move_loop()
                 if (!node)
                 {
                     auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "goal not found");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -378,7 +441,8 @@ void COMM_ZENOH::move_loop()
                     goal_name = node->name.toStdString();
                 }
 
-                // Build DATA_MOVE and invoke callback
+                mobile_ptr->move(0, 0, 0);
+
                 DATA_MOVE msg;
                 msg.id = QString::fromStdString(id);
                 msg.command = "goal";
@@ -396,18 +460,21 @@ void COMM_ZENOH::move_loop()
                 Eigen::Matrix4d cur_tf = loc_ptr->get_cur_tf();
                 msg.cur_pos = cur_tf.block(0, 3, 3, 1);
 
-                mobile_ptr->move(0, 0, 0);
-
                 // Response
                 auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                // Invoke move callback
-                ctrl_ptr->invoke_move(msg);
+                Q_EMIT (ctrl_ptr->signal_move(msg));
 
-                // Publish result
-                auto result_buf = build_move_result(id, "success", "goal accepted");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                // // Publish result
+                // SLAMNAV::MovePose goal_pose(
+                //     static_cast<float>(xi[0]),
+                //     static_cast<float>(xi[1]),
+                //     static_cast<float>(node->tf(2, 3)),
+                //     static_cast<float>(xi[2])
+                // );
+                // auto result_buf = build_result_move(id, goal_id, goal_name, method, preset, &goal_pose, 0, 0, "", "success", "goal accepted");
+                // pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -423,17 +490,17 @@ void COMM_ZENOH::move_loop()
                 {
                     SLAMNAV::MovePose pose(0, 0, 0, 0);
                     auto resp = build_response_target("", "", &pose, 0, "reject", "no payload");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
-                auto bytes = payload->as_vector();
-                auto req = SLAMNAV::GetRequest_Move_Target(bytes.data());
+                auto bytes = payload->get().as_vector();
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveTarget>(bytes.data());
                 if (!req)
                 {
                     SLAMNAV::MovePose pose(0, 0, 0, 0);
                     auto resp = build_response_target("", "", &pose, 0, "reject", "invalid request");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -461,21 +528,21 @@ void COMM_ZENOH::move_loop()
                 if (!unimap_ptr || !loc_ptr || !obsmap_ptr || !config_ptr || !ctrl_ptr || !mobile_ptr)
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "module not ready");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
                 if (unimap_ptr->get_is_loaded() != MAP_LOADED)
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "map not loaded");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
                 if (!loc_ptr->get_is_loc())
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "not localized");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -484,7 +551,7 @@ void COMM_ZENOH::move_loop()
                     y < unimap_ptr->get_map_min_y() || y > unimap_ptr->get_map_max_y())
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "out of bounds");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -494,7 +561,7 @@ void COMM_ZENOH::move_loop()
                 if (obsmap_ptr->is_tf_collision(goal_tf))
                 {
                     auto resp = build_response_target(id, method, &resp_pose, preset, "reject", "collision");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -514,12 +581,12 @@ void COMM_ZENOH::move_loop()
 
                 // Response
                 auto resp = build_response_target(id, method, &resp_pose, preset, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                ctrl_ptr->invoke_move(msg);
+                ctrl_ptr->slot_move(msg);
 
-                auto result_buf = build_move_result(id, "success", "target accepted");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                auto result_buf = build_result_move(id, "", "", method, preset, &resp_pose, 0, 0, "", "success", "target accepted");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -535,8 +602,8 @@ void COMM_ZENOH::move_loop()
 
                 if (payload.has_value())
                 {
-                    auto bytes = payload->as_vector();
-                    auto req = SLAMNAV::GetRequest_Move_Stop(bytes.data());
+                    auto bytes = payload->get().as_vector();
+                    auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveStop>(bytes.data());
                     if (req && req->id())
                     {
                         id = req->id()->str();
@@ -544,12 +611,12 @@ void COMM_ZENOH::move_loop()
                 }
 
                 auto resp = build_response_stop(id, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                invoke_move_stop_callback();
+                // invoke_move_stop_callback();
 
-                auto result_buf = build_move_result(id, "success", "stop executed");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                auto result_buf = build_simple_result(id, "success", "stop executed");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -565,8 +632,8 @@ void COMM_ZENOH::move_loop()
 
                 if (payload.has_value())
                 {
-                    auto bytes = payload->as_vector();
-                    auto req = SLAMNAV::GetRequest_Move_Pause(bytes.data());
+                    auto bytes = payload->get().as_vector();
+                    auto req = flatbuffers::GetRoot<SLAMNAV::RequestMovePause>(bytes.data());
                     if (req && req->id())
                     {
                         id = req->id()->str();
@@ -580,10 +647,10 @@ void COMM_ZENOH::move_loop()
                 }
 
                 auto resp = build_response_pause(id, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                auto result_buf = build_move_result(id, "success", "paused");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                auto result_buf = build_simple_result(id, "success", "paused");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -599,8 +666,8 @@ void COMM_ZENOH::move_loop()
 
                 if (payload.has_value())
                 {
-                    auto bytes = payload->as_vector();
-                    auto req = SLAMNAV::GetRequest_Move_Resume(bytes.data());
+                    auto bytes = payload->get().as_vector();
+                    auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveResume>(bytes.data());
                     if (req && req->id())
                     {
                         id = req->id()->str();
@@ -614,10 +681,10 @@ void COMM_ZENOH::move_loop()
                 }
 
                 auto resp = build_response_resume(id, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                auto result_buf = build_move_result(id, "success", "resumed");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                auto result_buf = build_simple_result(id, "success", "resumed");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -632,16 +699,16 @@ void COMM_ZENOH::move_loop()
                 if (!payload.has_value())
                 {
                     auto resp = build_response_xlinear("", 0, 0, "reject", "no payload");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
-                auto bytes = payload->as_vector();
-                auto req = SLAMNAV::GetRequest_Move_XLinear(bytes.data());
+                auto bytes = payload->get().as_vector();
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveXLinear>(bytes.data());
                 if (!req)
                 {
                     auto resp = build_response_xlinear("", 0, 0, "reject", "invalid request");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -653,7 +720,15 @@ void COMM_ZENOH::move_loop()
                 if (fabs(target) > 10.0f || fabs(speed) > 1.5f)
                 {
                     auto resp = build_response_xlinear(id, target, speed, "reject", "value out of range");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (!ctrl_ptr)
+                {
+                    auto resp = build_response_xlinear(id, target, speed, "reject", "module not ready");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -664,16 +739,78 @@ void COMM_ZENOH::move_loop()
                 msg.speed = speed;
 
                 auto resp = build_response_xlinear(id, target, speed, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                invoke_profile_move_callback(msg);
+                ctrl_ptr->slot_profile_move(msg);
 
-                auto result_buf = build_move_result(id, "success", "xLinear started");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                SLAMNAV::MovePose empty_pose(0, 0, 0, 0);
+                auto result_buf = build_result_move(id, "", "", "", 0, &empty_pose, target, speed, "", "success", "xLinear started");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
         log_info("Queryable registered: {}", topic_xlinear);
+
+        // ---- move/yLinear ----
+        auto q_ylinear = session.declare_queryable(
+            zenoh::KeyExpr(topic_ylinear),
+            [this, &pub_result](const zenoh::Query& query)
+            {
+                const auto& payload = query.get_payload();
+                if (!payload.has_value())
+                {
+                    auto resp = build_response_ylinear("", 0, 0, "reject", "no payload");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                auto bytes = payload->get().as_vector();
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveYLinear>(bytes.data());
+                if (!req)
+                {
+                    auto resp = build_response_ylinear("", 0, 0, "reject", "invalid request");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                std::string id = req->id() ? req->id()->str() : "";
+                float target = req->target();
+                float speed = req->speed();
+
+                // Validate
+                if (fabs(target) > 10.0f || fabs(speed) > 1.5f)
+                {
+                    auto resp = build_response_ylinear(id, target, speed, "reject", "value out of range");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (!ctrl_ptr)
+                {
+                    auto resp = build_response_ylinear(id, target, speed, "reject", "module not ready");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                DATA_MOVE msg;
+                msg.id = QString::fromStdString(id);
+                msg.command = "yLinear";
+                msg.target = target;
+                msg.speed = speed;
+
+                auto resp = build_response_ylinear(id, target, speed, "accept", "");
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+
+                ctrl_ptr->slot_profile_move(msg);
+
+                SLAMNAV::MovePose empty_pose(0, 0, 0, 0);
+                auto result_buf = build_result_move(id, "", "", "", 0, &empty_pose, target, speed, "", "success", "yLinear started");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
+            },
+            zenoh::closures::none
+        );
+        log_info("Queryable registered: {}", topic_ylinear);
 
         // ---- move/circular ----
         auto q_circular = session.declare_queryable(
@@ -684,16 +821,16 @@ void COMM_ZENOH::move_loop()
                 if (!payload.has_value())
                 {
                     auto resp = build_response_circular("", 0, 0, "", "reject", "no payload");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
-                auto bytes = payload->as_vector();
-                auto req = SLAMNAV::GetRequest_Move_Circular(bytes.data());
+                auto bytes = payload->get().as_vector();
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveCircular>(bytes.data());
                 if (!req)
                 {
                     auto resp = build_response_circular("", 0, 0, "", "reject", "invalid request");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -706,7 +843,15 @@ void COMM_ZENOH::move_loop()
                 if (fabs(target) > 360.0f || fabs(speed) > 60.0f)
                 {
                     auto resp = build_response_circular(id, target, speed, direction, "reject", "value out of range");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (!ctrl_ptr)
+                {
+                    auto resp = build_response_circular(id, target, speed, direction, "reject", "module not ready");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -718,12 +863,13 @@ void COMM_ZENOH::move_loop()
                 msg.direction = QString::fromStdString(direction);
 
                 auto resp = build_response_circular(id, target, speed, direction, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                invoke_profile_move_callback(msg);
+                ctrl_ptr->slot_profile_move(msg);
 
-                auto result_buf = build_move_result(id, "success", "circular started");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                SLAMNAV::MovePose empty_pose(0, 0, 0, 0);
+                auto result_buf = build_result_move(id, "", "", "", 0, &empty_pose, target, speed, direction, "success", "circular started");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
@@ -738,16 +884,16 @@ void COMM_ZENOH::move_loop()
                 if (!payload.has_value())
                 {
                     auto resp = build_response_rotate("", 0, 0, "reject", "no payload");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
-                auto bytes = payload->as_vector();
-                auto req = SLAMNAV::GetRequest_Move_Rotate(bytes.data());
+                auto bytes = payload->get().as_vector();
+                auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveRotate>(bytes.data());
                 if (!req)
                 {
                     auto resp = build_response_rotate("", 0, 0, "reject", "invalid request");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -759,7 +905,15 @@ void COMM_ZENOH::move_loop()
                 if (fabs(target) > 360.0f || fabs(speed) > 60.0f)
                 {
                     auto resp = build_response_rotate(id, target, speed, "reject", "value out of range");
-                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+                    return;
+                }
+
+                AUTOCONTROL* ctrl_ptr = get_autocontrol();
+                if (!ctrl_ptr)
+                {
+                    auto resp = build_response_rotate(id, target, speed, "reject", "module not ready");
+                    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
                     return;
                 }
 
@@ -770,18 +924,19 @@ void COMM_ZENOH::move_loop()
                 msg.speed = speed * D2R;
 
                 auto resp = build_response_rotate(id, target, speed, "accept", "");
-                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes::serialize(resp));
+                query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
 
-                invoke_profile_move_callback(msg);
+                ctrl_ptr->slot_profile_move(msg);
 
-                auto result_buf = build_move_result(id, "success", "rotate started");
-                pub_result.put(zenoh::Bytes::serialize(result_buf));
+                SLAMNAV::MovePose empty_pose(0, 0, 0, 0);
+                auto result_buf = build_result_move(id, "", "", "", 0, &empty_pose, target, speed, "", "success", "rotate started");
+                pub_result.put(zenoh::Bytes(std::move(result_buf)));
             },
             zenoh::closures::none
         );
         log_info("Queryable registered: {}", topic_rotate);
 
-        // 7. Main loop - keep alive
+        
         while (is_move_running_.load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

@@ -927,7 +927,7 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_JOG_MOVE = 8,
     VT_OBS = 10,
     VT_PATH_STATE = 12,
-    VT_PATH_T = 14,
+    VT_MULTI_ID = 14,
     VT_STEP = 16,
     VT_MULTI_STATE = 18
   };
@@ -946,8 +946,8 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::String *path_state() const {
     return GetPointer<const ::flatbuffers::String *>(VT_PATH_STATE);
   }
-  double path_t() const {
-    return GetField<double>(VT_PATH_T, 0.0);
+  const ::flatbuffers::String *multi_id() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_MULTI_ID);
   }
   int32_t step() const {
     return GetField<int32_t>(VT_STEP, 0);
@@ -967,7 +967,8 @@ struct StatusMoveState FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyString(obs()) &&
            VerifyOffset(verifier, VT_PATH_STATE) &&
            verifier.VerifyString(path_state()) &&
-           VerifyField<double>(verifier, VT_PATH_T, 8) &&
+           VerifyOffset(verifier, VT_MULTI_ID) &&
+           verifier.VerifyString(multi_id()) &&
            VerifyField<int32_t>(verifier, VT_STEP, 4) &&
            VerifyOffset(verifier, VT_MULTI_STATE) &&
            verifier.VerifyString(multi_state()) &&
@@ -994,8 +995,8 @@ struct StatusMoveStateBuilder {
   void add_path_state(::flatbuffers::Offset<::flatbuffers::String> path_state) {
     fbb_.AddOffset(StatusMoveState::VT_PATH_STATE, path_state);
   }
-  void add_path_t(double path_t) {
-    fbb_.AddElement<double>(StatusMoveState::VT_PATH_T, path_t, 0.0);
+  void add_multi_id(::flatbuffers::Offset<::flatbuffers::String> multi_id) {
+    fbb_.AddOffset(StatusMoveState::VT_MULTI_ID, multi_id);
   }
   void add_step(int32_t step) {
     fbb_.AddElement<int32_t>(StatusMoveState::VT_STEP, step, 0);
@@ -1021,13 +1022,13 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveState(
     ::flatbuffers::Offset<::flatbuffers::String> jog_move = 0,
     ::flatbuffers::Offset<::flatbuffers::String> obs = 0,
     ::flatbuffers::Offset<::flatbuffers::String> path_state = 0,
-    double path_t = 0.0,
+    ::flatbuffers::Offset<::flatbuffers::String> multi_id = 0,
     int32_t step = 0,
     ::flatbuffers::Offset<::flatbuffers::String> multi_state = 0) {
   StatusMoveStateBuilder builder_(_fbb);
-  builder_.add_path_t(path_t);
   builder_.add_multi_state(multi_state);
   builder_.add_step(step);
+  builder_.add_multi_id(multi_id);
   builder_.add_path_state(path_state);
   builder_.add_obs(obs);
   builder_.add_jog_move(jog_move);
@@ -1043,7 +1044,7 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveStateDirect(
     const char *jog_move = nullptr,
     const char *obs = nullptr,
     const char *path_state = nullptr,
-    double path_t = 0.0,
+    const char *multi_id = nullptr,
     int32_t step = 0,
     const char *multi_state = nullptr) {
   auto auto_move__ = auto_move ? _fbb.CreateString(auto_move) : 0;
@@ -1051,6 +1052,7 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveStateDirect(
   auto jog_move__ = jog_move ? _fbb.CreateString(jog_move) : 0;
   auto obs__ = obs ? _fbb.CreateString(obs) : 0;
   auto path_state__ = path_state ? _fbb.CreateString(path_state) : 0;
+  auto multi_id__ = multi_id ? _fbb.CreateString(multi_id) : 0;
   auto multi_state__ = multi_state ? _fbb.CreateString(multi_state) : 0;
   return SLAMNAV::CreateStatusMoveState(
       _fbb,
@@ -1059,7 +1061,7 @@ inline ::flatbuffers::Offset<StatusMoveState> CreateStatusMoveStateDirect(
       jog_move__,
       obs__,
       path_state__,
-      path_t,
+      multi_id__,
       step,
       multi_state__);
 }

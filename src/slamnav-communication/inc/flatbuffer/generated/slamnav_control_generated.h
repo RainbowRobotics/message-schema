@@ -1499,30 +1499,15 @@ inline ::flatbuffers::Offset<ResponseChargeTrigger> CreateResponseChargeTriggerD
 struct RequestGetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef RequestGetObsBoxBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_MIN = 6,
-    VT_MAX = 8,
-    VT_RANGE = 10
+    VT_ID = 4
   };
   const ::flatbuffers::String *id() const {
     return GetPointer<const ::flatbuffers::String *>(VT_ID);
-  }
-  const SLAMNAV::ObsBox *min() const {
-    return GetStruct<const SLAMNAV::ObsBox *>(VT_MIN);
-  }
-  const SLAMNAV::ObsBox *max() const {
-    return GetStruct<const SLAMNAV::ObsBox *>(VT_MAX);
-  }
-  float range() const {
-    return GetField<float>(VT_RANGE, 0.0f);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
-           VerifyField<SLAMNAV::ObsBox>(verifier, VT_MIN, 4) &&
-           VerifyField<SLAMNAV::ObsBox>(verifier, VT_MAX, 4) &&
-           VerifyField<float>(verifier, VT_RANGE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1533,15 +1518,6 @@ struct RequestGetObsBoxBuilder {
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
     fbb_.AddOffset(RequestGetObsBox::VT_ID, id);
-  }
-  void add_min(const SLAMNAV::ObsBox *min) {
-    fbb_.AddStruct(RequestGetObsBox::VT_MIN, min);
-  }
-  void add_max(const SLAMNAV::ObsBox *max) {
-    fbb_.AddStruct(RequestGetObsBox::VT_MAX, max);
-  }
-  void add_range(float range) {
-    fbb_.AddElement<float>(RequestGetObsBox::VT_RANGE, range, 0.0f);
   }
   explicit RequestGetObsBoxBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1556,31 +1532,19 @@ struct RequestGetObsBoxBuilder {
 
 inline ::flatbuffers::Offset<RequestGetObsBox> CreateRequestGetObsBox(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> id = 0,
-    const SLAMNAV::ObsBox *min = nullptr,
-    const SLAMNAV::ObsBox *max = nullptr,
-    float range = 0.0f) {
+    ::flatbuffers::Offset<::flatbuffers::String> id = 0) {
   RequestGetObsBoxBuilder builder_(_fbb);
-  builder_.add_range(range);
-  builder_.add_max(max);
-  builder_.add_min(min);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
 inline ::flatbuffers::Offset<RequestGetObsBox> CreateRequestGetObsBoxDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *id = nullptr,
-    const SLAMNAV::ObsBox *min = nullptr,
-    const SLAMNAV::ObsBox *max = nullptr,
-    float range = 0.0f) {
+    const char *id = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   return SLAMNAV::CreateRequestGetObsBox(
       _fbb,
-      id__,
-      min,
-      max,
-      range);
+      id__);
 }
 
 struct ResponseGetObsBox FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {

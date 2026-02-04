@@ -1,5 +1,5 @@
 #include "comm_zenoh.h"
-#include "global_defines.h"
+// #include "global_defines.h"
 #include "flatbuffer/generated/slamnav_status_generated.h"
 
 namespace

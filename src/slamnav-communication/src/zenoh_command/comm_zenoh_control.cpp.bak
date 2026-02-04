@@ -16,7 +16,7 @@
  */
 
 #include "comm_zenoh.h"
-#include "global_defines.h"
+// #include "global_defines.h"
 #include "flatbuffer/generated/slamnav_control_generated.h"
 
 namespace

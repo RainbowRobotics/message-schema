@@ -57,11 +57,11 @@ struct RequestGetSensorInfoBuilder;
 struct ResponseGetSensorInfo;
 struct ResponseGetSensorInfoBuilder;
 
-struct RequestSetSensorIndex;
-struct RequestSetSensorIndexBuilder;
+struct RequestSetSensorInfo;
+struct RequestSetSensorInfoBuilder;
 
-struct ResponseSetSensorIndex;
-struct ResponseSetSensorIndexBuilder;
+struct ResponseSetSensorInfo;
+struct ResponseSetSensorInfoBuilder;
 
 struct RequestGetSensorControl;
 struct RequestGetSensorControlBuilder;
@@ -1148,8 +1148,8 @@ inline ::flatbuffers::Offset<ResponseGetSensorInfo> CreateResponseGetSensorInfoD
       message__);
 }
 
-struct RequestSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef RequestSetSensorIndexBuilder Builder;
+struct RequestSetSensorInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RequestSetSensorInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1177,43 +1177,43 @@ struct RequestSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
 };
 
-struct RequestSetSensorIndexBuilder {
-  typedef RequestSetSensorIndex Table;
+struct RequestSetSensorInfoBuilder {
+  typedef RequestSetSensorInfo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(RequestSetSensorIndex::VT_ID, id);
+    fbb_.AddOffset(RequestSetSensorInfo::VT_ID, id);
   }
   void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(RequestSetSensorIndex::VT_TARGET, target);
+    fbb_.AddOffset(RequestSetSensorInfo::VT_TARGET, target);
   }
   void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(RequestSetSensorIndex::VT_INDEX, index);
+    fbb_.AddOffset(RequestSetSensorInfo::VT_INDEX, index);
   }
-  explicit RequestSetSensorIndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit RequestSetSensorInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<RequestSetSensorIndex> Finish() {
+  ::flatbuffers::Offset<RequestSetSensorInfo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<RequestSetSensorIndex>(end);
+    auto o = ::flatbuffers::Offset<RequestSetSensorInfo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<RequestSetSensorIndex> CreateRequestSetSensorIndex(
+inline ::flatbuffers::Offset<RequestSetSensorInfo> CreateRequestSetSensorInfo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> target = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0) {
-  RequestSetSensorIndexBuilder builder_(_fbb);
+  RequestSetSensorInfoBuilder builder_(_fbb);
   builder_.add_index(index);
   builder_.add_target(target);
   builder_.add_id(id);
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<RequestSetSensorIndex> CreateRequestSetSensorIndexDirect(
+inline ::flatbuffers::Offset<RequestSetSensorInfo> CreateRequestSetSensorInfoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *target = nullptr,
@@ -1221,15 +1221,15 @@ inline ::flatbuffers::Offset<RequestSetSensorIndex> CreateRequestSetSensorIndexD
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto target__ = target ? _fbb.CreateString(target) : 0;
   auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
-  return SLAMNAV::CreateRequestSetSensorIndex(
+  return SLAMNAV::CreateRequestSetSensorInfo(
       _fbb,
       id__,
       target__,
       index__);
 }
 
-struct ResponseSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef ResponseSetSensorIndexBuilder Builder;
+struct ResponseSetSensorInfo FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ResponseSetSensorInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
     VT_TARGET = 6,
@@ -1269,44 +1269,44 @@ struct ResponseSetSensorIndex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   }
 };
 
-struct ResponseSetSensorIndexBuilder {
-  typedef ResponseSetSensorIndex Table;
+struct ResponseSetSensorInfoBuilder {
+  typedef ResponseSetSensorInfo Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
   void add_id(::flatbuffers::Offset<::flatbuffers::String> id) {
-    fbb_.AddOffset(ResponseSetSensorIndex::VT_ID, id);
+    fbb_.AddOffset(ResponseSetSensorInfo::VT_ID, id);
   }
   void add_target(::flatbuffers::Offset<::flatbuffers::String> target) {
-    fbb_.AddOffset(ResponseSetSensorIndex::VT_TARGET, target);
+    fbb_.AddOffset(ResponseSetSensorInfo::VT_TARGET, target);
   }
   void add_index(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index) {
-    fbb_.AddOffset(ResponseSetSensorIndex::VT_INDEX, index);
+    fbb_.AddOffset(ResponseSetSensorInfo::VT_INDEX, index);
   }
   void add_result(::flatbuffers::Offset<::flatbuffers::String> result) {
-    fbb_.AddOffset(ResponseSetSensorIndex::VT_RESULT, result);
+    fbb_.AddOffset(ResponseSetSensorInfo::VT_RESULT, result);
   }
   void add_message(::flatbuffers::Offset<::flatbuffers::String> message) {
-    fbb_.AddOffset(ResponseSetSensorIndex::VT_MESSAGE, message);
+    fbb_.AddOffset(ResponseSetSensorInfo::VT_MESSAGE, message);
   }
-  explicit ResponseSetSensorIndexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResponseSetSensorInfoBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  ::flatbuffers::Offset<ResponseSetSensorIndex> Finish() {
+  ::flatbuffers::Offset<ResponseSetSensorInfo> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = ::flatbuffers::Offset<ResponseSetSensorIndex>(end);
+    auto o = ::flatbuffers::Offset<ResponseSetSensorInfo>(end);
     return o;
   }
 };
 
-inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorIndex(
+inline ::flatbuffers::Offset<ResponseSetSensorInfo> CreateResponseSetSensorInfo(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> id = 0,
     ::flatbuffers::Offset<::flatbuffers::String> target = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>> index = 0,
     ::flatbuffers::Offset<::flatbuffers::String> result = 0,
     ::flatbuffers::Offset<::flatbuffers::String> message = 0) {
-  ResponseSetSensorIndexBuilder builder_(_fbb);
+  ResponseSetSensorInfoBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_result(result);
   builder_.add_index(index);
@@ -1315,7 +1315,7 @@ inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorInde
   return builder_.Finish();
 }
 
-inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorIndexDirect(
+inline ::flatbuffers::Offset<ResponseSetSensorInfo> CreateResponseSetSensorInfoDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const char *target = nullptr,
@@ -1327,7 +1327,7 @@ inline ::flatbuffers::Offset<ResponseSetSensorIndex> CreateResponseSetSensorInde
   auto index__ = index ? _fbb.CreateVector<::flatbuffers::Offset<SLAMNAV::SensorInfo>>(*index) : 0;
   auto result__ = result ? _fbb.CreateString(result) : 0;
   auto message__ = message ? _fbb.CreateString(message) : 0;
-  return SLAMNAV::CreateResponseSetSensorIndex(
+  return SLAMNAV::CreateResponseSetSensorInfo(
       _fbb,
       id__,
       target__,

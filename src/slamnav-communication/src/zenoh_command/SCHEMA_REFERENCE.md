@@ -1,6 +1,6 @@
 # SLAMNAV FlatBuffer Schema Reference
 
-이 문서는 `schemas/slam/v1/` 디렉토리의 FlatBuffer 스키마를 정리한 것입니다.
+이 문서는 `schemas/amr/v1/` 디렉토리의 FlatBuffer 스키마를 정리한 것입니다.
 
 ---
 
@@ -12,26 +12,26 @@
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Safety_Field` | 안전 필드 조회 요청 | `id` |
-| `Response_Get_Safety_Field` | 안전 필드 조회 응답 | `id`, `safety_field: int`, `result`, `message` |
-| `Request_Set_Safety_Field` | 안전 필드 설정 요청 | `id`, `safety_field: int` |
-| `Response_Set_Safety_Field` | 안전 필드 설정 응답 | `id`, `safety_field: int`, `result`, `message` |
+| `RequestGetSafetyField` | 안전 필드 조회 요청 | `id` |
+| `ResponseGetSafetyField` | 안전 필드 조회 응답 | `id`, `safety_field: int`, `result`, `message` |
+| `RequestSetSafetyField` | 안전 필드 설정 요청 | `id`, `safety_field: int` |
+| `ResponseSetSafetyField` | 안전 필드 설정 응답 | `id`, `safety_field: int`, `result`, `message` |
 
 ### 1.2 Safety Flag (안전 플래그)
 
 ```fbs
-struct SafetyFlag {
-    name: string;
+table SafetyFlag {
+    name: string;   // obstacle, bumper, interlock, operationStop
     value: bool;
 }
 ```
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Safety_Flag` | 안전 플래그 조회 요청 | `id` |
-| `Response_Get_Safety_Flag` | 안전 플래그 조회 응답 | `id`, `safety_flag: [SafetyFlag]`, `result`, `message` |
-| `Request_Set_Safety_Flag` | 안전 플래그 설정 요청 | `id`, `reset_flag: [SafetyFlag]` |
-| `Response_Set_Safety_Flag` | 안전 플래그 설정 응답 | `id`, `reset_flag: [SafetyFlag]`, `result`, `message` |
+| `RequestGetSafetyFlag` | 안전 플래그 조회 요청 | `id` |
+| `ResponseGetSafetyFlag` | 안전 플래그 조회 응답 | `id`, `safety_flag: [SafetyFlag]`, `result`, `message` |
+| `RequestSetSafetyFlag` | 안전 플래그 설정 요청 | `id`, `reset_flag: [SafetyFlag]` |
+| `ResponseSetSafetyFlag` | 안전 플래그 설정 응답 | `id`, `reset_flag: [SafetyFlag]`, `result`, `message` |
 
 ### 1.3 Safety IO (안전 I/O)
 
@@ -39,10 +39,10 @@ MCU의 디지털 I/O 제어 (각 8개 채널)
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Safety_Io` | Safety I/O 조회 | `id` |
-| `Response_Get_Safety_Io` | Safety I/O 응답 | `id`, `mcu0_dio[8]`, `mcu1_dio[8]`, `mcu0_din[8]`, `mcu1_din[8]`, `result`, `message` |
-| `Request_Set_Safety_Io` | Safety I/O 설정 | `id`, `command`, `mcu0_din[8]`, `mcu1_din[8]` |
-| `Response_Set_Safety_Io` | Safety I/O 설정 응답 | `id`, `command`, `mcu0_din[8]`, `mcu1_din[8]`, `result`, `message` |
+| `RequestGetSafetyIo` | Safety I/O 조회 | `id` |
+| `ResponseGetSafetyIo` | Safety I/O 응답 | `id`, `mcu0_dio[8]`, `mcu1_dio[8]`, `mcu0_din[8]`, `mcu1_din[8]`, `result`, `message` |
+| `RequestSetSafetyIo` | Safety I/O 설정 | `id`, `mcu0_din[8]`, `mcu1_din[8]` |
+| `ResponseSetSafetyIo` | Safety I/O 설정 응답 | `id`, `mcu0_din[8]`, `mcu1_din[8]`, `result`, `message` |
 
 ### 1.4 Dock (도킹/충전)
 
@@ -50,11 +50,11 @@ MCU의 디지털 I/O 제어 (각 8개 채널)
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Dock` | 도킹 명령 요청 | `id`, `command` |
-| `Response_Dock` | 도킹 명령 응답 | `id`, `command`, `result`, `message` |
-| `Request_Charge_Trigger` | 충전 트리거 요청 | `id`, `onoff: bool` |
-| `Response_Charge_Trigger` | 충전 트리거 응답 | `id`, `onoff: bool`, `result`, `message` |
-| `State_Change_Dock` | 도킹 상태 변경 알림 | `id`, `command`, `result`, `message` |
+| `RequestDockControl` | 도킹 명령 요청 | `id`, `command` |
+| `ResponseDockControl` | 도킹 명령 응답 | `id`, `command`, `result`, `message` |
+| `RequestChargeTrigger` | 충전 트리거 요청 | `id`, `control: bool` |
+| `ResponseChargeTrigger` | 충전 트리거 응답 | `id`, `control: bool`, `result`, `message` |
+| `ResultControlDock` | 도킹 상태 변경 알림 | `id`, `command`, `result`, `message` |
 
 ### 1.5 Obstacle Box (장애물 박스)
 
@@ -68,31 +68,31 @@ struct ObsBox {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Obs_Box` | 장애물 박스 조회 | `id`, `command`, `min: ObsBox`, `max: ObsBox`, `range: float` |
-| `Response_Get_Obs_Box` | 장애물 박스 응답 | `id`, `command`, `min`, `max`, `range`, `result`, `message` |
-| `Request_Set_Obs_Box` | 장애물 박스 설정 | `id`, `command`, `min: ObsBox`, `max: ObsBox`, `range: float` |
-| `Response_Set_Obs_Box` | 장애물 박스 응답 | `id`, `command`, `min`, `max`, `range`, `result`, `message` |
+| `RequestGetObsBox` | 장애물 박스 조회 | `id` |
+| `ResponseGetObsBox` | 장애물 박스 응답 | `id`, `min: ObsBox`, `max: ObsBox`, `range: float`, `result`, `message` |
+| `RequestSetObsBox` | 장애물 박스 설정 | `id`, `min: ObsBox`, `max: ObsBox`, `range: float` |
+| `ResponseSetObsBox` | 장애물 박스 응답 | `id`, `min: ObsBox`, `max: ObsBox`, `range: float`, `result`, `message` |
 
 ### 1.6 LED 제어
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Led` | LED 제어 요청 | `id`, `onoff: bool`, `color: string` |
-| `Response_Led` | LED 제어 응답 | `id`, `onoff`, `color`, `result`, `message` |
+| `RequestLedMode` | LED 제어 요청 | `id`, `control: bool`, `color: string` |
+| `ResponseLedMode` | LED 제어 응답 | `id`, `control`, `color`, `result`, `message` |
 
 ### 1.7 Motor 제어
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Motor` | 모터 On/Off 요청 | `id`, `onoff: bool` |
-| `Response_Motor` | 모터 On/Off 응답 | `id`, `onoff`, `result`, `message` |
+| `RequestMotorMode` | 모터 On/Off 요청 | `id`, `control: bool` |
+| `ResponseMotorMode` | 모터 On/Off 응답 | `id`, `control`, `result`, `message` |
 
 ### 1.8 Jog 제어
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Jog` | Jog 모드 On/Off 요청 | `id`, `onoff: bool` |
-| `Response_Jog` | Jog 모드 On/Off 응답 | `id`, `onoff`, `result`, `message` |
+| `RequestJog` | Jog 모드 On/Off 요청 | `id`, `control: bool` |
+| `ResponseJog` | Jog 모드 On/Off 응답 | `id`, `control`, `result`, `message` |
 
 ### 1.9 Sensor 제어
 
@@ -101,32 +101,22 @@ struct ObsBox {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Sensor` | 센서 제어 요청 | `id`, `command`, `onoff: bool`, `frequency: int` |
-| `Response_Sensor` | 센서 제어 응답 | `id`, `command`, `onoff`, `frequency`, `result`, `message` |
+| `RequestSensorMode` | 센서 제어 요청 | `id`, `command`, `control: bool`, `frequency: int` |
+| `ResponseSensorMode` | 센서 제어 응답 | `id`, `command`, `control`, `frequency`, `result`, `message` |
 
 ### 1.10 Path 제어
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Path` | 경로 제어 요청 | `id`, `onoff: bool`, `frequency: int` |
-| `Response_Path` | 경로 제어 응답 | `id`, `onoff`, `frequency`, `result`, `message` |
+| `RequestPathMode` | 경로 제어 요청 | `id`, `control: bool`, `frequency: int` |
+| `ResponsePathMode` | 경로 제어 응답 | `id`, `control`, `frequency`, `result`, `message` |
 
 ### 1.11 Detect (마커 감지)
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Detect` | 마커 감지 요청 | `id`, `command`, `camera_number: int`, `camera_serial`, `marker_size: float` |
-| `Response_Detect` | 마커 감지 응답 | `id`, `command`, `camera_number`, `camera_serial`, `marker_size`, `tf: [float]` (4x4 Matrix), `result`, `message` |
-
-### 1.12 Control_Result (공통 응답)
-
-```fbs
-table Control_Result {
-    id: string;
-    result: string;   // "success" / "fail"
-    message: string;  // reason
-}
-```
+| `RequestDetectMarker` | 마커 감지 요청 | `id`, `number: int`, `serial: string`, `m_size: float` |
+| `ResponseDetectMarker` | 마커 감지 응답 | `id`, `number`, `serial`, `m_size`, `tf: [float]` (4x4 Matrix), `result`, `message` |
 
 ---
 
@@ -149,23 +139,29 @@ struct LocalizationPose {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Localization_Init` | 수동 초기화 요청 | `id`, `pose: LocalizationPose` |
-| `Response_Localization_Init` | 수동 초기화 응답 | `id`, `pose`, `result`, `message` |
-| `Request_Localization_RandomInit` | 랜덤 초기화 요청 | `id`, `random_seed: string` |
-| `Response_Localization_RandomInit` | 랜덤 초기화 응답 | `id`, `random_seed`, `pose`, `result`, `message` |
-| `Request_Localization_AutoInit` | 자동 초기화 요청 | `id` |
-| `Response_Localization_AutoInit` | 자동 초기화 응답 | `id`, `pose`, `result`, `message` |
-| `Request_Localization_SemiAutoInit` | 반자동 초기화 요청 | `id` |
-| `Response_Localization_SemiAutoInit` | 반자동 초기화 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationInit` | 수동 초기화 요청 | `id`, `pose: LocalizationPose` |
+| `ResponseLocalizationInit` | 수동 초기화 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationRandomInit` | 랜덤 초기화 요청 | `id` |
+| `ResponseLocalizationRandomInit` | 랜덤 초기화 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationAutoInit` | 자동 초기화 요청 | `id` |
+| `ResponseLocalizationAutoInit` | 자동 초기화 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationSemiAutoInit` | 반자동 초기화 요청 | `id` |
+| `ResponseLocalizationSemiAutoInit` | 반자동 초기화 응답 | `id`, `pose`, `result`, `message` |
 
 ### 2.3 시작/정지 명령
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Localization_Start` | 위치 추정 시작 | `id` |
-| `Response_Localization_Start` | 위치 추정 시작 응답 | `id`, `pose`, `result`, `message` |
-| `Request_Localization_Stop` | 위치 추정 정지 | `id` |
-| `Response_Localization_Stop` | 위치 추정 정지 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationStart` | 위치 추정 시작 | `id` |
+| `ResponseLocalizationStart` | 위치 추정 시작 응답 | `id`, `pose`, `result`, `message` |
+| `RequestLocalizationStop` | 위치 추정 정지 | `id` |
+| `ResponseLocalizationStop` | 위치 추정 정지 응답 | `id`, `pose`, `result`, `message` |
+
+### 2.4 Result (결과 알림)
+
+| Table | 설명 | 필드 |
+|-------|------|------|
+| `ResultLocalizationInit` | 위치 초기화 결과 응답 | `id`, `pose`, `result`, `message` |
 
 ---
 
@@ -198,14 +194,16 @@ table MapFile {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Map_List` | 맵 목록 조회 | `id` |
-| `Response_Map_List` | 맵 목록 응답 | `id`, `list: [MapFile]`, `result`, `message` |
-| `Request_Map_Delete` | 맵 삭제 요청 | `id`, `map_name` |
-| `Response_Map_Delete` | 맵 삭제 응답 | `id`, `map_name`, `result`, `message` |
-| `Request_Map_Current` | 현재 맵 조회 | `id` |
-| `Response_Map_Current` | 현재 맵 응답 | `id`, `map_name`, `result`, `message` |
-| `Request_Map_Load` | 맵 로드 요청 | `id`, `map_name` |
-| `Response_Map_Load` | 맵 로드 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestMapList` | 맵 목록 조회 | `id` |
+| `ResponseMapList` | 맵 목록 응답 | `id`, `list: [MapFile]`, `result`, `message` |
+| `RequestMapDelete` | 맵 삭제 요청 | `id`, `map_name` |
+| `ResponseMapDelete` | 맵 삭제 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestMapCurrent` | 현재 맵 조회 | `id` |
+| `ResponseMapCurrent` | 현재 맵 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestMapLoad` | 맵 로드 요청 | `id`, `map_name` |
+| `ResponseMapLoad` | 맵 로드 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestTopoLoad` | 토폴로지 로드 요청 | `id` |
+| `ResponseTopoLoad` | 토폴로지 로드 응답 | `id`, `map_name`, `result`, `message` |
 
 ### 3.3 Cloud Data (포인트 클라우드)
 
@@ -220,51 +218,76 @@ struct CloudData {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Map_File` | 맵 파일 조회 | `id`, `map_name`, `file_name` |
-| `Response_Get_Map_File` | 맵 파일 응답 | `id`, `map_name`, `file_name`, `size`, `data: [CloudData]`, `result`, `message` |
-| `Request_Get_Map_Cloud` | 맵 클라우드 조회 | `id`, `map_name`, `file_name` |
-| `Response_Get_Map_Cloud` | 맵 클라우드 응답 | `id`, `map_name`, `file_name`, `size`, `data: [CloudData]`, `result`, `message` |
-| `Request_Set_Map_Cloud` | 맵 클라우드 설정 | `id`, `map_name`, `file_name`, `size`, `data: [CloudData]` |
-| `Response_Set_Map_Cloud` | 맵 클라우드 응답 | `id`, `map_name`, `file_name`, `size`, `result`, `message` |
+| `RequestGetMapFile` | 맵 파일 조회 | `id`, `map_name`, `file_name` |
+| `ResponseGetMapFile` | 맵 파일 응답 | `id`, `map_name`, `file_name`, `size: uint32`, `data: [CloudData]`, `result`, `message` |
+| `RequestGetMapCloud` | 맵 클라우드 조회 | `id`, `map_name`, `file_name` |
+| `ResponseGetMapCloud` | 맵 클라우드 응답 | `id`, `map_name`, `file_name`, `size: uint32`, `data: [CloudData]`, `result`, `message` |
+| `RequestSetMapCloud` | 맵 클라우드 설정 | `id`, `map_name`, `file_name`, `size: uint32`, `data: [CloudData]` |
+| `ResponseSetMapCloud` | 맵 클라우드 응답 | `id`, `map_name`, `file_name`, `result`, `message` |
 
 ### 3.4 Topology (노드/링크)
 
 ```fbs
+table NodePose {
+    x: float;
+    y: float;
+    z: float;
+    roll: float;
+    pitch: float;
+    yaw: float;
+}
+
+table NodeSize {
+    x_size: float;
+    y_size: float;
+    z_size: float;
+}
+
 table Link {
     id: string;
-    info: string;
+    dir: string;           // 주행 방향 ( "FORWARD" / "REVERSE" )
+    method: string;        // 이동 방법 ( "PP" / "HPP" / "QD" )
     speed: float;
-    method: string;
     safety_field: int;
 }
 
 table Node {
+    context: string;
     id: string;
-    name: string;
-    pose: [float];
-    info: string;
     links: [Link];
-    type: string;
+    name: string;
+    pose: NodePose;
+    role: string;
+    size: NodeSize;
+    type: string;          // "GOAL" / "INIT" / "ROUTE" / "STATION" / "ARUCO"
 }
 ```
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Map_Topology` | 토폴로지 조회 | `id`, `map_name` |
-| `Response_Get_Map_Topology` | 토폴로지 응답 | `id`, `map_name`, `data: [Node]`, `result`, `message` |
-| `Request_Set_Map_Topology` | 토폴로지 설정 | `id`, `map_name`, `data: [Node]` |
-| `Response_Set_Map_Topology` | 토폴로지 설정 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestGetMapTopology` | 토폴로지 조회 | `id`, `map_name`, `file_name`, `page_no`, `page_size`, `total_page`, `node_type`, `search_text`, `sort_option`, `sort_direction` |
+| `ResponseGetMapTopology` | 토폴로지 응답 | `id`, `map_name`, `file_name`, `page_no`, `page_size`, `total_page`, `node_type`, `search_text`, `sort_option`, `sort_direction`, `data: [Node]`, `result`, `message` |
+| `RequestSetMapTopology` | 토폴로지 설정 | `id`, `map_name`, `data: [Node]` |
+| `ResponseSetMapTopology` | 토폴로지 설정 응답 | `id`, `map_name`, `result`, `message` |
 
 ### 3.5 Mapping (맵 생성)
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Mapping_Start` | 맵핑 시작 | `id` |
-| `Response_Mapping_Start` | 맵핑 시작 응답 | `id`, `result`, `message` |
-| `Request_Mapping_Stop` | 맵핑 정지 | `id` |
-| `Response_Mapping_Stop` | 맵핑 정지 응답 | `id`, `result`, `message` |
-| `Request_Mapping_Save` | 맵 저장 | `id`, `map_name` |
-| `Response_Mapping_Save` | 맵 저장 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestMappingStart` | 맵핑 시작 | `id` |
+| `ResponseMappingStart` | 맵핑 시작 응답 | `id`, `result`, `message` |
+| `RequestMappingStop` | 맵핑 정지 | `id` |
+| `ResponseMappingStop` | 맵핑 정지 응답 | `id`, `result`, `message` |
+| `RequestMappingSave` | 맵 저장 | `id`, `map_name` |
+| `ResponseMappingSave` | 맵 저장 응답 | `id`, `map_name`, `result`, `message` |
+| `RequestMappingCloudReload` | 맵핑 클라우드 리로드 | `id` |
+| `ResponseMappingCloudReload` | 맵핑 클라우드 리로드 응답 | `id`, `result`, `message` |
+
+### 3.6 Result (결과 알림)
+
+| Table | 설명 | 필드 |
+|-------|------|------|
+| `ResultMapLoad` | 맵 로드 결과 응답 | `id`, `map_name`, `result`, `message` |
 
 ---
 
@@ -287,64 +310,60 @@ struct MovePose {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Move_Goal` | 목표 노드로 이동 | `id`, `goal_id`, `goal_name`, `method`, `preset: int` |
-| `Response_Move_Goal` | 목표 노드 이동 응답 | `id`, `goal_id`, `goal_name`, `method`, `preset`, `result`, `message` |
-| `Request_Move_Target` | 목표 좌표로 이동 | `id`, `goal_pose: MovePose`, `method`, `preset: int` |
-| `Response_Move_Target` | 목표 좌표 이동 응답 | `id`, `goal_pose`, `method`, `preset`, `result`, `message` |
+| `RequestMoveGoal` | 목표 노드로 이동 | `id`, `goal_id`, `goal_name`, `method`, `preset: int` |
+| `ResponseMoveGoal` | 목표 노드 이동 응답 | `id`, `goal_id`, `goal_name`, `method`, `preset`, `result`, `message` |
+| `RequestMoveTarget` | 목표 좌표로 이동 | `id`, `goal_pose: MovePose`, `method`, `preset: int` |
+| `ResponseMoveTarget` | 목표 좌표 이동 응답 | `id`, `method`, `goal_pose`, `preset`, `result`, `message` |
 
 ### 4.3 이동 제어
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Move_Stop` | 이동 정지 | `id` |
-| `Response_Move_Stop` | 이동 정지 응답 | `id`, `result`, `message` |
-| `Request_Move_Pause` | 이동 일시정지 | `id` |
-| `Response_Move_Pause` | 이동 일시정지 응답 | `id`, `result`, `message` |
-| `Request_Move_Resume` | 이동 재개 | `id` |
-| `Response_Move_Resume` | 이동 재개 응답 | `id`, `result`, `message` |
+| `RequestMoveStop` | 이동 정지 | `id` |
+| `ResponseMoveStop` | 이동 정지 응답 | `id`, `result`, `message` |
+| `RequestMovePause` | 이동 일시정지 | `id` |
+| `ResponseMovePause` | 이동 일시정지 응답 | `id`, `result`, `message` |
+| `RequestMoveResume` | 이동 재개 | `id` |
+| `ResponseMoveResume` | 이동 재개 응답 | `id`, `result`, `message` |
 
 ### 4.4 특수 이동
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Move_XLinear` | X축 직선 이동 | `id`, `target: float`, `speed: float` |
-| `Response_Move_XLinear` | X축 직선 이동 응답 | `id`, `target`, `speed`, `result`, `message` |
-| `Request_Move_Circular` | 원형 이동 | `id`, `target: float`, `speed: float`, `direction: string` |
-| `Response_Move_Circular` | 원형 이동 응답 | `id`, `target`, `speed`, `direction`, `result`, `message` |
-| `Request_Move_Rotate` | 회전 이동 | `id`, `target: float`, `speed: float` |
-| `Response_Move_Rotate` | 회전 이동 응답 | `id`, `target`, `speed`, `result`, `message` |
+| `RequestMoveXLinear` | X축 직선 이동 | `id`, `target: float`, `speed: float` |
+| `ResponseMoveXLinear` | X축 직선 이동 응답 | `id`, `target`, `speed`, `result`, `message` |
+| `RequestMoveYLinear` | Y축 직선 이동 | `id`, `target: float`, `speed: float` |
+| `ResponseMoveYLinear` | Y축 직선 이동 응답 | `id`, `target`, `speed`, `result`, `message` |
+| `RequestMoveCircular` | 원형 이동 | `id`, `target: float`, `speed: float`, `direction: string` |
+| `ResponseMoveCircular` | 원형 이동 응답 | `id`, `target`, `speed`, `direction`, `result`, `message` |
+| `RequestMoveRotate` | 회전 이동 | `id`, `target: float`, `speed: float` |
+| `ResponseMoveRotate` | 회전 이동 응답 | `id`, `target`, `speed`, `result`, `message` |
 
-### 4.5 Jog 명령
+### 4.5 Jog 명령 (Pub/Sub)
 
 ```fbs
-table Move_Jog {
+table MoveJog {
     vx: float;
     vy: float;
     wz: float;
 }
 ```
 
-### 4.6 State_Change_Move (이동 상태 변경 알림)
+### 4.6 ResultMove (이동 결과 알림)
 
 ```fbs
-table State_Change_Move {
+table ResultMove {
     id: string;
-    command: string;
-    cur_pose: MovePose;
-    goal_pose: MovePose;
-    map_name: string;
-    vel: [float];
     goal_id: string;
     goal_name: string;
     method: string;
-    direction: string;
     preset: int;
-    result: string;
-    message: string;
-    remaining_dist: float;
+    goal_pose: MovePose;
     target: float;
     speed: float;
-    bat_percent: int;
+    direction: string;
+    result: string;
+    message: string;
 }
 ```
 
@@ -358,15 +377,15 @@ table State_Change_Move {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Path` | 경로 요청 | `id`, `path: [string]` |
-| `Response_Path` | 경로 응답 | `id`, `path: [string]`, `result`, `message` |
+| `RequestMultiPath` | 경로 요청 | `id`, `path: [string]` |
+| `ResponseMultiPath` | 경로 응답 | `id`, `path: [string]`, `result`, `message` |
 
 ### 5.2 VOBS (가상 장애물)
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Vobs` | VOBS 요청 | `id`, `vobs_robots: [string]`, `vobs_closures: [string]`, `is_vobs_closures_change: string` |
-| `Response_Vobs` | VOBS 응답 | `id`, `vobs_robots`, `vobs_closures`, `is_vobs_closures_change`, `result`, `message` |
+| `RequestMultiVobs` | VOBS 요청 | `id`, `vobs_robots: [string]`, `vobs_closures: [string]`, `is_vobs_c: string` |
+| `ResponseMultiVobs` | VOBS 응답 | `id`, `vobs_robots`, `vobs_closures`, `is_vobs_c`, `result`, `message` |
 
 ---
 
@@ -378,10 +397,10 @@ table State_Change_Move {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Robot_Type` | 로봇 타입 조회 | `id` |
-| `Response_Get_Robot_Type` | 로봇 타입 응답 | `id`, `robot_type`, `result`, `message` |
-| `Request_Set_Robot_Type` | 로봇 타입 설정 | `id`, `robot_type` |
-| `Response_Set_Robot_Type` | 로봇 타입 설정 응답 | `id`, `robot_type`, `result`, `message` |
+| `RequestGetRobotType` | 로봇 타입 조회 | `id` |
+| `ResponseGetRobotType` | 로봇 타입 응답 | `id`, `robot_type`, `result`, `message` |
+| `RequestSetRobotType` | 로봇 타입 설정 | `id`, `robot_type` |
+| `ResponseSetRobotType` | 로봇 타입 설정 응답 | `id`, `robot_type`, `result`, `message` |
 
 ### 6.2 Setting Param
 
@@ -397,19 +416,19 @@ table SettingParam {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Pdu_Param` | PDU 파라미터 조회 | `id` |
-| `Response_Get_Pdu_Param` | PDU 파라미터 응답 | `id`, `params: [SettingParam]`, `result`, `message` |
-| `Request_Set_Pdu_Param` | PDU 파라미터 설정 | `id`, `params: [SettingParam]` |
-| `Response_Set_Pdu_Param` | PDU 파라미터 설정 응답 | `id`, `params`, `result`, `message` |
+| `RequestGetPduParam` | PDU 파라미터 조회 | `id` |
+| `ResponseGetPduParam` | PDU 파라미터 응답 | `id`, `params: [SettingParam]`, `result`, `message` |
+| `RequestSetPduParam` | PDU 파라미터 설정 | `id`, `params: [SettingParam]` |
+| `ResponseSetPduParam` | PDU 파라미터 설정 응답 | `id`, `params`, `result`, `message` |
 
 ### 6.4 Drive Param
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Drive_Param` | 드라이브 파라미터 조회 | `id` |
-| `Response_Get_Drive_Param` | 드라이브 파라미터 응답 | `id`, `params: [SettingParam]`, `result`, `message` |
+| `RequestGetDriveParam` | 드라이브 파라미터 조회 | `id` |
+| `ResponseGetDriveParam` | 드라이브 파라미터 응답 | `id`, `params: [SettingParam]`, `result`, `message` |
 
-### 6.5 Sensor Index
+### 6.5 Sensor Info
 
 ```fbs
 table SensorInfo {
@@ -420,14 +439,26 @@ table SensorInfo {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Get_Sensor_Index` | 센서 인덱스 조회 | `id`, `target: string` |
-| `Response_Get_Sensor_Index` | 센서 인덱스 응답 | `id`, `target`, `index: [SensorInfo]`, `result`, `message` |
-| `Request_Set_Sensor_Index` | 센서 인덱스 설정 | `id`, `target`, `index: [SensorInfo]` |
-| `Response_Set_Sensor_Index` | 센서 인덱스 설정 응답 | `id`, `target`, `index`, `result`, `message` |
-| `Request_Set_Sensor_On` | 센서 On 요청 | `id`, `index: [SensorInfo]` |
-| `Response_Set_Sensor_On` | 센서 On 응답 | `id`, `index`, `result`, `message` |
-| `Request_Get_Sensor_Off` | 센서 Off 조회 | `id`, `index: [SensorInfo]` |
-| `Response_Get_Sensor_Off` | 센서 Off 응답 | `id`, `index`, `result`, `message` |
+| `RequestGetSensorInfo` | 센서 정보 조회 | `id`, `target: string` |
+| `ResponseGetSensorInfo` | 센서 정보 응답 | `id`, `target`, `index: [SensorInfo]`, `result`, `message` |
+| `RequestSetSensorInfo` | 센서 정보 설정 | `id`, `target`, `index: [SensorInfo]` |
+| `ResponseSetSensorInfo` | 센서 정보 설정 응답 | `id`, `target`, `index`, `result`, `message` |
+
+### 6.6 Sensor Control
+
+| Table | 설명 | 필드 |
+|-------|------|------|
+| `RequestGetSensorControl` | 센서 제어 상태 조회 | `id`, `target: string`, `control: bool` |
+| `ResponseGetSensorControl` | 센서 제어 상태 응답 | `id`, `target`, `control`, `result`, `message` |
+| `RequestSetSensorControl` | 센서 제어 설정 | `id`, `target: string`, `control: bool` |
+| `ResponseSetSensorControl` | 센서 제어 설정 응답 | `id`, `target`, `control`, `result`, `message` |
+
+### 6.7 Result (결과 알림)
+
+| Table | 설명 | 필드 |
+|-------|------|------|
+| `ResultSettingParam` | 설정 파라미터 결과 응답 | `id`, `params: [SettingParam]`, `result`, `message` |
+| `ResultSettingSensor` | 센서 설정 결과 응답 | `id`, `target`, `control`, `index: [SensorInfo]`, `result`, `message` |
 
 ---
 
@@ -441,12 +472,14 @@ table SensorInfo {
 struct Point2D {
     x: float;
     y: float;
+    intensity: float;
 }
 
 struct Point3D {
     x: float;
     y: float;
     z: float;
+    intensity: float;
 }
 ```
 
@@ -454,16 +487,14 @@ struct Point3D {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Lidar_2D` | 2D 라이다 데이터 | `timestamp: float`, `points: [Point2D]` |
-| `Lidar_3D` | 3D 라이다 데이터 | `timestamp: float`, `points: [Point3D]` |
-| `Mapping_Cloud` | 맵핑 클라우드 데이터 | `timestamp: float`, `points: [Point3D]` |
+| `Lidar2D` | 2D 라이다 데이터 (Pub/Sub) | `id: string`, `points: [Point2D]` |
+| `RequestLidar3D` | 3D 라이다 요청 (RPC) | `id: string` |
+| `ResponseLidar3D` | 3D 라이다 응답 (RPC) | `id: string`, `points: [Point3D]` |
+| `MappingCloud` | 맵핑 클라우드 데이터 (Pub/Sub) | `id: string`, `points: [Point3D]` |
 
-### 7.3 Path 데이터
+### 7.3 Path 데이터 (주석처리됨)
 
-| Table | 설명 | 필드 |
-|-------|------|------|
-| `Global_Path` | 글로벌 경로 | `id`, `path: [string]` |
-| `Local_Path` | 로컬 경로 | `id`, `path: [string]` |
+> **참고:** GlobalPath, LocalPath는 현재 주석처리되어 있으며, multi_path와 통합 예정입니다.
 
 ---
 
@@ -516,7 +547,7 @@ table StatusRobotState {
     charge: string;
     dock: bool;
     emo: bool;
-    localization: string;
+    localization: string;      // "good" / "none" / "fail"
     power: bool;
     sss_recovery: bool;
     sw_reset: bool;
@@ -578,14 +609,13 @@ table StatusMap {
 }
 ```
 
-### 8.8 종합 Status
+### 8.8 종합 Status (Pub/Sub)
 
 ```fbs
 table Status {
     condition: StatusCondition;
     imu: StatusImu;
-    motor0: StatusMotor;
-    motor1: StatusMotor;
+    motor: [StatusMotor];      // 모터 배열
     power: StatusPower;
     robot_state: StatusRobotState;
     robot_safety_io_state: StatusRobotSafetyIoState;
@@ -597,42 +627,41 @@ table Status {
 ### 8.9 Move Status (이동 상태)
 
 ```fbs
-table MoveStatusMoveState {
-    auto_move: string;
-    dock_move: string;
-    jog_move: string;
-    obs: string;
-    path: string;
+table StatusMoveState {
+    auto_move: string;     // "stop" / "move" / "pause" / "error" / "not ready" / "vir"
+    dock_move: string;     // "stop"
+    jog_move: string;      // "none"
+    obs: string;           // "none" / "near" / "far" / "vir"
+    path_state: string;    // "none" / "req_path" / "recv_path"
+    multi_id: string;      // multi 경로 id
+    step: int;             // 로봇 경로 step
+    multi_state: string;   // "none" / "move" / "complete" / "fail" / "obstacle" / "cancel"
 }
 
-struct MoveStatusPose {
+struct StatusPose {
     x: float;
     y: float;
-    z: float;
     rz: float;
 }
 
-struct MoveStatusVel {
+struct StatusVel {
     vx: float;
     vy: float;
     wz: float;
 }
 
-table MoveStatusNode {
-    node_id: string;
+table StatusNode {
+    id: string;
     name: string;
-    state: string;
-    x: float;
-    y: float;
-    rz: float;
+    pose: StatusPose;
 }
 
-table Move_Status {
-    cur_node: MoveStatusNode;
-    goal_node: MoveStatusNode;
-    move_state: MoveStatusMoveState;
-    pose: MoveStatusPose;
-    vel: MoveStatusVel;
+table MoveStatus {
+    move_state: StatusMoveState;
+    pose: StatusPose;
+    vel: StatusVel;
+    cur_node: StatusNode;
+    goal_node: StatusNode;
 }
 ```
 
@@ -644,10 +673,11 @@ table Move_Status {
 
 | Table | 설명 | 필드 |
 |-------|------|------|
-| `Request_Update` | 업데이트 요청 | `id`, `branch`, `version` |
-| `Response_Update` | 업데이트 응답 | `id`, `branch`, `version`, `result`, `message` |
-| `Request_Current_Version` | 현재 버전 조회 | `id` |
-| `Response_Current_Version` | 현재 버전 응답 | `id`, `version`, `result`, `message` |
+| `RequestUpdate` | 업데이트 요청 | `id`, `branch`, `version` |
+| `ResponseUpdate` | 업데이트 응답 | `id`, `branch`, `version`, `result`, `message` |
+| `RequestCurrentVersion` | 현재 버전 조회 | `id` |
+| `ResponseCurrentVersion` | 현재 버전 응답 | `id`, `version`, `result`, `message` |
+| `ResultUpdate` | 업데이트 결과 알림 | `id`, `branch`, `version`, `result`, `message` |
 
 ---
 
@@ -663,14 +693,14 @@ table Move_Status {
 
 ### Result 테이블
 
-각 도메인별 공통 Result 테이블이 정의되어 있습니다:
-- `Control_Result`
-- `Localization_Result`
-- `Map_Result`
-- `Move_Result`
-- `Setting_Result`
-- `Status_Result`
-- `Update_Result`
+비동기 작업의 결과를 알리는 테이블:
+- `ResultControlDock`
+- `ResultLocalizationInit`
+- `ResultMapLoad`
+- `ResultMove`
+- `ResultSettingParam`
+- `ResultSettingSensor`
+- `ResultUpdate`
 
 ---
 

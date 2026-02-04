@@ -1,6 +1,10 @@
 #ifndef COMM_ZENOH_H
 #define COMM_ZENOH_H
 
+// global defines
+#include "slamnav_communication_types.h"
+
+// other modules
 #include "config.h"
 #include "logger.h"
 #include "timer_queue.h"
@@ -15,59 +19,30 @@
 #include "autocontrol.h"
 #include "dockcontrol.h"
 
+// zenoh
 #include <zenoh.hxx>
 #include <flatbuffers/flatbuffers.h>
 
-#include <Eigen/Core>
-#include <queue>
+// std
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
 #include <condition_variable>
 #include <atomic>
 #include <memory>
+#include <chrono>
 #include <optional>
-#include <functional>
+// #include <queue>
+// #include <functional>
 
-struct COMM_ZENOH_INFO
+// qt
+#include <QObject>
+class COMM_ZENOH : public QObject
 {
-    static constexpr double status_send_time = 0.1;         // 100ms
-    static constexpr double move_status_send_time = 0.5;    // 500ms
-    static constexpr double mapping_cloud_send_time = 0.5;  // 500ms
-};
-
-namespace ZenohCallback
-{
-    // Move 관련 콜백
-    using JogUpdate = std::function<void(const Eigen::Vector3d& vel)>;
-    using MoveStop = std::function<void()>;
-
-    // Map 관련 콜백
-    using MapBuildStart = std::function<void()>;
-    using MapBuildStop = std::function<void()>;
-    using MapSave = std::function<void(const std::string& map_name)>;
-
-    // Docking 관련 콜백
-    using DockingStart = std::function<void()>;
-    using UndockingStart = std::function<void()>;
-    using DockingStop = std::function<void()>;
-
-    // UI 관련 콜백
-    using UiAllUpdate = std::function<void()>;
-}
-
-// NOTE: Topic 정의는 각 zenoh_command/*.cpp 내부에서 선언
-// 참고: topics.md, ARCHITECTURE.md
-
-class COMM_ZENOH
-{
+    Q_OBJECT
+    Q_DISABLE_COPY(COMM_ZENOH)
 public:
-    COMM_ZENOH(const COMM_ZENOH&) = delete;
-    COMM_ZENOH& operator=(const COMM_ZENOH&) = delete;
-    COMM_ZENOH(COMM_ZENOH&&) = delete;
-    COMM_ZENOH& operator=(COMM_ZENOH&&) = delete;
-
-    static COMM_ZENOH* instance();
+    static COMM_ZENOH* instance(QObject* parent = nullptr);
 
     // set robotType
     void set_robot_type(const std::string& type);
@@ -165,44 +140,27 @@ public:
     void clear_global_path_update();
     void clear_local_path_update();
 
-    // call back
-    void set_jog_callback(ZenohCallback::JogUpdate cb);
-    void set_move_stop_callback(ZenohCallback::MoveStop cb);
-    void set_map_build_start_callback(ZenohCallback::MapBuildStart cb);
-    void set_map_build_stop_callback(ZenohCallback::MapBuildStop cb);
-    void set_map_save_callback(ZenohCallback::MapSave cb);
-    void set_docking_start_callback(ZenohCallback::DockingStart cb);
-    void set_undocking_start_callback(ZenohCallback::UndockingStart cb);
-    void set_docking_stop_callback(ZenohCallback::DockingStop cb);
-    void set_ui_all_update_callback(ZenohCallback::UiAllUpdate cb);
 
-    // ===== 콜백 호출 (zenoh_command에서 사용) =====
-    void invoke_jog_callback(const Eigen::Vector3d& vel);
-    void invoke_move_stop_callback();
-    void invoke_map_build_start_callback();
-    void invoke_map_build_stop_callback();
-    void invoke_map_save_callback(const std::string& map_name);
-    void invoke_docking_start_callback();
-    void invoke_undocking_start_callback();
-    void invoke_docking_stop_callback();
-    void invoke_ui_all_update_callback();
+    // Q_signal
+Q_SIGNALS:
+    // void signal_mobile_jog_update(const Eigen::Vector3d& val);
 
-    // qt dependency
-// Q_SIGNALS:
-//     void signal_map_build_start();
-//     void signal_map_build_stop();
-//     void signal_map_save(const QString& _map_name);
-//     void signal_auto_profile_move(DATA_MOVE msg);
-//     void signal_auto_move_stop();
-//     void signal_mobile_jog_update(const Eigen::Vector3d& val);
-//     void signal_ui_all_update();
-//     void signal_docking_start();
-//     void signal_undocking_start();
-//     void signal_docking_stop();
-//     void signal_config_request(DATA_PDU_UPDATE msg);
+
+    void signal_map_build_start();
+    void signal_map_build_stop();
+    void signal_map_save(const QString& _map_name);
+    // void signal_auto_profile_move(DATA_MOVE msg);
+    void signal_auto_move_stop();
+    void signal_ui_all_update();
+
+    void signal_docking_start();
+    void signal_undocking_start();
+    void signal_docking_stop();
+
+    void signal_config_request(DATA_PDU_UPDATE msg);
 
 private:
-    COMM_ZENOH();
+    explicit COMM_ZENOH(QObject *parent = nullptr);
     ~COMM_ZENOH();
 
     // zenoh session
@@ -249,6 +207,8 @@ private:
 
     // threads
     std::unique_ptr<std::thread> move_thread_;
+    // mutable std::shared_mutex move_mtx;
+
     std::unique_ptr<std::thread> control_thread_;
     std::unique_ptr<std::thread> localization_thread_;
     std::unique_ptr<std::thread> map_thread_;
@@ -270,18 +230,6 @@ private:
     void status_loop();
     void move_status_loop();
     void sensor_loop();
-
-    // callback
-    ZenohCallback::JogUpdate jog_callback_;
-    ZenohCallback::MoveStop move_stop_callback_;
-    ZenohCallback::MapBuildStart map_build_start_callback_;
-    ZenohCallback::MapBuildStop map_build_stop_callback_;
-    ZenohCallback::MapSave map_save_callback_;
-    ZenohCallback::DockingStart docking_start_callback_;
-    ZenohCallback::UndockingStart undocking_start_callback_;
-    ZenohCallback::DockingStop docking_stop_callback_;
-    ZenohCallback::UiAllUpdate ui_all_update_callback_;
-    std::mutex callback_mtx_;
 };
 
 #endif // COMM_ZENOH_H

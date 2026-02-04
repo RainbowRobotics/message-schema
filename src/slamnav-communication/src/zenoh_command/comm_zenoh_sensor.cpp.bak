@@ -11,7 +11,7 @@
  */
 
 #include "comm_zenoh.h"
-#include "global_defines.h"
+// #include "global_defines.h"
 #include "slamnav_socket_generated.h"
 
 #include <QDebug>

@@ -29,6 +29,7 @@
 
 #include "comm_msa.h"
 #include "comm_fms.h"
+#include "comm_zenoh.h"
 
 // qt
 #include <QMainWindow>
