@@ -612,6 +612,8 @@ void COMM_ZENOH::set_autocontrol_module(AUTOCONTROL* _ctrl)
     {
         ctrl = _ctrl;
         log_debug("AUTOCONTROL module set");
+
+        connect(this, &COMM_ZENOH::signal_auto_move_stop,    ctrl, &AUTOCONTROL::stop);
     }
 }
 

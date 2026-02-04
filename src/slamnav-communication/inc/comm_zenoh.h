@@ -169,6 +169,9 @@ private:
     std::optional<zenoh::Session> session_;
     mutable std::shared_mutex session_mtx_;
 
+    //timer
+    TimerQueue delayed_tasks;
+
     // robotType
     std::string robot_type_;
     mutable std::shared_mutex robot_type_mtx_;
