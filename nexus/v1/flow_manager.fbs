@@ -1,0 +1,29 @@
+namespace flow_manager;
+
+enum RB_Flow_Manager_ProgramState : byte {
+  IDLE,
+  RUNNING,
+  PAUSED,
+  STOPPED,
+  WAITING,
+  ERROR,
+  COMPLETED,
+  AFTER_COMPLETED,
+}
+
+table Request_Update_Step_State {
+  step_id: string;
+  task_id: string;
+  state: RB_Flow_Manager_ProgramState;
+  error: string;
+}
+
+table Request_Update_All_Step_State {
+  task_id: string;
+  state: RB_Flow_Manager_ProgramState;
+}
+
+table Request_Update_Executor_State {
+  state: RB_Flow_Manager_ProgramState;
+  error: string;
+}
