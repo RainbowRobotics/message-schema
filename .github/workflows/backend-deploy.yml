@@ -53,7 +53,12 @@ jobs:
           HOST_DIR="backend/host"
           API_GATEWAY_DIR="api-gateway"
 
+          echo "APP_DIR: $APP_DIR"
+          echo "HOST_DIR: $HOST_DIR"
+          echo "API_GATEWAY_DIR: $API_GATEWAY_DIR"
           ls -al
+
+          echo "APP_NAME: ${{ env.APP_NAME }}"
 
           if [ "$env.APP_NAME" == "host" ]; then
             ls -al $HOST_DIR
@@ -61,7 +66,6 @@ jobs:
               echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
               exit 1
             fi
-
           else
             ls -al $APP_DIR
             if [ ! -d "$APP_DIR" ]; then
