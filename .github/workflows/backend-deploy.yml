@@ -55,17 +55,21 @@ jobs:
 
           ls -al
 
-          ls -al $APP_DIR
+          if [ "$env.APP_NAME" == "host" ]; then
+            ls -al $HOST_DIR
+            if [ ! -d "$HOST_DIR" ]; then
+              echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
+              exit 1
+            fi
 
-          if [ ! -d "$APP_DIR" ] && [ "$env.APP_NAME" != "host" ]; then
-            echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
-            exit 1
+          else
+            ls -al $APP_DIR
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
+              exit 1
+            fi
           fi
 
-          if [ ! -d "$HOST_DIR" ] && [ "$env.APP_NAME" == "host" ]; then
-            echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
-            exit 1
-          fi
 
           if [ ! -d "$API_GATEWAY_DIR" ]; then
             echo "Error: API Gateway directory not found: $API_GATEWAY_DIR"
