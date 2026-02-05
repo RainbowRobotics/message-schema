@@ -1,0 +1,158 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       Localization Pose Structure
+    field
+        - x, y, z       :       위치 좌표 (3축)
+        - rz            :       회전 각도 (yaw)
+*/
+struct LocalizationPose {
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/init
+    usage       :       위치 초기화 (수동)
+    field
+        - pose          :       초기화 위치
+*/
+table RequestLocalizationInit {
+    id: string;
+    pose: LocalizationPose;
+}
+table ResponseLocalizationInit {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/randomInit
+    usage       :       위치 초기화 (랜덤)
+    field
+        - pose          :       초기화된 로봇 위치
+*/
+table RequestLocalizationRandomInit {
+    id: string;
+}
+table ResponseLocalizationRandomInit {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/autoInit
+    usage       :       위치 초기화 (자동)
+    field
+        - pose          :       초기화된 로봇 위치
+*/
+table RequestLocalizationAutoInit {
+    id: string;
+}
+table ResponseLocalizationAutoInit {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/semiAutoInit
+    usage       :       위치 초기화 (반자동)
+    field
+        - pose          :       초기화된 로봇 위치
+*/
+table RequestLocalizationSemiAutoInit {
+    id: string;
+}
+table ResponseLocalizationSemiAutoInit {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/start
+    usage       :       위치 추정 시작
+    field
+        - pose          :       현재 로봇 위치
+*/
+table RequestLocalizationStart {
+    id: string;
+}
+table ResponseLocalizationStart {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    topic       :       {robotType}/localization/stop
+    usage       :       위치 추정 중지
+    field
+        - pose          :       현재 로봇 위치
+*/
+table RequestLocalizationStop {
+    id: string;
+}
+table ResponseLocalizationStop {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/localization/result/init
+    usage       :       위치 초기화 결과 응답
+    field
+        - pose          :       초기화된 로봇 위치
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+*/
+table ResultLocalizationInit {
+    id: string;
+    pose: LocalizationPose;
+    result: string;
+    message: string;
+}
