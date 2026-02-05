@@ -1,0 +1,10 @@
+
+namespace IPC;
+
+table State_Message {
+    type: int;
+    code: int;
+    sub_str: string;
+}
+
+root_type State_Message;
