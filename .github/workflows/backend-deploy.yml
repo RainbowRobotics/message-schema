@@ -53,15 +53,9 @@ jobs:
           HOST_DIR="backend/host"
           API_GATEWAY_DIR="api-gateway"
 
-          echo "APP_DIR: $APP_DIR"
-          echo "HOST_DIR: $HOST_DIR"
-          echo "API_GATEWAY_DIR: $API_GATEWAY_DIR"
           ls -al
 
-          echo "APP_NAME: ${{ env.APP_NAME }}"
-
           if [ "$APP_NAME" == "host" ]; then
-            echo "APP HOST!!!"
             ls -al $HOST_DIR
             if [ ! -d "$HOST_DIR" ]; then
               echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
@@ -73,7 +67,6 @@ jobs:
               exit 1
             fi
           else
-            echo "APP_NAME?????: $APP_NAME"
             ls -al $APP_DIR
             if [ ! -d "$APP_DIR" ]; then
               echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
@@ -99,12 +92,14 @@ jobs:
           mkdir -p dist
           mkdir -p dist/scripts/backend/
 
-          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
-          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
-          cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
-
-          cp -R backend/host/host.bin dist/
-          cp -R backend/host/config.env dist/
+          if [ "$APP_NAME" == "host" ]; then
+            cp -R backend/host/host.bin dist/
+            cp -R backend/host/config.env dist/
+          else
+            cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
+            cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
+            cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
+          fi
 
           cp -R scripts/backend/production-entrypoint.sh dist/scripts/backend/
 
