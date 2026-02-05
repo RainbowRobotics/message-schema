@@ -14,10 +14,12 @@ set -euo pipefail
 
 OS="$(uname -s)"
 
-STAT_FORMAT_ATIME='%a %N' 
-STAT_FORMAT_SIZE='%z'     
+STAT_FORMAT_ATIME='%a %N'
+STAT_FORMAT_SIZE='%z'
+STAT_FORMAT_OPTION='-f'
 
 if [[ "$OS" == "Linux" ]]; then
+    STAT_FORMAT_OPTION='-c'
     STAT_FORMAT_ATIME='%X %n'
     STAT_FORMAT_SIZE='%s'
 fi
@@ -26,6 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKDIR="${REPO_ROOT}/backend"
 SERVICES_DIR="$WORKDIR/services"
+HOST_DIR="$WORKDIR/host"
 DOCKERFILE="$WORKDIR/Dockerfile.build"
 
 prune_local_cache_by_size() {
@@ -33,16 +36,16 @@ prune_local_cache_by_size() {
   local cache_dir="${REPO_ROOT}/${CACHE_ROOT}-${arch}"
   local target_dir="${cache_dir}/blobs/sha256"
   local max_bytes=$((MAX_CACHE_SIZE_GB * 1024 * 1024 * 1024))
-  
+
   if [[ ! -d "$target_dir" ]]; then
     return 0
   fi
 
   local current_kb
-  current_kb=$(du -s -k "$cache_dir" | awk '{print $1}') 
-  local current_bytes=$((current_kb * 1024)) 
+  current_kb=$(du -s -k "$cache_dir" | awk '{print $1}')
+  local current_bytes=$((current_kb * 1024))
   local current_size_gb=$(echo "scale=2; $current_bytes / (1024*1024*1024)" | bc)
-  
+
   echo "➡️  캐시 크기 확인 (${arch}): 현재 ${current_size_gb} GB / 최대 ${MAX_CACHE_SIZE_GB} GB"
 
   if (( current_bytes < max_bytes )); then
@@ -53,37 +56,37 @@ prune_local_cache_by_size() {
   echo "⚠️  최대 용량(${MAX_CACHE_SIZE_GB} GB) 초과! 정리 시작..."
 
   local total_removed_count=0
-  
+
   local deleted_count
   deleted_count=$(find "$target_dir" -type f -atime +"${MIN_FREE_DAYS}" -delete -print 2>/dev/null | wc -l)
   total_removed_count=${deleted_count}
-  
+
   current_kb=$(du -s -k "$cache_dir" | awk '{print $1}')
   current_bytes=$((current_kb * 1024))
   current_size_gb=$(echo "scale=2; $current_bytes / (1024*1024*1024)" | bc)
 
   if (( current_bytes >= max_bytes )); then
-    
+
     local bytes_to_remove=$((current_bytes - max_bytes))
     local removed_bytes=0
     local removed_count=0
 
-    find "$target_dir" -type f -print0 | xargs -0 stat -f "$STAT_FORMAT_ATIME" | sort -n | while read -r atime filename; do
+    find "$target_dir" -type f -print0 | xargs -0 stat "$STAT_FORMAT_OPTION" "$STAT_FORMAT_ATIME" | sort -n | while read -r atime filename; do
       if (( removed_bytes >= bytes_to_remove )); then
           break
       fi
-      
+
       local file_size
-      file_size=$(stat -f "$STAT_FORMAT_SIZE" "$filename")
-      
+      file_size=$(stat "$STAT_FORMAT_OPTION" "$STAT_FORMAT_SIZE" "$filename")
+
       rm -f "$filename" 2>/dev/null
-      
+
       if [[ $? -eq 0 ]]; then
         removed_bytes=$((removed_bytes + file_size))
         removed_count=$((removed_count + 1))
       fi
     done
-    
+
     total_removed_count=$((total_removed_count + removed_count))
 
     current_kb=$(du -s -k "$cache_dir" | awk '{print $1}')
@@ -153,7 +156,7 @@ build_service() {
   local arch=$2
   local cache_dir="${REPO_ROOT}/${CACHE_ROOT}-${arch}"
   local outdir="$SERVICES_DIR/$svc/.out-$arch"
-  
+
   [[ -d "$SERVICES_DIR/$svc" ]] || { echo "skip: $svc not found"; return 0; }
 
   mkdir -p "$cache_dir"
@@ -182,13 +185,44 @@ build_service() {
     echo "❌ 빌드 실패: ${svc} (${arch})" >&2
     return 1
   fi
-  
+
   mv "${outdir}/run.bin" "$SERVICES_DIR/${svc}/${svc}.${arch}.bin"
   rm -rf "$outdir"
   echo "✔ 완료"
   return 0
 }
 
+
+build_host() {
+  local outdir="$HOST_DIR/.out"
+
+  [[ -d "$HOST_DIR" ]] || { echo "skip: host not found"; return 0; }
+
+  rm -rf "$outdir"; mkdir -p "$outdir"
+
+  echo "➡️  빌드 시작: host "
+
+  cmd=(
+    uv run pyinstaller
+    --onefile
+    --clean
+    --name "host.bin"
+    --distpath "${outdir}"
+    --workpath "${outdir}/.work"
+    --specpath "${outdir}"
+    ${HOST_DIR}/run.py
+  )
+
+  if ! "${cmd[@]}"; then
+    echo "❌ 빌드 실패: host" >&2
+    return 1
+  fi
+
+  mv "${outdir}/host.bin" "$HOST_DIR/host.bin"
+  rm -rf "$outdir"
+  echo "✔ 완료"
+  return 0
+}
 
 echo "🔄 로컬 캐시 용량 기반 사전 정리 시작..."
 for arch in $ARCHS; do
@@ -197,12 +231,16 @@ done
 wait
 echo "✅ 로컬 캐시 사전 정리 완료."
 
-
-for arch in $ARCHS; do
-  for svc in "${SERVICES[@]}"; do
-    build_service "$svc" "$arch" & 
+for svc in "${SERVICES[@]}"; do
+  if [ "$svc" = "host" ]; then
+    build_host "$svc" &
     BUILD_PIDS+=($!)
-  done
+  else
+    for arch in $ARCHS; do
+      build_service "$svc" "$arch" &
+      BUILD_PIDS+=($!)
+    done
+  fi
 done
 
 

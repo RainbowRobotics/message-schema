@@ -50,14 +50,20 @@ jobs:
       - name: Check App Directory and dist file
         run: |
           APP_DIR="backend/services/${{ env.APP_NAME }}"
+          HOST_DIR="backend/host"
           API_GATEWAY_DIR="api-gateway"
 
           ls -al
 
           ls -al $APP_DIR
 
-          if [ ! -d "$APP_DIR" ]; then
+          if [ ! -d "$APP_DIR" ] && [ "$env.APP_NAME" != "host" ]; then
             echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
+            exit 1
+          fi
+
+          if [ ! -d "$HOST_DIR" ] && [ "$env.APP_NAME" == "host" ]; then
+            echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
             exit 1
           fi
 
@@ -80,6 +86,9 @@ jobs:
           cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
           cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
           cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
+
+          cp -R backend/host/host.bin dist/
+          cp -R backend/host/config.env dist/
 
           cp -R scripts/backend/production-entrypoint.sh dist/scripts/backend/
 
