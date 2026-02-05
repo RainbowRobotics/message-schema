@@ -23,7 +23,6 @@ function print_string(){
 function get_service_name() {
     local app_names=()
     local app_dirs=()
-    local host_deploy="no"
 
     # print_string 출력을 /dev/tty로 강제 지정
     print_string "info" "배포할 서비스 이름을 입력해주세요 (여러 서비스는 쉼표로 구분, 전체는 all):" > /dev/tty
@@ -53,7 +52,6 @@ function get_service_name() {
         # host 배포 포함
         app_names+=("host")
         app_dirs+=("backend/host")
-        host_deploy="yes"
     else
         # 기존 로직: 쉼표로 구분된 입력을 배열로 변환
         IFS=',' read -ra input_array <<< "${input}"
@@ -62,7 +60,6 @@ function get_service_name() {
             # 앱 이름에서 공백 제거
             app_name=$(echo "${app_name}" | xargs)
             if [ "$app_name" = "host" ]; then
-                host_deploy="yes"
                 app_names+=("host")
                 app_dirs+=("backend/host")
             elif [ -d "backend/services/${app_name}" ] && [[ ! " ${app_names[@]} " =~ " ${app_name} " ]]; then
@@ -79,7 +76,7 @@ function get_service_name() {
     local names_str=$(IFS=','; echo "${app_names[*]}")
     local dirs_str=$(IFS=','; echo "${app_dirs[*]}")
 
-    echo "${names_str} ${dirs_str} ${host_deploy}"
+    echo "${names_str} ${dirs_str}"
 }
 
 # hotfix 여부를 선택하는 함수
@@ -348,12 +345,11 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # 배포할 서비스 이름 입력 받기
 # 메인 스크립트에서 배열로 변환하여 사용
-read names_str dirs_str host_deploy <<< $(get_service_name)
+read names_str dirs_str <<< $(get_service_name)
 
 # 공백 제거
 names_str=$(echo "${names_str}" | xargs)
 dirs_str=$(echo "${dirs_str}" | xargs)
-host_deploy=$(echo "${host_deploy}" | xargs)
 
 if [[ "$current_branch" = "main" ]]; then
     # 메인 스크립트 실행 부분에 hotfix 여부 확인 추가
@@ -372,7 +368,6 @@ IFS=',' read -ra app_dirs <<< "$dirs_str"
 
 echo "app_names: ${app_names[@]}"
 echo "app_dirs: ${app_dirs[@]}"
-echo "host_deploy: ${host_deploy}"
 
 # 빌드 실행
 # build_project "$names_str" || exit 1
