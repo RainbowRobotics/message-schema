@@ -60,16 +60,28 @@ jobs:
 
           echo "APP_NAME: ${{ env.APP_NAME }}"
 
-          if [ "$env.APP_NAME" == "host" ]; then
+          if [ "$APP_NAME" == "host" ]; then
+            echo "APP HOST!!!"
             ls -al $HOST_DIR
             if [ ! -d "$HOST_DIR" ]; then
               echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
               exit 1
             fi
+
+            if [ ! -f "$HOST_DIR/host.bin" ]; then
+              echo "Error: bin file not found: $HOST_DIR/host.bin"
+              exit 1
+            fi
           else
+            echo "APP_NAME?????: $APP_NAME"
             ls -al $APP_DIR
             if [ ! -d "$APP_DIR" ]; then
               echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
+              exit 1
+            fi
+
+            if [ ! -f "$APP_DIR/${{ env.APP_NAME }}.arm64.bin" ] || [ ! -f "$APP_DIR/${{ env.APP_NAME }}.amd64.bin" ]; then
+              echo "Error: bin file not found: $APP_DIR/${{ env.APP_NAME }}.arm64.bin or $APP_DIR/${{ env.APP_NAME }}.amd64.bin"
               exit 1
             fi
           fi
@@ -80,10 +92,6 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "$APP_DIR/${{ env.APP_NAME }}.arm64.bin" ] || [ ! -f "$APP_DIR/${{ env.APP_NAME }}.amd64.bin" ]; then
-            echo "Error: bin file not found: $APP_DIR/${{ env.APP_NAME }}.arm64.bin or $APP_DIR/${{ env.APP_NAME }}.amd64.bin"
-            exit 1
-          fi
 
       - name: Compress bin directory
         run: |
