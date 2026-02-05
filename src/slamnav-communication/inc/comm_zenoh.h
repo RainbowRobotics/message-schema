@@ -210,17 +210,21 @@ private:
 
     // threads
     std::unique_ptr<std::thread> move_thread_;
-    // mutable std::shared_mutex move_mtx;
 
-    std::unique_ptr<std::thread> control_thread_;
+    // std::unique_ptr<std::thread> control_thread_;
+
     std::unique_ptr<std::thread> localization_thread_;
-    std::unique_ptr<std::thread> map_thread_;
-    std::unique_ptr<std::thread> setting_thread_;
-    std::unique_ptr<std::thread> update_thread_;
-    std::unique_ptr<std::thread> path_thread_;
-    std::unique_ptr<std::thread> status_thread_;
-    std::unique_ptr<std::thread> move_status_thread_;
-    std::unique_ptr<std::thread> sensor_thread_;
+
+    // std::unique_ptr<std::thread> map_thread_;
+    // std::unique_ptr<std::thread> setting_thread_;
+    // std::unique_ptr<std::thread> update_thread_;
+    // std::unique_ptr<std::thread> path_thread_;
+    // std::unique_ptr<std::thread> status_thread_;
+    // std::unique_ptr<std::thread> move_status_thread_;
+    // std::unique_ptr<std::thread> sensor_thread_;
+
+    // thread mutex
+    // std::mutex move_result_mtx;
 
     // thread function
     void move_loop();

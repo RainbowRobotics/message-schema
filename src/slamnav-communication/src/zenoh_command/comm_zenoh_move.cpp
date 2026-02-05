@@ -308,12 +308,12 @@ void COMM_ZENOH::move_loop()
     log_info("move_loop registering topics with prefix: {}", get_robot_type());
 
     // topic_result Request
-    auto send_result = [this, &topic_result](std::vector<uint8_t> data) {                                                                                                          
+    auto send_result = [this, &topic_result](std::vector<uint8_t> data) {
+
       if (!is_session_valid()) return;
 
       zenoh::Session::GetOptions opts;
       opts.payload = zenoh::Bytes(std::move(data));
-
       get_session().get(
           zenoh::KeyExpr(topic_result),
           "",
@@ -801,7 +801,7 @@ void COMM_ZENOH::move_loop()
 
         double t = std::abs(target/(speed + 1e-06)) + 0.5;
         delayed_tasks.schedule(std::chrono::milliseconds(static_cast<int>(t*1000)),
-        [this, send_result, id, target, speed]() {
+        [this, &send_result, id, target, speed]() {
 
           AUTOCONTROL* ctrl_ptr = get_autocontrol();
           MOBILE* mobile_ptr = get_mobile();
@@ -857,10 +857,19 @@ void COMM_ZENOH::move_loop()
 
         AUTOCONTROL* ctrl_ptr = get_autocontrol();
         MOBILE* mobile_ptr = get_mobile();
+        CONFIG* config_ptr = get_config();
 
         if (!ctrl_ptr || !mobile_ptr)
         {
           auto resp = build_response_ylinear(id, target, speed, "reject", "module not ready");
+          query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+          return;
+        }
+
+        QString wheel_type = config_ptr->get_robot_wheel_type();
+        if(wheel_type != "MECANUM")
+        {
+          auto resp = build_response_ylinear(id, target, speed, "reject", "invalid wheel type");
           query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
           return;
         }
@@ -874,7 +883,7 @@ void COMM_ZENOH::move_loop()
 
         double t = std::abs(target/(speed + 1e-06)) + 0.5;
         delayed_tasks.schedule(std::chrono::milliseconds(static_cast<int>(t*1000)),
-        [this, send_result, id, target, speed]() {
+        [this, &send_result, id, target, speed]() {
 
           AUTOCONTROL* ctrl_ptr = get_autocontrol();
           MOBILE* mobile_ptr = get_mobile();
@@ -953,7 +962,7 @@ void COMM_ZENOH::move_loop()
 
         double t = std::abs(target/(speed + 1e-06)) + 1.0;
         delayed_tasks.schedule(std::chrono::milliseconds(static_cast<int>(t*1000)),
-        [this, send_result, id, target, speed, &direction]() {
+        [this, &send_result, id, target, speed, &direction]() {
 
           AUTOCONTROL* ctrl_ptr = get_autocontrol();
           MOBILE* mobile_ptr = get_mobile();
@@ -1027,7 +1036,7 @@ void COMM_ZENOH::move_loop()
 
         double t = std::abs(target/(speed + 1e-06)) + 0.5;
         delayed_tasks.schedule(std::chrono::milliseconds(static_cast<int>(t*1000)),
-        [this, send_result, id, target, speed]() {
+        [this, &send_result, id, target, speed]() {
 
           AUTOCONTROL* ctrl_ptr = get_autocontrol();
           MOBILE* mobile_ptr = get_mobile();

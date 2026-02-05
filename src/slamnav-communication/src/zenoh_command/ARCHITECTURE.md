@@ -549,23 +549,329 @@ src/slamnav-communication/
 
 ---
 
-## 13. 새 기능 구현 가이드
+## 13. Move 도메인 구현 (comm_zenoh_move.cpp)
 
-### 13.1 새 Pub/Sub 토픽 추가
+### 13.1 개요
+
+Move 도메인은 로봇의 이동 명령을 처리합니다.
+
+| 통신 타입 | 토픽 | 설명 |
+|----------|------|------|
+| RPC (Queryable) | move/goal | 노드 ID/이름 기반 목표 이동 |
+| RPC (Queryable) | move/target | 좌표 기반 목표 이동 |
+| RPC (Queryable) | move/stop | 이동 정지 |
+| RPC (Queryable) | move/pause | 이동 일시정지 |
+| RPC (Queryable) | move/resume | 이동 재개 |
+| RPC (Queryable) | move/xLinear | X축 직선 이동 |
+| RPC (Queryable) | move/yLinear | Y축 직선 이동 (메카넘 전용) |
+| RPC (Queryable) | move/circular | 원형 이동 |
+| RPC (Queryable) | move/rotate | 제자리 회전 |
+| Subscriber | move/jog | 실시간 조그 속도 명령 |
+| Publisher | move/result | 이동 결과 발행 |
+
+### 13.2 빌더 함수 패턴
+
+익명 네임스페이스에서 FlatBuffer 응답을 생성하는 빌더 함수들을 정의합니다:
+
+```cpp
+namespace
+{
+  constexpr const char* MODULE_NAME = "ZENOH_MOVE";
+
+  // 결과 빌더 (Publisher용)
+  std::vector<uint8_t> build_result_move(const std::string& id,
+                                         const std::string& goal_id,
+                                         const std::string& goal_name,
+                                         const std::string& method,
+                                         int preset,
+                                         const SLAMNAV::MovePose* goal_pose,
+                                         float target,
+                                         float speed,
+                                         const std::string& direction,
+                                         const std::string& result,
+                                         const std::string& message)
+  {
+    flatbuffers::FlatBufferBuilder fbb(512);
+    auto fb_result = SLAMNAV::CreateResultMove(fbb, ...);
+    fbb.Finish(fb_result);
+    const uint8_t* buf = fbb.GetBufferPointer();
+    return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+  }
+
+  // RPC 응답 빌더 (Queryable용)
+  std::vector<uint8_t> build_response_goal(const std::string& id,
+                                           const std::string& goal_id,
+                                           const std::string& goal_name,
+                                           const std::string& method,
+                                           int preset,
+                                           const std::string& result,
+                                           const std::string& message)
+  {
+    flatbuffers::FlatBufferBuilder fbb(512);
+    auto resp = SLAMNAV::CreateResponseMoveGoal(fbb, ...);
+    fbb.Finish(resp);
+    const uint8_t* buf = fbb.GetBufferPointer();
+    return std::vector<uint8_t>(buf, buf + fbb.GetSize());
+  }
+}
+```
+
+**빌더 함수 목록:**
+
+| 함수명 | 용도 | FlatBuffer 타입 |
+|--------|------|-----------------|
+| `build_result_move` | 이동 결과 발행 | ResultMove |
+| `build_profile_result` | 프로필 이동 결과 (헬퍼) | ResultMove |
+| `build_response_goal` | goal RPC 응답 | ResponseMoveGoal |
+| `build_response_target` | target RPC 응답 | ResponseMoveTarget |
+| `build_response_stop` | stop RPC 응답 | ResponseMoveStop |
+| `build_response_pause` | pause RPC 응답 | ResponseMovePause |
+| `build_response_resume` | resume RPC 응답 | ResponseMoveResume |
+| `build_response_xlinear` | xLinear RPC 응답 | ResponseMoveXLinear |
+| `build_response_ylinear` | yLinear RPC 응답 | ResponseMoveYLinear |
+| `build_response_circular` | circular RPC 응답 | ResponseMoveCircular |
+| `build_response_rotate` | rotate RPC 응답 | ResponseMoveRotate |
+
+### 13.3 move_loop() 구조
+
+```cpp
+void COMM_ZENOH::move_loop()
+{
+  log_info("move_loop started");
+
+  // 1. robotType 설정 대기
+  while (is_move_running_.load() && get_robot_type().empty())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  }
+
+  // 2. 세션 유효성 확인
+  if (!is_session_valid())
+  {
+    log_error("move_loop aborted: session invalid");
+    return;
+  }
+
+  log_info("move_loop initialized with robotType: {}", get_robot_type());
+
+  try
+  {
+    zenoh::Session& session = get_session();
+
+    // 3. 토픽 생성
+    std::string topic_goal     = make_topic("move/goal");
+    std::string topic_target   = make_topic("move/target");
+    // ...
+
+    // 4. 결과 발행 람다
+    auto send_result = [this, &topic_result](std::vector<uint8_t> data) {
+      if (!is_session_valid()) return;
+      zenoh::Session::GetOptions opts;
+      opts.payload = zenoh::Bytes(std::move(data));
+      get_session().get(zenoh::KeyExpr(topic_result), "", ...);
+    };
+
+    // 5. Subscriber 등록
+    auto sub_jog = session.declare_subscriber(...);
+
+    // 6. Queryable 등록
+    auto q_goal = session.declare_queryable(...);
+    auto q_target = session.declare_queryable(...);
+    // ...
+
+    // 7. 메인 루프
+    while (is_move_running_.load())
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    log_info("move_loop ending, resources will be released");
+  }
+  catch (const zenoh::ZException& e)
+  {
+    log_error("move_loop Zenoh exception: {}", e.what());
+  }
+  catch (const std::exception& e)
+  {
+    log_error("move_loop exception: {}", e.what());
+  }
+
+  log_info("move_loop ended");
+}
+```
+
+### 13.4 Queryable 핸들러 구현 패턴
+
+모든 Queryable 핸들러는 다음 패턴을 따릅니다:
+
+```cpp
+auto q_goal = session.declare_queryable(
+  zenoh::KeyExpr(topic_goal),
+  [this](const zenoh::Query& query)
+  {
+    // 1. Payload 유효성 검사
+    const auto& payload = query.get_payload();
+    if (!payload.has_value())
+    {
+      auto resp = build_response_goal("", "", "", "", 0, "reject", "no payload");
+      query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+      return;
+    }
+
+    // 2. Slice 추출 및 FlatBuffer 파싱
+    auto iter = payload->get().slice_iter();
+    auto slice = iter.next();
+    if (!slice.has_value())
+    {
+      auto resp = build_response_goal("", "", "", "", 0, "reject", "invalid slice, no data");
+      query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+      return;
+    }
+    auto req = flatbuffers::GetRoot<SLAMNAV::RequestMoveGoal>(slice->data);
+
+    // 3. 요청 데이터 추출
+    std::string id = req->id() ? req->id()->str() : "";
+    std::string goal_id = req->goal_id() ? req->goal_id()->str() : "";
+    // ...
+
+    // 4. 모듈 의존성 획득 및 검증
+    UNIMAP* unimap_ptr = get_unimap();
+    LOCALIZATION* loc_ptr = get_localization();
+    AUTOCONTROL* ctrl_ptr = get_autocontrol();
+    MOBILE* mobile_ptr = get_mobile();
+
+    if (!unimap_ptr || !loc_ptr || !ctrl_ptr || !mobile_ptr)
+    {
+      auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "module not ready");
+      query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+      return;
+    }
+
+    // 5. 비즈니스 로직 검증
+    if (unimap_ptr->get_is_loaded() != MAP_LOADED)
+    {
+      auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "reject", "map not loaded");
+      query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+      return;
+    }
+
+    // 6. 명령 실행
+    mobile_ptr->move(0, 0, 0);
+    DATA_MOVE msg;
+    // ... 메시지 구성
+
+    // 7. 성공 응답
+    auto resp = build_response_goal(id, goal_id, goal_name, method, preset, "accept", "");
+    query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+
+    // 8. 비동기 작업 트리거 (필요시)
+    Q_EMIT (ctrl_ptr->signal_move(msg));
+  },
+  zenoh::closures::none
+);
+```
+
+### 13.5 응답 결과 값
+
+| 결과 | 의미 |
+|------|------|
+| `"accept"` | 명령 수락 (처리 시작) |
+| `"reject"` | 명령 거부 (오류) |
+| `"success"` | 작업 완료 (결과 발행시) |
+| `"fail"` | 작업 실패 (결과 발행시) |
+
+### 13.6 Jog Subscriber 구현
+
+실시간 조그 명령은 Subscriber로 처리합니다:
+
+```cpp
+auto sub_jog = session.declare_subscriber(
+  zenoh::KeyExpr(topic_jog),
+  [this](const zenoh::Sample& sample)
+  {
+    MOBILE* mobile_ptr = get_mobile();
+    if (!mobile_ptr) return;
+
+    const auto& payload = sample.get_payload();
+    auto iter = payload.slice_iter();
+    auto slice = iter.next();
+    if (!slice.has_value()) return;
+
+    auto jog = flatbuffers::GetRoot<SLAMNAV::MoveJog>(slice->data);
+    if (!jog) return;
+
+    double vx = static_cast<double>(jog->vx());
+    double vy = static_cast<double>(jog->vy());
+    double wz = static_cast<double>(jog->wz()) * D2R;
+
+    mobile_ptr->slot_jog_update(Eigen::Vector3d(vx, vy, wz));
+  },
+  zenoh::closures::none
+);
+```
+
+### 13.7 프로필 이동 비동기 결과 처리
+
+프로필 이동(xLinear, yLinear, circular, rotate)은 `delayed_tasks`를 사용하여 비동기 결과를 발행합니다:
+
+```cpp
+// 즉시 응답
+auto resp = build_response_xlinear(id, target, speed, "accept", "");
+query.reply(zenoh::KeyExpr(query.get_keyexpr()), zenoh::Bytes(std::move(resp)));
+
+// 이동 시작
+ctrl_ptr->stop();
+ctrl_ptr->set_is_moving(true);
+mobile_ptr->move_linear_x(target, speed);
+
+// 예상 완료 시간 후 결과 발행
+double t = std::abs(target/(speed + 1e-06)) + 0.5;
+delayed_tasks.schedule(std::chrono::milliseconds(static_cast<int>(t*1000)),
+[this, send_result, id, target, speed]() {
+  AUTOCONTROL* ctrl_ptr = get_autocontrol();
+  MOBILE* mobile_ptr = get_mobile();
+  if (!ctrl_ptr || !mobile_ptr)
+  {
+    send_result(build_profile_result(id, target, speed, "", "fail", "module not ready"));
+    return;
+  }
+  ctrl_ptr->set_is_moving(false);
+  send_result(build_profile_result(id, target, speed, "", "success", ""));
+});
+```
+
+### 13.8 입력 값 검증 범위
+
+| 명령 | 파라미터 | 최대값 |
+|------|----------|--------|
+| xLinear | target | 10.0 m |
+| xLinear | speed | 1.5 m/s |
+| yLinear | target | 10.0 m |
+| yLinear | speed | 1.5 m/s |
+| circular | target | 360.0° |
+| circular | speed | 60.0°/s |
+| rotate | target | 360.0° |
+| rotate | speed | 60.0°/s |
+
+---
+
+## 14. 새 기능 구현 가이드
+
+### 14.1 새 Pub/Sub 토픽 추가
 
 1. **스키마 정의**: `schemas/amr/v1/slamnav_*.fbs`
 2. **flatc 컴파일**: `flatc --cpp -o ...`
 3. **루프 함수에서 발행/구독 구현**
 4. **SCHEMA_REFERENCE.md 업데이트**
 
-### 13.2 새 RPC 토픽 추가
+### 14.2 새 RPC 토픽 추가
 
 1. **Request/Response 스키마 정의**
 2. **Queryable 등록** (서버)
 3. **Query 호출** (클라이언트)
 4. **문서 업데이트**
 
-### 13.3 새 스레드 추가
+### 14.3 새 스레드 추가
 
 1. **헤더에 선언 추가**:
    - `is_xxx_running_` 플래그

@@ -146,7 +146,7 @@ void COMM_ZENOH::start_all_thread()
 {
     start_move_thread();
     // start_control_thread();
-    // start_localization_thread();
+    start_localization_thread();
     // start_map_thread();
     // start_setting_thread();
     // start_update_thread();
@@ -162,7 +162,7 @@ void COMM_ZENOH::stop_all_thread()
 {
     stop_move_thread();
     // stop_control_thread();
-    // stop_localization_thread();
+    stop_localization_thread();
     // stop_map_thread();
     // stop_setting_thread();
     // stop_update_thread();
@@ -232,34 +232,34 @@ void COMM_ZENOH::stop_move_thread()
 //     }
 // }
 
-// // localization thread
-// void COMM_ZENOH::start_localization_thread()
-// {
-//     if (is_localization_running_.load())
-//     {
-//         log_warn("Localization thread already running");
-//         return;
-//     }
+// localization thread
+void COMM_ZENOH::start_localization_thread()
+{
+    if (is_localization_running_.load())
+    {
+        log_warn("Localization thread already running");
+        return;
+    }
 
-//     is_localization_running_ = true;
-//     localization_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::localization_loop, this);
-//     log_info("Localization thread started");
-// }
-// void COMM_ZENOH::stop_localization_thread()
-// {
-//     if (!is_localization_running_.load())
-//     {
-//         return;
-//     }
+    is_localization_running_ = true;
+    localization_thread_ = std::make_unique<std::thread>(&COMM_ZENOH::localization_loop, this);
+    log_info("Localization thread started");
+}
+void COMM_ZENOH::stop_localization_thread()
+{
+    if (!is_localization_running_.load())
+    {
+        return;
+    }
 
-//     is_localization_running_ = false;
-//     if (localization_thread_ && localization_thread_->joinable())
-//     {
-//         localization_thread_->join();
-//         localization_thread_.reset();
-//         log_info("Localization thread stopped");
-//     }
-// }
+    is_localization_running_ = false;
+    if (localization_thread_ && localization_thread_->joinable())
+    {
+        localization_thread_->join();
+        localization_thread_.reset();
+        log_info("Localization thread stopped");
+    }
+}
 
 // // map theead
 // void COMM_ZENOH::start_map_thread()
@@ -462,75 +462,6 @@ void COMM_ZENOH::stop_move_thread()
 //         sensor_thread_.reset();
 //         log_info("Sensor thread stopped");
 //     }
-// }
-
-// =============================================================================
-// 스레드 루프 함수 - 빈 구현 (zenoh_command/*.cpp에서 구현 예정)
-// =============================================================================
-
-// move_loop()는 zenoh_command/comm_zenoh_move.cpp에서 구현
-
-// control_loop()는 zenoh_command/comm_zenoh_control.cpp에서 구현
-
-// localization_loop()는 zenoh_command/comm_zenoh_localization.cpp에서 구현
-
-// map_loop()는 zenoh_command/comm_zenoh_map.cpp에서 구현
-
-// void COMM_ZENOH::setting_loop()
-// {
-//     log_info("setting_loop started (placeholder)");
-
-//     while (is_setting_running_.load())
-//     {
-//         // TODO: zenoh_command/comm_zenoh_setting.cpp에서 구현
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     }
-
-//     log_info("setting_loop ended");
-// }
-
-// void COMM_ZENOH::update_loop()
-// {
-//     log_info("update_loop started (placeholder)");
-
-//     while (is_update_running_.load())
-//     {
-//         // TODO: zenoh_command/comm_zenoh_update.cpp에서 구현
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     }
-
-//     log_info("update_loop ended");
-// }
-
-// void COMM_ZENOH::path_loop()
-// {
-//     log_info("path_loop started (placeholder)");
-
-//     while (is_path_running_.load())
-//     {
-//         // TODO: zenoh_command/comm_zenoh_path.cpp에서 구현
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     }
-
-//     log_info("path_loop ended");
-// }
-
-// // status_loop()는 zenoh_command/comm_zenoh_status.cpp에서 구현
-
-// // move_status_loop()는 zenoh_command/comm_zenoh_moveStatus.cpp에서 구현
-
-// void COMM_ZENOH::sensor_loop()
-// {
-//     log_info("sensor_loop started (placeholder)");
-
-//     while (is_sensor_running_.load())
-//     {
-//         // TODO: zenoh_command/comm_zenoh_sensor.cpp에서 구현
-//         // lidar2d, lidar3d, mappingCloud 발행
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     }
-
-//     log_info("sensor_loop ended");
 // }
 
 // set modules
