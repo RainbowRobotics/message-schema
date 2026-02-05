@@ -242,12 +242,12 @@ table MoveJog {
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------          RPC(Query)          --------
+// -----------     Pub / Sub  (Result )     --------
 // -----------                              --------
 // -------------------------------------------------
 
 /*
-    category    :       RPC ( Result )
+    category    :       Pub / Sub (Result)
     topic       :       {robotType}/move/result
     usage       :       이동 결과 응답
     field
@@ -259,8 +259,11 @@ table MoveJog {
         - target        :       이동 거리/각도
         - speed         :       이동 속도
         - direction     :       회전 방향
-        - result        :       결과 상태
-        - message       :       결과 메시지
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
 table ResultMove {
     id: string;
