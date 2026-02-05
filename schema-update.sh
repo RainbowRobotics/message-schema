@@ -155,7 +155,6 @@ else
     print_string "info" "No changes in working tree"
 fi
 
-# STEP 3는 SCHEMA_COMMITTED가 true일 때만 실행
 if [ "$SCHEMA_COMMITTED" = false ]; then
     print_string "info" "No schemas commits, skipping STEP 3"
     print_string "success" "Done"
@@ -179,56 +178,73 @@ echo "Tree: $LOCAL_TREE"
 echo "Commit: $MAIN_COMMIT"
 echo ""
 
+# 원격 브랜치 존재 여부 확인
 git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/null || true
-
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 if git show-ref --verify --quiet "$REMOTE_REF"; then
+    # 원격 브랜치가 존재하는 경우 - 업데이트
     REMOTE_TREE="$(git rev-parse "$REMOTE_NAME/$BR^{tree}")"
     echo "Remote tree: $REMOTE_TREE"
+
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
         print_string "info" "No changes"
         exit 0
     fi
+
+    print_string "info" "Updating existing remote branch..."
     WORK_DIR="$(mktemp -d)"
     trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+
     git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
     (
         cd "$WORK_DIR"
-        print_string "info" "Updating..."
+        print_string "info" "Extracting changes..."
         TEMP_EXTRACT="$(mktemp -d)"
         trap "rm -rf '$TEMP_EXTRACT'" EXIT
+
         git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
         rsync -av "$TEMP_EXTRACT/" ./
         rm -rf "$TEMP_EXTRACT"
+
         git add -A
         if git diff --staged --quiet; then
-            print_string "info" "No changes"
+            print_string "info" "No changes to commit"
         else
-            echo "Changed:"
+            echo "Changed files:"
             git diff --staged --name-status
             echo ""
             git commit -m "Update schemas from main @ $MAIN_COMMIT"
             git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
+            print_string "success" "Updated remote branch"
         fi
     ) || {
-        print_string "error" "Push failed"
+        print_string "error" "Update failed"
         exit 1
     }
 else
-    print_string "info" "Creating branch"
-    if git show-ref --verify --quiet "refs/heads/$BR"; then
-        git branch -D "$BR"
-    fi
+    # 원격 브랜치가 없는 경우 - 새로 생성
+    print_string "info" "Creating new remote branch..."
+
     TMP="$BR-tmp"
+
+    # 임시 브랜치가 있으면 삭제
     git branch -D "$TMP" 2>/dev/null || true
+
+    print_string "info" "Splitting subtree..."
     git subtree split --prefix="$SCHEMA_DIR" -b "$TMP"
-    if ! git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
-        print_string "error" "Failed"
+
+    print_string "info" "Pushing to $REMOTE_NAME/$BR..."
+    if git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"; then
+        print_string "success" "Remote branch created"
+    else
+        print_string "error" "Push failed"
         git branch -D "$TMP" 2>/dev/null || true
         exit 1
     fi
-    git branch -D "$TMP"
+
+    # 임시 브랜치 정리
+    git branch -D "$TMP" 2>/dev/null || true
 fi
 
 print_string "success" "Complete"
