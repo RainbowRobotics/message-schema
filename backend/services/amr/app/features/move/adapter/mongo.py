@@ -39,6 +39,7 @@ class MoveMongoDatabaseAdapter(DatabasePort):
     """
     [Move MongoDB 어댑터 초기화]
     """
+    
     def __init__(self):
         self.name = "command_move"
 
@@ -47,8 +48,6 @@ class MoveMongoDatabaseAdapter(DatabasePort):
             # 0) 인덱스 삭제용..(필요할때만..주석해제..)
             # await mongo_db.db[self.name].drop_index("move_index")
             # await mongo_db.db[self.name].drop_index("created_at_1")
-
-
 
             # 1) 컬렉션 생성(이미 존재하면 패스)
             await mongo_db.add_collection(mongo_db.db, self.name)
@@ -61,6 +60,7 @@ class MoveMongoDatabaseAdapter(DatabasePort):
                 ("goalId", "text"),("command", "text"),
                 ("mapName", "text"),
                 ("direction", "text"),("createdAt", -1)], name="move_index")
+
             await mongo_db.ensure_index(mongo_db.db, self.name, [("createdAt", 1)], name="created_at_1")
 
             # 3) 현재 컬렉션 사이즈 조회(디버그용)

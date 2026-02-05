@@ -172,6 +172,7 @@ class RBBaseSDK:
         # 리스트 초기화 (데코레이터가 먼저 실행될 수 있음)
         if not hasattr(self, "_zenoh_queryables"):
             self._zenoh_queryables = []
+
         if not hasattr(self, "_zenoh_subscribers"):
             self._zenoh_subscribers = []
 
