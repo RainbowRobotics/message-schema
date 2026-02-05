@@ -203,30 +203,6 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    # async def control_random_sequence(self, robot_model: str, req_id: str) -> Response_Random_SequenceT:
-    #     """
-    #     [Control Random Sequence 전송]
-    #     - model: ControlRequestModel
-    #     - Response_Random_SequenceT 객체 반환
-    #     """
-
-    #     # 1) Request_Random_SequenceT 객체 생성
-    #     req = Request_Random_SequenceT()
-    #     req.id = req_id
-    #     # 2) 요청 전송
-    #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/control/random_sequence",
-    #         flatbuffer_req_obj=req,
-    #         flatbuffer_res_T_class=Response_Random_SequenceT,
-    #         flatbuffer_buf_size=125,
-    #     )
-
-    #     # 3) 결과 처리 및 반환
-    #     if result["obj_payload"] is None:
-    #         raise RuntimeError("Call Control Random Sequence failed: obj_payload is None")
-
-    #     return result["obj_payload"]
-
     async def control_dock(self, robot_model: str, req_id: str, command: str) -> ResponseDockControlT:
         """
         [도킹 제어]

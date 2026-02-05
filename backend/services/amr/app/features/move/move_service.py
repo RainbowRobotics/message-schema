@@ -688,7 +688,6 @@ class AmrMoveService:
             await self.database_port.upsert(db)
             await socket_client.emit(topic, t_to_dict(obj))
 
-
     def _parse_json_maybe(self, v: str | dict[str, Any] | None) -> dict[str, Any] | None:
         if v is None:
             return None

@@ -3,129 +3,362 @@ from pydantic import (
     BaseModel,
     Field,
 )
+from rb_sdk.amr_sdk.amr_control import SafetyFlag
 
+class RequestGetSafetyFieldPD(BaseModel):
+    """
+    [세이프티 필드 조회 요청]
+    """
 
-class ControlLEDResponse(BaseModel):
-    id: str
-    onoff: bool
-    color: str
-    result: str | None = None
-    message: str | None = None
-
-class Request_Control_FrequencyPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    target: str = Field(None, example="lidar")
-    onoff: bool = Field(None, example=True)
-    frequency: int = Field(None, example=10)
-
-class Request_Control_OnOffPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    onoff: bool = Field(..., description="LED 켜기/끄기", example=True)
-    frequency: int = Field(..., description="주기", example=10)
-
-class Response_Control_OnOffPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    onoff: bool = Field(..., description="LED 켜기/끄기", example=True)
-    frequency: int = Field(..., description="주기", example=10)
+class ResponseGetSafetyFieldPD(BaseModel):
+    """
+    [충전 트리거 명령 응답]
+    * safetyField : 세이프티 영역 번호
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    safetyField: int = Field(..., example=1)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_WorkPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    work: str = Field(..., description="작업", example="lidarOn")
+class RequestSetSafetyFieldPD(BaseModel):
+    """
+    [세이프티 필드 설정 요청]
+    * safetyField : 세이프티 영역 번호
+    """
+    safetyField: int = Field(..., example=1)
 
-class Request_Control_DockPD(BaseModel):
+class ResponseSetSafetyFieldPD(BaseModel):
+    """
+    [세이프티 필드 설정 응답]
+    * safetyField : 세이프티 영역 번호
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    safetyField: int = Field(..., example=1)
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestGetSafetyFlagPD(BaseModel):
+    """
+    [세이프티 필드 조회 요청]
+    """
+class ResponseGetSafetyFlagPD(BaseModel):
+    """
+    [세이프티 필드 조회 응답]
+    * resetFlag : 세이프티 플래그 목록
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    resetFlag: list[SafetyFlag] = Field(..., example=[{"name":"obstacle","value":False}])
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestSetSafetyFlagPD(BaseModel):
+    """
+    [세이프티 필드 설정 요청]
+    * safetyFlag : 세이프티 플래그 목록
+    """
+    safetyFlag: list[SafetyFlag] = Field(..., example=[{"name":"obstacle","value":False}])
+
+class ResponseSetSafetyFlagPD(BaseModel):
+    """
+    [세이프티 필드 설정 응답]
+    * safetyFlag : 세이프티 플래그 목록
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    safetyFlag: list[SafetyFlag] = Field(..., example=[{"name":"obstacle","value":False}])
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestGetSafetyIoPD(BaseModel):
+    """
+    [세이프티 IO 조회 요청]
+    """
+class ResponseGetSafetyIoPD(BaseModel):
+    """
+    [세이프티 IO 조회 응답]
+    # * mcu0Dio : MCU0 Digital Output (8bit)
+    # * mcu1Dio : MCU1 Digital Output (8bit)
+    * mcu0Din : MCU0 Digital Input (8bit)
+    * mcu1Din : MCU1 Digital Input (8bit)
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    # mcu0Dio: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    # mcu1Dio: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    mcu0Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    mcu1Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestSetSafetyIoPD(BaseModel):
+    """
+    [세이프티 IO 설정 요청]
+    * mcu0Din : MCU0 Digital Input (8bit)
+    * mcu1Din : MCU1 Digital Input (8bit)
+    """
+    mcu0Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    mcu1Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+
+class ResponseSetSafetyIoPD(BaseModel):
+    """
+    [세이프티 IO 설정 응답]
+    * mcu0Din : MCU0 Digital Input (8bit)
+    * mcu1Din : MCU1 Digital Input (8bit)
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    mcu0Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    mcu1Din: list[bool] = Field(..., example=[False, True, False, True, False, True, False, True])
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestControlDockPD(BaseModel):
+    """
+    [도킹 명령 요청]
+    * command : 도킹 명령 ( "dock", "undock", "dockstop" )
+    """
     command: str = Field(..., description="도킹 명령", example="dock")
-
-class Response_Control_WorkPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    work: str = Field(..., description="작업", example="lidarOn")
+class ResponseControlDockPD(BaseModel):
+    """
+    [도킹 명령 응답]
+    * command : 도킹 명령 ( "dock", "undock", "dockstop" )
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    command: str = Field(..., description="도킹 명령", example="dock")
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Response_Control_DockPD(BaseModel):
+class RequestControlChargeTriggerPD(BaseModel):
+    """
+    [충전 트리거 명령 요청]
+    * control : 충전 트리거 명령 ( True / False )
+    """
+    control: bool = Field(..., example=True)
+class ResponseControlChargeTriggerPD(BaseModel):
+    """
+    [충전 트리거 명령 응답]
+    * control : 충전 트리거 명령 ( True / False )
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    control: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Response_Control_UndockPD(BaseModel):
+class RequestControlGetObsBoxPD(BaseModel):
+    """
+    [옵스 박스 조회 요청]
+    """
+
+class ResponseControlGetObsBoxPD(BaseModel):
+    """
+    [옵스 박스 조회 응답]
+    * min_x : 옵스 박스 최소 x 범위
+    * min_y : 옵스 박스 최소 y 범위
+    * min_z : 옵스 박스 최소 z 범위
+    * max_x : 옵스 박스 최대 x 범위
+    * max_y : 옵스 박스 최대 y 범위
+    * max_z : 옵스 박스 최대 z 범위
+    * map_range : 옵스 박스 맵 범위
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    min_x: float = Field(..., example=1.0)
+    min_y: float = Field(..., example=1.0)
+    min_z: float = Field(..., example=1.0)
+    max_x: float = Field(..., example=1.0)
+    max_y: float = Field(..., example=1.0)
+    max_z: float = Field(..., example=1.0)
+    map_range: float = Field(..., example=1.0)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Response_Control_DockStopPD(BaseModel):
+class RequestControlSetObsBoxPD(BaseModel):
+    """
+    [옵스 박스 설정 요청]
+    * min_x : 옵스 박스 최소 x 범위
+    * min_y : 옵스 박스 최소 y 범위
+    * min_z : 옵스 박스 최소 z 범위
+    * max_x : 옵스 박스 최대 x 범위
+    * max_y : 옵스 박스 최대 y 범위
+    * max_z : 옵스 박스 최대 z 범위
+    * map_range : 옵스 박스 맵 범위
+    """
+    min_x: float = Field(..., example=1.0)
+    min_y: float = Field(..., example=1.0)
+    min_z: float = Field(..., example=1.0)
+    max_x: float = Field(..., example=1.0)
+    max_y: float = Field(..., example=1.0)
+    max_z: float = Field(..., example=1.0)
+    map_range: float = Field(..., example=1.0)
+
+class ResponseControlSetObsBoxPD(BaseModel):
+    """
+    [옵스 박스 설정 응답]
+    * min_x : 옵스 박스 최소 x 범위
+    * min_y : 옵스 박스 최소 y 범위
+    * min_z : 옵스 박스 최소 z 범위
+    * max_x : 옵스 박스 최대 x 범위
+    * max_y : 옵스 박스 최대 y 범위
+    * max_z : 옵스 박스 최대 z 범위
+    * map_range : 옵스 박스 맵 범위
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    min_x: float = Field(..., example=1.0)
+    min_y: float = Field(..., example=1.0)
+    min_z: float = Field(..., example=1.0)
+    max_x: float = Field(..., example=1.0)
+    max_y: float = Field(..., example=1.0)
+    max_z: float = Field(..., example=1.0)
+    map_range: float = Field(..., example=1.0)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Response_Control_ChargeTriggerPD(BaseModel):
+class RequestControlLedModePD(BaseModel):
+    """
+    [LED 모드 설정 요청]
+    * control : LED on / off
+    * color : LED color
+    """
+    control: bool = Field(..., example=True)
+    color: str = Field(..., example="red")
+
+class ResponseControlLedModePD(BaseModel):
+    """
+    [LED 모드 설정 응답]
+    * control : LED on / off
+    * color : LED color
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    control: bool = Field(..., example=True)
+    color: str = Field(..., example="red")
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_SafetyFieldPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    safetyField: int = Field(..., description="안전 필드", example=1)
-
-class Response_Control_SafetyFieldPD(BaseModel):
-    safetyField: int = Field(..., description="안전 필드", example=1)
+class RequestControlMotorModePD(BaseModel):
+    """
+    [모터 모드 설정 요청]
+    * control : 모터 on / off
+    """
+    control: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_SafetyFlagPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    safetyFlag: str = Field(..., description="안전 플래그", example="lidarOn")
-
-class Response_Control_SafetyFlagPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    safetyFlag: str = Field(..., description="안전 플래그", example="lidarOn")
+class ResponseControlMotorModePD(BaseModel):
+    """
+    [모터 모드 설정 응답]
+    * control : 모터 on / off
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    control: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_LEDPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    led: str = Field(..., description="LED", example="lidarOn")
-
-class Request_Control_MotorPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    onoff: bool = Field(..., description="모터", example=True)
-class Response_Control_LEDPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    led: str = Field(..., description="LED", example="lidarOn")
+class RequestControlJogModePD(BaseModel):
+    """
+    [조그 모드 설정 요청]
+    * control : 조그 on / off
+    """
+    control: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_SafetyIOPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    mcu0_dio: list[bool] = Field(..., description="MCU0 DIO", example=[True, False, True])
-    mcu1_dio: list[bool] = Field(..., description="MCU1 DIO", example=[True, False, True])
-
-class Response_Control_SafetyIOPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    mcu0_dio: list[bool] = Field(..., description="MCU0 DIO", example=[True, False, True])
-    mcu1_dio: list[bool] = Field(..., description="MCU1 DIO", example=[True, False, True])
-    mcu0_din: list[bool] = Field(..., description="MCU0 DIN", example=[True, False, True])
-    mcu1_din: list[bool] = Field(..., description="MCU1 DIN", example=[True, False, True])
+class ResponseControlJogModePD(BaseModel):
+    """
+    [조그 모드 설정 응답]
+    * control : 조그 on / off
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    control: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_ObsBoxPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    obsBox: str = Field(..., description="관측 박스", example="lidarOn")
-
-class Response_Control_ObsBoxPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    obsBox: str = Field(..., description="관측 박스", example="lidarOn")
+class RequestControlSensorModePD(BaseModel):
+    """
+    [센서 모드 설정 요청]
+    * command : 센서 종류 ( "camera", "lidar2d", "lidar3d" )
+    * control : 센서 통신 on / off
+    * frequency : 센서 주파수 (Hz)
+    """
+    command: str = Field(..., example="camera")
+    control: bool = Field(..., example=True)
+    frequency: int = Field(..., example=10)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
-class Request_Control_DetectPD(BaseModel):
-    robot_model: str = Field(..., description="로봇 모델", example="test")
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    detect: str = Field(..., description="검출", example="lidarOn")
+class ResponseControlSensorModePD(BaseModel):
+    """
+    [센서 모드 설정 응답]
+    * command : 센서 종류 ( "camera", "lidar2d", "lidar3d" )
+    * control : 센서 통신 on / off
+    * frequency : 센서 주파수 (Hz)
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    command: str = Field(..., example="camera")
+    control: bool = Field(..., example=True)
+    frequency: int = Field(..., example=10)
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
 
-class Response_Control_DetectPD(BaseModel):
-    command: str = Field(..., description="명령", example="lidarOnOff")
-    detect: str = Field(..., description="검출", example="lidarOn")
+class RequestControlPathModePD(BaseModel):
+    """
+    [경로 모드 설정 요청]
+    * control : 경로 통신 on / off
+    * frequency : 경로 주파수 (Hz)
+    """
+    control: bool = Field(..., example=True)
+    frequency: int = Field(..., example=10)
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class ResponseControlPathModePD(BaseModel):
+    """
+    [경로 모드 설정 응답]
+    * control : 경로 통신 on / off
+    * frequency : 경로 주파수 (Hz)
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    control: bool = Field(..., example=True)
+    frequency: int = Field(..., example=10)
+    result: str = Field(..., example="accept")
+    message: str | None = Field(None, example="")
+
+class RequestControlDetectMarkerPD(BaseModel):
+    """
+    [장애물 감지 명령 요청]
+    * command : 감지 명령 ( "charuco", "aruco" )
+    * camera_number : 카메라 번호
+    * camera_serial : 카메라 시리얼
+    * marker_size : 마커 크기
+    """
+    command: str = Field(..., example="aruco")
+    camera_number: int = Field(..., example=0)
+    camera_serial: str = Field(..., example="1234567890")
+    marker_size: float = Field(..., example=0.1)
+
+class ResponseControlDetectMarkerPD(BaseModel):
+    """
+    [장애물 감지 명령 응답]
+    * command : 감지 명령 ( "charuco", "aruco" )
+    * camera_number : 카메라 번호
+    * camera_serial : 카메라 시리얼
+    * marker_size : 마커 크기
+    * result : 요청한 명령에 대한 결과입니다.
+    * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
+    """
+    command: str = Field(..., example="aruco")
+    camera_number: int = Field(..., example=0)
+    camera_serial: str = Field(..., example="1234567890")
+    marker_size: float = Field(..., example=0.1)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")

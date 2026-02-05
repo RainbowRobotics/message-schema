@@ -6,21 +6,32 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+from rb_sdk.amr_sdk.amr_control import SafetyFlag
 from rb_utils.service_exception import ServiceException
-
-from app.features.control.control_schema import (
-    Request_Control_DetectPD,
-    Request_Control_DockPD,
-    Request_Control_FrequencyPD,
-    Request_Control_LEDPD,
-    Request_Control_MotorPD,
-    Request_Control_ObsBoxPD,
-    Request_Control_SafetyFieldPD,
-    Request_Control_SafetyFlagPD,
-    Request_Control_SafetyIOPD,
-)
 from app.schema.amr import AmrResponseStatusEnum
-
+from app.features.control.control_schema import (
+    RequestControlChargeTriggerPD,
+    RequestControlDetectMarkerPD,
+    RequestControlDockPD,
+    RequestControlLedModePD,
+    RequestControlMotorModePD,
+    RequestControlSetObsBoxPD,
+    RequestSetSafetyFieldPD,
+    RequestSetSafetyFlagPD,
+    RequestSetSafetyIoPD,
+    ResponseControlChargeTriggerPD,
+    ResponseControlDetectMarkerPD,
+    ResponseControlDockPD,
+    ResponseControlGetObsBoxPD,
+    ResponseControlLedModePD,
+    ResponseControlSetObsBoxPD,
+    ResponseGetSafetyFieldPD,
+    ResponseGetSafetyFlagPD,
+    ResponseGetSafetyIoPD,
+    ResponseSetSafetyFieldPD,
+    ResponseSetSafetyFlagPD,
+    ResponseSetSafetyIoPD,
+)
 
 class AmrLedColorEnum(str, Enum):
     """
@@ -45,7 +56,6 @@ class AmrControlCommandEnum(str, Enum):
     """
     [AMR 제어 명령]
     """
-    CONTROL_FREQUENCY = "controlFrequency"
     CONTROL_DOCK = "dock"
     CONTROL_UNDOCK = "undock"
     CONTROL_DOCK_STOP = "dockStop"
@@ -60,7 +70,7 @@ class AmrControlCommandEnum(str, Enum):
     CONTROL_SET_SAFETY_IO = "setSafetyIo"
     CONTROL_GET_OBS_BOX = "getObsBox"
     CONTROL_SET_OBS_BOX = "setObsBox"
-    CONTROL_DETECT = "detect"
+    CONTROL_DETECT = "detectMarker"
 
 
 # === Model ==========================================================
@@ -78,9 +88,7 @@ class ControlModel:
     result: str | None = None
     message: str | None = None
 
-    # controlOnoff
-    target: str | None = None
-    onoff: bool | None = None
+    control: bool | None = None
     frequency: int | None = None
 
     # controlLed
@@ -88,7 +96,7 @@ class ControlModel:
 
     # controlSafety
     safety_field: int | None = None
-    # safety_flags: list[Safety_FlagT] | None = None
+    safety_flag: list[SafetyFlag] | None = None
 
     # controlSafetyIo
     mcu0_dio: list[bool] | None = None
@@ -108,40 +116,37 @@ class ControlModel:
     # ExternalAccessory
     foot_position: str | None = None
 
+    # controlDetect
+    camera_number: int | None = None
+    camera_serial: str | None = None
+    marker_size: int | None = None
+
     def set_robot_model(self, robot_model: str):
         """
         """
         self.robot_model = robot_model
         self.update_at = datetime.now(UTC)
 
-    def control_frequency(self, req: Request_Control_FrequencyPD):
-        """
-        """
-        self.command = AmrControlCommandEnum.CONTROL_FREQUENCY
-        self.target = req.target
-        self.onoff = req.onoff
-        self.frequency = req.frequency
-        self.update_at = datetime.now(UTC)
 
-    def control_dock(self, req: Request_Control_DockPD):
+    def control_dock(self, req: RequestControlDockPD):
         """
         """
         self.command = req.command
         self.update_at = datetime.now(UTC)
 
-    def control_led(self, req: Request_Control_LEDPD):
+    def set_control_led(self, req: RequestControlLedModePD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_LED
-        self.onoff = req.onoff
+        self.control = req.control
         self.color = req.color
         self.update_at = datetime.now(UTC)
 
-    def control_motor(self, req: Request_Control_MotorPD):
+    def control_motor(self, req: RequestControlMotorModePD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_MOTOR
-        self.onoff = req.onoff
+        self.control = req.control
         self.update_at = datetime.now(UTC)
 
     def get_control_safety_field(self):
@@ -150,7 +155,7 @@ class ControlModel:
         self.command = AmrControlCommandEnum.CONTROL_GET_SAFETY_FIELD
         self.update_at = datetime.now(UTC)
 
-    def set_control_safety_field(self, req: Request_Control_SafetyFieldPD):
+    def set_control_safety_field(self, req: RequestSetSafetyFieldPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_SET_SAFETY_FIELD
@@ -163,11 +168,11 @@ class ControlModel:
         self.command = AmrControlCommandEnum.CONTROL_GET_SAFETY_FLAG
         self.update_at = datetime.now(UTC)
 
-    def set_control_safety_flag(self, req: Request_Control_SafetyFlagPD):
+    def set_control_safety_flag(self, req: RequestSetSafetyFlagPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_SET_SAFETY_FLAG
-        self.safety_flags = req.safety_flags
+        self.safety_flag = req.safetyFlag
         self.update_at = datetime.now(UTC)
 
     def get_control_safety_io(self):
@@ -176,38 +181,48 @@ class ControlModel:
         self.command = AmrControlCommandEnum.CONTROL_GET_SAFETY_IO
         self.update_at = datetime.now(UTC)
 
-    def set_control_safety_io(self, req: Request_Control_SafetyIOPD):
+    def set_control_safety_io(self, req: RequestSetSafetyIoPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_SET_SAFETY_IO
-        self.mcu0_dio = req.mcu0_dio
-        self.mcu1_dio = req.mcu1_dio
+        self.mcu0_dio = req.mcu0Din
+        self.mcu1_dio = req.mcu1Din
         self.update_at = datetime.now(UTC)
 
-    def set_control_obs_box(self, req: Request_Control_ObsBoxPD):
+    def get_control_obs_box(self):
+        """
+        """
+        self.command = AmrControlCommandEnum.CONTROL_GET_OBS_BOX
+        self.update_at = datetime.now(UTC)
+
+    def set_control_obs_box(self, req: RequestControlSetObsBoxPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_SET_OBS_BOX
-        self.min_x = req.min_x
-        self.min_y = req.min_y
-        self.min_z = req.min_z
-        self.max_x = req.max_x
-        self.max_y = req.max_y
-        self.max_z = req.max_z
-        self.map_range = req.map_range
+        self.min_x = req.minX
+        self.min_y = req.minY
+        self.min_z = req.minZ
+        self.max_x = req.maxX
+        self.max_y = req.maxY
+        self.max_z = req.maxZ
+        self.map_range = req.mapRange
         self.update_at = datetime.now(UTC)
 
 
-    def set_control_detect(self, req: Request_Control_DetectPD):
+    def set_control_detect(self, req: RequestControlDetectMarkerPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_DETECT
+        self.camera_number = req.cameraNumber
+        self.camera_serial = req.cameraSerial
+        self.marker_size = req.markerSize
         self.update_at = datetime.now(UTC)
 
-    def set_control_charge_trigger(self):
+    def set_control_charge_trigger(self, req: RequestControlChargeTriggerPD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_CHARGE_TRIGGER
+        self.control = req.control
         self.update_at = datetime.now(UTC)
 
 
@@ -235,56 +250,50 @@ class ControlModel:
         """
         """
         if self.robot_model is None:
-            raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
-        if self.command == AmrControlCommandEnum.CONTROL_FREQUENCY:
-            if self.target is None:
-                raise ServiceException("target 값이 비어있습니다", status_code=400)
-            if self.onoff is None:
-                raise ServiceException("onoff 값이 비어있습니다", status_code=400)
-            if self.frequency is None:
-                raise ServiceException("frequency 값이 비어있습니다", status_code=400)
-        elif self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
+            raise ServiceException("robotModel 값이 비어있습니다", status_code=400)
+
+        if self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_LED:
-            if self.onoff is None:
-                raise ServiceException("onoff 값이 비어있습니다", status_code=400)
+            if self.control is None:
+                raise ServiceException("control 값이 비어있습니다", status_code=400)
             if self.color is None:
                 raise ServiceException("color 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_MOTOR:
-            if self.onoff is None:
-                raise ServiceException("onoff 값이 비어있습니다", status_code=400)
+            if self.control is None:
+                raise ServiceException("control 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FIELD:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FIELD:
             if self.safety_field is None:
-                raise ServiceException("safety_field 값이 비어있습니다", status_code=400)
+                raise ServiceException("safetyField 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FLAG:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FLAG:
-            if self.safety_flags is None:
-                raise ServiceException("safety_flags 값이 비어있습니다", status_code=400)
+            if self.safety_flag is None:
+                raise ServiceException("safetyFlag 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_IO:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_IO:
             if self.mcu0_dio is None:
-                raise ServiceException("mcu0_dio 값이 비어있습니다", status_code=400)
+                raise ServiceException("mcu0Dio 값이 비어있습니다", status_code=400)
             if self.mcu1_dio is None:
-                raise ServiceException("mcu1_dio 값이 비어있습니다", status_code=400)
+                raise ServiceException("mcu1Dio 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_GET_OBS_BOX:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_OBS_BOX:
             if self.min_x is None:
-                raise ServiceException("min_x 값이 비어있습니다", status_code=400)
+                raise ServiceException("minX 값이 비어있습니다", status_code=400)
             if self.min_y is None:
-                raise ServiceException("min_y 값이 비어있습니다", status_code=400)
+                raise ServiceException("minY 값이 비어있습니다", status_code=400)
             if self.min_z is None:
-                raise ServiceException("min_z 값이 비어있습니다", status_code=400)
+                raise ServiceException("minZ 값이 비어있습니다", status_code=400)
             if self.max_x is None:
-                raise ServiceException("max_x 값이 비어있습니다", status_code=400)
+                raise ServiceException("maxX 값이 비어있습니다", status_code=400)
             if self.max_y is None:
-                raise ServiceException("max_y 값이 비어있습니다", status_code=400)
+                raise ServiceException("maxY 값이 비어있습니다", status_code=400)
             if self.max_z is None:
-                raise ServiceException("max_z 값이 비어있습니다", status_code=400)
+                raise ServiceException("maxZ 값이 비어있습니다", status_code=400)
             if self.map_range is None:
                 raise ServiceException("map_range 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_DETECT or self.command == AmrControlCommandEnum.CONTROL_CHARGE_TRIGGER:
@@ -303,17 +312,13 @@ class ControlModel:
         d["updateAt"] = self.update_at
         d["result"] = self.result
         d["message"] = self.message
-        if self.command == AmrControlCommandEnum.CONTROL_FREQUENCY:
-            d["target"] = self.target
-            d["onoff"] = self.onoff
-            d["frequency"] = self.frequency
-        elif self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
+        if self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_LED:
-            d["onoff"] = self.onoff
+            d["control"] = self.control
             d["color"] = self.color
         elif self.command == AmrControlCommandEnum.CONTROL_MOTOR:
-            d["onoff"] = self.onoff
+            d["control"] = self.control
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FIELD:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FIELD:
@@ -321,7 +326,7 @@ class ControlModel:
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FLAG:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FLAG:
-            d["safetyFlags"] = self.safety_flags
+            d["safetyFlag"] = self.safety_flag
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_IO:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_IO:

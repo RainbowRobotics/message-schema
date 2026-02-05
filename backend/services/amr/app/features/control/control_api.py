@@ -5,21 +5,26 @@
 from fastapi import APIRouter
 
 from .control_schema import (
-    Request_Control_DetectPD,
-    Request_Control_DockPD,
-    Request_Control_LEDPD,
-    Request_Control_ObsBoxPD,
-    Request_Control_SafetyFieldPD,
-    Request_Control_SafetyFlagPD,
-    Request_Control_SafetyIOPD,
-    Response_Control_ChargeTriggerPD,
-    Response_Control_DetectPD,
-    Response_Control_DockPD,
-    Response_Control_LEDPD,
-    Response_Control_ObsBoxPD,
-    Response_Control_SafetyFieldPD,
-    Response_Control_SafetyFlagPD,
-    Response_Control_SafetyIOPD,
+    RequestControlChargeTriggerPD,
+    RequestControlDetectMarkerPD,
+    RequestControlDockPD,
+    RequestControlLedModePD,
+    RequestControlSetObsBoxPD,
+    RequestSetSafetyFieldPD,
+    RequestSetSafetyFlagPD,
+    RequestSetSafetyIoPD,
+    ResponseControlChargeTriggerPD,
+    ResponseControlDetectMarkerPD,
+    ResponseControlDockPD,
+    ResponseControlGetObsBoxPD,
+    ResponseControlLedModePD,
+    ResponseControlSetObsBoxPD,
+    ResponseGetSafetyFieldPD,
+    ResponseGetSafetyFlagPD,
+    ResponseGetSafetyIoPD,
+    ResponseSetSafetyFieldPD,
+    ResponseSetSafetyFlagPD,
+    ResponseSetSafetyIoPD,
 )
 from .control_service import AmrControlService
 
@@ -78,11 +83,11 @@ amr_control_service = AmrControlService()
     """,
     response_description="도킹 처리 결과 반환"
 )
-async def slamnav_control_dock(robot_model: str, request: Request_Control_DockPD) -> Response_Control_DockPD:
+async def slamnav_control_dock(robot_model: str, request: RequestControlDockPD) -> ResponseControlDockPD:
     return await amr_control_service.control_dock(robot_model, request)
 
 @amr_control_router.post(
-    "/{robot_model}/control/charge",
+    "/{robot_model}/control/chargeTrigger",
     summary="충전 트리거 요청",
     description= """
 충전 트리거 명령을 요청합니다.
@@ -92,11 +97,17 @@ async def slamnav_control_dock(robot_model: str, request: Request_Control_DockPD
 - 일부 도킹스테이션 모델의 경우 충전 완료 후 도킹스테이션이 꺼집니다.
 - 충전 완료 이후 로봇이 계속 켜져있으면 전원이 방전되므로 일정 조건 도달 시, 충전 트리거를 요청해주세요.
 
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| control | bool | ✅ | - | 충전 트리거 켜기/끄기 | True/False |
+
 ## 📌 응답 바디(JSON)
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'chargeTrigger' |
+| control | bool | 충전 트리거 켜기/끄기 | True/False |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -113,12 +124,12 @@ async def slamnav_control_dock(robot_model: str, request: Request_Control_DockPD
     """,
     response_description="충전 트리거 처리 결과 반환"
 )
-async def slamnav_control_work_chargeTrigger(robot_model: str) -> Response_Control_ChargeTriggerPD:
-    return await amr_control_service.control_chargeTrigger(robot_model)
+async def slamnav_control_chargeTrigger(robot_model: str, request: RequestControlChargeTriggerPD) -> ResponseControlChargeTriggerPD:
+    return await amr_control_service.control_chargeTrigger(robot_model, request)
 
 
 @amr_control_router.get(
-    "/{robot_model}/control/safetyField",
+    "/{robot_model}/control/getSafetyField",
     summary="세이프티 영역 조회",
     description= """
 현재 설정된 세이프티 영역을 조회합니다.
@@ -132,8 +143,7 @@ async def slamnav_control_work_chargeTrigger(robot_model: str) -> Response_Contr
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'getSafetyField' |
-| safetyField | string | 설정된 세이프티 영역 | '1' |
+| safetyField | int | 설정된 세이프티 영역 | 1 |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -150,13 +160,13 @@ async def slamnav_control_work_chargeTrigger(robot_model: str) -> Response_Contr
     """,
     response_description="세이프티 영역 조회 결과 반환"
 )
-async def slamnav_control_safetyField(robot_model: str) -> Response_Control_SafetyFieldPD:
+async def slamnav_control_getSafetyField(robot_model: str) -> ResponseGetSafetyFieldPD:
     return await amr_control_service.control_get_safetyField(robot_model)
 
 
 @amr_control_router.post(
-    "/{robot_model}/control/safetyField",
-    summary="특정 작업 요청",
+    "/{robot_model}/control/setSafetyField",
+    summary="세이프티 영역 설정",
     description= """
 세이프티 영역을 설정합니다.
 
@@ -169,14 +179,13 @@ async def slamnav_control_safetyField(robot_model: str) -> Response_Control_Safe
 
 | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
 |-|-|-|-|-|-|
-| safetyField | string | ✅ | - | 세이프티 영역 | '1' |
+| safetyField | int | ✅ | - | 세이프티 영역 | 1 |
 
 ## 📌 응답 바디(JSON)
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'setSafetyField' |
-| safetyField | string | 설정된 세이프티 영역 | '1' |
+| safetyField | int | 설정된 세이프티 영역 | 1 |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -193,16 +202,16 @@ async def slamnav_control_safetyField(robot_model: str) -> Response_Control_Safe
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_set_safetyField(robot_model: str, request: Request_Control_SafetyFieldPD) -> Response_Control_SafetyFieldPD:
+async def slamnav_control_setSafetyField(robot_model: str, request: RequestSetSafetyFieldPD) -> ResponseSetSafetyFieldPD:
     return await amr_control_service.control_set_safetyField(robot_model, request)
 
 
 
 @amr_control_router.get(
-    "/{robot_model}/control/safetyFlag",
-    summary="세이프티 플래그 값 요청",
+    "/{robot_model}/control/getSafetyFlag",
+    summary="세이프티 플래그 조회",
     description= """
-세이프티 플래그 값을 요청합니다.
+세이프티 플래그를 조회합니다.
 
 ## 📌 기능 설명
 - 세이프티 기능을 지원하는 모델만 사용가능합니다.
@@ -224,7 +233,7 @@ async def slamnav_control_set_safetyField(robot_model: str, request: Request_Con
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| flags | SafetyFlag[] | 초기화할 세이프티 플래그 | [{name:'obstacle',value:false}, {name:'interlock',value:true}] |
+| safetyFlag | SafetyFlag[] | 세이프티 플래그 | [{name:'obstacle',value:false}, {name:'interlock',value:true}] |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -241,16 +250,16 @@ async def slamnav_control_set_safetyField(robot_model: str, request: Request_Con
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_get_safetyFlag(robot_model: str) -> Response_Control_SafetyFlagPD:
+async def slamnav_control_getSafetyFlag(robot_model: str) -> ResponseGetSafetyFlagPD:
     return await amr_control_service.control_get_safetyFlag(robot_model)
 
 
 
 @amr_control_router.post(
-    "/{robot_model}/control/safetyFlag",
-    summary="세이프티 플래그 초기화",
+    "/{robot_model}/control/setSafetyFlag",
+    summary="세이프티 플래그 설정",
     description= """
-세이프티 플래그를 초기화합니다.
+세이프티 플래그를 설정합니다.
 
 ## 📌 기능 설명
 - 세이프티 기능을 지원하는 모델만 사용가능합니다.
@@ -266,7 +275,7 @@ async def slamnav_control_get_safetyFlag(robot_model: str) -> Response_Control_S
 
 | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
 |-|-|-|-|-|-|
-| flags | SafetyFlag[] | ✅ | - | 초기화할 세이프티 플래그 | [{name:'obstacle',value:false}] |
+| safetyFlag | SafetyFlag[] | ✅ | - | 세이프티 플래그 초기화 | [{name:'obstacle',value:false}] |
 
 ## 📌 SafetyFlag
 
@@ -279,7 +288,7 @@ async def slamnav_control_get_safetyFlag(robot_model: str) -> Response_Control_S
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| flags | SafetyFlag[] | 초기화할 세이프티 플래그 | [{name:'obstacle',value:false}] |
+| safetyFlag | SafetyFlag[] | 세이프티 플래그 | [{name:'obstacle',value:false}] |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -296,7 +305,7 @@ async def slamnav_control_get_safetyFlag(robot_model: str) -> Response_Control_S
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_set_safetyFlag(robot_model: str, request: Request_Control_SafetyFlagPD) -> Response_Control_SafetyFlagPD:
+async def slamnav_control_setSafetyFlag(robot_model: str, request: RequestSetSafetyFlagPD) -> ResponseSetSafetyFlagPD:
     return await amr_control_service.control_set_safetyFlag(robot_model, request)
 
 
@@ -315,15 +324,14 @@ LED의 수동 제어를 요청합니다.
 
 | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
 |-|-|-|-|-|-|
-| onoff | boolean | ✅ | - | LED 수동 제어 켜고 끌지를 결정합니다. | true |
+| control | bool | ✅ | - | LED 수동 제어 켜고 끌지를 결정합니다. | true |
 | color | string | - | - | LED 색상을 입력합니다. onoff가 true일 경우에만 사용됩니다. | 'none','red', 'blue', 'white', 'green', 'magenta', 'yellow', 'red_blink', 'blue_blink', 'white_blink', 'green_blink', 'magenta_blink', 'yellow_blink' |
 
 ## 📌 응답 바디(JSON)
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'ledControl' |
-| onoff | boolean | LED 수동 제어 켜고 끌지를 결정합니다. | true |
+| control | bool | LED 수동 제어 켜고 끌지를 결정합니다. | true |
 | color | string | LED 색상을 입력합니다. onoff가 true일 경우에만 사용됩니다. | 'none','red', 'blue', 'white', 'green', 'magenta', 'yellow', 'red_blink', 'blue_blink', 'white_blink', 'green_blink', 'magenta_blink', 'yellow_blink' |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
@@ -343,57 +351,12 @@ LED의 수동 제어를 요청합니다.
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_led(robot_model: str, request: Request_Control_LEDPD) -> Response_Control_LEDPD:
+async def slamnav_control_led(robot_model: str, request: RequestControlLedModePD) -> ResponseControlLedModePD:
     return await amr_control_service.control_led(robot_model, request)
 
 
-@amr_control_router.post(
-    "/{robot_model}/control/safetyIo",
-    summary="세이프티 IO 설정",
-    description= """
-세이프티 IO를 설정합니다.
-
-## 📌 기능 설명
-- 세이프티 IO를 지원하는 모델만 사용가능합니다.
-- MCU의 DIO를 제어하는 기능입니다.
-- MCU의 DIO는 0번 핀부터 7번 핀까지 순서대로 제어합니다.
-
-## 📌 요청 바디(JSON)
-
-| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
-|-|-|-|-|-|-|
-| mcuDio | number[][] | ✅ | 0/1 | MCU DIO 제어. 0번 핀부터 7번 핀까지 순서대로 입력하세요. <br> 예로 [0,0,0,0,0,1,1,1] 은 0번 핀부터 7번 핀까지 순서대로 0,0,0,0,0,1,1,1 로 제어합니다. | [[0,0,0,0,0,1,1,1], [1,0,0,0,0,0,0,0]] |
-
-## 📌 응답 바디(JSON)
-
-| 필드명       | 타입    | 설명                          | 예시 |
-|-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'setDigitalIO' |
-| mcuDio | number[][] | MCU DIO 제어. 0번 핀부터 7번 핀까지 순서대로 입력하세요. <br> 예로 [0,0,0,0,0,1,1,1] 은 0번 핀부터 7번 핀까지 순서대로 0,0,0,0,0,1,1,1 로 제어합니다. | [[0,0,0,0,0,1,1,1], [1,0,0,0,0,0,0,0]] |
-| result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
-| message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
-
-## ⚠️ 에러 케이스
-### **403** INVALID_ARGUMENT
-  - 파라메터가 없거나 잘못된 값일 때
-### **409** CONFLICT
-  - 요청한 명령을 수행할 수 없을 때
-  - SLAMNAV에서 거절했을 때
-### **500** INTERNAL_SERVER_ERROR
-  - DB관련 에러 등 서버 내부적인 에러
-### **502** BAD_GATEWAY
-  - SLAMNAV와 연결되지 않았을 때
-### **504** DEADLINE_EXCEEDED
-  - SLAMNAV로부터 응답을 받지 못했을 때
-    """,
-    response_description="특정 작업 처리 결과 반환"
-)
-async def slamnav_control_set_safetyIo(robot_model: str, request: Request_Control_SafetyIOPD) -> Response_Control_SafetyIOPD:
-    return await amr_control_service.control_set_safetyIo(robot_model, request)
-
-
 @amr_control_router.get(
-    "/{robot_model}/control/safetyIo",
+    "/{robot_model}/control/getSafetyIo",
     summary="세이프티 IO 조회",
     description= """
 세이프티 IO를 조회합니다.
@@ -407,9 +370,10 @@ async def slamnav_control_set_safetyIo(robot_model: str, request: Request_Contro
 
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
-| command | string | 요청 명령 | 'setDigitalIO' |
-| mcuDio | number[][] | MCU DIO. 0번 핀부터 7번 핀 순서대로 조회합니다. | [[0,0,0,0,0,1,1,1], [1,0,0,0,0,0,0,0]] |
-| mcuDin | number[][] | MCU DIN. 0번 핀부터 7번 핀 순서대로 조회합니다. | [[0,0,0,0,0,1,1,1], [1,0,0,0,0,0,0,0]] |
+| mcu0Dio | bool[] | MCU0 DIO. 0번 핀부터 7번 핀 순서대로 조회합니다. | [False, True, False, True, False, True, False, True] |
+| mcu0Din | bool[] | MCU0 DIN. 0번 핀부터 7번 핀 순서대로 조회합니다. | [False, True, False, True, False, True, False, True] |
+| mcu1Dio | bool[] | MCU1 DIO. 0번 핀부터 7번 핀 순서대로 조회합니다. | [False, True, False, True, False, True, False, True] |
+| mcu1Din | bool[] | MCU1 DIN. 0번 핀부터 7번 핀 순서대로 조회합니다. | [False, True, False, True, False, True, False, True] |
 | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
 | message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
 
@@ -428,12 +392,60 @@ async def slamnav_control_set_safetyIo(robot_model: str, request: Request_Contro
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_get_safetyIo(robot_model: str) -> Response_Control_SafetyIOPD:
+async def slamnav_control_getSafetyIo(robot_model: str) -> ResponseGetSafetyIoPD:
     return await amr_control_service.control_get_safetyIo(robot_model)
+
+@amr_control_router.post(
+    "/{robot_model}/control/setSafetyIo",
+    summary="세이프티 IO 설정",
+    description= """
+세이프티 IO를 설정합니다.
+
+## 📌 기능 설명
+- 세이프티 IO를 지원하는 모델만 사용가능합니다.
+- MCU의 DIO를 제어하는 기능입니다.
+- MCU의 DIO는 0번 핀부터 7번 핀까지 순서대로 제어합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| mcu0Din | bool[] | ✅ | - | MCU0 Digital Input (8bit) | [False, True, False, True, False, True, False, True] |
+| mcu1Din | bool[] | ✅ | - | MCU1 Digital Input (8bit) | [False, True, False, True, False, True, False, True] |
+
+## 📌 응답 바디(JSON)
+
+| 필드명       | 타입    | 설명                          | 예시 |
+|-------------|---------|-------------------------------|--------|
+| mcu0Din | bool[] | MCU0 Digital Input (8bit) | [False, True, False, True, False, True, False, True] |
+| mcu1Din | bool[] | MCU1 Digital Input (8bit) | [False, True, False, True, False, True, False, True] |
+| mcu0Dio | bool[] | MCU0 Digital Output (8bit) | [False, True, False, True, False, True, False, True] |
+| mcu1Dio | bool[] | MCU1 Digital Output (8bit) | [False, True, False, True, False, True, False, True] |
+| result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
+| message | string | result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다. | '' |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 파라메터가 없거나 잘못된 값일 때
+### **409** CONFLICT
+  - 요청한 명령을 수행할 수 없을 때
+  - SLAMNAV에서 거절했을 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+### **502** BAD_GATEWAY
+  - SLAMNAV와 연결되지 않았을 때
+### **504** DEADLINE_EXCEEDED
+  - SLAMNAV로부터 응답을 받지 못했을 때
+    """,
+    response_description="특정 작업 처리 결과 반환"
+)
+async def slamnav_control_set_safetyIo(robot_model: str, request: RequestSetSafetyIoPD) -> ResponseSetSafetyIoPD:
+    return await amr_control_service.control_set_safetyIo(robot_model, request)
+
 
 
 @amr_control_router.get(
-    "/{robot_model}/control/obsbox",
+    "/{robot_model}/control/getObsBox",
     summary="장애물감지 영역 조회",
     description= """
 장애물감지 영역을 조회합니다.
@@ -471,12 +483,12 @@ async def slamnav_control_get_safetyIo(robot_model: str) -> Response_Control_Saf
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_get_obsbox(robot_model: str) -> Response_Control_ObsBoxPD:
+async def slamnav_control_getObsBox(robot_model: str) -> ResponseControlGetObsBoxPD:
     return await amr_control_service.control_get_obsbox(robot_model)
 
 
 @amr_control_router.post(
-    "/{robot_model}/control/obsbox",
+    "/{robot_model}/control/setObsBox",
     summary="장애물감지 영역 설정",
     description= """
 장애물감지 영역을 설정합니다.
@@ -526,15 +538,15 @@ async def slamnav_control_get_obsbox(robot_model: str) -> Response_Control_ObsBo
     """,
     response_description="특정 작업 처리 결과 반환"
 )
-async def slamnav_control_set_obsbox(robot_model: str, request: Request_Control_ObsBoxPD) -> Response_Control_ObsBoxPD:
+async def slamnav_control_setObsBox(robot_model: str, request: RequestControlSetObsBoxPD) -> ResponseControlSetObsBoxPD:
     return await amr_control_service.control_set_obsbox(robot_model, request)
 
 
 @amr_control_router.post(
-    "/{robot_model}/control/detect",
-    summary="센서 감지 요청",
+    "/{robot_model}/control/detectMarker",
+    summary="마커 감지 요청",
     description= """
-  감지를 요청합니다.
+  마커를 감지합니다.
 
   ## 📌 기능 설명
   - 카메라 등의 센서로 감지를 요청합니다.
@@ -547,10 +559,9 @@ async def slamnav_control_set_obsbox(robot_model: str, request: Request_Control_
 
   | 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
   |-|-|-|-|-|-|
-  | command | string | ✅ | - | 감지 명령 | 'aruco' |
   | cameraNumber | number | - | - | 카메라 번호 | 0 |
   | cameraSerial | string | - | - | 카메라 시리얼넘버 | '1234567890' |
-  | size | number | - | m | 아르코마커 사이즈 | 0.1 |
+  | markerSize | number | - | m | 아르코마커 사이즈 | 0.1 |
 
   ## 📌 응답 바디(JSON)
 
@@ -559,7 +570,7 @@ async def slamnav_control_set_obsbox(robot_model: str, request: Request_Control_
   | command | string | 감지 명령 | 'aruco' |
   | cameraNumber | number | 카메라 번호 | 0 |
   | cameraSerial | string | 카메라 시리얼넘버 | '1234567890' |
-  | size | number | 아르코마커 사이즈 | 0.1 |
+  | markerSize | number | 아르코마커 사이즈 | 0.1 |
   | pose | number[] | 아르코마커의 pose(x,y,z,roll,pitch,yaw) | [[0.1, -2.3, 0.0, 0.0, 0.0, 0.0]] |
   | tf | number[] | 아르코마커의 tf(4x4) | [[1.0, 0.0, 0.0, 0.1, 0.0, 1.0, 0.0, -2.3, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]] |
   | result | string | 요청한 명령에 대한 결과입니다. | 'accept', 'reject' |
@@ -580,5 +591,5 @@ async def slamnav_control_set_obsbox(robot_model: str, request: Request_Control_
     """,
     response_description="센서 감지 처리 결과 반환"
 )
-async def slamnav_control_detect(robot_model: str, request: Request_Control_DetectPD) -> Response_Control_DetectPD:
+async def slamnav_control_detectMarker(robot_model: str, request: RequestControlDetectMarkerPD) -> ResponseControlDetectMarkerPD:
     return await amr_control_service.control_detect(robot_model, request)
