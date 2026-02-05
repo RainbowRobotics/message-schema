@@ -370,7 +370,7 @@ echo "app_names: ${app_names[@]}"
 echo "app_dirs: ${app_dirs[@]}"
 
 # 빌드 실행
-# build_project "$names_str" || exit 1
+build_project "$names_str" || exit 1
 
 new_versions=()
 
@@ -378,8 +378,6 @@ new_versions=()
 for i in "${!app_names[@]}"; do
     app_name="${app_names[$i]}"
     app_dir="${app_dirs[$i]}"
-
-    echo "app_name: ${app_name}"
 
     if [[ "$last_git_work_status" = "bad" ]]; then
         break
@@ -392,16 +390,12 @@ for i in "${!app_names[@]}"; do
         new_version=$(get_app_version $version_type $app_name)
     fi
 
-    echo "new_version: ${new_version}"
-
     # 태그 버전 생성
     if [ "$is_hotfix" = "yes" ]; then
         tag_version="deploy_hotfix/${app_name}/${current_branch}/${new_version}"
     else
         tag_version="deploy/${app_name}/${current_branch}/${new_version}"
     fi
-
-    echo "tag_version: ${tag_version}"
 
     # 배포 메시지 생성
     deploy_message="deploy: [App: ${app_name}, Version: ${new_version}] release 배포"
@@ -413,14 +407,12 @@ for i in "${!app_names[@]}"; do
     fi
 
     if [[ "$last_git_work_status" = "normal" ]]; then
-        echo "git_tag_work!!!"
         # Git 작업 실행
         git_tag_work "$new_version" "$tag_version" "$app_dir" "$app_name" "$deploy_message" || last_git_work_status="bad"
     fi
 
 
     if [[ "$last_git_work_status" = "bad" ]]; then
-        echo "git work status BAD!!!"
         git tag -d $tag_version
         git push origin --delete $tag_version
     else
@@ -428,12 +420,8 @@ for i in "${!app_names[@]}"; do
     fi
 done
 
-echo "last_git_work_status!@: ${last_git_work_status}"
-
 # .bin 추적 해제 및 ignore 복구 커밋
 git_cleanup_bin_track "${app_names}"
-
-echo "git_cleanup_bin_track!!!"
 
 if [[ "$last_git_work_status" = "normal" ]]; then
     sleep 10
@@ -449,13 +437,10 @@ if [[ "$last_git_work_status" = "normal" ]]; then
         fi
     else
         release_tag_version="release/dev-total/${current_branch}/${timestamp}"
-        echo "release_tag_version: ${release_tag_version}"
         git_tag_work_total "$new_total_version" "$release_tag_version" "$release_message" || last_git_work_status="bad"
-        echo "git_tag_work_total!!!"
     fi
 
     if [[ "$last_git_work_status" = "bad" ]]; then
-        echo "last_git_work_status BAD!!!"
         git tag -d $release_tag_version
         git push origin --delete $release_tag_version
     fi
@@ -463,8 +448,6 @@ fi
 
 # 완료 메시지 출력
 if [ "$last_git_work_status" = "normal" ]; then
-    echo "last_git_work_status NORMAL!!!"
-    echo "new_versions: ${new_versions[@]}"
     print_completion_message "$new_versions"
     exit 0
 else
