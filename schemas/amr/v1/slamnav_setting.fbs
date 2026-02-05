@@ -259,18 +259,21 @@ table ResponseSetSensorControl {
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------          RPC(Query)          --------
+// -----------     Pub / Sub  (Result )     --------
 // -----------                              --------
 // -------------------------------------------------
 
 /*
-    category    :       RPC ( Result )
+    category    :       Pub / Sub (Result)
     topic       :       {robotType}/setting/result/param
     usage       :       설정 파라미터 결과 응답
     field
         - params        :       파라미터 목록
-        - result        :       결과 상태
-        - message       :       결과 메시지
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
 table ResultSettingParam {
     id: string;
@@ -280,15 +283,18 @@ table ResultSettingParam {
 }
 
 /*
-    category    :       RPC ( Result )
+    category    :       Pub / Sub (Result)
     topic       :       {robotType}/setting/result/sensor
     usage       :       센서 설정 결과 응답
     field
         - target        :       센서 대상
         - control       :       센서 동작 On/Off 상태
         - index         :       센서 정보 목록
-        - result        :       결과 상태
-        - message       :       결과 메시지
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
 table ResultSettingSensor {
     id: string;
