@@ -49,6 +49,9 @@ function get_service_name() {
                 fi
             fi
         done
+        # host 배포 포함
+        app_names+=("host")
+        app_dirs+=("backend/host")
     else
         # 기존 로직: 쉼표로 구분된 입력을 배열로 변환
         IFS=',' read -ra input_array <<< "${input}"
@@ -56,7 +59,10 @@ function get_service_name() {
         for app_name in "${input_array[@]}"; do
             # 앱 이름에서 공백 제거
             app_name=$(echo "${app_name}" | xargs)
-            if [ -d "backend/services/${app_name}" ] && [[ ! " ${app_names[@]} " =~ " ${app_name} " ]]; then
+            if [ "$app_name" = "host" ]; then
+                app_names+=("host")
+                app_dirs+=("backend/host")
+            elif [ -d "backend/services/${app_name}" ] && [[ ! " ${app_names[@]} " =~ " ${app_name} " ]]; then
                 app_names+=("${app_name}")
                 app_dirs+=("backend/services/${app_name}")
             else
@@ -97,6 +103,7 @@ function git_cleanup_bin_track() {
 
     for app_name in "${app_names[@]}"; do
         bin_files+=($(find backend/services/${app_name} -type f -name "*.bin"))
+        bin_files+=($(find backend/host -type f -name "*.bin"))
     done
 
     if [ ${#bin_files[@]} -gt 0 ]; then
@@ -121,6 +128,7 @@ function git_tag_work() {
         print_string "warning" "'${tag_version}' 로컬 태그가 이미 있어 삭제합니다"
         git tag -d "${tag_version}" || true
     fi
+
     if git ls-remote --tags origin | awk '{print $2}' | grep -Fxq "refs/tags/${tag_version}"; then
         print_string "warning" "'${tag_version}' 원격 태그가 이미 있어 삭제합니다"
         git push origin ":refs/tags/${tag_version}" || true
@@ -139,12 +147,19 @@ function git_tag_work() {
         git add -f "${app_dir}/${app_name}.amd64.bin" || { print_string "error" "Git add ${app_name}.amd64.bin 실패"; return 1; }
     fi
 
+    if [ -f "${app_dir}/${app_name}.bin" ] && [ $app_dir != "." ]; then
+        echo "git add -f ${app_dir}/${app_name}.bin"
+        git add -f "${app_dir}/${app_name}.bin" || { print_string "error" "Git add ${app_name}.bin 실패"; return 1; }
+    fi
+
     # 태그용 임시 커밋
     git commit --allow-empty -m "chore: Deploy ${app_name} ${new_version}" || { print_string "error" "Git commit 실패"; return 1; }
+
 
     # 태그 생성 + push
     git tag -a "$tag_version" -m "$release_message" || { print_string "error" "Git tag 실패"; return 1; }
     git push origin "$tag_version" || { print_string "error" "Git tag push 실패"; return 1; }
+    echo "git push origin $tag_version"
 
     # 태그 로컬 제거
     git tag -d "$tag_version" || { print_string "error" "Git tag 삭제 실패"; return 1; }
@@ -363,8 +378,6 @@ new_versions=()
 for i in "${!app_names[@]}"; do
     app_name="${app_names[$i]}"
     app_dir="${app_dirs[$i]}"
-
-    echo "app_name: ${app_name}"
 
     if [[ "$last_git_work_status" = "bad" ]]; then
         break

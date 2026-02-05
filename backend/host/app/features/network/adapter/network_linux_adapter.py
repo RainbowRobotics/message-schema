@@ -142,7 +142,7 @@ def _build_network(device: str, typ: str) -> Optional[Network]:
     # 7) 신호강도 조회 후 signal 반환
     signal = wifi_signal_from_proc(device) if typ in {"wifi", "802-11-wireless"} else None
 
-    # 7) Network 객체 반환
+    # 8) Network 객체 반환
     return Network(
         device=device,
         dhcp=dhcp,
@@ -202,6 +202,7 @@ def _build_networkT(device: str, typ: str) -> Optional[Network]:
         dns=dns,
         signal=signal
     )
+
 def wifi_signal_from_proc(device: str) -> Optional[int]:
     """
     /proc/net/wireless 의 link quality(0~70 근처)를 0~100으로 대충 매핑.

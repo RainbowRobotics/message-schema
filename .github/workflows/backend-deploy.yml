@@ -50,26 +50,41 @@ jobs:
       - name: Check App Directory and dist file
         run: |
           APP_DIR="backend/services/${{ env.APP_NAME }}"
+          HOST_DIR="backend/host"
           API_GATEWAY_DIR="api-gateway"
 
           ls -al
 
-          ls -al $APP_DIR
+          if [ "$APP_NAME" == "host" ]; then
+            ls -al $HOST_DIR
+            if [ ! -d "$HOST_DIR" ]; then
+              echo "Error: ${{ env.APP_NAME }} directory not found: $HOST_DIR"
+              exit 1
+            fi
 
-          if [ ! -d "$APP_DIR" ]; then
-            echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
-            exit 1
+            if [ ! -f "$HOST_DIR/host.bin" ]; then
+              echo "Error: bin file not found: $HOST_DIR/host.bin"
+              exit 1
+            fi
+          else
+            ls -al $APP_DIR
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
+              exit 1
+            fi
+
+            if [ ! -f "$APP_DIR/${{ env.APP_NAME }}.arm64.bin" ] || [ ! -f "$APP_DIR/${{ env.APP_NAME }}.amd64.bin" ]; then
+              echo "Error: bin file not found: $APP_DIR/${{ env.APP_NAME }}.arm64.bin or $APP_DIR/${{ env.APP_NAME }}.amd64.bin"
+              exit 1
+            fi
           fi
+
 
           if [ ! -d "$API_GATEWAY_DIR" ]; then
             echo "Error: API Gateway directory not found: $API_GATEWAY_DIR"
             exit 1
           fi
 
-          if [ ! -f "$APP_DIR/${{ env.APP_NAME }}.arm64.bin" ] || [ ! -f "$APP_DIR/${{ env.APP_NAME }}.amd64.bin" ]; then
-            echo "Error: bin file not found: $APP_DIR/${{ env.APP_NAME }}.arm64.bin or $APP_DIR/${{ env.APP_NAME }}.amd64.bin"
-            exit 1
-          fi
 
       - name: Compress bin directory
         run: |
@@ -77,9 +92,14 @@ jobs:
           mkdir -p dist
           mkdir -p dist/scripts/backend/
 
-          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
-          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
-          cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
+          if [ "$APP_NAME" == "host" ]; then
+            cp -R backend/host/host.bin dist/
+            cp -R backend/host/config.env dist/
+          else
+            cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
+            cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
+            cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
+          fi
 
           cp -R scripts/backend/production-entrypoint.sh dist/scripts/backend/
 
