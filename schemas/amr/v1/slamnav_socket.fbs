@@ -67,7 +67,7 @@ table Lidar2D {
     usage       :       3D 라이다 포인트 클라우드 데이터
                 :       데이터가 방대하여, 요청 시 전달 예정.
     field
-        - id            :       uuid
+        - id            :       
         - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
                         :       필요시, point filter로 개수 줄일 수 있음.
 */
