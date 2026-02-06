@@ -42,6 +42,7 @@ table SensorInfo {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/setting/getRobotType
     usage       :       로봇 타입 조회
     field
@@ -60,6 +61,7 @@ table ResponseGetRobotType {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/setting/setRobotType
     usage       :       로봇 타입 설정
     field
@@ -117,6 +119,7 @@ table ResponseSetSettingParam {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/setting/getPduParam
     usage       :       PDU 파라미터 조회
     field
@@ -135,6 +138,7 @@ table ResponseGetPduParam {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/setting/setPduParam
     usage       :       PDU 파라미터 설정
     field
@@ -154,6 +158,7 @@ table ResponseSetPduParam {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/setting/getDriveParam
     usage       :       드라이브 파라미터 조회
     field
@@ -172,11 +177,12 @@ table ResponseGetDriveParam {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/setting/getSensorInfo
     usage       :       센서 정보 조회
     field
-        - target        :       센서 대상
-        - index         :       센서 정보 목록
+        - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
+        - info          :       센서 정보 목록
 */
 table RequestGetSensorInfo {
     id: string;
@@ -185,7 +191,7 @@ table RequestGetSensorInfo {
 table ResponseGetSensorInfo {
     id: string;
     target: string;
-    index: [SensorInfo];
+    info: [SensorInfo];
     result: string;
     message: string;
 }
@@ -193,21 +199,22 @@ table ResponseGetSensorInfo {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/setting/setSensorInfo
     usage       :       센서 정보 설정
     field
-        - target        :       센서 대상
-        - index         :       센서 정보 목록
+        - target        :       센서 대상  ( "camera", "lidar2d", "lidar3d" )
+        - info          :       센서 정보 목록
 */
 table RequestSetSensorInfo {
     id: string;
     target: string;
-    index: [SensorInfo];
+    info: [SensorInfo];
 }
 table ResponseSetSensorInfo {
     id: string;
     target: string;
-    index: [SensorInfo];
+    info: [SensorInfo];
     result: string;
     message: string;
 }
@@ -215,42 +222,55 @@ table ResponseSetSensorInfo {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/setting/getSensorControl
-    usage       :       센서 제어 상태 조회
+    response    :       One-shot
+    topic       :       {robotType}/setting/getSensorMode
+    usage       :       센서 mode 상태 조회
     field
-        - target        :       센서 대상
-        - control       :       센서 동작 on / off
+        - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
+        - index         :       센서 인덱스 ( 0 , 1 , ...)
+        - serial        :       센서 시리얼 ( serial_num / IP )
+        - mode          :       센서 동작 ( "on" / "off" )
 */
-table RequestGetSensorControl {
+table RequestGetSensorMode {
     id: string;
     target: string;
-    control: bool;
+    index: int;
+    serial: string;
 }
-table ResponseGetSensorControl {
+table ResponseGetSensorMode {
     id: string;
     target: string;
-    control: bool;
+    index: int;
+    serial: string;
+    mode: string;
     result: string;
     message: string;
 }
 
 /*
     category    :       RPC
-    topic       :       {robotType}/setting/setSensorControl
-    usage       :       센서 제어 설정
+    response    :       Callback
+    topic       :       {robotType}/setting/setSensorMode
+    usage       :       센서 Mode 상태 설정
     field
-        - target        :       센서 대상
-        - control       :       센서 동작 on / off
+        - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
+        - index         :       센서 인덱스 ( 0 , 1 , ...)
+        - serial        :       센서 시리얼 ( serial_num / IP )
+        - mode          :       센서 동작 ( "on" / "off" )
 */
-table RequestSetSensorControl {
+table RequestSetSensorMode {
     id: string;
     target: string;
-    control: bool;
+    index: int;
+    serial: string;
+    mode: string;
 }
-table ResponseSetSensorControl {
+table ResponseSetSensorMode {
     id: string;
     target: string;
-    control: bool;
+    index: int;
+    serial: string;
+    mode: string;
     result: string;
     message: string;
 }
@@ -263,33 +283,18 @@ table ResponseSetSensorControl {
 // -----------                              --------
 // -------------------------------------------------
 
-/*
-    category    :       Pub / Sub (Result)
-    topic       :       {robotType}/setting/result/param
-    usage       :       설정 파라미터 결과 응답
-    field
-        - params        :       파라미터 목록
-        - result        :       이동 결과
-            - success       :       동작 성공.
-            - fail          :       동작 실패.
-            - start         :       동작 시작.
-            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
-*/
-table ResultSettingParam {
-    id: string;
-    params: [SettingParam];
-    result: string;
-    message: string;
-}
 
 /*
     category    :       Pub / Sub (Result)
-    topic       :       {robotType}/setting/result/sensor
-    usage       :       센서 설정 결과 응답
+    topic       :       {robotType}/setting/result
+    usage       :       setting 결과 응답
     field
-        - target        :       센서 대상
-        - control       :       센서 동작 On/Off 상태
-        - index         :       센서 정보 목록
+        - command       :       Setting Callback 명령 (string)
+            - "setSensorMode"
+        - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
+        - index         :       센서 인덱스 ( 0 , 1 , ...)
+        - serial        :       센서 시리얼 ( serial_num / IP )
+        - mode          :       센서 동작 ( "on" / "off" )
         - result        :       이동 결과
             - success       :       동작 성공.
             - fail          :       동작 실패.
@@ -298,9 +303,31 @@ table ResultSettingParam {
 */
 table ResultSettingSensor {
     id: string;
+    command: string;
     target: string;
-    control: bool;
-    index: [SensorInfo];
+    index: int;
+    serial: string;
+    mode: string;
     result: string;
     message: string;
 }
+
+
+// /*
+//     category    :       Pub / Sub (Result)
+//     topic       :       {robotType}/setting/result/param
+//     usage       :       설정 파라미터 결과 응답
+//     field
+//         - params        :       파라미터 목록
+//         - result        :       이동 결과
+//             - success       :       동작 성공.
+//             - fail          :       동작 실패.
+//             - start         :       동작 시작.
+//             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+// */
+// table ResultSettingParam {
+//     id: string;
+//     params: [SettingParam];
+//     result: string;
+//     message: string;
+// }
