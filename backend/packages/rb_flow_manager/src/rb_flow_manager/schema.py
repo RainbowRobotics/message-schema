@@ -21,6 +21,7 @@ class MakeProcessArgs(TypedDict):
     min_step_interval: float | None = None
     is_ui_execution: bool = False
     post_tree:  Union["Step", None] = None
+    parent_process_id: str | None = None
 
 class RB_Flow_Manager_ProgramState(str, Enum):
     IDLE = "idle"
