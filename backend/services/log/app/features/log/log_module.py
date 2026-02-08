@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import io
 from datetime import (
@@ -16,6 +17,7 @@ from fastapi.responses import (
 from pymongo import DESCENDING
 from rb_database.mongo_db import (
     MongoDB,
+    get_db,
 )
 from rb_database.utils import (
     make_check_date_range_query,
@@ -24,6 +26,9 @@ from rb_database.utils import (
 )
 from rb_modules.log import (
     rb_log,
+)
+from rb_modules.service import (
+    BaseService,
 )
 from rb_utils.asyncio_helper import (
     fire_and_log,
@@ -42,8 +47,14 @@ from .log_schema import (
 )
 
 
-class LogService:
+class LogService(BaseService):
+    singleton = True
+
     def __init__(self):
+        if getattr(self, "_service_initialized", False):
+            return
+
+        super().__init__()
         self._level_to_name = {
             0: "info",
             1: "warning",
@@ -53,6 +64,78 @@ class LogService:
             5: "general",
         }
         self._name_to_level = {v: k for k, v in self._level_to_name.items()}
+
+        #메모리 카운터
+        self._error_count = 0
+        self._warning_count = 0
+        self._count_lock = asyncio.Lock()
+        self._initialized = False  #초기화 플래그
+        self._service_initialized = True
+
+    async def _ensure_initialized(self, db: MongoDB):
+        """첫 호출 시 자동으로 초기화 (lazy initialization)"""
+        if self._initialized:
+            return
+
+        async with self._count_lock:
+            # Double-check pattern
+            if self._initialized:
+                return
+
+            try:
+                now_dt = datetime.now(UTC)
+                cutoff_dt = now_dt - timedelta(hours=24)
+
+                self._error_count = await db["state_logs"].count_documents(
+                    {"level": {"$in": [2, "error"]}, "createdAtDt": {"$gte": cutoff_dt}}
+                )
+
+                self._warning_count = await db["state_logs"].count_documents(
+                    {"level": {"$in": [1, "warning"]}, "createdAtDt": {"$gte": cutoff_dt}}
+                )
+
+                self._initialized = True
+
+                rb_log.info(f"📊 Log counters initialized: error={self._error_count}, warning={self._warning_count}")
+
+            except Exception as e:
+                rb_log.error(f"Failed to initialize counters: {e}")
+
+    async def start_count_updater(self):
+        """백그라운드: 1분마다 DB와 동기화 (startup에서 호출)"""
+        db = await get_db()
+
+        while True:
+            try:
+                await asyncio.sleep(60)
+
+                #초기화되지 않았다면 먼저 초기화
+                await self._ensure_initialized(db)
+
+                now_dt = datetime.now(UTC)
+                cutoff_dt = now_dt - timedelta(hours=24)
+
+                error_cnt = await db["state_logs"].count_documents(
+                    {"level": {"$in": [2, "error"]}, "createdAtDt": {"$gte": cutoff_dt}}
+                )
+
+                warning_cnt = await db["state_logs"].count_documents(
+                    {"level": {"$in": [1, "warning"]}, "createdAtDt": {"$gte": cutoff_dt}}
+                )
+
+                async with self._count_lock:
+                    if self._error_count != error_cnt:
+                        rb_log.debug(f"📊 Error count synced: {self._error_count} → {error_cnt}")
+                        self._error_count = error_cnt
+                        await socket_client.emit("error_log_count_for_24h", {"count": error_cnt})
+
+                    if self._warning_count != warning_cnt:
+                        rb_log.debug(f"📊 Warning count synced: {self._warning_count} → {warning_cnt}")
+                        self._warning_count = warning_cnt
+                        await socket_client.emit("warning_log_count_for_24h", {"count": warning_cnt})
+
+            except Exception as e:
+                rb_log.error(f"count updater error: {e}")
 
     async def get_log_list(
         self,
@@ -129,17 +212,44 @@ class LogService:
         }
 
     async def error_log_count_for_24h(self, *, db: MongoDB):
-        now_utc = datetime.now(UTC)
+        """API 엔드포인트용: DB에서 정확한 값 조회"""
+        if self._initialized:
+            return {"count": self._error_count}
 
+        await self._ensure_initialized(db)  #자동 초기화
+
+        now_utc = datetime.now(UTC)
         cutoff_dt = now_utc - timedelta(hours=24)
 
         cnt = await db["state_logs"].count_documents(
             {"level": {"$in": [2, self._level_to_name[2]]}, "createdAtDt": {"$gte": cutoff_dt}}
         )
 
-        res = {"count": cnt}
+        # 메모리 카운터도 동기화
+        async with self._count_lock:
+            self._error_count = cnt
 
-        return res
+        return {"count": cnt}
+
+    async def warning_log_count_for_24h(self, *, db: MongoDB):
+        """API 엔드포인트용: DB에서 정확한 값 조회"""
+        if self._initialized:
+            return {"count": self._warning_count}
+
+        await self._ensure_initialized(db)  #자동 초기화
+
+        now_utc = datetime.now(UTC)
+        cutoff_dt = now_utc - timedelta(hours=24)
+
+        cnt = await db["state_logs"].count_documents(
+            {"level": {"$in": [1, self._level_to_name[1]]}, "createdAtDt": {"$gte": cutoff_dt}}
+        )
+
+        # 메모리 카운터도 동기화
+        async with self._count_lock:
+            self._warning_count = cnt
+
+        return {"count": cnt}
 
     async def on_zenoh_sub_state(self, *, db: MongoDB, topic, obj, attachment):
         rb_log.debug("🔎 subscribe */state_log")
@@ -151,8 +261,6 @@ class LogService:
             obj["level"] if isinstance(obj["level"], int) else (obj["level"] or "unknown").lower()
         )
         obj["createdAt"] = now_utc.isoformat()
-        # obj["createdAtDt"] = now_utc - timedelta(hours=24)
-
 
         await socket_client.emit("state_log", obj)
 
@@ -172,6 +280,7 @@ class LogService:
         fire_and_log(self.insert_db_and_emit_24h_count(db, obj, now_utc))
 
     async def insert_db_and_emit_24h_count(self, db: MongoDB, d: dict, now_dt: datetime):
+        """로그 삽입 + 실시간 emit (메모리 카운터 사용 - 빠름!)"""
         try:
             level = self._level_to_name.get(d["level"]) or "unknown"
             int_level = int(d["level"])
@@ -188,18 +297,17 @@ class LogService:
             ):
                 return
 
+            #DB 삽입만 수행 (빠름 - 10ms)
             await db["state_logs"].insert_one(d)
 
-            cutoff_dt = now_dt - timedelta(hours=24)
-
-            cnt = await db["state_logs"].count_documents(
-                {"level": {"$in": [int_level, level]}, "createdAtDt": {"$gte": cutoff_dt}}
-            )
-
-            if int_level == 2 or level == "Error":
-                await socket_client.emit("error_log_count_for_24h", {"count": cnt})
-            elif int_level == 1 or level == "Warning":
-                await socket_client.emit("warning_log_count_for_24h", {"count": cnt})
+            #메모리 카운터 증가 및 실시간 emit (count 쿼리 없음!)
+            async with self._count_lock:
+                if int_level == 2 or level == "error":
+                    self._error_count += 1
+                    await socket_client.emit("error_log_count_for_24h", {"count": self._error_count})
+                elif int_level == 1 or level == "warning":
+                    self._warning_count += 1
+                    await socket_client.emit("warning_log_count_for_24h", {"count": self._warning_count})
 
         except Exception as e:
             rb_log.error(f"[state_log persist/count error] {e}")
