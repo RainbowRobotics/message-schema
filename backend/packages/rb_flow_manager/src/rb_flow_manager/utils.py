@@ -1,7 +1,20 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from rb_schemas.sdk import FlowManagerArgs
 
 from .context import ExecutionContext
 from .exception import BreakFolder
+
+if TYPE_CHECKING:
+    from .step import Step
+
+
+def call_event_tree(event_tree: "Step", flow_manager_args: FlowManagerArgs, target_step_id: str | None = None, _post_run: bool = False):
+    """
+    이벤트 트리 호출
+    """
+    event_tree.execute(flow_manager_args.ctx, target_step_id=target_step_id, _post_run=_post_run)
+
 
 
 def _resolve_arg_scope_value(v: Any, ctx: ExecutionContext) -> Any:

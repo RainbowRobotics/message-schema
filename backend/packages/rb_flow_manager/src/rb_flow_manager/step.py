@@ -260,6 +260,7 @@ class Step:
         """단계 실행"""
         is_skip = target_step_id is not None and target_step_id != self.step_id
 
+
         self._pre_execute(ctx, is_skip=is_skip)
 
         if not is_skip:
@@ -279,7 +280,7 @@ class Step:
 
 
         if fn is None and func_name and not self.disabled and not is_skip:
-            fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
+            fn = ctx.get_sdk_function(func_name)
             if fn is None:
                 raise StopExecution(f"unknown flow function: {func_name}")
 
@@ -322,9 +323,11 @@ class Step:
                         )
 
                 if self.variable:
+                    resolved_variables = dict(self.variable)
+
                     for k, v in self.variable.items():
                         if self.not_ast_eval:
-                            self.variable[k] = v
+                            resolved_variables[k] = v
                         else:
                             if isinstance(v, str):
                                 if v.startswith("$parent."):
@@ -340,12 +343,17 @@ class Step:
                                         get_global_variable=ctx.get_global_variable,
                                     )
 
-                        self.variable[k] = v
+                        resolved_variables[k] = v
 
-                    ctx.update_local_variables(self.variable)
+                    # 원본 step 정의(self.variable)를 mutate하지 않고 실행 시점 값만 반영한다.
+                    ctx.update_local_variables(resolved_variables)
 
                 if "robot_model" not in eval_args:
                     eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
+
+                eval_args["target_step_id"] = target_step_id
+                eval_args["_post_run"] = _post_run
+
             except FlowControlException as e:
                 raise e
             except RuntimeError as e:
@@ -771,19 +779,21 @@ class ConditionStep(Step):
                 return
 
         elif isinstance(self.condition, str):
+            condition_expr = self.condition
+
             if self.condition_type == "Case":
                 parent_switch_value = ctx.lookup("switch_value")
-                self.condition = self.condition.replace("$parent.switch_value", parent_switch_value)
+                condition_expr = condition_expr.replace("$parent.switch_value", parent_switch_value)
 
             if safe_eval_expr(
-                self.condition,
+                condition_expr,
                 variables=ctx.variables,
                 get_global_variable=ctx.get_global_variable,
             ):
                 post_execute_and_execute_children()
                 return
 
-        elif self.condition is not None and not callable(self.condition) and self.condition():
+        elif self.condition is not None and callable(self.condition) and self.condition():
             post_execute_and_execute_children()
             return
 

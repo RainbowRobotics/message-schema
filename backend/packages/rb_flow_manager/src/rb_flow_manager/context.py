@@ -1,6 +1,5 @@
 import builtins
 import contextlib
-import inspect
 import sys
 import time
 from collections.abc import (
@@ -39,6 +38,7 @@ class ExecutionContext:
     ):
         self.process_id = process_id
         self.state_dict = state_dict
+        self.parent_process_id = state_dict.get("parent_process_id")
         self.pause_event = pause_event
         self.resume_event = resume_event
         self.stop_event = stop_event
@@ -47,7 +47,8 @@ class ExecutionContext:
             "local": {},
             "global": {},
         }
-        self.sdk_functions: dict[str, Callable] | None = None
+        self.sdk_functions: dict[str, Callable] = {}
+        self._sdk_roots: dict[str, Any] | None = None
         self._arg_scope: list[dict[str, Any]] = []
         self._generation = state_dict.get("generation")
         self.min_step_interval = min_step_interval
@@ -58,8 +59,6 @@ class ExecutionContext:
         self._step_ticket = 1 if not step_mode else 0
         self.is_ui_execution = state_dict.get("is_ui_execution", False)
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
-
-        self.initialize_sdk_functions()
 
     def update_vars_to_state_dict(self):
         current = dict(self.state_dict.get("variables", {}))
@@ -81,9 +80,6 @@ class ExecutionContext:
         self.update_vars_to_state_dict()
 
     def get_global_variable(self, var_name: str) -> Any:
-        if self.sdk_functions is None:
-            return None
-
         robot_model = self.state_dict.get("robot_model", None)
         category = self.state_dict.get("category", None)
 
@@ -92,7 +88,7 @@ class ExecutionContext:
 
         try:
             if category == "manipulate":
-                fn = self.sdk_functions.get("rb_manipulate_sdk.get_data.get_variable")
+                fn = self.get_sdk_function("rb_manipulate_sdk.get_data.get_variable")
 
                 res = fn(robot_model, var_name) if fn is not None else None
 
@@ -105,81 +101,47 @@ class ExecutionContext:
 
                 return res
         except Exception as e:
-            print(f"[{self.process_id}] Error getting global variable: {e}", flush=True)
             raise e
 
-    def _collect_public_methods(
-        self,
-        obj,
-        prefix: str,
-        out: dict,
-        *,
-        max_depth: int = 5,
-        _depth: int = 0,
-        _seen=None,
-    ):
-        if _seen is None:
-            _seen = set()
-
-        if _depth > max_depth:
+    def _ensure_sdk_roots(self):
+        if self._sdk_roots is not None:
             return
 
-        key = (id(obj), prefix)
-        if key in _seen:
-            return
-        _seen.add(key)
+        self._sdk_roots = {
+            "rb_base_sdk": RBBaseSDK(),
+            "rb_manipulate_sdk": RBManipulateSDK(),
+        }
 
-        # 1) obj의 public "메서드"만 수집
-        for name in dir(obj):
-            if name.startswith("_"):
-                continue
-            try:
-                attr = getattr(obj, name)
-            except Exception:
-                continue
+    def get_sdk_function(self, func_name: str) -> Callable | None:
+        if not func_name:
+            return None
 
-            # callable() 대신 "메서드/함수"만
-            if inspect.ismethod(attr) or inspect.isfunction(attr):
-                out[f"{prefix}.{name}"] = attr
+        cached = self.sdk_functions.get(func_name)
+        if cached is not None:
+            return cached
 
-        # 2) 하위 SDK 객체 재귀 탐색
-        for name, value in vars(obj).items():
-            if name.startswith("_"):
-                continue
+        self._ensure_sdk_roots()
+        if self._sdk_roots is None:
+            return None
 
-            if isinstance(value, RBBaseSDK):
-                self._collect_public_methods(
-                    value,
-                    prefix=f"{prefix}.{name}",
-                    out=out,
-                    max_depth=max_depth,
-                    _depth=_depth + 1,
-                    _seen=_seen,
-                )
+        parts = func_name.split(".")
+        if len(parts) < 2:
+            return None
 
-    def _make_rb_sdk_method_key_value_map(self):
-        sdk_list = [
-            {"name": "rb_base_sdk", "class": RBBaseSDK},
-            {"name": "rb_manipulate_sdk", "class": RBManipulateSDK},
-        ]
+        obj = self._sdk_roots.get(parts[0])
+        if obj is None:
+            return None
 
-        all_methods: dict[str, callable] = {}
+        for part in parts[1:]:
+            if part.startswith("_") or not hasattr(obj, part):
+                return None
+            obj = getattr(obj, part)
 
-        for item in sdk_list:
-            sdk = item["class"]()  # 여기서 RBManipulateSDK()가 내부에 program/move/...를 생성해둠
-            self._collect_public_methods(sdk, prefix=item["name"], out=all_methods)
+        if not callable(obj):
+            return None
 
-        if self.sdk_functions is not None:
-            self.sdk_functions.update(all_methods)
-
-
-    def initialize_sdk_functions(self):
-        if self.sdk_functions is not None:
-            return
-
-        self.sdk_functions = {}
-
-        self._make_rb_sdk_method_key_value_map()
+        self.sdk_functions[func_name] = obj
+        return obj
 
     def step_barrier(self):
         """step_mode면, 이 스텝 수행 후 일시정지하고
@@ -295,6 +257,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "is_wait": is_wait,
+                "parent_process_id": self.parent_process_id,
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": None,
@@ -308,6 +271,7 @@ class ExecutionContext:
                 "type": "resume",
                 "process_id": self.process_id,
                 "step_id": step_id,
+                "parent_process_id": self.parent_process_id,
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": None,
@@ -321,6 +285,7 @@ class ExecutionContext:
                 "type": "stop",
                 "process_id": self.process_id,
                 "step_id": step_id,
+                "parent_process_id": self.parent_process_id,
                 "ts": time.time(),
                 "generation": self._generation,
                 "error": None,
@@ -465,10 +430,11 @@ class ExecutionContext:
     def _safe_close_sdk(self):
         """SDK 안전 종료"""
         with contextlib.suppress(Exception):
-            if self.sdk_functions is not None:
-                for key in list(self.sdk_functions.keys()):
-                    if key.endswith(".close"):
-                        self.sdk_functions[key]()
+            if self._sdk_roots is not None:
+                for sdk in self._sdk_roots.values():
+                    close_fn = getattr(sdk, "close", None)
+                    if callable(close_fn):
+                        close_fn()
 
     def close(self):
         """안전하게 close"""

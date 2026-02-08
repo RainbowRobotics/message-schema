@@ -31,7 +31,7 @@ from .step import Step
 
 # 상수 정의
 POLLING_INTERVAL = 0.1
-EVENT_BATCH_INTERVAL = 0.05
+EVENT_BATCH_INTERVAL = 0.01
 
 
 def _execute_tree_in_process(
@@ -62,8 +62,6 @@ def _execute_tree_in_process(
     - 마지막에 post_tree가 있으면 후처리 트리 실행
     - 종료 시 completion_event.set() 보장
     """
-    t0 = time.monotonic()
-    print(f"[child {process_id}] entered in {time.monotonic()-t0:.6f}", flush=True)
     os.environ["_PYINSTALLER_WORKER"] = "1"
 
     # Ready 신호 전송
@@ -73,12 +71,14 @@ def _execute_tree_in_process(
         "ts": time.time(),
         "generation": state_dict.get("generation"),
     })
-    print(f"[child {process_id}] ready signal sent in {time.monotonic()-t0:.6f}", flush=True)
 
     # Start 이벤트 대기
     if start_event is not None:
         start_event.wait()
-    print(f"[child {process_id}] start_event.wait() in {time.monotonic()-t0:.6f}", flush=True)
+
+    ctx: ExecutionContext | None = None
+    error_msg: str | None = None
+    post_tree_ref: dict[str, Step | None] = {"value": post_tree}
 
     ctx: ExecutionContext | None = None
     error_msg: str | None = None
@@ -89,7 +89,6 @@ def _execute_tree_in_process(
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
         state_dict["error"] = msg
         error_msg = msg
-        print(f"Execution error: {msg}", flush=True)
 
     def emit_error_or_stop(step_id: str, msg: str):
         if ctx is None:
@@ -108,6 +107,7 @@ def _execute_tree_in_process(
         state_dict["sub_task_list"] = []
         state_dict["current_repeat"] = 0
         state_dict.pop("error", None)
+
 
     def execute_task(tree: Step, current_repeat: int, *, is_sub_task: bool = False):
         """step 트리 1회 실행"""
@@ -252,7 +252,6 @@ def _execute_tree_in_process(
             raise RuntimeError("JumpToStep: Post program tree is not allowed.") from e
 
     finally:
-        print(f"completion_event set >>> {completion_event.is_set()}", flush=True)
         completion_event.set()
 
         if ctx is not None:
@@ -272,11 +271,11 @@ class ScriptExecutor:
         on_resume: Callable[[str, str], None] | None = None,
         on_stop: Callable[[str, str], None] | None = None,
         on_next: Callable[[str, str], None] | None = None,
-        on_sub_task_start: Callable[[str, Literal["INSERT", "CHANGE"]], None] | None = None,
-        on_sub_task_done: Callable[[str, Literal["INSERT", "CHANGE"]], None] | None = None,
+        on_sub_task_start: Callable[[str, str, Literal["INSERT", "CHANGE"]], None] | None = None,
+        on_sub_task_done: Callable[[str, str, Literal["INSERT", "CHANGE"]], None] | None = None,
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
-        on_done: Callable[[str], None] | None = None,
+        on_done: Callable[[str, str], None] | None = None,
         on_post_start: Callable[[str], None] | None = None,
         on_complete: Callable[[str], None] | None = None,
         on_all_complete: Callable[[], None] | None = None,
@@ -419,8 +418,7 @@ class ScriptExecutor:
 
                 print(
                     f"[SyncRegistry] Registered {process_id} to flag '{flag}', "
-                    f"parties_next: {st['parties_next']}",
-                    flush=True,
+                    f"parties_next: {st['parties_next']}"
                 )
 
         return flags
@@ -530,8 +528,7 @@ class ScriptExecutor:
 
                     print(
                         f"[CHANGE] Unregistered main tree flag '{flag}' for {pid}, "
-                        f"remaining members: {len(members)}",
-                        flush=True
+                        f"remaining members: {len(members)}"
                     )
 
                 self._sync_cond.notify_all()
@@ -560,7 +557,7 @@ class ScriptExecutor:
         new_flags = self._collect_sync_flags(sub_task_tree) | self._collect_sync_flags(post_tree)
 
         if not new_flags:
-            print(f"[SubTask-{subtask_type}] No sync flags found for {pid}", flush=True)
+            print(f"[SubTask-{subtask_type}] No sync flags found for {pid}")
             return
 
         # CHANGE 타입이면 같은 태스크를 실행 중인 다른 프로세스들도 찾아서 함께 등록
@@ -610,7 +607,6 @@ class ScriptExecutor:
 
                     print(
                         f"[CHANGE] Registered flag '{flag}' with {len(members)} participants: {members}",
-                        flush=True
                     )
 
             # CHANGE 타입이면 state_dict의 sync_flags 업데이트
@@ -620,8 +616,7 @@ class ScriptExecutor:
             # INSERT 타입은 기존 로직 사용
             sync_flags = self._register_process_sync_flags(pid, sub_task_tree, post_tree)
             print(
-                f"[SubTask-{subtask_type}] Registered sync flags for {pid}: {sync_flags}",
-                flush=True
+                f"[SubTask-{subtask_type}] Registered sync flags for {pid}: {sync_flags}"
             )
 
     def _handle_subtask_sync_unregister(self, pid: str, evt: dict):
@@ -687,7 +682,6 @@ class ScriptExecutor:
 
         print(
             f"[SubTask-{evt.get('subtask_type')}] Unregistered sync flags for {pid}: {flags}",
-            flush=True
         )
 
     def _register_batch(self, batch: list[MakeProcessArgs]) -> dict[str, set[str]]:
@@ -748,6 +742,7 @@ class ScriptExecutor:
         *,
         multi_start: bool = False,
         start_event: EventType | None = None,
+        invoke_callbacks: bool = True,
     ) -> SpawnProcess | None:
         """개별 프로세스 생성"""
         process_id = args.get("process_id")
@@ -759,37 +754,26 @@ class ScriptExecutor:
         min_step_interval = args.get("min_step_interval")
         is_ui_execution = args.get("is_ui_execution")
         post_tree = args.get("post_tree")
+        parent_process_id = args.get("parent_process_id")
 
         # 이미 실행 중인 프로세스 체크
         if process_id in self.processes and self.processes[process_id].is_alive():
-            print(f"Process {process_id} is already running", flush=True)
-
             # state_dict 존재 확인
             if process_id not in self.state_dicts:
-                print(f"[WARNING] Process {process_id} running but no state_dict", flush=True)
                 return None
 
             # 실행 중인 프로세스가 step_mode면 토글
             is_step_mode = self.state_dicts[process_id].get("step_mode", False)
-            print(f"[DEBUG] process_id={process_id}, step_mode={is_step_mode}", flush=True)
 
             if is_step_mode:
                 current_state = self.state_dicts[process_id].get("state")
-                print(f"[DEBUG] current_state={current_state}", flush=True)
 
                 if current_state == RB_Flow_Manager_ProgramState.PAUSED:
-                    print(f"[step_mode] Resuming {process_id}", flush=True)
                     self.resume(process_id)
                 elif current_state == RB_Flow_Manager_ProgramState.RUNNING:
-                    print(f"[step_mode] Pausing {process_id}", flush=True)
                     self.pause(process_id)
                 elif current_state == RB_Flow_Manager_ProgramState.WAITING:
-                    print(f"[step_mode] Resuming from WAITING {process_id}", flush=True)
                     self.resume(process_id)
-                else:
-                    print(f"[step_mode] Cannot toggle - state: {current_state}", flush=True)
-            else:
-                print(f"[INFO] Process {process_id} is not in step_mode", flush=True)
 
             return None
 
@@ -818,7 +802,7 @@ class ScriptExecutor:
 
         self.result_queues[process_id] = self._mp_ctx.Queue(maxsize=10)
 
-        # ⭐ 단일 프로세스의 경우 sync flags 등록 (배치가 아닐 때)
+        # 단일 프로세스의 경우 sync flags 등록 (배치가 아닐 때)
         if not multi_start:
             sync_flags = self._register_process_sync_flags(process_id, step, post_tree)
             self.state_dicts[process_id]["sync_flags"] = list(sync_flags)
@@ -831,19 +815,21 @@ class ScriptExecutor:
         self.state_dicts[process_id]["generation"] = gen
         self.state_dicts[process_id]["step_mode"] = step_mode
         self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
+        self.state_dicts[process_id]["parent_process_id"] = parent_process_id
 
         # 콜백 호출
-        if self._on_init is not None:
-            self._on_init(self.state_dicts)
+        if invoke_callbacks:
+            if self._on_init is not None:
+                self._on_init(self.state_dicts)
 
-        if self.controller is not None:
-            self.controller.on_init(self.state_dicts)
+            if self.controller is not None:
+                self.controller.on_init(self.state_dicts)
 
-        if self._on_start is not None:
-            self._on_start(process_id)
+            if self._on_start is not None:
+                self._on_start(process_id)
 
-        if self.controller is not None:
-            self.controller.on_start(process_id)
+            if self.controller is not None:
+                self.controller.on_start(process_id)
 
         # 이벤트 생성
         self.completion_events[process_id] = self._mp_ctx.Event()
@@ -930,10 +916,24 @@ class ScriptExecutor:
                 arg,
                 multi_start=True,
                 start_event=batch_start_event,
+                invoke_callbacks=False,
             )
             if p:
                 processes.append(p)
                 pids.append(pid)
+
+        # 배치 실행에서는 init을 한 번만 호출해 중복 초기화 비용을 줄인다.
+        if self._on_init is not None:
+            self._on_init(self.state_dicts)
+        if self.controller is not None:
+            self.controller.on_init(self.state_dicts)
+
+        # start 콜백은 프로세스 단위로 호출한다.
+        for pid in pids:
+            if self._on_start is not None:
+                self._on_start(pid)
+            if self.controller is not None:
+                self.controller.on_start(pid)
 
         # 프로세스 시작
         for i, p in enumerate(processes):
@@ -970,11 +970,11 @@ class ScriptExecutor:
 
             # 오래된 이벤트 무시
             if cur_gen is None or evt_gen != cur_gen:
-                print(f"Ignoring stale event: {evt}", flush=True)
+                print(f"Ignoring stale event: {evt}")
                 continue
 
             if self.state_dicts.get(pid) is None:
-                print(f"Process not found: {pid}", flush=True)
+                print(f"Process not found: {pid}")
                 continue
 
             # 이벤트 타입별 처리
@@ -991,105 +991,130 @@ class ScriptExecutor:
         evt: dict,
     ):
         """개별 이벤트 처리"""
-        try:
-            if evt_type == "next":
-                if self._on_next is not None:
-                    self._on_next(pid, step_id)
+        if evt_type == "next":
+            if step_id is None:
+                raise ValueError("next event requires step_id")
+            if self._on_next is not None:
+                self._on_next(pid, step_id)
+            if self.controller is not None:
+                self.controller.on_next(pid, step_id)
+
+        elif evt_type == "sub_task_start":
+            if sub_task_id is None or sub_task_type not in ("INSERT", "CHANGE"):
+                raise ValueError("sub_task_start event requires sub_task_id and valid sub_task_type")
+            if self._on_sub_task_start is not None:
+                self._on_sub_task_start(pid, sub_task_id, sub_task_type)
+            if self.controller is not None:
+                self.controller.on_sub_task_start(pid, sub_task_id, sub_task_type)
+
+        elif evt_type == "sub_task_done":
+            if sub_task_id is None or sub_task_type not in ("INSERT", "CHANGE"):
+                raise ValueError("sub_task_done event requires sub_task_id and valid sub_task_type")
+            if self._on_sub_task_done is not None:
+                self._on_sub_task_done(pid, sub_task_id, sub_task_type)
+            if self.controller is not None:
+                self.controller.on_sub_task_done(pid, sub_task_id, sub_task_type)
+
+        elif evt_type == "subtask_sync_register":
+            self._handle_subtask_sync_register(pid, evt)
+
+        elif evt_type == "subtask_sync_unregister":
+            self._handle_subtask_sync_unregister(pid, evt)
+
+        elif evt_type == "main_tree_sync_unregister":
+            self._handle_main_tree_sync_unregister(pid)
+
+        elif evt_type == "done":
+            if step_id is None:
+                raise ValueError("done event requires step_id")
+            if self._on_done is not None:
+                self._on_done(pid, step_id)
+            if self.controller is not None:
+                self.controller.on_done(pid, step_id)
+
+        elif evt_type == "error":
+            err_repr = evt.get("error")
+            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.ERROR
+            if self._on_error is not None:
+                self._on_error(pid, step_id, RuntimeError(err_repr))
+            if self.controller is not None:
+                self.controller.on_error(pid, step_id, err_repr)
+            time.sleep(0.5)
+            self.stop_all()
+
+        elif evt_type == "post_start":
+            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.POST_START
+            if self._on_post_start is not None:
+                self._on_post_start(pid)
+            if self.controller is not None:
+                self.controller.on_post_start(pid)
+
+        elif evt_type == "pause":
+            if step_id is None:
+                raise ValueError("pause event requires step_id")
+            state = (
+                RB_Flow_Manager_ProgramState.WAITING
+                if is_wait
+                else RB_Flow_Manager_ProgramState.PAUSED
+            )
+            self.state_dicts[pid]["state"] = state
+
+            parent_process_id = evt.get("parent_process_id")
+
+            if parent_process_id is not None:
+                self.pause(parent_process_id)
+
+            for find_pid in list(self.state_dicts.keys()):
+                if self.state_dicts[find_pid].get("parent_process_id") == pid:
+                    self.pause(find_pid)
+
+            if is_wait:
+                if self._on_wait is not None:
+                    self._on_wait(pid, step_id)
                 if self.controller is not None:
-                    self.controller.on_next(pid, step_id)
-
-            elif evt_type == "sub_task_start":
-                if self._on_sub_task_start is not None:
-                    self._on_sub_task_start(pid, sub_task_id, sub_task_type)
+                    self.controller.on_wait(pid, step_id)
+            else:
+                if self._on_pause is not None:
+                    self._on_pause(pid, step_id)
                 if self.controller is not None:
-                    self.controller.on_sub_task_start(pid, sub_task_id, sub_task_type)
+                    self.controller.on_pause(pid, step_id)
 
-            elif evt_type == "sub_task_done":
-                if self._on_sub_task_done is not None:
-                    self._on_sub_task_done(pid, sub_task_type)
-                if self.controller is not None:
-                    self.controller.on_sub_task_done(pid, sub_task_id, sub_task_type)
+        elif evt_type == "resume":
+            if step_id is None:
+                raise ValueError("resume event requires step_id")
+            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
 
-            elif evt_type == "subtask_sync_register":
-                self._handle_subtask_sync_register(pid, evt)
+            parent_process_id = evt.get("parent_process_id")
+            if parent_process_id is not None:
+                self.resume(parent_process_id)
 
-            elif evt_type == "subtask_sync_unregister":
-                self._handle_subtask_sync_unregister(pid, evt)
+            for find_pid in list(self.state_dicts.keys()):
+                if self.state_dicts[find_pid].get("parent_process_id") == pid:
+                    self.resume(find_pid)
 
-            elif evt_type == "main_tree_sync_unregister":
-                self._handle_main_tree_sync_unregister(pid)
+            if self._on_resume is not None:
+                self._on_resume(pid, step_id)
+            if self.controller is not None:
+                self.controller.on_resume(pid, step_id)
 
-            elif evt_type == "done":
-                if self._on_done is not None:
-                    self._on_done(pid)
-                if self.controller is not None:
-                    self.controller.on_done(pid, step_id)
+        elif evt_type == "stop":
+            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
-            elif evt_type == "error":
-                err_repr = evt.get("error")
-                self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.ERROR
-                if self._on_error is not None:
-                    self._on_error(pid, step_id, RuntimeError(err_repr))
-                if self.controller is not None:
-                    self.controller.on_error(pid, step_id, err_repr)
-                time.sleep(0.5)
-                self.stop_all()
+        elif evt_type == "control":
+            action = evt.get("action")
+            if action == "pause_all":
+                self.pause_all()
+            elif action == "resume_all":
+                self.resume_all()
 
-            elif evt_type == "post_start":
-                self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.POST_START
-                if self._on_post_start is not None:
-                    self._on_post_start(pid)
-                if self.controller is not None:
-                    self.controller.on_post_start(pid)
-
-            elif evt_type == "pause":
-                state = (
-                    RB_Flow_Manager_ProgramState.WAITING
-                    if is_wait
-                    else RB_Flow_Manager_ProgramState.PAUSED
-                )
-                self.state_dicts[pid]["state"] = state
-
-                if is_wait:
-                    if self._on_wait is not None:
-                        self._on_wait(pid, step_id)
-                    if self.controller is not None:
-                        self.controller.on_wait(pid, step_id)
-                else:
-                    if self._on_pause is not None:
-                        self._on_pause(pid, step_id)
-                    if self.controller is not None:
-                        self.controller.on_pause(pid, step_id)
-
-            elif evt_type == "resume":
-                self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
-                if self._on_resume is not None:
-                    self._on_resume(pid, step_id)
-                if self.controller is not None:
-                    self.controller.on_resume(pid, step_id)
-
-            elif evt_type == "stop":
-                self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.STOPPED
-
-            elif evt_type == "control":
-                action = evt.get("action")
-                if action == "pause_all":
-                    self.pause_all()
-                elif action == "resume_all":
-                    self.resume_all()
-
-            elif evt_type == "ready":
-                with self._batch_ready_mu:
-                    self._batch_ready_count += 1
-                    if (
-                        self._batch_ready_count >= self._batch_expected
-                        and self._batch_start_event is not None
-                    ):
-                        self._batch_start_event.set()
-
-        except Exception as e:
-            print(f"Error handling event: {e}", flush=True)
-            raise
+        elif evt_type == "ready":
+            with self._batch_ready_mu:
+                self._batch_ready_count += 1
+                if (
+                    self._batch_ready_count >= self._batch_expected
+                    and self._batch_start_event is not None
+                ):
+                    self._batch_start_event.set()
 
     def _start_monitor(self):
         """백그라운드 모니터 스레드 시작"""
@@ -1153,11 +1178,6 @@ class ScriptExecutor:
 
         if dead:
             self._unregister_process_sync_flags(process_id)
-            print(f"[Cleanup] {process_id} is dead -> unregister sync flags", flush=True)
-        else:
-            # 살아있는데 cleanup 타는 케이스면 보통 없지만, 안전하게 유지
-            state = self.state_dicts.get(process_id, {}).get("state")
-            print(f"[Cleanup] {process_id} still alive? state={state}", flush=True)
 
         with self._mu:
             p = self.processes.pop(process_id, None)
@@ -1245,7 +1265,7 @@ class ScriptExecutor:
                 self._on_all_pause()
             if self.controller is not None:
                 self.controller.on_all_pause()
-            print("All processes paused", flush=True)
+            print("All processes paused")
 
         return True
 
