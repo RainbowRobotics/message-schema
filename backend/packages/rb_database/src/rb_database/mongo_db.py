@@ -249,21 +249,51 @@ async def init_indexes(db: AsyncIOMotorDatabase):
     - 데이터베이스 인덱스 초기화
     """
     await ensure_index(db, "robots", "name", name="robots_name_idx", unique=True)
+
+    # state_logs 인덱스들
+    await ensure_index(
+        db,
+        "state_logs",
+        [("createdAt", -1)],
+        name="state_logs_createdAt_idx",
+    )
+
+    await ensure_index(
+        db,
+        "state_logs",
+        [("level", 1), ("createdAt", -1)],
+        name="state_logs_level_created_idx",
+    )
+
     await ensure_index(
         db,
         "state_logs",
         [("swName", 1), ("level", 1), ("createdAt", -1)],
         name="state_logs_sw_level_created_idx",
     )
-    await ensure_index(db, "state_logs", [("contents", "text")], name="state_logs_text_idx")
+
+    await ensure_index(
+        db,
+        "state_logs",
+        [("contents", "text")],
+        name="state_logs_text_idx"
+    )
+
     await ensure_index(
         db,
         "state_logs",
         [("createdAtDt", 1)],
         name="state_logs_createdAtDt_ttl",
-        expireAfterSeconds=60 * 60 * 24 * 90,  # 90일
+        expireAfterSeconds=60 * 60 * 24 * 90,
     )
-    await ensure_index(db, "programs", [("name", 1)], name="uniq_program_name", unique=True)
+
+    await ensure_index(
+        db,
+        "programs",
+        [("name", 1)],
+        name="uniq_program_name",
+        unique=True
+    )
 
 
 async def init_db(app: FastAPI, uri: str, db_name: str):
