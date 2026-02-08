@@ -1,0 +1,8 @@
+namespace IPC;
+
+table Response_Functions {
+  return_value: int;
+}
+
+table Request_PrintInfo {
+}
