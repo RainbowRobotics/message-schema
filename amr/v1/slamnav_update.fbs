@@ -1,0 +1,79 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/update/upgrade
+    usage       :       소프트웨어 업데이트
+    field
+        - branch        :       업데이트 브랜치
+        - version       :       업데이트 버전
+*/
+table RequestUpdate {
+    id: string;
+    branch: string;
+    version: string;
+}
+table ResponseUpdate {
+    id: string;
+    branch: string;
+    version: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/update/curVersion
+    usage       :       현재 버전 조회
+    field
+        - version       :       현재 버전
+*/
+table RequestCurrentVersion {
+    id: string;
+}
+table ResponseCurrentVersion {
+    id: string;
+    version: string;
+    result: string;
+    message: string;
+}
+
+
+// 필요없는 느낌
+// update 실행 후, 프로그램이 종료 후 재부팅 되는데.
+// 이를 알려줄 마땅한 방법이 없음.
+// // -------------------------------------------------
+// // -----------                              --------
+// // -----------     Pub / Sub  (Result )     --------
+// // -----------                              --------
+// // -------------------------------------------------
+
+// /*
+//     category    :       Pub / Sub (Result)
+//     topic       :       {robotType}/update/result
+//     usage       :       업데이트 결과 응답
+//     field
+//         - branch        :       업데이트 브랜치
+//         - version       :       업데이트 버전
+//         - result        :       이동 결과
+//             - success       :       동작 성공.
+//             - fail          :       동작 실패.
+//             - start         :       동작 시작.
+//             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+// */
+// table ResultUpdate {
+//     id: string;
+//     branch: string;
+//     version: string;
+//     result: string;
+//     message: string;
+// }
