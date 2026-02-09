@@ -1,0 +1,58 @@
+namespace SMBC;
+
+struct N_32_i {
+  i: [int: 32];
+}
+
+//--------------------------------------------------------------
+table Request_Read {
+    issue_core:     string;
+    server_ip:      string;
+    server_port:    int;
+
+    function_code:  int;
+    register_addr:  int;
+    number_of_read: int;
+    timeout_ms:     int;
+}
+table Response_Read {
+    result:         int;
+    payload_dlc:    int;
+    payload:        N_32_i;
+}
+//--------------------------------------------------------------
+table Request_Write {
+    issue_core:     string;
+    server_ip:      string;
+    server_port:    int;
+
+    function_code:  int;
+    register_addr:  int;
+    payload_dlc:    int;
+    payload:        N_32_i;
+    timeout_ms:     int;
+}
+table Response_Write {
+    result:         int;
+}
+//--------------------------------------------------------------
+table Request_PrintInfo {
+}
+
+table Response_Functions {
+  return_value: int;
+}
+
+//--------------------------------------------------------------
+table State_Log {
+    level: int;
+    timestamp: string;
+    contents: string;
+}
+//--------------------------------------------------------------
+table State_Message {
+    type: int;
+    code: int;
+    sub_str: string;
+}
+//--------------------------------------------------------------
