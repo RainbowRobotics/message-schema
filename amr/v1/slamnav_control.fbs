@@ -283,37 +283,20 @@ table ResponseSetObsBox {
     category    :       RPC
     response    :       One-shot
     topic       :       {robotType}/control/led
-    usage       :       LED On / Off
-    field
-        - switch        :       true(on) / false(off)
-*/
-table RequestSetLed {
-    id: string;
-    switch: bool;
-}
-table ResponseSetLed {
-    id: string;
-    switch: bool;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/ledColor
     usage       :       LED Mode
     field
+        - switch        :       true(on) / false(off)
         - color         :       Color
             - "none"  "red"  ...
 */
 table RequestSetLedColor {
     id: string;
+    switch: bool;
     color: string;
 }
 table ResponseSetLedColor {
     id: string;
+    switch: bool;
     color: string;
     result: string;
     message: string;
@@ -420,7 +403,7 @@ table ResponseStreamFrequency {
 
 /*
     category    :       Pub / Sub (Result)
-    topic       :       {robotType}/control/result
+    topic       :       {robotType}/control/resultDock
     usage       :       도킹 제어 결과 응답
     field
         - command       :       control Callback 명령 (string)
@@ -433,6 +416,28 @@ table ResponseStreamFrequency {
             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
 table ResultControlDock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       Pub / Sub (Result)
+    topic       :       {robotType}/control/resultChargeTrigger
+    usage       :       도킹 제어 결과 응답
+    field
+        - command       :       control Callback 명령 (string)
+            - "chargeTrigger"
+        - switch        :       true(on) / false(off)
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+*/
+table ResultControlChargeTrigger {
     id: string;
     command: string;
     switch: bool;
