@@ -36,6 +36,7 @@ struct ObsBox {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/getSafetyField
     usage       :
     field
@@ -54,6 +55,7 @@ table ResponseGetSafetyField {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/control/setSafetyField
     usage       :
     field
@@ -73,6 +75,7 @@ table ResponseSetSafetyField {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/getSafetyFlag
     usage       :
     field
@@ -91,6 +94,7 @@ table ResponseGetSafetyFlag {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/control/setSafetyFlag
     usage       :
     field
@@ -98,11 +102,11 @@ table ResponseGetSafetyFlag {
 */
 table RequestSetSafetyFlag {
     id: string;
-    reset_flag: [SafetyFlag];
+    safety_flag: [SafetyFlag];
 }
 table ResponseSetSafetyFlag {
     id: string;
-    reset_flag: [SafetyFlag];
+    safety_flag: [SafetyFlag];
     result: string;
     message: string;
 }
@@ -110,6 +114,7 @@ table ResponseSetSafetyFlag {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/getSafetyIo
     usage       :
     field
@@ -123,10 +128,10 @@ table RequestGetSafetyIo {
 }
 table ResponseGetSafetyIo {
     id: string;
-    mcu0_dio: [bool];
-    mcu1_dio: [bool];
     mcu0_din: [bool];
     mcu1_din: [bool];
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
     result: string;
     message: string;
 }
@@ -134,6 +139,7 @@ table ResponseGetSafetyIo {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/control/setSafetyIo
     usage       :
     field
@@ -149,6 +155,8 @@ table ResponseSetSafetyIo {
     id: string;
     mcu0_din: [bool];
     mcu1_din: [bool];
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
     result: string;
     message: string;
 }
@@ -156,18 +164,15 @@ table ResponseSetSafetyIo {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/control/dock
-    usage       :
-    field
-        - command       :       도킹 명령 ( "dock", "undock", "dockstop" )
+    usage       :       도킹 시작
 */
-table RequestDockControl {
+table RequestDock {
     id: string;
-    command: string;
 }
-table ResponseDockControl {
+table ResponseDock {
     id: string;
-    command: string;
     result: string;
     message: string;
 }
@@ -175,18 +180,15 @@ table ResponseDockControl {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/chargeTrigger
-    usage       :
-    field
-        - control       :       충전 on / off
+    response    :       Callback
+    topic       :       {robotType}/control/undock
+    usage       :       도킹 해제
 */
-table RequestChargeTrigger {
+table RequestUndock {
     id: string;
-    control: bool;
 }
-table ResponseChargeTrigger {
+table ResponseUndock {
     id: string;
-    control: bool;
     result: string;
     message: string;
 }
@@ -194,6 +196,55 @@ table ResponseChargeTrigger {
 
 /*
     category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/dockStop
+    usage       :       도킹 정지
+*/
+table RequestDockStop {
+    id: string;
+}
+table ResponseDockStop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Callback
+    topic       :       {robotType}/control/chargeTriggerOn
+    usage       :       충전 트리거 On
+*/
+table RequestChargeTriggerOn {
+    id: string;
+}
+table ResponseChargeTriggerOn {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/chargeTriggerOff
+    usage       :       충전 트리거 Off
+*/
+table RequestChargeTriggerOff {
+    id: string;
+}
+table ResponseChargeTriggerOff {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/getObsBox
     usage       :       장애물 박스 범위 조회
     field
@@ -203,9 +254,6 @@ table ResponseChargeTrigger {
 */
 table RequestGetObsBox {
     id: string;
-    min: ObsBox;
-    max: ObsBox;
-    range: float;
 }
 table ResponseGetObsBox {
     id: string;
@@ -219,6 +267,7 @@ table ResponseGetObsBox {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/setObsBox
     usage       :       장애물 박스 범위 설정
     field
@@ -244,20 +293,19 @@ table ResponseSetObsBox {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/led
+    response    :       One-shot
+    topic       :       {robotType}/control/ledColor
     usage       :       LED Mode
     field
-        - control       :       LED on / off
         - color         :       Color
+            - "none"  "red"  ...
 */
-table RequestLedMode {
+table RequestSetLedColor {
     id: string;
-    control: bool;
     color: string;
 }
-table ResponseLedMode {
+table ResponseSetLedColor {
     id: string;
-    control: bool;
     color: string;
     result: string;
     message: string;
@@ -266,18 +314,15 @@ table ResponseLedMode {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/motor
-    usage       :       모터 Mode
-    field
-        - control       :       모터 Init on / off
+    response    :       One-shot
+    topic       :       {robotType}/control/motorOn
+    usage       :       모터 On
 */
-table RequestMotorMode {
+table RequestMotorOn {
     id: string;
-    control: bool;
 }
-table ResponseMotorMode {
+table ResponseMotorOn {
     id: string;
-    control: bool;
     result: string;
     message: string;
 }
@@ -285,18 +330,15 @@ table ResponseMotorMode {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/jog
-    usage       :       조그 Mode
-    field
-        - control       :       조그 on / off
+    response    :       One-shot
+    topic       :       {robotType}/control/motorOff
+    usage       :       모터 Off
 */
-table RequestJog {
+table RequestMotorOff {
     id: string;
-    control: bool;
 }
-table ResponseJog {
+table ResponseMotorOff {
     id: string;
-    control: bool;
     result: string;
     message: string;
 }
@@ -304,24 +346,15 @@ table ResponseJog {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/sensor
-    usage       :       센서 소켓 On/Off 및 주파수 설정
-    field
-        - command       :       센서 ( "camera", "lidar2d", "lidar3d" )
-        - control       :       센서 통신 on / off
-        - frequency     :       데이터 전송 주파수 (Hz)
+    response    :       One-shot
+    topic       :       {robotType}/control/jogOn
+    usage       :       조그 On
 */
-table RequestSensorMode {
+table RequestJogOn {
     id: string;
-    command: string;
-    control: bool;
-    frequency: int;
 }
-table ResponseSensorMode {
+table ResponseJogOn {
     id: string;
-    command: string;
-    control: bool;
-    frequency: int;
     result: string;
     message: string;
 }
@@ -329,21 +362,15 @@ table ResponseSensorMode {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/path
-    usage       :       경로 소켓 On/Off 및 주파수 설정
-    field
-        - control       :       경로 통신 on / off
-        - frequency     :       데이터 전송 주파수 (Hz)
+    response    :       One-shot
+    topic       :       {robotType}/control/jogOff
+    usage       :       조그 Off
 */
-table RequestPathMode {
+table RequestJogOff {
     id: string;
-    control: bool;
-    frequency: int;
 }
-table ResponsePathMode {
+table ResponseJogOff {
     id: string;
-    control: bool;
-    frequency: int;
     result: string;
     message: string;
 }
@@ -351,46 +378,74 @@ table ResponsePathMode {
 
 /*
     category    :       RPC
-    topic       :       {robotType}/control/detectMarker
-    usage       :       마커 감지 제어
+    response    :       One-shot
+    topic       :       {robotType}/control/StreamFrequency
+    usage       :       소켓 스트림 주파수 설정
     field
-        - command       :       감지 명령   ( "charuco" / "aruco" )
-        - number        :       카메라 번호
-        - serial        :       카메라 시리얼
-        - m_size        :       마커 크기
-        - tf            :       변환 행렬 (4x4 Matrix)
+        - target        :       스트림 대상 ( "camera", "lidar2d", "lidar3d", "path" )
+        - frequency     :       데이터 전송 주파수 (0 ~ 10 Hz)
 */
-table RequestDetectMarker {
+table RequestStreamFrequency {
     id: string;
-    number: int;
-    serial: string;
-    m_size: float;
+    target: string;
+    frequency: int;
 }
-table ResponseDetectMarker {
+table ResponseStreamFrequency {
     id: string;
-    number: int;
-    serial: string;
-    m_size: float;
-    tf: [float];
+    target: string;
+    frequency: int;
     result: string;
     message: string;
 }
+
+
+// /*
+//     category    :       RPC
+//     response    :       Delayed One-shot
+//     topic       :       {robotType}/control/detectMarker
+//     usage       :       마커 감지 제어
+//     field
+//         - target        :       감지 명령   ( "charuco" / "aruco" ) (현재 미구현이나, 추후 마커 종류를 구분할 경우 추가예정.)
+//         - number        :       카메라 번호
+//         - serial        :       카메라 시리얼
+//         - m_size        :       마커 크기
+//         - tf            :       변환 행렬 (4x4 Matrix)
+// */
+// table RequestDetectMarker {
+//     id: string;
+//     number: int;
+//     serial: string;
+//     m_size: float;
+// }
+// table ResponseDetectMarker {
+//     id: string;
+//     number: int;
+//     serial: string;
+//     m_size: float;
+//     tf: [float];
+//     result: string;
+//     message: string;
+// }
 
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------          RPC(Query)          --------
+// -----------     Pub / Sub  (Result )     --------
 // -----------                              --------
 // -------------------------------------------------
 
 /*
-    category    :       RPC ( Result )
-    topic       :       {robotType}/control/result/dock
+    category    :       Pub / Sub (Result)
+    topic       :       {robotType}/control/result
     usage       :       도킹 제어 결과 응답
     field
-        - command       :       실행된 도킹 명령
-        - result        :       결과 상태   ( "success" / "fail" )
-        - message       :       결과 메시지
+        - command       :       control Callback 명령 (string)
+            - "dock"  "undock"  "dockStop"
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
 table ResultControlDock {
     id: string;
