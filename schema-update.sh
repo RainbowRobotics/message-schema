@@ -187,40 +187,12 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
         print_string "info" "No changes"
         exit 0
     fi
-    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/schema-update-worktree.XXXXXX")"
-    cleanup_work_dir() {
-        git worktree remove --force "$WORK_DIR" >/dev/null 2>&1 || true
-        rm -rf "$WORK_DIR" >/dev/null 2>&1 || true
-    }
-    trap cleanup_work_dir EXIT INT TERM
-    git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
-    (
-        cd "$WORK_DIR"
-        print_string "info" "Updating..."
-        TEMP_EXTRACT="$(mktemp -d)"
-        trap "rm -rf '$TEMP_EXTRACT'" EXIT
-        git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
-        # worktree의 .git 파일을 지우면 이후 git 명령이 모두 실패한다.
-        rsync -av --delete --exclude='.git' "$TEMP_EXTRACT/" ./
-        rm -rf "$TEMP_EXTRACT"
-        git add -A
-        if git diff --staged --quiet; then
-            print_string "info" "No changes"
-        else
-            echo "Changed:"
-            git diff --staged --name-status
-            echo ""
-            git commit -m "Update schemas from main @ $MAIN_COMMIT"
-            git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
-        fi
-    ) || {
-        cleanup_work_dir
-        trap - EXIT INT TERM
+    print_string "info" "Updating branch via subtree split..."
+    SPLIT_COMMIT="$(git subtree split --prefix="$SCHEMA_DIR" HEAD)"
+    if ! git push "$REMOTE_NAME" "$SPLIT_COMMIT:refs/heads/$BR"; then
         print_string "error" "Push failed"
         exit 1
-    }
-    cleanup_work_dir
-    trap - EXIT INT TERM
+    fi
 else
     print_string "info" "Creating branch"
     if git show-ref --verify --quiet "refs/heads/$BR"; then
