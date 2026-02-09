@@ -4,16 +4,15 @@ from datetime import (
     UTC,
     datetime,
 )
-import os
 
 from rb_flat_buffers.SLAMNAV.ResultControlDock import ResultControlDockT
 from rb_modules.log import rb_log
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
-from app.socket.socket_client import socket_client
 
 from app.schema.amr import AmrResponseStatusEnum
+from app.socket.socket_client import socket_client
 
 from .adapter.mongo import ControlMongoDatabaseAdapter
 from .adapter.smtplib import ControlSmtpLibEmailAdapter

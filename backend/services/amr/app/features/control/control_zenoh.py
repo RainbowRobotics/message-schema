@@ -7,7 +7,7 @@ from rb_flat_buffers.SLAMNAV.ResultControlDock import (
 from rb_zenoh.router import (
     ZenohRouter,
 )
-from rb_modules.log import rb_log
+
 from .control_api import amr_control_service
 
 control_zenoh_router = ZenohRouter()
