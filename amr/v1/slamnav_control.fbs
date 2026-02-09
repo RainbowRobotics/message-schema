@@ -289,12 +289,12 @@ table ResponseSetObsBox {
         - color         :       Color
             - "none"  "red"  ...
 */
-table RequestSetLedColor {
+table RequestSetLed {
     id: string;
     switch: bool;
     color: string;
 }
-table ResponseSetLedColor {
+table ResponseSetLed {
     id: string;
     switch: bool;
     color: string;
