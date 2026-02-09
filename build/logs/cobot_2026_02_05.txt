@@ -1,0 +1,747 @@
+W 00:20:56.725   [LAN2CAN]      Header footer not match
+W 01:22:15.829   [LAN2CAN]      Header footer not match
+W 01:22:43.337   [LAN2CAN]      Header footer not match
+W 02:02:15.781   [LAN2CAN]      Header footer not match
+W 02:55:19.598   [LAN2CAN]      Header footer not match
+W 03:25:03.657   [LAN2CAN]      Header footer not match
+W 03:39:04.093   [LAN2CAN]      Header footer not match
+W 04:35:05.257   [LAN2CAN]      Header footer not match
+W 04:52:15.681   [LAN2CAN]      Header footer not match
+W 05:44:46.658   [LAN2CAN]      Header footer not match
+W 06:04:03.205   [LAN2CAN]      Header footer not match
+W 07:05:08.085   [LAN2CAN]      Header footer not match
+W 07:34:29.985   [LAN2CAN]      Header footer not match
+W 08:09:32.757   [LAN2CAN]      Header footer not match
+W 09:04:10.359   [LAN2CAN]      Header footer not match
+W 10:25:27.749   [LAN2CAN]      Header footer not match
+W 10:25:37.825   [LAN2CAN]      Header footer not match
+W 10:26:03.265   [LAN2CAN]      Header footer not match
+W 10:39:10.682   [LAN2CAN]      Header footer not match
+W 10:50:21.325   [LAN2CAN]      Header footer not match
+W 11:32:55.849   [LAN2CAN]      Header footer not match
+W 11:39:40.981   [LAN2CAN]      Header footer not match
+W 11:51:23.521   [LAN2CAN]      Header footer not match
+W 12:10:41.882   [LAN2CAN]      Header footer not match
+W 12:11:01.257   [LAN2CAN]      Header footer not match
+I 12:14:36.133   [MOTION]       Motion Mode Changed: 0->2
+I 12:14:36.139   [MOTION]       Motion-Time Done
+I 12:14:36.139   [MOTION]       Motion Mode Changed: 2->0
+W 12:28:40.934   [LAN2CAN]      Header footer not match
+W 12:37:50.821   [LAN2CAN]      Header footer not match
+W 13:19:25.825   [LAN2CAN]      Header footer not match
+W 13:31:23.757   [LAN2CAN]      Header footer not match
+W 13:35:51.523   [LAN2CAN]      Header footer not match
+W 13:35:51.532   [LAN2CAN]      Header footer not match
+W 14:10:00.117   [LAN2CAN]      Header footer not match
+W 14:10:16.421   [LAN2CAN]      Header footer not match
+W 14:24:45.030   [LAN2CAN]      Header footer not match
+W 14:33:12.193   [LAN2CAN]      Header footer not match
+W 14:35:00.246   [LAN2CAN]      Header footer not match
+W 15:08:16.741   [LAN2CAN]      Header footer not match
+W 15:16:39.821   [LAN2CAN]      Header footer not match
+W 16:20:43.025   [LAN2CAN]      Header footer not match
+W 17:21:35.305   [LAN2CAN]      Header footer not match
+W 17:22:02.866   [LAN2CAN]      Header footer not match
+W 17:35:23.705   [LAN2CAN]      Header footer not match
+W 17:54:40.957   [LAN2CAN]      Header footer not match
+W 18:23:59.974   [LAN2CAN]      Header footer not match
+W 19:12:28.562   [LAN2CAN]      Header footer not match
+W 20:06:18.238   [LAN2CAN]      Header footer not match
+I 20:23:00.039   [MAIN]         System Version: 1.0.0
+I 20:23:00.549   [LAN2CAN]      Succeed to create socket: 
+I 20:23:01.052   [DAEMON]       Succeed to start read thread
+I 20:23:01.052   [DAEMON]       Succeed to start real-time thread
+I 20:23:01.549   [LAN2CAN]      Succeed to connect l2c
+I 20:23:01.591   [SCB_V1]       SCB CON 1
+I 20:23:01.658   [SCB_V1]       SCB CON 0
+I 20:23:01.682   [SYSTEM]       SCB CONFIG DONE
+W 20:23:03.548   [SYSTEM]       System General Thread Jitter High: 263493 ns
+I 20:23:04.565   [MAIN]         SYSTEM STARTING
+I 20:26:34.069   [MAIN]         System Version: 1.0.0
+I 20:26:34.586   [LAN2CAN]      Succeed to create socket: 
+I 20:26:35.089   [DAEMON]       Succeed to start read thread
+I 20:26:35.089   [DAEMON]       Succeed to start real-time thread
+I 20:26:35.586   [LAN2CAN]      Succeed to connect l2c
+I 20:26:35.592   [SCB_V1]       SCB CON 1
+I 20:26:35.658   [SCB_V1]       SCB CON 0
+I 20:26:35.679   [SYSTEM]       SCB CONFIG DONE
+W 20:26:37.585   [SYSTEM]       System General Thread Jitter High: 133855 ns
+I 20:26:38.602   [MAIN]         SYSTEM STARTING
+I 20:28:52.006   [MAIN]         System Version: 1.0.0
+I 20:28:52.516   [LAN2CAN]      Succeed to create socket: 
+I 20:28:53.019   [DAEMON]       Succeed to start read thread
+I 20:28:53.019   [DAEMON]       Succeed to start real-time thread
+I 20:28:53.516   [LAN2CAN]      Succeed to connect l2c
+I 20:28:53.594   [SCB_V1]       SCB CON 1
+I 20:28:53.659   [SCB_V1]       SCB CON 0
+I 20:28:53.672   [SYSTEM]       SCB CONFIG DONE
+W 20:28:55.517   [SYSTEM]       System General Thread Jitter High: 406054 ns
+I 20:28:56.533   [MAIN]         SYSTEM STARTING
+I 20:34:02.060   [MAIN]         System Version: 1.0.0
+I 20:34:02.570   [LAN2CAN]      Succeed to create socket: 
+I 20:34:03.073   [DAEMON]       Succeed to start read thread
+I 20:34:03.073   [DAEMON]       Succeed to start real-time thread
+I 20:34:03.570   [LAN2CAN]      Succeed to connect l2c
+I 20:34:03.596   [SCB_V1]       SCB CON 1
+I 20:34:03.660   [SCB_V1]       SCB CON 0
+I 20:34:03.685   [SYSTEM]       SCB CONFIG DONE
+I 20:35:39.764   [MAIN]         System Version: 1.0.0
+I 20:35:40.274   [LAN2CAN]      Succeed to create socket: 
+I 20:35:40.777   [DAEMON]       Succeed to start read thread
+I 20:35:40.777   [DAEMON]       Succeed to start real-time thread
+I 20:35:41.274   [LAN2CAN]      Succeed to connect l2c
+I 20:35:41.396   [SCB_V1]       SCB CON 1
+I 20:35:41.460   [SCB_V1]       SCB CON 0
+I 20:35:41.490   [SYSTEM]       SCB CONFIG DONE
+W 20:35:43.275   [SYSTEM]       System General Thread Jitter High: 197714 ns
+I 20:35:44.290   [MAIN]         SYSTEM STARTING
+I 20:36:40.856   [MAIN]         System Version: 1.0.0
+I 20:36:41.367   [LAN2CAN]      Succeed to create socket: 
+I 20:36:41.870   [DAEMON]       Succeed to start read thread
+I 20:36:41.870   [DAEMON]       Succeed to start real-time thread
+I 20:36:42.367   [LAN2CAN]      Succeed to connect l2c
+I 20:36:42.397   [SCB_V1]       SCB CON 1
+I 20:36:42.460   [SCB_V1]       SCB CON 0
+I 20:36:42.480   [SYSTEM]       SCB CONFIG DONE
+W 20:36:44.366   [SYSTEM]       System General Thread Jitter High: 214242 ns
+I 20:36:45.384   [MAIN]         SYSTEM STARTING
+I 20:39:03.756   [MAIN]         System Version: 1.0.0
+I 20:39:04.275   [LAN2CAN]      Succeed to create socket: 
+I 20:39:04.777   [DAEMON]       Succeed to start read thread
+I 20:39:04.778   [DAEMON]       Succeed to start real-time thread
+I 20:39:05.275   [LAN2CAN]      Succeed to connect l2c
+I 20:39:05.397   [SCB_V1]       SCB CON 1
+I 20:39:05.461   [SCB_V1]       SCB CON 0
+I 20:39:05.486   [SYSTEM]       SCB CONFIG DONE
+I 20:41:32.700   [MAIN]         System Version: 1.0.0
+I 20:41:33.210   [LAN2CAN]      Succeed to create socket: 
+I 20:41:33.712   [DAEMON]       Succeed to start read thread
+I 20:41:33.712   [DAEMON]       Succeed to start real-time thread
+I 20:41:34.210   [LAN2CAN]      Succeed to connect l2c
+I 20:41:34.261   [SCB_V1]       SCB CON 0
+I 20:41:34.399   [SCB_V1]       SCB CON 1
+I 20:41:34.421   [SYSTEM]       SCB CONFIG DONE
+W 20:41:36.206   [SYSTEM]       System General Thread Jitter High: 115914 ns
+I 20:41:37.225   [MAIN]         SYSTEM STARTING
+I 20:42:37.747   [MAIN]         System Version: 1.0.0
+I 20:42:38.257   [LAN2CAN]      Succeed to create socket: 
+I 20:42:38.760   [DAEMON]       Succeed to start read thread
+I 20:42:38.760   [DAEMON]       Succeed to start real-time thread
+I 20:42:39.258   [LAN2CAN]      Succeed to connect l2c
+I 20:42:39.262   [SCB_V1]       SCB CON 0
+I 20:42:39.398   [SCB_V1]       SCB CON 1
+I 20:42:39.411   [SYSTEM]       SCB CONFIG DONE
+W 20:42:41.257   [SYSTEM]       System General Thread Jitter High: 155861 ns
+I 20:42:42.273   [MAIN]         SYSTEM STARTING
+I 20:42:58.163   [MAIN]         System Version: 1.0.0
+I 20:42:58.674   [LAN2CAN]      Succeed to create socket: 
+I 20:42:59.177   [DAEMON]       Succeed to start read thread
+I 20:42:59.177   [DAEMON]       Succeed to start real-time thread
+I 20:42:59.674   [LAN2CAN]      Succeed to connect l2c
+I 20:42:59.799   [SCB_V1]       SCB CON 1
+I 20:42:59.861   [SCB_V1]       SCB CON 0
+I 20:42:59.889   [SYSTEM]       SCB CONFIG DONE
+W 20:43:01.675   [SYSTEM]       System General Thread Jitter High: 124770 ns
+I 20:43:02.690   [MAIN]         SYSTEM STARTING
+I 20:44:28.512   [MAIN]         System Version: 1.0.0
+I 20:44:29.022   [LAN2CAN]      Succeed to create socket: 
+I 20:44:29.525   [DAEMON]       Succeed to start read thread
+I 20:44:29.525   [DAEMON]       Succeed to start real-time thread
+I 20:44:30.023   [LAN2CAN]      Succeed to connect l2c
+I 20:44:30.062   [SCB_V1]       SCB CON 0
+I 20:44:30.199   [SCB_V1]       SCB CON 1
+I 20:44:30.214   [SYSTEM]       SCB CONFIG DONE
+W 20:44:32.019   [SYSTEM]       System General Thread Jitter High: 154421 ns
+I 20:44:33.037   [MAIN]         SYSTEM STARTING
+W 20:46:57.456   [LAN2CAN]      LAN disconnected (size 0)
+I 20:46:58.031   [LAN2CAN]      Succeed to create socket: 
+I 20:47:43.842   [MAIN]         System Version: 1.0.0
+I 20:47:44.349   [LAN2CAN]      Succeed to create socket: 
+I 20:47:44.854   [DAEMON]       Succeed to start read thread
+I 20:47:44.854   [DAEMON]       Succeed to start real-time thread
+I 20:47:45.350   [LAN2CAN]      Succeed to connect l2c
+I 20:47:45.401   [SCB_V1]       SCB CON 1
+I 20:47:45.462   [SCB_V1]       SCB CON 0
+I 20:47:45.485   [SYSTEM]       SCB CONFIG DONE
+W 20:47:47.350   [SYSTEM]       System General Thread Jitter High: 111057 ns
+I 20:47:48.367   [MAIN]         SYSTEM STARTING
+I 20:50:08.803   [MAIN]         System Version: 1.0.0
+I 20:50:09.313   [LAN2CAN]      Succeed to create socket: 
+I 20:50:09.816   [DAEMON]       Succeed to start read thread
+I 20:50:09.816   [DAEMON]       Succeed to start real-time thread
+I 20:50:10.313   [LAN2CAN]      Succeed to connect l2c
+I 20:50:10.401   [SCB_V1]       SCB CON 1
+I 20:50:10.463   [SCB_V1]       SCB CON 0
+I 20:50:10.484   [SYSTEM]       SCB CONFIG DONE
+I 20:51:32.717   [MAIN]         System Version: 1.0.0
+I 20:51:33.226   [LAN2CAN]      Succeed to create socket: 
+I 20:51:33.729   [DAEMON]       Succeed to start read thread
+I 20:51:33.729   [DAEMON]       Succeed to start real-time thread
+I 20:51:34.226   [LAN2CAN]      Succeed to connect l2c
+I 20:51:34.263   [SCB_V1]       SCB CON 0
+I 20:51:34.402   [SCB_V1]       SCB CON 1
+I 20:51:34.419   [SYSTEM]       SCB CONFIG DONE
+W 20:51:35.334   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:36.226   [LAN2CAN]      Succeed to create socket: 
+I 20:51:37.226   [LAN2CAN]      Succeed to connect l2c
+W 20:51:37.826   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:38.227   [LAN2CAN]      Succeed to create socket: 
+I 20:51:39.227   [LAN2CAN]      Succeed to connect l2c
+W 20:51:39.825   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:40.227   [LAN2CAN]      Succeed to create socket: 
+I 20:51:41.227   [LAN2CAN]      Succeed to connect l2c
+W 20:51:41.826   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:42.227   [LAN2CAN]      Succeed to create socket: 
+I 20:51:43.228   [LAN2CAN]      Succeed to connect l2c
+W 20:51:43.827   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:44.228   [LAN2CAN]      Succeed to create socket: 
+I 20:51:45.228   [LAN2CAN]      Succeed to connect l2c
+W 20:51:45.827   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:46.228   [LAN2CAN]      Succeed to create socket: 
+I 20:51:47.228   [LAN2CAN]      Succeed to connect l2c
+W 20:51:47.827   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:48.229   [LAN2CAN]      Succeed to create socket: 
+I 20:51:49.229   [LAN2CAN]      Succeed to connect l2c
+W 20:51:49.827   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:50.229   [LAN2CAN]      Succeed to create socket: 
+I 20:51:51.229   [LAN2CAN]      Succeed to connect l2c
+W 20:51:51.828   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:52.230   [LAN2CAN]      Succeed to create socket: 
+I 20:51:53.230   [LAN2CAN]      Succeed to connect l2c
+W 20:51:53.829   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:54.230   [LAN2CAN]      Succeed to create socket: 
+I 20:51:55.230   [LAN2CAN]      Succeed to connect l2c
+W 20:51:55.829   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:56.230   [LAN2CAN]      Succeed to create socket: 
+I 20:51:57.231   [LAN2CAN]      Succeed to connect l2c
+W 20:51:57.829   [LAN2CAN]      LAN disconnected (size 0)
+I 20:51:58.231   [LAN2CAN]      Succeed to create socket: 
+I 20:51:59.231   [LAN2CAN]      Succeed to connect l2c
+W 20:51:59.830   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:00.231   [LAN2CAN]      Succeed to create socket: 
+I 20:52:01.231   [LAN2CAN]      Succeed to connect l2c
+W 20:52:01.830   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:02.232   [LAN2CAN]      Succeed to create socket: 
+I 20:52:03.232   [LAN2CAN]      Succeed to connect l2c
+W 20:52:03.831   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:04.232   [LAN2CAN]      Succeed to create socket: 
+I 20:52:05.232   [LAN2CAN]      Succeed to connect l2c
+W 20:52:05.831   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:06.232   [LAN2CAN]      Succeed to create socket: 
+I 20:52:07.233   [LAN2CAN]      Succeed to connect l2c
+W 20:52:07.831   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:08.233   [LAN2CAN]      Succeed to create socket: 
+I 20:52:09.233   [LAN2CAN]      Succeed to connect l2c
+W 20:52:09.832   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:10.233   [LAN2CAN]      Succeed to create socket: 
+I 20:52:11.233   [LAN2CAN]      Succeed to connect l2c
+W 20:52:11.832   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:12.234   [LAN2CAN]      Succeed to create socket: 
+I 20:52:13.234   [LAN2CAN]      Succeed to connect l2c
+W 20:52:13.833   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:14.234   [LAN2CAN]      Succeed to create socket: 
+I 20:52:15.234   [LAN2CAN]      Succeed to connect l2c
+W 20:52:15.833   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:16.234   [LAN2CAN]      Succeed to create socket: 
+I 20:52:17.235   [LAN2CAN]      Succeed to connect l2c
+W 20:52:17.833   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:18.235   [LAN2CAN]      Succeed to create socket: 
+I 20:52:19.235   [LAN2CAN]      Succeed to connect l2c
+W 20:52:19.834   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:20.235   [LAN2CAN]      Succeed to create socket: 
+I 20:52:21.236   [LAN2CAN]      Succeed to connect l2c
+W 20:52:21.834   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:22.236   [LAN2CAN]      Succeed to create socket: 
+I 20:52:23.236   [LAN2CAN]      Succeed to connect l2c
+W 20:52:23.835   [LAN2CAN]      LAN disconnected (size 0)
+I 20:52:24.236   [LAN2CAN]      Succeed to create socket: 
+I 20:53:27.660   [MAIN]         System Version: 1.0.0
+I 20:53:28.170   [LAN2CAN]      Succeed to create socket: 
+I 20:53:28.673   [DAEMON]       Succeed to start read thread
+I 20:53:28.673   [DAEMON]       Succeed to start real-time thread
+I 20:53:29.170   [LAN2CAN]      Succeed to connect l2c
+I 20:53:29.203   [SCB_V1]       SCB CON 1
+I 20:53:29.263   [SCB_V1]       SCB CON 0
+I 20:53:29.285   [SYSTEM]       SCB CONFIG DONE
+I 21:05:56.513   [MAIN]         System Version: 1.0.0
+I 21:05:57.025   [LAN2CAN]      Succeed to create socket: 
+I 21:05:57.528   [DAEMON]       Succeed to start read thread
+I 21:05:57.528   [DAEMON]       Succeed to start real-time thread
+I 21:05:58.025   [LAN2CAN]      Succeed to connect l2c
+I 21:05:58.066   [SCB_V1]       SCB CON 0
+I 21:05:58.206   [SCB_V1]       SCB CON 1
+I 21:05:58.220   [SYSTEM]       SCB CONFIG DONE
+W 21:06:00.025   [SYSTEM]       System General Thread Jitter High: 254575 ns
+I 21:06:01.043   [MAIN]         SYSTEM STARTING
+I 21:09:16.001   [MAIN]         System Version: 1.0.0
+I 21:09:16.512   [LAN2CAN]      Succeed to create socket: 
+I 21:09:17.015   [DAEMON]       Succeed to start read thread
+I 21:09:17.015   [DAEMON]       Succeed to start real-time thread
+I 21:09:17.512   [LAN2CAN]      Succeed to connect l2c
+W 21:09:17.512   [LAN2CAN]      LAN disconnected (size 0)
+I 21:09:18.512   [LAN2CAN]      Succeed to create socket: 
+W 21:09:19.500   [SYSTEM]       System General Thread Jitter High: 229892 ns
+I 21:09:19.512   [LAN2CAN]      Succeed to connect l2c
+I 21:09:19.608   [SCB_V1]       SCB CON 1
+I 21:09:19.666   [SCB_V1]       SCB CON 0
+I 21:09:19.693   [SYSTEM]       SCB CONFIG DONE
+I 21:09:20.529   [MAIN]         SYSTEM STARTING
+I 21:15:50.584   [MAIN]         System Version: 1.0.0
+I 21:15:51.095   [LAN2CAN]      Succeed to create socket: 
+I 21:15:51.597   [DAEMON]       Succeed to start read thread
+I 21:15:51.598   [DAEMON]       Succeed to start real-time thread
+I 21:15:52.095   [LAN2CAN]      Succeed to connect l2c
+I 21:15:52.210   [SCB_V1]       SCB CON 1
+I 21:15:52.267   [SCB_V1]       SCB CON 0
+I 21:15:52.290   [SYSTEM]       SCB CONFIG DONE
+W 21:15:54.095   [SYSTEM]       System General Thread Jitter High: 144864 ns
+I 21:15:55.111   [MAIN]         SYSTEM STARTING
+I 21:18:20.192   [MAIN]         System Version: 1.0.0
+I 21:18:20.703   [LAN2CAN]      Succeed to create socket: 
+I 21:18:21.206   [DAEMON]       Succeed to start read thread
+I 21:18:21.206   [DAEMON]       Succeed to start real-time thread
+I 21:18:21.704   [LAN2CAN]      Succeed to connect l2c
+I 21:18:21.811   [SCB_V1]       SCB CON 1
+I 21:18:21.868   [SCB_V1]       SCB CON 0
+I 21:18:21.897   [SYSTEM]       SCB CONFIG DONE
+W 21:18:23.702   [SYSTEM]       System General Thread Jitter High: 122929 ns
+E 21:18:24.220   [MAIN]         FAIL to initialize rb_sds_server
+I 21:18:31.649   [MAIN]         System Version: 1.0.0
+I 21:18:32.159   [LAN2CAN]      Succeed to create socket: 
+I 21:18:32.662   [DAEMON]       Succeed to start read thread
+I 21:18:32.662   [DAEMON]       Succeed to start real-time thread
+I 21:18:33.160   [LAN2CAN]      Succeed to connect l2c
+I 21:18:33.212   [SCB_V1]       SCB CON 1
+I 21:18:33.268   [SCB_V1]       SCB CON 0
+I 21:18:33.295   [SYSTEM]       SCB CONFIG DONE
+W 21:18:35.160   [SYSTEM]       System General Thread Jitter High: 204828 ns
+I 21:18:36.177   [MAIN]         SYSTEM STARTING
+I 21:24:32.056   [MAIN]         System Version: 1.0.0
+I 21:24:32.567   [LAN2CAN]      Succeed to create socket: 
+I 21:24:33.070   [DAEMON]       Succeed to start read thread
+I 21:24:33.070   [DAEMON]       Succeed to start real-time thread
+I 21:24:33.567   [LAN2CAN]      Succeed to connect l2c
+I 21:24:33.614   [SCB_V1]       SCB CON 1
+I 21:24:33.669   [SCB_V1]       SCB CON 0
+I 21:24:33.680   [SYSTEM]       SCB CONFIG DONE
+W 21:24:35.565   [SYSTEM]       System General Thread Jitter High: 526998 ns
+I 21:24:36.584   [MAIN]         SYSTEM STARTING
+I 21:25:07.966   [MAIN]         System Version: 1.0.0
+I 21:25:08.477   [LAN2CAN]      Succeed to create socket: 
+I 21:25:08.979   [DAEMON]       Succeed to start read thread
+I 21:25:08.979   [DAEMON]       Succeed to start real-time thread
+I 21:25:09.477   [LAN2CAN]      Succeed to connect l2c
+I 21:25:09.614   [SCB_V1]       SCB CON 1
+I 21:25:09.669   [SCB_V1]       SCB CON 0
+I 21:25:09.688   [SYSTEM]       SCB CONFIG DONE
+I 21:25:12.494   [MAIN]         SYSTEM STARTING
+I 21:45:51.029   [MAIN]         System Version: 1.0.0
+I 21:45:51.539   [LAN2CAN]      Succeed to create socket: 
+I 21:45:52.042   [DAEMON]       Succeed to start read thread
+I 21:45:52.042   [DAEMON]       Succeed to start real-time thread
+I 21:45:52.539   [LAN2CAN]      Succeed to connect l2c
+I 21:45:52.622   [SCB_V1]       SCB CON 1
+I 21:45:52.673   [SCB_V1]       SCB CON 0
+I 21:45:52.695   [SYSTEM]       SCB CONFIG DONE
+W 21:45:54.540   [SYSTEM]       System General Thread Jitter High: 150049 ns
+I 21:45:55.557   [MAIN]         SYSTEM STARTING
+I 22:44:50.527   [MAIN]         System Version: 1.0.0
+I 22:44:51.045   [LAN2CAN]      Succeed to create socket: 
+I 22:44:51.548   [DAEMON]       Succeed to start read thread
+I 22:44:51.548   [DAEMON]       Succeed to start real-time thread
+I 22:44:52.046   [LAN2CAN]      Succeed to connect l2c
+I 22:44:52.083   [SCB_V1]       SCB CON 0
+I 22:44:52.243   [SCB_V1]       SCB CON 1
+I 22:44:52.259   [SYSTEM]       SCB CONFIG DONE
+W 22:44:54.044   [SYSTEM]       System General Thread Jitter High: 93850 ns
+I 22:44:55.063   [MAIN]         SYSTEM STARTING
+W 22:44:56.050   [SYSTEM]       System General Thread Jitter High: 255414 ns
+I 22:45:26.481   [MAIN]         System Version: 1.0.0
+I 22:45:26.993   [LAN2CAN]      Succeed to create socket: 
+I 22:45:27.496   [DAEMON]       Succeed to start read thread
+I 22:45:27.496   [DAEMON]       Succeed to start real-time thread
+I 22:45:27.993   [LAN2CAN]      Succeed to connect l2c
+I 22:45:28.044   [SCB_V1]       SCB CON 1
+I 22:45:28.084   [SCB_V1]       SCB CON 0
+I 22:45:28.106   [SYSTEM]       SCB CONFIG DONE
+I 22:45:52.920   [MAIN]         System Version: 1.0.0
+I 22:45:53.431   [LAN2CAN]      Succeed to create socket: 
+I 22:45:53.934   [DAEMON]       Succeed to start read thread
+I 22:45:53.934   [DAEMON]       Succeed to start real-time thread
+I 22:45:54.431   [LAN2CAN]      Succeed to connect l2c
+I 22:45:54.443   [SCB_V1]       SCB CON 1
+I 22:45:54.484   [SCB_V1]       SCB CON 0
+I 22:45:54.506   [SYSTEM]       SCB CONFIG DONE
+W 22:45:56.431   [SYSTEM]       System General Thread Jitter High: 193328 ns
+I 22:45:57.448   [MAIN]         SYSTEM STARTING
+I 23:01:22.998   [MAIN]         System Version: 1.0.0
+I 23:01:23.509   [LAN2CAN]      Succeed to create socket: 
+I 23:01:24.012   [DAEMON]       Succeed to start read thread
+I 23:01:24.012   [DAEMON]       Succeed to start real-time thread
+I 23:01:24.509   [LAN2CAN]      Succeed to connect l2c
+I 23:01:24.649   [SCB_V1]       SCB CON 1
+I 23:01:24.687   [SCB_V1]       SCB CON 0
+I 23:01:24.704   [SYSTEM]       SCB CONFIG DONE
+I 23:03:02.521   [MAIN]         System Version: 1.0.0
+I 23:03:03.031   [LAN2CAN]      Succeed to create socket: 
+I 23:03:03.534   [DAEMON]       Succeed to start read thread
+I 23:03:03.534   [DAEMON]       Succeed to start real-time thread
+I 23:03:04.031   [LAN2CAN]      Succeed to connect l2c
+I 23:03:04.049   [SCB_V1]       SCB CON 1
+I 23:03:04.087   [SCB_V1]       SCB CON 0
+I 23:03:04.106   [SYSTEM]       SCB CONFIG DONE
+W 23:03:06.031   [SYSTEM]       System General Thread Jitter High: 148441 ns
+I 23:03:07.048   [MAIN]         SYSTEM STARTING
+W 23:03:10.043   [SYSTEM]       System General Thread Jitter High: 277084 ns
+I 23:03:44.014   [MAIN]         System Version: 1.0.0
+I 23:03:44.526   [LAN2CAN]      Succeed to create socket: 
+I 23:03:45.028   [DAEMON]       Succeed to start read thread
+I 23:03:45.029   [DAEMON]       Succeed to start real-time thread
+I 23:03:45.526   [LAN2CAN]      Succeed to connect l2c
+I 23:03:45.650   [SCB_V1]       SCB CON 1
+I 23:03:45.687   [SCB_V1]       SCB CON 0
+I 23:03:45.701   [SYSTEM]       SCB CONFIG DONE
+W 23:03:47.526   [SYSTEM]       System General Thread Jitter High: 160692 ns
+I 23:03:48.542   [MAIN]         SYSTEM STARTING
+I 23:04:42.192   [MAIN]         System Version: 1.0.0
+I 23:04:42.703   [LAN2CAN]      Succeed to create socket: 
+I 23:04:43.207   [DAEMON]       Succeed to start read thread
+I 23:04:43.207   [DAEMON]       Succeed to start real-time thread
+I 23:04:43.704   [LAN2CAN]      Succeed to connect l2c
+I 23:04:43.850   [SCB_V1]       SCB CON 1
+I 23:04:43.887   [SCB_V1]       SCB CON 0
+I 23:04:43.915   [SYSTEM]       SCB CONFIG DONE
+W 23:04:45.700   [SYSTEM]       System General Thread Jitter High: 401696 ns
+I 23:04:46.722   [MAIN]         SYSTEM STARTING
+I 23:10:29.749   [MAIN]         System Version: 1.0.0
+I 23:10:30.260   [LAN2CAN]      Succeed to create socket: 
+I 23:10:30.763   [DAEMON]       Succeed to start read thread
+I 23:10:30.763   [DAEMON]       Succeed to start real-time thread
+I 23:10:31.260   [LAN2CAN]      Succeed to connect l2c
+I 23:10:31.288   [SCB_V1]       SCB CON 0
+I 23:10:31.452   [SCB_V1]       SCB CON 1
+I 23:10:31.471   [SYSTEM]       SCB CONFIG DONE
+W 23:10:33.257   [SYSTEM]       System General Thread Jitter High: 57840 ns
+I 23:10:34.278   [MAIN]         SYSTEM STARTING
+W 23:10:35.263   [SYSTEM]       System General Thread Jitter High: 116318 ns
+I 23:11:08.198   [MAIN]         System Version: 1.0.0
+I 23:11:08.711   [LAN2CAN]      Succeed to create socket: 
+I 23:11:09.214   [DAEMON]       Succeed to start read thread
+I 23:11:09.214   [DAEMON]       Succeed to start real-time thread
+I 23:11:09.711   [LAN2CAN]      Succeed to connect l2c
+I 23:11:09.853   [SCB_V1]       SCB CON 1
+I 23:11:09.889   [SCB_V1]       SCB CON 0
+I 23:11:09.906   [SYSTEM]       SCB CONFIG DONE
+W 23:11:11.712   [SYSTEM]       System General Thread Jitter High: 165404 ns
+I 23:11:12.729   [MAIN]         SYSTEM STARTING
+W 23:11:13.718   [SYSTEM]       System General Thread Jitter High: 481923 ns
+I 23:13:15.964   [MAIN]         System Version: 1.0.0
+I 23:13:16.482   [LAN2CAN]      Succeed to create socket: 
+I 23:13:16.985   [DAEMON]       Succeed to start read thread
+I 23:13:16.985   [DAEMON]       Succeed to start real-time thread
+I 23:13:17.483   [LAN2CAN]      Succeed to connect l2c
+I 23:13:17.489   [SCB_V1]       SCB CON 0
+I 23:13:17.653   [SCB_V1]       SCB CON 1
+I 23:13:17.674   [SYSTEM]       SCB CONFIG DONE
+W 23:13:19.479   [SYSTEM]       System General Thread Jitter High: 153406 ns
+I 23:13:20.500   [MAIN]         SYSTEM STARTING
+I 23:14:50.894   [MAIN]         System Version: 1.0.0
+I 23:14:51.405   [LAN2CAN]      Succeed to create socket: 
+I 23:14:51.907   [DAEMON]       Succeed to start read thread
+I 23:14:51.907   [DAEMON]       Succeed to start real-time thread
+I 23:14:52.405   [LAN2CAN]      Succeed to connect l2c
+W 23:14:52.405   [LAN2CAN]      LAN disconnected (size 0)
+I 23:14:53.405   [LAN2CAN]      Succeed to create socket: 
+W 23:14:54.393   [SYSTEM]       System General Thread Jitter High: 117911 ns
+I 23:14:54.405   [LAN2CAN]      Succeed to connect l2c
+I 23:14:54.454   [SCB_V1]       SCB CON 1
+I 23:14:54.489   [SCB_V1]       SCB CON 0
+I 23:14:54.505   [SYSTEM]       SCB CONFIG DONE
+I 23:14:55.422   [MAIN]         SYSTEM STARTING
+I 23:18:00.604   [MAIN]         System Version: 1.0.0
+I 23:18:01.115   [LAN2CAN]      Succeed to create socket: 
+I 23:18:01.618   [DAEMON]       Succeed to start read thread
+I 23:18:01.618   [DAEMON]       Succeed to start real-time thread
+I 23:18:02.115   [LAN2CAN]      Succeed to connect l2c
+I 23:18:02.255   [SCB_V1]       SCB CON 1
+I 23:18:02.289   [SCB_V1]       SCB CON 0
+I 23:18:02.309   [SYSTEM]       SCB CONFIG DONE
+W 23:18:04.114   [SYSTEM]       System General Thread Jitter High: 164273 ns
+I 23:18:05.133   [MAIN]         SYSTEM STARTING
+I 23:20:47.760   [MAIN]         System Version: 1.0.0
+I 23:20:48.273   [LAN2CAN]      Succeed to create socket: 
+I 23:20:48.776   [DAEMON]       Succeed to start read thread
+I 23:20:48.776   [DAEMON]       Succeed to start real-time thread
+I 23:20:49.273   [LAN2CAN]      Succeed to connect l2c
+I 23:20:49.290   [SCB_V1]       SCB CON 0
+I 23:20:49.456   [SCB_V1]       SCB CON 1
+I 23:20:49.468   [SYSTEM]       SCB CONFIG DONE
+W 23:20:51.274   [SYSTEM]       System General Thread Jitter High: 307523 ns
+I 23:20:52.291   [MAIN]         SYSTEM STARTING
+I 23:21:18.299   [MAIN]         System Version: 1.0.0
+I 23:21:18.809   [LAN2CAN]      Succeed to create socket: 
+I 23:21:19.312   [DAEMON]       Succeed to start read thread
+I 23:21:19.312   [DAEMON]       Succeed to start real-time thread
+I 23:21:19.809   [LAN2CAN]      Succeed to connect l2c
+I 23:21:19.856   [SCB_V1]       SCB CON 1
+I 23:21:19.890   [SCB_V1]       SCB CON 0
+I 23:21:19.904   [SYSTEM]       SCB CONFIG DONE
+W 23:21:21.810   [SYSTEM]       System General Thread Jitter High: 286311 ns
+I 23:21:22.827   [MAIN]         SYSTEM STARTING
+I 23:24:04.668   [MAIN]         System Version: 1.0.0
+I 23:24:05.178   [LAN2CAN]      Succeed to create socket: 
+I 23:24:05.681   [DAEMON]       Succeed to start read thread
+I 23:24:05.681   [DAEMON]       Succeed to start real-time thread
+I 23:24:06.178   [LAN2CAN]      Succeed to connect l2c
+I 23:24:06.257   [SCB_V1]       SCB CON 1
+I 23:24:06.290   [SCB_V1]       SCB CON 0
+I 23:24:06.313   [SYSTEM]       SCB CONFIG DONE
+W 23:24:08.178   [SYSTEM]       System General Thread Jitter High: 747230 ns
+I 23:24:09.195   [MAIN]         SYSTEM STARTING
+W 23:24:30.239   [SYSTEM]       System General Thread Jitter High: 1719495 ns
+I 23:26:24.836   [MAIN]         System Version: 1.0.0
+I 23:26:25.346   [LAN2CAN]      Succeed to create socket: 
+I 23:26:25.849   [DAEMON]       Succeed to start read thread
+I 23:26:25.849   [DAEMON]       Succeed to start real-time thread
+I 23:26:26.346   [LAN2CAN]      Succeed to connect l2c
+W 23:26:26.347   [LAN2CAN]      LAN disconnected (size 0)
+I 23:27:21.358   [MAIN]         System Version: 1.0.0
+I 23:27:21.869   [LAN2CAN]      Succeed to create socket: 
+I 23:27:22.372   [DAEMON]       Succeed to start read thread
+I 23:27:22.372   [DAEMON]       Succeed to start real-time thread
+I 23:27:22.870   [LAN2CAN]      Succeed to connect l2c
+I 23:27:22.891   [SCB_V1]       SCB CON 0
+I 23:27:23.058   [SCB_V1]       SCB CON 1
+I 23:27:23.085   [SYSTEM]       SCB CONFIG DONE
+I 23:27:32.747   [MAIN]         System Version: 1.0.0
+I 23:27:33.258   [LAN2CAN]      Succeed to create socket: 
+I 23:27:33.761   [DAEMON]       Succeed to start read thread
+I 23:27:33.761   [DAEMON]       Succeed to start real-time thread
+I 23:27:34.259   [LAN2CAN]      Succeed to connect l2c
+I 23:27:34.291   [SCB_V1]       SCB CON 0
+I 23:27:34.458   [SCB_V1]       SCB CON 1
+I 23:27:34.474   [SYSTEM]       SCB CONFIG DONE
+I 23:27:37.275   [MAIN]         SYSTEM STARTING
+I 23:29:29.395   [MAIN]         System Version: 1.0.0
+I 23:29:29.906   [LAN2CAN]      Succeed to create socket: 
+I 23:29:30.409   [DAEMON]       Succeed to start read thread
+I 23:29:30.409   [DAEMON]       Succeed to start real-time thread
+I 23:29:30.906   [LAN2CAN]      Succeed to connect l2c
+I 23:29:31.059   [SCB_V1]       SCB CON 1
+I 23:29:31.092   [SCB_V1]       SCB CON 0
+I 23:29:31.121   [SYSTEM]       SCB CONFIG DONE
+I 23:29:40.227   [MAIN]         System Version: 1.0.0
+I 23:29:40.737   [LAN2CAN]      Succeed to create socket: 
+I 23:29:41.242   [DAEMON]       Succeed to start read thread
+I 23:29:41.242   [DAEMON]       Succeed to start real-time thread
+I 23:29:41.737   [LAN2CAN]      Succeed to connect l2c
+I 23:29:41.859   [SCB_V1]       SCB CON 1
+I 23:29:41.891   [SCB_V1]       SCB CON 0
+I 23:29:41.913   [SYSTEM]       SCB CONFIG DONE
+I 23:30:16.040   [MAIN]         System Version: 1.0.0
+I 23:30:16.550   [LAN2CAN]      Succeed to create socket: 
+I 23:30:17.053   [DAEMON]       Succeed to start read thread
+I 23:30:17.053   [DAEMON]       Succeed to start real-time thread
+I 23:30:17.551   [LAN2CAN]      Succeed to connect l2c
+I 23:30:17.659   [SCB_V1]       SCB CON 1
+I 23:30:17.692   [SCB_V1]       SCB CON 0
+I 23:30:17.706   [SYSTEM]       SCB CONFIG DONE
+I 23:31:55.083   [MAIN]         System Version: 1.0.0
+I 23:31:55.594   [LAN2CAN]      Succeed to create socket: 
+I 23:31:56.097   [DAEMON]       Succeed to start read thread
+I 23:31:56.097   [DAEMON]       Succeed to start real-time thread
+I 23:31:56.594   [LAN2CAN]      Succeed to connect l2c
+I 23:31:56.660   [SCB_V1]       SCB CON 1
+I 23:31:56.692   [SCB_V1]       SCB CON 0
+I 23:31:56.707   [SYSTEM]       SCB CONFIG DONE
+W 23:31:58.592   [SYSTEM]       System General Thread Jitter High: 647878 ns
+I 23:31:59.611   [MAIN]         SYSTEM STARTING
+I 23:36:14.971   [MAIN]         System Version: 1.0.0
+I 23:36:15.481   [LAN2CAN]      Succeed to create socket: 
+I 23:36:15.985   [DAEMON]       Succeed to start read thread
+I 23:36:15.985   [DAEMON]       Succeed to start real-time thread
+I 23:36:16.482   [LAN2CAN]      Succeed to connect l2c
+I 23:36:16.492   [SCB_V1]       SCB CON 0
+I 23:36:16.661   [SCB_V1]       SCB CON 1
+I 23:36:16.677   [SYSTEM]       SCB CONFIG DONE
+I 23:37:03.738   [MAIN]         System Version: 1.0.0
+I 23:37:04.248   [LAN2CAN]      Succeed to create socket: 
+I 23:37:04.751   [DAEMON]       Succeed to start read thread
+I 23:37:04.751   [DAEMON]       Succeed to start real-time thread
+I 23:37:05.248   [LAN2CAN]      Succeed to connect l2c
+I 23:37:05.262   [SCB_V1]       SCB CON 1
+I 23:37:05.293   [SCB_V1]       SCB CON 0
+I 23:37:05.323   [SYSTEM]       SCB CONFIG DONE
+W 23:37:07.249   [SYSTEM]       System General Thread Jitter High: 135404 ns
+I 23:37:08.264   [MAIN]         SYSTEM STARTING
+I 23:40:00.882   [MAIN]         System Version: 1.0.0
+I 23:40:01.393   [LAN2CAN]      Succeed to create socket: 
+I 23:40:01.896   [DAEMON]       Succeed to start read thread
+I 23:40:01.896   [DAEMON]       Succeed to start real-time thread
+I 23:40:02.393   [LAN2CAN]      Succeed to connect l2c
+I 23:40:02.462   [SCB_V1]       SCB CON 1
+I 23:40:02.493   [SCB_V1]       SCB CON 0
+I 23:40:02.506   [SYSTEM]       SCB CONFIG DONE
+W 23:40:04.392   [SYSTEM]       System General Thread Jitter High: 114995 ns
+I 23:40:05.409   [MAIN]         SYSTEM STARTING
+I 23:40:58.323   [MAIN]         System Version: 1.0.0
+I 23:40:58.833   [LAN2CAN]      Succeed to create socket: 
+I 23:40:59.336   [DAEMON]       Succeed to start read thread
+I 23:40:59.336   [DAEMON]       Succeed to start real-time thread
+I 23:40:59.833   [LAN2CAN]      Succeed to connect l2c
+I 23:40:59.863   [SCB_V1]       SCB CON 1
+I 23:40:59.893   [SCB_V1]       SCB CON 0
+I 23:40:59.908   [SYSTEM]       SCB CONFIG DONE
+W 23:41:01.834   [SYSTEM]       System General Thread Jitter High: 132768 ns
+I 23:41:02.850   [MAIN]         SYSTEM STARTING
+W 23:41:05.845   [SYSTEM]       System General Thread Jitter High: 108400 ns
+I 23:41:56.764   [MAIN]         System Version: 1.0.0
+I 23:41:57.276   [LAN2CAN]      Succeed to create socket: 
+I 23:41:57.779   [DAEMON]       Succeed to start read thread
+I 23:41:57.779   [DAEMON]       Succeed to start real-time thread
+I 23:41:58.276   [LAN2CAN]      Succeed to connect l2c
+I 23:41:58.293   [SCB_V1]       SCB CON 0
+I 23:41:58.463   [SCB_V1]       SCB CON 1
+I 23:41:58.487   [SYSTEM]       SCB CONFIG DONE
+W 23:42:00.273   [SYSTEM]       System General Thread Jitter High: 71396 ns
+I 23:42:01.294   [MAIN]         SYSTEM STARTING
+I 23:43:04.057   [MAIN]         System Version: 1.0.0
+I 23:43:04.568   [LAN2CAN]      Succeed to create socket: 
+I 23:43:05.071   [DAEMON]       Succeed to start read thread
+I 23:43:05.071   [DAEMON]       Succeed to start real-time thread
+I 23:43:05.568   [LAN2CAN]      Succeed to connect l2c
+I 23:43:05.664   [SCB_V1]       SCB CON 1
+I 23:43:05.694   [SCB_V1]       SCB CON 0
+I 23:43:05.721   [SYSTEM]       SCB CONFIG DONE
+W 23:43:07.566   [SYSTEM]       System General Thread Jitter High: 500045 ns
+I 23:43:08.584   [MAIN]         SYSTEM STARTING
+I 23:43:42.729   [MAIN]         System Version: 1.0.0
+I 23:43:43.239   [LAN2CAN]      Succeed to create socket: 
+I 23:43:43.742   [DAEMON]       Succeed to start read thread
+I 23:43:43.742   [DAEMON]       Succeed to start real-time thread
+I 23:43:44.239   [LAN2CAN]      Succeed to connect l2c
+I 23:43:44.264   [SCB_V1]       SCB CON 1
+I 23:43:44.294   [SCB_V1]       SCB CON 0
+I 23:43:44.314   [SYSTEM]       SCB CONFIG DONE
+W 23:43:46.240   [SYSTEM]       System General Thread Jitter High: 188619 ns
+I 23:43:47.255   [MAIN]         SYSTEM STARTING
+W 23:43:50.250   [SYSTEM]       System General Thread Jitter High: 121640 ns
+I 23:44:42.764   [MAIN]         System Version: 1.0.0
+I 23:44:43.275   [LAN2CAN]      Succeed to create socket: 
+I 23:44:43.778   [DAEMON]       Succeed to start read thread
+I 23:44:43.778   [DAEMON]       Succeed to start real-time thread
+I 23:44:44.275   [LAN2CAN]      Succeed to connect l2c
+I 23:44:44.295   [SCB_V1]       SCB CON 0
+I 23:44:44.464   [SCB_V1]       SCB CON 1
+I 23:44:44.487   [SYSTEM]       SCB CONFIG DONE
+W 23:44:46.272   [SYSTEM]       System General Thread Jitter High: 296509 ns
+I 23:44:47.293   [MAIN]         SYSTEM STARTING
+I 23:48:16.745   [MAIN]         System Version: 1.0.0
+I 23:48:17.255   [LAN2CAN]      Succeed to create socket: 
+I 23:48:17.758   [DAEMON]       Succeed to start read thread
+I 23:48:17.758   [DAEMON]       Succeed to start real-time thread
+I 23:48:18.255   [LAN2CAN]      Succeed to connect l2c
+W 23:48:18.256   [LAN2CAN]      LAN disconnected (size 0)
+I 23:48:19.256   [LAN2CAN]      Succeed to create socket: 
+W 23:48:20.243   [SYSTEM]       System General Thread Jitter High: 150009 ns
+I 23:48:20.256   [LAN2CAN]      Succeed to connect l2c
+I 23:48:20.266   [SCB_V1]       SCB CON 1
+I 23:48:20.295   [SCB_V1]       SCB CON 0
+I 23:48:20.311   [SYSTEM]       SCB CONFIG DONE
+E 23:48:20.772   [MAIN]         FAIL to initialize rb_sds_server
+I 23:48:56.569   [MAIN]         System Version: 1.0.0
+I 23:48:57.080   [LAN2CAN]      Succeed to create socket: 
+I 23:48:57.582   [DAEMON]       Succeed to start read thread
+I 23:48:57.583   [DAEMON]       Succeed to start real-time thread
+I 23:48:58.080   [LAN2CAN]      Succeed to connect l2c
+I 23:48:58.095   [SCB_V1]       SCB CON 0
+I 23:48:58.266   [SCB_V1]       SCB CON 1
+I 23:48:58.293   [SYSTEM]       SCB CONFIG DONE
+W 23:49:00.078   [SYSTEM]       System General Thread Jitter High: 165748 ns
+I 23:49:01.096   [MAIN]         SYSTEM STARTING
+I 23:50:09.154   [MAIN]         System Version: 1.0.0
+I 23:50:09.663   [LAN2CAN]      Succeed to create socket: 
+I 23:50:10.166   [DAEMON]       Succeed to start read thread
+I 23:50:10.166   [DAEMON]       Succeed to start real-time thread
+I 23:50:10.664   [LAN2CAN]      Succeed to connect l2c
+I 23:50:10.666   [SCB_V1]       SCB CON 1
+I 23:50:10.695   [SCB_V1]       SCB CON 0
+I 23:50:10.718   [SYSTEM]       SCB CONFIG DONE
+W 23:50:12.664   [SYSTEM]       System General Thread Jitter High: 114562 ns
+I 23:50:13.678   [MAIN]         SYSTEM STARTING
+W 23:50:14.669   [SYSTEM]       System General Thread Jitter High: 67545 ns
+I 23:54:33.048   [MAIN]         System Version: 1.0.0
+I 23:54:33.557   [LAN2CAN]      Succeed to create socket: 
+I 23:54:34.060   [DAEMON]       Succeed to start read thread
+I 23:54:34.061   [DAEMON]       Succeed to start real-time thread
+I 23:54:34.557   [LAN2CAN]      Succeed to connect l2c
+I 23:54:34.668   [SCB_V1]       SCB CON 1
+I 23:54:34.696   [SCB_V1]       SCB CON 0
+I 23:54:34.710   [SYSTEM]       SCB CONFIG DONE
+I 23:55:28.441   [MAIN]         System Version: 1.0.0
+I 23:55:28.950   [LAN2CAN]      Succeed to create socket: 
+I 23:55:29.453   [DAEMON]       Succeed to start read thread
+I 23:55:29.453   [DAEMON]       Succeed to start real-time thread
+I 23:55:29.950   [LAN2CAN]      Succeed to connect l2c
+I 23:55:30.068   [SCB_V1]       SCB CON 1
+I 23:55:30.096   [SCB_V1]       SCB CON 0
+I 23:55:30.125   [SYSTEM]       SCB CONFIG DONE
+I 23:55:41.208   [MAIN]         System Version: 1.0.0
+I 23:55:41.718   [LAN2CAN]      Succeed to create socket: 
+I 23:55:42.221   [DAEMON]       Succeed to start read thread
+I 23:55:42.221   [DAEMON]       Succeed to start real-time thread
+I 23:55:42.718   [LAN2CAN]      Succeed to connect l2c
+I 23:55:42.869   [SCB_V1]       SCB CON 1
+I 23:55:42.896   [SCB_V1]       SCB CON 0
+I 23:55:42.912   [SYSTEM]       SCB CONFIG DONE
+W 23:55:44.717   [SYSTEM]       System General Thread Jitter High: 60092 ns
+I 23:55:45.734   [MAIN]         SYSTEM STARTING
+W 23:55:50.734   [SYSTEM]       System General Thread Jitter High: 269211 ns
+I 23:56:27.186   [MAIN]         System Version: 1.0.0
+I 23:56:27.696   [LAN2CAN]      Succeed to create socket: 
+I 23:56:28.198   [DAEMON]       Succeed to start read thread
+I 23:56:28.198   [DAEMON]       Succeed to start real-time thread
+I 23:56:28.696   [LAN2CAN]      Succeed to connect l2c
+I 23:56:28.869   [SCB_V1]       SCB CON 1
+I 23:56:28.897   [SCB_V1]       SCB CON 0
+I 23:56:28.907   [SYSTEM]       SCB CONFIG DONE
+W 23:56:30.692   [SYSTEM]       System General Thread Jitter High: 170781 ns
+I 23:56:31.711   [MAIN]         SYSTEM STARTING
+I 23:56:55.904   [MAIN]         System Version: 1.0.0
+I 23:56:56.414   [LAN2CAN]      Succeed to create socket: 
+I 23:56:56.917   [DAEMON]       Succeed to start read thread
+I 23:56:56.917   [DAEMON]       Succeed to start real-time thread
+I 23:56:57.414   [LAN2CAN]      Succeed to connect l2c
+I 23:56:57.469   [SCB_V1]       SCB CON 1
+I 23:56:57.497   [SCB_V1]       SCB CON 0
+I 23:56:57.509   [SYSTEM]       SCB CONFIG DONE
+W 23:56:59.415   [SYSTEM]       System General Thread Jitter High: 220180 ns
+I 23:57:00.431   [MAIN]         SYSTEM STARTING
+I 23:57:30.149   [MAIN]         System Version: 1.0.0
+I 23:57:30.658   [LAN2CAN]      Succeed to create socket: 
+I 23:57:31.161   [DAEMON]       Succeed to start read thread
+I 23:57:31.161   [DAEMON]       Succeed to start real-time thread
+I 23:57:31.658   [LAN2CAN]      Succeed to connect l2c
+I 23:57:31.669   [SCB_V1]       SCB CON 1
+I 23:57:31.697   [SCB_V1]       SCB CON 0
+I 23:57:31.711   [SYSTEM]       SCB CONFIG DONE
+W 23:57:33.656   [SYSTEM]       System General Thread Jitter High: 411094 ns
+I 23:57:34.673   [MAIN]         SYSTEM STARTING
+I 23:58:22.481   [MAIN]         System Version: 1.0.0
+I 23:58:22.990   [LAN2CAN]      Succeed to create socket: 
+I 23:58:23.493   [DAEMON]       Succeed to start read thread
+I 23:58:23.493   [DAEMON]       Succeed to start real-time thread
+I 23:58:23.991   [LAN2CAN]      Succeed to connect l2c
+I 23:58:24.070   [SCB_V1]       SCB CON 1
+I 23:58:24.097   [SCB_V1]       SCB CON 0
+I 23:58:24.126   [SYSTEM]       SCB CONFIG DONE
+I 23:58:37.879   [MAIN]         System Version: 1.0.0
+I 23:58:38.389   [LAN2CAN]      Succeed to create socket: 
+I 23:58:38.893   [DAEMON]       Succeed to start read thread
+I 23:58:38.893   [DAEMON]       Succeed to start real-time thread
+I 23:58:39.390   [LAN2CAN]      Succeed to connect l2c
+I 23:58:39.469   [SCB_V1]       SCB CON 1
+I 23:58:39.497   [SCB_V1]       SCB CON 0
+I 23:58:39.525   [SYSTEM]       SCB CONFIG DONE
+W 23:58:41.390   [SYSTEM]       System General Thread Jitter High: 540091 ns
+I 23:58:42.405   [MAIN]         SYSTEM STARTING
