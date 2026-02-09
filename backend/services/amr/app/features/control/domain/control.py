@@ -8,7 +8,7 @@ from typing import Any
 
 from rb_sdk.amr_sdk.amr_control import SafetyFlag
 from rb_utils.service_exception import ServiceException
-from app.schema.amr import AmrResponseStatusEnum
+
 from app.features.control.control_schema import (
     RequestControlChargeTriggerPD,
     RequestControlDetectMarkerPD,
@@ -19,19 +19,9 @@ from app.features.control.control_schema import (
     RequestSetSafetyFieldPD,
     RequestSetSafetyFlagPD,
     RequestSetSafetyIoPD,
-    ResponseControlChargeTriggerPD,
-    ResponseControlDetectMarkerPD,
-    ResponseControlDockPD,
-    ResponseControlGetObsBoxPD,
-    ResponseControlLedModePD,
-    ResponseControlSetObsBoxPD,
-    ResponseGetSafetyFieldPD,
-    ResponseGetSafetyFlagPD,
-    ResponseGetSafetyIoPD,
-    ResponseSetSafetyFieldPD,
-    ResponseSetSafetyFlagPD,
-    ResponseSetSafetyIoPD,
 )
+from app.schema.amr import AmrResponseStatusEnum
+
 
 class AmrLedColorEnum(str, Enum):
     """

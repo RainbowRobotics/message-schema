@@ -7,7 +7,6 @@ from rb_zenoh.router import (
 )
 
 from .move_api import amr_move_service
-from app.socket.socket_client import socket_client
 
 move_zenoh_router = ZenohRouter()
 

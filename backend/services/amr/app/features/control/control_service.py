@@ -4,16 +4,15 @@ from datetime import (
     UTC,
     datetime,
 )
-import os
 
 from rb_flat_buffers.SLAMNAV.ResultControlDock import ResultControlDockT
 from rb_modules.log import rb_log
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
-from app.socket.socket_client import socket_client
 
 from app.schema.amr import AmrResponseStatusEnum
+from app.socket.socket_client import socket_client
 
 from .adapter.mongo import ControlMongoDatabaseAdapter
 from .adapter.smtplib import ControlSmtpLibEmailAdapter
@@ -91,6 +90,53 @@ class AmrControlService:
                 print("[control_dock] DB Exception : ", e)
 
             print("============== control_dock return ===============")
+            return model.to_dict()
+        except ServiceException as e:
+            print("[control_dock] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            return model.to_dict()
+
+    async def control_undock(self, robot_model: str, request:RequestControlUndockPD) -> ResponseControlUndockPD:
+        """
+        [도킹 명령 전송]
+        * robot_model : 명령을 전송할 로봇 모델
+        """
+        model = ControlModel()
+        try:
+            rb_log.info(f"[amr_control_service] control_undock : {robot_model}, {request.command}")
+            # 1) controlModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.control_undock(request)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[control_undock] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.control.control_undock(
+                robot_model=model.robot_model,
+                req_id=model.id
+            )
+
+            print("============== control_undock result ===============")
+            print(result)
+
+            model.result_change(result.get("result"))
+            model.message = result.get("message")
+            model.status_change(result.get("result"))
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[control_undock] DB Exception : ", e)
+
+            print("============== control_undock return ===============")
             return model.to_dict()
         except ServiceException as e:
             print("[control_dock] ServiceException : ", e.message, e.status_code)

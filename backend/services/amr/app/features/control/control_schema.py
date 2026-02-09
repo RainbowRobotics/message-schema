@@ -5,6 +5,7 @@ from pydantic import (
 )
 from rb_sdk.amr_sdk.amr_control import SafetyFlag
 
+
 class RequestGetSafetyFieldPD(BaseModel):
     """
     [세이프티 필드 조회 요청]

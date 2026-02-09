@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from rb_flat_buffers.SLAMNAV.ObsBox import ObsBoxT
 from rb_flat_buffers.SLAMNAV.RequestChargeTrigger import RequestChargeTriggerT
 from rb_flat_buffers.SLAMNAV.RequestDetectMarker import RequestDetectMarkerT
-from rb_flat_buffers.SLAMNAV.RequestDockControl import RequestDockControlT
+from rb_flat_buffers.SLAMNAV.RequestDock import RequestDockT
+from rb_flat_buffers.SLAMNAV.RequestDockStop import RequestDockStopT
 from rb_flat_buffers.SLAMNAV.RequestGetObsBox import RequestGetObsBoxT
 from rb_flat_buffers.SLAMNAV.RequestGetSafetyField import RequestGetSafetyFieldT
 from rb_flat_buffers.SLAMNAV.RequestGetSafetyFlag import RequestGetSafetyFlagT
@@ -16,9 +17,11 @@ from rb_flat_buffers.SLAMNAV.RequestSetObsBox import RequestSetObsBoxT
 from rb_flat_buffers.SLAMNAV.RequestSetSafetyField import RequestSetSafetyFieldT
 from rb_flat_buffers.SLAMNAV.RequestSetSafetyFlag import RequestSetSafetyFlagT
 from rb_flat_buffers.SLAMNAV.RequestSetSafetyIo import RequestSetSafetyIoT
+from rb_flat_buffers.SLAMNAV.RequestUndock import RequestUndockT
 from rb_flat_buffers.SLAMNAV.ResponseChargeTrigger import ResponseChargeTriggerT
 from rb_flat_buffers.SLAMNAV.ResponseDetectMarker import ResponseDetectMarkerT
-from rb_flat_buffers.SLAMNAV.ResponseDockControl import ResponseDockControlT
+from rb_flat_buffers.SLAMNAV.ResponseDock import ResponseDockT
+from rb_flat_buffers.SLAMNAV.ResponseDockStop import ResponseDockStopT
 from rb_flat_buffers.SLAMNAV.ResponseGetObsBox import ResponseGetObsBoxT
 from rb_flat_buffers.SLAMNAV.ResponseGetSafetyField import ResponseGetSafetyFieldT
 from rb_flat_buffers.SLAMNAV.ResponseGetSafetyFlag import ResponseGetSafetyFlagT
@@ -32,6 +35,7 @@ from rb_flat_buffers.SLAMNAV.ResponseSetObsBox import ResponseSetObsBoxT
 from rb_flat_buffers.SLAMNAV.ResponseSetSafetyField import ResponseSetSafetyFieldT
 from rb_flat_buffers.SLAMNAV.ResponseSetSafetyFlag import ResponseSetSafetyFlagT
 from rb_flat_buffers.SLAMNAV.ResponseSetSafetyIo import ResponseSetSafetyIoT
+from rb_flat_buffers.SLAMNAV.ResponseUndock import ResponseUndockT
 from rb_flat_buffers.SLAMNAV.SafetyFlag import SafetyFlagT
 
 from ..base import RBBaseSDK
@@ -130,13 +134,13 @@ class RBAmrControlSDK(RBBaseSDK):
         # 1) RequestSetSafetyFlagT 객체 생성
         req = RequestSetSafetyFlagT()
         req.id = req_id
-        req.resetFlag = []
+        req.safetyFlag = []
 
         for flag in reset_flag:
             safety_flag = SafetyFlagT()
             safety_flag.name = flag.name
             safety_flag.value = flag.value
-            req.resetFlag.add(safety_flag)
+            req.safetyFlag.add(safety_flag)
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
@@ -203,23 +207,21 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_dock(self, robot_model: str, req_id: str, command: str) -> ResponseDockControlT:
+    async def control_dock(self, robot_model: str, req_id: str) -> ResponseDockT:
         """
         [도킹 제어]
-        - command: 도킹 명령 ( "dock", "undock", "dockstop" )
         - ResponseDockT 객체 반환
         """
 
-        # 1) RequestDockControlT 객체 생성
-        req = RequestDockControlT()
+        # 1) RequestDockT 객체 생성
+        req = RequestDockT()
         req.id = req_id
-        req.command = command
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
             f"{robot_model}/control/dock",
             flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=ResponseDockControlT,
+            flatbuffer_res_T_class=ResponseDockT,
             flatbuffer_buf_size=125,
         )
 
@@ -229,7 +231,55 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_charge_trigger(self, robot_model: str, req_id: str, control: bool) -> ResponseChargeTriggerT:
+    async def control_undock(self, robot_model: str, req_id: str) -> ResponseUndockT:
+        """
+        [도킹 제어]
+        - ResponseUndockT 객체 반환
+        """
+
+        # 1) RequestDockT 객체 생성
+        req = RequestUndockT()
+        req.id = req_id
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/undock",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=ResponseUndockT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Undock failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_dockStop(self, robot_model: str, req_id: str) -> ResponseDockStopT:
+        """
+        [도킹 제어]
+        - ResponsedockStopT 객체 반환
+        """
+
+        # 1) RequestDockT 객체 생성
+        req = RequestDockStopT()
+        req.id = req_id
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/control/dockStop",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=ResponseDockStopT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Control Dock Stop failed: obj_payload is None")
+
+        return result["obj_payload"]
+
+    async def control_charge_trigger_on(self, robot_model: str, req_id: str, control: bool) -> ResponseChargeTriggerT:
         """
         [충전 트리거 제어]
         - control: 충전 트리거 켜기/끄기 (True: 켜기, False: 끄기)
