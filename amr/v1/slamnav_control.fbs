@@ -213,30 +213,18 @@ table ResponseDockStop {
 /*
     category    :       RPC
     response    :       Callback
-    topic       :       {robotType}/control/chargeTriggerOn
-    usage       :       충전 트리거 On
+    topic       :       {robotType}/control/chargeTrigger
+    usage       :       충전 트리거 On / Off
+    field
+        - switch        :       true(on) / false(off)
 */
-table RequestChargeTriggerOn {
+table RequestChargeTrigger {
     id: string;
+    switch: bool;
 }
-table ResponseChargeTriggerOn {
+table ResponseChargeTrigger {
     id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/chargeTriggerOff
-    usage       :       충전 트리거 Off
-*/
-table RequestChargeTriggerOff {
-    id: string;
-}
-table ResponseChargeTriggerOff {
-    id: string;
+    switch: bool;
     result: string;
     message: string;
 }
@@ -315,14 +303,18 @@ table ResponseSetLedColor {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/control/motorOn
-    usage       :       모터 On
+    topic       :       {robotType}/control/motor
+    usage       :       모터 On / Off
+    field
+        - switch        :       true(on) / false(off)
 */
-table RequestMotorOn {
+table RequestSetMotor {
     id: string;
+    switch: bool;
 }
-table ResponseMotorOn {
+table ResponseSetMotor {
     id: string;
+    switch: bool;
     result: string;
     message: string;
 }
@@ -331,46 +323,18 @@ table ResponseMotorOn {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/control/motorOff
-    usage       :       모터 Off
+    topic       :       {robotType}/control/jog
+    usage       :       조그 On / Off
+    field
+        - switch        :       true(on) / false(off)
 */
-table RequestMotorOff {
+table RequestSetJog {
     id: string;
+    switch: bool;
 }
-table ResponseMotorOff {
+table ResponseSetJog {
     id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/jogOn
-    usage       :       조그 On
-*/
-table RequestJogOn {
-    id: string;
-}
-table ResponseJogOn {
-    id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/jogOff
-    usage       :       조그 Off
-*/
-table RequestJogOff {
-    id: string;
-}
-table ResponseJogOff {
-    id: string;
+    switch: bool;
     result: string;
     message: string;
 }
@@ -441,6 +405,7 @@ table ResponseStreamFrequency {
     field
         - command       :       control Callback 명령 (string)
             - "dock"  "undock"  "dockStop"
+        - switch        :       true(on) / false(off)
         - result        :       이동 결과
             - success       :       동작 성공.
             - fail          :       동작 실패.
@@ -450,6 +415,7 @@ table ResponseStreamFrequency {
 table ResultControlDock {
     id: string;
     command: string;
+    switch: bool;
     result: string;
     message: string;
 }
