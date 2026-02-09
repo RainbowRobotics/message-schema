@@ -90,12 +90,10 @@ class ConfigService(BaseService):
                 else:
                     # TODO: other speedbar
                     continue
-            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-                rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
                 continue
                 # raise HTTPException(status_code=503, detail="Zenoh communication error") from e
-            except Exception as e:
-                rb_log.error(f"get_all_speedbar {e}", disable_db=True)
+            except Exception:
                 continue
 
         # if diff_flag:
@@ -126,19 +124,15 @@ class ConfigService(BaseService):
                 res = await self.get_all_speedbar(components=components)
                 if isinstance(res, dict) and "speedbar" in res:
                     fire_and_log(socket_client.emit("speedbar", res))
-                else:
-                    rb_log.error(f"repeat_get_all_speedbar res: {res}")
 
                 now = time.monotonic()
                 next_ts = max(next_ts + 1.0, now + 1.0)
                 await asyncio.sleep(max(0.0, next_ts - now))
-            except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-                rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
+            except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
                 await asyncio.sleep(0.5)
                 next_ts = time.monotonic() + 1.0
                 continue
-            except Exception as e:
-                rb_log.error(f"repeat_get_all_speedbar {e}", disable_db=True)
+            except Exception:
                 await asyncio.sleep(0.5)
                 next_ts = time.monotonic() + 1.0
                 continue

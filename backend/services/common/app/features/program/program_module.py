@@ -3,6 +3,7 @@ import contextlib
 import importlib.util
 import os
 import sys
+from collections import defaultdict
 from collections.abc import (
     Iterable,
 )
@@ -431,16 +432,40 @@ class ProgramService(BaseService):
 
         raw_steps: list[dict] = [t_to_dict(s) for s in req["steps"]]
 
-        record_find_task_ids: set[str] = set()
+        checked_actual_task_ids: set[str] = set()  # 이미 검증된 실제 ObjectId들
         record_find_program_ids: set[str] = set()
+        task_id_map: dict[str, str] = {}  # 입력 taskId -> 실제 ObjectId 매핑
+
         for s in raw_steps:
             tid, pid, children = s.get("taskId"), s.get("programId"), s.get("children")
 
-            if tid and tid not in record_find_task_ids:
-                doc = await tasks_col.find_one({"_id": ObjectId(tid)})
-                if not doc:
-                    raise HTTPException(400, f"Invalid taskId: {tid}")
-                record_find_task_ids.add(tid)
+            if tid:
+                # 이미 매핑된 경우 스킵
+                if tid in task_id_map:
+                    continue
+
+                # ObjectId인지 확인
+                if ObjectId.is_valid(tid):
+                    doc = await tasks_col.find_one({"_id": ObjectId(tid)})
+                    if not doc:
+                        raise HTTPException(400, f"Invalid taskId: {tid}")
+                    actual_task_id = str(doc["_id"])
+                else:
+                    # ObjectId가 아니면 rawTaskId로 찾기
+                    doc = await tasks_col.find_one({"rawTaskId": tid})
+                    if not doc:
+                        raise HTTPException(400, f"Invalid taskId: {tid}")
+                    actual_task_id = str(doc["_id"])
+
+                # 중복 검증: 실제 ObjectId가 이미 처리되었는지 확인
+                if actual_task_id in checked_actual_task_ids:
+                    # 이미 처리된 task - 매핑만 추가
+                    task_id_map[tid] = actual_task_id
+                    continue
+
+                # 새로운 task
+                task_id_map[tid] = actual_task_id
+                checked_actual_task_ids.add(actual_task_id)
 
             if pid and pid not in record_find_program_ids:
                 doc = await program_col.find_one({"_id": ObjectId(pid)})
@@ -458,7 +483,6 @@ class ProgramService(BaseService):
             sid = s.get("stepId")
             if sid and not ObjectId.is_valid(sid):
                 return str(sid)
-
             return None
 
         for s in raw_steps:
@@ -479,6 +503,11 @@ class ProgramService(BaseService):
             elif s.get("varType") and s.get("varName") is None:
                 raise HTTPException(400, "If varType is set, varName is required")
 
+            # taskId를 실제 ObjectId로 교체
+            original_task_id = s.get("taskId")
+            if original_task_id and original_task_id in task_id_map:
+                s["taskId"] = task_id_map[original_task_id]
+
             s["_id"] = oid
             s["stepId"] = str(oid)
             prepped_steps.append(s)
@@ -490,7 +519,6 @@ class ProgramService(BaseService):
                 return val
             if val in local_to_oid:
                 return str(local_to_oid[val])
-
             raise HTTPException(400, f"unknown parent/sync reference: {val}")
 
         for s in prepped_steps:
@@ -508,14 +536,7 @@ class ProgramService(BaseService):
             for s in prepped_steps:
                 oid = s["_id"]
                 body = {**s}
-                body.pop("_id", None)  # _id는 쿼리로만
-                # set_on_insert = {}
-                # 기존 createdAt 유지
-                # existing = await steps_col.find_one({"_id": oid}, session=session)
-                # if existing:
-                #     body["createdAt"] = existing["createdAt"]
-                # else:
-                #     set_on_insert["createdAt"] = now
+                body.pop("_id", None)
 
                 ops.append(
                     UpdateOne(
@@ -768,19 +789,31 @@ class ProgramService(BaseService):
         steps_col = db["steps"]
         program_col = db["programs"]
 
-        task_doc = await task_col.find_one({"_id": ObjectId(task_id)})
+        main_task_doc = await task_col.find_one({"_id": ObjectId(task_id)})
+        sub_task_docs = await task_col.find({"parentTaskId": task_id, "type": TaskType.SUB}).to_list(length=None)
+        event_sub_task_docs = await task_col.find({"parentTaskId": task_id, "type": TaskType.EVENT_SUB}).to_list(length=None)
 
-        if not task_doc:
+
+
+        if not main_task_doc:
             raise HTTPException(status_code=400, detail=f"Invalid taskId: {task_id}")
 
-        program_doc = await program_col.find_one({"_id": ObjectId(task_doc["programId"])})
+        program_doc = await program_col.find_one({"_id": ObjectId(main_task_doc["programId"])})
 
         if not program_doc:
             raise HTTPException(
-                status_code=400, detail=f"Invalid programId: {task_doc['programId']}"
+                status_code=400, detail=f"Invalid programId: {main_task_doc['programId']}"
             )
 
         steps_docs = await steps_col.find({"taskId": task_id}).to_list(length=None)
+        sub_steps_docs: dict[str, list[Step]] = defaultdict(list)
+        event_sub_steps_docs: dict[str, list[Step]] = defaultdict(list)
+
+        for sub_task_doc in sub_task_docs:
+            sub_steps_docs[str(sub_task_doc["_id"])] = self.build_step_tree(await steps_col.find({"taskId": str(sub_task_doc["_id"])}).to_list(length=None))
+
+        for event_sub_task_doc in event_sub_task_docs:
+            event_sub_steps_docs[str(event_sub_task_doc["_id"])] = self.build_step_tree(await steps_col.find({"taskId": str(event_sub_task_doc["_id"])}).to_list(length=None))
 
         steps_tree = self.build_step_tree(steps_docs)
 
@@ -799,17 +832,19 @@ class ProgramService(BaseService):
         script_context = self.build_script_context(
             normal_steps_tree,
             task_id,
-            task_doc["scriptName"],
+            main_task_doc["scriptName"],
             program_doc["repeatCnt"],
-            robot_model=task_doc["robotModel"],
-            begin=task_doc.get("begin", None),
+            robot_model=main_task_doc["robotModel"],
+            begin=main_task_doc.get("begin", None),
             post_tree=post_steps_tree,
+            sub_task_steps=sub_steps_docs,
+            event_sub_task_steps=event_sub_steps_docs,
         )
 
-        os.makedirs(task_doc["scriptPath"], exist_ok=True)
+        os.makedirs(main_task_doc["scriptPath"], exist_ok=True)
 
         with open(
-            f"{task_doc['scriptPath']}/{task_doc['scriptName']}.{task_doc['extension']}",
+            f"{main_task_doc['scriptPath']}/{main_task_doc['scriptName']}.{main_task_doc['extension']}",
             "w",
             encoding="utf-8",
         ) as f:
@@ -853,13 +888,15 @@ class ProgramService(BaseService):
 
     def build_script_context(
         self,
-        steps_tree: list[dict[str, Any]],
+        steps_tree: list[Step],
         task_id: str,
         script_name: str,
         repeat_count: int,
         *,
         robot_model: str | None = None,
         begin: MainTaskBegin | None = None,
+        sub_task_steps: dict[str, list[Step]] | None = None,
+        event_sub_task_steps: dict[str, list[Step]] | None = None,
         post_tree: list[dict[str, Any]] | None = None,
     ):
         """
@@ -873,21 +910,21 @@ class ProgramService(BaseService):
 
         post_body_context = "\n".join(
             self.parse_step_context(step, depth=0, to_string=True) for step in post_tree
-        )
+        ) if post_tree else ""
 
-        if not post_body_context:
-            post_body_context = ""
-
-        if not body_context:
-            body_context = ""
-
+        # Header
+        header_context = f'""" {script_name} """\n'
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
         header_context += "from rb_flow_manager.schema import MakeProcessArgs\n"
         header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep, SubTaskStep, SyncStep\n"
-        header_context += (
-            "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
-        )
+        header_context += "from rb_flow_manager.utils import call_event_tree\n"
+        header_context += "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n"
 
+        # Context variables
+        context_part = "\nsub_tree_list: list[Step] = []\n"
+        context_part += "event_sub_tree_list: list[Step] = []\n\n"
+
+        # Begin arguments (optional)
         func_part = ""
         args_part = ""
 
@@ -904,8 +941,9 @@ class ProgramService(BaseService):
                 f"    }},\n"
             )
 
+        # Main tree
         root_block = (
-            "tree = Step(\n"
+            "\ntree = Step(\n"
             f"    step_id='{task_id}',\n"
             f"    name='{script_name}',\n"
             f"{func_part}"
@@ -916,27 +954,78 @@ class ProgramService(BaseService):
             ")\n"
         )
 
+        # Sub task trees
+        sub_task_root_block = ""
+        if sub_task_steps is not None:
+            for steps in sub_task_steps.values():
+                sub_task_body_context = "\n".join(
+                    self.parse_step_context(step, depth=4, to_string=True) for step in steps
+                )
+
+                sub_task_root_block += (
+                    "\n\nsub_tree_list.append(\n"
+                    f"{sub_task_body_context}\n"
+                    ")\n"
+                )
+
+        # Event sub task trees
+        event_sub_task_root_block = ""
+        if event_sub_task_steps is not None:
+            for steps in event_sub_task_steps.values():
+                event_sub_task_body_context = "\n".join(
+                    self.parse_step_context(step, depth=4, to_string=True) for step in steps
+                )
+
+                event_sub_task_root_block += (
+                    "\n\nevent_sub_tree_list.append(\n"
+                    f"{event_sub_task_body_context}\n"
+                    ")\n"
+                )
+
+        # Post tree (if exists)
         post_root_block = (
-            f"post_tree = {post_body_context}\n"
+            f"\n\npost_tree = {post_body_context}\n"
         ) if post_body_context else ""
 
-        footer_context = 'if __name__ == "__main__":\n\n'
+        # Footer - main execution block
+        footer_context = '\n\nif __name__ == "__main__":\n\n'
         footer_context += "    zenoh_controller = Zenoh_Controller()\n"
         footer_context += "    executor = ScriptExecutor(controller=zenoh_controller)\n\n"
 
-        footer_context += (
-            f"    executor.start(\n"
-            f"        MakeProcessArgs(\n"
-            f"            process_id='{script_name}',\n"
-            f"            step=tree,\n"
-            f"            repeat_count={repeat_count},\n"
-            f"            robot_model={repr(robot_model)},\n"
-            f"            category={repr(category)},\n"
-            f"        )\n"
-            f"    )\n\n"
-        )
+        footer_context += "    processes = [\n"
+        footer_context += "        MakeProcessArgs(\n"
+        footer_context += f"            process_id='{script_name}',\n"
+        footer_context += "            step=tree,\n"
+        footer_context += f"            repeat_count={repeat_count},\n"
+        footer_context += f"            robot_model={repr(robot_model)},\n"
+        footer_context += f"            category={repr(category)},\n"
+        footer_context += "        )\n"
+        footer_context += "    ]\n\n"
 
-        return header_context + "\n" + root_block + "\n" + post_root_block + "\n" + footer_context
+        # Add sub tree processes (linked to main process)
+        footer_context += "    for index, sub_tree in enumerate(sub_tree_list):\n"
+        footer_context += "        processes.append(\n"
+        footer_context += "            MakeProcessArgs(\n"
+        footer_context += f"                process_id=f\"{script_name}_sub_tree_{{index}}\",\n"
+        footer_context += "                step=sub_tree,\n"
+        footer_context += f"                repeat_count={repeat_count},\n"
+        footer_context += f"                robot_model={repr(robot_model)},\n"
+        footer_context += f"                category={repr(category)},\n"
+        footer_context += f"                parent_process_id='{script_name}',\n"
+        footer_context += "            )\n"
+        footer_context += "        )\n\n"
+
+        footer_context += "    executor.start(processes)\n"
+
+        return (
+            header_context +
+            context_part +
+            root_block +
+            sub_task_root_block +
+            event_sub_task_root_block +
+            post_root_block +
+            footer_context
+        )
 
     async def get_script_context(self, *, request: Request_Get_Script_ContextPD, db: MongoDB):
         """
@@ -945,6 +1034,8 @@ class ProgramService(BaseService):
         request_dict = t_to_dict(request)
         task_id = request_dict["taskId"]
         steps_tree = request_dict["steps"]
+        sub_task_steps = request_dict.get("subTaskSteps", None)
+        event_sub_task_steps = request_dict.get("eventSubTaskSteps", None)
         begin = request_dict.get("begin", None)
 
         task_col = db["tasks"]
@@ -978,6 +1069,8 @@ class ProgramService(BaseService):
             program_doc["repeatCnt"],
             robot_model=task_doc["robotModel"],
             begin=begin,
+            sub_task_steps=sub_task_steps,
+            event_sub_task_steps=event_sub_task_steps,
             post_tree=post_steps_tree,
         )
 
@@ -1012,7 +1105,11 @@ class ProgramService(BaseService):
         tasks_col = db["tasks"]
         tasks_docs = (
             await tasks_col.find(
-                {"programId": program_id, "type": TaskType.SUB, "parentTaskId": parent_task_id}
+                {
+                    "programId": program_id,
+                    "type": {"$in": [TaskType.SUB, TaskType.EVENT_SUB]},
+                    "parentTaskId": parent_task_id
+                }
             )
             .sort("order", 1)
             .to_list(length=None)
@@ -1077,7 +1174,7 @@ class ProgramService(BaseService):
 
             for task in tasks:
                 parent_task_id = task.get("parentTaskId")
-                if task.get("type") == TaskType.SUB and parent_task_id is None:
+                if task.get("type") != TaskType.MAIN and parent_task_id is None:
                     raise HTTPException(status_code=400, detail="Sub task must have parentTaskId")
 
                 # if task.get("type") == TaskType.MAIN and task.get("begin") is None:
@@ -1139,17 +1236,20 @@ class ProgramService(BaseService):
     async def update_tasks(self, *, request: Request_Update_Multiple_TaskPD, db: MongoDB):
         """
         Task들을 업데이트하는 함수.
+        delete_on이 True면 요청에 포함되지 않은 기존 task들을 삭제합니다.
         """
 
         now = datetime.now(UTC)
-        ops = []
+        update_ops = []
 
         tasks_col = db["tasks"]
         program_col = db["programs"]
 
+        delete_on = request.delete_on if hasattr(request, 'delete_on') else False
+
         request_dict = Request_Update_Multiple_TaskPD.model_validate(
                 request
-            ).model_dump(exclude_none=False, exclude_unset=True)
+            ).model_dump(exclude_none=False, exclude_unset=True, exclude={"delete_on"})
 
         tasks = request_dict["tasks"]
 
@@ -1157,6 +1257,8 @@ class ProgramService(BaseService):
 
         record_find_program_ids = []
         updated_task_ids = []
+        created_tasks = []
+        raw_to_actual_task_id_map = {}  # raw taskId -> actual ObjectId 매핑
 
         for pid in program_ids:
             if pid in record_find_program_ids:
@@ -1173,18 +1275,89 @@ class ProgramService(BaseService):
                 raise HTTPException(
                     status_code=400, detail=f"Invalid parentTaskId: {parent_task_id}"
                 )
+            elif task.get("type") != TaskType.MAIN and parent_task_id is None:
+                raise HTTPException(status_code=400, detail="Sub task must have parentTaskId")
 
-            tid = task.pop("taskId")
+            tid = task.get("taskId")
 
-            task["updatedAt"] = now
-            ops.append(UpdateOne({"_id": ObjectId(tid)}, {"$set": task}))
-            updated_task_ids.append(tid)
+            # taskId가 유효한 ObjectId인지 확인
+            if tid and ObjectId.is_valid(tid):
+                # Update 로직
+                task_data = task.copy()
+                task_data.pop("taskId")
+                task_data["updatedAt"] = now
 
-        if ops:
-            await tasks_col.bulk_write(ops, ordered=False)
+                update_ops.append(UpdateOne({"_id": ObjectId(tid)}, {"$set": task_data}))
+                updated_task_ids.append(tid)
+            else:
+                # Create 로직
+                task_data = task.copy()
+                raw_task_id = task_data.pop("taskId", None)  # taskId를 빼서 저장
+                task_data["createdAt"] = now
+                task_data["updatedAt"] = now
+
+                # ObjectId가 아닌 taskId를 rawTaskId에 저장
+                if raw_task_id:
+                    task_data["rawTaskId"] = raw_task_id
+
+                created_tasks.append((raw_task_id, task_data))  # raw_task_id도 함께 저장
+
+        # delete_on이 True면 요청에 없는 기존 task 삭제
+        deleted_count = 0
+        if delete_on:
+            # 요청에 포함된 모든 taskId 수집
+            existing_task_ids = [ObjectId(tid) for tid in updated_task_ids if ObjectId.is_valid(tid)]
+
+            # 각 programId에 대해 삭제 작업 수행
+            for pid in program_ids:
+                delete_result = await tasks_col.delete_many({
+                    "programId": pid,
+                    "_id": {"$nin": existing_task_ids}
+                })
+                deleted_count += delete_result.deleted_count
+
+        # Update 실행
+        if update_ops:
+            await tasks_col.bulk_write(update_ops, ordered=False)
+
+        # Create 실행 및 매핑 생성
+        created_ids = []
+        if created_tasks:
+            tasks_to_insert = [task_data for _, task_data in created_tasks]
+            result = await tasks_col.insert_many(tasks_to_insert)
+            created_ids = [str(oid) for oid in result.inserted_ids]
+
+            # raw taskId -> actual ObjectId 매핑 생성
+            for i, (raw_task_id, _) in enumerate(created_tasks):
+                if raw_task_id:
+                    actual_id = created_ids[i]
+                    raw_to_actual_task_id_map[raw_task_id] = actual_id
+
+        # parentTaskId가 raw ID인 경우 실제 ObjectId로 업데이트
+        if raw_to_actual_task_id_map:
+            parent_update_ops = []
+            for created_id in created_ids:
+                doc = await tasks_col.find_one({"_id": ObjectId(created_id)})
+                if doc and doc.get("parentTaskId"):
+                    parent_id = doc["parentTaskId"]
+                    # parentTaskId가 raw_to_actual_task_id_map에 있으면 실제 ID로 교체
+                    if parent_id in raw_to_actual_task_id_map:
+                        actual_parent_id = raw_to_actual_task_id_map[parent_id]
+                        parent_update_ops.append(
+                            UpdateOne(
+                                {"_id": ObjectId(created_id)},
+                                {"$set": {"parentTaskId": actual_parent_id, "updatedAt": now}}
+                            )
+                        )
+
+            if parent_update_ops:
+                await tasks_col.bulk_write(parent_update_ops, ordered=False)
+
+        # 결과 조회 (updated + created)
+        all_ids = [ObjectId(tid) for tid in updated_task_ids] + [ObjectId(cid) for cid in created_ids]
 
         res = await tasks_col.find(
-            {"_id": {"$in": [ObjectId(tid) for tid in updated_task_ids]}}
+            {"_id": {"$in": all_ids}}
         ).to_list(length=None)
 
         for doc in res:
@@ -1194,6 +1367,7 @@ class ProgramService(BaseService):
 
         return {
             "tasks": res,
+            "deletedCount": deleted_count if delete_on else 0,
         }
 
     async def delete_tasks(self, *, request: Request_Delete_TasksPD, db: MongoDB):
@@ -1242,7 +1416,8 @@ class ProgramService(BaseService):
             return {
                 "program": None,
                 "mainTasks": None,
-                "allSteps": None,
+                "subTasks": None,
+                "mainSteps": None,
             }
 
         program_doc["programId"] = str(program_doc.pop("_id"))
@@ -1250,25 +1425,42 @@ class ProgramService(BaseService):
         program_doc["updatedAt"] = program_doc["updatedAt"].isoformat()
 
         tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+        tasks_docs.sort(key=lambda x: x.get("order", 0))
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
             doc["createdAt"] = doc["createdAt"].isoformat()
             doc["updatedAt"] = doc["updatedAt"].isoformat()
 
-        main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
+        type_counts = {}
+        for doc in tasks_docs:
+            t = doc.get("type", "MISSING")
+            type_counts[t] = type_counts.get(t, 0) + 1
+        print(f"📈 Type distribution: {type_counts}", flush=True)
 
-        all_steps: dict[str, list[dict]] = {}
+        main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
+        sub_tasks_docs = [doc for doc in tasks_docs if doc["type"] != TaskType.MAIN]
+
+        main_steps: dict[str, list[dict]] = {}
+        sub_steps: dict[str, dict[str, list[dict]]] = defaultdict(dict)
 
         for doc in tasks_docs:
             steps_docs = await steps_col.find({"taskId": doc["taskId"]}).to_list(length=None)
+
             steps_tree = self.build_step_tree(steps_docs)
-            all_steps[doc["taskId"]] = steps_tree
+
+            if doc["type"] == TaskType.MAIN:
+                main_steps[doc["taskId"]] = steps_tree
+            elif doc.get("parentTaskId") is not None:
+                sub_steps[doc["parentTaskId"]][doc["taskId"]] = steps_tree
+
 
         return {
             "program": program_doc,
             "mainTasks": main_tasks_docs,
-            "allSteps": all_steps,
+            "subTasks": sub_tasks_docs,
+            "mainSteps": main_steps,
+            "subSteps": sub_steps,
         }
 
     async def get_program_list(
@@ -1370,14 +1562,17 @@ class ProgramService(BaseService):
             )
 
             all_steps: dict[str, list[dict]] = {}
+            tasks = tasks_res.get("tasks", [])
 
-            for task in tasks_res.get("tasks", []):
+            for task in tasks:
                 all_steps[task["taskId"]] = []
 
             return {
                 "program": find_program_doc,
-                "mainTasks": [task for task in tasks_res if task["type"] == TaskType.MAIN],
-                "allSteps": all_steps,
+                "mainTasks": [task for task in tasks if task["type"] == TaskType.MAIN],
+                "subTasks": [task for task in tasks if task["type"] != TaskType.MAIN],
+                "mainSteps": all_steps,
+                "subSteps": None,
             }
 
         except Exception as e:
@@ -1431,6 +1626,7 @@ class ProgramService(BaseService):
 
         program_col = db["programs"]
         tasks_col = db["tasks"]
+        steps_col = db["steps"]
 
         request_dict = t_to_dict(request)
         program_id = request_dict["programId"]
@@ -1465,8 +1661,11 @@ class ProgramService(BaseService):
             raise e
 
         tasks_id_map: dict[str, str] = {}
+        steps_id_map: dict[str, str] = {}
+        new_step_ids: list[str] = []
 
         try:
+            # Task 복제
             for task in tasks_docs:
                 pre_task_id = str(task.pop("_id"))
                 task["programId"] = new_program_id
@@ -1483,17 +1682,105 @@ class ProgramService(BaseService):
                         self.write_script_context(new_task_id, db), name="write_script_context"
                     )
 
+            # 모든 Step 문서 수집
+            all_steps_to_insert = []
+            old_step_id_to_parent = {}  # old_step_id -> old_parent_step_id 매핑
+            old_step_id_to_target = {}  # old_step_id -> old_target_step_id 매핑
+
+            for old_task_id, new_task_id in tasks_id_map.items():
+                steps_docs = await steps_col.find({"taskId": old_task_id}).to_list(length=None)
+
+                for step in steps_docs:
+                    old_step_id = str(step.pop("_id"))
+                    old_parent_step_id = step.get("parentStepId")
+                    old_target_step_id = step.get("targetStepId")
+
+                    step["taskId"] = new_task_id
+                    step["createdAt"] = now
+                    step["updatedAt"] = now
+
+                    all_steps_to_insert.append((old_step_id, step))
+
+                    # parentStepId가 있으면 매핑 저장
+                    if old_parent_step_id:
+                        old_step_id_to_parent[old_step_id] = old_parent_step_id
+
+                    # targetStepId가 있으면 매핑 저장
+                    if old_target_step_id:
+                        old_step_id_to_target[old_step_id] = old_target_step_id
+
+            # Step 일괄 삽입
+            if all_steps_to_insert:
+                steps_to_insert = [step_data for _, step_data in all_steps_to_insert]
+                insert_result = await steps_col.insert_many(steps_to_insert)
+
+                # steps_id_map 생성
+                for i, (old_step_id, _) in enumerate(all_steps_to_insert):
+                    new_step_id = str(insert_result.inserted_ids[i])
+                    steps_id_map[old_step_id] = new_step_id
+                    new_step_ids.append(new_step_id)
+
+            # parentStepId, targetStepId 일괄 업데이트
+            update_ops = []
+            for i, (old_step_id, _) in enumerate(all_steps_to_insert):
+                new_step_id = new_step_ids[i]
+                update_fields = {}
+
+                # parentStepId 업데이트
+                if old_step_id in old_step_id_to_parent:
+                    old_parent_step_id = old_step_id_to_parent[old_step_id]
+
+                    if old_parent_step_id in steps_id_map:
+                        new_parent_step_id = steps_id_map[old_parent_step_id]
+                        update_fields["parentStepId"] = new_parent_step_id
+
+                # targetStepId 업데이트
+                if old_step_id in old_step_id_to_target:
+                    old_target_step_id = old_step_id_to_target[old_step_id]
+
+                    if old_target_step_id in steps_id_map:
+                        new_target_step_id = steps_id_map[old_target_step_id]
+                        update_fields["targetStepId"] = new_target_step_id
+
+                # 업데이트할 필드가 있으면 bulk operation 추가
+                if update_fields:
+                    update_fields["updatedAt"] = now
+                    update_ops.append(
+                        UpdateOne(
+                            {"_id": ObjectId(new_step_id)},
+                            {"$set": update_fields}
+                        )
+                    )
+
+            if update_ops:
+                await steps_col.bulk_write(update_ops, ordered=False)
+
         except Exception as e:
             if new_program_id:
                 await program_col.delete_one({"_id": ObjectId(new_program_id)})
 
-            await tasks_col.delete_many({"_id": {"$in": list(tasks_id_map.values())}})
+            if tasks_id_map:
+                await tasks_col.delete_many({
+                    "_id": {
+                        "$in": [ObjectId(tid) for tid in tasks_id_map.values()]
+                        }
+                    }
+                )
+
+            if new_step_ids:
+                await steps_col.delete_many({
+                    "_id": {
+                        "$in": [ObjectId(sid) for sid in new_step_ids]
+                        }
+                    }
+                )
 
             raise e
 
         return {
             "new_program_id": new_program_id,
             "tasks_id_map": tasks_id_map,
+            "steps_id_map": steps_id_map,
         }
 
     async def delete_program(self, *, program_id: str, db: MongoDB):
@@ -1803,6 +2090,11 @@ class ProgramService(BaseService):
         request_dict = t_to_dict(request)
         scripts = request_dict["scripts"]
 
+        if len(scripts) == 0:
+            return {
+                "status": "success",
+            }
+
         tasks_col = db["tasks"]
 
         tree_list = []
@@ -1811,6 +2103,7 @@ class ProgramService(BaseService):
             task_id = script["taskId"]
             repeat_count = script["repeatCount"]
             steps_tree = script["steps"]
+            parent_task_id = script.get("parentTaskId", None)
             step_mode = script.get("stepMode", False)  # 각 스크립트마다 step_mode 가져오기
 
             normal_steps_tree = []
@@ -1830,6 +2123,9 @@ class ProgramService(BaseService):
             if not task_doc:
                 raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
+            if task_doc["type"] == TaskType.EVENT_SUB:
+                continue
+
             robot_model = task_doc["robotModel"]
             category = self._robot_models[robot_model].get("be_service", None)
             begin = script.get("begin", None)
@@ -1846,6 +2142,7 @@ class ProgramService(BaseService):
                     "robot_model": robot_model,
                     "category": category,
                     "step_mode": step_mode,  # 각 스크립트의 step_mode 저장
+                    "parent_process_id": parent_task_id,
                 }
             )
 
@@ -1862,6 +2159,7 @@ class ProgramService(BaseService):
                     min_step_interval=0.5 if tree["step_mode"] else None,  # 각 tree의 step_mode 기준
                     is_ui_execution=True,
                     post_tree=tree["post_tree"],
+                    parent_process_id=tree["parent_process_id"],
                 )
             )
 

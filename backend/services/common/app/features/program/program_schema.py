@@ -118,6 +118,7 @@ class Response_Upsert_StepsPD(BaseModel):
 class TaskType(str, Enum):
     MAIN = "MAIN"
     SUB = "SUB"
+    EVENT_SUB = "EVENT_SUB"
 
 class SubTaskType(str, Enum):
     INSERT = "INSERT"
@@ -135,10 +136,12 @@ class MainTaskBegin(BaseModel):
 
 class Task_Base(BaseModel):
     taskId: PyObjectId
+    rawTaskId: str | None = Field(default=None)
     programId: str
     parentTaskId: str | None = Field(default=None)
     robotModel: str
     type: TaskType = Field(default=TaskType.MAIN)
+    order: int = Field(default=0)
     scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
     begin: MainTaskBegin | None = Field(default=None)
@@ -161,6 +164,8 @@ class Request_Create_TaskPD(Omit(Task_Base, "taskId")):
 
 
 class Request_Update_TaskPD(Pick(Task_Base, "taskId")):
+    taskId: str
+    parentTaskId: str | None = Field(default=None)
     name: str | None = Field(default=None)
     programId: str | None = Field(default=None)
     robotModel: str | None = Field(default=None)
@@ -179,9 +184,11 @@ class Response_Create_Multiple_TaskPD(BaseModel):
 
 class Request_Update_Multiple_TaskPD(BaseModel):
     tasks: list[Request_Update_TaskPD]
+    delete_on: bool | None = Field(default=False)
 
 class Response_Update_Multiple_TaskPD(BaseModel):
     tasks: list[Task_Base]
+    deletedCount: int | None = Field(default=None)
 
 
 class Request_Delete_TasksPD(BaseModel):
@@ -210,7 +217,10 @@ class Request_Get_Program_ListPD(BaseModel):
 class Response_Get_ProgramPD(BaseModel):
     program: Program_Base | None
     mainTasks: list[Task_Base] | None
-    allSteps: dict[str, list[Step_Tree_Base]] | None
+    subTasks: list[Task_Base] | None
+    mainSteps: dict[str, list[Step_Tree_Base]] | None
+    subSteps: dict[str, dict[str, list[Step_Tree_Base]]] | None
+
 
 
 class Response_Get_Program_ListPD(BaseModel):
@@ -256,7 +266,9 @@ class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt", "updated
 class Response_Create_Program_And_TasksPD(BaseModel):
     program: Program_Base
     mainTasks: list[Task_Base]
-    allSteps: dict[str, list[Step_Tree_Base]]
+    subTasks: list[Task_Base]
+    mainSteps: dict[str, list[Step_Tree_Base]]
+    subSteps: dict[str, dict[str, list[Step_Tree_Base]]] | None
 
 
 class Response_Update_ProgramPD(BaseModel):
@@ -271,6 +283,7 @@ class Request_Clone_ProgramPD(BaseModel):
 class Response_Clone_ProgramPD(BaseModel):
     new_program_id: str
     tasks_id_map: dict[str, str]
+    steps_id_map: dict[str, str]
 
 
 class Response_Delete_Program_And_TasksPD(BaseModel):
@@ -309,6 +322,7 @@ class Client_Script_InfoPD(BaseModel):
     taskId: str
     repeatCount: int
     begin: MainTaskBegin | None = Field(default=None)
+    parentTaskId: str | None = Field(default=None)
     steps: list[Client_StepPD]
     stepMode: bool = Field(default=False)
 
@@ -334,6 +348,8 @@ class Request_Get_Script_ContextPD(BaseModel):
     taskId: str
     begin: MainTaskBegin | None = Field(default=None)
     steps: list[Client_StepPD]
+    subTaskSteps: dict[str, list[Client_StepPD]] | None = Field(default=None)
+    eventSubTaskSteps: dict[str, list[Client_StepPD]] | None = Field(default=None)
 
 
 class PlayState(str, Enum):

@@ -34,23 +34,38 @@ class Zenoh_Controller(BaseController):
 
     def on_init(self, state_dicts):
         self._state_dicts = state_dicts
-        self._zenoh_client = ZenohClient()
 
+        # ✅ 이미 생성되어 있으면 재사용
         if self._zenoh_client is None:
-            raise RuntimeError("Zenoh client not initialized")
+            self._zenoh_client = ZenohClient()
 
-        start_time = time.time()
+            if self._zenoh_client is None:
+                raise RuntimeError("Zenoh client not initialized")
 
-        while self._zenoh_client.session is None:
-            if time.time() - start_time > 3.0:
-                raise RuntimeError("Zenoh session not established within 3 seconds.")
-            time.sleep(0.1)
+            # ✅ 세션 대기를 비동기적으로 처리 (블로킹 최소화)
+            # 세션이 없어도 publish는 내부 큐에 쌓여서 나중에 전송됨
+            start_time = time.time()
 
+            while self._zenoh_client.session is None:
+                # ✅ 0.5초만 기다리고 진행 (3초 → 0.5초)
+                if time.time() - start_time > 0.5:
+                    print("[WARNING] Zenoh session not ready, continuing anyway", flush=True)
+                    break
+                time.sleep(0.01)  # ✅ 100ms → 10ms로 단축
+
+        # ✅ 초기 상태 업데이트 시도 (실패해도 계속 진행)
         for task_id in self._state_dicts:
-            self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
-
-        # if self._zenoh_client is not None:
-        #     self._zenoh_client.query_one("rrs/stop")
+            try:
+                self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
+            except (ZenohNoReply, ZenohReplyError) as e:
+                rb_log.warning(f"initial state update skipped: {e}")
+            except RuntimeError as e:
+                rb_log.warning(f"initial state update skipped: {e}")
+            except ValueError as e:
+                rb_log.warning(f"initial state update skipped: {e}")
+            except TypeError as e:
+                # 초기화 단계에서는 에러 무시
+                rb_log.warning(f"initial state update skipped: {e}")
 
     def on_start(self, task_id: str) -> None:
         if self._zenoh_client is not None:
@@ -67,7 +82,6 @@ class Zenoh_Controller(BaseController):
         robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
 
         try:
-
             if self._zenoh_client is not None:
                 self._zenoh_client.query_one(
                     f"{robot_model}/call_halt",
@@ -77,8 +91,6 @@ class Zenoh_Controller(BaseController):
                 )
         except (ZenohNoReply, ZenohReplyError) as e:
             rb_log.warning(f"Warning program: {e}")
-        except Exception as e:
-            raise e
 
     def on_wait(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
@@ -97,15 +109,12 @@ class Zenoh_Controller(BaseController):
 
         except (ZenohNoReply, ZenohReplyError) as e:
             rb_log.warning(f"Warning program: {e}")
-        except Exception as e:
-            raise e
 
     def on_pause(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.PAUSED)
         self.update_executor_state(RB_Flow_Manager_ProgramState.PAUSED)
 
         try:
-
             robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
 
             if self._zenoh_client is not None:
@@ -117,15 +126,12 @@ class Zenoh_Controller(BaseController):
                 )
         except (ZenohNoReply, ZenohReplyError) as e:
             rb_log.warning(f"Warning program: {e}")
-        except Exception as e:
-            raise e
 
     def on_resume(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
         try:
-
             robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
 
             if self._zenoh_client is not None:
@@ -138,8 +144,6 @@ class Zenoh_Controller(BaseController):
 
         except (ZenohNoReply, ZenohReplyError) as e:
             rb_log.warning(f"Warning program: {e}")
-        except Exception as e:
-            raise e
 
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
@@ -200,8 +204,8 @@ class Zenoh_Controller(BaseController):
                     "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
                 )
         except Exception as e:
-            print(f"Error updating step state: {e}")
-            raise e
+            rb_log.error(f"Error updating step state: {e}")
+            raise
 
     def update_all_task_step_state(self, task_id: str, state: int) -> None:
         """Task의 모든 Step 상태 업데이트"""
@@ -217,8 +221,8 @@ class Zenoh_Controller(BaseController):
                     flatbuffer_buf_size=32,
                 )
         except Exception as e:
-            print(f"Error updating all task step state: {e}")
-            raise e
+            rb_log.error(f"Error updating all task step state: {e}")
+            raise
 
     def update_executor_state(self, state: int, error: str | None = "") -> None:
         """Executor 상태 업데이트"""
@@ -233,8 +237,8 @@ class Zenoh_Controller(BaseController):
                     flatbuffer_buf_size=256 if error is not None else 32,
                 )
         except Exception as e:
-            print(f"Error updating executor state: {e}")
-            raise e
+            rb_log.error(f"Error updating executor state: {e}")
+            raise
 
     def sub_task_start_or_done(self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"], state: int) -> None:
         try:
@@ -251,8 +255,8 @@ class Zenoh_Controller(BaseController):
                     flatbuffer_buf_size=32,
                 )
         except Exception as e:
-            print(f"Error updating sub task state: {e}")
-            raise e
+            rb_log.error(f"Error updating sub task state: {e}")
+            raise
 
     def _proxy_to_dict(self, obj):
         if isinstance(obj, dict):
