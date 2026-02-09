@@ -51,6 +51,8 @@ print_string "info" "=== Auto-commit ==="
 SCHEMA_COMMITTED=false
 SCHEMA_STASHED=false
 LOCAL_SCHEMA_COMMITTED=false
+LOCAL_SCHEMA_CHANGED_LIST="$(mktemp "${TMPDIR:-/tmp}/schema-update-local-changed.XXXXXX")"
+trap 'rm -f "$LOCAL_SCHEMA_CHANGED_LIST" >/dev/null 2>&1 || true' EXIT
 
 # subtree pull은 전체 워킹트리가 clean해야 안전하게 동작한다.
 if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
@@ -64,6 +66,12 @@ if [ -n "$(git status --porcelain -- . ":!$SCHEMA_DIR")" ]; then
     print_string "info" "Please commit/stash non-schema files first"
     exit 1
 fi
+
+# pull 전에 사용자가 실제로 건드린 schema 파일 목록을 저장한다.
+git status --porcelain -- "$SCHEMA_DIR" \
+    | sed -E 's/^.. //' \
+    | sed -E 's/^[^ ]+ -> //' \
+    > "$LOCAL_SCHEMA_CHANGED_LIST"
 
 echo ""
 print_string "info" "=== STEP 1: Pull ==="
@@ -99,23 +107,63 @@ else
         fi
         SCHEMA_COMMITTED=true
     else
-        print_string "error" "Conflict"
-        echo ""
-        print_string "warning" "=== Resolve in VSCode ==="
-        git status --short | grep "^UU\|^AA\|^DD" || echo ""
-        echo ""
-        echo "1. Open VSCode Source Control"
-        echo "2. Resolve conflicts"
-        echo "3. git add schemas/"
-        echo "4. git commit"
-        echo "5. git push origin $CURRENT_BRANCH"
-        echo "6. Run again: make schema-update"
-        echo ""
-        if [ "$SCHEMA_STASHED" = true ]; then
-            print_string "warning" "Your schema changes are stashed"
-            print_string "info" "Restore: git stash pop"
+        print_string "warning" "Conflict detected. Auto-resolving non-local files with theirs(main)..."
+
+        AUTO_RESOLVED=0
+        UNRESOLVED_LOCAL=0
+
+        while IFS= read -r conflict_file; do
+            [ -z "$conflict_file" ] && continue
+
+            if grep -Fxq "$conflict_file" "$LOCAL_SCHEMA_CHANGED_LIST"; then
+                print_string "warning" "Keep manual resolve: $conflict_file"
+                UNRESOLVED_LOCAL=1
+                continue
+            fi
+
+            print_string "info" "Auto-resolve with theirs: $conflict_file"
+            git checkout --theirs -- "$conflict_file" >/dev/null 2>&1 || true
+            git add -A -- "$conflict_file"
+            AUTO_RESOLVED=$((AUTO_RESOLVED + 1))
+        done < <(git diff --name-only --diff-filter=U -- "$SCHEMA_DIR")
+
+        if [ "$UNRESOLVED_LOCAL" -eq 0 ]; then
+            if git diff --name-only --diff-filter=U -- "$SCHEMA_DIR" | grep -q .; then
+                print_string "error" "Conflict remains after auto-resolve"
+            else
+                print_string "success" "Auto-resolved $AUTO_RESOLVED file(s)"
+                git commit -m "Merge subtree updates from $REMOTE_NAME/main"
+                if git push origin "$CURRENT_BRANCH"; then
+                    print_string "success" "Pushed"
+                else
+                    print_string "warning" "Push failed"
+                fi
+                SCHEMA_COMMITTED=true
+                UNRESOLVED_LOCAL=0
+            fi
         fi
-        exit 1
+
+        if [ "$UNRESOLVED_LOCAL" -eq 0 ] && ! git diff --name-only --diff-filter=U -- "$SCHEMA_DIR" | grep -q .; then
+            :
+        else
+            print_string "error" "Conflict"
+            echo ""
+            print_string "warning" "=== Resolve in VSCode ==="
+            git status --short | grep "^UU\|^AA\|^DD" || echo ""
+            echo ""
+            echo "1. Open VSCode Source Control"
+            echo "2. Resolve conflicts"
+            echo "3. git add schemas/"
+            echo "4. git commit"
+            echo "5. git push origin $CURRENT_BRANCH"
+            echo "6. Run again: make schema-update"
+            echo ""
+            if [ "$SCHEMA_STASHED" = true ]; then
+                print_string "warning" "Your schema changes are stashed"
+                print_string "info" "Restore: git stash pop"
+            fi
+            exit 1
+        fi
     fi
 fi
 
@@ -190,9 +238,9 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
         print_string "info" "No changes"
         exit 0
     fi
-    print_string "info" "Updating branch via subtree split..."
-    SPLIT_COMMIT="$(git subtree split --prefix="$SCHEMA_DIR" HEAD)"
-    if ! git push --force-with-lease="refs/heads/$BR:$REMOTE_HEAD" "$REMOTE_NAME" "$SPLIT_COMMIT:refs/heads/$BR"; then
+    print_string "info" "Updating branch with fast-forward commit..."
+    NEW_COMMIT="$(printf "Update schemas from main @ %s\n" "$MAIN_COMMIT" | git commit-tree "$LOCAL_TREE" -p "$REMOTE_HEAD")"
+    if ! git push "$REMOTE_NAME" "$NEW_COMMIT:refs/heads/$BR"; then
         print_string "warning" "Remote branch changed during push. Fetch latest and retry."
         print_string "error" "Push failed"
         exit 1
