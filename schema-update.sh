@@ -50,6 +50,7 @@ print_string "info" "=== Auto-commit ==="
 
 SCHEMA_COMMITTED=false
 SCHEMA_STASHED=false
+LOCAL_SCHEMA_COMMITTED=false
 
 # subtree pull은 전체 워킹트리가 clean해야 안전하게 동작한다.
 if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
@@ -148,13 +149,14 @@ if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$
     fi
     print_string "success" "Committed"
     SCHEMA_COMMITTED=true
+    LOCAL_SCHEMA_COMMITTED=true
 else
     print_string "info" "No changes in working tree"
 fi
 
-# STEP 3는 SCHEMA_COMMITTED가 true일 때만 실행
-if [ "$SCHEMA_COMMITTED" = false ]; then
-    print_string "info" "No schemas commits, skipping STEP 3"
+# STEP 3는 로컬 schema 변경 커밋이 있을 때만 실행
+if [ "$LOCAL_SCHEMA_COMMITTED" = false ]; then
+    print_string "info" "No local schema changes to publish, skipping STEP 3"
     print_string "success" "Done"
     exit 0
 fi
@@ -181,6 +183,7 @@ git fetch "$REMOTE_NAME" "+refs/heads/$BR:refs/remotes/$REMOTE_NAME/$BR" 2>/dev/
 REMOTE_REF="refs/remotes/$REMOTE_NAME/$BR"
 
 if git show-ref --verify --quiet "$REMOTE_REF"; then
+    REMOTE_HEAD="$(git rev-parse "$REMOTE_NAME/$BR")"
     REMOTE_TREE="$(git rev-parse "$REMOTE_NAME/$BR^{tree}")"
     echo "Remote tree: $REMOTE_TREE"
     if [ "$LOCAL_TREE" = "$REMOTE_TREE" ]; then
@@ -189,7 +192,8 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
     fi
     print_string "info" "Updating branch via subtree split..."
     SPLIT_COMMIT="$(git subtree split --prefix="$SCHEMA_DIR" HEAD)"
-    if ! git push "$REMOTE_NAME" "$SPLIT_COMMIT:refs/heads/$BR"; then
+    if ! git push --force-with-lease="refs/heads/$BR:$REMOTE_HEAD" "$REMOTE_NAME" "$SPLIT_COMMIT:refs/heads/$BR"; then
+        print_string "warning" "Remote branch changed during push. Fetch latest and retry."
         print_string "error" "Push failed"
         exit 1
     fi
