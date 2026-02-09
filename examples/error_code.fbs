@@ -1,8 +1,0 @@
-namespace rb.v1;
-
-enum ErrorCode : int32 {
-  OK = 0,
-  INVALID_ARGUMENT = 1,
-  NOT_FOUND = 2,
-  INTERNAL_ERROR = 3
-}

@@ -1,2 +1,0 @@
-/usr/bin/ar qc librb_session.a CMakeFiles/rb_session.dir/session.cpp.o CMakeFiles/rb_session.dir/zenoh_backend.cpp.o
-/usr/bin/ranlib librb_session.a
