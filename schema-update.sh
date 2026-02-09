@@ -196,7 +196,8 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
         TEMP_EXTRACT="$(mktemp -d)"
         trap "rm -rf '$TEMP_EXTRACT'" EXIT
         git -C "$MAIN_REPO" archive "$LOCAL_TREE" | tar -x -C "$TEMP_EXTRACT"
-        rsync -av --delete "$TEMP_EXTRACT/" ./
+        # worktree의 .git 파일을 지우면 이후 git 명령이 모두 실패한다.
+        rsync -av --delete --exclude='.git' "$TEMP_EXTRACT/" ./
         rm -rf "$TEMP_EXTRACT"
         git add -A
         if git diff --staged --quiet; then
