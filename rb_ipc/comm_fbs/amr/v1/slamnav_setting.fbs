@@ -229,7 +229,7 @@ table ResponseSetSensorInfo {
         - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
         - index         :       센서 인덱스 ( 0 , 1 , ...)
         - serial        :       센서 시리얼 ( serial_num / IP )
-        - mode          :       센서 동작 ( "on" / "off" )
+        - switch        :       true(on) / false(off)
 */
 table RequestGetSensorMode {
     id: string;
@@ -242,92 +242,35 @@ table ResponseGetSensorMode {
     target: string;
     index: int;
     serial: string;
-    mode: string;
+    switch: bool;
     result: string;
     message: string;
 }
 
 /*
     category    :       RPC
-    response    :       Callback
+    response    :       One-shot
     topic       :       {robotType}/setting/setSensorMode
     usage       :       센서 Mode 상태 설정
     field
         - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
         - index         :       센서 인덱스 ( 0 , 1 , ...)
         - serial        :       센서 시리얼 ( serial_num / IP )
-        - mode          :       센서 동작 ( "on" / "off" )
+        - switch        :       true(on) / false(off)
 */
 table RequestSetSensorMode {
     id: string;
     target: string;
     index: int;
     serial: string;
-    mode: string;
+    switch: bool;
 }
 table ResponseSetSensorMode {
     id: string;
     target: string;
     index: int;
     serial: string;
-    mode: string;
+    switch: bool;
     result: string;
     message: string;
 }
-
-
-
-// -------------------------------------------------
-// -----------                              --------
-// -----------     Pub / Sub  (Result )     --------
-// -----------                              --------
-// -------------------------------------------------
-
-
-/*
-    category    :       Pub / Sub (Result)
-    topic       :       {robotType}/setting/result
-    usage       :       setting 결과 응답
-    field
-        - command       :       Setting Callback 명령 (string)
-            - "setSensorMode"
-        - target        :       센서 대상 ( "camera", "lidar2d", "lidar3d" )
-        - index         :       센서 인덱스 ( 0 , 1 , ...)
-        - serial        :       센서 시리얼 ( serial_num / IP )
-        - mode          :       센서 동작 ( "on" / "off" )
-        - result        :       이동 결과
-            - success       :       동작 성공.
-            - fail          :       동작 실패.
-            - start         :       동작 시작.
-            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
-*/
-table ResultSettingSensor {
-    id: string;
-    command: string;
-    target: string;
-    index: int;
-    serial: string;
-    mode: string;
-    result: string;
-    message: string;
-}
-
-
-// /*
-//     category    :       Pub / Sub (Result)
-//     topic       :       {robotType}/setting/result/param
-//     usage       :       설정 파라미터 결과 응답
-//     field
-//         - params        :       파라미터 목록
-//         - result        :       이동 결과
-//             - success       :       동작 성공.
-//             - fail          :       동작 실패.
-//             - start         :       동작 시작.
-//             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
-// */
-// table ResultSettingParam {
-//     id: string;
-//     params: [SettingParam];
-//     result: string;
-//     message: string;
-// }
