@@ -46,6 +46,12 @@ class ExecutorContractTest(unittest.TestCase):
         self.assertIn("sub_task_done event requires sub_task_id and valid sub_task_type", text)
         self.assertIn("sub_task_start event requires sub_task_id and valid sub_task_type", text)
 
+    def test_waiting_pause_does_not_propagate_to_parent_or_children(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn("if not is_wait:", text)
+        self.assertIn("if parent_process_id is not None:", text)
+        self.assertIn("self.pause(parent_process_id)", text)
+
 
 class ControllerExceptionPolicyTest(unittest.TestCase):
     def test_zenoh_controller_no_raise_e_pattern(self):

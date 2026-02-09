@@ -118,15 +118,30 @@ class Step:
         }
 
     def to_py_string(self, depth: int = 0):
+        raw_expr_strings = {"event_sub_tree_list"}
+
         def _indent(s: str, n: int) -> str:
             pad = " " * n
             return "\n".join(pad + line if line else line for line in s.splitlines())
 
-        def format_dict(d: dict, indent: int) -> str:
+        def format_value(v: Any) -> str:
+            if isinstance(v, str):
+                if v in raw_expr_strings:
+                    return v
+                return repr(v)
+            if isinstance(v, dict):
+                return format_dict(v)
+            if isinstance(v, list):
+                return "[" + ", ".join(format_value(x) for x in v) + "]"
+            if callable(v):
+                return getattr(v, "__name__", str(v))
+            return repr(v)
+
+        def format_dict(d: dict) -> str:
             pad = " " * 4
             items = []
             for k, v in d.items():
-                items.append(f"{pad}{repr(k)}: {repr(v)},")
+                items.append(f"{pad}{repr(k)}: {format_value(v)},")
             return "{\n" + "\n".join(items) + "\n" + " " + "}"
 
         if self.children:
@@ -139,18 +154,18 @@ class Step:
 
         variable_block = ""
         if self.variable:
-            v = format_dict(self.variable, depth)
+            v = format_dict(self.variable)
             variable_block = _indent(f"variable={v},\n\n", depth + 4)
 
         # args block
         args_block = ""
         if self.args:
-            a = format_dict(self.args, depth + 4)
+            a = format_dict(self.args)
             args_block = _indent(f"args={a},\n\n", depth + 4)
 
         post_args_block = ""
         if self.post_args:
-            a = format_dict(self.post_args, depth + 4)
+            a = format_dict(self.post_args)
             post_args_block = _indent(f"post_args={a},\n\n", depth + 4)
 
         other_kwargs_block = ""
@@ -176,6 +191,11 @@ class Step:
             + (
                 _indent(f"func_name={repr(self.func_name)},\n\n", depth + 4)
                 if self.func_name
+                else ""
+            )
+            + (
+                _indent(f"func={format_value(self.func)},\n\n", depth + 4)
+                if self.func is not None and self.func_name is None
                 else ""
             )
             + args_block

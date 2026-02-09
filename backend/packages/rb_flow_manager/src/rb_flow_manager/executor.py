@@ -53,6 +53,8 @@ def _execute_tree_in_process(
     sync_state: dict[str, dict[str, int]],
     sync_cond: ConditionProxy,
     sync_lock: AcquirerProxy,
+    process_alive: dict[str, bool] | None = None,
+    parent_map: dict[str, str | None] | None = None,
 ):
     """
     프로세스에서 실행될 트리 실행 함수
@@ -177,6 +179,28 @@ def _execute_tree_in_process(
         if pt is None:
             return
 
+        # parent process는 자신의 자식 프로세스(parent_process_id == process_id)가 끝난 뒤 post_tree 실행
+        if process_alive is not None and parent_map is not None:
+            while True:
+                has_alive_children = False
+                for pid in list(parent_map.keys()):
+                    if pid == process_id:
+                        continue
+                    if parent_map.get(pid) != process_id:
+                        continue
+                    if process_alive.get(pid, False):
+                        has_alive_children = True
+                        break
+
+                if not has_alive_children:
+                    break
+
+                if stop_event.is_set() and not state_dict.get("ignore_stop", False):
+                    state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+                    raise StopExecution("Execution stopped by user")
+
+                time.sleep(0.05)
+
         stop_event.clear()
         state_dict["ignore_stop"] = True
 
@@ -252,6 +276,9 @@ def _execute_tree_in_process(
             raise RuntimeError("JumpToStep: Post program tree is not allowed.") from e
 
     finally:
+        if process_alive is not None:
+            process_alive[process_id] = False
+
         completion_event.set()
 
         if ctx is not None:
@@ -336,10 +363,13 @@ class ScriptExecutor:
         self._sync_cond = None
         self._sync_state: DictProxy | None = None
         self._sync_members: DictProxy | None = None
+        self._process_alive: DictProxy | None = None
+        self._parent_map: DictProxy | None = None
 
         # 모니터 스레드
         self._monitor_thread: Thread | None = None
         self._stop_monitor: EventType = self._mp_ctx.Event()
+        self._pending_complete_callbacks: set[str] = set()
 
         # 전역 락
         self._mu = Lock()
@@ -357,6 +387,10 @@ class ScriptExecutor:
             self._sync_state = self.manager.dict()
         if self._sync_members is None:
             self._sync_members = self.manager.dict()
+        if self._process_alive is None:
+            self._process_alive = self.manager.dict()
+        if self._parent_map is None:
+            self._parent_map = self.manager.dict()
 
         # 락/컨디션은 "진짜 multiprocessing 객체"로 (프록시 금지)
         if self._sync_lock is None:
@@ -800,7 +834,12 @@ class ScriptExecutor:
         if process_id not in self.state_dicts:
             self.state_dicts[process_id] = self.manager.dict()
 
-        self.result_queues[process_id] = self._mp_ctx.Queue(maxsize=10)
+        # 이벤트 백프레셔로 worker가 put()에서 멈추지 않도록 bounded queue를 피한다.
+        self.result_queues[process_id] = self._mp_ctx.Queue()
+        if self._process_alive is not None:
+            self._process_alive[process_id] = True
+        if self._parent_map is not None:
+            self._parent_map[process_id] = parent_process_id
 
         # 단일 프로세스의 경우 sync flags 등록 (배치가 아닐 때)
         if not multi_start:
@@ -861,6 +900,8 @@ class ScriptExecutor:
                 "sync_state": self._sync_state,
                 "sync_cond": self._sync_cond,
                 "sync_lock": self._sync_lock,
+                "process_alive": self._process_alive,
+                "parent_map": self._parent_map,
             },
         )
 
@@ -1059,14 +1100,17 @@ class ScriptExecutor:
             )
             self.state_dicts[pid]["state"] = state
 
-            parent_process_id = evt.get("parent_process_id")
+            # step_mode barrier 대기(WAITING)는 해당 프로세스만 대기시킨다.
+            # 부모/자식 전파는 사용자 pause 요청(PAUSED)일 때만 수행.
+            if not is_wait:
+                parent_process_id = evt.get("parent_process_id")
 
-            if parent_process_id is not None:
-                self.pause(parent_process_id)
+                if parent_process_id is not None:
+                    self.pause(parent_process_id)
 
-            for find_pid in list(self.state_dicts.keys()):
-                if self.state_dicts[find_pid].get("parent_process_id") == pid:
-                    self.pause(find_pid)
+                for find_pid in list(self.state_dicts.keys()):
+                    if self.state_dicts[find_pid].get("parent_process_id") == pid:
+                        self.pause(find_pid)
 
             if is_wait:
                 if self._on_wait is not None:
@@ -1121,6 +1165,48 @@ class ScriptExecutor:
         self._monitor_thread = Thread(target=self._monitor_processes, daemon=True)
         self._monitor_thread.start()
 
+    def _has_alive_descendant_process(self, parent_pid: str) -> bool:
+        # parent_process_id 그래프를 따라 자식/자손 중 alive가 있으면 True
+        stack = [parent_pid]
+        visited: set[str] = set()
+
+        while stack:
+            cur_parent = stack.pop()
+            if cur_parent in visited:
+                continue
+            visited.add(cur_parent)
+
+            for pid, state in self.state_dicts.items():
+                if pid == cur_parent:
+                    continue
+                if state.get("parent_process_id") != cur_parent:
+                    continue
+
+                # worker finally에서 _process_alive를 false로 내리므로 종료 판정을 더 정확히 본다.
+                if self._process_alive is not None and self._process_alive.get(pid, False):
+                    return True
+
+                proc = self.processes.get(pid)
+                if proc is not None and proc.is_alive():
+                    return True
+
+                stack.append(pid)
+
+        return False
+
+    def _flush_complete_callbacks(self):
+        if not self._pending_complete_callbacks:
+            return
+
+        for pid in list(self._pending_complete_callbacks):
+            if self._has_alive_descendant_process(pid):
+                continue
+            if self._on_complete is not None:
+                self._on_complete(pid)
+            if self.controller is not None:
+                self.controller.on_complete(pid)
+            self._pending_complete_callbacks.discard(pid)
+
     def _monitor_processes(self):
         """프로세스 완료 감시 및 자원 정리"""
         last_event_process_time = time.time()
@@ -1151,15 +1237,16 @@ class ScriptExecutor:
 
             # 완료된 프로세스 정리
             for pid in finished:
-                if self._on_complete is not None:
-                    self._on_complete(pid)
-                if self.controller is not None:
-                    self.controller.on_complete(pid)
-
+                self._pending_complete_callbacks.add(pid)
                 self._cleanup_process(pid)
+
+            # 부모-자식 관계를 고려해 on_complete 지연 호출
+            self._flush_complete_callbacks()
 
             # 모든 프로세스 완료 시
             if not self.processes:
+                # 남은 pending callback 강제 flush
+                self._flush_complete_callbacks()
                 if self._on_all_complete is not None:
                     self._on_all_complete()
                 if self.controller is not None:
@@ -1178,6 +1265,8 @@ class ScriptExecutor:
 
         if dead:
             self._unregister_process_sync_flags(process_id)
+            if self._process_alive is not None:
+                self._process_alive[process_id] = False
 
         with self._mu:
             p = self.processes.pop(process_id, None)
@@ -1212,11 +1301,16 @@ class ScriptExecutor:
 
         self.result_queues = {}
         self._monitor_thread = None
+        self._pending_complete_callbacks.clear()
 
         if self._sync_state is not None:
             self._sync_state.clear()
         if self._sync_members is not None:
             self._sync_members.clear()
+        if self._process_alive is not None:
+            self._process_alive.clear()
+        if self._parent_map is not None:
+            self._parent_map.clear()
 
         # 락/컨디션은 stuck 가능성 때문에 재생성
         self._sync_lock = self._mp_ctx.RLock()
@@ -1334,8 +1428,22 @@ class ScriptExecutor:
 
     def stop_all(self):
         """모든 스크립트 중지"""
-        for process_id in list(self.processes.keys()):
+        pids = list(self.processes.keys())
+        for process_id in pids:
             self.stop(process_id)
+
+        # soft stop 이후에도 남아있는 프로세스는 강제 종료
+        deadline = time.time() + 2.0
+        while time.time() < deadline:
+            if all(not p.is_alive() for p in self.processes.values()):
+                break
+            time.sleep(0.05)
+
+        for process_id in pids:
+            p = self.processes.get(process_id)
+            if p is not None and p.is_alive():
+                with contextlib.suppress(Exception):
+                    p.terminate()
 
         if self._on_all_stop is not None:
             self._on_all_stop()

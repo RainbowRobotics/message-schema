@@ -69,6 +69,7 @@ from .program_schema import (
     Request_Update_ProgramPD,
     Request_Update_StepStatePD,
     Response_Get_Task_ListPD,
+    SubStepItem,
     TaskType,
 )
 
@@ -523,7 +524,10 @@ class ProgramService(BaseService):
 
         for s in prepped_steps:
             s["parentStepId"] = resolve_ref(s.get("parentStepId"))
-            s["targetStepId"] = resolve_ref(s.get("targetStepId"))
+            target_step_id = s.get("targetStepId")
+            if isinstance(target_step_id, str) and not target_step_id.strip():
+                target_step_id = None
+            s["targetStepId"] = resolve_ref(target_step_id)
             if "syncStepIds" in s and s["syncStepIds"]:
                 s["syncStepIds"] = [resolve_ref(x) for x in s["syncStepIds"]]
 
@@ -1441,8 +1445,9 @@ class ProgramService(BaseService):
         main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
         sub_tasks_docs = [doc for doc in tasks_docs if doc["type"] != TaskType.MAIN]
 
+
         main_steps: dict[str, list[dict]] = {}
-        sub_steps: dict[str, dict[str, list[dict]]] = defaultdict(dict)
+        sub_steps: dict[str, list[SubStepItem]] = defaultdict(list)
 
         for doc in tasks_docs:
             steps_docs = await steps_col.find({"taskId": doc["taskId"]}).to_list(length=None)
@@ -1452,7 +1457,10 @@ class ProgramService(BaseService):
             if doc["type"] == TaskType.MAIN:
                 main_steps[doc["taskId"]] = steps_tree
             elif doc.get("parentTaskId") is not None:
-                sub_steps[doc["parentTaskId"]][doc["taskId"]] = steps_tree
+                sub_steps[doc["parentTaskId"]].append({
+                    "taskId": doc["taskId"],
+                    "steps": steps_tree,
+                })
 
 
         return {
@@ -2096,8 +2104,84 @@ class ProgramService(BaseService):
             }
 
         tasks_col = db["tasks"]
+        steps_col = db["steps"]
+
+        task_doc_map: dict[str, dict[str, Any]] = {}
+        for script in scripts:
+            task_id = script["taskId"]
+            if task_id in task_doc_map:
+                continue
+            task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+            if not task_doc:
+                raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+            task_doc_map[task_id] = task_doc
+
+        # parent task id -> event sub tree list
+        event_sub_trees_by_parent: dict[str, list[Step]] = defaultdict(list)
+
+        # 1) 요청에 포함된 EVENT_SUB로 우선 구성
+        for script in scripts:
+            task_id = script["taskId"]
+            task_doc = task_doc_map[task_id]
+            if task_doc["type"] != TaskType.EVENT_SUB:
+                continue
+
+            parent_task_id = str(task_doc.get("parentTaskId") or script.get("parentTaskId") or "")
+            if not parent_task_id:
+                continue
+
+            event_normal_steps = [
+                s for s in script["steps"] if s.get("method", None) != "ActionPost"
+            ]
+            event_sub_trees_by_parent[parent_task_id].extend(
+                [self.parse_step_context(s, depth=8) for s in event_normal_steps]
+            )
+
+        # 2) 요청에 EVENT_SUB가 없으면 DB fallback
+        parent_ids = {
+            script["taskId"]
+            for script in scripts
+            if task_doc_map[script["taskId"]]["type"] != TaskType.EVENT_SUB
+        }
+        for parent_id in parent_ids:
+            if event_sub_trees_by_parent.get(parent_id):
+                continue
+
+            event_sub_docs = await tasks_col.find(
+                {"parentTaskId": parent_id, "type": TaskType.EVENT_SUB}
+            ).to_list(length=None)
+            for event_sub_doc in event_sub_docs:
+                event_steps_docs = await steps_col.find(
+                    {"taskId": str(event_sub_doc["_id"])}
+                ).to_list(length=None)
+                steps_tree = self.build_step_tree(event_steps_docs)
+                event_sub_trees_by_parent[parent_id].extend(
+                    [self.parse_step_context(s, depth=8) for s in steps_tree]
+                )
 
         tree_list = []
+
+        def inject_event_trees(step_obj: Step, event_trees: list[Step]) -> tuple[int, int]:
+            call_count = 0
+            invalid_bind_count = 0
+
+            if getattr(step_obj, "func_name", None) == "rb_base_sdk.call_event_tree":
+                call_count += 1
+                args = step_obj.args if isinstance(step_obj.args, dict) else {}
+                trees_arg = args.get("trees")
+
+                if isinstance(trees_arg, str) or trees_arg is None:
+                    args["trees"] = event_trees
+                    step_obj.args = args
+                elif not isinstance(trees_arg, list):
+                    invalid_bind_count += 1
+
+            for child in getattr(step_obj, "children", []) or []:
+                c_count, c_invalid = inject_event_trees(child, event_trees)
+                call_count += c_count
+                invalid_bind_count += c_invalid
+
+            return call_count, invalid_bind_count
 
         for script in scripts:
             task_id = script["taskId"]
@@ -2118,10 +2202,7 @@ class ProgramService(BaseService):
             if len(post_steps_tree) > 1:
                 raise HTTPException(status_code=400, detail=f"ActionPost step must be only one: {task_id}")
 
-            task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
-
-            if not task_doc:
-                raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+            task_doc = task_doc_map[task_id]
 
             if task_doc["type"] == TaskType.EVENT_SUB:
                 continue
@@ -2132,6 +2213,20 @@ class ProgramService(BaseService):
 
             tree = self.build_tree_from_client(normal_steps_tree, task_id, robot_model, category, begin)
             post_tree = self.parse_step_context(post_steps_tree[0], depth=8) if len(post_steps_tree) > 0 else None
+
+            call_count, invalid_bind_count = inject_event_trees(
+                tree, event_sub_trees_by_parent.get(task_id, [])
+            )
+            if call_count > 0 and invalid_bind_count > 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"call_event_tree trees binding failed: {task_id}",
+                )
+            if call_count > 0 and len(event_sub_trees_by_parent.get(task_id, [])) == 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"EVENT_SUB is required for call_event_tree: {task_id}",
+                )
 
             tree_list.append(
                 {
