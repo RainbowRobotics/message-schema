@@ -187,8 +187,12 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
         print_string "info" "No changes"
         exit 0
     fi
-    WORK_DIR="$(mktemp -d)"
-    trap "git worktree remove --force '$WORK_DIR' 2>/dev/null || true" EXIT
+    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/schema-update-worktree.XXXXXX")"
+    cleanup_work_dir() {
+        git worktree remove --force "$WORK_DIR" >/dev/null 2>&1 || true
+        rm -rf "$WORK_DIR" >/dev/null 2>&1 || true
+    }
+    trap cleanup_work_dir EXIT INT TERM
     git worktree add --detach "$WORK_DIR" "$REMOTE_NAME/$BR"
     (
         cd "$WORK_DIR"
@@ -210,9 +214,13 @@ if git show-ref --verify --quiet "$REMOTE_REF"; then
             git push "$REMOTE_NAME" "HEAD:refs/heads/$BR"
         fi
     ) || {
+        cleanup_work_dir
+        trap - EXIT INT TERM
         print_string "error" "Push failed"
         exit 1
     }
+    cleanup_work_dir
+    trap - EXIT INT TERM
 else
     print_string "info" "Creating branch"
     if git show-ref --verify --quiet "refs/heads/$BR"; then
