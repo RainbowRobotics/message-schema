@@ -218,7 +218,7 @@ table Status {
         - jog_move      :       조그 이동 상태 ( "none" )
         - obs           :       장애물 상태 ( "none" / "near" / "far" / "vir" )
         - path_state    :       경로 상태 ( "none" / "req_path" / "recv_path" )
-        - path_t        :       경로 발행 시간
+        - multi_id      :       multi 경로 id (RequestMultiPath::id 값 사용.)
         - step          :       로봇 경로 step
         - multi_state   :       multi 상태  ( "none" / "move" / "complete" / "fail" / "obstacle" / "cancel" )
 */
@@ -228,7 +228,7 @@ table StatusMoveState {
     jog_move: string;
     obs: string;
     path_state: string;
-    path_t: double;
+    multi_id: string;
     step: int;
     multi_state: string;
 }
