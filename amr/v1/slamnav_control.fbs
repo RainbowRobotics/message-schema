@@ -282,6 +282,26 @@ table ResponseSetObsBox {
 /*
     category    :       RPC
     response    :       One-shot
+    topic       :       {robotType}/control/led
+    usage       :       LED On / Off
+    field
+        - switch        :       true(on) / false(off)
+*/
+table RequestSetLed {
+    id: string;
+    switch: bool;
+}
+table ResponseSetLed {
+    id: string;
+    switch: bool;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/ledColor
     usage       :       LED Mode
     field
