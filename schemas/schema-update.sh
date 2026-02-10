@@ -54,6 +54,10 @@ LOCAL_SCHEMA_COMMITTED=false
 LOCAL_SCHEMA_CHANGED_LIST="$(mktemp "${TMPDIR:-/tmp}/schema-update-local-changed.XXXXXX")"
 trap 'rm -f "$LOCAL_SCHEMA_CHANGED_LIST" >/dev/null 2>&1 || true' EXIT
 
+has_schema_changes() {
+    git status --porcelain=v1 -uall -- "$SCHEMA_DIR" | grep -q .
+}
+
 # subtree pull은 전체 워킹트리가 clean해야 안전하게 동작한다.
 if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
     print_string "error" "Staged changes exist outside $SCHEMA_DIR"
@@ -78,10 +82,14 @@ print_string "info" "=== STEP 1: Pull ==="
 
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR" || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
+if has_schema_changes; then
+    print_string "info" "Detected local schema changes:"
+    git status --short -uall -- "$SCHEMA_DIR"
     print_string "info" "Stashing local $SCHEMA_DIR changes before pull"
     git stash push -u -m "schema-update-schema-stash" -- "$SCHEMA_DIR"
     SCHEMA_STASHED=true
+else
+    print_string "info" "No local schema changes detected in $SCHEMA_DIR before pull"
 fi
 
 print_string "info" "Fetching..."
@@ -179,7 +187,7 @@ fi
 echo ""
 print_string "info" "=== STEP 2: Commit ==="
 
-if ! git diff --quiet HEAD -- "$SCHEMA_DIR" || ! git diff --cached --quiet -- "$SCHEMA_DIR" || [ -n "$(git ls-files --others --exclude-standard -- "$SCHEMA_DIR")" ]; then
+if has_schema_changes; then
     print_string "info" "Changes detected"
     echo ""
     git status --short -- "$SCHEMA_DIR"
