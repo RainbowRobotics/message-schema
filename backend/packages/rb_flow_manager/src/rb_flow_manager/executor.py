@@ -79,18 +79,11 @@ def _execute_tree_in_process(
         start_event.wait()
 
     ctx: ExecutionContext | None = None
-    error_msg: str | None = None
-    post_tree_ref: dict[str, Step | None] = {"value": post_tree}
-
-    ctx: ExecutionContext | None = None
-    error_msg: str | None = None
     post_tree_ref: dict[str, Step | None] = {"value": post_tree}
 
     def set_error(msg: str):
-        nonlocal error_msg
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
         state_dict["error"] = msg
-        error_msg = msg
 
     def emit_error_or_stop(step_id: str, msg: str):
         if ctx is None:
@@ -119,15 +112,28 @@ def _execute_tree_in_process(
         state_dict["current_repeat"] = current_repeat
 
         try:
-            # 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
-            if state_dict["current_repeat"] > 1:
-                tree.execute_children(ctx)
-            else:
-                tree.execute(ctx)
+            pending_target_step_id: str | None = None
+            max_jump_hops = 1000
+            jump_hops = 0
 
-        except JumpToStepException as e:
-            tree.execute_children(ctx, target_step_id=e.target_step_id)
-            return
+            while True:
+                try:
+                    # 2회차 이상이면 root는 다시 실행하지 않고 children만 실행
+                    if pending_target_step_id is not None:
+                        tree.execute_children(ctx, target_step_id=pending_target_step_id)
+                        pending_target_step_id = None
+                    elif state_dict["current_repeat"] > 1:
+                        tree.execute_children(ctx)
+                    else:
+                        tree.execute(ctx)
+                    break
+                except JumpToStepException as e:
+                    pending_target_step_id = e.target_step_id
+                    jump_hops += 1
+                    if jump_hops > max_jump_hops:
+                        raise RuntimeError(
+                            "JumpToStep: exceeded max jump hops in a single execution."
+                        )
 
         except ChangeSubTaskException as e:
             if e.sub_task_tree is None:
@@ -752,15 +758,11 @@ class ScriptExecutor:
             )
             pid_flags[pid] = flags
 
-        # 각 flag별로 이번 배치의 참가자 수 계산
-        flag_counts: dict[str, int] = {}
-        for _, flags in pid_flags.items():
-            for flag in flags:
-                flag_counts[flag] = flag_counts.get(flag, 0) + 1
-
         # sync_state 업데이트
         with self._sync_lock:
-            for flag, _ in flag_counts.items():
+            # 이번 배치에서 등장한 모든 flag 순회
+            all_flags = {flag for flags in pid_flags.values() for flag in flags}
+            for flag in all_flags:
                 # members - 일반 list로 저장 (proxy 중첩 금지)
                 members = list(self._sync_members.get(flag, []))
 
@@ -795,6 +797,7 @@ class ScriptExecutor:
 
         event_tree_dict = evt.get("event_tree")
         event_task_id = evt.get("event_task_id")
+        step_id = evt.get("step_id")
         run_mode = str(evt.get("run_mode") or "ASYNC").upper()
         call_seq = evt.get("call_seq")
 
@@ -804,67 +807,45 @@ class ScriptExecutor:
             raise ValueError("event_sub_task_start event requires event_tree")
         if run_mode not in ("SYNC", "ASYNC"):
             raise ValueError("event_sub_task_start event requires valid run_mode")
+        parent_state = self.state_dicts[parent_pid]
 
-        event_tree = Step.from_dict(event_tree_dict)
-        has_sync_flags = bool(self._collect_sync_flags(event_tree))
+        def reject_spawn(message: str):
+            pending_map = dict(parent_state.get("event_start_pending_map", {}))
+            if (
+                event_task_id in pending_map
+                and call_seq is not None
+                and pending_map[event_task_id] == call_seq
+            ):
+                pending_map.pop(event_task_id, None)
+                parent_state["event_start_pending_map"] = pending_map
 
-        # 이미 동일 event task 프로세스가 실행 중이면 기본적으로 재사용한다.
-        # 단, SyncStep이 포함되거나 run_mode=SYNC인 경우 정확성을 위해 직렬 실행한다.
+            rejected_map = dict(parent_state.get("event_start_rejected_map", {}))
+            rejected_map[event_task_id] = {
+                "call_seq": call_seq,
+                "message": message,
+            }
+            parent_state["event_start_rejected_map"] = rejected_map
+
+            q = self.result_queues.get(parent_pid)
+            if q is not None:
+                q.put(
+                    {
+                        "type": "error",
+                        "process_id": parent_pid,
+                        "step_id": step_id or parent_state.get("current_step_id"),
+                        "ts": time.time(),
+                        "generation": self._pid_generation.get(parent_pid, parent_state.get("generation")),
+                        "error": message,
+                    }
+                )
+
+        # 이미 동일 이벤트 프로세스가 살아있으면(실행/일시정지 포함) 즉시 에러 처리
         existing_proc = self.processes.get(event_task_id)
         if existing_proc is not None and existing_proc.is_alive():
-            if run_mode == "SYNC" or has_sync_flags:
-                # 기존 실행이 끝난 뒤 새 호출을 실행한다.
-                deadline = time.time() + 10.0
-                while existing_proc.is_alive() and time.time() < deadline:
-                    time.sleep(0.01)
+            reject_spawn(f"Event sub task already running: {event_task_id}")
+            return
 
-                if existing_proc.is_alive():
-                    # 비정상 장기 실행 시 재사용 fallback
-                    pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
-                    if (
-                        event_task_id in pending_map
-                        and call_seq is not None
-                        and pending_map[event_task_id] == call_seq
-                    ):
-                        pending_map.pop(event_task_id, None)
-                        self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
-
-                    if run_mode == "SYNC":
-                        parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
-                        if event_task_id not in parent_children:
-                            parent_children.append(event_task_id)
-                            self.state_dicts[parent_pid]["event_sync_children"] = parent_children
-
-                        if self._event_wait_parent_by_child.get(event_task_id) is None:
-                            self._event_wait_parent_by_child[event_task_id] = parent_pid
-                    return
-
-                # 완료된 기존 프로세스 정리 후 새로 spawn
-                self._cleanup_process(event_task_id)
-                existing_proc = self.processes.get(event_task_id)
-
-            if existing_proc is not None and existing_proc.is_alive():
-                pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
-                if (
-                    event_task_id in pending_map
-                    and call_seq is not None
-                    and pending_map[event_task_id] == call_seq
-                ):
-                    pending_map.pop(event_task_id, None)
-                    self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
-
-                if run_mode == "SYNC":
-                    parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
-                    if event_task_id not in parent_children:
-                        parent_children.append(event_task_id)
-                        self.state_dicts[parent_pid]["event_sync_children"] = parent_children
-
-                    # 이미 맵핑이 없으면 연결만 복구 (중복 카운트는 올리지 않는다).
-                    if self._event_wait_parent_by_child.get(event_task_id) is None:
-                        self._event_wait_parent_by_child[event_task_id] = parent_pid
-                return
-
-        parent_state = self.state_dicts[parent_pid]
+        event_tree = Step.from_dict(event_tree_dict)
 
         args = MakeProcessArgs(
             process_id=event_task_id,
@@ -881,23 +862,10 @@ class ScriptExecutor:
 
         p = self.make_process(args, multi_start=False, start_event=None, invoke_callbacks=True)
         if p is None:
-            pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
-            if (
-                event_task_id in pending_map
-                and call_seq is not None
-                and pending_map[event_task_id] == call_seq
-            ):
-                pending_map.pop(event_task_id, None)
-                self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
-
-            if run_mode == "SYNC":
-                parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
-                if event_task_id in parent_children:
-                    parent_children.remove(event_task_id)
-                    self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+            reject_spawn(f"Failed to spawn event sub task: {event_task_id}")
             return
 
-        # start 이전에 등록해야 자식이 즉시 종료해도 resume 누락이 없다.
+        # start 이전에 등록해야 자식이 즉시 종료해도 resume 누락이 없음
         if run_mode == "SYNC":
             parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
             if event_task_id not in parent_children:
@@ -1621,10 +1589,15 @@ class ScriptExecutor:
         if self.controller is not None and step_id is not None:
             self.controller.on_stop(process_id, step_id)
 
-        if self._on_all_stop is not None:
-            self._on_all_stop()
-        if self.controller is not None:
-            self.controller.on_all_stop()
+        # 모든 프로세스가 중지 상태일 때만 all_stop 콜백 호출
+        if all(
+            self.state_dicts[pid].get("state") == RB_Flow_Manager_ProgramState.STOPPED
+            for pid in self.processes
+        ):
+            if self._on_all_stop is not None:
+                self._on_all_stop()
+            if self.controller is not None:
+                self.controller.on_all_stop()
 
         print("Process stopped", flush=True)
 
@@ -1649,20 +1622,10 @@ class ScriptExecutor:
                 with contextlib.suppress(Exception):
                     p.terminate()
 
-        if self._on_all_stop is not None:
-            self._on_all_stop()
-        if self.controller is not None:
-            self.controller.on_all_stop()
-
     def pause_all(self):
         """모든 스크립트 일시정지"""
         for process_id in list(self.processes.keys()):
             self.pause(process_id)
-
-        if self._on_all_pause is not None:
-            self._on_all_pause()
-        if self.controller is not None:
-            self.controller.on_all_pause()
 
     def resume_all(self):
         """모든 스크립트 재개"""

@@ -881,8 +881,7 @@ class ProgramService(BaseService):
         header_context = f'""" {script_name} """\n'
         header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
         header_context += "from rb_flow_manager.schema import MakeProcessArgs\n"
-        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep, SubTaskStep, SyncStep\n"
-        header_context += "from rb_flow_manager.utils import call_event_tree\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, ConditionStep, FolderStep, Step, JumpToStep, BreakStep, SubTaskStep, SyncStep, CallEventStep\n"
         header_context += "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n"
 
         # Context variables

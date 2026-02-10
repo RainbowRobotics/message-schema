@@ -372,6 +372,7 @@ class ExecutionContext:
         *,
         event_task_id: str,
         event_tree,
+        step_id: str | None = None,
         run_mode: Literal["SYNC", "ASYNC"] = "ASYNC",
         call_seq: int | None = None,
     ):
@@ -383,6 +384,7 @@ class ExecutionContext:
                 "process_id": self.process_id,
                 "event_task_id": event_task_id,
                 "event_tree": event_tree.to_dict() if event_tree is not None else None,
+                "step_id": step_id,
                 "run_mode": run_mode,
                 "call_seq": call_seq,
                 "ts": time.time(),

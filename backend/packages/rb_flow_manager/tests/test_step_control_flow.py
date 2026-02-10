@@ -104,6 +104,7 @@ class DummyExecutionContext:
         *,
         event_task_id: str,
         event_tree,
+        step_id: str | None = None,
         run_mode: str = "ASYNC",
         call_seq: int | None = None,
     ):
@@ -111,6 +112,7 @@ class DummyExecutionContext:
             {
                 "event_task_id": event_task_id,
                 "event_tree": event_tree,
+                "step_id": step_id,
                 "run_mode": run_mode,
                 "call_seq": call_seq,
             }
@@ -484,6 +486,175 @@ class StepControlFlowTest(unittest.TestCase):
         self.assertEqual(len(rebuilt.children), 1)
         self.assertEqual(type(rebuilt.children[0]).__name__, "SyncStep")
         self.assertEqual(getattr(rebuilt.children[0], "flag", None), "f1")
+
+    def test_jump_loop_keeps_condition_chain_consistent(self):
+        Step = STEP_MOD.Step
+        ConditionStep = STEP_MOD.ConditionStep
+        JumpToStep = STEP_MOD.JumpToStep
+
+        ctx = DummyExecutionContext()
+
+        def init_test(*, flow_manager_args):
+            flow_manager_args.ctx.update_local_variables({"test": 1})
+            flow_manager_args.done()
+
+        def plus_one(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 1
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.ctx.trace.append(f"test:{v}")
+            flow_manager_args.done()
+
+        def plus_two(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 2
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.ctx.trace.append(f"test:{v}")
+            flow_manager_args.done()
+
+        def alarm(*, flow_manager_args):
+            flow_manager_args.ctx.trace.append("alarm")
+            flow_manager_args.done()
+
+        def tail(*, flow_manager_args):
+            flow_manager_args.ctx.trace.append("tail")
+            flow_manager_args.done()
+
+        root = Step(
+            step_id="root_jump_cond",
+            name="root_jump_cond",
+            children=[
+                Step(step_id="init", name="init", func=init_test),
+                Step(step_id="loop_anchor", name="loop_anchor"),
+                ConditionStep(
+                    step_id="if_test_4",
+                    group_id="jump_group",
+                    name="If",
+                    condition_type="If",
+                    condition="test == 4",
+                    children=[Step(step_id="alarm", name="alarm", func=alarm)],
+                ),
+                ConditionStep(
+                    step_id="elseif_test_2",
+                    group_id="jump_group",
+                    name="ElseIf",
+                    condition_type="ElseIf",
+                    condition="test == 2",
+                    children=[
+                        Step(step_id="plus_two", name="plus_two", func=plus_two),
+                        JumpToStep(step_id="jump_from_elseif", name="jump", target_step_id="loop_anchor"),
+                    ],
+                ),
+                ConditionStep(
+                    step_id="else_branch",
+                    group_id="jump_group",
+                    name="Else",
+                    condition_type="Else",
+                    children=[
+                        Step(step_id="plus_one", name="plus_one", func=plus_one),
+                        JumpToStep(step_id="jump_from_else", name="jump", target_step_id="loop_anchor"),
+                    ],
+                ),
+                Step(step_id="tail", name="tail", func=tail),
+            ],
+        )
+
+        max_jumps = 10
+        pending_target: str | None = None
+        for _ in range(max_jumps):
+            try:
+                if pending_target is None:
+                    root.execute(ctx)
+                else:
+                    root.execute_children(ctx, target_step_id=pending_target)
+                    pending_target = None
+                break
+            except EXC_MOD.JumpToStepException as e:
+                pending_target = e.target_step_id
+        else:
+            self.fail("jump loop did not converge")
+
+        self.assertEqual(ctx.trace, ["test:2", "test:4", "alarm", "tail"])
+
+    def test_jump_with_disabled_steps_keeps_scope_and_hits_alarm(self):
+        Step = STEP_MOD.Step
+        ConditionStep = STEP_MOD.ConditionStep
+        JumpToStep = STEP_MOD.JumpToStep
+
+        ctx = DummyExecutionContext()
+
+        def init_test(*, flow_manager_args):
+            flow_manager_args.ctx.update_local_variables({"test": 1})
+            flow_manager_args.done()
+
+        def plus_one(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 1
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.done()
+
+        def plus_two(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 2
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.done()
+
+        def alarm(*, flow_manager_args):
+            flow_manager_args.ctx.trace.append("alarm")
+            flow_manager_args.done()
+
+        root = Step(
+            step_id="root_jump_disabled",
+            name="root_jump_disabled",
+            children=[
+                Step(step_id="disabled_1", name="disabled_1", disabled=True),
+                Step(step_id="disabled_2", name="disabled_2", disabled=True),
+                Step(step_id="init", name="init", func=init_test),
+                Step(step_id="anchor", name="anchor"),
+                ConditionStep(
+                    step_id="if_test_4",
+                    group_id="jump_group2",
+                    name="If",
+                    condition_type="If",
+                    condition="test == 4",
+                    children=[Step(step_id="alarm", name="alarm", func=alarm)],
+                ),
+                ConditionStep(
+                    step_id="elseif_test_2",
+                    group_id="jump_group2",
+                    name="ElseIf",
+                    condition_type="ElseIf",
+                    condition="test == 2",
+                    children=[
+                        Step(step_id="plus_two", name="plus_two", func=plus_two),
+                        JumpToStep(step_id="jump_from_elseif", name="jump", target_step_id="anchor"),
+                    ],
+                ),
+                ConditionStep(
+                    step_id="else_branch",
+                    group_id="jump_group2",
+                    name="Else",
+                    condition_type="Else",
+                    children=[
+                        Step(step_id="plus_one", name="plus_one", func=plus_one),
+                        JumpToStep(step_id="jump_from_else", name="jump", target_step_id="anchor"),
+                    ],
+                ),
+            ],
+        )
+
+        max_jumps = 10
+        pending_target: str | None = None
+        for _ in range(max_jumps):
+            try:
+                if pending_target is None:
+                    root.execute(ctx)
+                else:
+                    root.execute_children(ctx, target_step_id=pending_target)
+                    pending_target = None
+                break
+            except EXC_MOD.JumpToStepException as e:
+                pending_target = e.target_step_id
+        else:
+            self.fail("jump loop did not converge with disabled steps")
+
+        self.assertEqual(ctx.trace, ["alarm"])
 
 
 if __name__ == "__main__":

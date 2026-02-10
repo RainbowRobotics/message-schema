@@ -267,6 +267,7 @@ class Step:
         current_target_step_id = target_step_id
 
         for child in self.children:
+            before_scope_len = len(getattr(ctx, "_arg_scope", []))
             try:
                 child_target_step_id = getattr(child, "target_step_id", None)
                 if (
@@ -281,7 +282,10 @@ class Step:
 
                 child.execute(ctx, target_step_id=current_target_step_id)
             finally:
-                ctx.pop_args()
+                after_scope_len = len(getattr(ctx, "_arg_scope", []))
+                while after_scope_len > before_scope_len:
+                    ctx.pop_args()
+                    after_scope_len -= 1
 
         if len(self.children) > 0:
             ctx.current_depth -= 1
@@ -757,6 +761,12 @@ class ConditionStep(Step):
         if target_step_id is not None:
             is_skip = is_skip or find_target_step(self)
 
+        # 점프 탐색 중이면 조건 평가를 건너뛰고 target child 탐색만 수행
+        if is_skip:
+            self.execute_children(ctx, target_step_id=target_step_id)
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
         condition_map = ctx.data.get("condition_map")
 
         if condition_map is None:
@@ -1189,6 +1199,7 @@ class CallEventStep(Step):
         ctx.emit_event_sub_task_start(
             event_task_id=task_id,
             event_tree=tree,
+            step_id=self.step_id,
             run_mode=self.run_mode,
             call_seq=call_seq,
         )
@@ -1198,6 +1209,15 @@ class CallEventStep(Step):
             while dict(ctx.state_dict.get("event_start_pending_map", {})).get(task_id) == call_seq:
                 ctx.check_stop()
                 time.sleep(0.01)
+
+            rejected_map = dict(ctx.state_dict.get("event_start_rejected_map", {}))
+            rejected = rejected_map.get(task_id)
+            if isinstance(rejected, dict) and rejected.get("call_seq") == call_seq:
+                message = str(rejected.get("message") or f"Event sub task already running: {task_id}")
+                rejected_map.pop(task_id, None)
+                ctx.state_dict["event_start_rejected_map"] = rejected_map
+                ctx.emit_error(self.step_id, RuntimeError(message))
+                raise RuntimeError(message)
 
         if executor_managed and self.run_mode == "SYNC":
             # RUNNING 상태로 이벤트 자식 완료 대기
