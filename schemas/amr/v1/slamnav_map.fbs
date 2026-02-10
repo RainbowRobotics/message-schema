@@ -58,9 +58,9 @@ table NodePose {
     x: float;
     y: float;
     z: float;
-    roll: float;
-    pitch: float;
-    yaw: float;
+    rx: float;
+    ry: float;
+    rz: float;
 }
 
 /*
@@ -72,9 +72,9 @@ table NodePose {
         - z_size        :       z 축 크기
 */
 table NodeSize {
-    x_size: float;
-    y_size: float;
-    z_size: float;
+    x: float;
+    y: float;
+    z: float;
 }
 
 /*
@@ -258,11 +258,7 @@ table ResponseGetMapFile {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    //data:  [CloudData];
-    data: [float];
-    column_count: uint32;
-    row_count: uint32;
+    data: [ubyte];
     result: string;
     message: string;
 }
@@ -288,8 +284,6 @@ table ResponseGetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    //data: [CloudData];
     data: [float];
     column_count: uint32;
     row_count: uint32;
@@ -313,8 +307,6 @@ table RequestSetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    //data: [CloudData];
     data: [float];
     column_count: uint32;
     row_count: uint32;
@@ -323,8 +315,6 @@ table ResponseSetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    // size: uint32;
-    // data: [Node]; -> too big
     result: string;
     message: string;
 }
