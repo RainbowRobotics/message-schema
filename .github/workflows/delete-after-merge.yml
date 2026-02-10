@@ -10,7 +10,6 @@ permissions:
 jobs:
   delete-branch:
     if: >
-      github.event.pull_request.merged == true &&
       (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'develop')
     runs-on: self-hosted
 
