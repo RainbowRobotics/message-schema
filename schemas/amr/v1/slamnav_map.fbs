@@ -11,38 +11,38 @@ namespace SLAMNAV;
     category    :       Data Structure
     usage       :       맵 파일 정보
     field
-        - map_name      :       맵 이름
+        - file_name     :       파일 이름
         - created_at    :       생성 일시
-        - update_at     :       수정 일시
-        - map_type      :       맵 타입
-        - map_size      :       맵 크기
+        - updated_at    :       수정 일시
+        - file_type     :       파일 타입
+        - file_size     :       파일 크기
 */
 table MapFileInfo {
-    map_name: string;
+    file_name: string;
     created_at: string;
-    update_at: string;
-    map_type: string;
-    map_size: float;
+    updated_at: string;
+    file_type: string;
+    file_size: float;
 }
 
 /*
     category    :       Data Structure
     usage       :       맵 파일
     field
-        - file_name     :       파일 이름
+        - map_name      :       맵 이름
         - created_at    :       생성 일시
-        - update_at     :       수정 일시
-        - file_type     :       파일 타입
+        - updated_at    :       수정 일시
+        - map_type      :       맵 타입
         - cloud_info    :       클라우드 맵 정보
         - topo_info     :       토폴로지 맵 정보
 */
-table MapFile {
-    file_name: string;
+table MapInfo {
+    map_name: string;
     created_at: string;
-    update_at: string;
-    file_type: string;
-    cloud_info: MapFileInfo;
-    topo_info: MapFileInfo;
+    updated_at: string;
+    map_type: string;
+    cloud_info: [MapFileInfo];
+    topo_info: [MapFileInfo];
 }
 
 /*
@@ -126,7 +126,7 @@ table Node {
         - x, y, z       :       3D 좌표
         - intensity     :       강도
 */
-struct CloudData {
+table CloudData {
     x: float;
     y: float;
     z: float;
@@ -193,7 +193,7 @@ table RequestMapList {
 }
 table ResponseMapList {
     id: string;
-    list: [MapFile];
+    list: [MapInfo];
     result: string;
     message: string;
 }
@@ -259,7 +259,10 @@ table ResponseGetMapFile {
     map_name: string;
     file_name: string;
     size: uint32;
-    data:  [CloudData]; // data: [ubyte];
+    //data:  [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
     result: string;
     message: string;
 }
@@ -286,7 +289,10 @@ table ResponseGetMapCloud {
     map_name: string;
     file_name: string;
     size: uint32;
-    data: [CloudData];
+    //data: [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
     result: string;
     message: string;
 }
@@ -308,7 +314,10 @@ table RequestSetMapCloud {
     map_name: string;
     file_name: string;
     size: uint32;
-    data: [CloudData];
+    //data: [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
 }
 table ResponseSetMapCloud {
     id: string;

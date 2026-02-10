@@ -1,7 +1,11 @@
 
 
 from ..base import RBBaseSDK
-
+from rb_flat_buffers.SLAMNAV.RequestMapList import RequestMapListT
+from rb_flat_buffers.SLAMNAV.ResponseMapList import ResponseMapListT
+from rb_flat_buffers.SLAMNAV.RequestGetMapCloud import RequestGetMapCloudT
+from rb_flat_buffers.SLAMNAV.ResponseGetMapCloud import ResponseGetMapCloudT
+from rb_flat_buffers.SLAMNAV.CloudData import CloudDataT
 
 class RBAmrMapSDK(RBBaseSDK):
     """Rainbow Robotics AMR Map SDK"""
@@ -31,28 +35,28 @@ class RBAmrMapSDK(RBBaseSDK):
 
     #     return result["obj_payload"]
 
-    # async def get_map_list(self, robot_model: str, req_id: str) -> Response_Map_ListT:
-    #     """
-    #     [Map List 전송]
-    #     - model: MapRequestModel
-    #     - Response_Map_ListT 객체 반환
-    #     """
-    #     # 1) Request_Map_ListT 객체 생성
-    #     req = Request_Map_ListT()
-    #     req.id = req_id
-    #     # 2) 요청 전송
-    #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/map/list",
-    #         flatbuffer_req_obj=req,
-    #         flatbuffer_res_T_class=Response_Map_ListT,
-    #         flatbuffer_buf_size=125,
-    #     )
+    async def get_map_list(self, robot_model: str, req_id: str) -> ResponseMapListT:
+        """
+        [Map List 전송]
+        - model: MapRequestModel
+        - ResponseMapListT 객체 반환
+        """
+        # 1) Request_Map_ListT 객체 생성
+        req = RequestMapListT()
+        req.id = req_id
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/map/list",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=ResponseMapListT,
+            flatbuffer_buf_size=2048,
+        )
 
-    #     # 3) 결과 처리 및 반환
-    #     if result["obj_payload"] is None:
-    #         raise RuntimeError("Call Map Load failed: obj_payload is None")
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Load failed: obj_payload is None")
 
-    #     return result["obj_payload"]
+        return result["obj_payload"]
 
     # async def map_load(self, robot_model: str, req_id: str, map_name: str) -> Response_Map_LoadT:
     #     """
@@ -75,30 +79,32 @@ class RBAmrMapSDK(RBBaseSDK):
     #     # 3) 결과 처리 및 반환
     #     return result["dict_payload"]
 
-    # async def get_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> Response_Get_Map_CloudT:
-    #     """
-    #     [Map Cloud 전송]
-    #     - model: MapRequestModel
-    #     - Response_Map_CloudT 객체 반환
-    #     """
-    #     # 1) Request_Map_CloudT 객체 생성
-    #     req = Request_Get_Map_CloudT()
-    #     req.id = req_id
-    #     req.map_name = map_name
-    #     req.file_name = file_name
+    async def get_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> ResponseGetMapCloudT:
+        """
+        [Map Cloud 전송]
+        - model: MapRequestModel
+        - Response_Map_CloudT 객체 반환
+        """
+        # 1) Request_Map_CloudT 객체 생성
+        req = RequestGetMapCloudT()
+        req.id = req_id
+        req.map_name = map_name
+        req.file_name = file_name
 
-    #     # 2) 요청 전송
-    #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/map/cloud/get",
-    #         flatbuffer_req_obj=req,
-    #         flatbuffer_res_T_class=Response_Get_Map_CloudT,
-    #         flatbuffer_buf_size=125,
-    #     )
-    #     # 3) 결과 처리 및 반환
-    #     if result["obj_payload"] is None:
-    #         raise RuntimeError("Call Map Cloud failed: obj_payload is None")
+        print(f"=============> get_map_cloud: {robot_model}/map/cloud, req: {map_name}, {file_name}")
 
-    #     return result["obj_payload"]
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/map/cloud",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=ResponseGetMapCloudT,
+            flatbuffer_buf_size=4096,
+        )
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Cloud failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     # async def set_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str, size: int, data: list[float]) -> Response_Set_Map_CloudT:
     #     """
