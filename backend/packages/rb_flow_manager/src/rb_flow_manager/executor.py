@@ -133,7 +133,7 @@ def _execute_tree_in_process(
                     if jump_hops > max_jump_hops:
                         raise RuntimeError(
                             "JumpToStep: exceeded max jump hops in a single execution."
-                        )
+                        ) from e
 
         except ChangeSubTaskException as e:
             if e.sub_task_tree is None:
@@ -256,10 +256,10 @@ def _execute_tree_in_process(
                 state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
 
         except StopExecution:
-            if post_tree_ref["value"] is None:
-                state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-                if ctx is not None:
-                    ctx.emit_stop(step.step_id)
+            # stop 요청 상태로 마킹 (post_tree는 정책상 실행 가능)
+            state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
+            if ctx is not None:
+                ctx.emit_stop(step.step_id)
 
         except RuntimeError as e:
             if post_tree_ref["value"] is None:
@@ -270,7 +270,7 @@ def _execute_tree_in_process(
             # 메인 루프 바깥으로 점프 예외가 올라오는 경우는 무시
             pass
 
-        # post_tree 실행
+        # post_tree 실행 (정책상 stop 이후에도 실행 가능)
         try:
             run_post_tree()
 

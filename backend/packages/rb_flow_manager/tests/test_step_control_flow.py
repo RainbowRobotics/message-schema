@@ -57,6 +57,7 @@ class DummyExecutionContext:
         self.events: list[tuple[str, str]] = []
         self.event_requests: list[dict[str, Any]] = []
         self.pause_calls: list[bool] = []
+        self.subtask_events: list[tuple[str, str]] = []
 
     def update_vars_to_state_dict(self):
         return
@@ -130,6 +131,21 @@ class DummyExecutionContext:
     def break_folder(self):
         if self._folder_depth > 0:
             raise EXC_MOD.BreakFolder()
+
+    def halt_sub_task(self):
+        raise EXC_MOD.SubTaskHaltException()
+
+    def emit_subtask_sync_register(self, sub_task_tree, post_tree=None, subtask_type: str = "INSERT"):
+        return
+
+    def emit_subtask_sync_unregister(self, sub_task_tree, post_tree=None, subtask_type: str = "INSERT"):
+        return
+
+    def emit_sub_task_start(self, task_id: str, sub_task_type: str):
+        self.subtask_events.append(("start", task_id))
+
+    def emit_sub_task_done(self, task_id: str, sub_task_type: str):
+        self.subtask_events.append(("done", task_id))
 
 
 def _run_root_with_jump(root_step, ctx):
@@ -655,6 +671,150 @@ class StepControlFlowTest(unittest.TestCase):
             self.fail("jump loop did not converge with disabled steps")
 
         self.assertEqual(ctx.trace, ["alarm"])
+
+    def test_switch_case_jump_then_if_alarm(self):
+        Step = STEP_MOD.Step
+        ConditionStep = STEP_MOD.ConditionStep
+        JumpToStep = STEP_MOD.JumpToStep
+
+        ctx = DummyExecutionContext()
+
+        def init_test(*, flow_manager_args):
+            flow_manager_args.ctx.update_local_variables({"test": 1})
+            flow_manager_args.done()
+
+        def plus_one(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 1
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.done()
+
+        def plus_two(*, flow_manager_args):
+            v = int(flow_manager_args.ctx.variables["local"].get("test", 0)) + 2
+            flow_manager_args.ctx.update_local_variables({"test": v})
+            flow_manager_args.done()
+
+        def alarm_case(*, flow_manager_args):
+            flow_manager_args.ctx.trace.append("alarm_case")
+            flow_manager_args.done()
+
+        def alarm_if(*, flow_manager_args):
+            flow_manager_args.ctx.trace.append("alarm_if")
+            flow_manager_args.done()
+
+        root = Step(
+            step_id="root_switch_jump",
+            name="root_switch_jump",
+            children=[
+                Step(step_id="init", name="init", func=init_test),
+                Step(step_id="anchor", name="anchor"),
+                Step(
+                    step_id="switch",
+                    name="Switch",
+                    args={"switch_value": "test"},
+                    children=[
+                        ConditionStep(
+                            step_id="case_4",
+                            group_id="switch_group",
+                            name="Case",
+                            condition_type="Case",
+                            condition="$parent.switch_value == 4",
+                            children=[Step(step_id="alarm_case", name="alarm_case", func=alarm_case)],
+                        ),
+                        ConditionStep(
+                            step_id="case_2",
+                            group_id="switch_group",
+                            name="Case",
+                            condition_type="Case",
+                            condition="$parent.switch_value == 2",
+                            children=[
+                                Step(step_id="plus_two", name="plus_two", func=plus_two),
+                                JumpToStep(
+                                    step_id="jump_from_case_2",
+                                    name="jump",
+                                    target_step_id="anchor",
+                                ),
+                            ],
+                        ),
+                        ConditionStep(
+                            step_id="case_default",
+                            group_id="switch_group",
+                            name="Case",
+                            condition_type="Case",
+                            condition=True,
+                            children=[
+                                Step(step_id="plus_one", name="plus_one", func=plus_one),
+                                JumpToStep(
+                                    step_id="jump_from_default",
+                                    name="jump",
+                                    target_step_id="anchor",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                ConditionStep(
+                    step_id="if_after_switch",
+                    group_id="if_group",
+                    name="If",
+                    condition_type="If",
+                    condition="test == 4",
+                    children=[Step(step_id="alarm_if", name="alarm_if", func=alarm_if)],
+                ),
+            ],
+        )
+
+        max_jumps = 10
+        pending_target: str | None = None
+        for _ in range(max_jumps):
+            try:
+                if pending_target is None:
+                    root.execute(ctx)
+                else:
+                    root.execute_children(ctx, target_step_id=pending_target)
+                    pending_target = None
+                break
+            except EXC_MOD.JumpToStepException as e:
+                pending_target = e.target_step_id
+        else:
+            self.fail("switch/case jump loop did not converge")
+
+        self.assertEqual(ctx.variables["local"]["test"], 4)
+        self.assertEqual(ctx.trace, ["alarm_case", "alarm_if"])
+        self.assertEqual(ctx.current_depth, 0)
+
+    def test_subtask_insert_halt_is_caught_and_step_completes(self):
+        Step = STEP_MOD.Step
+        SubTaskStep = STEP_MOD.SubTaskStep
+
+        ctx = DummyExecutionContext()
+
+        def halt_here(*, flow_manager_args):
+            flow_manager_args.ctx.halt_sub_task()
+
+        sub_task_tree = Step(
+            step_id="sub_task_root",
+            name="sub_task_root",
+            children=[Step(step_id="halt_child", name="halt_child", func=halt_here)],
+        )
+
+        subtask_step = SubTaskStep(
+            step_id="subtask_insert",
+            name="Load Sub Task",
+            sub_task_type="INSERT",
+            sub_task_script_path="/tmp/unused.py",
+        )
+        subtask_step._load_sub_task_trees = lambda: (sub_task_tree, None)  # type: ignore[attr-defined]
+
+        root = Step(
+            step_id="root_subtask_halt",
+            name="root_subtask_halt",
+            children=[subtask_step],
+        )
+
+        root.execute(ctx)
+
+        self.assertEqual(ctx.subtask_events, [("start", "sub_task_root"), ("done", "sub_task_root")])
+        self.assertIn(("done", "subtask_insert"), ctx.events)
 
 
 if __name__ == "__main__":

@@ -261,34 +261,36 @@ class Step:
 
     def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
-        if len(self.children) > 0:
+        has_children = len(self.children) > 0
+        if has_children:
             ctx.current_depth += 1
 
         current_target_step_id = target_step_id
 
-        for child in self.children:
-            before_scope_len = len(getattr(ctx, "_arg_scope", []))
-            try:
-                child_target_step_id = getattr(child, "target_step_id", None)
-                if (
-                    child_target_step_id is not None
-                    and child_target_step_id == current_target_step_id
-                ):
-                    continue
+        try:
+            for child in self.children:
+                before_scope_len = len(getattr(ctx, "_arg_scope", []))
+                try:
+                    child_target_step_id = getattr(child, "target_step_id", None)
+                    if (
+                        child_target_step_id is not None
+                        and child_target_step_id == current_target_step_id
+                    ):
+                        continue
 
-                if current_target_step_id is not None and child.step_id == current_target_step_id:
-                    current_target_step_id = None
-                    ctx.data["finding_jump_to_step"] = False
+                    if current_target_step_id is not None and child.step_id == current_target_step_id:
+                        current_target_step_id = None
+                        ctx.data["finding_jump_to_step"] = False
 
-                child.execute(ctx, target_step_id=current_target_step_id)
-            finally:
-                after_scope_len = len(getattr(ctx, "_arg_scope", []))
-                while after_scope_len > before_scope_len:
-                    ctx.pop_args()
-                    after_scope_len -= 1
-
-        if len(self.children) > 0:
-            ctx.current_depth -= 1
+                    child.execute(ctx, target_step_id=current_target_step_id)
+                finally:
+                    after_scope_len = len(getattr(ctx, "_arg_scope", []))
+                    while after_scope_len > before_scope_len:
+                        ctx.pop_args()
+                        after_scope_len -= 1
+        finally:
+            if has_children:
+                ctx.current_depth -= 1
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None, _post_run: bool = False):
         """단계 실행"""
@@ -1029,8 +1031,6 @@ class SubTaskStep(Step):
         if self.disabled or is_skip:
             self._post_execute(ctx, ignore_step_interval=True)
             return
-
-        self._pre_execute(ctx)
 
         ctx.emit_next(self.step_id)
 
