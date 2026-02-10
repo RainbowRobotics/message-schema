@@ -55,6 +55,7 @@ def _execute_tree_in_process(
     sync_lock: AcquirerProxy,
     process_alive: dict[str, bool] | None = None,
     parent_map: dict[str, str | None] | None = None,
+    all_state_dicts: dict[str, MutableMapping[str, Any]] | None = None,
 ):
     """
     프로세스에서 실행될 트리 실행 함수
@@ -233,6 +234,7 @@ def _execute_tree_in_process(
             stop_event=stop_event,
             min_step_interval=min_step_interval,
             step_mode=step_mode,
+            shared_state_dicts=all_state_dicts,
         )
 
         # Sync 레지스트리 설정
@@ -1019,6 +1021,7 @@ class ScriptExecutor:
                 "sync_lock": self._sync_lock,
                 "process_alive": self._process_alive,
                 "parent_map": self._parent_map,
+                "all_state_dicts": self.state_dicts,
             },
         )
 

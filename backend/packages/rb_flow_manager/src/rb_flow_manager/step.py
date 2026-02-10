@@ -229,6 +229,10 @@ class Step:
     def _pre_execute(
         self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False
     ):
+        # parent/self owner 변수 스냅샷을 매 스텝 직전에 동기화
+        if hasattr(ctx, "sync_state_variables"):
+            ctx.sync_state_variables()
+
         if reset_condition_result:
             condition_map: dict[str, bool] = ctx.data.get("condition_map", {})
 

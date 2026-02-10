@@ -35,6 +35,7 @@ class ExecutionContext:
         *,
         min_step_interval: float | None = None,
         step_mode: bool = False,
+        shared_state_dicts: dict[str, Any] | None = None,
     ):
         self.process_id = process_id
         self.state_dict = state_dict
@@ -59,9 +60,33 @@ class ExecutionContext:
         self._step_ticket = 1 if not step_mode else 0
         self.is_ui_execution = state_dict.get("is_ui_execution", False)
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
+        self.shared_state_dicts = shared_state_dicts
+
+        # parent_process_id가 있으면 부모 변수 저장소를 owner로 사용
+        self.sync_state_variables()
+
+    def _resolve_variable_owner_state(self) -> dict[str, Any]:
+        if self.parent_process_id is not None and self.shared_state_dicts is not None:
+            parent_state = self.shared_state_dicts.get(self.parent_process_id)
+            if parent_state is not None:
+                return parent_state
+        return self.state_dict
+
+    @staticmethod
+    def _normalize_state_variables(raw: Any) -> dict[str, dict[str, Any]]:
+        if not isinstance(raw, dict):
+            return {}
+        normalized: dict[str, dict[str, Any]] = {}
+        for key, payload in raw.items():
+            if not isinstance(payload, dict) or "value" not in payload:
+                continue
+            var_type = "global" if payload.get("type") == "global" else "local"
+            normalized[key] = {"value": payload.get("value"), "type": var_type}
+        return normalized
 
     def update_vars_to_state_dict(self):
-        current = dict(self.state_dict.get("variables", {}))
+        owner_state = self._resolve_variable_owner_state()
+        current = dict(owner_state.get("variables", {}))
 
         for k, v in self.variables.get("global", {}).items():
             current[k] = {"value": v, "type": "global"}
@@ -69,7 +94,25 @@ class ExecutionContext:
         for k, v in self.variables.get("local", {}).items():
             current[k] = {"value": v, "type": "local"}
 
+        owner_state["variables"] = current
+        # 로컬 state에도 미러링해 UI/호환성 유지
         self.state_dict["variables"] = current
+
+    def sync_state_variables(self):
+        """owner(state 혹은 parent state)의 variables를 런타임 캐시에 반영"""
+        owner_state = self._resolve_variable_owner_state()
+        normalized = self._normalize_state_variables(owner_state.get("variables", {}))
+
+        self.variables["local"].clear()
+        self.variables["global"].clear()
+
+        for key, payload in normalized.items():
+            if payload["type"] == "global":
+                self.variables["global"][key] = payload["value"]
+            else:
+                self.variables["local"][key] = payload["value"]
+
+        self.state_dict["variables"] = dict(owner_state.get("variables", {}))
 
     def update_local_variables(self, variables: dict[str, Any]):
         self.variables["local"].update(t_to_dict(variables))
