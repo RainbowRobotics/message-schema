@@ -1,0 +1,446 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       safety Flag Structure
+    field
+        - name          :       obstacle, bumper, interlock, operationStop
+        - value         :       true / false
+*/
+table SafetyFlag {
+    name: string;   
+    value: bool;
+}
+/*
+    category    :       Data Structure
+    usage       :       Obstacle Range Structure
+*/
+struct ObsBox {
+    x: float;
+    y: float;
+    z: float;
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/getSafetyField
+    usage       :
+    field
+        - safety_field  :       safety field number
+*/
+table RequestGetSafetyField {
+    id: string;
+}
+table ResponseGetSafetyField {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/control/setSafetyField
+    usage       :
+    field
+        - safety_field  :       safety field number
+*/
+table RequestSetSafetyField {
+    id: string;
+    safety_field: int;
+}
+table ResponseSetSafetyField {
+    id: string;
+    safety_field: int;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/getSafetyFlag
+    usage       :
+    field
+        - safety_flag  :        safety Flag Structure
+*/
+table RequestGetSafetyFlag {
+    id: string;
+}
+table ResponseGetSafetyFlag {
+    id: string;
+    safety_flag: [SafetyFlag];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/control/setSafetyFlag
+    usage       :
+    field
+        - safety_flag  :        safety Flag Structure
+*/
+table RequestSetSafetyFlag {
+    id: string;
+    safety_flag: [SafetyFlag];
+}
+table ResponseSetSafetyFlag {
+    id: string;
+    safety_flag: [SafetyFlag];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/getSafetyIo
+    usage       :
+    field
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+        - mcu0_do       :       MCU0 Digital Output (8bit)
+        - mcu1_do       :       MCU1 Digital Output (8bit)
+*/
+table RequestGetSafetyIo {
+    id: string;
+}
+table ResponseGetSafetyIo {
+    id: string;
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/control/setSafetyIo
+    usage       :
+    field
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+*/
+table RequestSetSafetyIo {
+    id: string;
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+}
+table ResponseSetSafetyIo {
+    id: string;
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Callback
+    topic       :       {robotType}/control/dock
+    usage       :       도킹 시작
+*/
+table RequestDock {
+    id: string;
+}
+table ResponseDock {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Callback
+    topic       :       {robotType}/control/undock
+    usage       :       도킹 해제
+*/
+table RequestUndock {
+    id: string;
+}
+table ResponseUndock {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/dockStop
+    usage       :       도킹 정지
+*/
+table RequestDockStop {
+    id: string;
+}
+table ResponseDockStop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Callback
+    topic       :       {robotType}/control/chargeTrigger
+    usage       :       충전 트리거 On / Off
+    field
+        - switch        :       true(on) / false(off)
+*/
+table RequestChargeTrigger {
+    id: string;
+    switch: bool;
+}
+table ResponseChargeTrigger {
+    id: string;
+    switch: bool;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/getObsBox
+    usage       :       장애물 박스 범위 조회
+    field
+        - min           :       Obstacle Min Range Structure (x, y, z)
+        - max           :       Obstacle Max Range Structure (x, y, z)
+        - range         :       set Obstacle Radius
+*/
+table RequestGetObsBox {
+    id: string;
+}
+table ResponseGetObsBox {
+    id: string;
+    min: ObsBox;
+    max: ObsBox;
+    range: float;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/setObsBox
+    usage       :       장애물 박스 범위 설정
+    field
+        - min           :       Obstacle Min Range Structure (x, y, z)
+        - max           :       Obstacle Max Range Structure (x, y, z)
+        - range         :       set Obstacle Radius
+*/
+table RequestSetObsBox {
+    id: string;
+    min: ObsBox;
+    max: ObsBox;
+    range: float;
+}
+table ResponseSetObsBox {
+    id: string;
+    min: ObsBox;
+    max: ObsBox;
+    range: float;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/led
+    usage       :       LED Mode
+    field
+        - switch        :       true(on) / false(off)
+        - color         :       Color
+            - "none"  "red"  ...
+*/
+table RequestSetLed {
+    id: string;
+    switch: bool;
+    color: string;
+}
+table ResponseSetLed {
+    id: string;
+    switch: bool;
+    color: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/motor
+    usage       :       모터 On / Off
+    field
+        - switch        :       true(on) / false(off)
+*/
+table RequestSetMotor {
+    id: string;
+    switch: bool;
+}
+table ResponseSetMotor {
+    id: string;
+    switch: bool;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/jog
+    usage       :       조그 On / Off
+    field
+        - switch        :       true(on) / false(off)
+*/
+table RequestSetJog {
+    id: string;
+    switch: bool;
+}
+table ResponseSetJog {
+    id: string;
+    switch: bool;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/StreamFrequency
+    usage       :       소켓 스트림 주파수 설정
+    field
+        - target        :       스트림 대상 ( "camera", "lidar2d", "lidar3d", "path" )
+        - frequency     :       데이터 전송 주파수 (0 ~ 10 Hz)
+*/
+table RequestStreamFrequency {
+    id: string;
+    target: string;
+    frequency: int;
+}
+table ResponseStreamFrequency {
+    id: string;
+    target: string;
+    frequency: int;
+    result: string;
+    message: string;
+}
+
+
+// /*
+//     category    :       RPC
+//     response    :       Delayed One-shot
+//     topic       :       {robotType}/control/detectMarker
+//     usage       :       마커 감지 제어
+//     field
+//         - target        :       감지 명령   ( "charuco" / "aruco" ) (현재 미구현이나, 추후 마커 종류를 구분할 경우 추가예정.)
+//         - number        :       카메라 번호
+//         - serial        :       카메라 시리얼
+//         - m_size        :       마커 크기
+//         - tf            :       변환 행렬 (4x4 Matrix)
+// */
+// table RequestDetectMarker {
+//     id: string;
+//     number: int;
+//     serial: string;
+//     m_size: float;
+// }
+// table ResponseDetectMarker {
+//     id: string;
+//     number: int;
+//     serial: string;
+//     m_size: float;
+//     tf: [float];
+//     result: string;
+//     message: string;
+// }
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------     Pub / Sub  (Result )     --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub (Result)
+    topic       :       {robotType}/control/resultDock
+    usage       :       도킹 제어 결과 응답
+    field
+        - command       :       control Callback 명령 (string)
+            - "dock"  "undock"  "dockStop"
+        - switch        :       true(on) / false(off)
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+*/
+table ResultControlDock {
+    id: string;
+    command: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       Pub / Sub (Result)
+    topic       :       {robotType}/control/resultChargeTrigger
+    usage       :       도킹 제어 결과 응답
+    field
+        - command       :       control Callback 명령 (string)
+            - "chargeTrigger"
+        - switch        :       true(on) / false(off)
+        - result        :       이동 결과
+            - success       :       동작 성공.
+            - fail          :       동작 실패.
+            - start         :       동작 시작.
+            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+*/
+table ResultControlChargeTrigger {
+    id: string;
+    command: string;
+    switch: bool;
+    result: string;
+    message: string;
+}

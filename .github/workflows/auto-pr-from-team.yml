@@ -1,0 +1,284 @@
+name: Auto PR from team push (schema/from-*)
+
+on:
+  push:
+    branches:
+      - "schema/from-*"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pull-request-to-main:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check PR exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+          if [ "$EXIST" -gt 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq '.[0].number')
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "PR already exists for $BRANCH (#$PR_NUMBER)"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No PR for $BRANCH"
+          fi
+
+      - name: Get changed files
+        id: changed_files
+        env:
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          PR_EXISTS: ${{ steps.check_pr.outputs.exists }}
+          PR_NUMBER: ${{ steps.check_pr.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+
+          CHANGED_FILES=""
+
+          if [ "${PR_EXISTS}" = "true" ] && [ -n "${PR_NUMBER}" ]; then
+            echo "Fetch changed files from existing PR #${PR_NUMBER}"
+            CHANGED_FILES="$(gh pr diff "${PR_NUMBER}" --repo "${REPO}" --name-only || true)"
+          else
+            echo "Fetch changed files via compare API: main...${BRANCH}"
+            CHANGED_FILES="$(gh api "repos/${REPO}/compare/main...${BRANCH}" --jq '.files[].filename' || true)"
+          fi
+
+          # API 호출 실패 시 최소 git fetch로 폴백
+          if [ -z "${CHANGED_FILES// }" ]; then
+            echo "API result is empty, fallback to git diff"
+            git fetch origin main --depth=1 --prune
+            if ! git merge-base origin/main HEAD >/dev/null 2>&1; then
+              git fetch origin main --deepen=2000 --prune
+            fi
+            CHANGED_FILES="$(git diff --name-only origin/main...HEAD || true)"
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo "$CHANGED_FILES" > /tmp/changed_files.txt
+
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
+            | awk -F/ '{if (NF==1) print "root"; else print $1}' \
+            | sort -u \
+            | tr '\n' ' ')
+
+          echo "Final Dirs: [$CHANGED_DIRS]"
+          echo "dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
+
+      - name: Parse CODEOWNERS and get mentions
+        id: get_mentions
+        run: |
+          set -e
+
+          CODEOWNERS_FILE=".github/CODEOWNERS"
+          MAPPING_FILE=".github/slack-mentions.json"
+
+          if [ ! -f "$CODEOWNERS_FILE" ]; then
+            echo "CODEOWNERS file not found"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ ! -f "$MAPPING_FILE" ]; then
+            echo "Slack mapping file not found: $MAPPING_FILE"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CHANGED_FILES="$(cat /tmp/changed_files.txt || true)"
+
+          if [ -z "${CHANGED_FILES// }" ]; then
+            echo "No changed files"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # jq 필요 (self-hosted에 없으면 설치하거나 python으로 대체해야 함)
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "jq not found on runner"
+            echo "mentions=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 중복 제거를 위한 임시 파일
+          : > /tmp/mentions.txt
+
+          # CODEOWNERS 파싱
+          while IFS= read -r line; do
+            # 주석/빈줄 제외
+            [[ "$line" =~ ^#.*$ ]] && continue
+            [[ -z "${line// }" ]] && continue
+
+            PATTERN="$(echo "$line" | awk '{print $1}')"
+            OWNERS="$(echo "$line" | cut -d' ' -f2-)"
+
+            # CODEOWNERS pattern -> bash glob
+            # 예) /nexus/** -> /nexus/*
+            GLOB_PATTERN="${PATTERN//\*\*/\*}"
+
+            # 변경 파일들과 매칭 검사
+            while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+
+              # CODEOWNERS는 보통 "/nexus/..." 형태라 leading "/" 처리
+              file_slash="/$file"
+
+              if [[ "$file_slash" == $GLOB_PATTERN ]]; then
+                for owner in $OWNERS; do
+                  # 매핑 파일에서 owner 키의 멘션 배열을 꺼내서 한 줄씩 저장
+                  jq -r --arg key "$owner" '.[$key] // empty | .[]' "$MAPPING_FILE" >> /tmp/mentions.txt
+                done
+              fi
+            done <<< "$CHANGED_FILES"
+          done < "$CODEOWNERS_FILE"
+
+          # 중복 제거 + 공백 정리
+          MENTIONS="$(sort -u /tmp/mentions.txt | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//; s/ *$//')"
+
+          echo "Mentions: $MENTIONS"
+          echo "mentions=$MENTIONS" >> "$GITHUB_OUTPUT"
+
+
+      - name: Create PR
+        id: create_pr
+        if: steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          PR_URL=$(gh pr create \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH" \
+            --title "schema: update from $BRANCH" \
+            --body "Auto-created PR from team repo push: $BRANCH" \
+            2>&1) || {
+            echo "PR create failed; checking if PR now exists..."
+            EXIST=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+            if [ "$EXIST" -gt 0 ]; then
+              PR_NUMBER=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq '.[0].number')
+              PR_URL="https://github.com/$REPO/pull/$PR_NUMBER"
+              echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+              echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+              exit 0
+            else
+              exit 1
+            fi
+          }
+          
+          # PR 번호 추출
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "Created PR #$PR_NUMBER"
+
+      - name: Send Slack Notification (Created PR)
+        if: steps.create_pr.outputs.pr_number != ''
+        env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
+            PR_URL: ${{ steps.create_pr.outputs.pr_url }}
+            MENTIONS: ${{ steps.get_mentions.outputs.mentions }}
+            CHANGED_DIRS: ${{ steps.changed_files.outputs.dirs }}
+            REPO: ${{ github.repository }}
+            BRANCH: ${{ github.ref_name }}
+            ACTOR: ${{ github.actor }}
+            SHA: ${{ github.sha }}
+            STATUS: ${{ job.status }}
+            COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+            set -e
+
+            # 변경 디렉토리 리스트
+            DIR_LIST=$(printf "%s\n" "$CHANGED_DIRS" \
+                | tr ' ' '\n' \
+                | sed '/^$/d' \
+                | awk '{print "• `" $0 "`"}' \
+                | paste -sd '\n' -)
+
+            [ -z "$DIR_LIST" ] && DIR_LIST="• (변경사항 확인 중)"
+
+            # 기본 blocks 생성
+            BLOCKS=$(jq -n \
+                --arg repo "$REPO" \
+                --arg branch "$BRANCH" \
+                --arg status "$STATUS" \
+                --arg pr_url "$PR_URL" \
+                --arg pr_number "$PR_NUMBER" \
+                --arg dirs "$DIR_LIST" \
+                --arg commit "$COMMIT_MESSAGE" \
+                --arg actor "$ACTOR" \
+                --arg sha "$SHA" \
+                '[
+                {
+                    type: "header",
+                    text: {
+                    type: "plain_text",
+                    text: ":rocket: Schema PR 생성 완료",
+                    emoji: true
+                    }
+                },
+                {
+                    type: "section",
+                    fields: [
+                    { type: "mrkdwn", text: "*Repository:*\n\($repo)" },
+                    { type: "mrkdwn", text: "*Branch:*\n`\($branch)`" },
+                    { type: "mrkdwn", text: "*Status:*\n`\($status)`" },
+                    { type: "mrkdwn", text: "*PR:*\n<\($pr_url)|#\($pr_number)>" }
+                    ]
+                },
+                {
+                    type: "section",
+                    text: { type: "mrkdwn", text: "*변경된 디렉토리:*\n\($dirs)" }
+                },
+                {
+                    type: "section",
+                    text: { type: "mrkdwn", text: "*Commit Message:*\n_\($commit)_" }
+                },
+                {
+                    type: "context",
+                    elements: [
+                    { type: "mrkdwn", text: "Author: *\($actor)* | <https://github.com/\($repo)/commit/\($sha)|Commit>" }
+                    ]
+                }
+                ]'
+            )
+
+            # 멘션 블록 추가
+            if [ -n "$MENTIONS" ]; then
+                BLOCKS=$(echo "$BLOCKS" | jq \
+                --arg mentions "$MENTIONS" \
+                '. + [{
+                    type: "section",
+                    text: {
+                    type: "mrkdwn",
+                    text: "*:bell: 리뷰어:*\n\($mentions)"
+                    }
+                }]')
+            fi
+
+            # 최종 전송
+            curl -X POST -H 'Content-type: application/json' \
+                --data "$(jq -n \
+                --arg text ":rocket: [#${PR_NUMBER}] Schema PR 생성 완료${MENTIONS:+\n:bell: 리뷰어: $MENTIONS}" \
+                --argjson blocks "$BLOCKS" \
+                '{ text: $text, blocks: $blocks }')" \
+                "$SLACK_WEBHOOK_URL"
