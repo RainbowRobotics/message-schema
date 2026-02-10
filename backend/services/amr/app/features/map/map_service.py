@@ -122,7 +122,7 @@ class AmrMapService:
             result = await rb_amr_sdk.map.get_map_topology(robot_model, model.id, model.map_name, model.file_name)
             model.result = result.result
             model.message = result.message
-            model.parse_topology_data(result.data)
+            # model.parse_topology_data(result.data)
 
             # 4) 반환
             return model.to_dict()
