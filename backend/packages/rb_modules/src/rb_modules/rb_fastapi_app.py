@@ -7,7 +7,7 @@ from importlib.resources import as_file, files
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import FileResponse, JSONResponse
@@ -21,6 +21,7 @@ from rb_tcp.rpc_zenoh import make_rpc_zenoh_router
 from rb_utils.file import get_env_path
 from rb_zenoh.exeption import register_zenoh_exception_handlers
 from rb_zenoh.router import ZenohRouter
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .log import rb_log
 
@@ -146,14 +147,12 @@ def create_app(
                 if socket_client:
                     await socket_client.disconnect()
 
-                for t in app.state.bg_tasks:
-                    t.cancel()
-                for t in bg_tasks:
-                    if isinstance(t, asyncio.Task):
-                        with contextlib.suppress(asyncio.CancelledError):
-                            await t
-                    else:
-                        t()
+                running_bg_tasks = list(getattr(app.state, "bg_tasks", []))
+                for task in running_bg_tasks:
+                    task.cancel()
+                for task in running_bg_tasks:
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await task
 
                 await close_db(app)
             except Exception as e:
@@ -173,6 +172,16 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def log_unhandled_http_exception(request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as exc:
+            rb_log.error(
+                f"[middleware] uncaught exception method={request.method} url={request.url} exc={exc}"
+            )
+            raise
 
     register_zenoh_exception_handlers(app)
 
@@ -244,19 +253,29 @@ def create_app(
             return JSONResponse(
                 status_code=exc.status_code if hasattr(exc, "status_code") else 500,
                 content={
-                    "error": exc.message if hasattr(exc, "message") else "Internal Server Error",
+                    "code": exc.status_code if hasattr(exc, "status_code") else 500,
+                    "error": str(exc),
                     "method": request.method,
                     "url": str(request.url),
                     "query_params": dict(request.query_params),
                     "body": body_text,
-                    "message": str(exc),
+                    "message": exc.detail if hasattr(exc, "detail") else "Internal Server Error"
                 },
             )
         except Exception as e:
+            print("fucking exception", flush=True)
             rb_log.error(f"Internal Server Error: {e}")
             return JSONResponse(
                 status_code=500,
                 content={"error": "Internal Server Error", "message": str(e)},
             )
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        return await global_exeption_handler(request, exc)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException):
+        return await global_exeption_handler(request, exc)
 
     return app

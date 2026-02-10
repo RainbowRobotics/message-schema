@@ -69,7 +69,6 @@ from .program_schema import (
     Request_Update_ProgramPD,
     Request_Update_StepStatePD,
     Response_Get_Task_ListPD,
-    SubStepItem,
     TaskType,
 )
 
@@ -283,7 +282,11 @@ class ProgramService(BaseService):
         if not program_doc:
             raise HTTPException(status_code=404, detail="Program not found")
 
-        robot_info_doc: dict[str, Any] | None = await robot_info_col.find_one({}, {"_id": 1})
+        robot_info_doc: dict[str, Any] | None = await robot_info_col.find_one(
+            filter={},
+            projection={"_id": 1},
+            sort=[("_id", 1)],
+        )
 
         if robot_info_doc is None:
             await robot_info_col.insert_one(dict(RobotInfo(programId=program_id)))
@@ -573,13 +576,8 @@ class ProgramService(BaseService):
         return {"ok": True, "count": len(prepped_steps)}
 
     async def update_all_task_step_state(
-        self, *, task_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
+        self, *, task_id: str, state: RB_Flow_Manager_ProgramState
     ):
-        steps_col = db["steps"]
-        tasks_col = db["tasks"]
-
-        query: dict[str, Any] = {"scriptName": task_id}
-
         if state in [
             RB_Flow_Manager_ProgramState.RUNNING,
             RB_Flow_Manager_ProgramState.WAITING,
@@ -593,24 +591,14 @@ class ProgramService(BaseService):
         elif state == RB_Flow_Manager_ProgramState.IDLE:
             self._task_play_state[task_id] = PlayState.IDLE
 
-        if ObjectId.is_valid(task_id):
-            query = {"_id": ObjectId(task_id)}
 
-        task_doc = await tasks_col.find_one(query)
-
-        if not task_doc:
-            return {
-                "updated_count": 0,
-            }
-
-        real_task_id = str(task_doc["_id"])
 
         if state == RB_Flow_Manager_ProgramState.IDLE:
             fire_and_log(
                 socket_client.emit(
-                    f"program/task/{real_task_id}/ended",
+                    f"program/task/{task_id}/ended",
                     {
-                        "taskId": real_task_id,
+                        "taskId": task_id,
                         "state": state,
                     },
                 ),
@@ -619,30 +607,18 @@ class ProgramService(BaseService):
 
             fire_and_log(
                 socket_client.emit(
-                    f"program/task/{real_task_id}/state",
+                    f"program/task/{task_id}/state",
                     {
                         "state": state,
-                        "taskId": real_task_id,
-                        "robotModel": task_doc.get("robotModel", "*"),
+                        "taskId": task_id,
+                        "robotModel": self.script_executor.get_state(task_id).get("robot_model", "*"),
                         "stepMode": False,
                     },
                 ),
                 name="emit_task_state",
             )
 
-        update_res = await steps_col.update_many(
-            {
-                "taskId": real_task_id,
-                "state": {"$ne": RB_Flow_Manager_ProgramState.ERROR},
-            },
-            {"$set": {"state": state}},
-        )
-
-        return {
-            "updated_count": update_res.modified_count,
-        }
-
-    async def update_step_state(self, *, request: Request_Update_StepStatePD, db: MongoDB):
+    async def update_step_state(self, *, request: Request_Update_StepStatePD):
         request_dict = t_to_dict(request)
 
         step_id = request_dict["stepId"]
@@ -690,21 +666,8 @@ class ProgramService(BaseService):
             name="emit_step_update_state",
         )
 
-        steps_col = db["steps"]
-
         if not ObjectId.is_valid(step_id):
             return
-
-        find_step_doc = await steps_col.find_one_and_update(
-            {"_id": ObjectId(step_id)},
-            {"$set": {"state": state}},
-            return_document=ReturnDocument.AFTER,
-        )
-
-        if find_step_doc and state == RB_Flow_Manager_ProgramState.ERROR:
-            await self.stop_program(
-                request=Request_Program_ExecutionPD(programId=find_step_doc["programId"]), db=db
-            )
 
         # visited = set()
 
@@ -730,8 +693,6 @@ class ProgramService(BaseService):
         #     await update_children(root_id)
 
         #     find_step_doc["stepId"] = root_id
-
-        return find_step_doc
 
     def get_ctx_sub_task_list(self, task_id: str):
         all_states = self.get_executor_state() or {}
@@ -1003,6 +964,7 @@ class ProgramService(BaseService):
         footer_context += f"            repeat_count={repeat_count},\n"
         footer_context += f"            robot_model={repr(robot_model)},\n"
         footer_context += f"            category={repr(category)},\n"
+        footer_context += "            event_sub_tree_list=event_sub_tree_list,\n"
         footer_context += "        )\n"
         footer_context += "    ]\n\n"
 
@@ -1408,7 +1370,7 @@ class ProgramService(BaseService):
         program_doc = await program_col.find_one({"_id": ObjectId(program_id)})
 
         if not program_doc:
-            robot_info_doc = await robot_info_col.find_one({})
+            robot_info_doc = await robot_info_col.find_one({}, sort=[("_id", 1)])
 
             if robot_info_doc:
                 await robot_info_col.update_one(
@@ -1445,9 +1407,8 @@ class ProgramService(BaseService):
         main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
         sub_tasks_docs = [doc for doc in tasks_docs if doc["type"] != TaskType.MAIN]
 
-
         main_steps: dict[str, list[dict]] = {}
-        sub_steps: dict[str, list[SubStepItem]] = defaultdict(list)
+        sub_steps: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
         for doc in tasks_docs:
             steps_docs = await steps_col.find({"taskId": doc["taskId"]}).to_list(length=None)
@@ -2066,6 +2027,27 @@ class ProgramService(BaseService):
 
         return cast(Step, module.tree)
 
+    def _load_event_sub_trees_from_script(self, script_path: str) -> list[Step]:
+        path = Path(script_path).resolve()
+
+        if not path.exists():
+            raise FileNotFoundError(f"파일을 찾을 수 없습니다: {path}")
+
+        module_name = f"{path.stem}_event_sub"
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"모듈을 로드할 수 없습니다: {path}")
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        event_sub_tree_list = getattr(module, "event_sub_tree_list", [])
+        if not isinstance(event_sub_tree_list, list):
+            return []
+
+        return cast(list[Step], event_sub_tree_list)
+
     def get_executor_variables(self, robot_model: str):
         """
         Executor의 모든 변수를 조회하는 함수.
@@ -2104,7 +2086,6 @@ class ProgramService(BaseService):
             }
 
         tasks_col = db["tasks"]
-        steps_col = db["steps"]
 
         task_doc_map: dict[str, dict[str, Any]] = {}
         for script in scripts:
@@ -2116,10 +2097,8 @@ class ProgramService(BaseService):
                 raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
             task_doc_map[task_id] = task_doc
 
-        # parent task id -> event sub tree list
+        # parent(main task id) -> event sub tree list
         event_sub_trees_by_parent: dict[str, list[Step]] = defaultdict(list)
-
-        # 1) 요청에 포함된 EVENT_SUB로 우선 구성
         for script in scripts:
             task_id = script["taskId"]
             task_doc = task_doc_map[task_id]
@@ -2133,62 +2112,22 @@ class ProgramService(BaseService):
             event_normal_steps = [
                 s for s in script["steps"] if s.get("method", None) != "ActionPost"
             ]
-            event_sub_trees_by_parent[parent_task_id].extend(
-                [self.parse_step_context(s, depth=8) for s in event_normal_steps]
-            )
-
-        # 2) 요청에 EVENT_SUB가 없으면 DB fallback
-        parent_ids = {
-            script["taskId"]
-            for script in scripts
-            if task_doc_map[script["taskId"]]["type"] != TaskType.EVENT_SUB
-        }
-        for parent_id in parent_ids:
-            if event_sub_trees_by_parent.get(parent_id):
-                continue
-
-            event_sub_docs = await tasks_col.find(
-                {"parentTaskId": parent_id, "type": TaskType.EVENT_SUB}
-            ).to_list(length=None)
-            for event_sub_doc in event_sub_docs:
-                event_steps_docs = await steps_col.find(
-                    {"taskId": str(event_sub_doc["_id"])}
-                ).to_list(length=None)
-                steps_tree = self.build_step_tree(event_steps_docs)
-                event_sub_trees_by_parent[parent_id].extend(
-                    [self.parse_step_context(s, depth=8) for s in steps_tree]
+            for event_step in event_normal_steps:
+                event_sub_trees_by_parent[parent_task_id].append(
+                    self.parse_step_context(event_step, depth=8)
                 )
 
         tree_list = []
-
-        def inject_event_trees(step_obj: Step, event_trees: list[Step]) -> tuple[int, int]:
-            call_count = 0
-            invalid_bind_count = 0
-
-            if getattr(step_obj, "func_name", None) == "rb_base_sdk.call_event_tree":
-                call_count += 1
-                args = step_obj.args if isinstance(step_obj.args, dict) else {}
-                trees_arg = args.get("trees")
-
-                if isinstance(trees_arg, str) or trees_arg is None:
-                    args["trees"] = event_trees
-                    step_obj.args = args
-                elif not isinstance(trees_arg, list):
-                    invalid_bind_count += 1
-
-            for child in getattr(step_obj, "children", []) or []:
-                c_count, c_invalid = inject_event_trees(child, event_trees)
-                call_count += c_count
-                invalid_bind_count += c_invalid
-
-            return call_count, invalid_bind_count
-
         for script in scripts:
             task_id = script["taskId"]
+            task_doc = task_doc_map[task_id]
+            if task_doc["type"] == TaskType.EVENT_SUB:
+                continue
+
             repeat_count = script["repeatCount"]
             steps_tree = script["steps"]
             parent_task_id = script.get("parentTaskId", None)
-            step_mode = script.get("stepMode", False)  # 각 스크립트마다 step_mode 가져오기
+            step_mode = script.get("stepMode", False)
 
             normal_steps_tree = []
             post_steps_tree = []
@@ -2202,31 +2141,12 @@ class ProgramService(BaseService):
             if len(post_steps_tree) > 1:
                 raise HTTPException(status_code=400, detail=f"ActionPost step must be only one: {task_id}")
 
-            task_doc = task_doc_map[task_id]
-
-            if task_doc["type"] == TaskType.EVENT_SUB:
-                continue
-
             robot_model = task_doc["robotModel"]
             category = self._robot_models[robot_model].get("be_service", None)
             begin = script.get("begin", None)
 
             tree = self.build_tree_from_client(normal_steps_tree, task_id, robot_model, category, begin)
             post_tree = self.parse_step_context(post_steps_tree[0], depth=8) if len(post_steps_tree) > 0 else None
-
-            call_count, invalid_bind_count = inject_event_trees(
-                tree, event_sub_trees_by_parent.get(task_id, [])
-            )
-            if call_count > 0 and invalid_bind_count > 0:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"call_event_tree trees binding failed: {task_id}",
-                )
-            if call_count > 0 and len(event_sub_trees_by_parent.get(task_id, [])) == 0:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"EVENT_SUB is required for call_event_tree: {task_id}",
-                )
 
             tree_list.append(
                 {
@@ -2236,8 +2156,9 @@ class ProgramService(BaseService):
                     "repeat_count": repeat_count,
                     "robot_model": robot_model,
                     "category": category,
-                    "step_mode": step_mode,  # 각 스크립트의 step_mode 저장
+                    "step_mode": step_mode,
                     "parent_process_id": parent_task_id,
+                    "event_sub_tree_list": event_sub_trees_by_parent.get(task_id, []),
                 }
             )
 
@@ -2250,11 +2171,12 @@ class ProgramService(BaseService):
                     repeat_count=tree["repeat_count"],
                     robot_model=tree["robot_model"],
                     category=tree["category"],
-                    step_mode=tree["step_mode"],  # 각 tree의 step_mode 사용
-                    min_step_interval=0.5 if tree["step_mode"] else None,  # 각 tree의 step_mode 기준
+                    step_mode=tree["step_mode"],
+                    min_step_interval=0.5 if tree["step_mode"] else None,
                     is_ui_execution=True,
                     post_tree=tree["post_tree"],
                     parent_process_id=tree["parent_process_id"],
+                    event_sub_tree_list=tree["event_sub_tree_list"],
                 )
             )
 
@@ -2314,6 +2236,7 @@ class ProgramService(BaseService):
                     category=tree["category"],
                     step_mode=False,
                     is_ui_execution=True,
+                    event_sub_tree_list=[],
                 )
             )
 
@@ -2463,6 +2386,9 @@ class ProgramService(BaseService):
             category = self._robot_models[robot_model].get("be_service", None)
 
             tree = self._load_tree_from_script(f"{script_path}/{script_name}.{extension}")
+            event_sub_tree_list = self._load_event_sub_trees_from_script(
+                f"{script_path}/{script_name}.{extension}"
+            )
 
             self.script_executor.start(
                 MakeProcessArgs(
@@ -2471,6 +2397,7 @@ class ProgramService(BaseService):
                     repeat_count=repeat_count,
                     robot_model=robot_model,
                     category=category,
+                    event_sub_tree_list=event_sub_tree_list,
                 )
             )
 

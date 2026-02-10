@@ -53,7 +53,12 @@ class InfoService:
         if "robot_info" not in await db.list_collection_names():
             await db.create_collection("robot_info")
 
-        doc = await db["robot_info"].find_one({}, {"_id": 0})
+        # 빈 필터 COLLSCAN을 피하기 위해 _id 인덱스 순으로 1건 조회
+        doc = await db["robot_info"].find_one(
+            filter={},
+            projection={"_id": 0},
+            sort=[("_id", 1)],
+        )
 
         if not doc:
             doc = dict(RobotInfo())
@@ -67,7 +72,7 @@ class InfoService:
     async def upsert_robot_info(self, *, db: MongoDB, request: Request_Upsert_Robot_InfoPD):
         robot_info_col = db["robot_info"]
 
-        existing = await robot_info_col.find_one({})
+        existing = await robot_info_col.find_one({}, sort=[("_id", 1)])
 
         if existing is None:
             # === INSERT ===
@@ -132,7 +137,7 @@ class InfoService:
         return self._cache_robot_info
 
     async def load_robot_info(self, col: AsyncIOMotorCollection):
-        doc = await col.find_one({}, {"_id": 0}) or {}
+        doc = await col.find_one({}, {"_id": 0}, sort=[("_id", 1)]) or {}
 
         return doc
 

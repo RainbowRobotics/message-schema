@@ -63,10 +63,9 @@ async def on_stop():
     opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_update_all_step_state(*, topic, mv, obj, attachment):
-    db = await get_db()
     task_id = obj["taskId"]
     state = convert_state_to_string(obj["state"])
-    return await program_service.update_all_task_step_state(task_id=task_id, state=state, db=db)
+    return await program_service.update_all_task_step_state(task_id=task_id, state=state)
 
 
 @zenoh_program_router.subscribe(
@@ -75,7 +74,6 @@ async def on_update_all_step_state(*, topic, mv, obj, attachment):
     opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_update_step_state(*, topic, mv, obj, attachment):
-    db = await get_db()
     step_id = obj["stepId"]
     task_id = obj["taskId"]
     state = convert_state_to_string(obj["state"])
@@ -84,7 +82,6 @@ async def on_update_step_state(*, topic, mv, obj, attachment):
         request=Request_Update_StepStatePD(
             stepId=step_id, taskId=task_id, state=state, error=error_value
         ),
-        db=db,
     )
 
 

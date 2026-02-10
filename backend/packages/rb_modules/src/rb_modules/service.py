@@ -4,6 +4,7 @@ import os
 import threading
 from typing import ClassVar
 
+from fastapi import HTTPException
 from rb_sdk.manipulate import RBManipulateSDK
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
@@ -55,28 +56,32 @@ class BaseService:
         async def async_wrapper(*args, **kwargs):
             try:
                 return await fn(*args, **kwargs)
+            except HTTPException:
+                raise
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
-                raise Exception(e) from e
+                raise
             except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
-                raise Exception(e) from e
+                raise
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
-                raise Exception(e) from e
+                raise
 
         @functools.wraps(fn)
         def sync_wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
+            except HTTPException:
+                raise
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
-                raise Exception(e) from e
+                raise
             except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
-                raise Exception(e) from e
+                raise
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
-                raise Exception(e) from e
+                raise
 
         return async_wrapper if asyncio.iscoroutinefunction(fn) else sync_wrapper

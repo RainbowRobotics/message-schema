@@ -66,7 +66,7 @@ def _execute_tree_in_process(
     """
     os.environ["_PYINSTALLER_WORKER"] = "1"
 
-    # Ready 신호 전송
+    # 프로세스 부팅 완료 신호(배치 start barrier 용)
     result_queue.put({
         "type": "ready",
         "process_id": process_id,
@@ -235,6 +235,14 @@ def _execute_tree_in_process(
         ctx.sync_cond = sync_cond
         ctx.sync_lock = sync_lock
 
+        # 실제 실행 시작 가능 시점 신호(CallEventStep 대기 해제용)
+        result_queue.put({
+            "type": "exec_ready",
+            "process_id": process_id,
+            "ts": time.time(),
+            "generation": state_dict.get("generation"),
+        })
+
         # 메인 실행
         try:
             run_main_loop()
@@ -370,6 +378,10 @@ class ScriptExecutor:
         self._monitor_thread: Thread | None = None
         self._stop_monitor: EventType = self._mp_ctx.Event()
         self._pending_complete_callbacks: set[str] = set()
+        self._event_wait_parent_by_child: dict[str, str] = {}
+        self._event_wait_children_count: dict[str, int] = {}
+        self._event_wait_resume_pending: dict[str, int] = {}
+        self._event_start_seq_by_child: dict[str, int] = {}
 
         # 전역 락
         self._mu = Lock()
@@ -406,6 +418,10 @@ class ScriptExecutor:
         flags: set[str] = set()
 
         def walk(s: Step):
+            # disabled step(및 그 하위)는 실행되지 않으므로 sync 참가자에서 제외한다.
+            if getattr(s, "disabled", False):
+                return
+
             if s.__class__.__name__ == "SyncStep":
                 f = getattr(s, "flag", None)
                 if f:
@@ -447,6 +463,9 @@ class ScriptExecutor:
                 else:
                     # parties_next를 현재 멤버 수로 업데이트
                     st["parties_next"] = len(members)
+                    # 새 멤버가 중간 합류하더라도 현재 라운드 참여자에 반영한다.
+                    # 그렇지 않으면 기존 parties_cur 기준으로 barrier가 먼저 풀릴 수 있다.
+                    st["parties_cur"] = len(members)
 
                 self._sync_state[flag] = st
 
@@ -770,6 +789,131 @@ class ScriptExecutor:
 
         return pid_flags
 
+    def _spawn_event_sub_task(self, parent_pid: str, evt: dict):
+        if parent_pid not in self.state_dicts:
+            return
+
+        event_tree_dict = evt.get("event_tree")
+        event_task_id = evt.get("event_task_id")
+        run_mode = str(evt.get("run_mode") or "ASYNC").upper()
+        call_seq = evt.get("call_seq")
+
+        if not event_task_id:
+            raise ValueError("event_sub_task_start event requires event_task_id")
+        if not isinstance(event_tree_dict, dict):
+            raise ValueError("event_sub_task_start event requires event_tree")
+        if run_mode not in ("SYNC", "ASYNC"):
+            raise ValueError("event_sub_task_start event requires valid run_mode")
+
+        event_tree = Step.from_dict(event_tree_dict)
+        has_sync_flags = bool(self._collect_sync_flags(event_tree))
+
+        # 이미 동일 event task 프로세스가 실행 중이면 기본적으로 재사용한다.
+        # 단, SyncStep이 포함되거나 run_mode=SYNC인 경우 정확성을 위해 직렬 실행한다.
+        existing_proc = self.processes.get(event_task_id)
+        if existing_proc is not None and existing_proc.is_alive():
+            if run_mode == "SYNC" or has_sync_flags:
+                # 기존 실행이 끝난 뒤 새 호출을 실행한다.
+                deadline = time.time() + 10.0
+                while existing_proc.is_alive() and time.time() < deadline:
+                    time.sleep(0.01)
+
+                if existing_proc.is_alive():
+                    # 비정상 장기 실행 시 재사용 fallback
+                    pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
+                    if (
+                        event_task_id in pending_map
+                        and call_seq is not None
+                        and pending_map[event_task_id] == call_seq
+                    ):
+                        pending_map.pop(event_task_id, None)
+                        self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
+
+                    if run_mode == "SYNC":
+                        parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
+                        if event_task_id not in parent_children:
+                            parent_children.append(event_task_id)
+                            self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+
+                        if self._event_wait_parent_by_child.get(event_task_id) is None:
+                            self._event_wait_parent_by_child[event_task_id] = parent_pid
+                    return
+
+                # 완료된 기존 프로세스 정리 후 새로 spawn
+                self._cleanup_process(event_task_id)
+                existing_proc = self.processes.get(event_task_id)
+
+            if existing_proc is not None and existing_proc.is_alive():
+                pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
+                if (
+                    event_task_id in pending_map
+                    and call_seq is not None
+                    and pending_map[event_task_id] == call_seq
+                ):
+                    pending_map.pop(event_task_id, None)
+                    self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
+
+                if run_mode == "SYNC":
+                    parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
+                    if event_task_id not in parent_children:
+                        parent_children.append(event_task_id)
+                        self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+
+                    # 이미 맵핑이 없으면 연결만 복구 (중복 카운트는 올리지 않는다).
+                    if self._event_wait_parent_by_child.get(event_task_id) is None:
+                        self._event_wait_parent_by_child[event_task_id] = parent_pid
+                return
+
+        parent_state = self.state_dicts[parent_pid]
+
+        args = MakeProcessArgs(
+            process_id=event_task_id,
+            step=event_tree,
+            repeat_count=1,
+            robot_model=parent_state.get("robot_model"),
+            category=parent_state.get("category"),
+            step_mode=False,
+            min_step_interval=None,
+            is_ui_execution=parent_state.get("is_ui_execution", False),
+            post_tree=None,
+            parent_process_id=parent_pid,
+        )
+
+        p = self.make_process(args, multi_start=False, start_event=None, invoke_callbacks=True)
+        if p is None:
+            pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
+            if (
+                event_task_id in pending_map
+                and call_seq is not None
+                and pending_map[event_task_id] == call_seq
+            ):
+                pending_map.pop(event_task_id, None)
+                self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
+
+            if run_mode == "SYNC":
+                parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
+                if event_task_id in parent_children:
+                    parent_children.remove(event_task_id)
+                    self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+            return
+
+        # start 이전에 등록해야 자식이 즉시 종료해도 resume 누락이 없다.
+        if run_mode == "SYNC":
+            parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
+            if event_task_id not in parent_children:
+                parent_children.append(event_task_id)
+                self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+
+            self._event_wait_parent_by_child[event_task_id] = parent_pid
+            self._event_wait_children_count[parent_pid] = (
+                self._event_wait_children_count.get(parent_pid, 0) + 1
+            )
+
+        p.start()
+        self.processes[event_task_id] = p
+        if call_seq is not None:
+            self._event_start_seq_by_child[event_task_id] = int(call_seq)
+
     def make_process(
         self,
         args: MakeProcessArgs,
@@ -789,6 +933,7 @@ class ScriptExecutor:
         is_ui_execution = args.get("is_ui_execution")
         post_tree = args.get("post_tree")
         parent_process_id = args.get("parent_process_id")
+        event_sub_tree_list = args.get("event_sub_tree_list") or []
 
         # 이미 실행 중인 프로세스 체크
         if process_id in self.processes and self.processes[process_id].is_alive():
@@ -855,6 +1000,10 @@ class ScriptExecutor:
         self.state_dicts[process_id]["step_mode"] = step_mode
         self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
         self.state_dicts[process_id]["parent_process_id"] = parent_process_id
+        self.state_dicts[process_id]["executor_managed"] = True
+        self.state_dicts[process_id]["event_sub_tree_list"] = [
+            t.to_dict() if hasattr(t, "to_dict") else t for t in event_sub_tree_list
+        ]
 
         # 콜백 호출
         if invoke_callbacks:
@@ -1065,6 +1214,9 @@ class ScriptExecutor:
         elif evt_type == "main_tree_sync_unregister":
             self._handle_main_tree_sync_unregister(pid)
 
+        elif evt_type == "event_sub_task_start":
+            self._spawn_event_sub_task(pid, evt)
+
         elif evt_type == "done":
             if step_id is None:
                 raise ValueError("done event requires step_id")
@@ -1099,6 +1251,15 @@ class ScriptExecutor:
                 else RB_Flow_Manager_ProgramState.PAUSED
             )
             self.state_dicts[pid]["state"] = state
+
+            # event sub task(SYNC) 자식이 이미 끝난 뒤 WAITING으로 진입한 경우,
+            # 누락된 resume를 즉시 보정한다.
+            if is_wait and self._event_wait_resume_pending.get(pid, 0) > 0:
+                self._event_wait_resume_pending[pid] -= 1
+                if self._event_wait_resume_pending[pid] <= 0:
+                    self._event_wait_resume_pending.pop(pid, None)
+                self.resume(pid)
+                return
 
             # step_mode barrier 대기(WAITING)는 해당 프로세스만 대기시킨다.
             # 부모/자식 전파는 사용자 pause 요청(PAUSED)일 때만 수행.
@@ -1159,6 +1320,15 @@ class ScriptExecutor:
                     and self._batch_start_event is not None
                 ):
                     self._batch_start_event.set()
+
+        elif evt_type == "exec_ready":
+            parent_pid = self.state_dicts.get(pid, {}).get("parent_process_id")
+            if parent_pid is not None and parent_pid in self.state_dicts:
+                pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
+                seq = self._event_start_seq_by_child.get(pid)
+                if pid in pending_map and (seq is None or pending_map[pid] == seq):
+                    pending_map.pop(pid, None)
+                    self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
 
     def _start_monitor(self):
         """백그라운드 모니터 스레드 시작"""
@@ -1287,6 +1457,36 @@ class ScriptExecutor:
 
             self._pid_generation.pop(process_id, None)
 
+        wait_parent = self._event_wait_parent_by_child.pop(process_id, None)
+        start_seq = self._event_start_seq_by_child.pop(process_id, None)
+        if wait_parent is not None:
+            if wait_parent in self.state_dicts:
+                parent_children = list(self.state_dicts[wait_parent].get("event_sync_children", []))
+                if process_id in parent_children:
+                    parent_children.remove(process_id)
+                    self.state_dicts[wait_parent]["event_sync_children"] = parent_children
+
+            remaining = self._event_wait_children_count.get(wait_parent, 0) - 1
+            if remaining <= 0:
+                self._event_wait_children_count.pop(wait_parent, None)
+
+                # 상태 체크를 제거하고 무조건 resume 시도
+                if wait_parent in self.processes:
+                    self.resume(wait_parent)  # ← 이렇게 수정
+                else:
+                    self._event_wait_resume_pending[wait_parent] = (
+                        self._event_wait_resume_pending.get(wait_parent, 0) + 1
+                    )
+
+        parent_pid = self.state_dicts.get(process_id, {}).get("parent_process_id")
+        if parent_pid is not None and parent_pid in self.state_dicts:
+            pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
+            if (
+                process_id in pending_map
+                and (start_seq is None or pending_map[process_id] == start_seq)
+            ):
+                pending_map.pop(process_id, None)
+                self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
 
     def _auto_cleanup(self):
         """모든 프로세스 종료 시 자동 정리"""
@@ -1302,6 +1502,10 @@ class ScriptExecutor:
         self.result_queues = {}
         self._monitor_thread = None
         self._pending_complete_callbacks.clear()
+        self._event_wait_parent_by_child.clear()
+        self._event_wait_children_count.clear()
+        self._event_wait_resume_pending.clear()
+        self._event_start_seq_by_child.clear()
 
         if self._sync_state is not None:
             self._sync_state.clear()

@@ -367,6 +367,30 @@ class ExecutionContext:
             }
         )
 
+    def emit_event_sub_task_start(
+        self,
+        *,
+        event_task_id: str,
+        event_tree,
+        run_mode: Literal["SYNC", "ASYNC"] = "ASYNC",
+        call_seq: int | None = None,
+    ):
+        """EventSubTask 실행 요청 이벤트"""
+        print("emit_event_sub_task_start", flush=True)
+        self.result_queue.put(
+            {
+                "type": "event_sub_task_start",
+                "process_id": self.process_id,
+                "event_task_id": event_task_id,
+                "event_tree": event_tree.to_dict() if event_tree is not None else None,
+                "run_mode": run_mode,
+                "call_seq": call_seq,
+                "ts": time.time(),
+                "generation": self._generation,
+                "error": None,
+            }
+        )
+
     def emit_post_start(self):
         """post_start 이벤트 발생"""
         self.result_queue.put(

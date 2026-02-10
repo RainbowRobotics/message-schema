@@ -55,6 +55,8 @@ class DummyExecutionContext:
         self._arg_scope: list[dict[str, Any]] = []
         self.trace: list[str] = []
         self.events: list[tuple[str, str]] = []
+        self.event_requests: list[dict[str, Any]] = []
+        self.pause_calls: list[bool] = []
 
     def update_vars_to_state_dict(self):
         return
@@ -96,6 +98,26 @@ class DummyExecutionContext:
 
     def emit_error(self, step_id: str, error: Exception):
         self.events.append(("error", f"{step_id}:{error}"))
+
+    def emit_event_sub_task_start(
+        self,
+        *,
+        event_task_id: str,
+        event_tree,
+        run_mode: str = "ASYNC",
+        call_seq: int | None = None,
+    ):
+        self.event_requests.append(
+            {
+                "event_task_id": event_task_id,
+                "event_tree": event_tree,
+                "run_mode": run_mode,
+                "call_seq": call_seq,
+            }
+        )
+
+    def pause(self, is_wait: bool = False):
+        self.pause_calls.append(is_wait)
 
     def enter_folder(self):
         self._folder_depth += 1
@@ -384,6 +406,84 @@ class StepControlFlowTest(unittest.TestCase):
 
         root.execute(ctx)
         self.assertEqual(ctx.trace, ["callable-branch"])
+
+    def test_event_sub_task_step_emits_request_and_waits_in_sync_mode(self):
+        Step = STEP_MOD.Step
+        CallEventStep = STEP_MOD.CallEventStep
+
+        ctx = DummyExecutionContext()
+        event_tree = Step(step_id="event_tree_1", name="event_tree_1")
+        ctx.state_dict["event_sub_tree_list"] = [event_tree.to_dict()]
+
+        root = Step(
+            step_id="root5",
+            name="root5",
+            children=[
+                CallEventStep(
+                    step_id="event_call_1",
+                    name="event_call_1",
+                    index=0,
+                    run_mode="SYNC",
+                ),
+            ],
+        )
+
+        root.execute(ctx)
+
+        self.assertEqual(len(ctx.event_requests), 1)
+        self.assertEqual(ctx.event_requests[0]["event_task_id"], "event_tree_1")
+        self.assertEqual(ctx.event_requests[0]["run_mode"], "SYNC")
+        self.assertEqual(ctx.pause_calls, [])
+
+    def test_call_event_step_reads_tree_from_state_dict_by_index(self):
+        Step = STEP_MOD.Step
+        CallEventStep = STEP_MOD.CallEventStep
+
+        ctx = DummyExecutionContext()
+        ctx.state_dict["event_sub_tree_list"] = [
+            {"stepId": "event_tree_2", "name": "event_tree_2", "children": []}
+        ]
+
+        root = Step(
+            step_id="root6",
+            name="root6",
+            children=[
+                CallEventStep(
+                    step_id="event_call_2",
+                    name="event_call_2",
+                    index=0,
+                    run_mode="ASYNC",
+                ),
+            ],
+        )
+
+        root.execute(ctx)
+
+        self.assertEqual(len(ctx.event_requests), 1)
+        self.assertEqual(ctx.event_requests[0]["event_task_id"], "event_tree_2")
+        self.assertEqual(ctx.event_requests[0]["run_mode"], "ASYNC")
+        self.assertEqual(ctx.pause_calls, [])
+
+    def test_sync_step_roundtrip_preserves_sync_type_for_event_tree(self):
+        Step = STEP_MOD.Step
+        SyncStep = STEP_MOD.SyncStep
+
+        sync = SyncStep(
+            step_id="sync_1",
+            name="Sync",
+            args={"flag": "f1", "timeout": None},
+        )
+
+        tree = Step(
+            step_id="event_root",
+            name="event_root",
+            children=[sync],
+        )
+
+        rebuilt = Step.from_dict(tree.to_dict())
+        self.assertEqual(len(rebuilt.children), 1)
+        self.assertEqual(type(rebuilt.children[0]).__name__, "SyncStep")
+        self.assertEqual(getattr(rebuilt.children[0], "flag", None), "f1")
 
 
 if __name__ == "__main__":

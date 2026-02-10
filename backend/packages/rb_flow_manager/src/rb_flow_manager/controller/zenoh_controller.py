@@ -68,7 +68,7 @@ class Zenoh_Controller(BaseController):
                 rb_log.warning(f"initial state update skipped: {e}")
 
     def on_start(self, task_id: str) -> None:
-        if self._zenoh_client is not None:
+        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
             req = Request_Program_At_StartT()
             req.taskId = task_id
             self._zenoh_client.publish("rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
@@ -171,7 +171,9 @@ class Zenoh_Controller(BaseController):
         self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.IDLE)
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 
-        if self._zenoh_client is not None:
+        print(f"self._state_dicts.get('parent_process_id'): {self._state_dicts.get('parent_process_id')}", flush=True)
+
+        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
             req = Request_Program_At_EndT()
             req.taskId = task_id
             self._zenoh_client.publish("rrs/program/at_end", flatbuffer_req_obj=req, flatbuffer_buf_size=8)

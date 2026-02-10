@@ -468,18 +468,33 @@ class RBBaseSDK:
         *,
         trees: list["Step"],
         index: int,
+        task_id: str | None = None,
         target_step_id: str | None = None,
         _post_run: bool = False,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
-        """이벤트 스레드 호출"""
+        """이벤트 트리를 호출하고 실행이 끝날 때까지 대기한다."""
+        event_tree = trees[index] if 0 <= index < len(trees) else None
+        ctx = flow_manager_args.ctx if flow_manager_args is not None else None
+
         try:
-            if trees[index] is not None:
-                ctx = flow_manager_args.ctx if flow_manager_args is not None else None
-                trees[index].execute(ctx, target_step_id=target_step_id, _post_run=_post_run)
+            if event_tree is None or ctx is None:
+                return
+
+            if not hasattr(event_tree, "execute"):
+                rb_log.error(f"[call_event_tree] invalid event tree type: {type(event_tree)}")
+                return
+
+            if task_id is not None:
+                ctx.state_dict["event_sub_pid"] = task_id
+
+            event_tree.execute(ctx, target_step_id=target_step_id, _post_run=_post_run)
         finally:
+            if ctx is not None:
+                ctx.state_dict.pop("event_sub_pid", None)
             if flow_manager_args is not None:
                 flow_manager_args.done()
+
 
     def close(self):
         """SDK 종료 (전체 참조 카운트 기반으로 ZenohClient 정리 여부 결정)"""
