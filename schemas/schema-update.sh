@@ -37,7 +37,6 @@ if [ ! -d "$SCHEMA_DIR" ]; then
   exit 1
 fi
 
-# 사용자 요구: script는 SCHEMA_DIR 내부
 if [ "$SCRIPT_DIR" != "$MAIN_REPO/$SCHEMA_DIR" ]; then
   print_string "error" "$SCRIPT_NAME must be located in $SCHEMA_DIR"
   exit 1
