@@ -1,5 +1,6 @@
 namespace SLAMNAV;
 
+<<<<<<< HEAD
 /*
     category    :       RPC
     response    :       ???
@@ -59,6 +60,8 @@ table ResponseDeleteFile {
   result: string;
   message: string;
 }
+=======
+>>>>>>> 8b22a3bbe63bc27e7538eee07c494f90822f4042
 
 /*
     category    :       RPC
