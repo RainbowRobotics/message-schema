@@ -1,5 +1,64 @@
 namespace SLAMNAV;
 
+/*
+    category    :       RPC
+    response    :       ???
+    topic       :       {robotType}/file/compressFiles
+    usage       :       파일 압축
+    field
+        - dir_path      :       압축할 디렉토리 경로
+        - file_names    :       압축할 파일 이름 목록
+        - zip_name      :       압축 파일 이름
+*/
+table RequestCompressFiles {
+  base_dir: string;
+  source_names: [string];
+  output_name: string;
+}
+table ResponseCompressFiles {
+  base_dir: string;
+  source_names: [string];
+  output_name: string;
+  result: string;
+  message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       ???
+    topic       :       {robotType}/file/decompressFile
+    usage       :       파일 압축 해제
+    field
+        - source_path   :       압축 해제할 파일 경로
+        - output_path   :       압축 해제 파일 경로
+*/
+table RequestDecompressFile {
+  source_path: string;
+  output_path: string;
+}
+table ResponseDecompressFile {
+  source_path: string;
+  output_path: string;
+  result: string;
+  message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       ???
+    topic       :       {robotType}/file/deleteFile
+    usage       :       파일 삭제
+    field
+        - file_path  :       삭제할 파일 경로 목록
+*/
+table RequestDeleteFile {
+  file_path: string;
+}
+table ResponseDeleteFile {
+  file_path: string;
+  result: string;
+  message: string;
+}
 
 /*
     category    :       RPC
