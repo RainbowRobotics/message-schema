@@ -7,8 +7,10 @@ namespace SLAMNAV;
 // -----------                              --------
 // -------------------------------------------------
 
+
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/multi/path
     usage       :       멀티 로봇 경로 설정
     field
@@ -27,6 +29,7 @@ table ResponseMultiPath {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/multi/vobs
     usage       :       멀티 로봇 가상 장애물 설정
     field

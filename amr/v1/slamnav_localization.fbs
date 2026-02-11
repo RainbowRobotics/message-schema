@@ -7,6 +7,7 @@ namespace SLAMNAV;
 // -----------                              --------
 // -------------------------------------------------
 
+
 /*
     category    :       Data Structure
     usage       :       Localization Pose Structure
@@ -30,6 +31,7 @@ struct LocalizationPose {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/localization/init
     usage       :       위치 초기화 (수동)
     field
@@ -48,6 +50,7 @@ table ResponseLocalizationInit {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/localization/randomInit
     usage       :       위치 초기화 (랜덤)
     field
@@ -65,8 +68,9 @@ table ResponseLocalizationRandomInit {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/localization/autoInit
-    usage       :       위치 초기화 (자동)
+    usage       :       위치 초기화 (glbal-localizer 사용.) - 개발 중
     field
         - pose          :       초기화된 로봇 위치
 */
@@ -82,8 +86,9 @@ table ResponseLocalizationAutoInit {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/localization/semiAutoInit
-    usage       :       위치 초기화 (반자동)
+    usage       :       위치 초기화 (Init Node 에서 위치 추정.)
     field
         - pose          :       초기화된 로봇 위치
 */
@@ -99,6 +104,7 @@ table ResponseLocalizationSemiAutoInit {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/localization/start
     usage       :       위치 추정 시작
     field
@@ -116,6 +122,7 @@ table ResponseLocalizationStart {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/localization/stop
     usage       :       위치 추정 중지
     field
@@ -134,15 +141,18 @@ table ResponseLocalizationStop {
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------          Pub / Sub           --------
+// -----------     Pub / Sub  (Result )     --------
 // -----------                              --------
 // -------------------------------------------------
 
 /*
-    category    :       Pub / Sub
-    topic       :       {robotType}/localization/result/init
-    usage       :       위치 초기화 결과 응답
+    category    :       Pub / Sub (Result)
+    topic       :       {robotType}/localization/result
+    usage       :       위치 결과 응답
     field
+        - command       :       Localization Callback 명령 (string)
+            - "autoInit"  "semiAutoInit"
+            - "start"
         - pose          :       초기화된 로봇 위치
         - result        :       이동 결과
             - success       :       동작 성공.
@@ -150,8 +160,9 @@ table ResponseLocalizationStop {
             - start         :       동작 시작.
             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
 */
-table ResultLocalizationInit {
+table ResultLocalization {
     id: string;
+    command: string;
     pose: LocalizationPose;
     result: string;
     message: string;
