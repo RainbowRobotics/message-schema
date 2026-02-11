@@ -171,6 +171,7 @@ async def ensure_index(
             "weights",
             "expireAfterSeconds",
             "collation",
+            "partialFilterExpression",
         ]
         same_opts = all(
             (matched_meta.get(o) == create_kwargs.get(o))
@@ -201,7 +202,12 @@ async def ensure_index(
                 continue
 
             # 2) 옵션 충돌 / 이름만 다른 동일키 충돌 → 타깃 찾아 정확히 드롭 후 재생성
-            if code == 85 or "IndexOptionsConflict" in msg or "different name" in msg:
+            if (
+                code in (85, 86)
+                or "IndexOptionsConflict" in msg
+                or "IndexKeySpecsConflict" in msg
+                or "different name" in msg
+            ):
                 try:
                     # 현재 존재하는 동일 키/다른 이름 인덱스 찾기
                     target_name, _ = await _find_index_name_by_keys(col, norm_req)
@@ -308,6 +314,17 @@ async def init_indexes(db: AsyncIOMotorDatabase):
         "tasks",
         [("parentTaskId", 1), ("type", 1)],
         name="tasks_parent_type_idx",
+    )
+
+    # scriptName uniqueness applies only to MAIN tasks.
+    # SUB/EVENT_SUB tasks can share the same script file name with their parent task.
+    await ensure_index(
+        db,
+        "tasks",
+        [("scriptName", 1)],
+        name="uniq_scriptName",
+        unique=True,
+        partialFilterExpression={"type": "MAIN"},
     )
 
     await ensure_index(
