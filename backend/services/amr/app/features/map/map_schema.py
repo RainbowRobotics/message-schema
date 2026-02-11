@@ -65,13 +65,17 @@ class ResponseGetMapTopologyPD(BaseModel):
     searchText: str | None
     sortOption: str | None
     sortDirection: str | None
+    result: str | None
+    message: str | None
 
 class RequestSetMapTopologyPD(BaseModel):
     mapName: str
-    data: list[Node]
+    fileName: str
+    data: list[Node] | None
 
 class ResponseSetMapTopologyPD(BaseModel):
     mapName: str | None
+    fileName: str | None
     result: str | None
     message: str | None
 

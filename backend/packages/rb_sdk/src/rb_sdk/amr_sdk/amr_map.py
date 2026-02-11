@@ -26,8 +26,6 @@ from rb_flat_buffers.SLAMNAV.RequestMapCurrent import RequestMapCurrentT
 from rb_flat_buffers.SLAMNAV.ResponseMapCurrent import ResponseMapCurrentT
 from rb_flat_buffers.SLAMNAV.RequestMapDelete import RequestMapDeleteT
 from rb_flat_buffers.SLAMNAV.ResponseMapDelete import ResponseMapDeleteT
-from rb_flat_buffers.SLAMNAV.RequestGetMapFile import RequestGetMapFileT
-from rb_flat_buffers.SLAMNAV.ResponseGetMapFile import ResponseGetMapFileT
 
 class RBAmrMapSDK(RBBaseSDK):
     """Rainbow Robotics AMR Map SDK"""
@@ -106,39 +104,10 @@ class RBAmrMapSDK(RBBaseSDK):
             flatbuffer_buf_size=2048,
         )
 
+
         # 3) 결과 처리 및 반환
         if result["obj_payload"] is None:
             raise RuntimeError("Call Map Current failed: obj_payload is None")
-
-        return result["obj_payload"]
-
-    async def get_map_file(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> ResponseGetMapFileT:
-        """
-        [Map File 조회]
-        - robot_model: 요청을 보낼 로봇 모델
-        - req_id: 요청 ID
-        - map_name: 맵 이름
-        - file_name: 파일 이름
-        - ResponseGetMapFileT 객체 반환
-        """
-
-        # 1) RequestGetMapFileT 객체 생성
-        req = RequestGetMapFileT()
-        req.id = req_id
-        req.mapName = map_name
-        req.fileName = file_name
-
-        # 2) 요청 전송
-        result = self.zenoh_client.query_one(
-            f"{robot_model}/map/getFile",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=ResponseGetMapFileT,
-            flatbuffer_buf_size=2048,
-        )
-
-        # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
-            raise RuntimeError("Call Map File failed: obj_payload is None")
 
         return result["obj_payload"]
 
@@ -207,13 +176,19 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def get_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> ResponseGetMapTopologyT:
+    async def get_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyT:
         """
         [Map Topology 전송]
         - robot_model: 요청을 보낼 로봇 모델
         - req_id: 요청 ID
         - map_name: 맵 이름
         - file_name: 파일 이름
+        - pageNo: 페이지 번호
+        - pageSize: 페이지 크기
+        - nodeType: 노드 타입
+        - searchText: 검색어
+        - sortOption: 정렬 옵션
+        - sortDirection: 정렬 방향
         - ResponseGetMapTopologyT 객체 반환
         """
 
@@ -222,6 +197,12 @@ class RBAmrMapSDK(RBBaseSDK):
         req.id = req_id
         req.mapName = map_name
         req.fileName = file_name
+        req.pageNo = pageNo if pageNo is not None else 1
+        req.pageSize = pageSize if pageSize is not None else 10
+        req.nodeType = nodeType if nodeType is not None else ""
+        req.searchText = searchText if searchText is not None else ""
+        req.sortOption = sortOption if sortOption is not None else ""
+        req.sortDirection = sortDirection if sortDirection is not None else ""
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(

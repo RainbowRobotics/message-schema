@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import StreamingResponse
 
 from .map_schema import (
     ResponseMapListPD,
@@ -52,12 +53,20 @@ async def set_map_cloud(robot_model: str, request: RequestSetMapCloudPD) -> Resp
     return await amr_map_service.set_map_cloud(robot_model, request)
 
 @amr_map_router.get("/{robot_model}/map/getTopology", summary="맵 토폴로지 조회", description="맵 토폴로지 조회")
-async def get_map_topology(robot_model: str, mapName: str, fileName: str) -> ResponseGetMapTopologyPD:
-    return await amr_map_service.get_map_topology(robot_model, mapName, fileName)
+async def get_map_topology(robot_model: str, mapName: str, fileName: str, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyPD:
+    return await amr_map_service.get_map_topology(robot_model, mapName, fileName, pageNo=pageNo, pageSize=pageSize, nodeType=nodeType, searchText=searchText, sortOption=sortOption, sortDirection=sortDirection)
 
-# @amr_map_router.post("/{robot_model}/map/setTopology", summary="맵 토폴로지 설정", description="맵 토폴로지 설정")
-# async def set_map_topology(robot_model: str, request: RequestSetMapTopologyPD) -> ResponseSetMapTopologyPD:
-#     return await amr_map_service.set_map_topology(robot_model, request)
+@amr_map_router.post("/{robot_model}/map/setTopology", summary="맵 토폴로지 설정", description="맵 토폴로지 설정")
+async def set_map_topology(robot_model: str, request: RequestSetMapTopologyPD) -> ResponseSetMapTopologyPD:
+    return await amr_map_service.set_map_topology(robot_model, request)
+
+@amr_map_router.get("/{robot_model}/map/getFile", summary="맵 파일 반환", description="맵 파일 반환")
+async def get_map_file(robot_model: str, mapName: str, fileName: str) -> StreamingResponse:
+    return await amr_map_service.get_map_file(robot_model, mapName, fileName)
+
+@amr_map_router.get("/map/getFileProgress/{transfer_id}", summary="맵 파일 진행 상태 조회", description="맵 파일 진행 상태 조회")
+async def get_map_file_progress(transfer_id: str):
+    return await amr_map_service.get_map_file_progress(transfer_id)
 
 # @amr_map_router.get("/{robot_model}/map/loadMap", summary="맵 로드", description="맵 로드")
 # async def load_map(robot_model: str, request: RequestMapLoadPD) -> ResponseMapLoadPD:

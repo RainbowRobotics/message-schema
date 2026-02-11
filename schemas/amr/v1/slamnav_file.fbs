@@ -1,0 +1,69 @@
+namespace SLAMNAV;
+
+
+/*
+    category    :       RPC
+    response    :       ???
+    topic       :       {robotType}/file/getFileMeta
+    usage       :       파일 메타 조회
+    field
+        - file_path     :       파일 경로
+        - preferred_chunk_size:       원하는 청크 크기 (0이면 기본값. 64KB ~ 100MB)
+        - file_size       :       파일 크기
+        - chunk_size      :       청크 크기
+        - total_chunks    :       청크 개수
+        - mime            :       파일 타입
+        - sha256          :       파일 해시. 없으면 ""
+        - result          :       결과
+        - message         :       메시지
+*/
+table RequestGetFileMeta {
+  file_path: string;
+  preferred_chunk_size: uint;
+}
+table ResponseGetFileMeta {
+  file_size: ulong;
+  chunk_size: uint;
+  total_chunks: uint;
+
+  mime: string;
+  sha256: string;
+
+  result: string;
+  message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       ???
+    topic       :       {robotType}/file/getFileChunk
+    usage       :       맵 파일 청크 조회
+    field
+        - file_path     :       파일 경로
+        - chunk_index   :       청크 인덱스
+        - total_chunks  :       청크 개수
+        - offset        :       청크 오프셋
+        - result        :       결과
+        - message       :       메시지
+        - data          :       청크 데이터
+        - eof           :       파일 끝 여부
+*/
+table RequestGetFileChunk {
+  file_path: string;
+
+  chunk_index: uint;
+  chunk_size: uint;
+}
+table ResponseGetFileChunk {
+  file_path: string;
+
+  chunk_index: uint;
+  total_chunks: uint;
+  offset: ulong;
+
+  data: [ubyte];   // raw bytes
+  eof: bool;
+
+  result: string;  // "accept"/"reject"
+  message: string;
+}
