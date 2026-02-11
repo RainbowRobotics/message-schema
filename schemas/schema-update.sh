@@ -115,7 +115,7 @@ cleanup_stale_worktrees() {
 print_string "info" "=== STEP 1: Sync $SCHEMA_DIR from $REMOTE_NAME/main ==="
 cleanup_stale_worktrees
 
-# SCHEMA_DIR 밖 변경은 그대로 둔다. SCHEMA_DIR만 잠깐 비워서 동기화.
+# SCHEMA_DIR 밖 변경은 그대로 두고 SCHEMA_DIR만 잠깐 비워서 동기화.
 SCHEMA_STASH_HASH="$(stash_schema_if_changed)"
 if [ -n "$SCHEMA_STASH_HASH" ]; then
   print_string "info" "Stashed local $SCHEMA_DIR changes"
@@ -130,6 +130,23 @@ if ! (
   GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR" >/dev/null
 ); then
   print_string "error" "subtree pull failed (conflict)"
+  echo ""
+  print_string "warning" "=== Conflict files ==="
+  git -C "$TMP_WORKTREE" diff --name-only --diff-filter=U -- "$SCHEMA_DIR" || true
+  echo ""
+  print_string "warning" "=== Git status (short) ==="
+  git -C "$TMP_WORKTREE" status --short -- "$SCHEMA_DIR" || true
+  echo ""
+  print_string "info" "This conflict occurred in a temporary worktree."
+  print_string "info" "Apply equivalent conflict resolution in your main workspace, then:"
+  echo "  1) edit conflicted files under $SCHEMA_DIR"
+  echo "  2) git add $SCHEMA_DIR"
+  echo "  3) git commit"
+  echo "  4) git push origin $CURRENT_BRANCH"
+  echo "  5) make schema-update"
+  echo ""
+  print_string "info" "Tip: open the first conflicted file in your workspace:"
+  echo "  code -g \$(git -C \"$TMP_WORKTREE\" diff --name-only --diff-filter=U -- \"$SCHEMA_DIR\" | head -n 1)"
   print_string "warning" "Resolve conflict on your branch first, commit, then rerun"
   restore_schema_stash "$SCHEMA_STASH_HASH" || true
   exit 1
@@ -137,7 +154,7 @@ fi
 
 TMP_COMMIT="$(git -C "$TMP_WORKTREE" rev-parse HEAD)"
 
-# 현재 브랜치 워킹트리에 SCHEMA_DIR만 반영 (outside untouched)
+# 현재 브랜치 워킹트리에 SCHEMA_DIR만 반영
 git restore --source="$TMP_COMMIT" --staged --worktree -- "$SCHEMA_DIR"
 
 # 사용자 로컬 schema 변경 복원
