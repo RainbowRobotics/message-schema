@@ -22,6 +22,7 @@ table RequestGetFileMeta {
   preferred_chunk_size: uint;
 }
 table ResponseGetFileMeta {
+  file_path: string;
   file_size: ulong;
   chunk_size: uint;
   total_chunks: uint;
