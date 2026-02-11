@@ -37,7 +37,6 @@ if [ ! -d "$SCHEMA_DIR" ]; then
   exit 1
 fi
 
-# 사용자 요구: schema-update.sh는 schemas 내부에 위치
 if [ "$SCRIPT_DIR" != "$MAIN_REPO/$SCHEMA_DIR" ]; then
   print_string "error" "$SCRIPT_NAME must be located at $SCHEMA_DIR/$SCRIPT_NAME"
   exit 1
@@ -58,6 +57,7 @@ SUCCESS=false
 SCHEMA_STASH_HASH=""
 OUTSIDE_STASH_HASH=""
 LOCAL_SCHEMA_COMMITTED=false
+LAST_COMMIT_SHA=""
 
 stash_if_changed() {
   local msg="$1"
@@ -98,8 +98,15 @@ restore_stash() {
 
   print_string "info" "Restoring $label from $ref..."
   if ! git stash pop "$ref"; then
-    print_string "warning" "Failed to auto-restore $label from $ref"
-    return 1
+    print_string "warning" "Conflict detected while restoring. Trying stash apply..."
+    if git stash apply "$ref"; then
+      print_string "info" "Applied $label successfully (stash kept at $ref for safety)"
+      print_string "warning" "Please resolve any conflicts and drop the stash manually if needed"
+      return 0
+    else
+      print_string "warning" "Failed to auto-restore $label from $ref"
+      return 1
+    fi
   fi
   return 0
 }
@@ -110,6 +117,16 @@ cleanup_on_exit() {
   fi
 
   # 실패 시 자동 복구 시도. merge 중이면 stash 유지.
+  # 커밋 rollback
+  if [ "$LOCAL_SCHEMA_COMMITTED" = true ] && [ -n "$LAST_COMMIT_SHA" ]; then
+    CURRENT_HEAD="$(git rev-parse HEAD)"
+    if [ "$CURRENT_HEAD" = "$LAST_COMMIT_SHA" ]; then
+      print_string "warning" "Rolling back failed commit..."
+      git reset --soft HEAD~1
+      print_string "info" "Commit rolled back. Changes are staged."
+    fi
+  fi
+
   restore_stash "$OUTSIDE_STASH_HASH" "non-schema changes" || true
   restore_stash "$SCHEMA_STASH_HASH" "$SCHEMA_DIR changes" || true
 }
@@ -140,8 +157,22 @@ git fetch "$REMOTE_NAME" main
 
 # 에디터 의존 제거
 if ! GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"; then
-  print_string "error" "subtree pull failed (conflict or merge issue)"
-  print_string "warning" "Resolve conflict and commit, then run again"
+  print_string "error" "subtree pull failed"
+
+  # 충돌 상세 정보 표시
+  if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
+    print_string "info" "Conflicted files:"
+    git diff --name-only --diff-filter=U | while read -r file; do
+      print_string "warning" "  - $file"
+    done
+    echo ""
+    print_string "info" "To resolve:"
+    print_string "info" "  1. Fix conflicts in the files above"
+    print_string "info" "  2. git add <resolved-files>"
+    print_string "info" "  3. git commit"
+    print_string "info" "  4. Run this script again"
+  fi
+
   exit 1
 fi
 
@@ -162,7 +193,17 @@ if [ -n "$(git status --porcelain=v1 -uall -- "$SCHEMA_DIR")" ]; then
   echo ""
   git add -A -- "$SCHEMA_DIR"
   git commit -m "Update $SCHEMA_DIR from $REMOTE_NAME/main"
-  git push origin "$CURRENT_BRANCH"
+  LAST_COMMIT_SHA="$(git rev-parse HEAD)"
+
+  if ! git push origin "$CURRENT_BRANCH"; then
+    print_string "error" "Push failed"
+    print_string "warning" "Rolling back commit..."
+    git reset --soft HEAD~1
+    print_string "info" "Commit rolled back. Changes are staged in $SCHEMA_DIR"
+    print_string "info" "Fix the issue (e.g., pull remote changes) and run the script again"
+    exit 1
+  fi
+
   LOCAL_SCHEMA_COMMITTED=true
   print_string "success" "Pushed to origin/$CURRENT_BRANCH"
 else
