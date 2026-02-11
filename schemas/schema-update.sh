@@ -29,7 +29,6 @@ done
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-
 cd "$MAIN_REPO"
 
 if [ ! -d "$SCHEMA_DIR" ]; then
@@ -58,110 +57,71 @@ TMP_WORKTREE=""
 TMP_COMMIT=""
 TMP_BASE_DIR="$MAIN_REPO/.git/schema-update-tmp"
 
-stash_schema_if_changed() {
-  local before after
-  before="$(git rev-parse -q --verify refs/stash 2>/dev/null || true)"
-  git stash push -u -m "schema-update-schema-stash-$(date +%s)" -- "$SCHEMA_DIR" >/dev/null 2>&1 || true
-  after="$(git rev-parse -q --verify refs/stash 2>/dev/null || true)"
-  if [ -n "$after" ] && [ "$before" != "$after" ]; then
-    echo "$after"
-  else
-    echo ""
-  fi
-}
+print_string "info" "=== STEP 1: Pull $REMOTE_NAME/main into $SCHEMA_DIR ==="
 
-stash_ref_from_hash() {
-  local hash="$1"
-  git stash list --format='%gd %H' | awk -v h="$hash" '$2==h{print $1; exit}'
-}
-
-restore_schema_stash() {
-  local hash="$1"
-  [ -z "$hash" ] && return 0
-  local ref
-  ref="$(stash_ref_from_hash "$hash")"
-  [ -z "$ref" ] && return 0
-  print_string "info" "Restoring schema changes from $ref..."
-  if ! git stash pop "$ref"; then
-    print_string "error" "Failed to restore schema stash ($ref)"
-    print_string "warning" "Resolve conflicts manually, then rerun schema-update"
-    return 1
-  fi
-  return 0
-}
-
-cleanup() {
-  if [ -n "$TMP_WORKTREE" ]; then
-    git worktree remove --force "$TMP_WORKTREE" >/dev/null 2>&1 || true
-    rm -rf "$TMP_WORKTREE" >/dev/null 2>&1 || true
-  fi
-}
-trap cleanup EXIT INT TERM
-
-cleanup_stale_worktrees() {
-  mkdir -p "$TMP_BASE_DIR"
-  git worktree prune >/dev/null 2>&1 || true
-
-  # 이전 실행에서 남은 schema-update 임시 worktree 자동 정리
-  for d in "$TMP_BASE_DIR"/wt.*; do
-    [ -e "$d" ] || continue
-    git worktree remove --force "$d" >/dev/null 2>&1 || true
-    rm -rf "$d" >/dev/null 2>&1 || true
-  done
-
-  git worktree prune >/dev/null 2>&1 || true
-}
-
-print_string "info" "=== STEP 1: Sync $SCHEMA_DIR from $REMOTE_NAME/main ==="
-cleanup_stale_worktrees
-
-# SCHEMA_DIR 밖 변경은 그대로 두고 SCHEMA_DIR만 잠깐 비워서 동기화.
-SCHEMA_STASH_HASH="$(stash_schema_if_changed)"
-if [ -n "$SCHEMA_STASH_HASH" ]; then
-  print_string "info" "Stashed local $SCHEMA_DIR changes"
+# SCHEMA_DIR 이외 워킹트리가 깨끗해야 실행.
+if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
+  print_string "error" "SCHEMA_DIR 이외 영역에 staged 변경사항이 있습니다."
+  print_string "info" "SCHEMA_DIR 이외에 수정하신 내용은 먼저 커밋/푸시(또는 별도 정리) 후 schema-update를 다시 실행해 주세요."
+  exit 1
 fi
 
-TMP_WORKTREE="$(mktemp -d "$TMP_BASE_DIR/wt.XXXXXX")"
-git worktree add --detach "$TMP_WORKTREE" HEAD >/dev/null
+if [ -n "$(git status --porcelain=v1 -uall -- . ":!$SCHEMA_DIR")" ]; then
+  print_string "error" "SCHEMA_DIR 이외 영역에 수정사항이 있습니다."
+  print_string "info" "SCHEMA_DIR 이외에 수정하신 내용은 먼저 커밋/푸시(또는 별도 정리) 후 schema-update를 다시 실행해 주세요."
+  exit 1
+fi
 
-if ! (
-  cd "$TMP_WORKTREE"
-  git fetch "$REMOTE_NAME" main >/dev/null
-  GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR" >/dev/null
-); then
+# SCHEMA_DIR 내부 변경은 먼저 로컬 커밋해서 subtree pull 가능 상태로 만든다.
+if [ -n "$(git status --porcelain=v1 -uall -- "$SCHEMA_DIR")" ]; then
+  print_string "info" "$SCHEMA_DIR 로컬 변경을 먼저 커밋합니다."
+  git add -A -- "$SCHEMA_DIR"
+  git commit -m "WIP: local $SCHEMA_DIR changes before sync"
+fi
+
+print_string "info" "Fetching $REMOTE_NAME/main..."
+git fetch "$REMOTE_NAME" main
+
+# 현재 워킹트리에서 pull
+if ! GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"; then
   print_string "error" "subtree pull failed (conflict)"
-  print_string "warning" "Resolve conflict on your branch first, commit, then rerun"
-  restore_schema_stash "$SCHEMA_STASH_HASH" || true
+  echo ""
+  print_string "warning" "=== Conflict files ==="
+  git diff --name-only --diff-filter=U -- "$SCHEMA_DIR" || true
+  echo ""
+  print_string "warning" "=== Git status (short) ==="
+  git status --short -- "$SCHEMA_DIR" || true
+  echo ""
+  print_string "info" "Resolve conflicts in IDE (conflict markers are in current workspace), then:"
+  echo "  1) git add $SCHEMA_DIR"
+  echo "  2) git commit"
+  echo "  3) git push origin $CURRENT_BRANCH"
+  echo "  4) make schema-update"
   exit 1
 fi
 
-TMP_COMMIT="$(git -C "$TMP_WORKTREE" rev-parse HEAD)"
-
-# 현재 브랜치 워킹트리에 SCHEMA_DIR만 반영
-git restore --source="$TMP_COMMIT" --staged --worktree -- "$SCHEMA_DIR"
-
-# 사용자 로컬 schema 변경 복원
-if ! restore_schema_stash "$SCHEMA_STASH_HASH"; then
-  exit 1
-fi
-SCHEMA_STASH_HASH=""
-
-print_string "success" "Schema sync applied"
+print_string "success" "Pulled successfully"
 
 print_string "info" "=== STEP 2: Commit/push main repo ($SCHEMA_DIR only) ==="
+
 if [ -n "$(git status --porcelain=v1 -uall -- "$SCHEMA_DIR")" ]; then
   echo ""
   git status --short -uall -- "$SCHEMA_DIR"
   echo ""
   git add -A -- "$SCHEMA_DIR"
   git commit -m "Update $SCHEMA_DIR from $REMOTE_NAME/main"
+fi
+
+# pull로 생성된 커밋(또는 위 commit)이 있으면 메인 레포 푸시
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$CURRENT_BRANCH" 2>/dev/null || echo "")" ]; then
   git push origin "$CURRENT_BRANCH"
   print_string "success" "Pushed to origin/$CURRENT_BRANCH"
 else
-  print_string "info" "No $SCHEMA_DIR changes to commit"
+  print_string "info" "No new commit to push on $CURRENT_BRANCH"
 fi
 
 print_string "info" "=== STEP 3: Publish $REMOTE_NAME schema branch ==="
+
 BR="schema/from-$(git config --get user.email | sed 's/@.*//' | tr -cd '[:alnum:]')"
 if [ -z "$BR" ] || [ "$BR" = "schema/from-" ]; then
   print_string "error" "Cannot determine schema branch from git user.email"
