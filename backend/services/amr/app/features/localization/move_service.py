@@ -107,7 +107,6 @@ class AmrMoveService:
                 print("[moveGoal] DB Exception : ", e)
 
             return model.to_dict()
-
         except ServiceException as e:
             print("[moveGoal] ServiceException : ", e.message, e.status_code)
             model.status_change(AmrResponseStatusEnum.FAIL)
