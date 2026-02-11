@@ -237,33 +237,6 @@ table ResponseMapCurrent {
     message: string;
 }
 
-
-/*
-    category    :       RPC
-    response    :       ???
-    topic       :       {robotType}/map/getFile
-    usage       :       맵 파일 조회
-    field
-        - map_name      :       맵 이름
-        - file_name     :       파일 이름
-        - size          :       cloud 데이터 크기 ???
-        - data          :       클라우드 데이터
-*/
-table RequestGetMapFile {
-    id: string;
-    map_name: string;
-    file_name: string;
-}
-table ResponseGetMapFile {
-    id: string;
-    map_name: string;
-    file_name: string;
-    data: [ubyte];
-    result: string;
-    message: string;
-}
-
-
 /*
     category    :       RPC
     response    :       ???
@@ -320,16 +293,6 @@ table ResponseSetMapCloud {
 }
 
 
-// TODO: 함수 용도 확인 필요
-table RequestGetMapPipe {}
-table ResponseGetMapPipe {}
-
-
-// TODO: 함수 용도 확인 필요
-table RequestGetMapTiles {}
-table ResponseGetMapTiles {}
-
-
 /*
     category    :       RPC
     response    :       ???
@@ -342,12 +305,13 @@ table ResponseGetMapTiles {}
 table RequestSetMapTopology {
     id: string;
     map_name: string;
+    file_name: string;
     data: [Node];
 }
 table ResponseSetMapTopology {
     id: string;
     map_name: string;
-    // data: [Node]; -> too big
+    file_name: string;
     result: string;
     message: string;
 }
@@ -376,7 +340,6 @@ table RequestGetMapTopology {
     file_name: string;
     page_no: int;
     page_size: int;
-    total_page: int;
     node_type: string;
     search_text: string;
     sort_option: string;
