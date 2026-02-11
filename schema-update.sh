@@ -52,6 +52,10 @@ if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
 fi
 
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+SCHEMA_STASH_HASH=""
+TMP_WORKTREE=""
+TMP_COMMIT=""
+TMP_BASE_DIR="$MAIN_REPO/.git/schema-update-tmp"
 
 print_string "info" "=== STEP 1: Pull $REMOTE_NAME/main into $SCHEMA_DIR ==="
 
