@@ -1,20 +1,28 @@
 import time
-from typing import Any, Dict
-import uuid
+
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
-from rb_sdk.amr import RBAmrSDK
 from rb_modules.log import rb_log
-from rb_utils.service_exception import ServiceException
-from .map_schema import RequestSetMapCloudPD, RequestSetMapTopologyPD, ResponseGetMapCloudPD, ResponseGetMapTopologyPD, ResponseMapListPD, RequestGetMapCloudPD, ResponseSetMapCloudPD, ResponseSetMapTopologyPD
+from rb_sdk.amr import RBAmrSDK
 from rb_utils.parser import t_to_dict
+from rb_utils.service_exception import ServiceException
+
 from .domain.map import MapModel, TransferState
+from .map_schema import (
+    RequestSetMapCloudPD,
+    RequestSetMapTopologyPD,
+    ResponseGetMapCloudPD,
+    ResponseGetMapTopologyPD,
+    ResponseMapListPD,
+    ResponseSetMapCloudPD,
+    ResponseSetMapTopologyPD,
+)
 
 rb_amr_sdk = RBAmrSDK()
 
 class AmrMapService:
     def __init__(self):
-        self.transfer_store:Dict[str, TransferState] = {}
+        self.transfer_store:dict[str, TransferState] = {}
 
     async def get_map_list(self, robot_model: str) -> ResponseMapListPD:
         """
