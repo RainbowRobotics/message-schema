@@ -35,25 +35,25 @@ class Zenoh_Controller(BaseController):
     def on_init(self, state_dicts):
         self._state_dicts = state_dicts
 
-        # ✅ 이미 생성되어 있으면 재사용
+        # 이미 생성되어 있으면 재사용
         if self._zenoh_client is None:
             self._zenoh_client = ZenohClient()
 
             if self._zenoh_client is None:
                 raise RuntimeError("Zenoh client not initialized")
 
-            # ✅ 세션 대기를 비동기적으로 처리 (블로킹 최소화)
+            # 세션 대기를 비동기적으로 처리 (블로킹 최소화)
             # 세션이 없어도 publish는 내부 큐에 쌓여서 나중에 전송됨
             start_time = time.time()
 
             while self._zenoh_client.session is None:
-                # ✅ 0.5초만 기다리고 진행 (3초 → 0.5초)
+                # 0.5초만 기다리고 진행 (3초 → 0.5초)
                 if time.time() - start_time > 0.5:
                     print("[WARNING] Zenoh session not ready, continuing anyway", flush=True)
                     break
-                time.sleep(0.01)  # ✅ 100ms → 10ms로 단축
+                time.sleep(0.01)  # 100ms → 10ms로 단축
 
-        # ✅ 초기 상태 업데이트 시도 (실패해도 계속 진행)
+        # 초기 상태 업데이트 시도 (실패해도 계속 진행)
         for task_id in self._state_dicts:
             try:
                 self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
@@ -68,7 +68,7 @@ class Zenoh_Controller(BaseController):
                 rb_log.warning(f"initial state update skipped: {e}")
 
     def on_start(self, task_id: str) -> None:
-        if self._zenoh_client is not None:
+        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
             req = Request_Program_At_StartT()
             req.taskId = task_id
             self._zenoh_client.publish("rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
@@ -171,7 +171,9 @@ class Zenoh_Controller(BaseController):
         self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.IDLE)
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 
-        if self._zenoh_client is not None:
+        print(f"self._state_dicts.get('parent_process_id'): {self._state_dicts.get('parent_process_id')}", flush=True)
+
+        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
             req = Request_Program_At_EndT()
             req.taskId = task_id
             self._zenoh_client.publish("rrs/program/at_end", flatbuffer_req_obj=req, flatbuffer_buf_size=8)

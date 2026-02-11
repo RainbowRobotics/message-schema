@@ -295,6 +295,35 @@ async def init_indexes(db: AsyncIOMotorDatabase):
         unique=True
     )
 
+    # tasks/steps 조회 최적화
+    await ensure_index(
+        db,
+        "tasks",
+        [("programId", 1), ("order", 1)],
+        name="tasks_program_order_idx",
+    )
+
+    await ensure_index(
+        db,
+        "tasks",
+        [("parentTaskId", 1), ("type", 1)],
+        name="tasks_parent_type_idx",
+    )
+
+    await ensure_index(
+        db,
+        "steps",
+        [("taskId", 1), ("order", 1)],
+        name="steps_task_order_idx",
+    )
+
+    await ensure_index(
+        db,
+        "steps",
+        [("programId", 1), ("taskId", 1)],
+        name="steps_program_task_idx",
+    )
+
 
 async def init_db(app: FastAPI, uri: str, db_name: str):
     """

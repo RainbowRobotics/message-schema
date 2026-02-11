@@ -33,6 +33,7 @@ class Step:
         step_id: str,
         name: str,
         variable: dict[str, Any] | None = None,
+        task_id: str | None = None,
         disabled: bool | None = None,
         method: str | None = None,
         func: Callable | None = None,
@@ -50,6 +51,7 @@ class Step:
         self._start_ts: float = 0
         self.step_id = step_id
         self.name = name
+        self.task_id = task_id
         self.variable = variable
         self.disabled = disabled
         self.method = method
@@ -85,6 +87,12 @@ class Step:
         if d.get("method") == "SubTask":
             return SubTaskStep.from_dict(d)
 
+        if d.get("funcName") == "rb_base_sdk.call_event_tree":
+            return CallEventStep.from_dict(d)
+
+        if d.get("method") == "CallEvent":
+            return CallEventStep.from_dict(d)
+
         if d.get("method") == "Sync":
             return SyncStep.from_dict(d)
 
@@ -93,6 +101,7 @@ class Step:
             name=d["name"],
             memo=d.get("memo"),
             variable=d.get("variable"),
+            task_id=d.get("taskId"),
             func_name=d.get("funcName"),
             post_func_name=d.get("postFuncName"),
             not_ast_eval=d.get("notAstEval"),
@@ -107,6 +116,7 @@ class Step:
         return {
             "stepId": self.step_id,
             "name": self.name,
+            "taskId": self.task_id,
             "disabled": self.disabled,
             "variable": self.variable,
             "funcName": self.func_name,
@@ -118,15 +128,30 @@ class Step:
         }
 
     def to_py_string(self, depth: int = 0):
+        raw_expr_strings = {"event_sub_tree_list"}
+
         def _indent(s: str, n: int) -> str:
             pad = " " * n
             return "\n".join(pad + line if line else line for line in s.splitlines())
 
-        def format_dict(d: dict, indent: int) -> str:
+        def format_value(v: Any) -> str:
+            if isinstance(v, str):
+                if v in raw_expr_strings:
+                    return v
+                return repr(v)
+            if isinstance(v, dict):
+                return format_dict(v)
+            if isinstance(v, list):
+                return "[" + ", ".join(format_value(x) for x in v) + "]"
+            if callable(v):
+                return getattr(v, "__name__", str(v))
+            return repr(v)
+
+        def format_dict(d: dict) -> str:
             pad = " " * 4
             items = []
             for k, v in d.items():
-                items.append(f"{pad}{repr(k)}: {repr(v)},")
+                items.append(f"{pad}{repr(k)}: {format_value(v)},")
             return "{\n" + "\n".join(items) + "\n" + " " + "}"
 
         if self.children:
@@ -139,18 +164,18 @@ class Step:
 
         variable_block = ""
         if self.variable:
-            v = format_dict(self.variable, depth)
+            v = format_dict(self.variable)
             variable_block = _indent(f"variable={v},\n\n", depth + 4)
 
         # args block
         args_block = ""
         if self.args:
-            a = format_dict(self.args, depth + 4)
+            a = format_dict(self.args)
             args_block = _indent(f"args={a},\n\n", depth + 4)
 
         post_args_block = ""
         if self.post_args:
-            a = format_dict(self.post_args, depth + 4)
+            a = format_dict(self.post_args)
             post_args_block = _indent(f"post_args={a},\n\n", depth + 4)
 
         other_kwargs_block = ""
@@ -178,6 +203,11 @@ class Step:
                 if self.func_name
                 else ""
             )
+            + (
+                _indent(f"func={format_value(self.func)},\n\n", depth + 4)
+                if self.func is not None and self.func_name is None
+                else ""
+            )
             + args_block
             + (
                 _indent(f"post_func_name={repr(self.post_func_name)},\n\n", depth + 4)
@@ -199,6 +229,10 @@ class Step:
     def _pre_execute(
         self, ctx: ExecutionContext, *, reset_condition_result: bool = True, is_skip: bool = False
     ):
+        # parent/self owner 변수 스냅샷을 매 스텝 직전에 동기화
+        if hasattr(ctx, "sync_state_variables"):
+            ctx.sync_state_variables()
+
         if reset_condition_result:
             condition_map: dict[str, bool] = ctx.data.get("condition_map", {})
 
@@ -231,30 +265,36 @@ class Step:
 
     def execute_children(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
         """자식 Step들을 순차적으로 실행"""
-        if len(self.children) > 0:
+        has_children = len(self.children) > 0
+        if has_children:
             ctx.current_depth += 1
 
         current_target_step_id = target_step_id
 
-        for child in self.children:
-            try:
-                child_target_step_id = getattr(child, "target_step_id", None)
-                if (
-                    child_target_step_id is not None
-                    and child_target_step_id == current_target_step_id
-                ):
-                    continue
+        try:
+            for child in self.children:
+                before_scope_len = len(getattr(ctx, "_arg_scope", []))
+                try:
+                    child_target_step_id = getattr(child, "target_step_id", None)
+                    if (
+                        child_target_step_id is not None
+                        and child_target_step_id == current_target_step_id
+                    ):
+                        continue
 
-                if current_target_step_id is not None and child.step_id == current_target_step_id:
-                    current_target_step_id = None
-                    ctx.data["finding_jump_to_step"] = False
+                    if current_target_step_id is not None and child.step_id == current_target_step_id:
+                        current_target_step_id = None
+                        ctx.data["finding_jump_to_step"] = False
 
-                child.execute(ctx, target_step_id=current_target_step_id)
-            finally:
-                ctx.pop_args()
-
-        if len(self.children) > 0:
-            ctx.current_depth -= 1
+                    child.execute(ctx, target_step_id=current_target_step_id)
+                finally:
+                    after_scope_len = len(getattr(ctx, "_arg_scope", []))
+                    while after_scope_len > before_scope_len:
+                        ctx.pop_args()
+                        after_scope_len -= 1
+        finally:
+            if has_children:
+                ctx.current_depth -= 1
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None, _post_run: bool = False):
         """단계 실행"""
@@ -727,6 +767,12 @@ class ConditionStep(Step):
         if target_step_id is not None:
             is_skip = is_skip or find_target_step(self)
 
+        # 점프 탐색 중이면 조건 평가를 건너뛰고 target child 탐색만 수행
+        if is_skip:
+            self.execute_children(ctx, target_step_id=target_step_id)
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
         condition_map = ctx.data.get("condition_map")
 
         if condition_map is None:
@@ -990,8 +1036,6 @@ class SubTaskStep(Step):
             self._post_execute(ctx, ignore_step_interval=True)
             return
 
-        self._pre_execute(ctx)
-
         ctx.emit_next(self.step_id)
 
         ctx.check_stop()
@@ -1035,6 +1079,162 @@ class SubTaskStep(Step):
 
         self._post_execute(ctx, ignore_step_interval=True)
 
+        ctx.emit_done(self.step_id)
+
+
+class CallEventStep(Step):
+    """이벤트 서브 태스크 Step (별도 프로세스 실행)"""
+
+    _class_name = "CallEventStep"
+
+    def __init__(
+        self,
+        *,
+        step_id: str,
+        name: str,
+        process_id: str | None = None,
+        index: int | None = None,
+        run_mode: Literal["SYNC", "ASYNC"] | None = None,
+        disabled: bool | None = None,
+        args: dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            step_id=step_id,
+            name=name,
+            method="CallEvent",
+            args=args,
+            process_id=process_id,
+            disabled=disabled,
+        )
+        self.disabled = disabled
+        self.args = args or {}
+
+        self.process_id = process_id if process_id is not None else self.args.get("process_id")
+        self.index = index if index is not None else int(self.args.get("index", 0))
+        self.run_mode = run_mode if run_mode is not None else self.args.get("run_mode", "ASYNC")
+
+    @staticmethod
+    def from_dict(d) -> "CallEventStep":
+        args = d.get("args", {}) or {}
+
+        process_id = d.get("processId") or args.get("process_id")
+        index = args.get("index", 0)
+        run_mode = (d.get("runMode") or args.get("run_mode") or "ASYNC")
+
+        return CallEventStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d.get("name") or "CallEvent",
+            process_id=process_id,
+            index=int(index),
+            run_mode=str(run_mode).upper(),
+            disabled=d.get("disabled"),
+            args=args,
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "method": "CallEvent",
+            "processId": self.process_id,
+            "index": self.index,
+            "runMode": self.run_mode,
+            "disabled": self.disabled,
+            "args": self.args,
+        }
+
+    def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None, _post_run: bool = False):
+        is_skip = target_step_id is not None and target_step_id != self.step_id
+
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if self.disabled or is_skip:
+            self._post_execute(ctx, ignore_step_interval=True)
+            return
+
+        ctx.emit_next(self.step_id)
+        ctx.check_stop()
+
+        trees = ctx.state_dict.get("event_sub_tree_list", [])
+
+        # event_sub_tree_list가 없거나 비어있으면 스킵
+        if not trees:
+            print("[CallEventStep] No event_sub_tree_list, skipping", flush=True)
+            self._post_execute(ctx, ignore_step_interval=True)
+            ctx.emit_done(self.step_id)
+            return
+
+        tree: Step | None = None
+        if isinstance(trees, list) and 0 <= self.index < len(trees):
+            tree = trees[self.index]
+            if isinstance(tree, dict):
+                tree = Step.from_dict(tree)
+
+        if tree is None:
+            print("[CallEventStep] Cannot resolve tree, skipping", flush=True)
+            self._post_execute(ctx, ignore_step_interval=True)
+            ctx.emit_done(self.step_id)
+            return
+
+        task_id = (
+            self.process_id
+            if self.process_id is not None
+            else (tree.task_id if tree.task_id is not None else tree.step_id)
+        )
+
+        if task_id is None:
+            print("[CallEventStep] No valid task_id, skipping", flush=True)
+            self._post_execute(ctx, ignore_step_interval=True)
+            ctx.emit_done(self.step_id)
+            return
+
+        print(f"[CallEventStep] Spawning event task: {task_id}", flush=True)
+
+        executor_managed = bool(ctx.state_dict.get("executor_managed", False))
+        call_seq: int | None = None
+
+        if executor_managed and self.run_mode == "SYNC":
+            call_seq = int(ctx.state_dict.get("_event_call_seq", 0)) + 1
+            ctx.state_dict["_event_call_seq"] = call_seq
+            pending_map = dict(ctx.state_dict.get("event_start_pending_map", {}))
+            pending_map[task_id] = call_seq
+            ctx.state_dict["event_start_pending_map"] = pending_map
+
+        ctx.emit_event_sub_task_start(
+            event_task_id=task_id,
+            event_tree=tree,
+            step_id=self.step_id,
+            run_mode=self.run_mode,
+            call_seq=call_seq,
+        )
+
+        if executor_managed and self.run_mode == "SYNC":
+            # SYNC일 때만 이벤트 프로세스 시작(ready) 후 완료까지 대기
+            while dict(ctx.state_dict.get("event_start_pending_map", {})).get(task_id) == call_seq:
+                ctx.check_stop()
+                time.sleep(0.01)
+
+            rejected_map = dict(ctx.state_dict.get("event_start_rejected_map", {}))
+            rejected = rejected_map.get(task_id)
+            if isinstance(rejected, dict) and rejected.get("call_seq") == call_seq:
+                message = str(rejected.get("message") or f"Event sub task already running: {task_id}")
+                rejected_map.pop(task_id, None)
+                ctx.state_dict["event_start_rejected_map"] = rejected_map
+                ctx.emit_error(self.step_id, RuntimeError(message))
+                raise RuntimeError(message)
+
+        if executor_managed and self.run_mode == "SYNC":
+            # RUNNING 상태로 이벤트 자식 완료 대기
+            sync_children = list(ctx.state_dict.get("event_sync_children", []))
+            if task_id not in sync_children:
+                sync_children.append(task_id)
+                ctx.state_dict["event_sync_children"] = sync_children
+
+            while task_id in list(ctx.state_dict.get("event_sync_children", [])):
+                ctx.check_stop()
+                time.sleep(0.01)
+
+        self._post_execute(ctx, ignore_step_interval=True)
         ctx.emit_done(self.step_id)
 
 class SyncStep(Step):
@@ -1138,14 +1338,12 @@ class SyncStep(Step):
 
             current_phase = int(state.get("phase", 0))
 
-            # 현재 참가자 수: members 기준
-            parties_cur = int(state.get("parties_cur", 0))
-            if parties_cur <= 0:
-                members = list(ctx.sync_members.get(flag, []))
-                parties_cur = len(members)
-                state["parties_cur"] = parties_cur
-                state["parties_next"] = int(state.get("parties_next", parties_cur))
-                ctx.sync_state[flag] = state
+            # 현재 참가자 수는 상태 캐시가 아니라 members 실측값을 우선 사용한다.
+            members = list(ctx.sync_members.get(flag, []))
+            parties_cur = len(members)
+            state["parties_cur"] = parties_cur
+            state["parties_next"] = int(state.get("parties_next", parties_cur))
+            ctx.sync_state[flag] = state
 
             if parties_cur <= 1:
                 raise RuntimeError(
@@ -1196,7 +1394,10 @@ class SyncStep(Step):
 
                     # 중간에 parties가 줄어서(프로세스 제거) 프로세스가 사실상 마지막이 된 경우 처리
                     updated_arrived = int(updated.get("arrived", 0))
-                    updated_parties_cur = int(updated.get("parties_cur", parties_cur))
+                    updated_members = list(ctx.sync_members.get(flag, []))
+                    updated_parties_cur = len(updated_members)
+                    updated["parties_cur"] = updated_parties_cur
+                    ctx.sync_state[flag] = updated
 
                     if updated_parties_cur > 0 and updated_arrived >= updated_parties_cur:
                         next_parties = int(updated.get("parties_next", updated_parties_cur))
@@ -1255,7 +1456,13 @@ class SyncStep(Step):
         """Step을 딕셔너리로 직렬화"""
         base = super().to_dict()
         base.update({
+            "method": "Sync",
             "flag": self.flag,
             "timeout": self.timeout,
+            "args": {
+                **(base.get("args") or {}),
+                "flag": self.flag,
+                "timeout": self.timeout,
+            },
         })
         return base

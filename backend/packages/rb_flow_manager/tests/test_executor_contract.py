@@ -45,6 +45,18 @@ class ExecutorContractTest(unittest.TestCase):
         self.assertIn("done event requires step_id", text)
         self.assertIn("sub_task_done event requires sub_task_id and valid sub_task_type", text)
         self.assertIn("sub_task_start event requires sub_task_id and valid sub_task_type", text)
+        self.assertIn("event_sub_task_start event requires event_task_id", text)
+        self.assertIn("event_sub_task_start event requires event_tree", text)
+
+    def test_waiting_pause_does_not_propagate_to_parent_or_children(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn("if not is_wait:", text)
+        self.assertIn("if parent_process_id is not None:", text)
+        self.assertIn("self.pause(parent_process_id)", text)
+
+    def test_collect_sync_flags_ignores_disabled_steps(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn('if getattr(s, "disabled", False):', text)
 
 
 class ControllerExceptionPolicyTest(unittest.TestCase):

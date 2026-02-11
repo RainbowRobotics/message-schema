@@ -57,6 +57,7 @@ class Step_Base(BaseModel):
     disableCopy: bool = Field(default=False)
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
+    isStrict: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -213,13 +214,16 @@ class Request_Get_Program_ListPD(BaseModel):
     state: RB_Flow_Manager_ProgramState | None = None
     search_name: str | None = None
 
+class SubStepItem(TypedDict):
+    taskId: str
+    steps: list[Step_Tree_Base]
 
 class Response_Get_ProgramPD(BaseModel):
     program: Program_Base | None
     mainTasks: list[Task_Base] | None
     subTasks: list[Task_Base] | None
     mainSteps: dict[str, list[Step_Tree_Base]] | None
-    subSteps: dict[str, dict[str, list[Step_Tree_Base]]] | None
+    subSteps: dict[str, list[SubStepItem]] | None
 
 
 
@@ -268,7 +272,7 @@ class Response_Create_Program_And_TasksPD(BaseModel):
     mainTasks: list[Task_Base]
     subTasks: list[Task_Base]
     mainSteps: dict[str, list[Step_Tree_Base]]
-    subSteps: dict[str, dict[str, list[Step_Tree_Base]]] | None
+    subSteps: dict[str, list[SubStepItem]] | None
 
 
 class Response_Update_ProgramPD(BaseModel):

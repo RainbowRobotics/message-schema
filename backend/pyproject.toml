@@ -24,6 +24,7 @@ dev = [
 
 [tool.uv.workspace]
 members = ["services/*", "packages/*", "host"]
+exclude = ["packages/__pycache__"]
 
 
 [tool.black]
