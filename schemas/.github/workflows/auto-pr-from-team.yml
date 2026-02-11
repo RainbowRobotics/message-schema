@@ -40,20 +40,34 @@ jobs:
 
       - name: Get changed files
         id: changed_files
+        env:
+          GH_TOKEN: ${{ secrets.RB_MSG_SCHEMA_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          PR_EXISTS: ${{ steps.check_pr.outputs.exists }}
+          PR_NUMBER: ${{ steps.check_pr.outputs.pr_number }}
         run: |
           set -euo pipefail
 
-          for d in 50 200 1000; do
-            echo "fetch origin main with depth=$d"
-            git fetch origin main --depth=$d --prune
+          CHANGED_FILES=""
 
-            if git merge-base origin/main HEAD >/dev/null 2>&1; then
-              echo "merge-base found with depth=$d"
-              break
+          if [ "${PR_EXISTS}" = "true" ] && [ -n "${PR_NUMBER}" ]; then
+            echo "Fetch changed files from existing PR #${PR_NUMBER}"
+            CHANGED_FILES="$(gh pr diff "${PR_NUMBER}" --repo "${REPO}" --name-only || true)"
+          else
+            echo "Fetch changed files via compare API: main...${BRANCH}"
+            CHANGED_FILES="$(gh api "repos/${REPO}/compare/main...${BRANCH}" --jq '.files[].filename' || true)"
+          fi
+
+          # API 호출 실패 시 최소 git fetch로 폴백
+          if [ -z "${CHANGED_FILES// }" ]; then
+            echo "API result is empty, fallback to git diff"
+            git fetch origin main --depth=1 --prune
+            if ! git merge-base origin/main HEAD >/dev/null 2>&1; then
+              git fetch origin main --deepen=2000 --prune
             fi
-          done
-
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD || true)
+            CHANGED_FILES="$(git diff --name-only origin/main...HEAD || true)"
+          fi
 
           echo "Changed files:"
           echo "$CHANGED_FILES"

@@ -6,43 +6,44 @@ namespace SLAMNAV;
 // -----------       Data Structure         --------
 // -----------                              --------
 // -------------------------------------------------
+//
 
 /*
     category    :       Data Structure
     usage       :       맵 파일 정보
     field
-        - map_name      :       맵 이름
+        - file_name     :       파일 이름
         - created_at    :       생성 일시
-        - update_at     :       수정 일시
-        - map_type      :       맵 타입
-        - map_size      :       맵 크기
+        - updated_at    :       수정 일시
+        - file_type     :       파일 타입
+        - file_size     :       파일 크기
 */
 table MapFileInfo {
-    map_name: string;
+    file_name: string;
     created_at: string;
-    update_at: string;
-    map_type: string;
-    map_size: float;
+    updated_at: string;
+    file_type: string;
+    file_size: float;
 }
 
 /*
     category    :       Data Structure
     usage       :       맵 파일
     field
-        - file_name     :       파일 이름
+        - map_name      :       맵 이름
         - created_at    :       생성 일시
-        - update_at     :       수정 일시
-        - file_type     :       파일 타입
+        - updated_at    :       수정 일시
+        - map_type      :       맵 타입
         - cloud_info    :       클라우드 맵 정보
         - topo_info     :       토폴로지 맵 정보
 */
-table MapFile {
-    file_name: string;
+table MapInfo {
+    map_name: string;
     created_at: string;
-    update_at: string;
-    file_type: string;
-    cloud_info: MapFileInfo;
-    topo_info: MapFileInfo;
+    updated_at: string;
+    map_type: string;
+    cloud_info: [MapFileInfo];
+    topo_info: [MapFileInfo];
 }
 
 /*
@@ -58,9 +59,9 @@ table NodePose {
     x: float;
     y: float;
     z: float;
-    roll: float;
-    pitch: float;
-    yaw: float;
+    rx: float;
+    ry: float;
+    rz: float;
 }
 
 /*
@@ -72,9 +73,9 @@ table NodePose {
         - z_size        :       z 축 크기
 */
 table NodeSize {
-    x_size: float;
-    y_size: float;
-    z_size: float;
+    x: float;
+    y: float;
+    z: float;
 }
 
 /*
@@ -126,7 +127,7 @@ table Node {
         - x, y, z       :       3D 좌표
         - intensity     :       강도
 */
-struct CloudData {
+table CloudData {
     x: float;
     y: float;
     z: float;
@@ -142,6 +143,7 @@ struct CloudData {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/map/loadMap
     usage       :       맵 로드
     field
@@ -161,6 +163,7 @@ table ResponseMapLoad {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/map/loadTopo
     usage       :       토폴로지 맵 로드
     field
@@ -180,6 +183,7 @@ table ResponseTopoLoad {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/list
     usage       :       맵 목록 조회
     field
@@ -190,7 +194,7 @@ table RequestMapList {
 }
 table ResponseMapList {
     id: string;
-    list: [MapFile];
+    list: [MapInfo];
     result: string;
     message: string;
 }
@@ -198,6 +202,7 @@ table ResponseMapList {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/delete
     usage       :       맵 삭제
     field
@@ -217,6 +222,7 @@ table ResponseMapDelete {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/current
     usage       :       현재 맵 조회
     field
@@ -235,6 +241,7 @@ table ResponseMapCurrent {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/getFile
     usage       :       맵 파일 조회
     field
@@ -252,8 +259,7 @@ table ResponseGetMapFile {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    data:  [CloudData]; // data: [ubyte];
+    data: [ubyte];
     result: string;
     message: string;
 }
@@ -261,6 +267,7 @@ table ResponseGetMapFile {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/getCloud
     usage       :       맵 클라우드 조회
     field
@@ -278,8 +285,9 @@ table ResponseGetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    data: [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
     result: string;
     message: string;
 }
@@ -287,6 +295,7 @@ table ResponseGetMapCloud {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/setCloud
     usage       :       맵 클라우드 설정
     field
@@ -299,15 +308,14 @@ table RequestSetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    size: uint32;
-    data: [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
 }
 table ResponseSetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    // size: uint32;
-    // data: [Node]; -> too big
     result: string;
     message: string;
 }
@@ -325,6 +333,7 @@ table ResponseGetMapTiles {}
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/setTopology
     usage       :       토폴로지 맵 설정
     field
@@ -347,6 +356,7 @@ table ResponseSetMapTopology {
 
 /*
     category    :       RPC
+    response    :       ???
     topic       :       {robotType}/map/getTopology
     usage       :       토폴로지 맵 조회
     field
@@ -392,6 +402,7 @@ table ResponseGetMapTopology {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/mapping/start
     usage       :       매핑 시작
 */
@@ -406,6 +417,7 @@ table ResponseMappingStart {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/mapping/stop
     usage       :       매핑 중지
 */
@@ -420,6 +432,7 @@ table ResponseMappingStop {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/mapping/save
     usage       :       매핑 저장
     field
@@ -439,6 +452,7 @@ table ResponseMappingSave {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/mapping/cloudReload
     usage       :       Request 시, MappingCloud 에 모든 데이트를 쌓아서 publish
 */
@@ -460,9 +474,11 @@ table ResponseMappingCloudReload {
 
 /*
     category    :       Pub / Sub (Result)
-    topic       :       {robotType}/map/result/load
+    topic       :       {robotType}/map/result
     usage       :       맵 로드 결과 응답
     field
+        - command       :       Map Callback 명령 (string)
+            - "loadMap"  "loadTopo"
         - map_name      :       맵 이름
         - result        :       이동 결과
             - success       :       동작 성공.
@@ -472,6 +488,7 @@ table ResponseMappingCloudReload {
 */
 table ResultMapLoad {
     id: string;
+    command: string;
     map_name: string;
     result: string;
     message: string;

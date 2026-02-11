@@ -7,6 +7,7 @@ namespace SLAMNAV;
 // -----------                              --------
 // -------------------------------------------------
 
+
 /*
     category    :       Data Structure
     usage       :       Move Pose Structure
@@ -30,6 +31,7 @@ struct MovePose {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/goal
     usage       :       목표 노드로 이동
     field
@@ -58,6 +60,7 @@ table ResponseMoveGoal {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/target
     usage       :       목표 좌표로 이동
     field
@@ -83,6 +86,7 @@ table ResponseMoveTarget {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/move/stop
     usage       :       이동 중지
 */
@@ -98,6 +102,7 @@ table ResponseMoveStop {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/move/pause
     usage       :       이동 일시정지
 */
@@ -113,6 +118,7 @@ table ResponseMovePause {
 
 /*
     category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/move/resume
     usage       :       이동 재개
 */
@@ -128,6 +134,7 @@ table ResponseMoveResume {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/xLinear
     usage       :       X축 직선 이동
     field
@@ -150,6 +157,7 @@ table ResponseMoveXLinear {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/yLinear
     usage       :       Y축 직선 이동
     field
@@ -172,6 +180,7 @@ table ResponseMoveYLinear {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/circular
     usage       :       원형 이동
     field
@@ -197,6 +206,7 @@ table ResponseMoveCircular {
 
 /*
     category    :       RPC
+    response    :       Callback
     topic       :       {robotType}/move/rotate
     usage       :       제자리 회전
     field
@@ -251,6 +261,9 @@ table MoveJog {
     topic       :       {robotType}/move/result
     usage       :       이동 결과 응답
     field
+        - command       :       move Callback 명령 (string)
+            - "goal"  "target"
+            - "xLinear"  "yLinear"  "circular"  "rotate"
         - goal_id       :       목표 노드 ID
         - goal_name     :       목표 노드 이름
         - method        :       이동 방법
@@ -267,6 +280,7 @@ table MoveJog {
 */
 table ResultMove {
     id: string;
+    command: string;
     goal_id: string;
     goal_name: string;
     method: string;
@@ -280,7 +294,6 @@ table ResultMove {
     // map_name: string;
     // vel: [float];
     // cur_pose: MovePose;
-    // command: string;
     // remaining_dist: float;
     // bat_percent: int;
 }
