@@ -12,7 +12,6 @@ from rb_utils.service_exception import ServiceException
 from app.features.control.control_schema import (
     RequestControlChargeTriggerPD,
     RequestControlDetectMarkerPD,
-    RequestControlDockPD,
     RequestControlLedModePD,
     RequestControlMotorModePD,
     RequestControlSetObsBoxPD,
@@ -78,7 +77,7 @@ class ControlModel:
     result: str | None = None
     message: str | None = None
 
-    control: bool | None = None
+    switch: bool | None = None
     frequency: int | None = None
 
     # controlLed
@@ -118,17 +117,29 @@ class ControlModel:
         self.update_at = datetime.now(UTC)
 
 
-    def control_dock(self, req: RequestControlDockPD):
+    def control_dock(self):
         """
         """
-        self.command = req.command
+        self.command = AmrControlCommandEnum.CONTROL_DOCK
+        self.update_at = datetime.now(UTC)
+
+    def control_undock(self):
+        """
+        """
+        self.command = AmrControlCommandEnum.CONTROL_UNDOCK
+        self.update_at = datetime.now(UTC)
+
+    def control_dock_stop(self):
+        """
+        """
+        self.command = AmrControlCommandEnum.CONTROL_DOCK_STOP
         self.update_at = datetime.now(UTC)
 
     def set_control_led(self, req: RequestControlLedModePD):
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_LED
-        self.control = req.control
+        self.switch = req.switch
         self.color = req.color
         self.update_at = datetime.now(UTC)
 
@@ -136,7 +147,7 @@ class ControlModel:
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_MOTOR
-        self.control = req.control
+        self.switch = req.switch
         self.update_at = datetime.now(UTC)
 
     def get_control_safety_field(self):
@@ -212,7 +223,7 @@ class ControlModel:
         """
         """
         self.command = AmrControlCommandEnum.CONTROL_CHARGE_TRIGGER
-        self.control = req.control
+        self.switch = req.switch
         self.update_at = datetime.now(UTC)
 
 
@@ -245,13 +256,13 @@ class ControlModel:
         if self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_LED:
-            if self.control is None:
-                raise ServiceException("control 값이 비어있습니다", status_code=400)
+            if self.switch is None:
+                raise ServiceException("switch 값이 비어있습니다", status_code=400)
             if self.color is None:
                 raise ServiceException("color 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_MOTOR:
-            if self.control is None:
-                raise ServiceException("control 값이 비어있습니다", status_code=400)
+            if self.switch is None:
+                raise ServiceException("switch 값이 비어있습니다", status_code=400)
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FIELD:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FIELD:
@@ -305,10 +316,10 @@ class ControlModel:
         if self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_LED:
-            d["control"] = self.control
+            d["switch"] = self.switch
             d["color"] = self.color
         elif self.command == AmrControlCommandEnum.CONTROL_MOTOR:
-            d["control"] = self.control
+            d["switch"] = self.switch
         elif self.command == AmrControlCommandEnum.CONTROL_GET_SAFETY_FIELD:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_SET_SAFETY_FIELD:

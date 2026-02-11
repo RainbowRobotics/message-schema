@@ -125,28 +125,26 @@ class RequestControlDockPD(BaseModel):
 class ResponseControlDockPD(BaseModel):
     """
     [도킹 명령 응답]
-    * command : 도킹 명령 ( "dock", "undock", "dockstop" )
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    command: str = Field(..., description="도킹 명령", example="dock")
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
 class RequestControlChargeTriggerPD(BaseModel):
     """
     [충전 트리거 명령 요청]
-    * control : 충전 트리거 명령 ( True / False )
+    * switch : 충전 트리거 명령 ( True / False )
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
 class ResponseControlChargeTriggerPD(BaseModel):
     """
     [충전 트리거 명령 응답]
-    * control : 충전 트리거 명령 ( True / False )
+    * switch : 충전 트리거 명령 ( True / False )
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
@@ -226,7 +224,7 @@ class RequestControlLedModePD(BaseModel):
     * control : LED on / off
     * color : LED color
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     color: str = Field(..., example="red")
 
 class ResponseControlLedModePD(BaseModel):
@@ -237,7 +235,7 @@ class ResponseControlLedModePD(BaseModel):
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     color: str = Field(..., example="red")
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
@@ -247,7 +245,7 @@ class RequestControlMotorModePD(BaseModel):
     [모터 모드 설정 요청]
     * control : 모터 on / off
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
@@ -258,7 +256,7 @@ class ResponseControlMotorModePD(BaseModel):
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
@@ -267,7 +265,7 @@ class RequestControlJogModePD(BaseModel):
     [조그 모드 설정 요청]
     * control : 조그 on / off
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
@@ -278,7 +276,7 @@ class ResponseControlJogModePD(BaseModel):
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
 
@@ -286,11 +284,11 @@ class RequestControlSensorModePD(BaseModel):
     """
     [센서 모드 설정 요청]
     * command : 센서 종류 ( "camera", "lidar2d", "lidar3d" )
-    * control : 센서 통신 on / off
+    * switch : 센서 통신 on / off
     * frequency : 센서 주파수 (Hz)
     """
     command: str = Field(..., example="camera")
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     frequency: int = Field(..., example=10)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
@@ -305,7 +303,7 @@ class ResponseControlSensorModePD(BaseModel):
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
     command: str = Field(..., example="camera")
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     frequency: int = Field(..., example=10)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
@@ -313,10 +311,10 @@ class ResponseControlSensorModePD(BaseModel):
 class RequestControlPathModePD(BaseModel):
     """
     [경로 모드 설정 요청]
-    * control : 경로 통신 on / off
+    * switch : 경로 통신 on / off
     * frequency : 경로 주파수 (Hz)
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     frequency: int = Field(..., example=10)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")
@@ -324,12 +322,12 @@ class RequestControlPathModePD(BaseModel):
 class ResponseControlPathModePD(BaseModel):
     """
     [경로 모드 설정 응답]
-    * control : 경로 통신 on / off
+    * switch : 경로 통신 on / off
     * frequency : 경로 주파수 (Hz)
     * result : 요청한 명령에 대한 결과입니다.
     * message : result값이 reject 인 경우 SLAMNAV에서 보내는 메시지 입니다.
     """
-    control: bool = Field(..., example=True)
+    switch: bool = Field(..., example=True)
     frequency: int = Field(..., example=10)
     result: str = Field(..., example="accept")
     message: str | None = Field(None, example="")

@@ -4,7 +4,15 @@
     "components": {
       "C500920": {
         "type": "array",
-        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+        "mapper": [
+          "base",
+          "shoulder",
+          "arm_angle",
+          "elbow",
+          "wrist1",
+          "wrist2",
+          "wrist3"
+        ]
       }
     }
   },
@@ -13,7 +21,15 @@
     "components": {
       "C500880": {
         "type": "array",
-        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+        "mapper": [
+          "base",
+          "shoulder",
+          "arm_angle",
+          "elbow",
+          "wrist1",
+          "wrist2",
+          "wrist3"
+        ]
       }
     }
   },
@@ -22,7 +38,15 @@
     "components": {
       "C501880": {
         "type": "array",
-        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+        "mapper": [
+          "base",
+          "shoulder",
+          "arm_angle",
+          "elbow",
+          "wrist1",
+          "wrist2",
+          "wrist3"
+        ]
       }
     }
   },
@@ -31,7 +55,15 @@
     "components": {
       "C502880": {
         "type": "array",
-        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+        "mapper": [
+          "base",
+          "shoulder",
+          "arm_angle",
+          "elbow",
+          "wrist1",
+          "wrist2",
+          "wrist3"
+        ]
       }
     }
   },
@@ -40,7 +72,24 @@
     "components": {
       "RBY2": {
         "type": "array",
-        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+        "mapper": [
+          "base",
+          "shoulder",
+          "arm_angle",
+          "elbow",
+          "wrist1",
+          "wrist2",
+          "wrist3"
+        ]
+      }
+    }
+  },
+  "TEST": {
+    "urdfFileName": "d400.urdf",
+    "components": {
+      "TEST": {
+        "type": "array",
+        "mapper": []
       }
     }
   }

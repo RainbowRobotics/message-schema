@@ -18,15 +18,12 @@ from .adapter.mongo import ControlMongoDatabaseAdapter
 from .adapter.smtplib import ControlSmtpLibEmailAdapter
 from .control_schema import (
     RequestControlChargeTriggerPD,
-    RequestControlDetectMarkerPD,
-    RequestControlDockPD,
     RequestControlLedModePD,
     RequestControlSetObsBoxPD,
     RequestSetSafetyFieldPD,
     RequestSetSafetyFlagPD,
     RequestSetSafetyIoPD,
     ResponseControlChargeTriggerPD,
-    ResponseControlDetectMarkerPD,
     ResponseControlDockPD,
     ResponseControlGetObsBoxPD,
     ResponseControlLedModePD,
@@ -49,17 +46,17 @@ class AmrControlService:
         self._locks = defaultdict(asyncio.Lock)
 
 
-    async def control_dock(self, robot_model: str, request:RequestControlDockPD) -> ResponseControlDockPD:
+    async def control_dock(self, robot_model: str) -> ResponseControlDockPD:
         """
         [도킹 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
         """
         model = ControlModel()
         try:
-            rb_log.info(f"[amr_control_service] control_dock : {robot_model}, {request.command}")
+            rb_log.info(f"[amr_control_service] control_dock : {robot_model}")
             # 1) controlModel 객체 생성
             model.set_robot_model(robot_model)
-            model.control_dock(request)
+            model.control_dock()
 
             # 2) DB 저장
             try:
@@ -73,7 +70,6 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_dock(
                 robot_model=model.robot_model,
-                command=model.command,
                 req_id=model.id
             )
 
@@ -93,6 +89,100 @@ class AmrControlService:
             return model.to_dict()
         except ServiceException as e:
             print("[control_dock] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            return model.to_dict()
+
+    async def control_undock(self, robot_model: str) -> ResponseControlDockPD:
+        """
+        [도킹 명령 전송]
+        * robot_model : 명령을 전송할 로봇 모델
+        """
+        model = ControlModel()
+        try:
+            rb_log.info(f"[amr_control_service] control_undock : {robot_model}")
+            # 1) controlModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.control_undock()
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[control_undock] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.control.control_undock(
+                robot_model=model.robot_model,
+                req_id=model.id
+            )
+
+            print("============== control_undock result ===============")
+            print(result)
+
+            model.result_change(result.get("result"))
+            model.message = result.get("message")
+            model.status_change(result.get("result"))
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[control_undock] DB Exception : ", e)
+
+            print("============== control_undock return ===============")
+            return model.to_dict()
+        except ServiceException as e:
+            print("[control_dock] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            return model.to_dict()
+
+    async def control_dock_stop(self, robot_model: str) -> ResponseControlDockPD:
+        """
+        [도킹 정지 명령 전송]
+        * robot_model : 명령을 전송할 로봇 모델
+        """
+        model = ControlModel()
+        try:
+            rb_log.info(f"[amr_control_service] control_dock_stop : {robot_model}")
+            # 1) controlModel 객체 생성
+            model.set_robot_model(robot_model)
+            model.control_dock_stop()
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[control_dock_stop] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.control.control_dock_stop(
+                robot_model=model.robot_model,
+                req_id=model.id
+            )
+
+            print("============== control_dock_stop result ===============")
+            print(result)
+
+            model.result_change(result.get("result"))
+            model.message = result.get("message")
+            model.status_change(result.get("result"))
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[control_dock_stop] DB Exception : ", e)
+
+            print("============== control_dock_stop return ===============")
+            return model.to_dict()
+        except ServiceException as e:
+            print("[control_dock_stop] ServiceException : ", e.message, e.status_code)
             model.status_change(AmrResponseStatusEnum.FAIL)
             model.message = str(e.message)
             return model.to_dict()
@@ -168,7 +258,7 @@ class AmrControlService:
             result = await rb_amr_sdk.control.control_charge_trigger(
                 robot_model=model.robot_model,
                 req_id=model.id,
-                control=model.control
+                switch=model.switch
             )
 
             print("============== control_charge_trigger result ===============")
@@ -382,10 +472,10 @@ class AmrControlService:
                 print("[control_led] DB Exception : ", e)
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.control.control_led_mode(
+            result = await rb_amr_sdk.control.control_set_led(
                 robot_model=model.robot_model,
                 req_id=model.id,
-                control=model.control,
+                switch=model.switch,
                 color=model.color
             )
 
@@ -588,50 +678,50 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_detect(self, robot_model: str, request:RequestControlDetectMarkerPD) -> ResponseControlDetectMarkerPD:
-        """
-        [마커 감지 명령 전송]
-        * robot_model : 명령을 전송할 로봇 모델
-        * request : 마커 감지 명령 요청
-        """
-        model = ControlModel()
-        try:
-            rb_log.info(f"[amr_control_service] control_detect : {robot_model}, {request.control}")
-            model.set_robot_model(robot_model)
-            model.set_control_detect(request)
+    # async def control_detect(self, robot_model: str, request:RequestControlDetectMarkerPD) -> ResponseControlDetectMarkerPD:
+    #     """
+    #     [마커 감지 명령 전송]
+    #     * robot_model : 명령을 전송할 로봇 모델
+    #     * request : 마커 감지 명령 요청
+    #     """
+    #     model = ControlModel()
+    #     try:
+    #         rb_log.info(f"[amr_control_service] control_detect : {robot_model}, {request.control}")
+    #         model.set_robot_model(robot_model)
+    #         model.set_control_detect(request)
 
-            # 2) DB 저장
-            try:
-                await self.database_port.upsert(model.to_dict())
-            except ServiceException as e:
-                print("[control_detect] DB Exception : ", e)
+    #         # 2) DB 저장
+    #         try:
+    #             await self.database_port.upsert(model.to_dict())
+    #         except ServiceException as e:
+    #             print("[control_detect] DB Exception : ", e)
 
-            # 3) 요청 전송
-            result = await rb_amr_sdk.control.control_detect_marker(
-                robot_model=model.robot_model,
-                req_id=model.id,
-                command=model.command,
-                camera_number=model.camera_number,
-                camera_serial=model.camera_serial,
-                marker_size=model.marker_size
-            )
+    #         # 3) 요청 전송
+    #         result = await rb_amr_sdk.control.control_detect_marker(
+    #             robot_model=model.robot_model,
+    #             req_id=model.id,
+    #             command=model.command,
+    #             camera_number=model.camera_number,
+    #             camera_serial=model.camera_serial,
+    #             marker_size=model.marker_size
+    #         )
 
-            print("============== control_detect result ===============")
-            print(result)
+    #         print("============== control_detect result ===============")
+    #         print(result)
 
-            model.result_change(result.get("result"))
-            model.message = result.get("message")
-            model.status_change(result.get("result"))
+    #         model.result_change(result.get("result"))
+    #         model.message = result.get("message")
+    #         model.status_change(result.get("result"))
 
-            try:
-                await self.database_port.upsert(model.to_dict())
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                print("[control_detect] DB Exception : ", e)
+    #         try:
+    #             await self.database_port.upsert(model.to_dict())
+    #         except Exception as e:  # pylint: disable=broad-exception-caught
+    #             print("[control_detect] DB Exception : ", e)
 
-            print("============== control_detect return ===============")
-            return model.to_dict()
-        except ServiceException as e:
-            print("[control_detect] ServiceException : ", e.message, e.status_code)
-            model.status_change(AmrResponseStatusEnum.FAIL)
-            model.message = str(e.message)
-            return model.to_dict()
+    #         print("============== control_detect return ===============")
+    #         return model.to_dict()
+    #     except ServiceException as e:
+    #         print("[control_detect] ServiceException : ", e.message, e.status_code)
+    #         model.status_change(AmrResponseStatusEnum.FAIL)
+    #         model.message = str(e.message)
+    #         return model.to_dict()
