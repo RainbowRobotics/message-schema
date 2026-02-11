@@ -1,27 +1,15 @@
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from .map_schema import (
-    ResponseMapListPD,
-    RequestMapDeletePD,
-    ResponseMapDeletePD,
-    ResponseMapCurrentPD,
-    RequestGetMapCloudPD,
-    ResponseGetMapCloudPD,
     RequestSetMapCloudPD,
-    ResponseSetMapCloudPD,
-    RequestGetMapTopologyPD,
     RequestSetMapTopologyPD,
-    ResponseSetMapTopologyPD,
+    ResponseGetMapCloudPD,
     ResponseGetMapTopologyPD,
-    RequestMapLoadPD,
-    ResponseMapLoadPD,
-    ResponseTopoLoadPD,
-    ResponseMappingStartPD,
-    ResponseMappingStopPD,
-    RequestMappingSavePD,
-    ResponseMappingSavePD,
+    ResponseMapListPD,
+    ResponseSetMapCloudPD,
+    ResponseSetMapTopologyPD,
 )
 from .map_service import AmrMapService
 
@@ -64,9 +52,17 @@ async def set_map_topology(robot_model: str, request: RequestSetMapTopologyPD) -
 async def get_map_file(robot_model: str, mapName: str, fileName: str) -> StreamingResponse:
     return await amr_map_service.get_map_file(robot_model, mapName, fileName)
 
+@amr_map_router.get("/{robot_model}/map/getZip", summary="맵 압축 후 반환", description="맵 압축 후 반환")
+async def get_map_zip(robot_model: str, mapName: str, zipName: str) -> StreamingResponse:
+    return await amr_map_service.get_map_zip(robot_model, mapName, zipName)
+
 @amr_map_router.get("/map/getFileProgress/{transfer_id}", summary="맵 파일 진행 상태 조회", description="맵 파일 진행 상태 조회")
 async def get_map_file_progress(transfer_id: str):
     return await amr_map_service.get_map_file_progress(transfer_id)
+
+@amr_map_router.delete("/{robot_model}/map/delete", summary="맵 삭제", description="맵 삭제")
+async def delete_map(robot_model: str, mapName: str):
+    return await amr_map_service.delete_map(robot_model, mapName)
 
 # @amr_map_router.get("/{robot_model}/map/loadMap", summary="맵 로드", description="맵 로드")
 # async def load_map(robot_model: str, request: RequestMapLoadPD) -> ResponseMapLoadPD:

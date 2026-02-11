@@ -1,20 +1,21 @@
 """
 [AMR Map 모델]
 """
-from typing import Any
 import uuid
-from enum import Enum
-from pydantic import BaseModel
 from dataclasses import (
     dataclass,
     field,
 )
+from enum import Enum
+from typing import Any
 
+from pydantic import BaseModel
 from rb_flat_buffers.SLAMNAV.Link import LinkT
 from rb_flat_buffers.SLAMNAV.Node import NodeT
 from rb_flat_buffers.SLAMNAV.NodePose import NodePoseT
 from rb_flat_buffers.SLAMNAV.NodeSize import NodeSizeT
 from rb_utils.service_exception import ServiceException
+
 
 class AmrMapCommandEnum(str, Enum):
     """
@@ -24,6 +25,7 @@ class AmrMapCommandEnum(str, Enum):
     DELETE_MAP = "deleteMap"
     GET_MAP_CURRENT = "getMapCurrent"
     GET_MAP_FILE = "getMapFile"
+    GET_MAP_ZIP = "getMapZip"
     GET_MAP_CLOUD = "getMapCloud"
     SET_MAP_CLOUD = "setMapCloud"
     GET_MAP_TOPOLOGY = "getMapTopology"
@@ -103,6 +105,7 @@ class MapModel:
     command: AmrMapCommandEnum | None = None
 
     map_name: str | None = None
+    map_path: str | None = None
     file_name: str | None = None
     file_path: str | None = None
 
@@ -133,6 +136,7 @@ class MapModel:
     def __init__(self, robot_model: str):
         self.id = str(uuid.uuid4())
         self.robot_model = robot_model
+        self.map_root_path = "/data/maps"
 
     def get_map_list(self):
         """ map list 조회 """
@@ -142,6 +146,7 @@ class MapModel:
         """ map 삭제 """
         self.command = AmrMapCommandEnum.DELETE_MAP
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
 
     def get_map_current(self):
         """ map current 조회 """
@@ -151,22 +156,33 @@ class MapModel:
         """ map file 조회 """
         self.command = AmrMapCommandEnum.GET_MAP_FILE
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
         self.file_name = file_name
-        self.file_path = f"/data/maps/{map_name}/{file_name}"
+        self.file_path = f"{self.map_root_path}/{map_name}/{file_name}"
+
+    def get_map_zip(self, map_name: str, zip_name: str):
+        """ map zip 조회 """
+        self.command = AmrMapCommandEnum.GET_MAP_ZIP
+        self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
+        self.file_name = zip_name
+        self.file_path = f"{self.map_root_path}/{zip_name}"
 
     def get_map_cloud(self, map_name: str, file_name: str):
         """ map cloud 조회 """
         self.command = AmrMapCommandEnum.GET_MAP_CLOUD
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
         self.file_name = file_name
-        self.file_path = f"/data/maps/{map_name}/{file_name}"
+        self.file_path = f"{self.map_root_path}/{map_name}/{file_name}"
 
     def set_map_cloud(self, map_name: str, file_name: str, data: list[list[float]]):
         """ map cloud 설정 """
         self.command = AmrMapCommandEnum.SET_MAP_CLOUD
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
         self.file_name = file_name
-        self.file_path = f"/data/maps/{map_name}/{file_name}"
+        self.file_path = f"{self.map_root_path}/{map_name}/{file_name}"
 
         self.cloud_data = []
         self.cloud_column_count = len(data[0]) if isinstance(data, list) else 0
@@ -181,15 +197,17 @@ class MapModel:
         """ map topology 조회 """
         self.command = AmrMapCommandEnum.GET_MAP_TOPOLOGY
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
         self.file_name = file_name
-        self.file_path = f"/data/maps/{map_name}/{file_name}"
+        self.file_path = f"{self.map_root_path}/{map_name}/{file_name}"
 
     def set_map_topology(self, map_name: str, file_name: str, data: list[Node]):
         """ map topology 설정 """
         self.command = AmrMapCommandEnum.SET_MAP_TOPOLOGY
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
         self.file_name = file_name
-        self.file_path = f"/data/maps/{map_name}/{file_name}"
+        self.file_path = f"{self.map_root_path}/{map_name}/{file_name}"
         self.topo_data = data
         print("~~~", len(self.topo_data), len(data))
 
@@ -197,6 +215,7 @@ class MapModel:
         """ map 로드 """
         self.command = AmrMapCommandEnum.MAP_LOAD
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
 
     def map_topo_load(self):
         """ map topology 로드 """
@@ -214,31 +233,31 @@ class MapModel:
         """ mapping 저장 """
         self.command = AmrMapCommandEnum.MAPPING_SAVE
         self.map_name = map_name
+        self.map_path = f"{self.map_root_path}/{map_name}"
 
     def get_node_t(self) -> list[NodeT]:
         """ node type 조회 """
         node_ts = []
         for node in self.topo_data:
-            nodeT = NodeT()
-            nodeT.id = node.id
-            nodeT.name = node.name
-            nodeT.type = node.type
-            nodeT.pose = NodePoseT(node.pose.x, node.pose.y, node.pose.z, node.pose.rx, node.pose.ry, node.pose.rz)
-            nodeT.size = NodeSizeT(node.size.x, node.size.y, node.size.z)
-            nodeT.role = node.role
-            nodeT.context = node.context
-            nodeT.links = []
+            node_t = NodeT()
+            node_t.id = node.id
+            node_t.name = node.name
+            node_t.type = node.type
+            node_t.pose = NodePoseT(node.pose.x, node.pose.y, node.pose.z, node.pose.rx, node.pose.ry, node.pose.rz)
+            node_t.size = NodeSizeT(node.size.x, node.size.y, node.size.z)
+            node_t.role = node.role
+            node_t.context = node.context
+            node_t.links = []
             if node.links is not None:
                 for link in node.links:
-                    linkT = LinkT()
-                    linkT.id = link.id
-                    linkT.dir = link.dir
-                    linkT.method = link.method
-                    linkT.speed = link.speed
-                    linkT.safety_field = link.safety_field
-                    nodeT.links.append(linkT)
-            node_ts.append(nodeT)
-        print("~~~", len(node_ts))
+                    link_t = LinkT()
+                    link_t.id = link.id
+                    link_t.dir = link.dir
+                    link_t.method = link.method
+                    link_t.speed = link.speed
+                    link_t.safety_field = link.safety_field
+                    node_t.links.append(link_t)
+            node_ts.append(node_t)
         return node_ts
 
     def check_variables(self) -> None:
@@ -283,14 +302,17 @@ class MapModel:
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
             if self.file_name is None or self.file_name == "":
                 raise ServiceException("file_name 값이 비어있습니다", status_code=400)
+        elif self.command == AmrMapCommandEnum.GET_MAP_ZIP:
+            if self.map_name is None or self.map_name == "":
+                raise ServiceException("map_name 값이 비어있습니다", status_code=400)
+            if self.file_name is None or self.file_name == "":
+                raise ServiceException("file_name 값이 비어있습니다", status_code=400)
+            if not self.file_name.endswith(".zip"):
+                raise ServiceException("file_name 값이 압축 파일 이름이 아닙니다. (확장자: .zip)", status_code=400)
         elif self.command == AmrMapCommandEnum.MAP_LOAD:
             if self.map_name is None or self.map_name == "":
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
-        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD:
-            pass
-        elif self.command == AmrMapCommandEnum.MAPPING_START:
-            pass
-        elif self.command == AmrMapCommandEnum.MAPPING_STOP:
+        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:
             pass
         elif self.command == AmrMapCommandEnum.MAPPING_SAVE:
             if self.map_name is None or self.map_name == "":
@@ -344,11 +366,7 @@ class MapModel:
             d["fileName"] = self.file_name
         elif self.command == AmrMapCommandEnum.MAP_LOAD:
             d["mapName"] = self.map_name
-        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD:
-            pass
-        elif self.command == AmrMapCommandEnum.MAPPING_START:
-            pass
-        elif self.command == AmrMapCommandEnum.MAPPING_STOP:
+        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:
             pass
         elif self.command == AmrMapCommandEnum.MAPPING_SAVE:
             d["mapName"] = self.map_name

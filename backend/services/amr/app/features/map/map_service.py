@@ -175,7 +175,8 @@ class AmrMapService:
         """
         [AMR Map File 조회]
         * robot_model : 명령을 전송할 로봇 모델
-        * request : 요청 데이터
+        * mapName : 맵 이름
+        * fileName : 파일 이름
         """
         model = MapModel(robot_model)
         try:
@@ -190,6 +191,7 @@ class AmrMapService:
             # 3) 메타 요청
             meta = await rb_amr_sdk.file.get_file_meta(robot_model, model.file_path, preferred_chunk_size=1024*1024*50)
             meta_dict = t_to_dict(meta)
+
             if meta_dict["result"].lower() != "accept":
                 raise ServiceException(meta_dict["message"] or "file not found", status_code=404)
 
@@ -223,10 +225,10 @@ class AmrMapService:
 
             # 6) 스트리밍 제너레이터 반환
             headers = {
-                # 브라우저 다운로드 유도
                 "X-Transfer-Id": model.id,
                 "Content-Disposition": f'attachment; filename="{model.file_name}"',
                 "Content-Length": str(file_size),
+                "Content-Type": mime,
                 "Cache-Control": "no-store",
             }
             return StreamingResponse(gen(), media_type="application/octet-stream", headers=headers)
@@ -237,6 +239,112 @@ class AmrMapService:
                 st.error = str(e)
                 st.done = True
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+
+    async def get_map_zip(self, robot_model: str, mapName: str, zipName: str) -> StreamingResponse:
+        """
+        [AMR Map Zip 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * mapName : 맵 이름
+        """
+        model = MapModel(robot_model)
+        try:
+            rb_log.info(f"[map_service] get_map_zip : {robot_model} {mapName}")
+
+            # 1) MapModel 설정
+            model.get_map_zip(mapName, zipName)
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 압축 요청
+            result = await rb_amr_sdk.file.compress_files(robot_model, base_dir=model.map_root_path, source_names=[model.map_name], output_name=model.file_name)
+            result_dict = t_to_dict(result)
+            if result_dict["result"].lower() != "accept":
+                raise ServiceException(result_dict["message"] or "압축 실패", status_code=400)
+
+            print("### 압축 result : ", result_dict)
+            # 4) 메타 요청
+            meta = await rb_amr_sdk.file.get_file_meta(robot_model, model.file_path, preferred_chunk_size=1024*1024*50)
+            meta_dict = t_to_dict(meta)
+            print("### 메타 result : ", meta_dict)
+
+            if meta_dict["result"].lower() != "accept":
+                raise ServiceException(meta_dict["message"] or "file not found", status_code=404)
+
+            # 5) 메타 데이터 설정
+            total_chunks = meta_dict["totalChunks"]
+            chunk_size = meta_dict["chunkSize"]
+            file_size = meta_dict["fileSize"]
+            mime = meta_dict["mime"] or "application/octet-stream"
+
+            # 6) 진행률 상태 생성
+            self.transfer_store[model.id] = TransferState(total=file_size, created_at=time.time())
+
+            # 7) 스트리밍 제너레이터 선언
+            async def gen():
+                st = self.transfer_store[model.id]
+                for idx in range(total_chunks):
+                    chunk = await rb_amr_sdk.file.get_file_chunk(robot_model, model.file_path, idx, chunk_size)
+                    chunk_dict = t_to_dict(chunk)
+                    if chunk_dict["result"].lower() != "accept":
+                        # 여기서 raise 하면 다운로드가 중간에 끊김(정상)
+                        raise RuntimeError(chunk_dict["message"] or "chunk error")
+
+                    data: bytes = bytes(chunk_dict["data"])
+
+                    if len(data) > 0:
+                        st.sent += len(data)
+                        yield data
+                    if bool(chunk_dict["eof"]):
+                        break
+                st.done = True
+
+            # 8) 스트리밍 제너레이터 반환
+            headers = {
+                "X-Transfer-Id": model.id,
+                "Content-Disposition": f'attachment; filename="{model.file_name}"',
+                "Content-Length": str(file_size),
+                "Content-Type": mime,
+                "Cache-Control": "no-store",
+            }
+            return StreamingResponse(gen(), media_type="application/octet-stream", headers=headers)
+        except ServiceException as e:
+            rb_log.error(f"[map_service] get_map_file : {e}")
+            st = self.transfer_store.get(model.id)
+            if st:
+                st.error = str(e)
+                st.done = True
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+
+    async def delete_map(self, robot_model: str, mapName: str):
+        """
+        [AMR Map 삭제]
+        * robot_model : 명령을 전송할 로봇 모델
+        * mapName : 맵 이름
+        """
+        model = MapModel(robot_model)
+        try:
+            rb_log.info(f"[map_service] delete_map : {robot_model} {mapName}")
+
+            # 1) MapModel 설정
+            model.delete_map(mapName)
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.file.delete_file(robot_model, model.map_path)
+            result_dict = t_to_dict(result)
+            if result_dict["result"].lower() != "accept":
+                raise ServiceException(result_dict["message"] or "삭제 실패", status_code=400)
+
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] delete_map : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
     async def get_map_file_progress(self, transfer_id: str):
         """
