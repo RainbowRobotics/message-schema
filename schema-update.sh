@@ -59,7 +59,7 @@ TMP_BASE_DIR="$MAIN_REPO/.git/schema-update-tmp"
 
 print_string "info" "=== STEP 1: Pull $REMOTE_NAME/main into $SCHEMA_DIR ==="
 
-# 정책: stash/worktree 사용 안 함. 전체 워킹트리가 깨끗해야 실행.
+# SCHEMA_DIR 이외 워킹트리가 깨끗해야 실행.
 if ! git diff --cached --quiet -- . ":!$SCHEMA_DIR"; then
   print_string "error" "SCHEMA_DIR 이외 영역에 staged 변경사항이 있습니다."
   print_string "info" "SCHEMA_DIR 이외에 수정하신 내용은 먼저 커밋/푸시(또는 별도 정리) 후 schema-update를 다시 실행해 주세요."
@@ -82,7 +82,7 @@ fi
 print_string "info" "Fetching $REMOTE_NAME/main..."
 git fetch "$REMOTE_NAME" main
 
-# 현재 워킹트리에서 pull -> 충돌 시 IDE에서 바로 마커 확인 가능
+# 현재 워킹트리에서 pull
 if ! GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"; then
   print_string "error" "subtree pull failed (conflict)"
   echo ""
