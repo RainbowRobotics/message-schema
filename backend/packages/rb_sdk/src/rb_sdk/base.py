@@ -144,6 +144,7 @@ class RBBaseSDK:
                 RBBaseSDK._instances[key] = instance
                 instance._initialized = False
 
+
                 instance._zenoh_subscribers = []
                 instance._zenoh_queryables = []
                 instance._pid = pid
@@ -155,6 +156,7 @@ class RBBaseSDK:
                 # ZenohClient 생성 및 설정
                 if pid not in RBBaseSDK._zenoh_clients:
                     RBBaseSDK._zenoh_clients[pid] = ZenohClient()
+
 
                 instance.zenoh_client = RBBaseSDK._zenoh_clients[pid]
 
@@ -183,6 +185,8 @@ class RBBaseSDK:
         self.robot_uids = self._get_robot_uids(server=server) if server is not None else {}
 
         self._initialized = True
+
+
 
     def _get_robot_uids(self, *, server: Literal["amr", "manipulate"]) -> dict[str, str]:
         """
@@ -221,6 +225,8 @@ class RBBaseSDK:
     ):
         """데코레이터: Subscribe 자동 등록 및 정리"""
         def decorator(callback: Callable):
+
+
             handle = self.zenoh_client.subscribe(
                 topic=topic,
                 callback=callback,
@@ -245,6 +251,8 @@ class RBBaseSDK:
     ):
         """데코레이터: Queryable 자동 등록 및 정리"""
         def decorator(handler: Callable):
+
+
             # 중복 체크
             if keyexpr in self.zenoh_client._queryables:
                 print(f"⚠️  Queryable already declared: {keyexpr}", flush=True)

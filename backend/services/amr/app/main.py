@@ -9,6 +9,7 @@ from rb_modules.rb_fastapi_app import (
 from app.features.control.control_api import amr_control_router
 from app.features.map.map_api import amr_map_router
 from app.features.move.move_api import amr_move_router
+from app.features.move.move_socket import move_socket_router
 from app.features.move.move_zenoh import move_zenoh_router
 from app.socket.socket_client import (
     amr_zenoh_router,
@@ -37,7 +38,7 @@ app = create_app(
         # amr_setting_router,
         # amr_update_router
     ],
-    socket_routers=[],
+    socket_routers=[move_socket_router],
     # bg_tasks=[]
     # bg_tasks=[move_mongo_service.moveDBinit],  # lifespan에서 실행됨
 )

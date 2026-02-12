@@ -13,6 +13,7 @@ from app.features.move.move_schema import (
     Request_Move_LogsPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
+    RequestMoveJogPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LinearPD,
@@ -33,7 +34,7 @@ amr_move_router = APIRouter(
 amr_move_service = AmrMoveService()
 
 @amr_move_router.post(
-    "/{robot_model}/move/goal",
+    "/{robot_model}/{robot_id}/move/goal",
     summary="목표 지점으로 이동",
     description= """
 SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
@@ -76,11 +77,11 @@ SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_goal(robot_model: str, request: Request_Move_GoalPD) -> Response_Move_GoalPD:
-    return await amr_move_service.move_goal(robot_model, request)
+async def slamnav_move_goal(robot_model: str, robot_id: str, request: Request_Move_GoalPD) -> Response_Move_GoalPD:
+    return await amr_move_service.move_goal(robot_model, robot_id, request)
 
 @amr_move_router.post(
-    "/{robot_model}/move/target",
+    "/{robot_model}/{robot_id}/move/target",
     summary="타겟 좌표로 이동",
     description="""
 SLAMNAV로 조이스틱 이동 명령을 전달합니다.
@@ -114,8 +115,8 @@ SLAMNAV로 조이스틱 이동 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_target(robot_model: str, request: Request_Move_TargetPD) -> Response_Move_TargetPD:
-    return await amr_move_service.move_target(robot_model, request)
+async def slamnav_move_target(robot_model: str, robot_id: str, request: Request_Move_TargetPD) -> Response_Move_TargetPD:
+    return await amr_move_service.move_target(robot_model, robot_id, request)
 
 # @amr_move_router.post(
 #     "/jog",
@@ -136,7 +137,7 @@ async def slamnav_move_target(robot_model: str, request: Request_Move_TargetPD) 
 #     return await amr_move_service.move_jog(request)
 
 @amr_move_router.post(
-    "/{robot_model}/move/stop",
+    "/{robot_model}/{robot_id}/move/stop",
     summary="이동 중지",
     description="""
 SLAMNAV로 이동 정지 명령을 전달합니다.
@@ -166,12 +167,12 @@ SLAMNAV로 이동 정지 명령을 전달합니다.
     """,
     response_description="이동 중지 명령 처리 결과 반환"
 )
-async def slamnav_move_stop(robot_model: str) -> Response_Move_StopPD:
-    return await amr_move_service.move_stop(robot_model)
+async def slamnav_move_stop(robot_model: str, robot_id: str) -> Response_Move_StopPD:
+    return await amr_move_service.move_stop(robot_model, robot_id)
 
 
 @amr_move_router.post(
-    "/{robot_model}/move/pause",
+    "/{robot_model}/{robot_id}/move/pause",
     summary="이동 일시정지",
     description="""
 SLAMNAV로 이동 일시정지 명령을 전달합니다.
@@ -201,11 +202,11 @@ SLAMNAV로 이동 일시정지 명령을 전달합니다.
     """,
     response_description="이동 일시정지 명령 처리 결과 반환"
 )
-async def slamnav_move_pause(robot_model: str) -> Response_Move_PausePD:
-    return await amr_move_service.move_pause(robot_model)
+async def slamnav_move_pause(robot_model: str, robot_id: str) -> Response_Move_PausePD:
+    return await amr_move_service.move_pause(robot_model, robot_id)
 
 @amr_move_router.post(
-    "/{robot_model}/move/resume",
+    "/{robot_model}/{robot_id}/move/resume",
     summary="이동 재개",
     description="""
 SLAMNAV로 이동 일시재개 명령을 전달합니다.
@@ -235,12 +236,43 @@ SLAMNAV로 이동 일시재개 명령을 전달합니다.
     """,
     response_description="이동 재개 명령 처리 결과 반환"
 )
-async def slamnav_move_resume(robot_model: str) -> Response_Move_ResumePD:
-    return await amr_move_service.move_resume(robot_model)
+async def slamnav_move_resume(robot_model: str, robot_id: str) -> Response_Move_ResumePD:
+    return await amr_move_service.move_resume(robot_model, robot_id)
 
 
 @amr_move_router.post(
-    "/{robot_model}/move/xLinear",
+    "/{robot_model}/{robot_id}/move/jog",
+    summary="조이스틱 이동",
+    description="""
+SLAMNAV로 조이스틱 이동 명령을 전달합니다.
+
+## 📌 기능 설명
+- 로봇의 속도(vx, vy, wz)를 입력으로 받아 이동합니다.
+- 주기적으로 계속해서 요청을 주지 않으면 주행이 중단됩니다.
+- 응답 없이 일방적으로 송신합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| vx | number | - | m/s | 로봇의 x방향 속도를 입력하세요. | 0.2 |
+| vy | number | - | m/s | 로봇의 y방향 속도를 입력하세요. | 0 |
+| wz | number | - | deg/s | 로봇의 z축 회전 속도를 입력하세요. | 30 |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 요청한 명령이 지원하지 않는 명령일 때
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+    """,
+    response_description="조이스틱 이동 명령 처리 결과 반환"
+)
+async def slamnav_move_jog(robot_model: str, robot_id: str, request: RequestMoveJogPD) -> None:
+    return await amr_move_service.move_jog(robot_model, robot_id, request)
+
+@amr_move_router.post(
+    "/{robot_model}/{robot_id}/move/xLinear",
     summary="X축 선형 이동 명령",
     description="""
 SLAMNAV로 X축 선형 이동 명령을 전달합니다.
@@ -280,12 +312,12 @@ SLAMNAV로 X축 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_linear(robot_model: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
-    return await amr_move_service.move_x_linear(robot_model, request)
+async def slamnav_move_linear(robot_model: str, robot_id: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+    return await amr_move_service.move_x_linear(robot_model, robot_id, request)
 
 
 @amr_move_router.post(
-    "/{robot_model}/move/yLinear",
+    "/{robot_model}/{robot_id}/move/yLinear",
     summary="Y축 선형 이동 명령",
     description="""
 SLAMNAV로 Y축 선형 이동 명령을 전달합니다.
@@ -325,12 +357,12 @@ SLAMNAV로 Y축 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_y_linear(robot_model: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
-    return await amr_move_service.move_y_linear(robot_model, request)
+async def slamnav_move_y_linear(robot_model: str, robot_id: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+    return await amr_move_service.move_y_linear(robot_model, robot_id, request)
 
 
 @amr_move_router.post(
-    "/{robot_model}/move/circular",
+    "/{robot_model}/{robot_id}/move/circular",
     summary="회전 주행 명령",
     description="""
 SLAMNAV로 회전 명령을 전달합니다.
@@ -372,11 +404,11 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_circular(robot_model: str, request: Request_Move_CircularPD) -> Response_Move_CircularPD:
-    return await amr_move_service.move_circular(robot_model, request)
+async def slamnav_move_circular(robot_model: str, robot_id: str, request: Request_Move_CircularPD) -> Response_Move_CircularPD:
+    return await amr_move_service.move_circular(robot_model, robot_id, request)
 
 @amr_move_router.post(
-    "/{robot_model}/move/rotate",
+    "/{robot_model}/{robot_id}/move/rotate",
     summary="회전 명령",
     description="""
 SLAMNAV로 회전 명령을 전달합니다.
@@ -416,8 +448,8 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_rotate(robot_model: str, request: Request_Move_RotatePD) -> Response_Move_RotatePD:
-    return await amr_move_service.move_rotate(robot_model, request)
+async def slamnav_move_rotate(robot_model: str, robot_id: str, request: Request_Move_RotatePD) -> Response_Move_RotatePD:
+    return await amr_move_service.move_rotate(robot_model, robot_id, request)
 
 
 @amr_move_router.post(

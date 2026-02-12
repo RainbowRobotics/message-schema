@@ -38,11 +38,11 @@ from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_ExportLogPD,
     Request_Move_GoalPD,
-    Request_Move_JogPD,
     Request_Move_LinearPD,
     Request_Move_LogsPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
+    RequestMoveJogPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LinearPD,
@@ -167,7 +167,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_jog(self, robot_model: str, req: Request_Move_JogPD, model:MoveModel | None = None):
+    async def move_jog(self, robot_model: str, req: RequestMoveJogPD, model:MoveModel | None = None):
         """
         [AMR 조이스틱 이동]
         """
