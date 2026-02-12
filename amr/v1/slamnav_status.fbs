@@ -130,14 +130,9 @@ struct StatusPower {
     bat_percent: float;
     tabos_voltage: float;
     tabos_current: float;
-    tabos_status: float;
-    tabos_ttf: float;
-    tabos_tte: float;
     tabos_soc: float;
     tabos_soh: float;
     tabos_temp: float;
-    tabos_rc: float;
-    tabos_ae: float;
     charge_current: float;
     contact_voltage: float;
 }
