@@ -1023,18 +1023,21 @@ class SubTaskStep(Step):
         return tree, post_tree
 
     def execute(self, ctx: ExecutionContext, *, target_step_id: str | None = None):
-        tree, post_tree = self._load_sub_task_trees()
-
-        sub_task_tree: Step = tree
-        sub_task_post_tree: Step | None = post_tree
-
         is_skip = target_step_id is not None and target_step_id != self.step_id
-
-        self._pre_execute(ctx, is_skip=is_skip)
 
         if self.disabled or is_skip:
             self._post_execute(ctx, ignore_step_interval=True)
             return
+
+        self._pre_execute(ctx, is_skip=is_skip)
+
+        if self.disabled:
+            return
+
+        tree, post_tree = self._load_sub_task_trees()
+
+        sub_task_tree: Step = tree
+        sub_task_post_tree: Step | None = post_tree
 
         ctx.emit_next(self.step_id)
 
