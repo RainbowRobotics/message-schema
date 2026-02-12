@@ -1,7 +1,7 @@
 from rb_socketio import RbSocketIORouter
-from app.socket.socket_client import socket_client
-from app.features.move.move_schema import RequestMoveJogPD
+
 from app.features.move.move_api import amr_move_service
+from app.features.move.move_schema import RequestMoveJogPD
 
 move_socket_router = RbSocketIORouter()
 

@@ -38,7 +38,6 @@ from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_ExportLogPD,
     Request_Move_GoalPD,
-    RequestMoveJogPD,
     Request_Move_LinearPD,
     Request_Move_LogsPD,
     Request_Move_RotatePD,

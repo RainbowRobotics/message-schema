@@ -20,10 +20,10 @@ from rb_utils.service_exception import (
 from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_GoalPD,
-    RequestMoveJogPD,
     Request_Move_LinearPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
+    RequestMoveJogPD,
 )
 from app.schema.amr import AmrResponseStatusEnum
 

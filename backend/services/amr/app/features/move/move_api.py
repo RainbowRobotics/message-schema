@@ -13,6 +13,7 @@ from app.features.move.move_schema import (
     Request_Move_LogsPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
+    RequestMoveJogPD,
     Response_Move_CircularPD,
     Response_Move_GoalPD,
     Response_Move_LinearPD,
@@ -238,6 +239,37 @@ SLAMNAV로 이동 일시재개 명령을 전달합니다.
 async def slamnav_move_resume(robot_model: str, robot_id: str) -> Response_Move_ResumePD:
     return await amr_move_service.move_resume(robot_model, robot_id)
 
+
+@amr_move_router.post(
+    "/{robot_model}/{robot_id}/move/jog",
+    summary="조이스틱 이동",
+    description="""
+SLAMNAV로 조이스틱 이동 명령을 전달합니다.
+
+## 📌 기능 설명
+- 로봇의 속도(vx, vy, wz)를 입력으로 받아 이동합니다.
+- 주기적으로 계속해서 요청을 주지 않으면 주행이 중단됩니다.
+- 응답 없이 일방적으로 송신합니다.
+
+## 📌 요청 바디(JSON)
+
+| 필드명 | 타입 | 필수 | 단위 | 설명 | 예시 |
+|-|-|-|-|-|-|
+| vx | number | - | m/s | 로봇의 x방향 속도를 입력하세요. | 0.2 |
+| vy | number | - | m/s | 로봇의 y방향 속도를 입력하세요. | 0 |
+| wz | number | - | deg/s | 로봇의 z축 회전 속도를 입력하세요. | 30 |
+
+## ⚠️ 에러 케이스
+### **403** INVALID_ARGUMENT
+  - 요청한 명령이 지원하지 않는 명령일 때
+  - 파라메터가 없거나 잘못된 값일 때
+### **500** INTERNAL_SERVER_ERROR
+  - DB관련 에러 등 서버 내부적인 에러
+    """,
+    response_description="조이스틱 이동 명령 처리 결과 반환"
+)
+async def slamnav_move_jog(robot_model: str, robot_id: str, request: RequestMoveJogPD) -> None:
+    return await amr_move_service.move_jog(robot_model, robot_id, request)
 
 @amr_move_router.post(
     "/{robot_model}/{robot_id}/move/xLinear",
