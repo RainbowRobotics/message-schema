@@ -1196,7 +1196,7 @@ class CallEventStep(Step):
         executor_managed = bool(ctx.state_dict.get("executor_managed", False))
         call_seq: int | None = None
 
-        if executor_managed and self.run_mode == "SYNC":
+        if executor_managed:
             call_seq = int(ctx.state_dict.get("_event_call_seq", 0)) + 1
             ctx.state_dict["_event_call_seq"] = call_seq
             pending_map = dict(ctx.state_dict.get("event_start_pending_map", {}))
@@ -1211,8 +1211,8 @@ class CallEventStep(Step):
             call_seq=call_seq,
         )
 
-        if executor_managed and self.run_mode == "SYNC":
-            # SYNC일 때만 이벤트 프로세스 시작(ready) 후 완료까지 대기
+        if executor_managed:
+            # ASYNC/SYNC 모두 이벤트 프로세스 시작(ready) ack까지는 대기
             while dict(ctx.state_dict.get("event_start_pending_map", {})).get(task_id) == call_seq:
                 ctx.check_stop()
                 time.sleep(0.01)
