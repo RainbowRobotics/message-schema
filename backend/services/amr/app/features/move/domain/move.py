@@ -20,7 +20,7 @@ from rb_utils.service_exception import (
 from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_GoalPD,
-    Request_Move_JogPD,
+    RequestMoveJogPD,
     Request_Move_LinearPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
@@ -60,6 +60,7 @@ class MoveModel:
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     robot_model: str | None = None
+    robot_id: str | None = None
     command: AmrMoveCommandEnum | None = None
     status: AmrResponseStatusEnum = field(default=AmrResponseStatusEnum.PENDING)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -93,12 +94,13 @@ class MoveModel:
     bat_percent: int | None = None
     map_name: str | None = None
 
-    def set_robot_model(self, robot_model: str):
+    def set_robot_model(self, robot_model: str, robot_id: str):
         """
         - robot_model: str
         - return: None
         """
         self.robot_model = robot_model
+        self.robot_id = robot_id
 
     def set_move_goal(self, req: Request_Move_GoalPD):
         """
@@ -122,9 +124,9 @@ class MoveModel:
         self.goal_pose = req.goalPose
         self.update_at = datetime.now(UTC)
 
-    def set_move_jog(self, req: Request_Move_JogPD):
+    def set_move_jog(self, req: RequestMoveJogPD):
         """
-        - req: Request_Move_JogPD
+        - req: RequestMoveJogPD
         - return: None
         """
         self.command = AmrMoveCommandEnum.MOVE_JOG

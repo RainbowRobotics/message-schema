@@ -13,6 +13,7 @@ from app.features.move.move_zenoh import move_zenoh_router
 from app.socket.socket_client import (
     amr_zenoh_router,
 )
+from app.features.move.move_socket import move_socket_router
 
 from .socket.socket_client import (
     socket_client,
@@ -37,7 +38,7 @@ app = create_app(
         # amr_setting_router,
         # amr_update_router
     ],
-    socket_routers=[],
+    socket_routers=[move_socket_router],
     # bg_tasks=[]
     # bg_tasks=[move_mongo_service.moveDBinit],  # lifespan에서 실행됨
 )

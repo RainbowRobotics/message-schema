@@ -15,10 +15,11 @@ from rb_sdk.base import RBBaseSDK
 class RBAmrFileSDK(RBBaseSDK):
     """Rainbow Robotics AMR File SDK"""
 
-    async def get_file_meta(self, robot_model: str, file_path: str, preferred_chunk_size: int) -> ResponseGetFileMetaT:
+    async def get_file_meta(self, robot_model: str, robot_id: str, file_path: str, preferred_chunk_size: int) -> ResponseGetFileMetaT:
         """
         [File Meta 조회]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 요청을 보낼 로봇 ID
         - file_path: 파일 경로
         - ResponseGetFileMetaT 객체 반환
         """
@@ -30,7 +31,7 @@ class RBAmrFileSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/file/getFileMeta",
+            f"amr/{robot_model}/{robot_id}/file/getFileMeta",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetFileMetaT,
             flatbuffer_buf_size=2048,
@@ -43,10 +44,11 @@ class RBAmrFileSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def get_file_chunk(self, robot_model: str, file_path: str, idx: int, chunk_size: int) -> ResponseGetFileChunkT:
+    async def get_file_chunk(self, robot_model: str, robot_id: str, file_path: str, idx: int, chunk_size: int) -> ResponseGetFileChunkT:
         """
         [Map File Chunk 조회]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 요청을 보낼 로봇 ID
         - file_path: 파일 경로
         - idx: 청크 인덱스
         - chunk_size: 청크 크기
@@ -61,7 +63,7 @@ class RBAmrFileSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/file/getFileChunk",
+            f"amr/{robot_model}/{robot_id}/file/getFileChunk",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetFileChunkT,
             flatbuffer_buf_size=2048,
@@ -74,10 +76,11 @@ class RBAmrFileSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def compress_files(self, robot_model: str, base_dir: str, source_names: list[str], output_name: str) -> ResponseCompressFilesT:
+    async def compress_files(self, robot_model: str, robot_id: str, base_dir: str, source_names: list[str], output_name: str) -> ResponseCompressFilesT:
         """
         [Files Compress 압축]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 요청을 보낼 로봇 ID
         - base_dir: 압축할 디렉토리 경로
         - source_names: 압축할 파일 이름 목록
         - output_name: 압축 파일 이름
@@ -92,7 +95,7 @@ class RBAmrFileSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/file/compressFiles",
+            f"amr/{robot_model}/{robot_id}/file/compressFiles",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseCompressFilesT,
             flatbuffer_buf_size=2048,
@@ -105,10 +108,11 @@ class RBAmrFileSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def decompress_file(self, robot_model: str, source_path: str, output_path: str) -> ResponseDecompressFileT:
+    async def decompress_file(self, robot_model: str, robot_id: str, source_path: str, output_path: str) -> ResponseDecompressFileT:
         """
         [File Decompress 압축 해제]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 요청을 보낼 로봇 ID
         - source_path: 압축 해제할 파일 경로
         - output_path: 압축 해제 파일 경로
         - ResponseDecompressFileT 객체 반환
@@ -121,7 +125,7 @@ class RBAmrFileSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/file/decompressFile",
+            f"amr/{robot_model}/{robot_id}/file/decompressFile",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseDecompressFileT,
             flatbuffer_buf_size=2048,
@@ -134,10 +138,11 @@ class RBAmrFileSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def delete_file(self, robot_model: str, file_path: str) -> ResponseDeleteFileT:
+    async def delete_file(self, robot_model: str, robot_id: str, file_path: str) -> ResponseDeleteFileT:
         """
         [File Delete 파일 삭제]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 요청을 보낼 로봇 ID
         - file_path: 삭제할 파일 경로
         - ResponseDeleteFileT 객체 반환
         """
@@ -148,7 +153,7 @@ class RBAmrFileSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/file/deleteFile",
+            f"amr/{robot_model}/{robot_id}/file/deleteFile",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseDeleteFileT,
             flatbuffer_buf_size=2048,

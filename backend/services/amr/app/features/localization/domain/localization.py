@@ -20,7 +20,7 @@ from rb_utils.service_exception import (
 from app.features.move.move_schema import (
     Request_Move_CircularPD,
     Request_Move_GoalPD,
-    Request_Move_JogPD,
+    RequestMoveJogPD,
     Request_Move_LinearPD,
     Request_Move_RotatePD,
     Request_Move_TargetPD,
@@ -122,9 +122,9 @@ class MoveModel:
         self.goal_pose = req.goalPose
         self.update_at = datetime.now(UTC)
 
-    def set_move_jog(self, req: Request_Move_JogPD):
+    def set_move_jog(self, req: RequestMoveJogPD):
         """
-        - req: Request_Move_JogPD
+        - req: RequestMoveJogPD
         - return: None
         """
         self.command = AmrMoveCommandEnum.MOVE_JOG

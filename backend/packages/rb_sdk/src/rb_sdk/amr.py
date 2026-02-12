@@ -31,7 +31,7 @@ class RBAmrSDK(RBBaseSDK):
     """AMR 파일 관련 SDK 집합"""
 
     def __init__(self):
-        super().__init__()
+        super().__init__(server="amr")
 
         self.move = RBAmrMoveSDK()
         self.control = RBAmrControlSDK()

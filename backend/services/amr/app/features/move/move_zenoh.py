@@ -11,7 +11,7 @@ from .move_api import amr_move_service
 move_zenoh_router = ZenohRouter()
 
 @move_zenoh_router.subscribe(
-    "*/move/result",
+    "*/*/move/result",
     flatbuffer_obj_t=ResultMoveT
 )
 async def on_sub_slamnav_move_result(*, topic, obj):

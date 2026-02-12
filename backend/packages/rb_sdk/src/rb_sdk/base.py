@@ -7,7 +7,7 @@ import sys
 import threading
 import time as time_module
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar
 
 from rb_flat_buffers.program.RB_Program_Dialog import RB_Program_DialogT
 from rb_flat_buffers.program.RB_Program_Log import RB_Program_LogT
@@ -22,8 +22,6 @@ from rb_zenoh.schema import SubscribeOptions
 
 from .schema.base_schema import SetVariableDTO
 
-if TYPE_CHECKING:
-    from rb_flow_manager.step import Step
 
 class VariablesProxy:
     """변수 프록시"""
@@ -144,6 +142,7 @@ class RBBaseSDK:
                 RBBaseSDK._instances[key] = instance
                 instance._initialized = False
 
+                # ✅ 데코레이터보다 먼저 초기화
                 instance._zenoh_subscribers = []
                 instance._zenoh_queryables = []
                 instance._pid = pid
@@ -156,6 +155,7 @@ class RBBaseSDK:
                 if pid not in RBBaseSDK._zenoh_clients:
                     RBBaseSDK._zenoh_clients[pid] = ZenohClient()
 
+                # ✅ 즉시 설정
                 instance.zenoh_client = RBBaseSDK._zenoh_clients[pid]
 
             return RBBaseSDK._instances[key]
@@ -183,6 +183,8 @@ class RBBaseSDK:
         self.robot_uids = self._get_robot_uids(server=server) if server is not None else {}
 
         self._initialized = True
+
+        print(f"[SDK Base] Initialized {self.__class__.__name__} for PID {self._pid} (total refs: {RBBaseSDK._total_ref_counts[self._pid]})", flush=True)
 
     def _get_robot_uids(self, *, server: Literal["amr", "manipulate"]) -> dict[str, str]:
         """
@@ -221,6 +223,8 @@ class RBBaseSDK:
     ):
         """데코레이터: Subscribe 자동 등록 및 정리"""
         def decorator(callback: Callable):
+            # ✅ _initialized 체크 제거
+
             handle = self.zenoh_client.subscribe(
                 topic=topic,
                 callback=callback,
@@ -245,6 +249,8 @@ class RBBaseSDK:
     ):
         """데코레이터: Queryable 자동 등록 및 정리"""
         def decorator(handler: Callable):
+            # ✅ _initialized 체크 제거
+
             # 중복 체크
             if keyexpr in self.zenoh_client._queryables:
                 print(f"⚠️  Queryable already declared: {keyexpr}", flush=True)
@@ -434,7 +440,6 @@ class RBBaseSDK:
         content: str,
         robot_model: str,
         level: Literal["INFO", "WARNING", "ERROR", "USER", "DEBUG", "GENERAL"],
-        disable_db: bool = False,
         flow_manager_args: FlowManagerArgs | None = None):
         """프로그램 로그 발생"""
         req = RB_Program_LogT()
@@ -463,39 +468,6 @@ class RBBaseSDK:
         if flow_manager_args is not None:
             flow_manager_args.done()
 
-    def call_event_tree(
-        self,
-        *,
-        trees: list["Step"],
-        index: int,
-        task_id: str | None = None,
-        target_step_id: str | None = None,
-        _post_run: bool = False,
-        flow_manager_args: FlowManagerArgs | None = None,
-    ):
-        """이벤트 트리를 호출하고 실행이 끝날 때까지 대기한다."""
-        event_tree = trees[index] if 0 <= index < len(trees) else None
-        ctx = flow_manager_args.ctx if flow_manager_args is not None else None
-
-        try:
-            if event_tree is None or ctx is None:
-                return
-
-            if not hasattr(event_tree, "execute"):
-                rb_log.error(f"[call_event_tree] invalid event tree type: {type(event_tree)}")
-                return
-
-            if task_id is not None:
-                ctx.state_dict["event_sub_pid"] = task_id
-
-            event_tree.execute(ctx, target_step_id=target_step_id, _post_run=_post_run)
-        finally:
-            if ctx is not None:
-                ctx.state_dict.pop("event_sub_pid", None)
-            if flow_manager_args is not None:
-                flow_manager_args.done()
-
-
     def close(self):
         """SDK 종료 (전체 참조 카운트 기반으로 ZenohClient 정리 여부 결정)"""
         if os.getpid() != getattr(self, "_pid", os.getpid()):
@@ -510,12 +482,12 @@ class RBBaseSDK:
         with RBBaseSDK._lock:
             # 중복 close 방지
             if getattr(self, "_closing", False):
-                # self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) close already in progress", robot_model="RRS", level="DEBUG")
+                self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) close already in progress", robot_model="RRS", level="DEBUG")
                 return
 
             # 이미 제거된 인스턴스는 건너뜀 (카운트 감소 X)
             if key not in RBBaseSDK._instances:
-                # self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) already removed, skipping", robot_model="RRS", level="DEBUG")
+                self.log(content=f"[SDK Base] {self.__class__.__name__} (PID {pid}) already removed, skipping", robot_model="RRS", level="DEBUG")
                 return
 
             self._closing = True
@@ -525,7 +497,7 @@ class RBBaseSDK:
                 RBBaseSDK._total_ref_counts[pid] -= 1
                 remaining = RBBaseSDK._total_ref_counts[pid]
 
-                # self.log(content=f"[SDK Base] Closing {self.__class__.__name__} (PID {pid}), remaining SDKs: {remaining}", robot_model="RRS", level="DEBUG")
+                self.log(content=f"[SDK Base] Closing {self.__class__.__name__} (PID {pid}), remaining SDKs: {remaining}", robot_model="RRS", level="DEBUG")
 
                 # 이 클래스의 인스턴스가 정리될 때 리소스 정리
                 if key in RBBaseSDK._instances:
@@ -536,13 +508,13 @@ class RBBaseSDK:
                 if remaining <= 0:
                     should_close_zenoh = True
                     RBBaseSDK._total_ref_counts.pop(pid, None)
-                    # self.log(content=f"[SDK Base] ✅ All SDKs closed for PID {pid}, will close ZenohClient", robot_model="RRS", level="DEBUG")
+                    self.log(content=f"[SDK Base] ✅ All SDKs closed for PID {pid}, will close ZenohClient", robot_model="RRS", level="DEBUG")
 
         # Lock 밖에서 리소스 정리 (deadlock 방지)
         if should_cleanup_resources:
             try:
                 self._cleanup_resources()
-                # self.log(content=f"[SDK Base] ✅ Resources cleaned for {self.__class__.__name__}", robot_model="RRS", level="DEBUG")
+                self.log(content=f"[SDK Base] ✅ Resources cleaned for {self.__class__.__name__}", robot_model="RRS", level="DEBUG")
             except Exception as e:
                 self.log(content=f"[SDK Base] Error cleaning up resources: {e}", robot_model="RRS", level="ERROR")
 
@@ -553,7 +525,7 @@ class RBBaseSDK:
                     zenoh_client = RBBaseSDK._zenoh_clients.pop(pid, None)
 
                 if zenoh_client is not None:
-                    # self.log(content=f"[SDK Base] ✅ ZenohClient closed for PID {pid}", robot_model="RRS", level="DEBUG")
+                    self.log(content=f"[SDK Base] ✅ ZenohClient closed for PID {pid}", robot_model="RRS", level="DEBUG")
                     with contextlib.suppress(Exception, TimeoutError):
                         zenoh_client.close()
 

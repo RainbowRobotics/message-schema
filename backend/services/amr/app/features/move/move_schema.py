@@ -43,7 +43,7 @@ class Response_Move_TargetPD(BaseModel):
     message: str | None = Field(None, description="상태 메시지", example="")
 
 
-class Request_Move_JogPD(BaseModel):
+class RequestMoveJogPD(BaseModel):
     vx: float = Field(..., description="X 방향 속도 (m/s)", example=0.5)
     vy: float = Field(..., description="Y 방향 속도 (m/s)", example=0.3)
     wz: float = Field(..., description="Z축 각속도 (rad/s)", example=0.1)

@@ -23,13 +23,14 @@ _prev_res: list[dict[str, Any]] = []
 
 @whoami_socket_router.on("{robot_model}/whoami")
 async def on_whoami(data, robot_model: str):
-    next_ts = time.monotonic()
+    print("?????", robot_model, data)
+    # next_ts = time.monotonic()
 
-    while True:
-        res = await whoamiService.get_whoami(robot_model)
+    # while True:
+    #     res = await whoamiService.get_whoami(robot_model)
 
-        if _prev_res != res:
-            await socket_client.emit("whoami", res)
+    #     if _prev_res != res:
+    #         await socket_client.emit("whoami", res)
 
-        next_ts += _period
-        await asyncio.sleep(max(0, next_ts - time.monotonic()))
+    #     next_ts += _period
+    #     await asyncio.sleep(max(0, next_ts - time.monotonic()))
