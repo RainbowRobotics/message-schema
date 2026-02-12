@@ -219,7 +219,6 @@ table ResponseMapDelete {
     message: string;
 }
 
-
 /*
     category    :       RPC
     response    :       ???
