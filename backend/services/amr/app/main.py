@@ -8,11 +8,12 @@ from rb_modules.rb_fastapi_app import (
 
 from app.features.control.control_api import amr_control_router
 from app.features.map.map_api import amr_map_router
+from app.features.map.map_zenoh import map_zenoh_router
 from app.features.move.move_api import amr_move_router
 from app.features.move.move_socket import move_socket_router
 from app.features.move.move_zenoh import move_zenoh_router
 from app.features.status.status_zenoh import status_zenoh_router
-from app.features.map.map_zenoh import map_zenoh_router
+
 from .socket.socket_client import (
     socket_client,
 )

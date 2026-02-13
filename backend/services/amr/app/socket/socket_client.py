@@ -1,4 +1,5 @@
 from rb_socketio import RBSocketIONsClient
+
 socket_client = RBSocketIONsClient(
     "amr",
     reconnection=True,  # 자동 재연결 활성화

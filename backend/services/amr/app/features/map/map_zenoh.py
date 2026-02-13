@@ -1,5 +1,6 @@
-from rb_zenoh.router import ZenohRouter
 from rb_flat_buffers.SLAMNAV.MappingCloud import MappingCloudT
+from rb_zenoh.router import ZenohRouter
+
 from app.socket.socket_client import socket_client
 
 map_zenoh_router = ZenohRouter()
