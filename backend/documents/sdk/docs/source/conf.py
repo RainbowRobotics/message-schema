@@ -31,6 +31,16 @@ autodoc_typehints = "description"
 
 autodoc_mock_imports = [
     "zenoh",
+    "rb_sdk.amr_sdk.schema.amr_control_schema",
+    "rb_sdk.amr_sdk.schema.amr_localization_schema",
+    "rb_sdk.amr_sdk.schema.amr_map_schema",
+    "rb_sdk.amr_sdk.schema.amr_move_schema",
+    "rb_sdk.amr_sdk.schema.amr_setting_schema",
+    "rb_sdk.amr_sdk.schema.amr_update_schema",
+]
+
+suppress_warnings = [
+    "autodoc.mocked_object",
 ]
 
 templates_path = ["_templates"]
@@ -39,4 +49,5 @@ exclude_patterns = []
 language = "ko"
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
+_static_dir = Path(__file__).resolve().parent / "_static"
+html_static_path = ["_static"] if _static_dir.exists() else []
