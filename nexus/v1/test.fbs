@@ -4,6 +4,7 @@ table Test_General {
 
 table Test_Advanced {
   test: float;
+  test132: int;
 }
 
 root_type Test_General;
