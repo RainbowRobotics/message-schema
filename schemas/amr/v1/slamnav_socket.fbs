@@ -111,28 +111,28 @@ table MappingCloud {
 //          : 구조 변경 예정
 //          : multi_path 와 하나로 합칠 예정.
 //          : 선언 위치는 추후 결정.
-    // /*
-    //     category    :       Pub / Sub
-    //     topic       :       {robotType}/socket/globalPath
-    //     usage       :       전역 경로 데이터
-    //     field
-    //         - id            :       time
-    //         - path          :       경로 노드 목록
-    // */
-    // table GlobalPath {
-    //     id: string;
-    //     path: [string];
-    // }
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/globalPath
+    usage       :       전역 경로 데이터
+    field
+        - id            :       time
+        - path          :       경로 노드 목록
+*/
+table GlobalPath {
+    id: string;
+    path: [string];
+}
 
-    // /*
-    //     category    :       Pub / Sub
-    //     topic       :       {robotType}/socket/localPath
-    //     usage       :       지역 경로 데이터
-    //     field
-    //         - id            :       time
-    //         - path          :       경로 노드 목록
-    // */
-    // table LocalPath {
-    //     id: string;
-    //     path: [string];
-    // }
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/localPath
+    usage       :       지역 경로 데이터
+    field
+        - id            :       time
+        - path          :       경로 노드 목록
+*/
+table LocalPath {
+    id: string;
+    path: [string];
+}
