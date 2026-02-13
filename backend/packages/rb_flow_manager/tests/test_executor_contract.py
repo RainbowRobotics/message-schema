@@ -58,7 +58,6 @@ class ExecutorContractTest(unittest.TestCase):
         text = EXECUTOR_PATH.read_text(encoding="utf-8")
         self.assertIn('if getattr(s, "disabled", False):', text)
 
-
 class ControllerExceptionPolicyTest(unittest.TestCase):
     def test_zenoh_controller_no_raise_e_pattern(self):
         text = ZENOH_CONTROLLER_PATH.read_text(encoding="utf-8")

@@ -186,30 +186,74 @@ def _execute_tree_in_process(
         if pt is None:
             return
 
-        # parent process는 자신의 자식 프로세스(parent_process_id == process_id)가 끝난 뒤 post_tree 실행
+        # parent process는 자신의 모든 자손 프로세스(parent_process_id 체인)가
+        # 끝난 뒤 post_tree 실행
+        #
+        # 중요:
+        # - all_state_dicts는 child process 관점에서 스냅샷일 수 있어 동적 spawn된
+        #   event child를 놓칠 수 있다.
+        # - 따라서 shared parent_map/process_alive를 우선 진실원천으로 사용한다.
+        # - 또한 CallEventStep 직후 실제 child 등록 전 레이스를 막기 위해
+        #   event_start_pending_map이 비어있는지도 함께 확인한다.
         if process_alive is not None and parent_map is not None:
             while True:
+                pending_start_map = dict(state_dict.get("event_start_pending_map", {}))
+                has_pending_event_start = len(pending_start_map) > 0
                 has_alive_children = False
-                for pid in list(parent_map.keys()):
-                    if pid == process_id:
+                child_pids: list[str] = []
+
+                # descendants를 재귀적으로 수집 (shared parent_map 기준)
+                queue_pids: list[str] = [process_id]
+                visited: set[str] = set()
+                while queue_pids:
+                    parent = queue_pids.pop(0)
+                    if parent in visited:
                         continue
-                    if parent_map.get(pid) != process_id:
-                        continue
-                    if process_alive.get(pid, False):
+                    visited.add(parent)
+                    for pid in list(parent_map.keys()):
+                        if pid == process_id:
+                            continue
+                        if parent_map.get(pid) == parent and pid not in child_pids:
+                            child_pids.append(pid)
+                            queue_pids.append(pid)
+
+                # 보조 경로: 같은 세대에서 이미 보이는 state_dict 기반 자손도 union
+                # (parent_map 갱신 타이밍 레이스 완화용)
+                if all_state_dicts is not None:
+                    queue_pids = [process_id]
+                    visited.clear()
+                    while queue_pids:
+                        parent = queue_pids.pop(0)
+                        if parent in visited:
+                            continue
+                        visited.add(parent)
+                        for pid, child_sd in all_state_dicts.items():
+                            if pid == process_id:
+                                continue
+                            if (child_sd or {}).get("parent_process_id") == parent and pid not in child_pids:
+                                child_pids.append(pid)
+                                queue_pids.append(pid)
+
+                for pid in child_pids:
+                    child_alive = bool(process_alive.get(pid, False))
+                    if child_alive:
                         has_alive_children = True
                         break
 
-                if not has_alive_children:
+                # 비동기 event spawn ack 대기 중이거나,
+                # 실제 자손 프로세스가 살아있으면 post_tree 진입 금지
+                if not has_pending_event_start and not has_alive_children:
                     break
-
-                if stop_event.is_set() and not state_dict.get("ignore_stop", False):
-                    state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-                    raise StopExecution("Execution stopped by user")
 
                 time.sleep(0.05)
 
         stop_event.clear()
+        # post_tree는 정책상 stop 이후에도 실행되므로, 누적된 pause/resume latch에 걸려 진입 직후 block되지 않도록 강제로 정리
+        pause_event.clear()
+        resume_event.clear()
         state_dict["ignore_stop"] = True
+        state_dict["current_step_id"] = pt.step_id
+        state_dict["current_step_name"] = pt.name
 
         if ctx is not None:
             ctx.emit_post_start()
@@ -867,6 +911,11 @@ class ScriptExecutor:
             reject_spawn(f"Failed to spawn event sub task: {event_task_id}")
             return
 
+        # post_tree 대기 판단에 사용할 이벤트 자식 메타데이터 기록
+        if event_task_id in self.state_dicts:
+            self.state_dicts[event_task_id]["is_event_sub_task"] = True
+            self.state_dicts[event_task_id]["event_run_mode"] = run_mode
+
         # start 이전에 등록해야 자식이 즉시 종료해도 resume 누락이 없음
         if run_mode == "SYNC":
             parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
@@ -879,7 +928,44 @@ class ScriptExecutor:
                 self._event_wait_children_count.get(parent_pid, 0) + 1
             )
 
-        p.start()
+        try:
+            p.start()
+        except Exception as e:
+            # start 실패 시 SYNC 대기 카운트/매핑 롤백 (parent deadlock 방지)
+            if run_mode == "SYNC":
+                self._event_wait_parent_by_child.pop(event_task_id, None)
+                remaining = self._event_wait_children_count.get(parent_pid, 0) - 1
+                if remaining <= 0:
+                    self._event_wait_children_count.pop(parent_pid, None)
+                else:
+                    self._event_wait_children_count[parent_pid] = remaining
+
+                if parent_pid in self.state_dicts:
+                    parent_children = list(self.state_dicts[parent_pid].get("event_sync_children", []))
+                    if event_task_id in parent_children:
+                        parent_children.remove(event_task_id)
+                        self.state_dicts[parent_pid]["event_sync_children"] = parent_children
+
+            if self._process_alive is not None:
+                self._process_alive[event_task_id] = False
+            if self._parent_map is not None and event_task_id in self._parent_map:
+                del self._parent_map[event_task_id]
+
+            # 생성 중 만들었던 리소스 정리
+            self.completion_events.pop(event_task_id, None)
+            q = self.result_queues.pop(event_task_id, None)
+            if q is not None:
+                with contextlib.suppress(Exception):
+                    q.close()
+            self.pause_events.pop(event_task_id, None)
+            self.resume_events.pop(event_task_id, None)
+            self.stop_events.pop(event_task_id, None)
+            self.start_events.pop(event_task_id, None)
+            self._pid_generation.pop(event_task_id, None)
+
+            reject_spawn(f"Failed to start event sub task {event_task_id}: {e!s}")
+            return
+
         self.processes[event_task_id] = p
         if call_seq is not None:
             self._event_start_seq_by_child[event_task_id] = int(call_seq)
@@ -1240,8 +1326,8 @@ class ScriptExecutor:
                 if parent_process_id is not None:
                     self.pause(parent_process_id)
 
-                for find_pid in list(self.state_dicts.keys()):
-                    if self.state_dicts[find_pid].get("parent_process_id") == pid:
+                for find_pid in list(self.processes.keys()):
+                    if self.state_dicts.get(find_pid, {}).get("parent_process_id") == pid:
                         self.pause(find_pid)
 
             if is_wait:
@@ -1258,14 +1344,25 @@ class ScriptExecutor:
         elif evt_type == "resume":
             if step_id is None:
                 raise ValueError("resume event requires step_id")
-            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
+            # post 단계는 상태를 POST_START로 유지한다(표시/흐름 꼬임 방지).
+            if self.state_dicts[pid].get("state") != RB_Flow_Manager_ProgramState.POST_START:
+                self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
 
             parent_process_id = evt.get("parent_process_id")
             if parent_process_id is not None:
-                self.resume(parent_process_id)
+                # 자식의 resume를 부모로 전파할 때는,
+                # 부모가 실제 대기 상태(PAUSED/WAITING)인 경우에만 깨운다.
+                # POST_START 상태를 RUNNING으로 덮어써 current_step_id가 과거 step으로
+                # 되돌아가는 현상을 방지한다.
+                parent_state = self.state_dicts.get(parent_process_id, {}).get("state")
+                if parent_state in (
+                    RB_Flow_Manager_ProgramState.PAUSED,
+                    RB_Flow_Manager_ProgramState.WAITING,
+                ):
+                    self.resume(parent_process_id)
 
-            for find_pid in list(self.state_dicts.keys()):
-                if self.state_dicts[find_pid].get("parent_process_id") == pid:
+            for find_pid in list(self.processes.keys()):
+                if self.state_dicts.get(find_pid, {}).get("parent_process_id") == pid:
                     self.resume(find_pid)
 
             if self._on_resume is not None:
@@ -1408,6 +1505,17 @@ class ScriptExecutor:
             self._unregister_process_sync_flags(process_id)
             if self._process_alive is not None:
                 self._process_alive[process_id] = False
+            # 비정상 종료/이벤트 누락 시 state가 RUNNING/WAITING 등에 머물 수 있다.
+            # 이 경우 부모 post_tree 대기 루프가 영구 대기하지 않도록 terminal state로 정규화한다.
+            sd = self.state_dicts.get(process_id)
+            if sd is not None:
+                cur_state = sd.get("state")
+                if cur_state not in (
+                    RB_Flow_Manager_ProgramState.COMPLETED,
+                    RB_Flow_Manager_ProgramState.STOPPED,
+                    RB_Flow_Manager_ProgramState.ERROR,
+                ):
+                    sd["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
         with self._mu:
             p = self.processes.pop(process_id, None)
@@ -1558,7 +1666,8 @@ class ScriptExecutor:
         self.resume_events[process_id].set()
 
         step_id = self.state_dicts[process_id].get("current_step_id")
-        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
+        if self.state_dicts[process_id].get("state") != RB_Flow_Manager_ProgramState.POST_START:
+            self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
 
         if self._on_resume is not None:
             self._on_resume(process_id, step_id)
