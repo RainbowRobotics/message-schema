@@ -102,6 +102,7 @@ class MapModel:
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     robot_model: str | None = None
+    robot_id: str | None = None
     command: AmrMapCommandEnum | None = None
 
     map_name: str | None = None
@@ -133,9 +134,10 @@ class MapModel:
     sort_option: str | None = None
     sort_direction: str | None = None
 
-    def __init__(self, robot_model: str):
+    def __init__(self, robot_model: str, robot_id: str):
         self.id = str(uuid.uuid4())
         self.robot_model = robot_model
+        self.robot_id = robot_id
         self.map_root_path = "/data/maps"
 
     def get_map_list(self):
@@ -262,6 +264,13 @@ class MapModel:
 
     def check_variables(self) -> None:
         """ 변수 검사 """
+        if self.robot_model is None:
+            raise ServiceException("robot_model 값이 비어있습니다", status_code=400)
+        if self.robot_id is None:
+            raise ServiceException("robot_id 값이 비어있습니다", status_code=400)
+        if self.command is None:
+            raise ServiceException("command 값이 비어있습니다", status_code=500)
+
         if self.command == AmrMapCommandEnum.GET_MAP_LIST:
             pass
         elif self.command == AmrMapCommandEnum.DELETE_MAP:
@@ -312,13 +321,15 @@ class MapModel:
         elif self.command == AmrMapCommandEnum.MAP_LOAD:
             if self.map_name is None or self.map_name == "":
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
-        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:
+        elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD:
+            pass
+        elif self.command == AmrMapCommandEnum.MAPPING_START:
+            pass
+        elif self.command == AmrMapCommandEnum.MAPPING_STOP:
             pass
         elif self.command == AmrMapCommandEnum.MAPPING_SAVE:
             if self.map_name is None or self.map_name == "":
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
-        else:
-            raise ServiceException("알 수 없는 command 값입니다. ({self.command})", status_code=400)
 
     def parse_cloud_data(self, data: list[float], column_count: int, row_count: int):
         """ cloud data 파싱 """
@@ -369,6 +380,8 @@ class MapModel:
         elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:
             pass
         elif self.command == AmrMapCommandEnum.MAPPING_SAVE:
+            d["mapName"] = self.map_name
+        elif self.command == AmrMapCommandEnum.GET_MAP_CURRENT:
             d["mapName"] = self.map_name
 
         d["result"] = self.result

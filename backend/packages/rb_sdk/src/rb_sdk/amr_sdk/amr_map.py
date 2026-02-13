@@ -32,10 +32,11 @@ from ..base import RBBaseSDK
 class RBAmrMapSDK(RBBaseSDK):
     """Rainbow Robotics AMR Map SDK"""
 
-    async def get_map_list(self, robot_model: str, req_id: str) -> ResponseMapListT:
+    async def get_map_list(self, robot_model: str, robot_id: str, req_id: str) -> ResponseMapListT:
         """
         [Map List 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - ResponseMapListT 객체 반환
         """
@@ -46,7 +47,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/list",
+            f"{robot_model}/{robot_id}/map/list",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMapListT,
             flatbuffer_buf_size=2048,
@@ -58,10 +59,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def delete_map(self, robot_model: str, req_id: str, map_name: str) -> ResponseMapDeleteT:
+    async def delete_map(self, robot_model: str, robot_id: str, req_id: str, map_name: str) -> ResponseMapDeleteT:
         """
         [Map Delete 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - ResponseMapDeleteT 객체 반환
@@ -74,7 +76,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/delete",
+            f"{robot_model}/{robot_id}/map/delete",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMapDeleteT,
             flatbuffer_buf_size=2048,
@@ -86,10 +88,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def get_current_map(self, robot_model: str, req_id: str) -> ResponseMapCurrentT:
+    async def get_current_map(self, robot_model: str, robot_id: str, req_id: str) -> ResponseMapCurrentT:
         """
         [Current Map 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - ResponseMapCurrentT 객체 반환
         """
@@ -100,7 +103,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/current",
+            f"{robot_model}/{robot_id}/map/current",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMapCurrentT,
             flatbuffer_buf_size=2048,
@@ -113,10 +116,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def get_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str) -> ResponseGetMapCloudT:
+    async def get_map_cloud(self, robot_model: str, robot_id: str, req_id: str, map_name: str, file_name: str) -> ResponseGetMapCloudT:
         """
         [Map Cloud 조회]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - file_name: 파일 이름
@@ -131,7 +135,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/getCloud",
+            f"{robot_model}/{robot_id}/map/getCloud",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetMapCloudT,
             flatbuffer_buf_size=4096,
@@ -142,10 +146,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def set_map_cloud(self, robot_model: str, req_id: str, map_name: str, file_name: str, data: list[float], column_count: int, row_count: int) -> ResponseSetMapCloudT:
+    async def set_map_cloud(self, robot_model: str, robot_id: str, req_id: str, map_name: str, file_name: str, data: list[float], column_count: int, row_count: int) -> ResponseSetMapCloudT:
         """
         [Map Cloud 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - file_name: 파일 이름
@@ -166,7 +171,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/setCloud",
+            f"{robot_model}/{robot_id}/map/setCloud",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetMapCloudT,
             flatbuffer_buf_size=1000,
@@ -178,10 +183,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def get_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyT:
+    async def get_map_topology(self, robot_model: str, robot_id: str, req_id: str, map_name: str, file_name: str, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyT:
         """
         [Map Topology 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - file_name: 파일 이름
@@ -208,7 +214,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/getTopology",
+            f"{robot_model}/{robot_id}/map/getTopology",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetMapTopologyT,
             flatbuffer_buf_size=125,
@@ -220,10 +226,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def set_map_topology(self, robot_model: str, req_id: str, map_name: str, file_name: str, data: list[NodeT]) -> ResponseSetMapTopologyT:
+    async def set_map_topology(self, robot_model: str, robot_id: str, req_id: str, map_name: str, file_name: str, data: list[NodeT]) -> ResponseSetMapTopologyT:
         """
         [Map Topology 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - file_name: 파일 이름
@@ -239,7 +246,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/setTopology",
+            f"{robot_model}/{robot_id}/map/setTopology",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetMapTopologyT,
             flatbuffer_buf_size=1000,
@@ -251,10 +258,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def mapping_start(self, robot_model: str, req_id: str) -> ResponseMappingStartT:
+    async def mapping_start(self, robot_model: str, robot_id: str, req_id: str) -> ResponseMappingStartT:
         """
         [Mapping Start 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - ResponseMappingStartT 객체 반환
         """
@@ -265,7 +273,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/mapping/start",
+            f"{robot_model}/{robot_id}/mapping/start",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMappingStartT,
             flatbuffer_buf_size=125,
@@ -274,10 +282,11 @@ class RBAmrMapSDK(RBBaseSDK):
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
 
-    async def mapping_stop(self, robot_model: str, req_id: str) -> ResponseMappingStopT:
+    async def mapping_stop(self, robot_model: str, robot_id: str, req_id: str) -> ResponseMappingStopT:
         """
         [Mapping Stop 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - ResponseMappingStopT 객체 반환
         """
@@ -286,7 +295,7 @@ class RBAmrMapSDK(RBBaseSDK):
         req.id = req_id
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/mapping/stop",
+            f"{robot_model}/{robot_id}/mapping/stop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMappingStopT,
             flatbuffer_buf_size=125,
@@ -298,10 +307,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def mapping_save(self, robot_model: str, req_id: str, map_name: str) -> ResponseMappingSaveT:
+    async def mapping_save(self, robot_model: str, robot_id: str, req_id: str, map_name: str) -> ResponseMappingSaveT:
         """
         [Mapping Save 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - ResponseMappingSaveT 객체 반환
@@ -313,7 +323,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/mapping/save",
+            f"{robot_model}/{robot_id}/mapping/save",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMappingSaveT,
             flatbuffer_buf_size=125,
@@ -325,10 +335,11 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def map_load(self, robot_model: str, req_id: str, map_name: str) -> ResponseMapLoadT:
+    async def map_load(self, robot_model: str, robot_id: str, req_id: str, map_name: str) -> ResponseMapLoadT:
         """
         [Map Load 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - map_name: 맵 이름
         - ResponseMapLoadT 객체 반환
@@ -340,7 +351,7 @@ class RBAmrMapSDK(RBBaseSDK):
         req.mapName = map_name
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/loadMap",
+            f"{robot_model}/{robot_id}/map/loadMap",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseMapLoadT,
             flatbuffer_buf_size=125,
@@ -349,10 +360,11 @@ class RBAmrMapSDK(RBBaseSDK):
         # 3) 결과 처리 및 반환
         return result["dict_payload"]
 
-    async def topo_reload(self, robot_model: str, req_id: str) -> ResponseTopoLoadT:
+    async def topo_reload(self, robot_model: str, robot_id: str, req_id: str) -> ResponseTopoLoadT:
         """
         [Topo Load 전송]
         - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
         - req_id: 요청 ID
         - ResponseTopoLoadT 객체 반환
         """
@@ -363,7 +375,7 @@ class RBAmrMapSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/map/loadTopo",
+            f"{robot_model}/{robot_id}/map/loadTopo",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseTopoLoadT,
             flatbuffer_buf_size=125,
