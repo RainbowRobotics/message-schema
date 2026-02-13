@@ -22,12 +22,17 @@ from rb_sdk.manipulate_sdk.manipulate_get_data import RBManipulateGetDataSDK
 
 from ..base import RBBaseSDK
 from .manipulate_io import RBManipulateIOSDK
+from .manipulate_smbc import RBManipulateSMBCSdk
 from .schema.manipulate_io_schema import FlangeDoutArg
 from .schema.manipulate_move_schema import MoveInputTargetSchema
-from .schema.manipulate_program_schema import DigitalInputConditionSchema
+from .schema.manipulate_program_schema import (
+    DigitalInputConditionSchema,
+    InterfaceModbusClientPayloadSchema,
+)
 
 rb_manipulate_get_data_sdk = RBManipulateGetDataSDK()
 rb_manipulate_io_sdk = RBManipulateIOSDK()
+rb_manipulate_smbc_sdk = RBManipulateSMBCSdk()
 
 class RBManipulateProgramSDK(RBBaseSDK):
     """Rainbow Robotics Manipulate Program SDK"""
@@ -550,3 +555,79 @@ class RBManipulateProgramSDK(RBBaseSDK):
         flow_manager_args.done()
 
         return res
+
+    def interface(
+            self,
+            *,
+            option: Literal["MODBUS_CLIENT"],
+            modbus_client: InterfaceModbusClientPayloadSchema,
+            flow_manager_args: FlowManagerArgs | None = None
+        ):
+        """
+        [Interface 호출 함수]
+
+        Args:
+            option: 인터페이스 옵션 (MODBUS_CLIENT)
+            modbus_client: Modbus Client 인자
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        if option == "MODBUS_CLIENT":
+            if flow_manager_args is not None and not modbus_client["server_ip"]:
+                flow_manager_args.done()
+                return
+
+            if modbus_client["type"] == "READ":
+                if modbus_client["number_of_read"] is None:
+                    raise RuntimeError("Modbus Read failed: number_of_read is required")
+                if modbus_client["timeout_ms"] is None:
+                    raise RuntimeError("Modbus Read failed: timeout_ms is required")
+
+                obj_payload = rb_manipulate_smbc_sdk.modbus_read(
+                    issue_core=modbus_client["issue_core"],
+                    server_ip=modbus_client["server_ip"],
+                    server_port=modbus_client["server_port"],
+                    function_code=modbus_client["function_code"],
+                    register_addr=modbus_client["register_addr"],
+                    number_of_read=modbus_client["number_of_read"],
+                    timeout_ms=modbus_client["timeout_ms"],
+                )
+
+                if obj_payload is None:
+                    raise RuntimeError("Modbus Read failed: obj_payload is None")
+
+                if obj_payload.result != 0:
+                    raise RuntimeError(f"Modbus Read failed: result={obj_payload.result}")
+            elif modbus_client["type"] == "WRITE":
+                if modbus_client["payload_dlc"] is None and len(modbus_client["payload"]) > 1:
+                    raise RuntimeError("Modbus Write failed: payload_dlc is required")
+                if modbus_client["payload"] is None:
+                    raise RuntimeError("Modbus Write failed: payload is required")
+                if modbus_client["timeout_ms"] is None:
+                    raise RuntimeError("Modbus Write failed: timeout_ms is required")
+
+                obj_payload = rb_manipulate_smbc_sdk.modbus_write(
+                    issue_core=modbus_client["issue_core"],
+                    server_ip=modbus_client["server_ip"],
+                    server_port=modbus_client["server_port"],
+                    function_code=modbus_client["function_code"],
+                    register_addr=modbus_client["register_addr"],
+                    payload_dlc=modbus_client["payload_dlc"],
+                    payload=modbus_client["payload"],
+                    timeout_ms=modbus_client["timeout_ms"],
+                )
+
+                if obj_payload is None:
+                    raise RuntimeError("Modbus Write failed: obj_payload is None")
+
+                if obj_payload.result != 0:
+                    raise RuntimeError(f"Modbus Write failed: result={obj_payload.result}")
+
+                if flow_manager_args is not None and modbus_client["return_variable_name"] is not None:
+                    flow_manager_args.ctx.update_local_variables({
+                        modbus_client["return_variable_name"]: obj_payload.payload.i
+                    })
+            else:
+                raise RuntimeError("Modbus Client failed: modbus_read or modbus_write is required")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()

@@ -134,25 +134,26 @@ class Step:
             pad = " " * n
             return "\n".join(pad + line if line else line for line in s.splitlines())
 
-        def format_value(v: Any) -> str:
+        def format_value(v: Any, level: int = 0) -> str:
             if isinstance(v, str):
                 if v in raw_expr_strings:
                     return v
                 return repr(v)
             if isinstance(v, dict):
-                return format_dict(v)
+                return format_dict(v, level)
             if isinstance(v, list):
-                return "[" + ", ".join(format_value(x) for x in v) + "]"
+                return "[" + ", ".join(format_value(x, level) for x in v) + "]"
             if callable(v):
                 return getattr(v, "__name__", str(v))
             return repr(v)
 
-        def format_dict(d: dict) -> str:
-            pad = " " * 4
+        def format_dict(d: dict, level: int = 0) -> str:
+            pad = " " * (4 * (level + 1))
+            closing_pad = " " * (4 * level)
             items = []
             for k, v in d.items():
-                items.append(f"{pad}{repr(k)}: {format_value(v)},")
-            return "{\n" + "\n".join(items) + "\n" + " " + "}"
+                items.append(f"{pad}{repr(k)}: {format_value(v, level + 1)},")
+            return "{\n" + "\n".join(items) + "\n" + f"{closing_pad}" + "}"
 
         if self.children:
             inner_steps = [child.to_py_string(depth + 8) for child in self.children]

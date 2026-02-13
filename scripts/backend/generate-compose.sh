@@ -74,6 +74,7 @@ for dir in "$BE/services"/*; do
       - ./services/${NAME}:/app/backend/services/${NAME}
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
+      - ./documents:/app/backend/documents
       - ${DATA_DIR}:/app/data
 EOF
 
@@ -125,7 +126,7 @@ EOF
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
       - ${DATA_DIR}:/app/data
-
+      - ./documents:/app/backend/documents
 EOF
 done
 

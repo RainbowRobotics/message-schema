@@ -4,13 +4,14 @@ import os
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager
 from importlib.resources import as_file, files
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
@@ -227,10 +228,42 @@ def create_app(
 
         return get_swagger_ui_html(
             openapi_url=f"{prefix}/openapi.json",
-            title=f"{(settings.SERVICE_NAME or "").capitalize()} Service",
+            title=f"{(settings.SERVICE_NAME or '').capitalize()} Service",
             swagger_css_url=f"{prefix}/swagger-ui/swagger-ui.css",
             swagger_js_url=f"{prefix}/swagger-ui/swagger-ui.js",
         )
+
+    # SDK 문서 설정
+    current_file = Path(__file__)
+    workspace_root = current_file.parents[5]
+    docs_html_dir = workspace_root / "backend" / "documents" / "sdk" / "docs" / "build" / "html"
+
+    @app.get("/sdk/docs", include_in_schema=False)
+    def sdk_docs_root(request: Request):
+        prefix = (request.scope.get("root_path") or "").rstrip("/")
+        return RedirectResponse(url=f"{prefix}/sdk/docs/", status_code=307)
+
+    @app.get("/sdk/docs/{doc_path:path}", include_in_schema=False)
+    def sdk_docs_assets(doc_path: str = ""):
+        if not docs_html_dir.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"SDK docs directory not found: {docs_html_dir}",
+            )
+
+        normalized = doc_path.strip("/")
+        target_rel = "index.html" if normalized == "" else normalized
+        target = (docs_html_dir / target_rel).resolve()
+
+        try:
+            target.relative_to(docs_html_dir.resolve())
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail="Invalid docs path") from e
+
+        if not target.exists() or not target.is_file():
+            raise HTTPException(status_code=404, detail=f"SDK docs file not found: {target_rel}")
+
+        return FileResponse(str(target))
 
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
