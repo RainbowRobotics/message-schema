@@ -27,7 +27,7 @@ class RBManipulatePointSDK(RBBaseSDK):
         self,
         *,
         robot_model: str,
-        move_type: Literal["J", "L", "JB", "LB"],
+        move_type: Literal["J", "L", "JB", "LB", "XB"],
         tar_frame_reference_point: list[int | float] | None = None,
         pnt_para: int | None = None,
         pnt_type: int | None = None,
@@ -37,6 +37,7 @@ class RBManipulatePointSDK(RBBaseSDK):
         spd_mode: int,
         spd_vel_para: float,
         spd_acc_para: float,
+        method: int | None = None,
         tcp_num: int = -1,
         flow_manager_args: FlowManagerArgs | None = None,
     ) -> Response_FunctionsT | None:
@@ -55,6 +56,7 @@ class RBManipulatePointSDK(RBBaseSDK):
             spd_mode: 속도 측정 설정 방식 (0: %기반 설정, 1: 절대값(물리값))
             spd_vel_para: 속도
             spd_acc_para: 가속도
+            method: 메서드 (0: 기본값, 1: 툴 좌표계 사용)
             tcp_num: TCP 번호 (-1: 기본값)
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
@@ -116,5 +118,20 @@ class RBManipulatePointSDK(RBBaseSDK):
                     pnt_type=pnt_type,
                     pnt_para=pnt_para,
                 ),
+                flow_manager_args=flow_manager_args,
+            )
+        elif move_type == "XB":
+            if pnt_para is None or pnt_type is None:
+                raise ValueError("pnt_para and pnt_type are required for XB move")
+
+            return self.manipulate_move_sdk.call_move_xb_add(
+                robot_model=robot_model,
+                target=target,
+                speed=speed,
+                blend_type=MoveInputTypeSchema(
+                    pnt_type=pnt_type,
+                    pnt_para=pnt_para,
+                ),
+                method=method,
                 flow_manager_args=flow_manager_args,
             )

@@ -21,6 +21,9 @@ from rb_flat_buffers.IPC.Request_Move_SmoothJogL import Request_Move_SmoothJogLT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Request_Move_TickJogJ import Request_Move_TickJogJT
 from rb_flat_buffers.IPC.Request_Move_TickJogL import Request_Move_TickJogLT
+from rb_flat_buffers.IPC.Request_Move_XB_ADD import Request_Move_XB_ADDT
+from rb_flat_buffers.IPC.Request_Move_XB_CLR import Request_Move_XB_CLRT
+from rb_flat_buffers.IPC.Request_Move_XB_RUN import Request_Move_XB_RUNT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.sdk import FlowManagerArgs
@@ -579,6 +582,113 @@ class RBManipulateMoveSDK(RBBaseSDK):
 
         if res["obj_payload"] is None:
             raise RuntimeError("Move LB Run failed: obj_payload is None")
+
+        self._run_coro_blocking(
+            self._move_flow_manager_solver(
+                robot_model=robot_model,
+                flow_manager_args=flow_manager_args
+            )
+        )
+
+        return res["obj_payload"]
+
+    def call_move_xb_clr(
+        self,
+        *,
+        robot_model: str,
+        flow_manager_args: FlowManagerArgs | None = None
+    ):
+        """
+        [협동로봇이 직선 블랜드 이동 명령 배열을 초기화하는 명령 전송 함수]
+        """
+        req = Request_Move_XB_CLRT()
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_clr",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move XB Clear failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+        return res["obj_payload"]
+
+    def call_move_xb_add(
+        self,
+        *,
+        robot_model: str,
+        target: MoveInputTargetSchema,
+        speed: MoveInputSpeedSchema,
+        blend_type: MoveInputTypeSchema,
+        method: int,
+        flow_manager_args: FlowManagerArgs | None = None
+    ) -> Response_FunctionsT | None:
+        """
+        [협동로봇이 직선 블랜드 이동 명령 배열에 명령을 추가하는 명령 전송 함수]
+        """
+        req = Request_Move_XB_ADDT()
+        req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
+        req.type = MoveInput_TypeT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        req.target.tarValues = ni
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        req.speed.spdMode = speed.get("spd_mode", 1)
+        req.speed.spdVelPara = speed.get("spd_vel_para", 250)
+        req.speed.spdAccPara = speed.get("spd_acc_para", 1000)
+
+        req.type.pntType = blend_type.get("pnt_type")
+        req.type.pntPara = blend_type.get("pnt_para")
+
+        req.method = method
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_add",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move XB Add failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+        return res["obj_payload"]
+
+    def call_move_xb_run(
+        self,
+        *,
+        robot_model: str,
+        running_mode: int,
+        flow_manager_args: FlowManagerArgs | None = None
+    ) -> Response_FunctionsT | None:
+        """
+        [협동로봇이 직선 블랜드 이동을 시작하는 명령 전송 함수]
+        """
+        req = Request_Move_XB_RUNT()
+        req.runningMode = running_mode
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_run",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Move XB Run failed: obj_payload is None")
 
         self._run_coro_blocking(
             self._move_flow_manager_solver(
