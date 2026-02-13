@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
+from rb_influxdb.influxdb_client import init_influxdb
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
 from rb_tcp.gateway_server import TcpGatewayServer
 from rb_tcp.router import TcpRouter
@@ -49,6 +50,14 @@ class AppSettings(BaseSettings):
     MONGO_URI_PROD: str | None = "mongodb://127.0.0.1:27017?replicaSet=rs0"
     MONGO_URI: str | None = None
     MONGO_DB_NAME: str | None = "rrs"
+
+    #influxDB
+    INFLUXDB_URL_DEV: str | None = "http://rrs-influxdb-dev:8086"
+    INFLUXDB_URL_PROD: str | None = "http://127.0.0.1:8086"
+    INFLUXDB_URL: str | None = None
+    INFLUXDB_ORG: str | None = "rainbow"
+    INFLUXDB_BUCKET: str | None = "rrs"
+    INFLUXDB_TOKEN: str | None = "J4ecotdoPLl9gctrtN6SjFPG0s75e6z3UeIMkBBKQJXZvLs-UEDvpzmrzyOpDBEe6COvPtYwry6Ik8hWn410UA=="
 
     no_init_db: bool = False
     socket_role: str = "service"
@@ -90,6 +99,9 @@ def create_app(
     async def lifespan(app: FastAPI):
         if not settings.no_init_db:
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
+
+        #influxdb
+        await init_influxdb(app, settings.INFLUXDB_URL or "", settings.INFLUXDB_TOKEN or "", settings.INFLUXDB_ORG or "", "amr")
 
         await zenoh_router.startup()
         print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)

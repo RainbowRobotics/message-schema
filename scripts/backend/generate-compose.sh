@@ -175,8 +175,17 @@ for FD in 3 4 5; do
       - rrs-mongo-data:/data/db
       - ../scripts/backend/mongo-dev-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
+  rrs-influxdb-dev:
+    image: influxdb:2.7.1
+    container_name: rrs-influxdb-dev
+    ports: ["8086:8086"]
+    networks: [rb_net]
+    volumes:
+      - rrs-influxdb-data:/var/lib/influxdb
+
 volumes:
   rrs-mongo-data:
+  rrs-influxdb-data:
 
 networks:
   rb_net:

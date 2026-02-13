@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from rb_utils.service_exception import ServiceException
 
 from app.features.status.status_service import AmrStatusService
-from rb_utils.service_exception import ServiceException
 
 amr_status_router = APIRouter(
     tags=["AMR 상태"],

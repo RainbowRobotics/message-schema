@@ -1,10 +1,16 @@
+from collections.abc import Mapping, Sequence
+import json
+from influxdb_client.client.write.point import Point
 from rb_flat_buffers.SLAMNAV.GlobalPath import GlobalPathT
 from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
+from rb_influxdb import flatbuffer_to_point
+from rb_utils.parser import t_to_dict
 
 from app.socket.socket_client import socket_client
+import rb_influxdb.influxdb_client as influxdb_client
 
 
 class AmrStatusService:
@@ -34,6 +40,27 @@ class AmrStatusService:
 
         # common으로 전송
         # await status_zenoh_router.publish(f"?/status", obj)
+
+        # influxdb 저장
+        try:
+            # StatusT를 자동으로 InfluxDB Point로 변환
+            point = flatbuffer_to_point(
+                obj=obj,
+                measurement="status",
+                tags={
+                    "robot_model": robot_model,
+                    "robot_id": robot_id,
+                },
+            )
+
+            influxdb_client.write_api.write(
+                bucket="amr",
+                org="rainbow",
+                record=point,
+            )
+
+        except Exception as e:
+            print(f"InfluxDB 저장 실패: {e}", flush=True)
 
     def get_status(self, robot_model: str, robot_id: str) -> StatusT:
         """ API에서 요청하면 마지막 status 반환 """
