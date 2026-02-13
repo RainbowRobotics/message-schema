@@ -1,7 +1,8 @@
 from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
-from rb_flat_buffers.SLAMNAV.Status import StatusT
-from app.socket.socket_client import socket_client
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
+from rb_flat_buffers.SLAMNAV.Status import StatusT
+
+from app.socket.socket_client import socket_client
 
 
 class AmrStatusService:

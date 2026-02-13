@@ -3,6 +3,7 @@ from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
+
 from app.features.status.status_api import amr_status_service
 
 status_zenoh_router = ZenohRouter()
@@ -14,8 +15,6 @@ status_zenoh_router = ZenohRouter()
 )
 async def on_sub_slamnav_status(*, topic, obj):
     await amr_status_service.set_status(topic, obj)
-
-
 
 @status_zenoh_router.subscribe(
     "amr/*/*/moveStatus",

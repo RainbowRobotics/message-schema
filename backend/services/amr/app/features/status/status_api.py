@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.features.status.status_service import AmrStatusService
 
+from app.features.status.status_service import AmrStatusService
 
 amr_status_router = APIRouter(
     tags=["AMR 상태"],

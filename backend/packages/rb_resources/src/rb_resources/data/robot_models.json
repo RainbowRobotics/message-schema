@@ -48,7 +48,7 @@
     ]
   },
   "TEST": {
-    "model": "TEST",
+    "model": "test",
     "be_service": "amr",
     "alias": "amrTest",
     "useCharge": false,
