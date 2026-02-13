@@ -163,7 +163,7 @@ class StateService:
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
                         core_sw["connected"] = "STABLE"
 
-                elif core_sw["be_service"] == "mobility":
+                elif core_sw["be_service"] == "amr":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
                         f"{core_sw["sw_name"]}/state",
                     )

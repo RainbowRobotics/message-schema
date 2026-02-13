@@ -12,6 +12,7 @@ from app.features.map.map_zenoh import map_zenoh_router
 from app.features.move.move_api import amr_move_router
 from app.features.move.move_socket import move_socket_router
 from app.features.move.move_zenoh import move_zenoh_router
+from app.features.status.status_api import amr_status_router
 from app.features.status.status_zenoh import status_zenoh_router
 
 from .socket.socket_client import (
@@ -27,7 +28,8 @@ app = create_app(
     api_routers=[
         amr_move_router,
         amr_control_router,
-        amr_map_router
+        amr_map_router,
+        amr_status_router,
     ],
     socket_routers=[move_socket_router],
     # bg_tasks=[]
