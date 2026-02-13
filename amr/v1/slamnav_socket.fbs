@@ -35,6 +35,19 @@ struct Point3D {
     intensity: float;
 }
 
+/*
+    category    :       Data Structure
+    usage       :       경로 Structure
+    field
+        - x, y          :       2D 좌표 (m)
+        - rz            :       회전각 (rad)
+*/
+struct PathPose {
+    x: float;
+    y: float;
+    rz: float;
+}
+
 
 // -------------------------------------------------
 // -----------                              --------
@@ -58,24 +71,20 @@ table Lidar2D {
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------          RPC(Query)          --------
+// -----------          Pub / Sub           --------
 // -----------                              --------
 // -------------------------------------------------
 
 /*
-    category    :       RPC(Query)
+    category    :       Pub / Sub
     topic       :       {robotType}/socket/lidar3d
     usage       :       3D 라이다 포인트 클라우드 데이터
-                :       데이터가 방대하여, 요청 시 전달 예정.
     field
-        - id            :       
+        - id            :       time
         - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
                         :       필요시, point filter로 개수 줄일 수 있음.
 */
-table RequestLidar3D {
-    id: string;
-}
-table ResponseLidar3D {
+table Lidar3D {
     id: string;
     points: [Point3D];
 }
@@ -117,11 +126,11 @@ table MappingCloud {
     usage       :       전역 경로 데이터
     field
         - id            :       time
-        - path          :       경로 노드 목록
+        - path          :       경로 포즈 배열 (x, y, rz)
 */
 table GlobalPath {
     id: string;
-    path: [string];
+    path: [PathPose];
 }
 
 /*
@@ -130,9 +139,9 @@ table GlobalPath {
     usage       :       지역 경로 데이터
     field
         - id            :       time
-        - path          :       경로 노드 목록
+        - path          :       경로 포즈 배열 (x, y, rz)
 */
 table LocalPath {
     id: string;
-    path: [string];
+    path: [PathPose];
 }
