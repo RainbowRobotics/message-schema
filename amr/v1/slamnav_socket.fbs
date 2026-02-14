@@ -37,6 +37,21 @@ struct Point3D {
 
 /*
     category    :       Data Structure
+    usage       :       robot pose
+    field
+        - x, y, z       :       3D 좌표 (m)
+        - rz            :       회전각 (rad)
+*/
+struct PointPose {
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+
+
+/*
+    category    :       Data Structure
     usage       :       경로 Structure
     field
         - x, y          :       2D 좌표 (m)
@@ -62,10 +77,12 @@ struct PathPose {
     field
         - id            :       time
         - points        :       2D 포인트 배열 ( num : 360 )
+        - pose          :       Lidar 스캔 위치
 */
 table Lidar2D {
     id: string;
     points: [Point2D];
+    pose: PointPose;
 }
 
 
@@ -83,10 +100,12 @@ table Lidar2D {
         - id            :       time
         - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
                         :       필요시, point filter로 개수 줄일 수 있음.
+        - pose          :       Lidar 스캔 위치
 */
 table Lidar3D {
     id: string;
     points: [Point3D];
+    pose: PointPose;
 }
 
 // -------------------------------------------------
