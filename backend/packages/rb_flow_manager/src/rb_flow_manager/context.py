@@ -307,6 +307,19 @@ class ExecutionContext:
             }
         )
 
+    def emit_wait(self, step_id: str):
+
+        self.result_queue.put(
+            {
+                "type": "wait",
+                "process_id": self.process_id,
+                "step_id": step_id,
+                "parent_process_id": self.parent_process_id,
+                "ts": time.time(),
+                "generation": self._generation,
+                "error": None,
+            }
+        )
     def emit_resume(self, step_id: str):
         """resume 이벤트 발생"""
         self.result_queue.put(

@@ -78,3 +78,11 @@ class BaseController(ABC):
     @abstractmethod
     def on_all_pause(self) -> None:
         """모든 스크립트/플로우 Pause 시점에 동작을 수행"""
+
+    @abstractmethod
+    def on_all_wait(self) -> None:
+        """모든 스크립트/플로우 Wait 시점에 동작을 수행"""
+
+    @abstractmethod
+    def on_all_resume(self) -> None:
+        """모든 스크립트/플로우 Resume 시점에 동작을 수행"""

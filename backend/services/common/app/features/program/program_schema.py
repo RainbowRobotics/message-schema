@@ -340,11 +340,6 @@ class Request_Preview_Start_ProgramPD(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-class Request_Preview_Reset_ProgramPD(BaseModel):
-    scripts: list[Client_Script_Reset_InfoPD]
-
-    model_config = ConfigDict(extra="ignore")
-
 class Request_Preview_Stop_ProgramPD(BaseModel):
     taskIds: list[str]
 

@@ -94,7 +94,6 @@ class Zenoh_Controller(BaseController):
 
     def on_wait(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.WAITING)
-        self.update_executor_state(RB_Flow_Manager_ProgramState.WAITING)
 
         try:
             robot_model = self._state_dicts.get(task_id, {}).get("robot_model", "*")
@@ -190,6 +189,12 @@ class Zenoh_Controller(BaseController):
     def on_all_pause(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.PAUSED)
 
+    def on_all_wait(self) -> None:
+        self.update_executor_state(state=RB_Flow_Manager_ProgramState.WAITING)
+
+    def on_all_resume(self) -> None:
+        self.update_executor_state(state=RB_Flow_Manager_ProgramState.RUNNING)
+
     def update_step_state(
         self, step_id: str, task_id: str, state: int, error: str | None = ""
     ) -> None:
@@ -202,9 +207,10 @@ class Zenoh_Controller(BaseController):
                 req.state = state
                 req.error = error
 
-                self._zenoh_client.publish(
-                    "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
-                )
+                if step_id != "":
+                    self._zenoh_client.publish(
+                        "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
+                    )
         except Exception as e:
             rb_log.error(f"Error updating step state: {e}")
             raise

@@ -10,6 +10,8 @@ from typing import Any, Literal
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import call_with_matching_args, eval_value, safe_eval_expr
 
+from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
+
 from .context import ExecutionContext
 from .exception import (
     BreakFolder,
@@ -1376,6 +1378,9 @@ class SyncStep(Step):
                 # 대기
                 while True:
                     ctx.check_stop()
+
+                    if ctx.state_dict.get("step_mode", False) and ctx.state_dict.get("state") == RB_Flow_Manager_ProgramState.RUNNING:
+                        ctx.emit_pause(self.step_id, is_wait=True)
 
                     if deadline is not None:
                         remaining = deadline - time.time()

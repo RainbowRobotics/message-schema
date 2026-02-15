@@ -316,9 +316,15 @@ def _execute_tree_in_process(
             # 메인 루프 바깥으로 점프 예외가 올라오는 경우는 무시
             pass
 
-        # post_tree 실행 (정책상 stop 이후에도 실행 가능)
+        # post_tree 실행
+        # - 기본 정책: stop 이후에도 실행 가능
+        # - step_mode에서는 stop 시 post_tree를 실행하지 않는다.
         try:
-            run_post_tree()
+            if not (
+                step_mode
+                and state_dict.get("state") == RB_Flow_Manager_ProgramState.STOPPED
+            ):
+                run_post_tree()
 
         except (BreakRepeat, ContinueRepeat):
             pass
@@ -368,6 +374,8 @@ class ScriptExecutor:
         on_all_complete: Callable[[], None] | None = None,
         on_all_stop: Callable[[], None] | None = None,
         on_all_pause: Callable[[], None] | None = None,
+        on_all_wait: Callable[[], None] | None = None,
+        on_all_resume: Callable[[], None] | None = None,
         controller: BaseController | None = None,
         min_step_interval: float | None = 0,
     ):
@@ -389,6 +397,8 @@ class ScriptExecutor:
         self._on_all_complete = on_all_complete
         self._on_all_stop = on_all_stop
         self._on_all_pause = on_all_pause
+        self._on_all_wait = on_all_wait
+        self._on_all_resume = on_all_resume
 
         # 멀티프로세싱 관련
         self._mp_ctx = mp.get_context("spawn")
@@ -1345,16 +1355,60 @@ class ScriptExecutor:
                     if self.state_dicts.get(find_pid, {}).get("parent_process_id") == pid:
                         self.pause(find_pid)
 
+            alive_pids = [
+                find_pid
+                for find_pid, proc in list(self.processes.items())
+                if proc is not None and proc.is_alive()
+            ]
+
+
             if is_wait:
+                self._notify_all_wait_if_needed()
+
                 if self._on_wait is not None:
                     self._on_wait(pid, step_id)
                 if self.controller is not None:
                     self.controller.on_wait(pid, step_id)
             else:
+                if alive_pids and all(
+                    self.state_dicts.get(find_pid, {}).get("state") == RB_Flow_Manager_ProgramState.PAUSED
+                    for find_pid in alive_pids
+                ):
+                    if self._on_all_pause is not None:
+                        self._on_all_pause()
+                    if self.controller is not None:
+                        self.controller.on_all_pause()
+
                 if self._on_pause is not None:
                     self._on_pause(pid, step_id)
                 if self.controller is not None:
                     self.controller.on_pause(pid, step_id)
+
+        elif evt_type == "wait":
+            if step_id is None:
+                raise ValueError("wait event requires step_id")
+
+            self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.WAITING
+
+            alive_pids = [
+                find_pid
+                for find_pid, proc in list(self.processes.items())
+                if proc is not None and proc.is_alive()
+            ]
+
+            if alive_pids and all(
+                self.state_dicts.get(find_pid, {}).get("state") == RB_Flow_Manager_ProgramState.WAITING
+                for find_pid in alive_pids
+            ):
+                if self._on_all_wait is not None:
+                    self._on_all_wait()
+                if self.controller is not None:
+                    self.controller.on_all_wait()
+
+            if self._on_wait is not None:
+                self._on_wait(pid, step_id)
+            if self.controller is not None:
+                self.controller.on_wait(pid, step_id)
 
         elif evt_type == "resume":
             if step_id is None:
@@ -1384,6 +1438,15 @@ class ScriptExecutor:
                 self._on_resume(pid, step_id)
             if self.controller is not None:
                 self.controller.on_resume(pid, step_id)
+
+            if all(
+                self.state_dicts.get(find_pid, {}).get("state") == RB_Flow_Manager_ProgramState.RUNNING
+                for find_pid in alive_pids
+            ):
+                if self._on_all_resume is not None:
+                    self._on_all_resume()
+                if self.controller is not None:
+                    self.controller.on_all_resume()
 
         elif evt_type == "stop":
             self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.STOPPED
@@ -1459,6 +1522,21 @@ class ScriptExecutor:
             if self.controller is not None:
                 self.controller.on_complete(pid)
             self._pending_complete_callbacks.discard(pid)
+
+    def _notify_all_wait_if_needed(self):
+        alive_pids = [
+            pid for pid, proc in list(self.processes.items()) if proc is not None and proc.is_alive()
+        ]
+        if not alive_pids:
+            return
+        if all(
+            self.state_dicts.get(pid, {}).get("state") == RB_Flow_Manager_ProgramState.WAITING
+            for pid in alive_pids
+        ):
+            if self._on_all_wait is not None:
+                self._on_all_wait()
+            if self.controller is not None:
+                self.controller.on_all_wait()
 
     def _monitor_processes(self):
         """프로세스 완료 감시 및 자원 정리"""
@@ -1564,9 +1642,13 @@ class ScriptExecutor:
             if remaining <= 0:
                 self._event_wait_children_count.pop(wait_parent, None)
 
-                # 상태 체크를 제거하고 무조건 resume 시도
                 if wait_parent in self.processes:
-                    self.resume(wait_parent)  # ← 이렇게 수정
+                    parent_state = self.state_dicts.get(wait_parent, {})
+                    if parent_state.get("step_mode", False):
+                        # step_mode WAITING은 사용자 next 입력으로만 해제한다.
+                        self._notify_all_wait_if_needed()
+                    else:
+                        self.resume(wait_parent)
                 else:
                     self._event_wait_resume_pending[wait_parent] = (
                         self._event_wait_resume_pending.get(wait_parent, 0) + 1
@@ -1581,6 +1663,9 @@ class ScriptExecutor:
             ):
                 pending_map.pop(process_id, None)
                 self.state_dicts[parent_pid]["event_start_pending_map"] = pending_map
+
+        # 프로세스 종료로 alive 집합이 바뀌면 all-wait 조건을 즉시 재평가한다.
+        self._notify_all_wait_if_needed()
 
     def _auto_cleanup(self):
         """모든 프로세스 종료 시 자동 정리"""
@@ -1773,6 +1858,10 @@ class ScriptExecutor:
                 continue
             if proc.is_alive():
                 with contextlib.suppress(Exception):
+                    if self._on_complete is not None:
+                        self._on_complete(pid)
+                    if self.controller is not None:
+                        self.controller.on_complete(pid)
                     proc.terminate()
                 with contextlib.suppress(Exception):
                     proc.join(timeout=0.3)
@@ -1818,10 +1907,10 @@ class ScriptExecutor:
         self._monitor_thread = None
         self._stop_monitor.clear()
 
-        if self._on_close is not None:
-            self._on_close()
+        if self._on_all_complete is not None:
+            self._on_all_complete()
         if self.controller is not None:
-            self.controller.on_close()
+            self.controller.on_all_complete()
 
         print("=== ScriptExecutor reset done ===", flush=True)
 

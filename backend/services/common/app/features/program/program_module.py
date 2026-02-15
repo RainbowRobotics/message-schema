@@ -58,7 +58,6 @@ from .program_schema import (
     Request_Delete_TasksPD,
     Request_Get_Script_ContextPD,
     Request_Load_ProgramPD,
-    Request_Preview_Reset_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
     Request_Program_Dialog,
@@ -246,7 +245,7 @@ class ProgramService(BaseService):
         elif (
             str_state == RB_Flow_Manager_ProgramState.STOPPED
             or str_state == RB_Flow_Manager_ProgramState.ERROR
-        ):
+        ) or str_state == RB_Flow_Manager_ProgramState.COMPLETED:
             self._play_state = PlayState.STOP
         elif str_state == RB_Flow_Manager_ProgramState.IDLE:
             self._play_state = PlayState.IDLE
@@ -2207,19 +2206,23 @@ class ProgramService(BaseService):
             alive_task_ids = [
                 task_id for task_id, state in alive_states.items() if state.get("is_alive", False)
             ]
-            for task_id in alive_task_ids:
-                state = alive_states[task_id]
-                if state.get("state") in (
-                    RB_Flow_Manager_ProgramState.PAUSED,
-                    RB_Flow_Manager_ProgramState.WAITING,
-                ):
-                    self.script_executor.resume(task_id)
+            if alive_task_ids:
+                for task_id in alive_task_ids:
+                    state = alive_states[task_id]
+                    if state.get("state") in (
+                        RB_Flow_Manager_ProgramState.PAUSED,
+                        RB_Flow_Manager_ProgramState.WAITING,
+                    ):
+                        self.script_executor.resume(task_id)
 
-            # stepMode 진행 요청에서는 종료된 태스크를 다시 시작하지 않는다.
-            self._step_mode = len(alive_task_ids) > 0
-            return {
-                "status": "success",
-            }
+                # stepMode 진행 요청에서는 종료된 태스크를 다시 시작하지 않는다.
+                self._step_mode = True
+                return {
+                    "status": "success",
+                }
+
+            # reset/종료 이후 alive가 없으면 신규 start 경로로 내려간다.
+            self._step_mode = False
 
         self.script_executor.start(make_process_args_list)
 
@@ -2230,9 +2233,10 @@ class ProgramService(BaseService):
             "status": "success",
         }
 
-    async def preview_reset_program(self, request: Request_Preview_Reset_ProgramPD, db: MongoDB):
+    async def preview_reset_program(self):
         if self.script_executor:
             self.script_executor.reset()
+        self._step_mode = False
 
         return {
             "status": "success",
