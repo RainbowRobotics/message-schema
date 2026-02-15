@@ -1,6 +1,6 @@
-from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 # from rb_flat_buffers.SLAMNAV.Lidar3D import Lidar3DT
 from rb_flat_buffers.SLAMNAV.GlobalPath import GlobalPathT
+from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
