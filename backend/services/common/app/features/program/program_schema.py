@@ -324,6 +324,7 @@ class Client_StepPD(Omit(Step_Tree_Base, "order", "createdAt", "updatedAt")):
 
 class Client_Script_InfoPD(BaseModel):
     taskId: str
+    robotModel: str | None = Field(default=None)
     repeatCount: int
     begin: MainTaskBegin | None = Field(default=None)
     parentTaskId: str | None = Field(default=None)

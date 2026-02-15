@@ -1050,6 +1050,8 @@ class ScriptExecutor:
         # 상태 정보 업데이트
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
         self.state_dicts[process_id]["current_step_id"] = None
+        # process_id 재사용 시 이전 실행의 변수 캐시가 남지 않도록 초기화
+        self.state_dicts[process_id]["variables"] = {}
         self.state_dicts[process_id]["robot_model"] = robot_model
         self.state_dicts[process_id]["category"] = category
         self.state_dicts[process_id]["generation"] = gen
@@ -1135,20 +1137,24 @@ class ScriptExecutor:
         # 배치 모드
         pid_flags = self._register_batch(batch)
 
-        # 배치 시작 이벤트
+        # 배치 시작 이벤트(신규 프로세스가 있을 때만 사용)
         batch_start_event = self._mp_ctx.Event()
-
-        # 배치 ready 카운트 초기화
-        self._batch_expected = len(batch)
-        self._batch_ready_count = 0
-        self._batch_start_event = batch_start_event
 
         processes: list[SpawnProcess] = []
         pids: list[str] = []
+        resume_existing_pids: list[str] = []
 
         # 프로세스 생성
         for arg in batch:
             pid = arg["process_id"]
+
+            # 이미 살아있는 step_mode 프로세스는 batch 재호출 시 재생성/토글하지 않고
+            # 마지막에 일괄 resume만 수행한다. (stepMode + SyncStep 교착 방지)
+            if pid in self.processes and self.processes[pid].is_alive():
+                state = self.state_dicts.get(pid, {})
+                if state.get("step_mode", False):
+                    resume_existing_pids.append(pid)
+                continue
 
             # state_dict 초기화를 여기서 먼저 수행
             if self.manager is None:
@@ -1169,6 +1175,11 @@ class ScriptExecutor:
                 processes.append(p)
                 pids.append(pid)
 
+        # ready 카운트는 "이번 호출에서 새로 띄우는 프로세스 수" 기준이어야 한다.
+        self._batch_expected = len(processes)
+        self._batch_ready_count = 0
+        self._batch_start_event = batch_start_event if self._batch_expected > 0 else None
+
         # 배치 실행에서는 init을 한 번만 호출해 중복 초기화 비용을 줄인다.
         if self._on_init is not None:
             self._on_init(self.state_dicts)
@@ -1186,6 +1197,10 @@ class ScriptExecutor:
         for i, p in enumerate(processes):
             p.start()
             self.processes[pids[i]] = p
+
+        # batch 재호출 시 기존 step_mode 프로세스들을 같은 시점에 깨운다.
+        for pid in resume_existing_pids:
+            self.resume(pid)
 
         return True
 
@@ -1579,6 +1594,14 @@ class ScriptExecutor:
                 self.result_queues[pid].close()
 
         self.result_queues = {}
+        self.processes = {}
+        self.completion_events = {}
+        self.pause_events = {}
+        self.resume_events = {}
+        self.stop_events = {}
+        self.start_events = {}
+        self.state_dicts = {}
+        self._pid_generation.clear()
         self._monitor_thread = None
         self._pending_complete_callbacks.clear()
         self._event_wait_parent_by_child.clear()
@@ -1733,6 +1756,74 @@ class ScriptExecutor:
             if p is not None and p.is_alive():
                 with contextlib.suppress(Exception):
                     p.terminate()
+
+    def reset(self):
+        """데드락 복구를 위한 강제 전체 초기화"""
+        print("\n=== ScriptExecutor reset start ===", flush=True)
+
+        # 모니터 스레드를 먼저 중지해 내부 상태 변경과의 레이스를 줄인다.
+        self._stop_monitor.set()
+        if self._monitor_thread is not None and self._monitor_thread.is_alive():
+            with contextlib.suppress(Exception):
+                self._monitor_thread.join(timeout=1.0)
+
+        # 남은 프로세스 강제 종료
+        for pid, proc in list(self.processes.items()):
+            if proc is None:
+                continue
+            if proc.is_alive():
+                with contextlib.suppress(Exception):
+                    proc.terminate()
+                with contextlib.suppress(Exception):
+                    proc.join(timeout=0.3)
+
+        # 큐/프로세스 리소스 정리
+        with contextlib.suppress(Exception):
+            for q in list(self.result_queues.values()):
+                q.close()
+
+        self.result_queues = {}
+        self.processes = {}
+        self.completion_events = {}
+        self.pause_events = {}
+        self.resume_events = {}
+        self.stop_events = {}
+        self.start_events = {}
+        self.state_dicts = {}
+        self._pid_generation.clear()
+        self._pending_complete_callbacks.clear()
+
+        self._event_wait_parent_by_child.clear()
+        self._event_wait_children_count.clear()
+        self._event_wait_resume_pending.clear()
+        self._event_start_seq_by_child.clear()
+
+        self._batch_ready_count = 0
+        self._batch_expected = 0
+        self._batch_start_event = None
+
+        if self._sync_state is not None:
+            self._sync_state.clear()
+        if self._sync_members is not None:
+            self._sync_members.clear()
+        if self._process_alive is not None:
+            self._process_alive.clear()
+        if self._parent_map is not None:
+            self._parent_map.clear()
+
+        # deadlock에 걸렸을 가능성을 낮추기 위해 동기화 객체 재생성
+        self._sync_lock = self._mp_ctx.RLock()
+        self._sync_cond = self._mp_ctx.Condition(self._sync_lock)
+
+        self._monitor_thread = None
+        self._stop_monitor.clear()
+
+        if self._on_close is not None:
+            self._on_close()
+        if self.controller is not None:
+            self.controller.on_close()
+
+        print("=== ScriptExecutor reset done ===", flush=True)
 
     def pause_all(self):
         """모든 스크립트 일시정지"""

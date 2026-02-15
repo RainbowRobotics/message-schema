@@ -104,6 +104,6 @@ backend.mypy: ## mypy로 type check
 	@echo "✅ Type check completed"
 
 backend.docs-sdk: ## SDK 문서 생성
-	@cd ${WORKDIR}
-	@sphinx-apidoc -o documents/sdk/docs/source/api packages/rb_sdk/src/rb_sdk
-	@sphinx-build -b html -E -a documents/sdk/docs/source documents/sdk/docs/build/html
+	@cd ${WORKDIR} && \
+		uv run sphinx-apidoc -o documents/sdk/docs/source/api packages/rb_sdk/src/rb_sdk && \
+		uv run sphinx-build -b html -E -a documents/sdk/docs/source documents/sdk/docs/build/html

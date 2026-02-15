@@ -15,7 +15,18 @@ class RBManipulateSMBCSdk(RBBaseSDK):
     def __init__(self):
         super().__init__()
 
-    def modbus_read(self, *, issue_core: str, server_ip: str, server_port: int, function_code: int, register_addr: int, number_of_read: int, timeout_ms: int, flow_manager_args: FlowManagerArgs | None = None):
+    def modbus_read(
+            self,
+            *,
+            issue_core: str,
+            server_ip: str,
+            server_port: int,
+            function_code: int,
+            register_addr: int,
+            number_of_read: int,
+            timeout_ms: int | None = 0,
+            flow_manager_args: FlowManagerArgs | None = None
+        ):
         """
         [SMBC 호출 함수]
 
@@ -32,6 +43,7 @@ class RBManipulateSMBCSdk(RBBaseSDK):
         Returns:
             Response_ReadT: 읽은 데이터
         """
+
         req = Request_ReadT()
         req.issueCore = issue_core
         req.serverIp = server_ip
@@ -41,7 +53,14 @@ class RBManipulateSMBCSdk(RBBaseSDK):
         req.numberOfRead = number_of_read
         req.timeoutMs = timeout_ms
 
-        res = self.zenoh_client.query_one("smbc/modbus_read", flatbuffer_req_obj=req, flatbuffer_res_T_class=Response_ReadT, flatbuffer_buf_size=40)
+        topic = "SMBC/read_word" if function_code == 3 or function_code == 4 else "SMBC/read_bit"
+
+        res = self.zenoh_client.query_one(
+            topic,
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_ReadT,
+            flatbuffer_buf_size=40,
+        )
 
         if res["obj_payload"] is None:
             raise RuntimeError("Modbus Read failed: obj_payload is None")
@@ -52,7 +71,18 @@ class RBManipulateSMBCSdk(RBBaseSDK):
         return res["obj_payload"]
 
 
-    def modbus_write(self, *, issue_core: str, server_ip: str, server_port: int, function_code: int, register_addr: int, payload_dlc: int, payload: list[int], timeout_ms: int, flow_manager_args: FlowManagerArgs | None = None):
+    def modbus_write(
+            self,
+            *,
+            issue_core: str,
+            server_ip: str,
+            server_port: int,
+            function_code: int,
+            register_addr: int,
+            payload_dlc: int, payload: list[int],
+            timeout_ms: int | None = 0,
+            flow_manager_args: FlowManagerArgs | None = None,
+        ):
         """
         [SMBC 호출 함수]
 
@@ -70,6 +100,7 @@ class RBManipulateSMBCSdk(RBBaseSDK):
         Returns:
             Response_WriteT: 쓴 데이터
         """
+
         if not isinstance(payload, list):
             raise ValueError("payload must be a list")
 
@@ -94,8 +125,14 @@ class RBManipulateSMBCSdk(RBBaseSDK):
         ni.i = padded_payload
         req.payload = ni
 
+        topic = "SMBC/write_word" if function_code == 6 or function_code == 16 else "SMBC/write_bit"
 
-        res = self.zenoh_client.query_one("smbc/modbus_write", flatbuffer_req_obj=req, flatbuffer_res_T_class=Response_WriteT, flatbuffer_buf_size=40)
+        res = self.zenoh_client.query_one(
+            topic,
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_WriteT,
+            flatbuffer_buf_size=40,
+        )
 
         if res["obj_payload"] is None:
             raise RuntimeError("Modbus Write failed: obj_payload is None")

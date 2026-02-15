@@ -8,6 +8,7 @@ WORKDIR ${WORKDIR}
 COPY backend/pyproject.toml backend/uv.lock ./
 COPY backend/services ./services
 COPY backend/packages ./packages
+COPY backend/documents ./documents
 COPY scripts/ ../scripts/
 COPY schemas ../schemas
 COPY backend/Makefile ./
@@ -49,6 +50,7 @@ RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
     --add-data "packages/rb_resources/src/rb_resources/data:rb_resources/data" \
     --add-data "packages/rb_resources/src/rb_resources/swagger-ui:rb_resources/swagger-ui" \
     --add-data ".env:rb_resources/.env" \
+    --add-data "documents:documents" \
     ./services/${SERVICE}/run.py
 
 FROM scratch AS artifacts

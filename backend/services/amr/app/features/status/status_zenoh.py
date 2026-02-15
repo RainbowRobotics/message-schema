@@ -3,6 +3,7 @@ from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
+
 from app.features.status.status_api import amr_status_service
 
 status_zenoh_router = ZenohRouter()

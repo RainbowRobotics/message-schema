@@ -314,10 +314,10 @@ class RBBaseSDK:
     def set_variables(self, *, variables: list[SetVariableDTO], flow_manager_args: FlowManagerArgs | None = None):
         """변수 설정"""
         if flow_manager_args is not None:
-            for variable in variables:
-                flow_manager_args.ctx.update_local_variables({
-                    variable["name"]: variable["init_value"]
-                })
+            raw_variables = flow_manager_args.args.get("variables")
+
+            for index, variable in enumerate(raw_variables):
+                flow_manager_args.ctx.update_local_variables({variable.get("name"): variables[index].get("init_value")})
             flow_manager_args.done()
 
     def make_script(self, *, mode: Literal["GENERAL", "ADVANCED"] = "ADVANCED", contents: str | None = None, flow_manager_args: FlowManagerArgs | None = None):

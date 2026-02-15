@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import os
+import sys
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager
 from importlib.resources import as_file, files
@@ -234,9 +235,35 @@ def create_app(
         )
 
     # SDK 문서 설정
-    current_file = Path(__file__)
-    workspace_root = current_file.parents[5]
-    docs_html_dir = workspace_root / "backend" / "documents" / "sdk" / "docs" / "build" / "html"
+    # 실행 환경(소스/컨테이너/PyInstaller)에 따라 문서 경로를 유연하게 탐색한다.
+    def _resolve_docs_html_dir() -> Path:
+        candidates: list[Path] = []
+
+        # PyInstaller(onefile): add-data "documents:documents"는 _MEIPASS 아래에 풀린다.
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            candidates.append(Path(meipass) / "documents" / "sdk" / "docs" / "build" / "html")
+
+        current_file = Path(__file__).resolve()
+
+        # 현재 파일 기준 상위 경로에서 backend/documents 탐색
+        for parent in [current_file.parent, *current_file.parents]:
+            candidates.append(parent / "backend" / "documents" / "sdk" / "docs" / "build" / "html")
+            candidates.append(parent / "documents" / "sdk" / "docs" / "build" / "html")
+
+        # 실행 위치 기준 fallback
+        cwd = Path.cwd()
+        candidates.append(cwd / "backend" / "documents" / "sdk" / "docs" / "build" / "html")
+        candidates.append(cwd / "documents" / "sdk" / "docs" / "build" / "html")
+
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+
+        # 못 찾은 경우에도 디버깅 가능한 기본 경로 반환
+        return candidates[0]
+
+    docs_html_dir = _resolve_docs_html_dir()
 
     @app.get("/sdk/docs", include_in_schema=False)
     def sdk_docs_root(request: Request):
