@@ -1,4 +1,7 @@
 from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
+# from rb_flat_buffers.SLAMNAV.Lidar3D import Lidar3DT
+from rb_flat_buffers.SLAMNAV.GlobalPath import GlobalPathT
+from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_zenoh.router import ZenohRouter
@@ -16,8 +19,6 @@ status_zenoh_router = ZenohRouter()
 async def on_sub_slamnav_status(*, topic, obj):
     await amr_status_service.set_status(topic, obj)
 
-
-
 @status_zenoh_router.subscribe(
     "amr/*/*/moveStatus",
     flatbuffer_obj_t=MoveStatusT,
@@ -33,3 +34,24 @@ async def on_sub_slamnav_moveStatus(*, topic, obj):
 )
 async def on_sub_slamnav_lidar2d(*, topic, obj):
     await amr_status_service.set_lidar2d(topic, obj)
+
+@status_zenoh_router.subscribe(
+    "amr/*/*/socket/globalPath",
+    flatbuffer_obj_t=GlobalPathT
+)
+async def on_sub_slamnav_globalPath(*, topic, obj):
+    await amr_status_service.set_global_path(topic, obj)
+
+@status_zenoh_router.subscribe(
+    "amr/*/*/socket/localPath",
+    flatbuffer_obj_t=LocalPathT
+)
+async def on_sub_slamnav_localPath(*, topic, obj):
+    await amr_status_service.set_local_path(topic, obj)
+
+# @status_zenoh_router.subscribe(
+#     "amr/*/*/socket/lidar3d",
+#     flatbuffer_obj_t=Lidar3DT
+# )
+# async def on_sub_slamnav_lidar3d(*, topic, obj):
+#     await amr_status_service.set_lidar3d(topic, obj)

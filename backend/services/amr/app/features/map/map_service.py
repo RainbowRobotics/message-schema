@@ -9,13 +9,21 @@ from rb_utils.service_exception import ServiceException
 
 from .domain.map import MapModel, TransferState
 from .map_schema import (
+    RequestMapLoadPD,
     RequestSetMapCloudPD,
     RequestSetMapTopologyPD,
     ResponseGetMapCloudPD,
     ResponseGetMapTopologyPD,
+    ResponseMapCurrentPD,
     ResponseMapListPD,
+    ResponseMapLoadPD,
     ResponseSetMapCloudPD,
     ResponseSetMapTopologyPD,
+    ResponseTopoLoadPD,
+    ResponseMappingStartPD,
+    ResponseMappingStopPD,
+    RequestMappingSavePD,
+    ResponseMappingSavePD,
 )
 
 rb_amr_sdk = RBAmrSDK()
@@ -24,14 +32,15 @@ class AmrMapService:
     def __init__(self):
         self.transfer_store:dict[str, TransferState] = {}
 
-    async def get_map_list(self, robot_model: str) -> ResponseMapListPD:
+    async def get_map_list(self, robot_model: str, robot_id: str) -> ResponseMapListPD:
         """
         [AMR Map List 조회]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
-            rb_log.info(f"[map_service] get_map_list : {robot_model}")
+            rb_log.info(f"[map_service] get_map_list : {robot_model} {robot_id}")
 
             # 1) MapModel 설정
             model.get_map_list()
@@ -40,7 +49,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.map.get_map_list(robot_model, req_id=model.id)
+            result = await rb_amr_sdk.map.get_map_list(robot_model, robot_id, req_id=model.id)
             model.map_list = result.list
             model.message = result.message
             model.result = result.result
@@ -52,13 +61,14 @@ class AmrMapService:
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
 
-    async def get_map_cloud(self, robot_model: str, mapName: str, fileName: str) -> ResponseGetMapCloudPD:
+    async def get_map_cloud(self, robot_model: str, robot_id: str, mapName: str, fileName: str) -> ResponseGetMapCloudPD:
         """
         [AMR Map Cloud 조회]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * request : 요청 데이터
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] get_map_cloud : {robot_model} {mapName} {fileName}")
 
@@ -69,7 +79,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.map.get_map_cloud(robot_model, model.id, model.map_name, model.file_name)
+            result = await rb_amr_sdk.map.get_map_cloud(robot_model, robot_id, model.id, model.map_name, model.file_name)
             model.result = result.result
             model.message = result.message
             model.parse_cloud_data(result.data, result.columnCount, result.rowCount)
@@ -80,13 +90,14 @@ class AmrMapService:
             rb_log.error(f"[map_service] get_map_cloud : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def set_map_cloud(self, robot_model: str, request: RequestSetMapCloudPD) -> ResponseSetMapCloudPD:
+    async def set_map_cloud(self, robot_model: str, robot_id: str, request: RequestSetMapCloudPD) -> ResponseSetMapCloudPD:
         """
         [AMR Map Cloud 설정]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * request : 요청 데이터
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] set_map_cloud : {robot_model} {request.mapName} {request.fileName} {len(request.data)}")
 
@@ -99,6 +110,7 @@ class AmrMapService:
             # 3) 요청 전송
             result = await rb_amr_sdk.map.set_map_cloud(
                 robot_model,
+                robot_id,
                 req_id =    model.id,
                 map_name = model.map_name,
                 file_name = model.file_name,
@@ -115,13 +127,14 @@ class AmrMapService:
             rb_log.error(f"[map_service] set_map_cloud : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def get_map_topology(self, robot_model: str, mapName: str | None = None, fileName: str | None = None, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyPD:
+    async def get_map_topology(self, robot_model: str, robot_id: str, mapName: str | None = None, fileName: str | None = None, pageNo: int | None = None, pageSize: int | None = None, nodeType: str | None = None, searchText: str | None = None, sortOption: str | None = None, sortDirection: str | None = None) -> ResponseGetMapTopologyPD:
         """
         [AMR Map Topology 조회]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * request : 요청 데이터
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] get_map_topology : {robot_model} {mapName} {fileName} {pageNo} {pageSize} {nodeType} {searchText} {sortOption} {sortDirection}")
 
@@ -132,7 +145,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.map.get_map_topology(robot_model, model.id, model.map_name, model.file_name, pageNo, pageSize, nodeType, searchText, sortOption, sortDirection)
+            result = await rb_amr_sdk.map.get_map_topology(robot_model, robot_id, model.id, model.map_name, model.file_name, pageNo, pageSize, nodeType, searchText, sortOption, sortDirection)
 
             model.result = result.result
             model.message = result.message
@@ -151,13 +164,14 @@ class AmrMapService:
             rb_log.error(f"[map_service] get_map_topology : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def set_map_topology(self, robot_model: str, request: RequestSetMapTopologyPD) -> ResponseSetMapTopologyPD:
+    async def set_map_topology(self, robot_model: str, robot_id: str, request: RequestSetMapTopologyPD) -> ResponseSetMapTopologyPD:
         """
         [AMR Map Topology 설정]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * request : 요청 데이터
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] set_map_topology : {robot_model} {request.mapName} {request.fileName} {len(request.data)}")
 
@@ -168,7 +182,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.map.set_map_topology(robot_model, model.id, model.map_name, model.file_name, model.get_node_t())
+            result = await rb_amr_sdk.map.set_map_topology(robot_model, robot_id, model.id, model.map_name, model.file_name, model.get_node_t())
 
             model.result = result.result
             model.message = result.message
@@ -179,14 +193,15 @@ class AmrMapService:
             rb_log.error(f"[map_service] set_map_topology : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def get_map_file(self, robot_model: str, mapName: str, fileName: str) -> StreamingResponse:
+    async def get_map_file(self, robot_model: str, robot_id: str, mapName: str, fileName: str) -> StreamingResponse:
         """
         [AMR Map File 조회]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * mapName : 맵 이름
         * fileName : 파일 이름
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] get_map_file : {robot_model} {mapName} {fileName}")
 
@@ -197,7 +212,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 메타 요청
-            meta = await rb_amr_sdk.file.get_file_meta(robot_model, model.file_path, preferred_chunk_size=1024*1024*50)
+            meta = await rb_amr_sdk.file.get_file_meta(robot_model, robot_id, model.file_path, preferred_chunk_size=1024*1024*50)
             meta_dict = t_to_dict(meta)
 
             if meta_dict["result"].lower() != "accept":
@@ -216,7 +231,7 @@ class AmrMapService:
             async def gen():
                 st = self.transfer_store[model.id]
                 for idx in range(total_chunks):
-                    chunk = await rb_amr_sdk.file.get_file_chunk(robot_model, model.file_path, idx, chunk_size)
+                    chunk = await rb_amr_sdk.file.get_file_chunk(robot_model, robot_id, model.file_path, idx, chunk_size)
                     chunk_dict = t_to_dict(chunk)
                     if chunk_dict["result"].lower() != "accept":
                         # 여기서 raise 하면 다운로드가 중간에 끊김(정상)
@@ -248,13 +263,14 @@ class AmrMapService:
                 st.done = True
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
 
-    async def get_map_zip(self, robot_model: str, mapName: str, zipName: str) -> StreamingResponse:
+    async def get_map_zip(self, robot_model: str, robot_id: str, mapName: str, zipName: str) -> StreamingResponse:
         """
         [AMR Map Zip 조회]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * mapName : 맵 이름
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] get_map_zip : {robot_model} {mapName}")
 
@@ -265,14 +281,14 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 압축 요청
-            result = await rb_amr_sdk.file.compress_files(robot_model, base_dir=model.map_root_path, source_names=[model.map_name], output_name=model.file_name)
+            result = await rb_amr_sdk.file.compress_files(robot_model, robot_id, base_dir=model.map_root_path, source_names=[model.map_name], output_name=model.file_name)
             result_dict = t_to_dict(result)
             if result_dict["result"].lower() != "accept":
                 raise ServiceException(result_dict["message"] or "압축 실패", status_code=400)
 
             print("### 압축 result : ", result_dict)
             # 4) 메타 요청
-            meta = await rb_amr_sdk.file.get_file_meta(robot_model, model.file_path, preferred_chunk_size=1024*1024*50)
+            meta = await rb_amr_sdk.file.get_file_meta(robot_model, robot_id, model.file_path, preferred_chunk_size=1024*1024*50)
             meta_dict = t_to_dict(meta)
             print("### 메타 result : ", meta_dict)
 
@@ -292,7 +308,7 @@ class AmrMapService:
             async def gen():
                 st = self.transfer_store[model.id]
                 for idx in range(total_chunks):
-                    chunk = await rb_amr_sdk.file.get_file_chunk(robot_model, model.file_path, idx, chunk_size)
+                    chunk = await rb_amr_sdk.file.get_file_chunk(robot_model, robot_id, model.file_path, idx, chunk_size)
                     chunk_dict = t_to_dict(chunk)
                     if chunk_dict["result"].lower() != "accept":
                         # 여기서 raise 하면 다운로드가 중간에 끊김(정상)
@@ -324,13 +340,14 @@ class AmrMapService:
                 st.done = True
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
 
-    async def delete_map(self, robot_model: str, mapName: str):
+    async def delete_map(self, robot_model: str, robot_id: str, mapName: str):
         """
         [AMR Map 삭제]
         * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
         * mapName : 맵 이름
         """
-        model = MapModel(robot_model)
+        model = MapModel(robot_model, robot_id)
         try:
             rb_log.info(f"[map_service] delete_map : {robot_model} {mapName}")
 
@@ -341,7 +358,7 @@ class AmrMapService:
             model.check_variables()
 
             # 3) 요청 전송
-            result = await rb_amr_sdk.file.delete_file(robot_model, model.map_path)
+            result = await rb_amr_sdk.file.delete_file(robot_model, robot_id, model.map_path)
             result_dict = t_to_dict(result)
             if result_dict["result"].lower() != "accept":
                 raise ServiceException(result_dict["message"] or "삭제 실패", status_code=400)
@@ -379,3 +396,174 @@ class AmrMapService:
         except ServiceException as e:
             rb_log.error(f"[map_service] get_map_file_progress : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message}))
+
+    async def get_current_map(self, robot_model: str, robot_id: str) -> ResponseMapCurrentPD:
+        """
+        [AMR Map Current 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] get_current_map : {robot_model} {robot_id}")
+
+            # 1) MapModel 설정
+            model.get_map_current()
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.get_current_map(robot_model, robot_id, model.id)
+            result_dict = t_to_dict(result)
+            model.map_name = result_dict["mapName"]
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] get_current_map : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def load_map(self, robot_model: str, robot_id: str, request: RequestMapLoadPD) -> ResponseMapLoadPD:
+        """
+        [AMR Map Load 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        * request : 요청 데이터
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] load_map : {robot_model} {robot_id} {request.mapName}")
+
+            # 1) MapModel 설정
+            model.map_load(request.mapName)
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.map_load(robot_model, robot_id, model.id, model.map_name)
+            result_dict = t_to_dict(result)
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] load_map : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def reload_topo(self, robot_model: str, robot_id: str) -> ResponseTopoLoadPD:
+        """
+        [AMR Map Topo Load 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] load_topo_map : {robot_model} {robot_id}")
+
+            # 1) MapModel 설정
+            model.map_topo_load()
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.topo_reload(robot_model, robot_id, model.id)
+            result_dict = t_to_dict(result)
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] load_topo_map : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def mapping_start(self, robot_model: str, robot_id: str) -> ResponseMappingStartPD:
+        """
+        [AMR Mapping Start 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] mapping_start : {robot_model} {robot_id}")
+
+            # 1) MapModel 설정
+            model.mapping_start()
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.mapping_start(robot_model, robot_id, model.id)
+            result_dict = t_to_dict(result)
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] mapping_start : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def mapping_stop(self, robot_model: str, robot_id: str) -> ResponseMappingStopPD:
+        """
+        [AMR Mapping Stop 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] mapping_stop : {robot_model} {robot_id}")
+
+            # 1) MapModel 설정
+            model.mapping_stop()
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.mapping_stop(robot_model, robot_id, model.id)
+            result_dict = t_to_dict(result)
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] mapping_stop : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def mapping_save(self, robot_model: str, robot_id: str, request: RequestMappingSavePD) -> ResponseMappingSavePD:
+        """
+        [AMR Mapping Save 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        * request : 요청 데이터
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] mapping_save : {robot_model} {robot_id} {request.mapName}")
+
+            # 1) MapModel 설정
+            model.mapping_save(request.mapName)
+
+            # 2) 요청 검사
+            model.check_variables()
+
+            # 3) 요청 전송
+            result = await rb_amr_sdk.map.mapping_save(robot_model, robot_id, req_id=model.id, map_name=model.map_name)
+            result_dict = t_to_dict(result)
+            model.result = result_dict["result"]
+            model.message = result_dict["message"]
+
+            # 4) 반환
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] mapping_save : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))

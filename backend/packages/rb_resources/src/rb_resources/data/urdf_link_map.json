@@ -84,10 +84,10 @@
       }
     }
   },
-  "TEST": {
+  "test": {
     "urdfFileName": "d400.urdf",
     "components": {
-      "TEST": {
+      "test": {
         "type": "array",
         "mapper": []
       }

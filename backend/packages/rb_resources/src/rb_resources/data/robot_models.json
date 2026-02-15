@@ -44,16 +44,16 @@
       "C500880",
       "C501880",
       "C502880",
-      "TEST"
+      "test"
     ]
   },
-  "TEST": {
-    "model": "TEST",
+  "test": {
+    "model": "test",
     "be_service": "amr",
     "alias": "amrTest",
     "useCharge": false,
     "components": [
-      "TEST"
+      "test"
     ]
   }
 }
