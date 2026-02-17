@@ -485,6 +485,7 @@ class ScriptExecutor:
         self._batch_parent_wait_round: dict[str, dict[str, int]] = {}
         self._batch_group_released_round: dict[str, int] = {}
         self._batch_group_child_templates: dict[str, dict[str, MakeProcessArgs]] = {}
+        self._batch_group_spawn_pending: dict[str, set[str]] = {}
 
         # 전역 락
         self._mu = Lock()
@@ -1121,6 +1122,7 @@ class ScriptExecutor:
         self.state_dicts[process_id]["is_ui_execution"] = is_ui_execution
         self.state_dicts[process_id]["parent_process_id"] = parent_process_id
         self.state_dicts[process_id]["executor_managed"] = True
+        self.state_dicts[process_id]["exec_ready_seen"] = False
         self.state_dicts[process_id]["event_sub_tree_list"] = [
             t.to_dict() if hasattr(t, "to_dict") else t for t in event_sub_tree_list
         ]
@@ -1214,6 +1216,7 @@ class ScriptExecutor:
         self._batch_parent_wait_round[batch_group_id] = {}
         self._batch_group_released_round[batch_group_id] = 0
         self._batch_group_child_templates[batch_group_id] = {}
+        self._batch_group_spawn_pending[batch_group_id] = set()
 
         pid_flags = self._register_batch(batch)
 
@@ -1548,6 +1551,7 @@ class ScriptExecutor:
                     int(self.state_dicts[pid].get("batch_wait_round", 0)),
                     round_no,
                 )
+            self._stop_descendants_of_parent(pid)
 
         elif evt_type == "control":
             action = evt.get("action")
@@ -1566,6 +1570,8 @@ class ScriptExecutor:
                     self._batch_start_event.set()
 
         elif evt_type == "exec_ready":
+            if pid in self.state_dicts:
+                self.state_dicts[pid]["exec_ready_seen"] = True
             parent_pid = self.state_dicts.get(pid, {}).get("parent_process_id")
             if parent_pid is not None and parent_pid in self.state_dicts:
                 pending_map = dict(self.state_dicts[parent_pid].get("event_start_pending_map", {}))
@@ -1669,6 +1675,33 @@ class ScriptExecutor:
             # 부모가 이미 끝났다면 자식도 soft-stop으로 중단시켜 post_tree를 실행하도록 한다.
             self.stop(pid)
 
+    def _stop_descendants_of_parent(self, parent_pid: str):
+        queue_pids: list[str] = [parent_pid]
+        visited: set[str] = set()
+        descendants: list[str] = []
+
+        while queue_pids:
+            p = queue_pids.pop(0)
+            if p in visited:
+                continue
+            visited.add(p)
+
+            for pid, sd in list(self.state_dicts.items()):
+                if pid == p:
+                    continue
+                if (sd or {}).get("parent_process_id") == p and pid not in descendants:
+                    descendants.append(pid)
+                    queue_pids.append(pid)
+
+        for pid in descendants:
+            proc = self.processes.get(pid)
+            if proc is None or not proc.is_alive():
+                continue
+            self.stop(pid)
+            if proc.is_alive():
+                with contextlib.suppress(Exception):
+                    proc.terminate()
+
     def _has_group_child_slot_busy(self, group_id: str) -> bool:
         for pid, proc in list(self.processes.items()):
             sd = self.state_dicts.get(pid, {})
@@ -1706,7 +1739,11 @@ class ScriptExecutor:
                 continue
             if sd.get("parent_process_id") is None:
                 continue
+            # 라운드 경계에서는 자식이 즉시 멈춰야 하므로 soft stop 후 강제 종료로 보강한다.
             self.stop(pid)
+            if proc.is_alive():
+                with contextlib.suppress(Exception):
+                    proc.terminate()
 
     def _spawn_group_children_for_next_round(self, group_id: str):
         templates = self._batch_group_child_templates.get(group_id, {})
@@ -1714,8 +1751,14 @@ class ScriptExecutor:
             return
 
         for child_pid, template in list(templates.items()):
-            if child_pid in self.processes:
-                continue
+            existing = self.processes.get(child_pid)
+            if existing is not None:
+                if existing.is_alive():
+                    continue
+                # dead 프로세스 슬롯이 남아있으면 이번 라운드 spawn이 스킵될 수 있어 선정리
+                self._cleanup_process(child_pid)
+                if child_pid in self.processes:
+                    continue
 
             arg: MakeProcessArgs = dict(template)
             p = self.make_process(
@@ -1729,6 +1772,25 @@ class ScriptExecutor:
 
             p.start()
             self.processes[child_pid] = p
+            self._batch_group_spawn_pending.setdefault(group_id, set()).add(child_pid)
+
+    def _are_group_children_spawn_ready(self, group_id: str) -> bool:
+        pending = set(self._batch_group_spawn_pending.get(group_id, set()))
+        if not pending:
+            return True
+
+        remain: set[str] = set()
+        for pid in pending:
+            sd = self.state_dicts.get(pid, {})
+            if not bool(sd.get("exec_ready_seen", False)):
+                remain.add(pid)
+
+        if remain:
+            self._batch_group_spawn_pending[group_id] = remain
+            return False
+
+        self._batch_group_spawn_pending[group_id] = set()
+        return True
 
     def _all_group_parents_waiting_for_round(self, group_id: str, round_no: int) -> tuple[bool, list[str]]:
         parents = list(self._batch_group_parents.get(group_id, set()))
@@ -1767,15 +1829,24 @@ class ScriptExecutor:
                     self._batch_parent_wait_round.pop(group_id, None)
                     self._batch_group_released_round.pop(group_id, None)
                     self._batch_group_child_templates.pop(group_id, None)
+                    self._batch_group_spawn_pending.pop(group_id, None)
                 continue
 
-            # 라운드 경계에서는 부모 자식(이벤트 포함)을 먼저 중단시킨다.
-            self._stop_group_children(group_id)
-            if self._has_group_child_slot_busy(group_id):
-                continue
+            pending_spawn = set(self._batch_group_spawn_pending.get(group_id, set()))
+            if pending_spawn:
+                # 이미 다음 라운드용 자식을 띄운 상태면 다시 stop하지 않고 ready만 대기한다.
+                if not self._are_group_children_spawn_ready(group_id):
+                    continue
+            else:
+                # 라운드 경계 진입 1회차에서만 기존 자식을 정리한다.
+                self._stop_group_children(group_id)
+                if self._has_group_child_slot_busy(group_id):
+                    continue
 
-            # 배치로 전달된 자식(parent_process_id 지정)은 다음 라운드 시작 전에 새로 띄운다.
-            self._spawn_group_children_for_next_round(group_id)
+                # 배치로 전달된 자식(parent_process_id 지정)은 다음 라운드 시작 전에 새로 띄운다.
+                self._spawn_group_children_for_next_round(group_id)
+                if not self._are_group_children_spawn_ready(group_id):
+                    continue
 
             for pid in participants:
                 if pid in self.state_dicts:
@@ -1923,6 +1994,9 @@ class ScriptExecutor:
             wait_map = self._batch_parent_wait_round.get(group_id)
             if wait_map is not None and process_id in wait_map:
                 wait_map.pop(process_id, None)
+            pending = self._batch_group_spawn_pending.get(group_id)
+            if pending is not None and process_id in pending:
+                pending.discard(process_id)
 
         # 프로세스 종료로 alive 집합이 바뀌면 all-wait 조건을 즉시 재평가한다.
         self._notify_all_wait_if_needed()
@@ -1957,6 +2031,7 @@ class ScriptExecutor:
         self._batch_parent_wait_round.clear()
         self._batch_group_released_round.clear()
         self._batch_group_child_templates.clear()
+        self._batch_group_spawn_pending.clear()
 
         if self._sync_state is not None:
             self._sync_state.clear()
@@ -2160,6 +2235,7 @@ class ScriptExecutor:
         self._batch_parent_wait_round.clear()
         self._batch_group_released_round.clear()
         self._batch_group_child_templates.clear()
+        self._batch_group_spawn_pending.clear()
 
         self._batch_ready_count = 0
         self._batch_expected = 0
