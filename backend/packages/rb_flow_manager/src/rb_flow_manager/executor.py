@@ -1703,7 +1703,7 @@ class ScriptExecutor:
                     proc.terminate()
 
     def _has_group_child_slot_busy(self, group_id: str) -> bool:
-        for pid, proc in list(self.processes.items()):
+        for pid, _ in list(self.processes.items()):
             sd = self.state_dicts.get(pid, {})
             if sd.get("batch_group_id") != group_id:
                 continue
