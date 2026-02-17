@@ -63,6 +63,29 @@ class ExecutorContractTest(unittest.TestCase):
         self.assertIn("def _stop_children_of_finished_parents(self):", text)
         self.assertIn("self._stop_children_of_finished_parents()", text)
 
+    def test_batch_round_wait_and_group_progress_logic_exists(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn('"type": "round_wait"', text)
+        self.assertIn("def _progress_batch_rounds(self):", text)
+        self.assertIn("self._progress_batch_rounds()", text)
+        self.assertIn("def _spawn_group_children_for_next_round(self, group_id: str):", text)
+
+    def test_child_process_repeat_count_is_forced_to_one(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn("if parent_process_id is not None:", text)
+        self.assertIn("repeat_count = 1", text)
+
+    def test_sub_task_repeats_execute_root_not_children_only(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn("elif state_dict[\"current_repeat\"] > 1 and not is_sub_task:", text)
+
+    def test_ignore_pause_is_reset_in_executor_paths(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn('self.state_dicts[process_id]["ignore_pause"] = False', text)
+        self.assertIn('self.state_dicts[pid]["ignore_pause"] = False', text)
+        self.assertIn("if self.state_dicts[process_id].get(\"ignore_pause\"):", text)
+        self.assertIn("self.pause_events[process_id].clear()", text)
+
 class ControllerExceptionPolicyTest(unittest.TestCase):
     def test_zenoh_controller_no_raise_e_pattern(self):
         text = ZENOH_CONTROLLER_PATH.read_text(encoding="utf-8")

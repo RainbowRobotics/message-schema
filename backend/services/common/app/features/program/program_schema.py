@@ -58,6 +58,7 @@ class Step_Base(BaseModel):
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
     isStrict: bool = Field(default=False)
+    ignorePause: bool | None = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))

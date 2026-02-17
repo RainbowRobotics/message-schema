@@ -256,6 +256,15 @@ class ExecutionContext:
             self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
             raise StopExecution("Execution stopped by user")
 
+        # ignore_pause가 켜진 구간에서는 외부 pause를 소비하고 계속 진행한다.
+        if self.state_dict.get("ignore_pause", False):
+            if self.pause_event.is_set():
+                self.pause_event.clear()
+            if self.resume_event.is_set():
+                self.resume_event.clear()
+            if self.state_dict.get("state") == RB_Flow_Manager_ProgramState.PAUSED:
+                self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+            return
 
 
         if self.pause_event.is_set():
@@ -268,6 +277,11 @@ class ExecutionContext:
                 if self.stop_event.is_set() and not self.state_dict.get("ignore_stop", False):
                     self.state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
                     raise StopExecution("Execution stopped by user")
+                if self.state_dict.get("ignore_pause", False):
+                    self.pause_event.clear()
+                    self.resume_event.clear()
+                    self.state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
+                    break
                 if self.resume_event.wait(timeout=0.01):  # 10ms 타임슬라이스
                     self.resume_event.clear()
                     self.pause_event.clear()

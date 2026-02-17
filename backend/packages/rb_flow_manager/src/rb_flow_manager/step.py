@@ -38,6 +38,7 @@ class Step:
         task_id: str | None = None,
         disabled: bool | None = None,
         method: str | None = None,
+        ignore_pause: bool | None = None,
         func: Callable | None = None,
         post_func: Callable | None = None,
         done_script: Callable | str | None = None,
@@ -56,6 +57,7 @@ class Step:
         self.task_id = task_id
         self.variable = variable
         self.disabled = disabled
+        self.ignore_pause = ignore_pause
         self.method = method
         self.func = func
         self.post_func = post_func
@@ -108,6 +110,7 @@ class Step:
             post_func_name=d.get("postFuncName"),
             not_ast_eval=d.get("notAstEval"),
             disabled=d.get("disabled"),
+            ignore_pause=d.get("ignorePause"),
             args=d.get("args") or {},
             post_args=d.get("postArgs") or {},
             done_script=d.get("doneScript"),
@@ -120,6 +123,7 @@ class Step:
             "name": self.name,
             "taskId": self.task_id,
             "disabled": self.disabled,
+            "ignorePause": self.ignore_pause,
             "variable": self.variable,
             "funcName": self.func_name,
             "postFuncName": self.post_func_name,
@@ -201,6 +205,11 @@ class Step:
             + _indent(f"name={repr(self.name)},", depth + 4)
             + "\n"
             + (_indent(f"disabled={repr(self.disabled)},\n\n", depth + 4) if self.disabled else "")
+            + (
+                _indent(f"ignore_pause={repr(self.ignore_pause)},\n\n", depth + 4)
+                if self.ignore_pause is True
+                else ""
+            )
             + (
                 _indent(f"func_name={repr(self.func_name)},\n\n", depth + 4)
                 if self.func_name
@@ -308,139 +317,147 @@ class Step:
 
         self._pre_execute(ctx, is_skip=is_skip)
 
-        if not is_skip:
-            ctx.emit_next(self.step_id)
+        ignore_pause_applied = False
+        if not is_skip and self.ignore_pause:
+            ctx.state_dict["ignore_pause"] = True
+            ignore_pause_applied = True
 
-            ctx.check_stop()
-
-        done_called = False
-
-        fn = self.func if not _post_run else self.post_func
-        func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
-        args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
-
-        if _post_run:
-            func_name = _resolve_arg_scope_value(self.post_func_name, ctx) if self.post_func_name else None
-            args = _resolve_arg_scope_value(self.post_args, ctx) if self.post_args else self.args or {}
-
-
-        if fn is None and func_name and not self.disabled and not is_skip:
-            fn = ctx.get_sdk_function(func_name)
-            if fn is None:
-                raise StopExecution(f"unknown flow function: {func_name}")
-
-        if fn is not None and not self.disabled and not is_skip:
-            done_event = Event()
-
-            def done():
-                nonlocal done_called
-
-                if done_called:
-                    return
-
-                done_called = True
-
-                if self.done_script is not None:
-                    if isinstance(self.done_script, str):
-                        safe_eval_expr(
-                            self.done_script,
-                            variables=ctx.variables,
-                            get_global_variable=ctx.get_global_variable,
-                        )
-                    else:
-                        self.done_script()
-
-                ctx.update_vars_to_state_dict()
-
-                done_event.set()
-
-            flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args or {}, done=done)
-
-            eval_args = {}
-
-            try:
-                for k, v in args.items():
-                    if self.not_ast_eval:
-                        eval_args[k] = v
-                    else:
-                        eval_args[k] = eval_value(
-                            v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
-                        )
-
-                if self.variable:
-                    resolved_variables = dict(self.variable)
-
-                    for k, v in self.variable.items():
-                        if self.not_ast_eval:
-                            resolved_variables[k] = v
-                        else:
-                            if isinstance(v, str):
-                                if v.startswith("$parent."):
-                                    attr = v[len("$parent.") :]
-                                    v = ctx.lookup(attr)
-                                elif v.startswith("$args."):
-                                    attr = v[len("$args.") :]
-                                    v = eval_args.get(attr)
-                                else:
-                                    v = eval_value(
-                                        v,
-                                        variables=ctx.variables,
-                                        get_global_variable=ctx.get_global_variable,
-                                    )
-
-                        resolved_variables[k] = v
-
-                    # 원본 step 정의(self.variable)를 mutate하지 않고 실행 시점 값만 반영한다.
-                    ctx.update_local_variables(resolved_variables)
-
-                if "robot_model" not in eval_args:
-                    eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
-
-                eval_args["target_step_id"] = target_step_id
-                eval_args["_post_run"] = _post_run
-
-            except FlowControlException as e:
-                raise e
-            except RuntimeError as e:
-                if "Execution stopped by user" not in str(e):
-                    ctx.emit_error(self.step_id, RuntimeError(str(e)))
-                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                raise e
-            except Exception as e:  # noqa: BLE001
-                if "Execution stopped by user" not in str(e):
-                    ctx.emit_error(self.step_id, e)
-
-                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                raise e
-
-            try:
-                call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
-            except FlowControlException as e:
-                raise e
-            except RuntimeError as e:
-                if "Execution stopped by user" not in str(e):
-                    ctx.emit_error(self.step_id, RuntimeError(str(e)))
-                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                raise RuntimeError(str(e)) from e
-            except Exception as e:  # noqa: BLE001
-                if "Execution stopped by user" not in str(e):
-                    ctx.emit_error(self.step_id, e)
-                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
-                raise e
-
-            while not done_event.wait(timeout=0.01):
+        try:
+            if not is_skip:
+                ctx.emit_next(self.step_id)
                 ctx.check_stop()
 
-        self._post_execute(ctx, ignore_step_interval=self.disabled or is_skip)
+            done_called = False
 
-        if not is_skip:
-            ctx.emit_done(self.step_id)
+            fn = self.func if not _post_run else self.post_func
+            func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
+            args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
 
-        if not _post_run:
-            self.execute_children(ctx, target_step_id=target_step_id)
+            if _post_run:
+                func_name = _resolve_arg_scope_value(self.post_func_name, ctx) if self.post_func_name else None
+                args = _resolve_arg_scope_value(self.post_args, ctx) if self.post_args else self.args or {}
 
-        if not _post_run and (self.post_func is not None or self.post_func_name is not None):
-            self.execute(ctx, target_step_id=target_step_id, _post_run=True)
+
+            if fn is None and func_name and not self.disabled and not is_skip:
+                fn = ctx.get_sdk_function(func_name)
+                if fn is None:
+                    raise StopExecution(f"unknown flow function: {func_name}")
+
+            if fn is not None and not self.disabled and not is_skip:
+                done_event = Event()
+
+                def done():
+                    nonlocal done_called
+
+                    if done_called:
+                        return
+
+                    done_called = True
+
+                    if self.done_script is not None:
+                        if isinstance(self.done_script, str):
+                            safe_eval_expr(
+                                self.done_script,
+                                variables=ctx.variables,
+                                get_global_variable=ctx.get_global_variable,
+                            )
+                        else:
+                            self.done_script()
+
+                    ctx.update_vars_to_state_dict()
+
+                    done_event.set()
+
+                flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args or {}, done=done)
+
+                eval_args = {}
+
+                try:
+                    for k, v in args.items():
+                        if self.not_ast_eval:
+                            eval_args[k] = v
+                        else:
+                            eval_args[k] = eval_value(
+                                v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
+                            )
+
+                    if self.variable:
+                        resolved_variables = dict(self.variable)
+
+                        for k, v in self.variable.items():
+                            if self.not_ast_eval:
+                                resolved_variables[k] = v
+                            else:
+                                if isinstance(v, str):
+                                    if v.startswith("$parent."):
+                                        attr = v[len("$parent.") :]
+                                        v = ctx.lookup(attr)
+                                    elif v.startswith("$args."):
+                                        attr = v[len("$args.") :]
+                                        v = eval_args.get(attr)
+                                    else:
+                                        v = eval_value(
+                                            v,
+                                            variables=ctx.variables,
+                                            get_global_variable=ctx.get_global_variable,
+                                        )
+
+                            resolved_variables[k] = v
+
+                        # 원본 step 정의(self.variable)를 mutate하지 않고 실행 시점 값만 반영한다.
+                        ctx.update_local_variables(resolved_variables)
+
+                    if "robot_model" not in eval_args:
+                        eval_args["robot_model"] = ctx.state_dict.get("robot_model", None)
+
+                    eval_args["target_step_id"] = target_step_id
+                    eval_args["_post_run"] = _post_run
+
+                except FlowControlException as e:
+                    raise e
+                except RuntimeError as e:
+                    if "Execution stopped by user" not in str(e):
+                        ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    raise e
+                except Exception as e:  # noqa: BLE001
+                    if "Execution stopped by user" not in str(e):
+                        ctx.emit_error(self.step_id, e)
+
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    raise e
+
+                try:
+                    call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
+                except FlowControlException as e:
+                    raise e
+                except RuntimeError as e:
+                    if "Execution stopped by user" not in str(e):
+                        ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    raise RuntimeError(str(e)) from e
+                except Exception as e:  # noqa: BLE001
+                    if "Execution stopped by user" not in str(e):
+                        ctx.emit_error(self.step_id, e)
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    raise e
+
+                while not done_event.wait(timeout=0.01):
+                    ctx.check_stop()
+
+            self._post_execute(ctx, ignore_step_interval=self.disabled or is_skip)
+
+            if not is_skip:
+                ctx.emit_done(self.step_id)
+
+            if not _post_run:
+                self.execute_children(ctx, target_step_id=target_step_id)
+
+            if not _post_run and (self.post_func is not None or self.post_func_name is not None):
+                self.execute(ctx, target_step_id=target_step_id, _post_run=True)
+        finally:
+            if ignore_pause_applied:
+                ctx.state_dict["ignore_pause"] = False
 
 
 class FolderStep(Step):
