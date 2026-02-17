@@ -258,6 +258,8 @@ class Step:
     def _post_execute(self, ctx: ExecutionContext, *, ignore_step_interval: bool = False):
         if not ignore_step_interval:
             min_step_interval = getattr(ctx, "min_step_interval", 0)
+            if min_step_interval is None:
+                min_step_interval = 0.0
             elapsed = time.monotonic() - self._start_ts
             remaining = min_step_interval - elapsed
 
