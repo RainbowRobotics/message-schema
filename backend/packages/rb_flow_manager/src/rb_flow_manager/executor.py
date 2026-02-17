@@ -1538,6 +1538,41 @@ class ScriptExecutor:
             if self.controller is not None:
                 self.controller.on_all_wait()
 
+    def _is_process_running(self, process_id: str) -> bool:
+        proc = self.processes.get(process_id)
+        if proc is not None and proc.is_alive():
+            return True
+        if self._process_alive is not None and self._process_alive.get(process_id, False):
+            return True
+        return False
+
+    def _stop_children_of_finished_parents(self):
+        terminal_states = {
+            RB_Flow_Manager_ProgramState.COMPLETED,
+            RB_Flow_Manager_ProgramState.STOPPED,
+            RB_Flow_Manager_ProgramState.ERROR,
+        }
+
+        for pid, proc in list(self.processes.items()):
+            if proc is None or not proc.is_alive():
+                continue
+
+            child_state = self.state_dicts.get(pid, {})
+            parent_pid = child_state.get("parent_process_id")
+            if parent_pid is None:
+                continue
+
+            parent_state = self.state_dicts.get(parent_pid, {})
+            parent_has_terminated = (
+                parent_state.get("state") in terminal_states
+                and not self._is_process_running(parent_pid)
+            )
+            if not parent_has_terminated:
+                continue
+
+            # 부모가 이미 끝났다면 자식도 soft-stop으로 중단시켜 post_tree를 실행하도록 한다.
+            self.stop(pid)
+
     def _monitor_processes(self):
         """프로세스 완료 감시 및 자원 정리"""
         last_event_process_time = time.time()
@@ -1554,6 +1589,9 @@ class ScriptExecutor:
                 for pid in list(self.processes.keys()):
                     self._drain_events(pid)
                 last_event_process_time = current_time
+
+            # 부모 종료 후 남아있는 자식을 즉시 정리(post_tree 실행 경로 보장)
+            self._stop_children_of_finished_parents()
 
             # 완료된 프로세스 찾기
             finished: list[str] = []

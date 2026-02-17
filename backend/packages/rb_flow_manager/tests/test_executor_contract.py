@@ -58,6 +58,11 @@ class ExecutorContractTest(unittest.TestCase):
         text = EXECUTOR_PATH.read_text(encoding="utf-8")
         self.assertIn('if getattr(s, "disabled", False):', text)
 
+    def test_monitor_stops_children_when_parent_finishes(self):
+        text = EXECUTOR_PATH.read_text(encoding="utf-8")
+        self.assertIn("def _stop_children_of_finished_parents(self):", text)
+        self.assertIn("self._stop_children_of_finished_parents()", text)
+
 class ControllerExceptionPolicyTest(unittest.TestCase):
     def test_zenoh_controller_no_raise_e_pattern(self):
         text = ZENOH_CONTROLLER_PATH.read_text(encoding="utf-8")
