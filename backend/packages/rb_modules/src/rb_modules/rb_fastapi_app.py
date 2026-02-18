@@ -16,7 +16,10 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
+from rb_modbus.client import ModbusClient
+from rb_modbus.server import ModbusServer
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
+from rb_tcp.client import TcpClient
 from rb_tcp.gateway_server import TcpGatewayServer
 from rb_tcp.router import TcpRouter
 from rb_tcp.rpc_zenoh import make_rpc_zenoh_router
@@ -31,6 +34,7 @@ load_dotenv(get_env_path())
 
 # 이렇게 쓰시면 됩니당~~~
 print("MONGO_USERNAME >>>", os.getenv("MONGO_USERNAME"))
+
 
 class AppSettings(BaseSettings):
     IS_DEV: bool = Field(default=False)
@@ -72,6 +76,9 @@ def create_app(
     settings: AppSettings,
     socket_client: RBSocketIONsClient | None = None,
     tcp_gateway: TcpGatewayServer | None = None,
+    tcp_clients: Sequence[TcpClient] | None = None,
+    modbus_servers: Sequence[ModbusServer] | None = None,
+    modbus_clients: Sequence[ModbusClient] | None = None,
     zenoh_routers: Sequence[ZenohRouter] | None = None,
     api_routers: Sequence[APIRouter] | None = None,  # [state_router, program_router, ...]
     socket_routers: (
@@ -100,6 +107,24 @@ def create_app(
             app.state.tcp_gateway = tcp_gateway
             # registry 접근도 필요하면 tcp_gateway.registry 형태로 들고 있어도 됨
             print(f"🧷 tcp gateway up :{tcp_gateway.port}", flush=True)
+
+        if tcp_clients:
+            app.state.tcp_clients = list(tcp_clients)
+            for tcp_client in app.state.tcp_clients:
+                await tcp_client.connect()
+            print(f"🧷 tcp clients up x{len(app.state.tcp_clients)}", flush=True)
+
+        if modbus_servers:
+            app.state.modbus_servers = list(modbus_servers)
+            for modbus_server in app.state.modbus_servers:
+                await modbus_server.startup()
+            print(f"🧷 modbus servers up x{len(app.state.modbus_servers)}", flush=True)
+
+        if modbus_clients:
+            app.state.modbus_clients = list(modbus_clients)
+            for modbus_client in app.state.modbus_clients:
+                await modbus_client.connect()
+            print(f"🧷 modbus clients up x{len(app.state.modbus_clients)}", flush=True)
 
         if socket_client and not getattr(socket_client, "connected", False):
             app.state._sio_connect_task = asyncio.create_task(
@@ -145,6 +170,14 @@ def create_app(
                     await app.state.tcp_gateway.shutdown()
                     print("⛔ tcp gateway 종료", flush=True)
 
+                for tcp_client in getattr(app.state, "tcp_clients", []):
+                    await tcp_client.disconnect()
+
+                for modbus_client in getattr(app.state, "modbus_clients", []):
+                    await modbus_client.disconnect()
+
+                for modbus_server in getattr(app.state, "modbus_servers", []):
+                    await modbus_server.shutdown()
 
                 if socket_client:
                     await socket_client.disconnect()
@@ -309,7 +342,9 @@ def create_app(
                 except Exception:
                     body_text = "<error reading body>"
 
-            rb_log.error(f"Internal Server Error body: {b.decode('utf-8', 'ignore') if isinstance(b, bytes) else b}")
+            rb_log.error(
+                f"Internal Server Error body: {b.decode('utf-8', 'ignore') if isinstance(b, bytes) else b}"
+            )
             return JSONResponse(
                 status_code=exc.status_code if hasattr(exc, "status_code") else 500,
                 content={
@@ -319,7 +354,7 @@ def create_app(
                     "url": str(request.url),
                     "query_params": dict(request.query_params),
                     "body": body_text,
-                    "message": exc.detail if hasattr(exc, "detail") else "Internal Server Error"
+                    "message": exc.detail if hasattr(exc, "detail") else "Internal Server Error",
                 },
             )
         except Exception as e:

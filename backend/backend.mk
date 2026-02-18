@@ -107,3 +107,13 @@ backend.docs-sdk: ## SDK 문서 생성
 	@cd ${WORKDIR} && \
 		uv run sphinx-apidoc -o documents/sdk/docs/source/api packages/rb_sdk/src/rb_sdk && \
 		uv run sphinx-build -b html -E -a documents/sdk/docs/source documents/sdk/docs/build/html
+
+backend.test-tcp: ## TCP 통합 테스트 실행
+	@cd ${WORKDIR} && \
+		uv run pytest -s -q packages/rb_tcp/tests/test_tcp_integration.py && \
+		echo "✅ TCP 통합 테스트 완료"
+
+backend.test-modbus: ## Modbus 통합 테스트 실행
+	@cd ${WORKDIR} && \
+		uv run pytest -s -q packages/rb_modbus/tests/test_modbus_integration.py && \
+		echo "✅ Modbus 통합 테스트 완료"
