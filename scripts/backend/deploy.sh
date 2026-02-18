@@ -323,6 +323,8 @@ function print_completion_message() {
 # 메인 스크립트 실행 #
 #######################
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 if [[ "$current_branch" = "main" ]]; then
     # GitHub CLI가 설치되어 있는지 확인
     if ! command -v gh &> /dev/null; then
@@ -341,7 +343,6 @@ fi
 last_git_work_status="normal"
 
 timestamp=$(date +%Y%m%d%H%M%S)
-current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # 배포할 서비스 이름 입력 받기
 # 메인 스크립트에서 배열로 변환하여 사용

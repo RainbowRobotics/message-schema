@@ -34,7 +34,7 @@ class CommonTcpEnvConfig:
     modbus_proxy: ModbusProxyEnvConfig
 
     @classmethod
-    def from_env(cls) -> "CommonTcpEnvConfig":
+    def from_env(cls) -> CommonTcpEnvConfig:
         return cls(
             gateway=TcpGatewayConfig(
                 host=os.getenv("TCP_GATEWAY_HOST", "0.0.0.0"),
