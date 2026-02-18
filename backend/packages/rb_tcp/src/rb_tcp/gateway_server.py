@@ -8,25 +8,31 @@ from .registry import Registry
 
 Forwarder = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
 
+
 class TcpGatewayServer:
-    """ tcp gateway server """
+    """tcp gateway server"""
+
     def __init__(
         self,
         *,
         host: str,
         port: int,
         registry: Registry,
-        forwarder: Forwarder,
+        forwarder: Forwarder | None = None,
         idle_timeout: float = 60.0,
         route_prefix_as_service: bool = False,
     ):
         self.host = host
         self.port = port
         self.registry = registry
-        self.forwarder = forwarder
+        self.forwarder: Forwarder = forwarder or self._default_forwarder
         self.idle_timeout = idle_timeout
         self.route_prefix_as_service = route_prefix_as_service
         self._server: asyncio.AbstractServer | None = None
+
+    @staticmethod
+    async def _default_forwarder(msg: dict[str, Any]) -> dict[str, Any]:
+        return {"ok": True, "payload": msg.get("payload")}
 
     def _normalize_req_message(self, msg: dict[str, Any]) -> dict[str, Any]:
         if not self.route_prefix_as_service:
@@ -110,11 +116,11 @@ class TcpGatewayServer:
             await w.wait_closed()
 
     async def startup(self):
-        """ start the tcp gateway server """
+        """start the tcp gateway server"""
         self._server = await asyncio.start_server(self._handle, self.host, self.port)
 
     async def shutdown(self):
-        """ shutdown the tcp gateway server """
+        """shutdown the tcp gateway server"""
         if self._server:
             self._server.close()
             await self._server.wait_closed()

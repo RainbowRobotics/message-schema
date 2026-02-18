@@ -49,15 +49,10 @@ from rb_tcp import Registry, TcpGatewayServer
 
 registry = Registry()
 
-async def forwarder(msg: dict) -> dict:
-    # msg: {"type":"req", "target":"service", "route":"path", "payload":{...}}
-    return {"ok": True, "echo": msg.get("payload")}
-
 gateway = TcpGatewayServer(
     host="0.0.0.0",
     port=9100,
     registry=registry,
-    forwarder=forwarder,
     route_prefix_as_service=True,  # "manipulate/program/pause" -> target=manipulate, route=program/pause
 )
 
@@ -69,6 +64,11 @@ await gateway.shutdown()
 `route_prefix_as_service` 옵션:
 - `False` (기본): 순수 TCP 서버처럼 메시지를 그대로 `forwarder`에 전달
 - `True`: `req.route`의 첫 segment를 service로 분리해서 `target`/`route`로 정규화
+
+`forwarder` 옵션:
+- 생략 가능 (기본 내장 forwarder 사용)
+- 기본 동작: `{"ok": True, "payload": msg.get("payload")}` 반환
+- 커스텀 로직이 필요하면 `forwarder=...`로 주입
 
 ## 3-1. 권장 아키텍처 (common 대장 서버)
 

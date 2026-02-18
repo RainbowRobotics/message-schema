@@ -39,7 +39,7 @@ class TcpIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 return {
                     "service": "manipulate",
                     "route": "whoami",
-                    "echo": payload,
+                    "payload": payload,
                     "ok": True,
                 }
             return {
@@ -184,7 +184,7 @@ class TcpIntegrationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res["service"], "manipulate")
         self.assertEqual(res["route"], "whoami")
         self.assertEqual(
-            res["echo"],
+            res["payload"],
             {"from": "external", "request_id": "r1"},
         )
         self.assertEqual(len(self.manipulate_whoami_calls), 1)
@@ -193,6 +193,31 @@ class TcpIntegrationTest(unittest.IsolatedAsyncioTestCase):
             flush=True,
         )
         print("[tcp] test_external_to_common_to_manipulate_roundtrip done", flush=True)
+
+    async def test_default_forwarder_when_not_provided(self):
+        print("[tcp] test_default_forwarder_when_not_provided start", flush=True)
+        registry = Registry()
+        port = _free_port()
+        server = TcpGatewayServer(
+            host="127.0.0.1",
+            port=port,
+            registry=registry,
+        )
+        client = TcpClient(host="127.0.0.1", port=port, timeout=2.0)
+
+        await server.startup()
+        await client.connect()
+        try:
+            res = await client.request(
+                target="manipulate",
+                route="program/pause",
+                payload={"speed": 77},
+            )
+            self.assertEqual(res, {"ok": True, "payload": {"speed": 77}})
+        finally:
+            await client.disconnect()
+            await server.shutdown()
+        print("[tcp] test_default_forwarder_when_not_provided done", flush=True)
 
 
 if __name__ == "__main__":
