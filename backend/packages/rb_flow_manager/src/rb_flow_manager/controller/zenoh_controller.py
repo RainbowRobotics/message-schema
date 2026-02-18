@@ -68,10 +68,14 @@ class Zenoh_Controller(BaseController):
                 rb_log.warning(f"initial state update skipped: {e}")
 
     def on_start(self, task_id: str) -> None:
-        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
+        is_sub_task = self._state_dicts.get(task_id, {}).get("parent_process_id") is not None
+
+        if self._zenoh_client is not None and not is_sub_task:
             req = Request_Program_At_StartT()
             req.taskId = task_id
-            self._zenoh_client.publish("rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
+            self._zenoh_client.publish(
+                "rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8
+            )
 
         self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
@@ -147,11 +151,19 @@ class Zenoh_Controller(BaseController):
     def on_next(self, task_id: str, step_id: str) -> None:
         self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
-    def on_sub_task_start(self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type) -> None:
-        self.sub_task_start_or_done(task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.RUNNING)
+    def on_sub_task_start(
+        self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type
+    ) -> None:
+        self.sub_task_start_or_done(
+            task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.RUNNING
+        )
 
-    def on_sub_task_done(self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type) -> None:
-        self.sub_task_start_or_done(task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.COMPLETED)
+    def on_sub_task_done(
+        self, task_id: str, sub_task_id: str, sub_task_type: RB_Program_Sub_Task_Type
+    ) -> None:
+        self.sub_task_start_or_done(
+            task_id, sub_task_id, sub_task_type, RB_Flow_Manager_ProgramState.COMPLETED
+        )
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
         str_error = str(error)
@@ -170,12 +182,14 @@ class Zenoh_Controller(BaseController):
         self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.IDLE)
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
 
-        print(f"self._state_dicts.get('parent_process_id'): {self._state_dicts.get('parent_process_id')}", flush=True)
+        is_sub_task = self._state_dicts.get(task_id, {}).get("parent_process_id") is not None
 
-        if self._zenoh_client is not None and self._state_dicts.get("parent_process_id") is None:
+        if self._zenoh_client is not None and not is_sub_task:
             req = Request_Program_At_EndT()
             req.taskId = task_id
-            self._zenoh_client.publish("rrs/program/at_end", flatbuffer_req_obj=req, flatbuffer_buf_size=8)
+            self._zenoh_client.publish(
+                "rrs/program/at_end", flatbuffer_req_obj=req, flatbuffer_buf_size=8
+            )
 
     def on_close(self) -> None:
         pass
@@ -248,9 +262,15 @@ class Zenoh_Controller(BaseController):
             rb_log.error(f"Error updating executor state: {e}")
             raise
 
-    def sub_task_start_or_done(self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"], state: int) -> None:
+    def sub_task_start_or_done(
+        self, task_id: str, sub_task_id: str, sub_task_type: Literal["INSERT", "CHANGE"], state: int
+    ) -> None:
         try:
-            sub_task_type_enum = RB_Program_Sub_Task_Type.SUB_TASK_INSERT if sub_task_type == "INSERT" else RB_Program_Sub_Task_Type.SUB_TASK_CHANGE
+            sub_task_type_enum = (
+                RB_Program_Sub_Task_Type.SUB_TASK_INSERT
+                if sub_task_type == "INSERT"
+                else RB_Program_Sub_Task_Type.SUB_TASK_CHANGE
+            )
 
             if self._zenoh_client is not None:
                 req = Request_Update_Sub_Task_StateT()
