@@ -48,7 +48,8 @@ exclude = [
     "**/build/",
     "**/dist/",
     "**/*.egg-info/",
-    "packages/rb_flat_buffers/**"
+    "packages/rb_flat_buffers/**",
+    "**/tests/**"
 ]
 
 [tool.ruff.lint]
@@ -73,6 +74,7 @@ explicit_package_bases = true
 
 exclude = [
     "packages/rb_flat_buffers/",
+    ".*/tests/",
 ]
 
 [tool.pytest.ini_options]
