@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import os
 import threading
 import uuid
@@ -16,7 +17,9 @@ class TcpClientError(Exception):
 
 
 class TcpClient:
-    _instances: dict[int, dict[tuple[str, int, float, str | None], TcpClient]] = {}
+    _instances: dict[
+        int, dict[tuple[str, int, float, str | None, bool, str | None], TcpClient]
+    ] = {}
     _instances_lock = threading.Lock()
 
     def __new__(
@@ -26,10 +29,26 @@ class TcpClient:
         port: int,
         timeout: float = 5.0,
         service: str | None = None,
+        require_auth: bool = False,
+        auth_payload: dict[str, Any] | None = None,
     ):
         pid = os.getpid()
         normalized_service = service.strip("/") if isinstance(service, str) else None
-        key = (host, port, float(timeout), normalized_service)
+        if auth_payload is None:
+            auth_fingerprint = None
+        else:
+            try:
+                auth_fingerprint = json.dumps(auth_payload, sort_keys=True, ensure_ascii=True)
+            except TypeError:
+                auth_fingerprint = repr(auth_payload)
+        key = (
+            host,
+            port,
+            float(timeout),
+            normalized_service,
+            bool(require_auth),
+            auth_fingerprint,
+        )
 
         with cls._instances_lock:
             per_pid = cls._instances.setdefault(pid, {})
@@ -47,6 +66,8 @@ class TcpClient:
         port: int,
         timeout: float = 5.0,
         service: str | None = None,
+        require_auth: bool = False,
+        auth_payload: dict[str, Any] | None = None,
     ):
         if getattr(self, "_init_done", False):
             return
@@ -56,6 +77,8 @@ class TcpClient:
         self.port = port
         self.timeout = timeout
         self.service = service.strip("/") if isinstance(service, str) else None
+        self.require_auth = require_auth
+        self.auth_payload = dict(auth_payload or {}) if auth_payload is not None else None
 
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
@@ -99,7 +122,24 @@ class TcpClient:
             try:
                 self._reader, self._writer = await asyncio.open_connection(self.host, self.port)
                 self._read_task = asyncio.create_task(self._read_loop())
+                if self.require_auth or self.auth_payload is not None:
+                    res = await self._request({"type": "auth", "auth": self.auth_payload or {}})
+                    if not res.get("ok", False):
+                        raise TcpClientError(str(res.get("error", "auth_failed")))
             except Exception:
+                writer = self._writer
+                self._writer = None
+                self._reader = None
+                read_task = self._read_task
+                self._read_task = None
+                if read_task is not None:
+                    read_task.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await read_task
+                if writer is not None:
+                    writer.close()
+                    with contextlib.suppress(Exception):
+                        await writer.wait_closed()
                 self._use_count = max(0, self._use_count - 1)
                 raise
 

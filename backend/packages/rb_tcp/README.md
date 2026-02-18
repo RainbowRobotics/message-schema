@@ -67,8 +67,15 @@ await gateway.shutdown()
 
 `forwarder` 옵션:
 - 생략 가능 (기본 내장 forwarder 사용)
-- 기본 동작: `{"ok": True, "payload": msg.get("payload")}` 반환
+- 기본 동작: `{"ok": True, "echo": msg.get("payload")}` 반환
 - 커스텀 로직이 필요하면 `forwarder=...`로 주입
+
+인증 옵션:
+- `security_mode="off" | "jwt"` 지원 (기본 `off`)
+- `security_mode="jwt"`면 클라이언트가 먼저 `type="auth"` 메시지로 인증해야 함
+- `auth_provider(ctx)`에서 인증 결과를 반환
+  - `True/False` 또는 `{"ok": bool, "error": "..."}`
+- 하위 호환: `require_auth=True`를 주면 내부적으로 `security_mode="jwt"`로 동작
 
 ## 3-1. 권장 아키텍처 (common 대장 서버)
 
@@ -80,6 +87,33 @@ await gateway.shutdown()
 - 이벤트 fan-out: `common`이 `Registry.push()`로 전달
 
 즉, 각 서비스가 TCP 서버를 따로 띄우는 방식보다 `common` 집중형이 권장됩니다.
+
+`common`에서 환경변수로 보안 모드 제어:
+- `TCP_GATEWAY_SECURITY_MODE=off`
+- `TCP_GATEWAY_SECURITY_MODE=jwt`
+
+`common`에서 Modbus 프록시 제어:
+- `TCP_MODBUS_PROXY_ENABLED=true|false` (기본 false)
+- `TCP_MODBUS_PROXY_HOST=127.0.0.1`
+- `TCP_MODBUS_PROXY_PORT=1502`
+- `TCP_MODBUS_PROXY_TIMEOUT=2.0`
+- `TCP_MODBUS_PROXY_UNIT_ID=1`
+- `TCP_MODBUS_PROXY_AUTH_ENABLED=true|false` (기본 false)
+- `TCP_MODBUS_PROXY_AUTH_TOKEN=<token>`
+
+Modbus 프록시 요청 규칙:
+- `target="modbus"` + `route=<modbus_method>`
+- 지원 route:
+  - `auth` (세션 인증)
+  - `read_holding_registers`, `read_input_registers`, `read_coils`
+  - `write_register`, `write_registers`, `write_coil`, `write_coils`
+- 예시:
+  - `request(target="modbus", route="auth", payload={"token":"..."})`
+  - `request(target="modbus", route="read_holding_registers", payload={"address":10,"count":2})`
+
+설명:
+- `TCP_MODBUS_PROXY_AUTH_ENABLED=true`면 `modbus/auth`를 먼저 호출한 세션만 modbus route를 사용할 수 있습니다.
+- 이 modbus 세션 인증 토글은 `TCP_GATEWAY_SECURITY_MODE`와 별도로 동작합니다.
 
 ## 3-2. 서비스 경계 정책 (manipulate / amr)
 
@@ -141,6 +175,14 @@ client = TcpClient(host="127.0.0.1", port=9100, service="manipulate")
 - `request`는 자동 prefix 미적용:
   - `request(target="manipulate", route="program/pause")`
   - 또는 `request(route="manipulate/program/pause")`
+
+인증 옵션:
+- `require_auth=True`: `connect()` 단계에서 인증 핸드셰이크를 강제
+- `auth_payload`: 서버 `auth_provider`로 전달할 인증 데이터 (예: `{"jwt": "..."}`)
+
+게이트웨이 런타임 토글:
+- `gateway.set_security_mode("off")`
+- `gateway.set_security_mode("jwt", auth_provider=...)`
 
 ## 5. 클라이언트 이벤트 데코레이터
 

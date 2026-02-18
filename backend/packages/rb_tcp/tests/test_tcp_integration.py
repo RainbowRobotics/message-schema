@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import socket
 import sys
 import unittest
@@ -213,11 +214,111 @@ class TcpIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 route="program/pause",
                 payload={"speed": 77},
             )
-            self.assertEqual(res, {"ok": True, "payload": {"speed": 77}})
+            self.assertEqual(res, {"ok": True, "echo": {"speed": 77}})
         finally:
             await client.disconnect()
             await server.shutdown()
         print("[tcp] test_default_forwarder_when_not_provided done", flush=True)
+
+    async def test_auth_required_handshake(self):
+        print("[tcp] test_auth_required_handshake start", flush=True)
+        registry = Registry()
+        port = _free_port()
+
+        async def auth_provider(ctx: dict[str, Any]) -> bool:
+            auth = dict(ctx.get("auth") or {})
+            return auth.get("jwt") == "ok-token"
+
+        server = TcpGatewayServer(
+            host="127.0.0.1",
+            port=port,
+            registry=registry,
+            require_auth=True,
+            auth_provider=auth_provider,
+        )
+        bad = TcpClient(
+            host="127.0.0.1",
+            port=port,
+            timeout=2.0,
+            require_auth=True,
+            auth_payload={"jwt": "bad-token"},
+        )
+        good = TcpClient(
+            host="127.0.0.1",
+            port=port,
+            timeout=2.0,
+            require_auth=True,
+            auth_payload={"jwt": "ok-token"},
+        )
+
+        await server.startup()
+        try:
+            with self.assertRaises(TcpClientError):
+                await bad.connect()
+
+            await good.connect()
+            res = await good.request(
+                target="manipulate",
+                route="whoami",
+                payload={"name": "tester"},
+            )
+            self.assertEqual(res, {"ok": True, "echo": {"name": "tester"}})
+        finally:
+            with contextlib.suppress(Exception):
+                await bad.disconnect()
+            with contextlib.suppress(Exception):
+                await good.disconnect()
+            await server.shutdown()
+        print("[tcp] test_auth_required_handshake done", flush=True)
+
+    async def test_security_mode_toggle_runtime(self):
+        print("[tcp] test_security_mode_toggle_runtime start", flush=True)
+        registry = Registry()
+        port = _free_port()
+
+        async def auth_provider(ctx: dict[str, Any]) -> bool:
+            auth = dict(ctx.get("auth") or {})
+            return auth.get("jwt") == "ok-token"
+
+        server = TcpGatewayServer(
+            host="127.0.0.1",
+            port=port,
+            registry=registry,
+            security_mode="off",
+            auth_provider=auth_provider,
+        )
+        client = TcpClient(host="127.0.0.1", port=port, timeout=2.0)
+        authed = TcpClient(
+            host="127.0.0.1",
+            port=port,
+            timeout=2.0,
+            require_auth=True,
+            auth_payload={"jwt": "ok-token"},
+        )
+
+        await server.startup()
+        try:
+            await client.connect()
+            res1 = await client.request(target="manipulate", route="whoami", payload={"k": 1})
+            self.assertEqual(res1, {"ok": True, "echo": {"k": 1}})
+            await client.disconnect()
+
+            server.set_security_mode("jwt")
+
+            with self.assertRaises(TcpClientError):
+                await client.connect()
+                await client.request(target="manipulate", route="whoami", payload={"k": 99})
+
+            await authed.connect()
+            res2 = await authed.request(target="manipulate", route="whoami", payload={"k": 2})
+            self.assertEqual(res2, {"ok": True, "echo": {"k": 2}})
+        finally:
+            with contextlib.suppress(Exception):
+                await client.disconnect()
+            with contextlib.suppress(Exception):
+                await authed.disconnect()
+            await server.shutdown()
+        print("[tcp] test_security_mode_toggle_runtime done", flush=True)
 
 
 if __name__ == "__main__":

@@ -139,3 +139,8 @@ app = create_app(
 ```bash
 make backend.test-modbus
 ```
+
+## 7. 인증 구성 권장
+
+Modbus TCP 표준에는 JWT 핸드셰이크가 없습니다.  
+그래서 인증은 `rb_modbus` 내부가 아니라 **앞단 TCP 게이트웨이 프록시(`rb_tcp`)**에서 세션 단위로 처리하는 구성을 권장합니다.
