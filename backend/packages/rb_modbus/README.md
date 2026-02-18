@@ -134,6 +134,65 @@ app = create_app(
 
 `create_app` lifespan에서 startup/shutdown을 자동 처리합니다.
 
+## 5-1. `rb_flow_manager` Step 예제
+
+요청하신 형태처럼 **한 Step에서 연결/처리/종료까지** 끝내는 예제입니다.
+
+### A. Modbus 서버 원샷 Step (열고, 외부 요청 대기 후 닫기)
+
+```python
+import asyncio
+from rb_flow_manager.step import Step
+from rb_modbus import ModbusServer
+
+async def step_modbus_server_once(*, flow_manager_args):
+    server = ModbusServer(
+        host="0.0.0.0",
+        port=1502,
+        device_id=1,
+        initial_holding_registers={10: 1234},
+    )
+    await server.startup()
+    try:
+        # 외부 클라이언트 read/write를 받을 시간 (예시 10초)
+        await asyncio.sleep(10.0)
+    finally:
+        await server.shutdown()
+
+    flow_manager_args.done()
+
+tree = Step(
+    step_id="modbus_server_once",
+    name="modbus_server_once",
+    func=step_modbus_server_once,
+)
+```
+
+### B. Modbus 클라이언트 원샷 Step (연결, 요청/응답, 종료)
+
+```python
+from rb_flow_manager.step import Step
+from rb_modbus import ModbusClient
+
+async def step_modbus_client_once(*, flow_manager_args):
+    client = ModbusClient(host="127.0.0.1", port=1502, timeout=2.0)
+    await client.connect()
+    try:
+        await client.write_register(address=10, value=2222, unit_id=1)
+        values = await client.read_holding_registers(address=10, count=1, unit_id=1)
+        print("modbus values:", values, flush=True)
+    finally:
+        await client.disconnect()
+
+    flow_manager_args.done()
+
+tree = Step(
+    step_id="modbus_client_once",
+    name="modbus_client_once",
+    func=step_modbus_client_once,
+)
+```
+
 ## 6. 테스트 실행
 
 ```bash
