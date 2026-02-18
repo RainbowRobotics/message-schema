@@ -18,13 +18,35 @@ class TcpGatewayServer:
         registry: Registry,
         forwarder: Forwarder,
         idle_timeout: float = 60.0,
+        route_prefix_as_service: bool = False,
     ):
         self.host = host
         self.port = port
         self.registry = registry
         self.forwarder = forwarder
         self.idle_timeout = idle_timeout
+        self.route_prefix_as_service = route_prefix_as_service
         self._server: asyncio.AbstractServer | None = None
+
+    def _normalize_req_message(self, msg: dict[str, Any]) -> dict[str, Any]:
+        if not self.route_prefix_as_service:
+            return msg
+
+        if isinstance(msg.get("target"), str):
+            return msg
+
+        route = msg.get("route")
+        if not isinstance(route, str):
+            return msg
+
+        svc, sep, tail = route.partition("/")
+        if not sep or not svc or not tail:
+            return msg
+
+        normalized = dict(msg)
+        normalized["target"] = svc
+        normalized["route"] = tail
+        return normalized
 
     async def _handle(self, r: asyncio.StreamReader, w: asyncio.StreamWriter):
         last_seen = time.monotonic()
@@ -68,7 +90,7 @@ class TcpGatewayServer:
 
                 if typ == "req":
                     try:
-                        data = await self.forwarder(msg)
+                        data = await self.forwarder(self._normalize_req_message(msg))
                         resp = {"id": mid, "type": "res", "ok": True, "data": data}
                     except Exception as e:
                         resp = {"id": mid, "type": "res", "ok": False, "error": str(e)}

@@ -1,3 +1,5 @@
+import os
+
 from rb_modules.rb_fastapi_app import (
     AppSettings,
     create_app,
@@ -29,13 +31,16 @@ from app.tcp.tcp_evt_bridge import build_evt_bridge
 from app.tcp.tcp_forwarder import forward_to_service
 
 setting = AppSettings()
+tcp_gateway_host = os.getenv("TCP_GATEWAY_HOST", "0.0.0.0")
+tcp_gateway_port = int(os.getenv("TCP_GATEWAY_PORT", "9100"))
 
 registry = Registry()
 tcp_gateway = TcpGatewayServer(
-    host="0.0.0.0",
-    port=9100,
+    host=tcp_gateway_host,
+    port=tcp_gateway_port,
     registry=registry,
     forwarder=forward_to_service,
+    route_prefix_as_service=True,
 )
 evt_router = build_evt_bridge(registry=registry)
 

@@ -4,13 +4,26 @@ from rb_zenoh.client import ZenohClient
 
 zenoh = ZenohClient()
 
-async def forward_to_service(msg: dict[str, Any]) -> dict[str, Any]:
+
+def _resolve_target_and_route(msg: dict[str, Any]) -> tuple[str, str]:
     target = msg.get("target")
     route = msg.get("route")
+
+    if isinstance(target, str) and isinstance(route, str):
+        return target, route
+
+    if isinstance(route, str):
+        svc, sep, tail = route.partition("/")
+        if sep and svc and tail:
+            return svc, tail
+
+    raise ValueError("target/route required. or route must be '<service>/<route>'")
+
+
+async def forward_to_service(msg: dict[str, Any]) -> dict[str, Any]:
+    target, route = _resolve_target_and_route(msg)
     payload = msg.get("payload") or {}
 
-    if not isinstance(target, str) or not isinstance(route, str):
-        raise ValueError("target/route required")
     if not isinstance(payload, dict):
         raise ValueError("payload must be object")
 
