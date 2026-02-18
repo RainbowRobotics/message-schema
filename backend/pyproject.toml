@@ -49,6 +49,7 @@ exclude = [
     "**/dist/",
     "**/*.egg-info/",
     "packages/rb_flat_buffers/**",
+    "packages/rb_schemas/src/rb_schemas/fbs_models/**",
     "**/tests/**"
 ]
 
