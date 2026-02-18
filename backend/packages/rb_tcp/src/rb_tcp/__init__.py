@@ -1,8 +1,8 @@
 from .client import TcpClient, TcpClientError
-from .tcp_client_router import TcpClientRouter
 from .gateway_server import TcpGatewayServer
 from .registry import Registry
 from .router import TcpRouter
+from .tcp_client_router import TcpClientRouter
 
 __all__ = [
     "Registry",

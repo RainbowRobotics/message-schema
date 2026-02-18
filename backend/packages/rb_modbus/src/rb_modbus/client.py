@@ -13,7 +13,7 @@ class ModbusClientError(Exception):
 
 
 class ModbusClient:
-    _instances: dict[int, dict[tuple[str, int, float], "ModbusClient"]] = {}
+    _instances: dict[int, dict[tuple[str, int, float], ModbusClient]] = {}
     _instances_lock = threading.Lock()
 
     def __new__(cls, *, host: str, port: int = 502, timeout: float = 3.0):

@@ -12,9 +12,9 @@ if src not in sys.path:
     sys.path.insert(0, src)
 
 from rb_tcp.client import TcpClient, TcpClientError
-from rb_tcp.tcp_client_router import TcpClientRouter
 from rb_tcp.gateway_server import TcpGatewayServer
 from rb_tcp.registry import Registry
+from rb_tcp.tcp_client_router import TcpClientRouter
 
 
 def _free_port() -> int:

@@ -7,8 +7,8 @@ import threading
 import uuid
 from typing import Any
 
-from .tcp_client_router import TcpClientRouter
 from .framing import pack, read
+from .tcp_client_router import TcpClientRouter
 
 
 class TcpClientError(Exception):
@@ -16,7 +16,7 @@ class TcpClientError(Exception):
 
 
 class TcpClient:
-    _instances: dict[int, dict[tuple[str, int, float, str | None], "TcpClient"]] = {}
+    _instances: dict[int, dict[tuple[str, int, float, str | None], TcpClient]] = {}
     _instances_lock = threading.Lock()
 
     def __new__(

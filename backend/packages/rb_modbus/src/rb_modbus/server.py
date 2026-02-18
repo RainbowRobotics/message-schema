@@ -6,7 +6,11 @@ from typing import Any
 from .router import ModbusRouter, ModbusTable
 
 try:
-    from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock, ModbusServerContext
+    from pymodbus.datastore import (
+        ModbusDeviceContext,
+        ModbusSequentialDataBlock,
+        ModbusServerContext,
+    )
     from pymodbus.server import StartAsyncTcpServer
 except Exception:  # pragma: no cover
     ModbusDeviceContext = None  # type: ignore[assignment]

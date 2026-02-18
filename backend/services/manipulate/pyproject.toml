@@ -19,6 +19,7 @@ dependencies = [
   "rb_database",
   "rb_flow_manager",
   "rb_tcp",
+  "rb_modbus",
   "fastapi>=0.116.1,<0.117.0",
   "uvicorn[standard]>=0.35.0,<0.36.0",
   "python-dotenv>=1.1.1,<2.0.0",
@@ -36,3 +37,4 @@ rb_resources = { workspace = true }
 rb_database = { workspace = true }
 rb_flow_manager = { workspace = true }
 rb_tcp = { workspace = true }
+rb_modbus = { workspace = true }
