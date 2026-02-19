@@ -79,9 +79,6 @@ class AppSettings(BaseSettings):
         self.ROOT_PATH = f"/{self.SERVICE_NAME}"
         self.SOCKET_SERVER_URL = self.SOCKET_URL_DEV if self.IS_DEV else self.SOCKET_URL_PROD
         self.MONGO_URI = self.MONGO_URI_DEV if self.IS_DEV else self.MONGO_URI_PROD
-
-        print(f">>>>>>> IS_DEV: {self.IS_DEV}", flush=True)
-        print(f">>>>>>> MONGO_URI_DEV: {self.MONGO_URI_DEV}", flush=True)
         self.INFLUXDB_URL = self.INFLUXDB_URL_DEV if self.IS_DEV else self.INFLUXDB_URL_PROD
         return self
 
