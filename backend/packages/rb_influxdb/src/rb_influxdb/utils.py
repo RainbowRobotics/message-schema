@@ -57,11 +57,11 @@ def _add_fields_to_point(point: Point, data: Any, prefix: str = "") -> None:
         return
 
     # 원시 타입
-    if isinstance(data, (bool, int, float, str)):
+    if isinstance(data, bool|int|float|str):
         field_name = prefix if prefix else "value"
         if isinstance(data, bool):
             point.field(field_name, data)
-        elif isinstance(data, (int, float)):
+        elif isinstance(data, int|float):
             point.field(field_name, float(data))
         else:
             point.field(field_name, str(data))
@@ -78,29 +78,29 @@ def _add_fields_to_point(point: Point, data: Any, prefix: str = "") -> None:
             field_name = f"{prefix}.{key}" if prefix else key
 
             # 중첩된 딕셔너리나 리스트는 재귀 호출
-            if isinstance(value, (dict, list)):
+            if isinstance(value, dict|list):
                 _add_fields_to_point(point, value, field_name)
             else:
                 # 원시 타입은 직접 추가
                 if isinstance(value, bool):
                     point.field(field_name, value)
-                elif isinstance(value, (int, float)):
+                elif isinstance(value, int|float):
                     point.field(field_name, float(value))
                 elif isinstance(value, str):
                     point.field(field_name, str(value))
         return
 
     # 리스트
-    if isinstance(data, (list, tuple)):
+    if isinstance(data, list|tuple):
         # 리스트는 인덱스와 함께 필드로 추가
         for idx, item in enumerate(data):
             field_name = f"{prefix}[{idx}]" if prefix else f"[{idx}]"
-            if isinstance(item, (dict, list)):
+            if isinstance(item, dict|list):
                 _add_fields_to_point(point, item, field_name)
             else:
                 if isinstance(item, bool):
                     point.field(field_name, item)
-                elif isinstance(item, (int, float)):
+                elif isinstance(item, int|float):
                     point.field(field_name, float(item))
                 elif isinstance(item, str):
                     point.field(field_name, str(item))

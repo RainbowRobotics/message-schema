@@ -1208,7 +1208,6 @@ requires-dist = [
 ]
 
 [[package]]
-<<<<<<< HEAD
 name = "rb-influxdb"
 version = "0.1.0"
 source = { editable = "packages/rb_influxdb" }
@@ -1224,7 +1223,8 @@ requires-dist = [
     { name = "influxdb-client", specifier = ">=1.40.0" },
     { name = "rb-utils", editable = "packages/rb_utils" },
 ]
-=======
+
+[[package]]
 name = "rb-modbus"
 version = "0.1.0"
 source = { editable = "packages/rb_modbus" }
@@ -1234,7 +1234,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pymodbus", specifier = ">=3.8.0" }]
->>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
 
 [[package]]
 name = "rb-modules"
@@ -1247,11 +1246,8 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
-<<<<<<< HEAD
     { name = "rb-influxdb" },
-=======
     { name = "rb-modbus" },
->>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
@@ -1268,11 +1264,8 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
-<<<<<<< HEAD
     { name = "rb-influxdb", editable = "packages/rb_influxdb" },
-=======
     { name = "rb-modbus", editable = "packages/rb_modbus" },
->>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },

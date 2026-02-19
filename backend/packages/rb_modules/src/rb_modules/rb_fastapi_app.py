@@ -57,12 +57,15 @@ class AppSettings(BaseSettings):
     MONGO_DB_NAME: str | None = "rrs"
 
     #influxDB
-    INFLUXDB_URL_DEV: str | None = "http://rrs-influxdb-dev:8086"
-    INFLUXDB_URL_PROD: str | None = "http://127.0.0.1:8086"
+    INFLUXDB_URL_DEV: str = "http://rrs-influxdb-dev:8086"
+    INFLUXDB_URL_PROD: str = "http://127.0.0.1:8086"
     INFLUXDB_URL: str | None = None
-    INFLUXDB_ORG: str | None = "rainbow"
-    INFLUXDB_BUCKET: str | None = "rrs"
-    INFLUXDB_TOKEN: str | None = "J4ecotdoPLl9gctrtN6SjFPG0s75e6z3UeIMkBBKQJXZvLs-UEDvpzmrzyOpDBEe6COvPtYwry6Ik8hWn410UA=="
+    INFLUXDB_ORG: str = "rrs"
+    INFLUXDB_USERNAME: str = "rainbow"
+    INFLUXDB_PASSWORD: str = "rainbow2011"
+    INFLUXDB_PASSWORD_FILE: str = "/run/secrets/influxdb_password"
+    INFLUXDB_TOKEN: str = "rainbowToken"
+    INFLUXDB_TOKEN_FILE: str = "/run/secrets/influxdb_token"
 
     no_init_db: bool = False
     socket_role: str = "service"
@@ -74,9 +77,12 @@ class AppSettings(BaseSettings):
     @model_validator(mode="after")
     def _compute_config(self):
         self.ROOT_PATH = f"/{self.SERVICE_NAME}"
-
         self.SOCKET_SERVER_URL = self.SOCKET_URL_DEV if self.IS_DEV else self.SOCKET_URL_PROD
         self.MONGO_URI = self.MONGO_URI_DEV if self.IS_DEV else self.MONGO_URI_PROD
+
+        print(f">>>>>>> IS_DEV: {self.IS_DEV}", flush=True)
+        print(f">>>>>>> MONGO_URI_DEV: {self.MONGO_URI_DEV}", flush=True)
+        self.INFLUXDB_URL = self.INFLUXDB_URL_DEV if self.IS_DEV else self.INFLUXDB_URL_PROD
         return self
 
 
@@ -109,7 +115,16 @@ def create_app(
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
         #influxdb
-        await init_influxdb(app, settings.INFLUXDB_URL or "", settings.INFLUXDB_TOKEN or "", settings.INFLUXDB_ORG or "", "amr")
+        try:
+            if Path(settings.INFLUXDB_TOKEN_FILE).exists():
+                with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
+                    read_token = f.read().strip()
+            else:
+                read_token = settings.INFLUXDB_TOKEN
+
+            await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
+        except Exception as e:
+            rb_log.error(f"[InfluxDB] Initialization failed: {e}")
 
         await zenoh_router.startup()
         print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)

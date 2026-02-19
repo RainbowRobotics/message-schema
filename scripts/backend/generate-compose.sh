@@ -89,6 +89,11 @@ EOF
     environment:
       - SERVICE=${NAME}
       - PORT=${PORT}
+      - INFLUXDB_INIT_PASSWORD_FILE=/run/secrets/influxdb_password
+      - INFLUXDB_INIT_ADMIN_TOKEN_FILE=/run/secrets/influxdb_token
+    secrets:
+      - influxdb_password
+      - influxdb_token
     restart: unless-stopped
     ports:
       - "${PORT}:${PORT}"
@@ -114,6 +119,11 @@ EOF
     environment:
       - SERVICE=${NAME}
       - PORT=${PORT}
+      - INFLUXDB_INIT_PASSWORD_FILE=/run/secrets/influxdb_password
+      - INFLUXDB_INIT_ADMIN_TOKEN_FILE=/run/secrets/influxdb_token
+    secrets:
+      - influxdb_password
+      - influxdb_token
     restart: unless-stopped
     ports:
       - "${PORT}:${PORT}"
@@ -180,12 +190,22 @@ for FD in 3 4 5; do
     container_name: rrs-influxdb-dev
     ports: ["8086:8086"]
     networks: [rb_net]
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=rainbow
+      - DOCKER_INFLUXDB_INIT_PASSWORD=rainbow2011
+      - DOCKER_INFLUXDB_INIT_ORG=rrs
+      - DOCKER_INFLUXDB_INIT_BUCKET=rrs-rt
+      - DOCKER_INFLUXDB_INIT_RETENTION=7d
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=rainbowToken
     volumes:
-      - rrs-influxdb-data:/var/lib/influxdb
+      - rrs-influxdb-data:/var/lib/influxdb2
+      - rrs-influxdb-config:/etc/influxdb2
 
 volumes:
   rrs-mongo-data:
   rrs-influxdb-data:
+  rrs-influxdb-config:
 
 networks:
   rb_net:
@@ -208,18 +228,40 @@ EOF
       - ../api-gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
 
-  rrs-mongo-preview:
-    image: mongo:7
-    container_name: rrs-mongo-preview
-    ports: ["27017:27017"]
-    network_mode: host
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+  rrs-influxdb-preview:
+    image: influxdb:2.7.1
+    container_name: rrs-influxdb-preview
+    ports: ["8086:8086"]
+    networks: [rb_net]
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=rainbow
+      - DOCKER_INFLUXDB_INIT_PASSWORD_FILE=/run/secrets/influxdb_password
+      - DOCKER_INFLUXDB_INIT_ORG=rrs
+      - DOCKER_INFLUXDB_INIT_BUCKET=rrs-rt
+      - DOCKER_INFLUXDB_INIT_RETENTION=7d
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE=/run/secrets/influxdb_token
+    secrets:
+      - influxdb_password
+      - influxdb_token
     volumes:
-      - rrs-mongo-data:/data/db
-      - ../scripts/backend/mongo-preview-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - rrs-influxdb-data:/var/lib/influxdb2
+      - rrs-influxdb-config:/etc/influxdb2
 
 volumes:
   rrs-mongo-data:
+  rrs-influxdb-data:
+  rrs-influxdb-config:
+
+secrets:
+  influxdb_password:
+    file: ./secrets/influxdb_password
+  influxdb_token:
+    file: ./secrets/influxdb_token
+
+networks:
+  rb_net:
+    driver: bridge
 EOF
   else
     cat >&5 <<EOF
@@ -248,8 +290,40 @@ EOF
     volumes:
       - rrs-mongo-data:/data/db
 
+  rrs-influxdb:
+    image: influxdb:2.7.1
+    container_name: rrs-influxdb
+    ports: ["8086:8086"]
+    networks: [rb_net]
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=rainbow
+      - DOCKER_INFLUXDB_INIT_PASSWORD_FILE=/run/secrets/influxdb_password
+      - DOCKER_INFLUXDB_INIT_ORG=rrs
+      - DOCKER_INFLUXDB_INIT_BUCKET=rrs-rt
+      - DOCKER_INFLUXDB_INIT_RETENTION=7d
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE=/run/secrets/influxdb_token
+    secrets:
+      - influxdb_password
+      - influxdb_token
+    volumes:
+      - rrs-influxdb-data:/var/lib/influxdb2
+      - rrs-influxdb-config:/etc/influxdb2
+
 volumes:
   rrs-mongo-data:
+  rrs-influxdb-data:
+  rrs-influxdb-config:
+
+secrets:
+  influxdb_password:
+    file: ./secrets/influxdb_password
+  influxdb_token:
+    file: ./secrets/influxdb_token
+
+networks:
+  rb_net:
+    driver: bridge
 EOF
   fi
 done

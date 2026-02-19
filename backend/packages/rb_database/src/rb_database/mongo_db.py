@@ -353,6 +353,7 @@ async def init_db(app: FastAPI, uri: str, db_name: str):
     py_mongo_client = MongoClient(uri)
     db = client[db_name]
 
+    print(f">>>>>>> uri: {uri}", flush=True)
     await ensure_replica_set(client)
     await init_indexes(db)
 
