@@ -112,16 +112,16 @@ def create_app(
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
         #influxdb
-        try:
-            if Path(settings.INFLUXDB_TOKEN_FILE).exists():
-                with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
-                    read_token = f.read().strip()
-            else:
-                read_token = settings.INFLUXDB_TOKEN
+        # try:
+        #     if Path(settings.INFLUXDB_TOKEN_FILE).exists():
+        #         with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
+        #             read_token = f.read().strip()
+        #     else:
+        #         read_token = settings.INFLUXDB_TOKEN
 
-            await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
-        except Exception as e:
-            rb_log.error(f"[InfluxDB] Initialization failed: {e}")
+        #     await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
+        # except Exception as e:
+        #     rb_log.error(f"[InfluxDB] Initialization failed: {e}")
 
         await zenoh_router.startup()
         print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)
