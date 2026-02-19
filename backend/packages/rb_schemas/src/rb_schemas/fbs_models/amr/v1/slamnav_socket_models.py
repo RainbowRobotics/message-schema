@@ -19,19 +19,30 @@ class Point3DPD(BaseModel):
     z: float | None = Field(default=None)
     intensity: float | None = Field(default=None)
 
+class PointPosePD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    x: float | None = Field(default=None)
+    y: float | None = Field(default=None)
+    z: float | None = Field(default=None)
+    rz: float | None = Field(default=None)
+
+class PathPosePD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    x: float | None = Field(default=None)
+    y: float | None = Field(default=None)
+    rz: float | None = Field(default=None)
+
 class Lidar2DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     points: list[Point2DPD] = Field(default_factory=list)
+    pose: PointPosePD | None = Field(default=None)
 
-class RequestLidar3DPD(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-
-class ResponseLidar3DPD(BaseModel):
+class Lidar3DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     points: list[Point3DPD] = Field(default_factory=list)
+    pose: PointPosePD | None = Field(default=None)
 
 class MappingCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -41,19 +52,20 @@ class MappingCloudPD(BaseModel):
 class GlobalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: list[PathPosePD] = Field(default_factory=list)
 
 class LocalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: list[PathPosePD] = Field(default_factory=list)
 
 __all__ = [
     "Point2DPD",
     "Point3DPD",
+    "PointPosePD",
+    "PathPosePD",
     "Lidar2DPD",
-    "RequestLidar3DPD",
-    "ResponseLidar3DPD",
+    "Lidar3DPD",
     "MappingCloudPD",
     "GlobalPathPD",
     "LocalPathPD",
