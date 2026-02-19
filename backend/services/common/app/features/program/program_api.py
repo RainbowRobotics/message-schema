@@ -20,7 +20,6 @@ from .program_schema import (
     Request_Delete_StepsPD,
     Request_Get_Script_ContextPD,
     Request_Load_ProgramPD,
-    Request_Preview_Reset_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
     Request_Program_ExecutionPD,
@@ -198,8 +197,8 @@ async def preview_start_program(request: Request_Preview_Start_ProgramPD, db: Mo
     return JSONResponse(res)
 
 @program_router.post("/program/preview/reset", response_model=Response_Script_ExecutionPD)
-async def preview_reset_program(request: Request_Preview_Reset_ProgramPD, db: MongoDB):
-    res = await program_service.preview_reset_program(request=request, db=db)
+async def preview_reset_program():
+    res = await program_service.preview_reset_program()
     return JSONResponse(res)
 
 @program_router.post("/program/preview/stop", response_model=Response_Script_ExecutionPD)

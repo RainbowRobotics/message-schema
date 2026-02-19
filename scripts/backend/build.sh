@@ -203,7 +203,7 @@ build_host() {
   echo "➡️  빌드 시작: host "
 
   cmd=(
-    uv run pyinstaller
+    uv run --project "${HOST_DIR}" pyinstaller
     --onefile
     --clean
     --name "host.bin"

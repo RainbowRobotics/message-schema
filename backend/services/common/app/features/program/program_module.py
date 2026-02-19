@@ -58,7 +58,6 @@ from .program_schema import (
     Request_Delete_TasksPD,
     Request_Get_Script_ContextPD,
     Request_Load_ProgramPD,
-    Request_Preview_Reset_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
     Request_Program_Dialog,
@@ -246,7 +245,7 @@ class ProgramService(BaseService):
         elif (
             str_state == RB_Flow_Manager_ProgramState.STOPPED
             or str_state == RB_Flow_Manager_ProgramState.ERROR
-        ):
+        ) or str_state == RB_Flow_Manager_ProgramState.COMPLETED:
             self._play_state = PlayState.STOP
         elif str_state == RB_Flow_Manager_ProgramState.IDLE:
             self._play_state = PlayState.IDLE
@@ -2086,25 +2085,40 @@ class ProgramService(BaseService):
 
         tasks_col = db["tasks"]
 
-        task_doc_map: dict[str, dict[str, Any]] = {}
+        def get_parent_task_id(script: dict[str, Any]) -> str:
+            return str(script.get("parentTaskId") or "").strip()
+
+        def is_main_script(script: dict[str, Any]) -> bool:
+            return get_parent_task_id(script) == ""
+
+        def get_main_task_id(script: dict[str, Any]) -> str:
+            return script["taskId"] if is_main_script(script) else get_parent_task_id(script)
+
+        main_task_doc_map: dict[str, dict[str, Any]] = {}
         for script in scripts:
-            task_id = script["taskId"]
-            if task_id in task_doc_map:
+            main_task_id = get_main_task_id(script)
+            if main_task_id in main_task_doc_map:
                 continue
-            task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
-            if not task_doc:
-                raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
-            task_doc_map[task_id] = task_doc
+            if not ObjectId.is_valid(main_task_id):
+                continue
+            main_task_doc = await tasks_col.find_one({"_id": ObjectId(main_task_id)})
+            if main_task_doc:
+                main_task_doc_map[main_task_id] = main_task_doc
+
+        def is_event_sub_script(script: dict[str, Any]) -> bool:
+            if is_main_script(script):
+                return False
+            first_step = (script.get("steps") or [{}])[0] or {}
+            thread_type = (first_step.get("args") or {}).get("thread_type")
+            return thread_type != "GENERAL"
 
         # parent(main task id) -> event sub tree list
         event_sub_trees_by_parent: dict[str, list[Step]] = defaultdict(list)
         for script in scripts:
-            task_id = script["taskId"]
-            task_doc = task_doc_map[task_id]
-            if task_doc["type"] != TaskType.EVENT_SUB:
+            if not is_event_sub_script(script):
                 continue
 
-            parent_task_id = str(task_doc.get("parentTaskId") or script.get("parentTaskId") or "")
+            parent_task_id = get_parent_task_id(script)
             if not parent_task_id:
                 continue
 
@@ -2119,8 +2133,7 @@ class ProgramService(BaseService):
         tree_list = []
         for script in scripts:
             task_id = script["taskId"]
-            task_doc = task_doc_map[task_id]
-            if task_doc["type"] == TaskType.EVENT_SUB:
+            if is_event_sub_script(script):
                 continue
 
             repeat_count = script["repeatCount"]
@@ -2140,8 +2153,11 @@ class ProgramService(BaseService):
             if len(post_steps_tree) > 1:
                 raise HTTPException(status_code=400, detail=f"ActionPost step must be only one: {task_id}")
 
-            robot_model = task_doc["robotModel"]
-            category = self._robot_models[robot_model].get("be_service", None)
+            main_task_id = get_main_task_id(script)
+            robot_model = script.get("robotModel") or main_task_doc_map.get(main_task_id, {}).get("robotModel")
+            if not robot_model:
+                robot_model = self.script_executor.get_state(main_task_id).get("robot_model", None)
+            category = self._robot_models.get(robot_model or "", {}).get("be_service", None)
             begin = script.get("begin", None)
 
             tree = self.build_tree_from_client(normal_steps_tree, task_id, robot_model, category, begin)
@@ -2179,6 +2195,35 @@ class ProgramService(BaseService):
                 )
             )
 
+        # stepMode 진행 중에는 기존 실행 프로세스를 재시작하지 않고 resume만 수행한다.
+        step_mode_task_ids = [
+            tree["taskId"] for tree in tree_list if tree.get("step_mode", False)
+        ]
+        if step_mode_task_ids and self._step_mode:
+            alive_states = {
+                task_id: self.script_executor.get_state(task_id) for task_id in step_mode_task_ids
+            }
+            alive_task_ids = [
+                task_id for task_id, state in alive_states.items() if state.get("is_alive", False)
+            ]
+            if alive_task_ids:
+                for task_id in alive_task_ids:
+                    state = alive_states[task_id]
+                    if state.get("state") in (
+                        RB_Flow_Manager_ProgramState.PAUSED,
+                        RB_Flow_Manager_ProgramState.WAITING,
+                    ):
+                        self.script_executor.resume(task_id)
+
+                # stepMode 진행 요청에서는 종료된 태스크를 다시 시작하지 않는다.
+                self._step_mode = True
+                return {
+                    "status": "success",
+                }
+
+            # reset/종료 이후 alive가 없으면 신규 start 경로로 내려간다.
+            self._step_mode = False
+
         self.script_executor.start(make_process_args_list)
 
         # 모든 스크립트의 step_mode를 확인 (하나라도 True면 True)
@@ -2188,56 +2233,10 @@ class ProgramService(BaseService):
             "status": "success",
         }
 
-    async def preview_reset_program(self, request: Request_Preview_Reset_ProgramPD, db: MongoDB):
-        request_dict = t_to_dict(request)
-        scripts = request_dict["scripts"]
-
-        tasks_col = db["tasks"]
-
-        tree_list = []
-
-        for script in scripts:
-            task_id = script["taskId"]
-            repeat_count = 1
-            steps_tree = []
-
-            task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
-
-            if not task_doc:
-                raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
-
-            robot_model = task_doc["robotModel"]
-            category = self._robot_models[robot_model].get("be_service", None)
-            begin = script.get("begin", {
-                "is_enable": True,
-                "position": [0,0,0,0,0,0,0],
-            })
-
-            tree = self.build_tree_from_client(steps_tree, task_id, robot_model, category, begin)
-
-            tree_list.append(
-                {
-                    "taskId": task_id,
-                    "tree": tree,
-                    "repeat_count": repeat_count,
-                    "robot_model": robot_model,
-                    "category": category,
-                }
-            )
-
-        for tree in tree_list:
-            self.script_executor.start(
-                MakeProcessArgs(
-                    process_id=tree["taskId"],
-                    step=tree["tree"],
-                    repeat_count=tree["repeat_count"],
-                    robot_model=tree["robot_model"],
-                    category=tree["category"],
-                    step_mode=False,
-                    is_ui_execution=True,
-                    event_sub_tree_list=[],
-                )
-            )
+    async def preview_reset_program(self):
+        if self.script_executor:
+            self.script_executor.reset()
+        self._step_mode = False
 
         return {
             "status": "success",

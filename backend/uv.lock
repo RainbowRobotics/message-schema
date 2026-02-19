@@ -15,6 +15,7 @@ members = [
     "rb-flat-buffers",
     "rb-flow-manager",
     "rb-influxdb",
+    "rb-modbus",
     "rb-modules",
     "rb-resources",
     "rb-schemas",
@@ -110,10 +111,12 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
+    { name = "rb-modbus" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
+    { name = "rb-tcp" },
     { name = "rb-utils" },
     { name = "rb-zenoh" },
     { name = "uvicorn", extra = ["standard"] },
@@ -127,10 +130,12 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-tcp", editable = "packages/rb_tcp" },
     { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
@@ -275,6 +280,7 @@ dependencies = [
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
     { name = "rb-flow-manager" },
+    { name = "rb-modbus" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -296,6 +302,7 @@ requires-dist = [
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-flow-manager", editable = "packages/rb_flow_manager" },
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -317,6 +324,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
+    { name = "rb-modbus" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -335,6 +343,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -599,6 +608,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
+    { name = "rb-modbus" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -616,6 +626,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -649,6 +660,7 @@ dependencies = [
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
     { name = "rb-flow-manager" },
+    { name = "rb-modbus" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -667,6 +679,7 @@ requires-dist = [
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-flow-manager", editable = "packages/rb_flow_manager" },
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -977,6 +990,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pymodbus"
+version = "3.12.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/dc/8db192f3a66032e1bd900eb87b5bbcb539d5118f520372af0cb92ba42499/pymodbus-3.12.0.tar.gz", hash = "sha256:3fafe85e5d82bb9bcbda14b97a0e69a47dc46be55631e9f988adfaf95140c44b", size = 166075, upload-time = "2026-02-08T22:13:14.623Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/34/425cc4cd1ca9650498d74cec48582ecca204db9c9a5de514502738b3ec1d/pymodbus-3.12.0-py3-none-any.whl", hash = "sha256:fff8d216a0977b2e7c10796f6b1a90fefbf88d4cc598dee7dff21d383870ca7c", size = 167829, upload-time = "2026-02-08T22:13:11.981Z" },
+]
+
+[[package]]
 name = "pymongo"
 version = "4.15.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1186,6 +1208,7 @@ requires-dist = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "rb-influxdb"
 version = "0.1.0"
 source = { editable = "packages/rb_influxdb" }
@@ -1201,6 +1224,17 @@ requires-dist = [
     { name = "influxdb-client", specifier = ">=1.40.0" },
     { name = "rb-utils", editable = "packages/rb_utils" },
 ]
+=======
+name = "rb-modbus"
+version = "0.1.0"
+source = { editable = "packages/rb_modbus" }
+dependencies = [
+    { name = "pymodbus" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pymodbus", specifier = ">=3.8.0" }]
+>>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
 
 [[package]]
 name = "rb-modules"
@@ -1213,7 +1247,11 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "rb-database" },
     { name = "rb-flat-buffers" },
+<<<<<<< HEAD
     { name = "rb-influxdb" },
+=======
+    { name = "rb-modbus" },
+>>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
@@ -1230,7 +1268,11 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+<<<<<<< HEAD
     { name = "rb-influxdb", editable = "packages/rb_influxdb" },
+=======
+    { name = "rb-modbus", editable = "packages/rb_modbus" },
+>>>>>>> b10e0dc996f745b7622e2f7c910c1a9a2c5bdbce
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },

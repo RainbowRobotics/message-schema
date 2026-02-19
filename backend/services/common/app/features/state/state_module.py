@@ -117,7 +117,6 @@ class StateService:
             robot_model = self._robot_models.get(namespace)
 
             if not robot_model:
-                print(f"no robot model: {namespace}", flush=True)
                 continue
 
             core_sw_list.append(

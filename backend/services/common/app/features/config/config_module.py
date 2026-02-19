@@ -49,19 +49,19 @@ class ConfigService(BaseService):
     Config Service
     """
 
+    singleton = True
+
     def __init__(self):
         """
         Initialize Config Service
         """
         self._robot_models = read_json_file("data", "robot_models.json")
+        self._min_speedbar = 1.0
 
     async def get_all_speedbar(self, *, components: list[str]):
         """
         Get all speedbar
         """
-
-        # diff_flag = False
-        min_speedbar = 1.0
 
         for component in components:
             try:
@@ -77,9 +77,10 @@ class ConfigService(BaseService):
                     if obj:
                         speedbar = obj["motionSpeedBar"]
 
-                    if speedbar < min_speedbar:
-                        min_speedbar = speedbar
-                        # diff_flag = True
+                    if speedbar < self._min_speedbar:
+                        self._min_speedbar = speedbar
+                    elif speedbar > self._min_speedbar:
+                        self.control_speed_bar(components=[component], speedbar=self._min_speedbar)
 
                 elif be_service == "mobility":
                     # TODO: mobility speedbar
@@ -99,7 +100,7 @@ class ConfigService(BaseService):
         # if diff_flag:
         #     await self.control_speed_bar(components=components, speedbar=min_speedbar)
 
-        return {"speedbar": min_speedbar}
+        return {"speedbar": self._min_speedbar}
 
     async def repeat_get_all_speedbar(self):
         """
@@ -122,6 +123,7 @@ class ConfigService(BaseService):
 
                 res = await self.get_all_speedbar(components=components)
                 if isinstance(res, dict) and "speedbar" in res:
+
                     fire_and_log(socket_client.emit("speedbar", res))
 
                 now = time.monotonic()
@@ -141,38 +143,66 @@ class ConfigService(BaseService):
             failed_component = []
             rb_log.debug(f"components>{components}")
             for component in components:
-                model_info = self._robot_models.get(component)
-                rb_log.debug(f"model_info => ${model_info}")
-                be_service = model_info.get("be_service")
-                if be_service == "manipulate":
-                    req = Request_MotionSpeedBarT()
-                    req.alpha = speedbar
-
-                    res = zenoh_client.query_one(
-                        f"{component}/call_speedbar",
-                        flatbuffer_req_obj=req,
-                        flatbuffer_buf_size=32,
-                        flatbuffer_res_T_class=Response_FunctionsT,
-                    )
-
-                    if res["err"]:
+                try:
+                    model_info = self._robot_models.get(component) or {}
+                    rb_log.debug(f"model_info => ${model_info}")
+                    if not model_info:
                         failed_component.append(component)
-                        rb_log.error(res["err"])
-                elif be_service == "mobility":
-                    # TODO: mobility speedbar
-                    pass
-                elif be_service == "sensor":
-                    # TODO: sensor speedbar
-                    pass
-                else:
-                    # TODO: other speedbar
-                    pass
+                        rb_log.error(
+                            f"control_speed_bar unknown component: {component}",
+                            disable_db=True,
+                        )
+                        continue
+                    be_service = model_info.get("be_service")
+                    if be_service == "manipulate":
+                        req = Request_MotionSpeedBarT()
+                        req.alpha = speedbar
 
-            return {"returnValue": 500 if len(failed_component) > 0 else 0}
+                        res = zenoh_client.query_one(
+                            f"{component}/call_speedbar",
+                            flatbuffer_req_obj=req,
+                            flatbuffer_buf_size=32,
+                            flatbuffer_res_T_class=Response_FunctionsT,
+                        )
+
+                        if res["err"]:
+                            failed_component.append(component)
+                            rb_log.error(res["err"])
+                    elif be_service == "mobility":
+                        # TODO: mobility speedbar
+                        pass
+                    elif be_service == "sensor":
+                        # TODO: sensor speedbar
+                        pass
+                    else:
+                        # TODO: other speedbar
+                        pass
+                except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
+                    failed_component.append(component)
+                    rb_log.error(
+                        f"control_speed_bar zenoh error (component={component}): {e}",
+                        disable_db=True,
+                    )
+                    continue
+                except Exception as e:
+                    failed_component.append(component)
+                    rb_log.error(
+                        f"control_speed_bar error (component={component}): {e}",
+                        disable_db=True,
+                    )
+                    continue
+                finally:
+                    if len(failed_component) < len(components):
+                        self._min_speedbar = speedbar
+
+            # 일부 컴포넌트 실패는 무시하고, 전체 실패일 때만 에러로 본다.
+            if components and len(failed_component) == len(components):
+                return {"returnValue": 500}
+            return {"returnValue": 0}
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
-            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
+            return {"returnValue": 500}
         except Exception as e:
             rb_log.error(f"control_speed_bar error: {e}", disable_db=True)
             raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e

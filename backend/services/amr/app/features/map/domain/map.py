@@ -323,6 +323,8 @@ class MapModel:
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
         elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:
             pass
+        elif self.command == AmrMapCommandEnum.MAPPING_SAVE and (self.map_name is None or self.map_name == ""):
+            raise ServiceException("map_name 값이 비어있습니다", status_code=400)
 
     def parse_cloud_data(self, data: list[float], column_count: int, row_count: int):
         """ cloud data 파싱 """

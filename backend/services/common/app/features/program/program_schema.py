@@ -58,6 +58,7 @@ class Step_Base(BaseModel):
     groupLastItem: bool = Field(default=False)
     groupFirstItem: bool = Field(default=False)
     isStrict: bool = Field(default=False)
+    ignorePause: bool | None = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -324,6 +325,7 @@ class Client_StepPD(Omit(Step_Tree_Base, "order", "createdAt", "updatedAt")):
 
 class Client_Script_InfoPD(BaseModel):
     taskId: str
+    robotModel: str | None = Field(default=None)
     repeatCount: int
     begin: MainTaskBegin | None = Field(default=None)
     parentTaskId: str | None = Field(default=None)
@@ -336,11 +338,6 @@ class Client_Script_Reset_InfoPD(Pick(Client_Script_InfoPD, "taskId", "begin")):
 
 class Request_Preview_Start_ProgramPD(BaseModel):
     scripts: list[Client_Script_InfoPD]
-
-    model_config = ConfigDict(extra="ignore")
-
-class Request_Preview_Reset_ProgramPD(BaseModel):
-    scripts: list[Client_Script_Reset_InfoPD]
 
     model_config = ConfigDict(extra="ignore")
 

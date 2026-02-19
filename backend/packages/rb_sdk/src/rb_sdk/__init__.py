@@ -7,13 +7,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-__all__ = ["RBAmrSDK", "RBManipulateSDK", "RBBaseSDK"]
+__all__ = ["RBAmrSDK", "RBManipulateSDK", "RBBaseSDK", "RBRby1SDK"]
 
 # 타입체커/IDE(자동완성)용: 여기서는 import 해도 런타임에 실행되지 않음
 if TYPE_CHECKING:
     from .amr import RBAmrSDK
     from .base import RBBaseSDK
     from .manipulate import RBManipulateSDK
+    from .rby1 import RBRby1SDK
 
 
 def __getattr__(name: str):
@@ -28,6 +29,10 @@ def __getattr__(name: str):
     if name == "RBAmrSDK":
         from .amr import RBAmrSDK  # noqa: PLC0415
         return RBAmrSDK
+
+    if name == "RBRby1SDK":
+        from .rby1 import RBRby1SDK  # noqa: PLC0415
+        return RBRby1SDK
 
     raise AttributeError(name)
 

@@ -17,6 +17,7 @@ from typing import Any, NotRequired, Protocol, TypedDict, TypeVar, cast, overloa
 
 import flatbuffers
 import psutil
+from pydantic import BaseModel
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
 from zenoh import (
@@ -58,6 +59,7 @@ if hasattr(sys.stderr, "reconfigure"):
 T = TypeVar("T")
 TReq = TypeVar("TReq")
 TRes = TypeVar("TRes")
+TResModel = TypeVar("TResModel", bound=BaseModel)
 
 class FBPackable(Protocol):
     def Pack(self, builder: Any) -> Any: ...
@@ -646,6 +648,7 @@ class ZenohClient:
         flatbuffer_buf_size: int,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> Iterator[QueryResult[T]]: ...
 
     @overload
@@ -659,6 +662,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> Iterator[QueryResult[None]]: ...
 
     def query(
@@ -671,6 +675,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> Iterator[QueryResult[T] | QueryResult[None]]:
         if self.session is None:
             self.connect()
@@ -741,6 +746,12 @@ class ZenohClient:
 
                         if dict_payload is None:
                             raise ValueError("dict_payload is not a dict")
+                        if pydantic_res_model is not None:
+                            pydantic_obj = pydantic_res_model.model_validate(dict_payload)
+                            dict_payload = cast(
+                                dict[str, Any],
+                                pydantic_obj.model_dump(),
+                            )
 
                         ok_result_fb: QueryResult[T] = {
                             "key": samp.key_expr,
@@ -804,6 +815,7 @@ class ZenohClient:
         flatbuffer_buf_size: int,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> QueryResult[T]: ...
 
     @overload
@@ -817,6 +829,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> QueryResult[None]: ...
 
     def query_one(
@@ -829,6 +842,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ):
         try:
             return (
@@ -841,6 +855,7 @@ class ZenohClient:
                         timeout=timeout,
                         target=target,
                         payload=payload,
+                        pydantic_res_model=pydantic_res_model,
                     )
                 )
                 or {}
@@ -859,6 +874,7 @@ class ZenohClient:
         flatbuffer_buf_size: int,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> list[QueryResult[T]]: ...
 
     @overload
@@ -872,6 +888,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> list[QueryResult[None]]: ...
 
     def query_all(
@@ -884,6 +901,7 @@ class ZenohClient:
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
     ) -> list[QueryResult[T]] | list[QueryResult[None]]:
         res = list(
             self.query(
@@ -894,6 +912,7 @@ class ZenohClient:
                 timeout=timeout,
                 target=target,
                 payload=payload,
+                pydantic_res_model=pydantic_res_model,
             )
         )
 

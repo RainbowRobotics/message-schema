@@ -2,8 +2,6 @@ from rb_modules.rb_fastapi_app import (
     AppSettings,
     create_app,
 )
-from rb_tcp.gateway_server import TcpGatewayServer
-from rb_tcp.registry import Registry
 
 from app.features.config.config_api import config_router
 from app.features.config.config_module import ConfigService
@@ -26,17 +24,12 @@ from app.features.whoami.whoami_socket import whoami_socket_router
 from app.socket.socket_client import socket_client
 from app.socket.socket_server import RelayNS, app_with_sio, sio
 from app.tcp.tcp_evt_bridge import build_evt_bridge
-from app.tcp.tcp_forwarder import forward_to_service
+from app.tcp.tcp_gateway_config import CommonTcpEnvConfig
+from app.tcp.tcp_gateway_factory import build_tcp_gateway_stack
 
 setting = AppSettings()
-
-registry = Registry()
-tcp_gateway = TcpGatewayServer(
-    host="0.0.0.0",
-    port=9100,
-    registry=registry,
-    forwarder=forward_to_service,
-)
+tcp_cfg = CommonTcpEnvConfig.from_env()
+tcp_gateway, registry, modbus_proxy_client = build_tcp_gateway_stack(cfg=tcp_cfg)
 evt_router = build_evt_bridge(registry=registry)
 
 SOCKET_IO_ROUTE_PATH = f"{setting.SOCKET_PATH}/"
@@ -51,6 +44,7 @@ app = create_app(
     settings=setting,
     socket_client=socket_client,
     tcp_gateway=tcp_gateway,
+    modbus_clients=[modbus_proxy_client] if modbus_proxy_client is not None else None,
     zenoh_routers=[zenoh_state_router, zenoh_program_router, evt_router],
     socket_routers=[
         whoami_socket_router,

@@ -579,8 +579,6 @@ class RBManipulateProgramSDK(RBBaseSDK):
             if modbus_client["type"] == "READ":
                 if modbus_client["number_of_read"] is None:
                     raise RuntimeError("Modbus Read failed: number_of_read is required")
-                if modbus_client["timeout_ms"] is None:
-                    raise RuntimeError("Modbus Read failed: timeout_ms is required")
 
                 obj_payload = rb_manipulate_smbc_sdk.modbus_read(
                     issue_core=modbus_client["issue_core"],
@@ -589,7 +587,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
                     function_code=modbus_client["function_code"],
                     register_addr=modbus_client["register_addr"],
                     number_of_read=modbus_client["number_of_read"],
-                    timeout_ms=modbus_client["timeout_ms"],
+                    timeout_ms=modbus_client["timeout_ms"] or 0,
                 )
 
                 if obj_payload is None:
@@ -597,13 +595,17 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
                 if obj_payload.result != 0:
                     raise RuntimeError(f"Modbus Read failed: result={obj_payload.result}")
+
+                if flow_manager_args is not None and modbus_client["return_variable_name"] is not None:
+                    flow_manager_args.ctx.update_local_variables({
+                        flow_manager_args.args.get("modbus_client", {}).get("return_variable_name"): obj_payload.payload.i[:obj_payload.payloadDlc]
+                    })
+
             elif modbus_client["type"] == "WRITE":
                 if modbus_client["payload_dlc"] is None and len(modbus_client["payload"]) > 1:
                     raise RuntimeError("Modbus Write failed: payload_dlc is required")
                 if modbus_client["payload"] is None:
                     raise RuntimeError("Modbus Write failed: payload is required")
-                if modbus_client["timeout_ms"] is None:
-                    raise RuntimeError("Modbus Write failed: timeout_ms is required")
 
                 obj_payload = rb_manipulate_smbc_sdk.modbus_write(
                     issue_core=modbus_client["issue_core"],
@@ -613,7 +615,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
                     register_addr=modbus_client["register_addr"],
                     payload_dlc=modbus_client["payload_dlc"],
                     payload=modbus_client["payload"],
-                    timeout_ms=modbus_client["timeout_ms"],
+                    timeout_ms=modbus_client["timeout_ms"] or 0,
                 )
 
                 if obj_payload is None:
