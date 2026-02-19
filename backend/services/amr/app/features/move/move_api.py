@@ -315,7 +315,6 @@ SLAMNAV로 X축 선형 이동 명령을 전달합니다.
 async def slamnav_move_linear(robot_model: str, robot_id: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
     return await amr_move_service.move_x_linear(robot_model, robot_id, request)
 
-
 @amr_move_router.post(
     "/{robot_model}/{robot_id}/move/yLinear",
     summary="Y축 선형 이동 명령",

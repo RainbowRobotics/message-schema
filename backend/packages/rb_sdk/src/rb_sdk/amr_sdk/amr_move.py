@@ -1,7 +1,9 @@
 
 import asyncio
+import time
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
 from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
+from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
 from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
 from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
@@ -21,7 +23,9 @@ from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
 from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
 from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
 from rb_flat_buffers.SLAMNAV.ResultMove import ResultMoveT
+from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_schemas.sdk import FlowManagerArgs
+from rb_zenoh.exeption import ZenohNoReply
 
 from ..base import RBBaseSDK
 
@@ -35,31 +39,43 @@ class RBAmrMoveSDK(RBBaseSDK):
 
         Args:
             robot_model: 로봇 모델명
+            robot_id: 로봇 아이디
+            req_id: 요청 아이디
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
         if flow_manager_args is not None:
             while True:
                 try:
+                    print("FLOW MANAGER SOLVER TRY>>>>>>>>>", flush=True)
                     if not self._is_alive:
                         break
 
                     _, _, obj, _ = await self.zenoh_client.receive_one(
-                        f"{robot_model}/{robot_id}/move/result", flatbuffer_obj_t=ResultMoveT, timeout=0.1
+                        f"amr/{robot_model}/{robot_id}/move/result", flatbuffer_obj_t=ResultMoveT, timeout=1
                     )
+
+                    if obj is None:
+                        continue
+
+                    print(f"FLOW MANAGER SOLVER RESULT>>>>>>>>> {obj}", flush=True)
+
                     if obj.get("id") != req_id:
                         continue
+
                     if obj.get("result") == "success":
-                        flow_manager_args.done()
+                        print("FLOW MANAGER SOLVER DONE", flush=True)
+                        # flow_manager_args.done()
                         break
                     elif obj.get("result") == "fail" or obj.get("result") == "cancel":
                         raise RuntimeError(obj.get("message"))
-                    else:
-                        raise RuntimeError(f"Unknown move result: {obj.get('result')}")
-
+                except ZenohNoReply:
+                    continue
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
+                    print(f"FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
                     raise RuntimeError(str(e)) from e
+
         return None
 
     async def send_move_goal(
@@ -104,8 +120,10 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Target failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            print(result["dict_payload"].get("result"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
+
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,
@@ -155,8 +173,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Jog failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,
@@ -219,8 +237,8 @@ class RBAmrMoveSDK(RBBaseSDK):
         print(f"=> send_move_stop: {robot_model}/{robot_id}/move/stop: {result['obj_payload']}")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             flow_manager_args.done()
 
         return result["obj_payload"]
@@ -248,8 +266,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Pause failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             flow_manager_args.done()
 
         return result["obj_payload"]
@@ -276,8 +294,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Resume failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             flow_manager_args.done()
 
         return result["obj_payload"]
@@ -309,8 +327,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Linear failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,
@@ -349,8 +367,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Linear failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,
@@ -390,8 +408,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Circular failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,
@@ -429,8 +447,8 @@ class RBAmrMoveSDK(RBBaseSDK):
             raise RuntimeError("Call Move Rotate failed: obj_payload is None")
 
         if flow_manager_args is not None:
-            if result["obj_payload"].get("result") == "reject":
-                raise RuntimeError(result["obj_payload"].get("message"))
+            if result["dict_payload"].get("result") == "reject":
+                raise RuntimeError(result["dict_payload"].get("message"))
             self._run_coro_blocking(
                 self._move_flow_manager_solver(
                     robot_model=robot_model,

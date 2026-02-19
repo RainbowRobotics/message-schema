@@ -116,7 +116,6 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-
     async def move_target(self,
     robot_model: str,
     robot_id: str,
