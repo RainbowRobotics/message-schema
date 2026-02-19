@@ -49,6 +49,7 @@ async def init_influxdb(
         if not org:
             raise ValueError("org is required")
 
+        print(f"token: {token}",flush=True)
         client = InfluxDBClient(url=url, token=token, org=org, timeout=timeout)
         write_api = client.write_api(write_options=ASYNCHRONOUS)
 
@@ -59,6 +60,12 @@ async def init_influxdb(
         else:
             rb_log.warning(f"[InfluxDB] Health check failed: {health.message}")
 
+        try:
+            buckets = client.buckets_api().find_buckets().buckets  # auth 필요
+            rb_log.info(f"[InfluxDB] token OK. buckets={len(buckets)}")
+        except Exception as e:
+            rb_log.error(f"[InfluxDB] token INVALID (auth check failed): {e}")
+            raise
         app.state.influxdb_client = client
         app.state.influxdb_write_api = write_api
         app.state.influxdb_org = org

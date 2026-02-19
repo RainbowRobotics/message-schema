@@ -6,6 +6,7 @@ from .influxdb_client import (
     get_write_api,
     init_influxdb,
     wait_db_ready,
+    write_point,
 )
 from .utils import (
     flatbuffer_to_point,
@@ -20,4 +21,5 @@ __all__ = [
     "InfluxDBClientDep",
     "InfluxDBWriteApiDep",
     "flatbuffer_to_point",
+    "write_point",
 ]

@@ -1,9 +1,8 @@
 
 import asyncio
-import time
+
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
 from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
-from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
 from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
 from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
@@ -23,7 +22,6 @@ from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
 from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
 from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
 from rb_flat_buffers.SLAMNAV.ResultMove import ResultMoveT
-from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_schemas.sdk import FlowManagerArgs
 from rb_zenoh.exeption import ZenohNoReply
 

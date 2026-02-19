@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
-from rb_influxdb.influxdb_client import init_influxdb
+from rb_influxdb import init_influxdb
 from rb_modbus.client import ModbusClient
 from rb_modbus.server import ModbusServer
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
@@ -112,16 +112,19 @@ def create_app(
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
         #influxdb
-        # try:
-        #     if Path(settings.INFLUXDB_TOKEN_FILE).exists():
-        #         with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
-        #             read_token = f.read().strip()
-        #     else:
-        #         read_token = settings.INFLUXDB_TOKEN
+        try:
+            if Path(settings.INFLUXDB_TOKEN_FILE).exists():
+                print(f"token file exists: {settings.INFLUXDB_TOKEN_FILE}",flush=True)
+                with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
+                    read_token = f.read().strip()
+            else:
+                read_token = settings.INFLUXDB_TOKEN
 
-        #     await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
-        # except Exception as e:
-        #     rb_log.error(f"[InfluxDB] Initialization failed: {e}")
+            print(f"settings.INFLUXDB_TOKEN: {settings.INFLUXDB_TOKEN}",flush=True)
+            print(f"read_token: {read_token}",flush=True)
+            await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
+        except Exception as e:
+            rb_log.error(f"[InfluxDB] Initialization failed: {e}")
 
         await zenoh_router.startup()
         print(f"📡 zenoh subscribe 등록 완료 [PID: {os.getpid()}]", flush=True)

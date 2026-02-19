@@ -1,10 +1,10 @@
-import rb_influxdb.influxdb_client as influxdb_client
 from rb_flat_buffers.SLAMNAV.GlobalPath import GlobalPathT
 from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
-from rb_influxdb import flatbuffer_to_point
+from rb_influxdb import flatbuffer_to_point, write_point
+from rb_utils.parser import t_to_dict
 
 from app.socket.socket_client import socket_client
 
@@ -38,25 +38,24 @@ class AmrStatusService:
         # await status_zenoh_router.publish(f"?/status", obj)
 
         # influxdb 저장
-        # try:
-        #     # StatusT를 자동으로 InfluxDB Point로 변환
-        #     # point = flatbuffer_to_point(
-        #     #     obj=obj,
-        #     #     measurement="status",
-        #     #     tags={
-        #     #         "robot_model": robot_model,
-        #     #         "robot_id": robot_id,
-        #     #     },
-        #     # )
+        dict_obj=t_to_dict(obj)
+        self.write_influxdb(measurement="condition", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("condition"))
+        self.write_influxdb(measurement="imu", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("imu"))
+        self.write_influxdb(measurement="motor0", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("motor")[0])
+        self.write_influxdb(measurement="motor1", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("motor")[1])
+        self.write_influxdb(measurement="power", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("power"))
+        self.write_influxdb(measurement="robotState", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("robotState"))
+        self.write_influxdb(measurement="robotSafetyIoState", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("robotSafetyIoState"))
+        self.write_influxdb(measurement="map", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("map"))
 
-        #     # influxdb_client.write_point(
-        #     #     org="rrs",
-        #     #     bucket="amr-status",
-        #     #     point=point,
-        #     # )
 
-        # except Exception as e:
-        #     print(f"InfluxDB 저장 실패: {e}", flush=True)
+    def write_influxdb(self, measurement: str, robot_model: str, robot_id: str, obj: dict):
+        try:
+            tags={"robot_model": robot_model, "robot_id": robot_id}
+            point = flatbuffer_to_point(obj=obj, tags=tags, measurement=measurement)
+            write_point(org="rrs", bucket="rrs-rt", point=point)
+        except Exception as e:
+            print(f"InfluxDB 저장 실패: {e}", flush=True)
 
     def get_status(self, robot_model: str, robot_id: str) -> StatusT:
         """ API에서 요청하면 마지막 status 반환 """
@@ -79,6 +78,14 @@ class AmrStatusService:
 
         # common으로 전송
         # await status_zenoh_router.publish(f"?/moveStatus", obj)
+
+        # influxdb 저장
+        dict_obj=t_to_dict(obj)
+        self.write_influxdb(measurement="moveState", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("moveState"))
+        self.write_influxdb(measurement="pose", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("pose"))
+        self.write_influxdb(measurement="vel", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("vel"))
+        self.write_influxdb(measurement="curNode", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("curNode"))
+        self.write_influxdb(measurement="goalNode", robot_model=robot_model, robot_id=robot_id, obj=dict_obj.get("goalNode"))
 
     def get_move_status(self, robot_model: str, robot_id: str) -> MoveStatusT:
         """ API에서 요청하면 마지막 moveStatus 반환 """
