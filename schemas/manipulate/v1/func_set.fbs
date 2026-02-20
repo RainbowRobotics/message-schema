@@ -15,8 +15,8 @@ table Request_Set_User_Frame {
 
 // "set_shift"
 table Request_Set_Shift {
-  shift_no:       int;
-  shift_mode:     int;
+  shift_no:       int; // 시프트 번호 (Shift 0 ~ Shift 7) 8개 Dropdown
+  shift_mode:     int; // 0 : Off, 1 : Adjust L-Move, 2 : Adjust L,J-Move, 3 : Adjust J-Move
   target:         MoveInput_Target;
 }
 

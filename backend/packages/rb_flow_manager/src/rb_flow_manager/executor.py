@@ -1,3 +1,4 @@
+import atexit
 import contextlib
 import multiprocessing as mp
 import os
@@ -489,9 +490,19 @@ class ScriptExecutor:
 
         # 전역 락
         self._mu = Lock()
+        self._closed = False
 
         # Manager 초기화 (모든 속성 초기화 후 호출)
         self._ensure_manager()
+        atexit.register(self._shutdown_on_exit)
+
+    def _shutdown_on_exit(self):
+        """uv reload/프로세스 종료 시 complete 콜백을 최대한 보장한다."""
+        if self._closed:
+            return
+        self._closed = True
+        with contextlib.suppress(Exception):
+            self.reset()
 
     def _ensure_manager(self):
         """Manager 인스턴스 생성 및 동기화 객체 초기화"""
