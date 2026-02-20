@@ -267,6 +267,8 @@ def render_module(unit: SchemaUnit) -> str:
                 field_args.append(f'alias="{camel_alias}"')
             if field.name != py_name and field.name != camel_alias:
                 field_args.append(f'serialization_alias="{field.name}"')
+            if py_type == "str":
+                field_args.append('json_schema_extra={"example": ""}')
 
             if fixed_meta is not None:
                 fixed_inner = fixed_meta[len("Field(") : -1]

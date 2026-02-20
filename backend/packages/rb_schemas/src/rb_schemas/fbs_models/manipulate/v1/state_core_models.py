@@ -23,7 +23,7 @@ class State_CorePD(BaseModel):
     userf_selection_no: int | None = Field(alias="userfSelectionNo", default=None)
     userf_x_ref: N_CARTE_fPD | None = Field(alias="userfXRef", default=None)
     tool_selection_no: int | None = Field(alias="toolSelectionNo", default=None)
-    tool_name: str | None = Field(alias="toolName", default=None)
+    tool_name: str | None = Field(alias="toolName", json_schema_extra={"example": ""}, default=None)
     tool_tcp_x: float | None = Field(alias="toolTcpX", default=None)
     tool_tcp_y: float | None = Field(alias="toolTcpY", default=None)
     tool_tcp_z: float | None = Field(alias="toolTcpZ", default=None)

@@ -10,21 +10,21 @@ NAMESPACE = "IPC"
 class WifiPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     in_use: bool | None = Field(alias="inUse", default=None)
-    ssid: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
     signal: int | None = Field(default=None)
-    security: str | None = Field(default=None)
+    security: str | None = Field(json_schema_extra={"example": ""}, default=None)
     channel: int | None = Field(default=None)
-    rate: str | None = Field(default=None)
+    rate: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class NetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    device: str | None = Field(default=None)
+    device: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dhcp: bool | None = Field(default=None)
     dns: List[str] = Field(default_factory=list)
-    ssid: str | None = Field(default=None)
-    address: str | None = Field(default=None)
-    netmask: str | None = Field(default=None)
-    gateway: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    address: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    netmask: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    gateway: str | None = Field(json_schema_extra={"example": ""}, default=None)
     signal: int | None = Field(default=None)
 
 class Request_Network_GetNetworkPD(BaseModel):
@@ -39,39 +39,39 @@ class Response_Network_GetNetworkPD(BaseModel):
 
 class Request_Network_SetNetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    ssid: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dhcp: bool | None = Field(default=None)
-    address: str | None = Field(default=None)
-    netmask: str | None = Field(default=None)
-    gateway: str | None = Field(default=None)
+    address: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    netmask: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    gateway: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dns: List[str] = Field(default_factory=list)
 
 class Response_Network_SetNetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    ssid: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dhcp: bool | None = Field(default=None)
-    address: str | None = Field(default=None)
-    netmask: str | None = Field(default=None)
-    gateway: str | None = Field(default=None)
+    address: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    netmask: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    gateway: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dns: List[str] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Request_Network_ConnectWifiPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    ssid: str | None = Field(default=None)
-    password: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    password: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Response_Network_ConnectWifiPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    ssid: str | None = Field(default=None)
-    address: str | None = Field(default=None)
-    gateway: str | None = Field(default=None)
-    netmask: str | None = Field(default=None)
+    ssid: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    address: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    gateway: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    netmask: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dns: List[str] = Field(default_factory=list)
     signal: int | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Request_Network_GetWifiListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -80,8 +80,8 @@ class Request_Network_GetWifiListPD(BaseModel):
 class Response_Network_GetWifiListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     list: List[WifiPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "WifiPD",

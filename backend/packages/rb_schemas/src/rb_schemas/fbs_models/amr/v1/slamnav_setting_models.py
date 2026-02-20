@@ -9,133 +9,133 @@ NAMESPACE = "SLAMNAV"
 
 class SettingParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    key: str | None = Field(default=None)
-    type: str | None = Field(default=None)
-    value: str | None = Field(default=None)
+    key: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    type: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    value: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class SensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     index: int | None = Field(default=None)
-    serial: str | None = Field(default=None)
+    serial: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetRobotTypePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetRobotTypePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    robot_type: str | None = Field(alias="robotType", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    robot_type: str | None = Field(alias="robotType", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetRobotTypePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    robot_type: str | None = Field(alias="robotType", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    robot_type: str | None = Field(alias="robotType", json_schema_extra={"example": ""}, default=None)
 
 class ResponseSetRobotTypePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    robot_type: str | None = Field(alias="robotType", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    robot_type: str | None = Field(alias="robotType", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     params: List[SettingParamPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     params: List[SettingParamPD] = Field(default_factory=list)
 
 class ResponseSetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     params: List[SettingParamPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetDriveParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetDriveParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     params: List[SettingParamPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     info: List[SensorInfoPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     info: List[SensorInfoPD] = Field(default_factory=list)
 
 class ResponseSetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     info: List[SensorInfoPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetSensorModePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
-    serial: str | None = Field(default=None)
+    serial: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetSensorModePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
-    serial: str | None = Field(default=None)
+    serial: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetSensorModePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
-    serial: str | None = Field(default=None)
+    serial: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
 
 class ResponseSetSensorModePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
-    serial: str | None = Field(default=None)
+    serial: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "SettingParamPD",

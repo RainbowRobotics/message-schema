@@ -17,15 +17,15 @@ class Request_CallWhoAmIPD(BaseModel):
 
 class Response_CallWhoamIPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    category: str | None = Field(default=None)
-    model: str | None = Field(default=None)
-    version: str | None = Field(default=None)
-    alias: str | None = Field(default=None)
+    category: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    model: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    version: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    alias: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Request_ReadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    issue_core: str | None = Field(alias="issueCore", default=None)
-    server_ip: str | None = Field(alias="serverIp", default=None)
+    issue_core: str | None = Field(alias="issueCore", json_schema_extra={"example": ""}, default=None)
+    server_ip: str | None = Field(alias="serverIp", json_schema_extra={"example": ""}, default=None)
     server_port: int | None = Field(alias="serverPort", default=None)
     function_code: int | None = Field(alias="functionCode", default=None)
     register_addr: int | None = Field(alias="registerAddr", default=None)
@@ -40,8 +40,8 @@ class Response_ReadPD(BaseModel):
 
 class Request_WritePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    issue_core: str | None = Field(alias="issueCore", default=None)
-    server_ip: str | None = Field(alias="serverIp", default=None)
+    issue_core: str | None = Field(alias="issueCore", json_schema_extra={"example": ""}, default=None)
+    server_ip: str | None = Field(alias="serverIp", json_schema_extra={"example": ""}, default=None)
     server_port: int | None = Field(alias="serverPort", default=None)
     function_code: int | None = Field(alias="functionCode", default=None)
     register_addr: int | None = Field(alias="registerAddr", default=None)
@@ -64,14 +64,14 @@ class Response_FunctionsPD(BaseModel):
 class State_LogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     level: int | None = Field(default=None)
-    timestamp: str | None = Field(default=None)
-    contents: str | None = Field(default=None)
+    timestamp: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    contents: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class State_MessagePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     type: int | None = Field(default=None)
     code: int | None = Field(default=None)
-    sub_str: str | None = Field(alias="subStr", default=None)
+    sub_str: str | None = Field(alias="subStr", json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "N_32_iPD",

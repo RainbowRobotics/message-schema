@@ -9,18 +9,18 @@ NAMESPACE = "SLAMNAV"
 
 class MapFileInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_name: str | None = Field(alias="fileName", default=None)
-    created_at: str | None = Field(alias="createdAt", default=None)
-    updated_at: str | None = Field(alias="updatedAt", default=None)
-    file_type: str | None = Field(alias="fileType", default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    created_at: str | None = Field(alias="createdAt", json_schema_extra={"example": ""}, default=None)
+    updated_at: str | None = Field(alias="updatedAt", json_schema_extra={"example": ""}, default=None)
+    file_type: str | None = Field(alias="fileType", json_schema_extra={"example": ""}, default=None)
     file_size: float | None = Field(alias="fileSize", default=None)
 
 class MapInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    map_name: str | None = Field(alias="mapName", default=None)
-    created_at: str | None = Field(alias="createdAt", default=None)
-    updated_at: str | None = Field(alias="updatedAt", default=None)
-    map_type: str | None = Field(alias="mapType", default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    created_at: str | None = Field(alias="createdAt", json_schema_extra={"example": ""}, default=None)
+    updated_at: str | None = Field(alias="updatedAt", json_schema_extra={"example": ""}, default=None)
+    map_type: str | None = Field(alias="mapType", json_schema_extra={"example": ""}, default=None)
     cloud_info: List[MapFileInfoPD] = Field(alias="cloudInfo", default_factory=list)
     topo_info: List[MapFileInfoPD] = Field(alias="topoInfo", default_factory=list)
 
@@ -41,22 +41,22 @@ class NodeSizePD(BaseModel):
 
 class LinkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    dir: str | None = Field(default=None)
-    method: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    dir: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     speed: float | None = Field(default=None)
     safety_field: int | None = Field(alias="safetyField", default=None)
 
 class NodePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    context: str | None = Field(default=None)
-    id: str | None = Field(default=None)
+    context: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     links: List[LinkPD] = Field(default_factory=list)
-    name: str | None = Field(default=None)
+    name: str | None = Field(json_schema_extra={"example": ""}, default=None)
     pose: NodePosePD | None = Field(default=None)
-    role: str | None = Field(default=None)
+    role: str | None = Field(json_schema_extra={"example": ""}, default=None)
     size: NodeSizePD | None = Field(default=None)
-    type: str | None = Field(default=None)
+    type: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class CloudDataPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -67,187 +67,187 @@ class CloudDataPD(BaseModel):
 
 class RequestMapLoadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
 
 class ResponseMapLoadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestTopoLoadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseTopoLoadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMapListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMapListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     list: List[MapInfoPD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMapDeletePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
 
 class ResponseMapDeletePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMapCurrentPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMapCurrentPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetMapCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetMapCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
     data: List[float] = Field(default_factory=list)
     column_count: uint32PD | None = Field(alias="columnCount", default=None)
     row_count: uint32PD | None = Field(alias="rowCount", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetMapCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
     data: List[float] = Field(default_factory=list)
     column_count: uint32PD | None = Field(alias="columnCount", default=None)
     row_count: uint32PD | None = Field(alias="rowCount", default=None)
 
 class ResponseSetMapCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetMapTopologyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
     data: List[NodePD] = Field(default_factory=list)
 
 class ResponseSetMapTopologyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetMapTopologyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
     page_no: int | None = Field(alias="pageNo", default=None)
     page_size: int | None = Field(alias="pageSize", default=None)
-    node_type: str | None = Field(alias="nodeType", default=None)
-    search_text: str | None = Field(alias="searchText", default=None)
-    sort_option: str | None = Field(alias="sortOption", default=None)
-    sort_direction: str | None = Field(alias="sortDirection", default=None)
+    node_type: str | None = Field(alias="nodeType", json_schema_extra={"example": ""}, default=None)
+    search_text: str | None = Field(alias="searchText", json_schema_extra={"example": ""}, default=None)
+    sort_option: str | None = Field(alias="sortOption", json_schema_extra={"example": ""}, default=None)
+    sort_direction: str | None = Field(alias="sortDirection", json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetMapTopologyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    file_name: str | None = Field(alias="fileName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
     page_no: int | None = Field(alias="pageNo", default=None)
     page_size: int | None = Field(alias="pageSize", default=None)
     total_page: int | None = Field(alias="totalPage", default=None)
-    node_type: str | None = Field(alias="nodeType", default=None)
-    search_text: str | None = Field(alias="searchText", default=None)
-    sort_option: str | None = Field(alias="sortOption", default=None)
-    sort_direction: str | None = Field(alias="sortDirection", default=None)
+    node_type: str | None = Field(alias="nodeType", json_schema_extra={"example": ""}, default=None)
+    search_text: str | None = Field(alias="searchText", json_schema_extra={"example": ""}, default=None)
+    sort_option: str | None = Field(alias="sortOption", json_schema_extra={"example": ""}, default=None)
+    sort_direction: str | None = Field(alias="sortDirection", json_schema_extra={"example": ""}, default=None)
     data: List[NodePD] = Field(default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMappingStartPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMappingStartPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMappingStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMappingStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMappingSavePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
 
 class ResponseMappingSavePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMappingCloudReloadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMappingCloudReloadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResultMapLoadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    command: str | None = Field(default=None)
-    map_name: str | None = Field(alias="mapName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    command: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "MapFileInfoPD",

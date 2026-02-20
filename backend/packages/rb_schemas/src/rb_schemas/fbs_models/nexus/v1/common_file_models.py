@@ -12,30 +12,30 @@ FilePayloadPD = dict
 
 class FileMetaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    session: str | None = Field(default=None)
-    name: str | None = Field(default=None)
+    session: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    name: str | None = Field(json_schema_extra={"example": ""}, default=None)
     size: int | None = Field(default=None)
-    mime: str | None = Field(default=None)
+    mime: str | None = Field(json_schema_extra={"example": ""}, default=None)
     chunk_size: int | None = Field(alias="chunkSize", default=None)
     total_chunks: int | None = Field(alias="totalChunks", default=None)
     sha256: List[int] = Field(default_factory=list)
 
 class FileChunkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    session: str | None = Field(default=None)
+    session: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
     offset: int | None = Field(default=None)
     data: List[int] = Field(default_factory=list)
 
 class FileAckPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    session: str | None = Field(default=None)
+    session: str | None = Field(json_schema_extra={"example": ""}, default=None)
     index: int | None = Field(default=None)
     ok: bool | None = Field(default=None)
 
 class FileRequestPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    session: str | None = Field(default=None)
+    session: str | None = Field(json_schema_extra={"example": ""}, default=None)
     want_index: int | None = Field(alias="wantIndex", default=None)
 
 class FileMessagePD(BaseModel):

@@ -16,10 +16,10 @@ class Request_CallWhoAmIPD(BaseModel):
 
 class Response_CallWhoamIPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    category: str | None = Field(default=None)
-    model: str | None = Field(default=None)
-    version: str | None = Field(default=None)
-    alias: str | None = Field(default=None)
+    category: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    model: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    version: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    alias: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Request_CallConfigControlBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -35,7 +35,7 @@ class Request_CallConfigToolListPD(BaseModel):
 
 class ST_Config_AreaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    area_name: str | None = Field(alias="areaName", default=None)
+    area_name: str | None = Field(alias="areaName", json_schema_extra={"example": ""}, default=None)
     area_type: int | None = Field(alias="areaType", default=None)
     area_offset: Vec3fPD | None = Field(alias="areaOffset", default=None)
     area_euler: Vec3fPD | None = Field(alias="areaEuler", default=None)
@@ -43,7 +43,7 @@ class ST_Config_AreaPD(BaseModel):
 
 class ST_Config_UserFramePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    userf_name: str | None = Field(alias="userfName", default=None)
+    userf_name: str | None = Field(alias="userfName", json_schema_extra={"example": ""}, default=None)
     userf_offset: Vec3fPD | None = Field(alias="userfOffset", default=None)
     userf_euler: Vec3fPD | None = Field(alias="userfEuler", default=None)
 
@@ -89,7 +89,7 @@ class ST_Box_ParaPD(BaseModel):
 
 class ST_Tool_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    tool_name: str | None = Field(alias="toolName", default=None)
+    tool_name: str | None = Field(alias="toolName", json_schema_extra={"example": ""}, default=None)
     com_mass: float | None = Field(alias="comMass", default=None)
     com_offset: Vec3fPD | None = Field(alias="comOffset", default=None)
     tcp_offset: Vec3fPD | None = Field(alias="tcpOffset", default=None)

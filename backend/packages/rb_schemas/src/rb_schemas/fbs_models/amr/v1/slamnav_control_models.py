@@ -9,7 +9,7 @@ NAMESPACE = "SLAMNAV"
 
 class SafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    name: str | None = Field(default=None)
+    name: str | None = Field(json_schema_extra={"example": ""}, default=None)
     value: bool | None = Field(default=None)
 
 class ObsBoxPD(BaseModel):
@@ -20,217 +20,217 @@ class ObsBoxPD(BaseModel):
 
 class RequestGetSafetyFieldPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetSafetyFieldPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_field: int | None = Field(alias="safetyField", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetSafetyFieldPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_field: int | None = Field(alias="safetyField", default=None)
 
 class ResponseSetSafetyFieldPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_field: int | None = Field(alias="safetyField", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
 
 class ResponseSetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetSafetyIoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetSafetyIoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     mcu0_din: List[bool] = Field(alias="mcu0Din", default_factory=list)
     mcu1_din: List[bool] = Field(alias="mcu1Din", default_factory=list)
     mcu0_dio: List[bool] = Field(alias="mcu0Dio", default_factory=list)
     mcu1_dio: List[bool] = Field(alias="mcu1Dio", default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetSafetyIoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     mcu0_din: List[bool] = Field(alias="mcu0Din", default_factory=list)
     mcu1_din: List[bool] = Field(alias="mcu1Din", default_factory=list)
 
 class ResponseSetSafetyIoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     mcu0_din: List[bool] = Field(alias="mcu0Din", default_factory=list)
     mcu1_din: List[bool] = Field(alias="mcu1Din", default_factory=list)
     mcu0_dio: List[bool] = Field(alias="mcu0Dio", default_factory=list)
     mcu1_dio: List[bool] = Field(alias="mcu1Dio", default_factory=list)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestDockPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseDockPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestUndockPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseUndockPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestDockStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseDockStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestChargeTriggerPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
 
 class ResponseChargeTriggerPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseGetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     min: ObsBoxPD | None = Field(default=None)
     max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     min: ObsBoxPD | None = Field(default=None)
     max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
 
 class ResponseSetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     min: ObsBoxPD | None = Field(default=None)
     max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetLedPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    color: str | None = Field(default=None)
+    color: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseSetLedPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    color: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    color: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetMotorPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
 
 class ResponseSetMotorPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestSetJogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
 
 class ResponseSetJogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestStreamFrequencyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     frequency: int | None = Field(default=None)
 
 class ResponseStreamFrequencyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    target: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    target: str | None = Field(json_schema_extra={"example": ""}, default=None)
     frequency: int | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResultControlDockPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    command: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    command: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResultControlChargeTriggerPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    command: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    command: str | None = Field(json_schema_extra={"example": ""}, default=None)
     switch: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "SafetyFlagPD",

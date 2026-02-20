@@ -11,10 +11,10 @@ NAMESPACE = "IPC"
 
 class EmailMessagePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    from_email: str | None = Field(alias="fromEmail", default=None)
-    to_email: str | None = Field(alias="toEmail", default=None)
-    subject: str | None = Field(default=None)
-    body: str | None = Field(default=None)
+    from_email: str | None = Field(alias="fromEmail", json_schema_extra={"example": ""}, default=None)
+    to_email: str | None = Field(alias="toEmail", json_schema_extra={"example": ""}, default=None)
+    subject: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    body: str | None = Field(json_schema_extra={"example": ""}, default=None)
     attachment: List[FileMessagePD] = Field(default_factory=list)
 
 __all__ = [

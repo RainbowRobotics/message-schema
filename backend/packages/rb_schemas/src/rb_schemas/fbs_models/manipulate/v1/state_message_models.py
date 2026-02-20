@@ -11,7 +11,7 @@ class State_MessagePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     type: int | None = Field(default=None)
     code: int | None = Field(default=None)
-    sub_str: str | None = Field(alias="subStr", default=None)
+    sub_str: str | None = Field(alias="subStr", json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "State_MessagePD",

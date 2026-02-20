@@ -13,31 +13,31 @@ class Request_Sound_GetStatusPD(BaseModel):
 
 class Response_Sound_GetStatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_name: str | None = Field(alias="fileName", default=None)
-    status: str | None = Field(default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    status: str | None = Field(json_schema_extra={"example": ""}, default=None)
     volume: int | None = Field(default=None)
     repeat_count: int | None = Field(alias="repeatCount", default=None)
 
 class Request_Sound_PlayPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_name: str | None = Field(alias="fileName", default=None)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     volume: int | None = Field(default=None)
     repeat_count: int | None = Field(alias="repeatCount", default=None)
 
 class Response_Sound_PlayPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_name: str | None = Field(alias="fileName", default=None)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_name: str | None = Field(alias="fileName", json_schema_extra={"example": ""}, default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     volume: int | None = Field(default=None)
     repeat_count: int | None = Field(alias="repeatCount", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Response_Sound_StopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Request_Sound_Pause_TogglePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -45,8 +45,8 @@ class Request_Sound_Pause_TogglePD(BaseModel):
 
 class Response_Sound_Pause_TogglePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "Request_Sound_GetStatusPD",

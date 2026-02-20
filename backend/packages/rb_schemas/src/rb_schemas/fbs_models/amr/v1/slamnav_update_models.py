@@ -9,28 +9,28 @@ NAMESPACE = "SLAMNAV"
 
 class RequestUpdatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    branch: str | None = Field(default=None)
-    version: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    branch: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    version: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseUpdatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    branch: str | None = Field(default=None)
-    version: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    branch: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    version: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestCurrentVersionPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseCurrentVersionPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    version: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    version: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "RequestUpdatePD",

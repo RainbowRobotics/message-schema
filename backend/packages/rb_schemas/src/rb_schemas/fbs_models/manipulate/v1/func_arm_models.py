@@ -36,7 +36,7 @@ class Request_Save_Direct_Teach_SensitivityPD(BaseModel):
 class Request_Save_Tool_List_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     tool_no: int | None = Field(alias="toolNo", default=None)
-    tool_name: str | None = Field(alias="toolName", default=None)
+    tool_name: str | None = Field(alias="toolName", json_schema_extra={"example": ""}, default=None)
     tcp_x: float | None = Field(alias="tcpX", default=None)
     tcp_y: float | None = Field(alias="tcpY", default=None)
     tcp_z: float | None = Field(alias="tcpZ", default=None)

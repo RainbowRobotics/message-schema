@@ -35,10 +35,10 @@ class StatusConditionPD(BaseModel):
 
 class StatusRobotStatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    charge: str | None = Field(default=None)
+    charge: str | None = Field(json_schema_extra={"example": ""}, default=None)
     dock: bool | None = Field(default=None)
     emo: bool | None = Field(default=None)
-    localization: str | None = Field(default=None)
+    localization: str | None = Field(json_schema_extra={"example": ""}, default=None)
     power: bool | None = Field(default=None)
     sss_recovery: bool | None = Field(alias="sssRecovery", default=None)
     sw_reset: bool | None = Field(alias="swReset", default=None)
@@ -78,13 +78,13 @@ class StatusPowerPD(BaseModel):
 
 class StatusSettingPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    platform_type: str | None = Field(alias="platformType", default=None)
-    platform_name: str | None = Field(alias="platformName", default=None)
+    platform_type: str | None = Field(alias="platformType", json_schema_extra={"example": ""}, default=None)
+    platform_name: str | None = Field(alias="platformName", json_schema_extra={"example": ""}, default=None)
 
 class StatusMapPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    map_name: str | None = Field(alias="mapName", default=None)
-    map_status: str | None = Field(alias="mapStatus", default=None)
+    map_name: str | None = Field(alias="mapName", json_schema_extra={"example": ""}, default=None)
+    map_status: str | None = Field(alias="mapStatus", json_schema_extra={"example": ""}, default=None)
 
 class StatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -99,14 +99,14 @@ class StatusPD(BaseModel):
 
 class StatusMoveStatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    auto_move: str | None = Field(alias="autoMove", default=None)
-    dock_move: str | None = Field(alias="dockMove", default=None)
-    jog_move: str | None = Field(alias="jogMove", default=None)
-    obs: str | None = Field(default=None)
-    path_state: str | None = Field(alias="pathState", default=None)
-    multi_id: str | None = Field(alias="multiId", default=None)
+    auto_move: str | None = Field(alias="autoMove", json_schema_extra={"example": ""}, default=None)
+    dock_move: str | None = Field(alias="dockMove", json_schema_extra={"example": ""}, default=None)
+    jog_move: str | None = Field(alias="jogMove", json_schema_extra={"example": ""}, default=None)
+    obs: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    path_state: str | None = Field(alias="pathState", json_schema_extra={"example": ""}, default=None)
+    multi_id: str | None = Field(alias="multiId", json_schema_extra={"example": ""}, default=None)
     step: int | None = Field(default=None)
-    multi_state: str | None = Field(alias="multiState", default=None)
+    multi_state: str | None = Field(alias="multiState", json_schema_extra={"example": ""}, default=None)
 
 class StatusPosePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -122,8 +122,8 @@ class StatusVelPD(BaseModel):
 
 class StatusNodePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    name: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    name: str | None = Field(json_schema_extra={"example": ""}, default=None)
     pose: StatusPosePD | None = Field(default=None)
 
 class MoveStatusPD(BaseModel):
