@@ -1,10 +1,13 @@
 from typing import Any
-from rb_sdk.base import RBBaseSDK
-from rb_flat_buffers.SLAMNAV.Status import StatusT
-from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
-from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
+
 from rb_flat_buffers.SLAMNAV.GlobalPath import GlobalPathT
+from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
+from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
+from rb_flat_buffers.SLAMNAV.Status import StatusT
+
+from rb_sdk.base import RBBaseSDK
+
 
 class RBAmrStatusSDK(RBBaseSDK):
     """Rainbow Robotics AMR Status SDK"""

@@ -19,29 +19,29 @@ from fastapi import BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
+from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
+    MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
+    RequestMoveXLinearPD,
+    RequestMoveYLinearPD,
+    ResponseMoveCircularPD,
+    ResponseMoveGoalPD,
+    ResponseMovePausePD,
+    ResponseMoveResumePD,
+    ResponseMoveRotatePD,
+    ResponseMoveStopPD,
+    ResponseMoveTargetPD,
+    ResponseMoveXLinearPD,
+    ResponseMoveYLinearPD,
+)
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.date import convert_dt  # pylint: disable=import-error,no-name-in-module
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import (
     ServiceException,  # pylint: disable=import-error,no-name-in-module
-)
-from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
-    RequestMoveGoalPD,
-    RequestMoveTargetPD,
-    MoveJogPD,
-    RequestMoveXLinearPD,
-    RequestMoveYLinearPD,
-    RequestMoveCircularPD,
-    RequestMoveRotatePD,
-    ResponseMoveGoalPD,
-    ResponseMoveTargetPD,
-    ResponseMoveStopPD,
-    ResponseMovePausePD,
-    ResponseMoveResumePD,
-    ResponseMoveXLinearPD,
-    ResponseMoveYLinearPD,
-    ResponseMoveCircularPD,
-    ResponseMoveRotatePD,
 )
 
 from app.features.move.adapter.mongo import (

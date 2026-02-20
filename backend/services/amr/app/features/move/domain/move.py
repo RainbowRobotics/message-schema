@@ -14,13 +14,13 @@ from enum import Enum
 from typing import Any
 
 from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
-    RequestMoveGoalPD,
-    RequestMoveTargetPD,
     MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
     RequestMoveXLinearPD,
     RequestMoveYLinearPD,
-    RequestMoveCircularPD,
-    RequestMoveRotatePD,
 )
 from rb_utils.service_exception import (
     ServiceException,
