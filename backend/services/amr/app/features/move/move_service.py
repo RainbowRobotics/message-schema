@@ -92,7 +92,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_goal(
+            result = rb_amr_sdk.move.send_move_goal(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
@@ -145,7 +145,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_target(
+            result = rb_amr_sdk.move.send_move_target(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
@@ -192,7 +192,7 @@ class AmrMoveService:
             # model.check_variables()
 
             # 4) 요청 전송
-            await rb_amr_sdk.move.send_move_jog(
+            rb_amr_sdk.move.send_move_jog(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 vx=model.vx,
@@ -230,7 +230,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_stop(
+            result = rb_amr_sdk.move.send_move_stop(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id
@@ -274,7 +274,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_pause(
+            result = rb_amr_sdk.move.send_move_pause(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id
@@ -318,7 +318,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_resume(
+            result = rb_amr_sdk.move.send_move_resume(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id
@@ -362,7 +362,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_x_linear(
+            result = rb_amr_sdk.move.send_move_x_linear(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
@@ -409,7 +409,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_y_linear(
+            result = rb_amr_sdk.move.send_move_y_linear(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
@@ -455,7 +455,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_circular(
+            result = rb_amr_sdk.move.send_move_circular(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
@@ -502,7 +502,7 @@ class AmrMoveService:
             model.check_variables()
 
             # 4) 요청 전송
-            result = await rb_amr_sdk.move.send_move_rotate(
+            result = rb_amr_sdk.move.send_move_rotate(
                 robot_model=model.robot_model,
                 robot_id=model.robot_id,
                 req_id=model.id,
