@@ -9,7 +9,6 @@ from rb_utils.parser import t_to_dict
 
 from app.socket.socket_client import socket_client
 
-
 rb_amr_sdk = RBAmrSDK()
 class AmrStatusService:
     """

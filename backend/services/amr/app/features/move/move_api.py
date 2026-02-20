@@ -4,30 +4,29 @@
 
 from fastapi import APIRouter, BackgroundTasks
 from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
-  RequestMoveGoalPD,
-  RequestMoveTargetPD,
-  ResponseMoveGoalPD,
-  ResponseMoveTargetPD,
-  ResponseMoveStopPD,
-  ResponseMovePausePD,
-  ResponseMoveResumePD,
-  RequestMoveXLinearPD,
-  RequestMoveYLinearPD,
-  RequestMoveCircularPD,
-  RequestMoveRotatePD,
-  ResponseMoveXLinearPD,
-  ResponseMoveYLinearPD,
-  ResponseMoveCircularPD,
-  ResponseMoveRotatePD,
-  MoveJogPD,
+    MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
+    RequestMoveXLinearPD,
+    RequestMoveYLinearPD,
+    ResponseMoveCircularPD,
+    ResponseMoveGoalPD,
+    ResponseMovePausePD,
+    ResponseMoveResumePD,
+    ResponseMoveRotatePD,
+    ResponseMoveStopPD,
+    ResponseMoveTargetPD,
+    ResponseMoveXLinearPD,
+    ResponseMoveYLinearPD,
 )
+
 from app.features.move.move_schema import (
-  RequestMoveArchiveLogPD,
-  RequestMoveLogsPD,
-  ResponseMoveLogsPD,
-  ResponseMoveArchiveLogPD,
-  RequestMoveExportLogPD,
-  ResponseMoveExportLogPD,
+    RequestMoveArchiveLogPD,
+    RequestMoveExportLogPD,
+    RequestMoveLogsPD,
+    ResponseMoveLogsPD,
 )
 from app.features.move.move_service import AmrMoveService
 

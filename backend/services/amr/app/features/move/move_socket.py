@@ -1,7 +1,7 @@
+from rb_schemas.fbs_models.amr.v1.slamnav_move_models import MoveJogPD
 from rb_socketio import RbSocketIORouter
 
 from app.features.move.move_api import amr_move_service
-from rb_schemas.fbs_models.amr.v1.slamnav_move_models import MoveJogPD
 
 move_socket_router = RbSocketIORouter()
 
