@@ -596,7 +596,6 @@ async def slamnav_control_set_jog(robot_model: str, robot_id: str, request: Requ
 - 장애물감지 영역은 AMR 상부의 Torso, Arm이 움직일때 장애물감지 영역을 추가로 설정하기 위해 사용됩니다.
 
 ## 📌 응답 바디(JSON)
-
 | 필드명       | 타입    | 설명                          | 예시 |
 |-------------|---------|-------------------------------|--------|
 | minX | number | 장애물감지 영역 최소 x값 | 1.3 |

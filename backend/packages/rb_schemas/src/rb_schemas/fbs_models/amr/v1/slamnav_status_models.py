@@ -99,6 +99,8 @@ class StatusPD(BaseModel):
 
 class StatusMoveStatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+    move_id: str | None = Field(alias="moveId", json_schema_extra={"example": ""}, default=None)
+    move_result: str | None = Field(alias="moveResult", json_schema_extra={"example": ""}, default=None)
     auto_move: str | None = Field(alias="autoMove", json_schema_extra={"example": ""}, default=None)
     dock_move: str | None = Field(alias="dockMove", json_schema_extra={"example": ""}, default=None)
     jog_move: str | None = Field(alias="jogMove", json_schema_extra={"example": ""}, default=None)
