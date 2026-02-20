@@ -168,7 +168,7 @@ def convert_type(fbs_type: str) -> tuple[str, str | None]:
     vec = parse_vector_type(fbs_type)
     if vec is not None:
         base, fixed_len = vec
-        py_base = SCALAR_MAP.get(base, pd_name(base.split(".")[-1]))
+        py_base = SCALAR_MAP.get(base, "dict")#pd_name(base.split(".")[-1]))
         if fixed_len is None:
             return f"list[{py_base}]", None
         return (
@@ -180,7 +180,7 @@ def convert_type(fbs_type: str) -> tuple[str, str | None]:
     if py_scalar:
         return py_scalar, None
 
-    return pd_name(fbs_type.split(".")[-1]), None
+    return "dict", None#pd_name(fbs_type.split(".")[-1]), None
 
 
 def convert_default(py_type: str, raw_default: str | None) -> str:

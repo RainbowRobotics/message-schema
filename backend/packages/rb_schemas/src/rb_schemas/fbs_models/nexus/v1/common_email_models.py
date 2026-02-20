@@ -14,7 +14,7 @@ class EmailMessagePD(BaseModel):
     to_email: str | None = Field(alias="toEmail", default=None)
     subject: str | None = Field(default=None)
     body: str | None = Field(default=None)
-    attachment: list[FileMessagePD] = Field(default_factory=list)
+    attachment: list[dict] = Field(default_factory=list)
 
 __all__ = [
     "EmailMessagePD",

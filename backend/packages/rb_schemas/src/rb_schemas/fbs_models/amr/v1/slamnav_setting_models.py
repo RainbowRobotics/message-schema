@@ -47,19 +47,19 @@ class RequestGetPduParamPD(BaseModel):
 class ResponseGetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    params: list[SettingParamPD] = Field(default_factory=list)
+    params: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
 class RequestSetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    params: list[SettingParamPD] = Field(default_factory=list)
+    params: list[dict] = Field(default_factory=list)
 
 class ResponseSetPduParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    params: list[SettingParamPD] = Field(default_factory=list)
+    params: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -70,7 +70,7 @@ class RequestGetDriveParamPD(BaseModel):
 class ResponseGetDriveParamPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    params: list[SettingParamPD] = Field(default_factory=list)
+    params: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -83,7 +83,7 @@ class ResponseGetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     target: str | None = Field(default=None)
-    info: list[SensorInfoPD] = Field(default_factory=list)
+    info: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -91,13 +91,13 @@ class RequestSetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     target: str | None = Field(default=None)
-    info: list[SensorInfoPD] = Field(default_factory=list)
+    info: list[dict] = Field(default_factory=list)
 
 class ResponseSetSensorInfoPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     target: str | None = Field(default=None)
-    info: list[SensorInfoPD] = Field(default_factory=list)
+    info: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

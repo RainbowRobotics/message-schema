@@ -32,9 +32,9 @@ class Request_Network_GetNetworkPD(BaseModel):
 
 class Response_Network_GetNetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    ethernet: NetworkPD | None = Field(default=None)
-    wifi: NetworkPD | None = Field(default=None)
-    bluetooth: NetworkPD | None = Field(default=None)
+    ethernet: dict | None = Field(default=None)
+    wifi: dict | None = Field(default=None)
+    bluetooth: dict | None = Field(default=None)
 
 class Request_Network_SetNetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -78,7 +78,7 @@ class Request_Network_GetWifiListPD(BaseModel):
 
 class Response_Network_GetWifiListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    list: list[WifiPD] = Field(default_factory=list)
+    wifi_list: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

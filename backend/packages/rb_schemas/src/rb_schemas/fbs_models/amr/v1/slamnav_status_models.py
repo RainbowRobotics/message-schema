@@ -87,14 +87,14 @@ class StatusMapPD(BaseModel):
 
 class StatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    condition: StatusConditionPD | None = Field(default=None)
-    imu: StatusImuPD | None = Field(default=None)
-    motor: list[StatusMotorPD] = Field(default_factory=list)
-    power: StatusPowerPD | None = Field(default=None)
-    robot_state: StatusRobotStatePD | None = Field(alias="robotState", default=None)
-    robot_safety_io_state: StatusRobotSafetyIoStatePD | None = Field(alias="robotSafetyIoState", default=None)
-    setting: StatusSettingPD | None = Field(default=None)
-    map: StatusMapPD | None = Field(default=None)
+    condition: dict | None = Field(default=None)
+    imu: dict | None = Field(default=None)
+    motor: list[dict] = Field(default_factory=list)
+    power: dict | None = Field(default=None)
+    robot_state: dict | None = Field(alias="robotState", default=None)
+    robot_safety_io_state: dict | None = Field(alias="robotSafetyIoState", default=None)
+    setting: dict | None = Field(default=None)
+    map: dict | None = Field(default=None)
 
 class StatusMoveStatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -123,15 +123,15 @@ class StatusNodePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     name: str | None = Field(default=None)
-    pose: StatusPosePD | None = Field(default=None)
+    pose: dict | None = Field(default=None)
 
 class MoveStatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    move_state: StatusMoveStatePD | None = Field(alias="moveState", default=None)
-    pose: StatusPosePD | None = Field(default=None)
-    vel: StatusVelPD | None = Field(default=None)
-    cur_node: StatusNodePD | None = Field(alias="curNode", default=None)
-    goal_node: StatusNodePD | None = Field(alias="goalNode", default=None)
+    move_state: dict | None = Field(alias="moveState", default=None)
+    pose: dict | None = Field(default=None)
+    vel: dict | None = Field(default=None)
+    cur_node: dict | None = Field(alias="curNode", default=None)
+    goal_node: dict | None = Field(alias="goalNode", default=None)
 
 __all__ = [
     "StatusImuPD",

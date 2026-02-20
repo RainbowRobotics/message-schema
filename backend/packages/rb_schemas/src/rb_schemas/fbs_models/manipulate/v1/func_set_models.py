@@ -21,7 +21,7 @@ class Request_Set_ShiftPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     shift_no: int | None = Field(alias="shiftNo", default=None)
     shift_mode: int | None = Field(alias="shiftMode", default=None)
-    target: MoveInput_TargetPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
 
 class Request_Set_Out_Collision_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -38,8 +38,8 @@ class Request_Set_Self_Collision_ParaPD(BaseModel):
 class Request_Set_Joint_ImpedancePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     onoff: int | None = Field(default=None)
-    stiffness: N_JOINT_fPD | None = Field(default=None)
-    torquelimit: N_JOINT_fPD | None = Field(default=None)
+    stiffness: dict | None = Field(default=None)
+    torquelimit: dict | None = Field(default=None)
 
 class Request_Set_Free_DrivePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

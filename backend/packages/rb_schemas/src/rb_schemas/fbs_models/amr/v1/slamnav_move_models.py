@@ -34,7 +34,7 @@ class ResponseMoveGoalPD(BaseModel):
 class RequestMoveTargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
+    goal_pose: dict | None = Field(alias="goalPose", default=None)
     method: str | None = Field(default=None)
     preset: int | None = Field(default=None)
 
@@ -42,7 +42,7 @@ class ResponseMoveTargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     method: str | None = Field(default=None)
-    goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
+    goal_pose: dict | None = Field(alias="goalPose", default=None)
     preset: int | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
@@ -149,7 +149,7 @@ class ResultMovePD(BaseModel):
     goal_name: str | None = Field(alias="goalName", default=None)
     method: str | None = Field(default=None)
     preset: int | None = Field(default=None)
-    goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
+    goal_pose: dict | None = Field(alias="goalPose", default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
     direction: str | None = Field(default=None)
