@@ -68,11 +68,11 @@ async def delete_map(robot_model: str, robot_id: str, mapName: str):
 async def get_current_map(robot_model: str, robot_id: str) -> ResponseMapCurrentPD:
     return await amr_map_service.get_current_map(robot_model, robot_id)
 
-@amr_map_router.get("/{robot_model}/{robot_id}/map/loadMap", summary="맵 로드", description="맵 로드")
+@amr_map_router.post("/{robot_model}/{robot_id}/map/loadMap", summary="맵 로드", description="맵 로드")
 async def load_map(robot_model: str, robot_id: str, request: RequestMapLoadPD) -> ResponseMapLoadPD:
     return await amr_map_service.load_map(robot_model, robot_id, request)
 
-@amr_map_router.get("/{robot_model}/{robot_id}/map/loadTopo", summary="토폴로지 맵 로드", description="토폴로지 맵 로드")
+@amr_map_router.post("/{robot_model}/{robot_id}/map/loadTopo", summary="토폴로지 맵 로드", description="토폴로지 맵 로드")
 async def load_topo_map(robot_model: str, robot_id: str) -> ResponseTopoLoadPD:
     return await amr_map_service.reload_topo(robot_model, robot_id)
 
@@ -87,3 +87,7 @@ async def mapping_stop(robot_model: str, robot_id: str ) -> ResponseMappingStopP
 @amr_map_router.post("/{robot_model}/{robot_id}/mapping/save", summary="매핑 저장", description="매핑 저장")
 async def mapping_save(robot_model: str, robot_id: str, request: RequestMappingSavePD) -> ResponseMappingSavePD:
     return await amr_map_service.mapping_save(robot_model, robot_id, request)
+
+@amr_map_router.get("/{robot_model}/{robot_id}/mapping/cloudReload", summary="매핑 클라우드 재요청", description="매핑 클라우드 재요청")
+async def mapping_reload(robot_model: str, robot_id: str):
+    return await amr_map_service.mapping_reload(robot_model, robot_id)

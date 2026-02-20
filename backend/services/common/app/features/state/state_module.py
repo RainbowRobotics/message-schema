@@ -92,6 +92,7 @@ class StateService:
 
         for component in components:
             be_service = self._robot_models[component].get("be_service")
+            print("be_service>>>", robot_model, component, be_service, flush=True)
 
             if be_service == "manipulate":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -99,7 +100,7 @@ class StateService:
                 )
             elif be_service == "amr":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"amr/{component}/status", flatbuffer_obj_t=State_CoreT, timeout=0.2
+                    f"amr/{component}/*/status", flatbuffer_obj_t=StatusT, timeout=0.2
                 )
             elif be_service == "sensor":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -170,18 +171,25 @@ class StateService:
                     if obj is None:
                         continue
 
-                    print("obj>>>", core_sw["sw_name"], obj,flush=True)
-
-                    if not obj.get("robotState").get("power"):
+                    if obj.get("robotState").get("power") is False:
                         core_sw["connected"] = "POWER_OFF"
-                    elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock"):
+                    elif (
+                        obj.get("robotState").get("charge") != "none"
+                        or obj.get("robotState").get("dock") is True
+                    ):
                         core_sw["connected"] = "CHARGING"
                     elif obj.get("map").get("mapStatus") != "loaded":
                         core_sw["connected"] = "MAP_NOT_LOADED"
-                    elif obj.get("motor")[0].get("status") != 1:
+                    elif obj.get("robotState").get("emo") is True:
+                        core_sw["connected"] = "EMERGENCY_STOP"
+                    elif len(obj.get("motor")) > 0 and obj.get("motor")[0].get("status") != 1:
                         core_sw["connected"] = "MOTOR_0_ERROR"
-                    elif obj.get("motor")[1].get("status") != 1:
+                    elif len(obj.get("motor")) > 1 and obj.get("motor")[1].get("status") != 1:
                         core_sw["connected"] = "MOTOR_1_ERROR"
+                    elif len(obj.get("motor")) > 2 and obj.get("motor")[2].get("status") != 1:
+                        core_sw["connected"] = "MOTOR_2_ERROR"
+                    elif len(obj.get("motor")) > 3 and obj.get("motor")[3].get("status") != 1:
+                        core_sw["connected"] = "MOTOR_3_ERROR"
                     elif obj.get("robotState").get("localization") != "good":
                         core_sw["connected"] = "LOCALIZATION_ERROR"
                     else:
@@ -276,7 +284,10 @@ class StateService:
 
         executor_states = program_service.script_executor.get_all_states()
 
-        is_running = any(state["state"] != RB_Flow_Manager_ProgramState.IDLE for state in executor_states.values())
+        is_running = any(
+            state["state"] != RB_Flow_Manager_ProgramState.IDLE
+            for state in executor_states.values()
+        )
 
         message_dict = t_to_dict(message)
 
@@ -284,17 +295,10 @@ class StateService:
 
         message_dict["sw_name"] = sw_name
 
-
         fire_and_log(socket_client.emit("state_message", message_dict))
 
-
         if is_running and (message["type"] == 1 or message["type"] == 2):
-            asyncio.create_task(
-                asyncio.to_thread(
-                    program_service.script_executor.stop_all
-                )
-            )
-
+            asyncio.create_task(asyncio.to_thread(program_service.script_executor.stop_all))
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: float | None = 0.5

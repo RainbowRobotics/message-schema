@@ -7,6 +7,8 @@ from rb_sdk.amr import RBAmrSDK
 from rb_utils.parser import t_to_dict
 from rb_utils.service_exception import ServiceException
 
+from app.socket.socket_client import socket_client
+
 from .domain.map import MapModel, TransferState
 from .map_schema import (
     RequestMapLoadPD,
@@ -567,3 +569,35 @@ class AmrMapService:
         except ServiceException as e:
             rb_log.error(f"[map_service] mapping_save : {e}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def mapping_reload(self, robot_model: str, robot_id: str):
+        """
+        [AMR Mapping Reload 조회]
+        * robot_model : 명령을 전송할 로봇 모델
+        * robot_id : 로봇 아이디
+        """
+        model = MapModel(robot_model, robot_id)
+        try:
+            rb_log.info(f"[map_service] mapping_reload : {robot_model} {robot_id}")
+
+            result = await rb_amr_sdk.map.mapping_reload(robot_model, robot_id, model.id)
+            result_dict = t_to_dict(result)
+            model.result = result_dict.get("result")
+            model.message = result_dict.get("message")
+            return model.to_dict()
+        except ServiceException as e:
+            rb_log.error(f"[map_service] mapping_reload : {e}")
+            return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
+
+    async def map_result(self, topic:str, obj:dict):
+        """
+        [AMR Map Result 처리]
+        * topic : 토픽
+        * obj : 객체
+        """
+        rb_log.info(f"[map_service] map_result : {obj.get('id')}, {obj.get('command')}, {obj.get('result')}")
+        _id = obj.get("id")
+        if not _id:
+            return
+
+        await socket_client.emit(topic, t_to_dict(obj))

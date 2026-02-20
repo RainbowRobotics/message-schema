@@ -12,6 +12,7 @@ from rb_utils.service_exception import ServiceException
 from app.features.control.control_schema import (
     RequestControlChargeTriggerPD,
     RequestControlDetectMarkerPD,
+    RequestControlJogModePD,
     RequestControlLedModePD,
     RequestControlMotorModePD,
     RequestControlSetObsBoxPD,
@@ -49,6 +50,7 @@ class AmrControlCommandEnum(str, Enum):
     CONTROL_UNDOCK = "undock"
     CONTROL_DOCK_STOP = "dockStop"
     CONTROL_CHARGE_TRIGGER = "chargeTrigger"
+    CONTROL_JOG = "jog"
     CONTROL_GET_SAFETY_FIELD = "getSafetyField"
     CONTROL_SET_SAFETY_FIELD = "setSafetyField"
     CONTROL_GET_SAFETY_FLAG = "getSafetyFlag"
@@ -70,6 +72,7 @@ class ControlModel:
     """
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     robot_model: str | None = None
+    robot_id: str | None = None
     command: AmrControlCommandEnum | None = None
     status: AmrResponseStatusEnum = field(default=AmrResponseStatusEnum.PENDING)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -110,10 +113,11 @@ class ControlModel:
     camera_serial: str | None = None
     marker_size: int | None = None
 
-    def set_robot_model(self, robot_model: str):
+    def set_robot_model(self, robot_model: str, robot_id: str):
         """
         """
         self.robot_model = robot_model
+        self.robot_id = robot_id
         self.update_at = datetime.now(UTC)
 
 
@@ -226,6 +230,19 @@ class ControlModel:
         self.switch = req.switch
         self.update_at = datetime.now(UTC)
 
+    def set_control_jog(self, req: RequestControlJogModePD):
+        """
+        """
+        self.command = AmrControlCommandEnum.CONTROL_JOG
+        self.switch = req.switch
+        self.update_at = datetime.now(UTC)
+
+    def set_control_motor(self, req: RequestControlMotorModePD):
+        """
+        """
+        self.command = AmrControlCommandEnum.CONTROL_MOTOR
+        self.switch = req.switch
+        self.update_at = datetime.now(UTC)
 
     def parse_status(self, status: str) -> AmrResponseStatusEnum:
         """
@@ -247,12 +264,14 @@ class ControlModel:
         self.status = self.parse_status(status)
         self.update_at = datetime.now(UTC)
 
+
     def check_variables(self) -> None:
         """
         """
         if self.robot_model is None:
             raise ServiceException("robotModel 값이 비어있습니다", status_code=400)
-
+        if self.robot_id is None:
+            raise ServiceException("robotId 값이 비어있습니다", status_code=400)
         if self.command == AmrControlCommandEnum.CONTROL_DOCK or self.command == AmrControlCommandEnum.CONTROL_UNDOCK or self.command == AmrControlCommandEnum.CONTROL_DOCK_STOP:
             pass
         elif self.command == AmrControlCommandEnum.CONTROL_LED:

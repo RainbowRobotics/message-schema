@@ -5,6 +5,7 @@ from datetime import (
     datetime,
 )
 
+from rb_flat_buffers.SLAMNAV.ResultControlChargeTrigger import ResultControlChargeTriggerT
 from rb_flat_buffers.SLAMNAV.ResultControlDock import ResultControlDockT
 from rb_modules.log import rb_log
 from rb_sdk.amr import RBAmrSDK
@@ -18,7 +19,9 @@ from .adapter.mongo import ControlMongoDatabaseAdapter
 from .adapter.smtplib import ControlSmtpLibEmailAdapter
 from .control_schema import (
     RequestControlChargeTriggerPD,
+    RequestControlJogModePD,
     RequestControlLedModePD,
+    RequestControlMotorModePD,
     RequestControlSetObsBoxPD,
     RequestSetSafetyFieldPD,
     RequestSetSafetyFlagPD,
@@ -26,7 +29,9 @@ from .control_schema import (
     ResponseControlChargeTriggerPD,
     ResponseControlDockPD,
     ResponseControlGetObsBoxPD,
+    ResponseControlJogModePD,
     ResponseControlLedModePD,
+    ResponseControlMotorModePD,
     ResponseControlSetObsBoxPD,
     ResponseGetSafetyFieldPD,
     ResponseGetSafetyFlagPD,
@@ -46,7 +51,7 @@ class AmrControlService:
         self._locks = defaultdict(asyncio.Lock)
 
 
-    async def control_dock(self, robot_model: str) -> ResponseControlDockPD:
+    async def control_dock(self, robot_model: str, robot_id: str) -> ResponseControlDockPD:
         """
         [도킹 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
@@ -55,7 +60,7 @@ class AmrControlService:
         try:
             rb_log.info(f"[amr_control_service] control_dock : {robot_model}")
             # 1) controlModel 객체 생성
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.control_dock()
 
             # 2) DB 저장
@@ -70,6 +75,7 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_dock(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -93,7 +99,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_undock(self, robot_model: str) -> ResponseControlDockPD:
+    async def control_undock(self, robot_model: str, robot_id: str) -> ResponseControlDockPD:
         """
         [도킹 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
@@ -102,7 +108,7 @@ class AmrControlService:
         try:
             rb_log.info(f"[amr_control_service] control_undock : {robot_model}")
             # 1) controlModel 객체 생성
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.control_undock()
 
             # 2) DB 저장
@@ -117,6 +123,7 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_undock(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -140,7 +147,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_dock_stop(self, robot_model: str) -> ResponseControlDockPD:
+    async def control_dock_stop(self, robot_model: str, robot_id: str) -> ResponseControlDockPD:
         """
         [도킹 정지 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
@@ -149,7 +156,7 @@ class AmrControlService:
         try:
             rb_log.info(f"[amr_control_service] control_dock_stop : {robot_model}")
             # 1) controlModel 객체 생성
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.control_dock_stop()
 
             # 2) DB 저장
@@ -164,6 +171,7 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_dock_stop(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -187,7 +195,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_dock_result(self, topic: str, result: ResultControlDockT) -> ResponseControlDockPD:
+    async def control_dock_result(self, topic: str, result: ResultControlDockT):
         """
         [도킹 명령 결과 처리]
         * topic : 도킹 명령 결과 토픽
@@ -206,14 +214,39 @@ class AmrControlService:
                 db["createdAt"] = datetime.now(UTC)
                 db["updateAt"] = datetime.now(UTC)
 
-            if result.result == "fail" or result.result == "success":
-                db["status"] = AmrResponseStatusEnum.DONE
-            elif result.result == "cancel":
-                db["status"] = AmrResponseStatusEnum.CANCEL
-            elif result.result == "start":
-                db["status"] = AmrResponseStatusEnum.MOVING
-            elif result.result == "pause":
-                db["status"] = AmrResponseStatusEnum.PAUSE
+            # 2) database 저장
+            try:
+                await self.database_port.upsert(db)
+            except ServiceException as e:
+                print("[control_dock_result] DB Exception : ", e)
+
+            # 3) 소켓 전송
+            await socket_client.emit(topic, t_to_dict(result))
+        except ServiceException as e:
+            print("[control_dock_result] ServiceException : ", e.message, e.status_code)
+            return None
+        except Exception as e:
+            print("[control_dock_result] Exception : ", e)
+            return None
+
+    async def control_chargeTrigger_result(self, topic: str, result: ResultControlChargeTriggerT):
+        """
+        [충전 트리거 명령 결과 처리]
+        * topic : 충전 트리거 명령 결과 토픽
+        * obj : 충전 트리거 명령 결과 객체
+        """
+        try:
+            rb_log.info(f"[amr_control_service] control_chargeTrigger_result : {topic}, {result}")
+
+            # 1) database 조회
+            db = await self.database_port.get_log_by_id(result.id)
+            if db is not None:
+                db["result"] = result.result
+                db["message"] = result.message
+            else:
+                db = result.copy()
+                db["createdAt"] = datetime.now(UTC)
+                db["updateAt"] = datetime.now(UTC)
 
             # 2) database 저장
             try:
@@ -230,8 +263,105 @@ class AmrControlService:
             print("[control_dock_result] Exception : ", e)
             return None
 
+    async def control_set_motor(self, robot_model: str, robot_id: str, request:RequestControlMotorModePD) -> ResponseControlMotorModePD:
+        """
+        [모터 제어]
+        * robot_model : 명령을 전송할 로봇 모델
+        * request : 모터 제어 요청
+        """
+        model = ControlModel()
+        try:
+            rb_log.info(f"[amr_control_service] control_set_motor : {robot_model}, {request.switch}")
+            model.set_robot_model(robot_model, robot_id)
+            model.set_control_motor(request)
 
-    async def control_chargeTrigger(self, robot_model: str, request:RequestControlChargeTriggerPD) -> ResponseControlChargeTriggerPD:
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[control_set_motor] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.control.control_set_motor(
+                robot_model=model.robot_model,
+                robot_id=model.robot_id,
+                req_id=model.id,
+                switch=model.switch
+            )
+
+            print("============== control_set_motor result ===============")
+            print(result)
+
+            model.result_change(result.get("result"))
+            model.message = result.get("message")
+            model.status_change(result.get("result"))
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[control_set_motor] DB Exception : ", e)
+
+            print("============== control_set_motor return ===============")
+            return model.to_dict()
+        except ServiceException as e:
+            print("[control_set_motor] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            return model.to_dict()
+
+    async def control_set_jog(self, robot_model: str, robot_id: str, request:RequestControlJogModePD) -> ResponseControlJogModePD:
+        """
+        [조이스틱 모드 설정]
+        * robot_model : 명령을 전송할 로봇 모델
+        * request : 조이스틱 모드 설정 요청
+        """
+        model = ControlModel()
+        try:
+            rb_log.info(f"[amr_control_service] control_set_jog : {robot_model}, {request.switch}")
+            model.set_robot_model(robot_model, robot_id)
+            model.set_control_jog(request)
+
+            # 2) DB 저장
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except ServiceException as e:
+                print("[control_set_jog] DB Exception : ", e)
+
+            # 3) 요청 검사
+            model.check_variables()
+
+            # 4) 요청 전송
+            result = await rb_amr_sdk.control.control_set_jog(
+                robot_model=model.robot_model,
+                robot_id=model.robot_id,
+                req_id=model.id,
+                switch=model.switch
+            )
+
+            print("============== control_set_jog result ===============")
+            print(result)
+
+            model.result_change(result.get("result"))
+            model.message = result.get("message")
+            model.status_change(result.get("result"))
+
+            try:
+                await self.database_port.upsert(model.to_dict())
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print("[control_set_jog] DB Exception : ", e)
+
+            print("============== control_set_jog return ===============")
+            return model.to_dict()
+        except ServiceException as e:
+            print("[control_set_jog] ServiceException : ", e.message, e.status_code)
+            model.status_change(AmrResponseStatusEnum.FAIL)
+            model.message = str(e.message)
+            return model.to_dict()
+
+    async def control_chargeTrigger(self, robot_model: str, robot_id: str, request:RequestControlChargeTriggerPD) -> ResponseControlChargeTriggerPD:
         """
         [충전 트리거 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
@@ -242,7 +372,7 @@ class AmrControlService:
         try:
             rb_log.info(f"[amr_control_service] control_chargeTrigger : {robot_model}, {request.control}")
             # 1) controlModel 객체 생성
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_charge_trigger(request)
 
             # 2) DB 저장
@@ -257,6 +387,7 @@ class AmrControlService:
             # 4) 요청 전송
             result = await rb_amr_sdk.control.control_charge_trigger(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 switch=model.switch
             )
@@ -281,7 +412,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_get_safetyField(self, robot_model: str) -> ResponseGetSafetyFieldPD:
+    async def control_get_safetyField(self, robot_model: str, robot_id: str) -> ResponseGetSafetyFieldPD:
         """
         [안전 필드 조회]
         * robot_model : 명령을 전송할 로봇 모델
@@ -289,7 +420,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_get_safetyField : {robot_model}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.get_control_safety_field()
 
             # 2) DB 저장
@@ -301,6 +432,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_get_safety_field(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -324,7 +456,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_set_safetyField(self, robot_model: str, request:RequestSetSafetyFieldPD) -> ResponseSetSafetyFieldPD:
+    async def control_set_safetyField(self, robot_model: str, robot_id: str, request:RequestSetSafetyFieldPD) -> ResponseSetSafetyFieldPD:
         """
         [안전 필드 설정]
         * robot_model : 명령을 전송할 로봇 모델
@@ -333,7 +465,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_set_safetyField : {robot_model}, {request.safety_field}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_safety_field(request)
 
             # 2) DB 저장
@@ -345,6 +477,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_set_safety_field(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 safety_field=model.safety_field
             )
@@ -367,7 +500,7 @@ class AmrControlService:
             print("[control_set_safetyField] ServiceException : ", e.message, e.status_code)
             model.status_change(AmrResponseStatusEnum.FAIL)
 
-    async def control_get_safetyFlag(self, robot_model: str) -> ResponseGetSafetyFlagPD:
+    async def control_get_safetyFlag(self, robot_model: str, robot_id: str) -> ResponseGetSafetyFlagPD:
         """
         [안전 플래그 조회]
         * robot_model : 명령을 전송할 로봇 모델
@@ -375,7 +508,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_get_safetyFlag : {robot_model}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.get_control_safety_flag()
             # 2) DB 저장
             try:
@@ -386,6 +519,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_get_safety_flag(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -409,7 +543,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_set_safetyFlag(self, robot_model: str, request:RequestSetSafetyFlagPD) -> ResponseSetSafetyFlagPD:
+    async def control_set_safetyFlag(self, robot_model: str, robot_id: str, request:RequestSetSafetyFlagPD) -> ResponseSetSafetyFlagPD:
         """
         [안전 플래그 설정]
         * robot_model : 명령을 전송할 로봇 모델
@@ -418,7 +552,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_set_safetyFlag : {robot_model}, {request.safety_flag}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_safety_flag(request)
 
             # 2) DB 저장
@@ -430,6 +564,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_set_safety_flag(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 reset_flag=model.safety_flag
             )
@@ -453,7 +588,7 @@ class AmrControlService:
             model.status_change(AmrResponseStatusEnum.FAIL)
             model.message = str(e.message)
 
-    async def control_led(self, robot_model: str, request:RequestControlLedModePD) -> ResponseControlLedModePD:
+    async def control_led(self, robot_model: str, robot_id: str, request:RequestControlLedModePD) -> ResponseControlLedModePD:
         """
         [LED 명령 전송]
         * robot_model : 명령을 전송할 로봇 모델
@@ -462,7 +597,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_led : {robot_model}, {request.control}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_led(request)
 
             # 2) DB 저장
@@ -474,6 +609,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_set_led(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 switch=model.switch,
                 color=model.color
@@ -499,11 +635,11 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_get_safetyIo(self, robot_model: str) -> ResponseGetSafetyIoPD:
+    async def control_get_safetyIo(self, robot_model: str, robot_id: str) -> ResponseGetSafetyIoPD:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_get_safetyIo : {robot_model}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.get_control_safety_io()
 
             # 2) DB 저장
@@ -515,6 +651,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_get_safety_io(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -538,7 +675,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_set_safetyIo(self, robot_model: str, request:RequestSetSafetyIoPD) -> ResponseSetSafetyIoPD:
+    async def control_set_safetyIo(self, robot_model: str, robot_id: str, request:RequestSetSafetyIoPD) -> ResponseSetSafetyIoPD:
         """
         [세이프티 IO 설정]
         * robot_model : 명령을 전송할 로봇 모델
@@ -547,7 +684,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_set_safetyIo : {robot_model}, {request.mcu0Din}, {request.mcu1Din}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_safety_io(request)
 
             # 2) DB 저장
@@ -559,6 +696,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_set_safety_io(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 mcu0_din=model.mcu0_din,
                 mcu1_din=model.mcu1_din
@@ -584,7 +722,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_get_obsbox(self, robot_model: str) -> ResponseControlGetObsBoxPD:
+    async def control_get_obsbox(self, robot_model: str, robot_id: str) -> ResponseControlGetObsBoxPD:
         """
         [장애물 박스 조회]
         * robot_model : 명령을 전송할 로봇 모델
@@ -592,7 +730,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_get_obsbox : {robot_model}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.get_control_obs_box()
 
             # 2) DB 저장
@@ -604,6 +742,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_get_obs_box(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id
             )
 
@@ -627,7 +766,7 @@ class AmrControlService:
             model.message = str(e.message)
             return model.to_dict()
 
-    async def control_set_obsbox(self, robot_model: str, request:RequestControlSetObsBoxPD) -> ResponseControlSetObsBoxPD:
+    async def control_set_obsbox(self, robot_model: str, robot_id: str, request:RequestControlSetObsBoxPD) -> ResponseControlSetObsBoxPD:
         """
         [장애물 박스 설정]
         * robot_model : 명령을 전송할 로봇 모델
@@ -636,7 +775,7 @@ class AmrControlService:
         model = ControlModel()
         try:
             rb_log.info(f"[amr_control_service] control_set_obsbox : {robot_model}, {request.minX}, {request.minY}, {request.minZ}, {request.maxX}, {request.maxY}, {request.maxZ}, {request.mapRange}")
-            model.set_robot_model(robot_model)
+            model.set_robot_model(robot_model, robot_id)
             model.set_control_obs_box(request)
 
             # 2) DB 저장
@@ -648,6 +787,7 @@ class AmrControlService:
             # 3) 요청 전송
             result = await rb_amr_sdk.control.control_set_obs_box(
                 robot_model=model.robot_model,
+                robot_id=model.robot_id,
                 req_id=model.id,
                 min_x=model.min_x,
                 min_y=model.min_y,

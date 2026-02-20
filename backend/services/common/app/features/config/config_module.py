@@ -82,7 +82,7 @@ class ConfigService(BaseService):
                     elif speedbar > self._min_speedbar:
                         self.control_speed_bar(components=[component], speedbar=self._min_speedbar)
 
-                elif be_service == "mobility":
+                elif be_service == "amr":
                     # TODO: mobility speedbar
                     continue
                 elif be_service == "sensor":

@@ -1,4 +1,5 @@
-""" Rainbow Robotics Manipulate Program SDK """
+"""Rainbow Robotics Manipulate Program SDK"""
+
 import asyncio
 import time as time_module
 from typing import Literal
@@ -28,6 +29,7 @@ from .schema.manipulate_config_schema import (
     Request_Set_Fixed_Speed_ModeSchema,
     Request_Set_Out_Collision_ParaSchema,
     Request_Set_Self_Collision_ParaSchema,
+    Request_Set_ShiftSchema,
     Request_Set_User_Frame_SelectionSchema,
 )
 from .schema.manipulate_io_schema import FlangeDoutArg
@@ -41,6 +43,8 @@ rb_manipulate_get_data_sdk = RBManipulateGetDataSDK()
 rb_manipulate_io_sdk = RBManipulateIOSDK()
 rb_manipulate_smbc_sdk = RBManipulateSMBCSdk()
 rb_manipulate_config_sdk = RBManipulateConfigSDK()
+
+
 class RBManipulateProgramSDK(RBBaseSDK):
     """Rainbow Robotics Manipulate Program SDK"""
 
@@ -58,10 +62,8 @@ class RBManipulateProgramSDK(RBBaseSDK):
             flatbuffer_buf_size=2,
         )
 
-
         if res["obj_payload"] is None:
             raise RuntimeError("Call Resume failed: obj_payload is None")
-
 
         return res["obj_payload"]
 
@@ -159,7 +161,14 @@ class RBManipulateProgramSDK(RBBaseSDK):
         except Exception as e:
             raise e
 
-    async def set_begin(self, *, robot_model: str, position: list[float | int] | None = None, is_enable: bool = True, flow_manager_args: FlowManagerArgs | None = None):
+    async def set_begin(
+        self,
+        *,
+        robot_model: str,
+        position: list[float | int] | None = None,
+        is_enable: bool = True,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [메인 태스크 시작 위치 설정 함수]
 
@@ -175,30 +184,37 @@ class RBManipulateProgramSDK(RBBaseSDK):
             if flow_manager_args is not None:
                 try:
                     _, _, obj, _ = await self.zenoh_client.receive_one(
-                            f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
-                        )
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
 
                     if obj is not None:
-                        flow_manager_args.ctx.update_local_variables({
-                            "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get("f", [0,0,0,0,0,0,0])
-                        })
-                        flow_manager_args.ctx.update_local_variables({
-                            "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get("f", [0,0,0,0,0,0,0])
-                        })
+                        flow_manager_args.ctx.update_local_variables(
+                            {
+                                "MANIPULATE_BEGIN_JOINTS": obj.get("jointQRef", {}).get(
+                                    "f", [0, 0, 0, 0, 0, 0, 0]
+                                )
+                            }
+                        )
+                        flow_manager_args.ctx.update_local_variables(
+                            {
+                                "MANIPULATE_BEGIN_CARTES": obj.get("carteXRef", {}).get(
+                                    "f", [0, 0, 0, 0, 0, 0, 0]
+                                )
+                            }
+                        )
 
                     if position is not None:
-                        flow_manager_args.ctx.update_local_variables({
-                            "MANIPULATE_BEGIN_JOINTS": position
-                        })
-
+                        flow_manager_args.ctx.update_local_variables(
+                            {"MANIPULATE_BEGIN_JOINTS": position}
+                        )
 
                 except Exception:
-                    flow_manager_args.ctx.update_local_variables({
-                        "MANIPULATE_BEGIN_JOINTS": [0,0,0,0,0,0,0]
-                    })
-                    flow_manager_args.ctx.update_global_variables({
-                        "MANIPULATE_BEGIN_CARTES": [0,0,0,0,0,0,0]
-                    })
+                    flow_manager_args.ctx.update_local_variables(
+                        {"MANIPULATE_BEGIN_JOINTS": [0, 0, 0, 0, 0, 0, 0]}
+                    )
+                    flow_manager_args.ctx.update_global_variables(
+                        {"MANIPULATE_BEGIN_CARTES": [0, 0, 0, 0, 0, 0, 0]}
+                    )
 
                     return
                 finally:
@@ -237,11 +253,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
             content = str(content)
 
         if option == "ALARM":
-            self.alarm(
-                title=title,
-                content=content,
-                robot_model=robot_model
-            )
+            self.alarm(title=title, content=content, robot_model=robot_model)
 
             stop_type = "pause"
         elif option == "HALT":
@@ -256,11 +268,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
             stop_type = "continue"
 
         if save_log:
-            self.log(
-                content=content or title,
-                robot_model=robot_model,
-                level="USER"
-            )
+            self.log(content=content or title, robot_model=robot_model, level="USER")
 
         if flow_manager_args is not None:
             if stop_type == "pause":
@@ -295,14 +303,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
         if flow_manager_args is None:
             return
 
-        real_variables = [
-            to_json(var)
-            for var in variables
-        ]
+        real_variables = [to_json(var) for var in variables]
 
-        raw_variables: list[str] = [
-            var for var in flow_manager_args.args.get("variables", [])
-        ]
+        raw_variables: list[str] = [var for var in flow_manager_args.args.get("variables", [])]
 
         if len(raw_variables) == 0:
             flow_manager_args.done()
@@ -316,11 +319,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 else:
                     content += f"{var}: Undefined\n"
 
-            self.alarm(
-                title="Debug Variables",
-                content=content,
-                robot_model=robot_model
-            )
+            self.alarm(title="Debug Variables", content=content, robot_model=robot_model)
 
         elif option == "LOG":
             for index, var in enumerate(raw_variables):
@@ -330,17 +329,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 else:
                     content = f"{var}: Undefined"
 
-                self.log(
-                        content=content,
-                        robot_model=robot_model,
-                        level="USER"
-                    )
+                self.log(content=content, robot_model=robot_model, level="USER")
             if log_content is not None:
-                self.log(
-                    content=log_content,
-                    robot_model=robot_model,
-                    level="USER"
-                )
+                self.log(content=log_content, robot_model=robot_model, level="USER")
 
         if flow_manager_args is not None:
             if pause_option == "ALL":
@@ -359,7 +350,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
         second: float | int | None = None,
         digital_input: DigitalInputConditionSchema | None = None,
         time_out: float | int | None = None,
-        flow_manager_args: FlowManagerArgs | None = None
+        flow_manager_args: FlowManagerArgs | None = None,
     ):
         """
         [Manipulate Wait 커맨드 호출 함수]
@@ -380,9 +371,8 @@ class RBManipulateProgramSDK(RBBaseSDK):
         now = time_module.monotonic()
         condition = flow_manager_args.args.get("condition", None)
         logic_operator = (
-            (digital_input.get("logical_operator") if digital_input is not None else None)
-            or "AND"
-        )
+            digital_input.get("logical_operator") if digital_input is not None else None
+        ) or "AND"
         is_break = False
 
         if wait_type == "TIME":
@@ -393,7 +383,11 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 while True:
                     flow_manager_args.ctx.check_stop()
 
-                    if not safe_eval_expr(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
+                    if not safe_eval_expr(
+                        condition,
+                        variables=flow_manager_args.ctx.variables,
+                        get_global_variable=flow_manager_args.ctx.get_global_variable,
+                    ):
                         break
 
                     if time_out is not None and time_module.monotonic() - now >= time_out:
@@ -404,20 +398,32 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 while True:
                     flow_manager_args.ctx.check_stop()
 
-                    _, _, obj, _ = await self.zenoh_client.receive_one(f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT)
+                    _, _, obj, _ = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
 
                     if logic_operator == "AND":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] != signal:
+                            elif (
+                                obj.get("cboxDigitalInput", {}).get("u", [0, 0, 0, 0, 0, 0, 0])[
+                                    index
+                                ]
+                                != signal
+                            ):
                                 is_break = True
 
                     elif logic_operator == "OR":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
+                            elif (
+                                obj.get("cboxDigitalInput", {}).get("u", [0, 0, 0, 0, 0, 0, 0])[
+                                    index
+                                ]
+                                == signal
+                            ):
                                 is_break = False
                                 break
                             else:
@@ -431,13 +437,16 @@ class RBManipulateProgramSDK(RBBaseSDK):
 
                     await asyncio.sleep(0.01)
 
-
         elif wait_type == "EXIT":
             if mode == "GENERAL":
                 while True:
                     flow_manager_args.ctx.check_stop()
 
-                    if safe_eval_expr(condition, variables=flow_manager_args.ctx.variables, get_global_variable=flow_manager_args.ctx.get_global_variable):
+                    if safe_eval_expr(
+                        condition,
+                        variables=flow_manager_args.ctx.variables,
+                        get_global_variable=flow_manager_args.ctx.get_global_variable,
+                    ):
                         break
 
                     if time_out is not None and time_module.monotonic() - now >= time_out:
@@ -448,13 +457,20 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 while True:
                     flow_manager_args.ctx.check_stop()
 
-                    _, _, obj, _ = await self.zenoh_client.receive_one(f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT)
+                    _, _, obj, _ = await self.zenoh_client.receive_one(
+                        f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                    )
 
                     if logic_operator == "AND":
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] != signal:
+                            elif (
+                                obj.get("cboxDigitalInput", {}).get("u", [0, 0, 0, 0, 0, 0, 0])[
+                                    index
+                                ]
+                                != signal
+                            ):
                                 is_break = False
                                 break
                             else:
@@ -464,7 +480,12 @@ class RBManipulateProgramSDK(RBBaseSDK):
                         for index, signal in enumerate(digital_input["signal"]):
                             if signal == -1:
                                 continue
-                            elif obj.get("cboxDigitalInput", {}).get("u", [0,0,0,0,0,0,0])[index] == signal:
+                            elif (
+                                obj.get("cboxDigitalInput", {}).get("u", [0, 0, 0, 0, 0, 0, 0])[
+                                    index
+                                ]
+                                == signal
+                            ):
                                 is_break = True
 
                     if is_break:
@@ -511,7 +532,9 @@ class RBManipulateProgramSDK(RBBaseSDK):
             )
 
             if res.calculatedResult != 0:
-                raise RuntimeError(f"Get Relative Value failed: calculatedResult={res.calculatedResult}")
+                raise RuntimeError(
+                    f"Get Relative Value failed: calculatedResult={res.calculatedResult}"
+                )
         else:
             res = rb_manipulate_get_data_sdk.get_absolute_value(
                 robot_model=robot_model,
@@ -520,20 +543,29 @@ class RBManipulateProgramSDK(RBBaseSDK):
             )
 
             if res.calculatedResult != 0:
-                raise RuntimeError(f"Get Absolute Value failed: calculatedResult={res.calculatedResult}")
+                raise RuntimeError(
+                    f"Get Absolute Value failed: calculatedResult={res.calculatedResult}"
+                )
 
         calculated_value = res.calculatedValue
 
         if variable_name is not None:
-            flow_manager_args.ctx.update_local_variables({
-                variable_name: calculated_value.tarValues.f
-            })
+            flow_manager_args.ctx.update_local_variables(
+                {variable_name: calculated_value.tarValues.f}
+            )
 
         flow_manager_args.done()
 
         return res
 
-    def tool_out(self, *, robot_model: str, tool_voltage: int, tool_dout_args: list[FlangeDoutArg], flow_manager_args: FlowManagerArgs | None = None) -> Response_FunctionsT:
+    def tool_out(
+        self,
+        *,
+        robot_model: str,
+        tool_voltage: int,
+        tool_dout_args: list[FlangeDoutArg],
+        flow_manager_args: FlowManagerArgs | None = None,
+    ) -> Response_FunctionsT:
         """
         [Tool Out 호출 함수]
 
@@ -564,12 +596,12 @@ class RBManipulateProgramSDK(RBBaseSDK):
         return res
 
     def interface(
-            self,
-            *,
-            option: Literal["MODBUS_CLIENT"],
-            modbus_client: InterfaceModbusClientPayloadSchema,
-            flow_manager_args: FlowManagerArgs | None = None
-        ):
+        self,
+        *,
+        option: Literal["MODBUS_CLIENT"],
+        modbus_client: InterfaceModbusClientPayloadSchema,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [Interface 호출 함수]
 
@@ -603,10 +635,17 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 if obj_payload.result != 0:
                     raise RuntimeError(f"Modbus Read failed: result={obj_payload.result}")
 
-                if flow_manager_args is not None and modbus_client["return_variable_name"] is not None:
-                    flow_manager_args.ctx.update_local_variables({
-                        flow_manager_args.args.get("modbus_client", {}).get("return_variable_name"): obj_payload.payload.i[:obj_payload.payloadDlc]
-                    })
+                if (
+                    flow_manager_args is not None
+                    and modbus_client["return_variable_name"] is not None
+                ):
+                    flow_manager_args.ctx.update_local_variables(
+                        {
+                            flow_manager_args.args.get("modbus_client", {}).get(
+                                "return_variable_name"
+                            ): obj_payload.payload.i[: obj_payload.payloadDlc]
+                        }
+                    )
 
             elif modbus_client["type"] == "WRITE":
                 if modbus_client["payload_dlc"] is None and len(modbus_client["payload"]) > 1:
@@ -631,10 +670,13 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 if obj_payload.result != 0:
                     raise RuntimeError(f"Modbus Write failed: result={obj_payload.result}")
 
-                if flow_manager_args is not None and modbus_client["return_variable_name"] is not None:
-                    flow_manager_args.ctx.update_local_variables({
-                        modbus_client["return_variable_name"]: obj_payload.payload.i
-                    })
+                if (
+                    flow_manager_args is not None
+                    and modbus_client["return_variable_name"] is not None
+                ):
+                    flow_manager_args.ctx.update_local_variables(
+                        {modbus_client["return_variable_name"]: obj_payload.payload.i}
+                    )
             else:
                 raise RuntimeError("Modbus Client failed: modbus_read or modbus_write is required")
 
@@ -645,11 +687,14 @@ class RBManipulateProgramSDK(RBBaseSDK):
         self,
         *,
         robot_model: str,
-        option: Literal["USER_FRAME_SELECTION", "OUT_COLLISION", "SELF_COLLISION", "FIXED_SPEED"],
+        option: Literal[
+            "USER_FRAME_SELECTION", "OUT_COLLISION", "SELF_COLLISION", "FIXED_SPEED", "SHIFT"
+        ],
         out_collision: Request_Set_Out_Collision_ParaSchema | None = None,
         self_collision: Request_Set_Self_Collision_ParaSchema | None = None,
         user_frame_selection: Request_Set_User_Frame_SelectionSchema | None = None,
         fixed_speed: Request_Set_Fixed_Speed_ModeSchema | None = None,
+        shift: Request_Set_ShiftSchema | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """
@@ -661,6 +706,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
             out_collision: 충돌 감지 설정
             self_collision: 충돌 감지 설정
             user_frame_selection: 사용자 프레임 설정
+            shift: 좌표계 시프트 설정
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
 
@@ -709,6 +755,17 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 vel_parameter=fixed_speed["vel_parameter"],
                 acc_option=fixed_speed["acc_option"],
                 acc_parameter=fixed_speed["acc_parameter"],
+            )
+
+        elif option == "SHIFT":
+            if shift is None:
+                raise RuntimeError("Shift failed: shift is required")
+
+            rb_manipulate_config_sdk.set_shift(
+                robot_model=robot_model,
+                shift_no=shift["shift_no"],
+                shift_mode=shift["shift_mode"],
+                target=shift["target"],
             )
 
         if flow_manager_args is not None:
