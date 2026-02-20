@@ -16,125 +16,125 @@ class MovePosePD(BaseModel):
 
 class RequestMoveGoalPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    goal_id: str | None = Field(alias="goalId", default=None)
-    goal_name: str | None = Field(alias="goalName", default=None)
-    method: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    goal_id: str | None = Field(alias="goalId", json_schema_extra={"example": ""}, default=None)
+    goal_name: str | None = Field(alias="goalName", json_schema_extra={"example": ""}, default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     preset: int | None = Field(default=None)
 
 class ResponseMoveGoalPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    goal_id: str | None = Field(alias="goalId", default=None)
-    goal_name: str | None = Field(alias="goalName", default=None)
-    method: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    goal_id: str | None = Field(alias="goalId", json_schema_extra={"example": ""}, default=None)
+    goal_name: str | None = Field(alias="goalName", json_schema_extra={"example": ""}, default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     preset: int | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveTargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
-    method: str | None = Field(default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     preset: int | None = Field(default=None)
 
 class ResponseMoveTargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    method: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
     preset: int | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMoveStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMovePausePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMovePausePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveResumePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMoveResumePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveXLinearPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
 
 class ResponseMoveXLinearPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveYLinearPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
 
 class ResponseMoveYLinearPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveCircularPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    direction: str | None = Field(default=None)
+    direction: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class ResponseMoveCircularPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    direction: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    direction: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestMoveRotatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
 
 class ResponseMoveRotatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class MoveJogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -144,18 +144,18 @@ class MoveJogPD(BaseModel):
 
 class ResultMovePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    command: str | None = Field(default=None)
-    goal_id: str | None = Field(alias="goalId", default=None)
-    goal_name: str | None = Field(alias="goalName", default=None)
-    method: str | None = Field(default=None)
+    id: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    command: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    goal_id: str | None = Field(alias="goalId", json_schema_extra={"example": ""}, default=None)
+    goal_name: str | None = Field(alias="goalName", json_schema_extra={"example": ""}, default=None)
+    method: str | None = Field(json_schema_extra={"example": ""}, default=None)
     preset: int | None = Field(default=None)
     goal_pose: MovePosePD | None = Field(alias="goalPose", default=None)
     target: float | None = Field(default=None)
     speed: float | None = Field(default=None)
-    direction: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    direction: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "MovePosePD",

@@ -13,7 +13,7 @@ NAMESPACE = "IPC"
 class Request_Get_Core_DataPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     option: int | None = Field(default=None)
-    name: str | None = Field(default=None)
+    name: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class Response_Get_Core_DataPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -21,7 +21,7 @@ class Response_Get_Core_DataPD(BaseModel):
     type: int | None = Field(default=None)
     payload_num: float | None = Field(alias="payloadNum", default=None)
     payload_arr: FloatArray32PD | None = Field(alias="payloadArr", default=None)
-    payload_str: str | None = Field(alias="payloadStr", default=None)
+    payload_str: str | None = Field(alias="payloadStr", json_schema_extra={"example": ""}, default=None)
 
 class Request_Get_Relative_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

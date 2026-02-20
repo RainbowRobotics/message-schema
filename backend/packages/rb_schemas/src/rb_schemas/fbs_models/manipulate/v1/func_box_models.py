@@ -18,7 +18,7 @@ class Request_Save_Robot_CodePD(BaseModel):
 class Request_Save_Area_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     area_no: int | None = Field(alias="areaNo", default=None)
-    area_name: str | None = Field(alias="areaName", default=None)
+    area_name: str | None = Field(alias="areaName", json_schema_extra={"example": ""}, default=None)
     area_type: int | None = Field(alias="areaType", default=None)
     area_x: float | None = Field(alias="areaX", default=None)
     area_y: float | None = Field(alias="areaY", default=None)
@@ -33,7 +33,7 @@ class Request_Save_Area_ParaPD(BaseModel):
 class Request_Save_User_FramePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     userf_no: int | None = Field(alias="userfNo", default=None)
-    userf_name: str | None = Field(alias="userfName", default=None)
+    userf_name: str | None = Field(alias="userfName", json_schema_extra={"example": ""}, default=None)
     userf_x: float | None = Field(alias="userfX", default=None)
     userf_y: float | None = Field(alias="userfY", default=None)
     userf_z: float | None = Field(alias="userfZ", default=None)
@@ -44,7 +44,7 @@ class Request_Save_User_FramePD(BaseModel):
 class Request_Save_User_ScriptPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     script_no: int | None = Field(alias="scriptNo", default=None)
-    script_txt: str | None = Field(alias="scriptTxt", default=None)
+    script_txt: str | None = Field(alias="scriptTxt", json_schema_extra={"example": ""}, default=None)
 
 class Request_Save_SideDin_SpecialFuncPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

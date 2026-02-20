@@ -23,52 +23,52 @@ class RB_Program_Log_TypePD(Enum):
 
 class RB_Program_Task_StatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    task_id: str | None = Field(alias="taskId", default=None)
-    program_id: str | None = Field(alias="programId", default=None)
+    task_id: str | None = Field(alias="taskId", json_schema_extra={"example": ""}, default=None)
+    program_id: str | None = Field(alias="programId", json_schema_extra={"example": ""}, default=None)
     sync_task_ids: List[str] = Field(alias="syncTaskIds", default_factory=list)
     node_path: List[str] = Field(alias="nodePath", default_factory=list)
-    status: str | None = Field(default=None)
+    status: str | None = Field(json_schema_extra={"example": ""}, default=None)
     offset: int | None = Field(default=None)
 
 class RB_Program_Task_CheckpointPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    task_id: str | None = Field(alias="taskId", default=None)
-    program_id: str | None = Field(alias="programId", default=None)
+    task_id: str | None = Field(alias="taskId", json_schema_extra={"example": ""}, default=None)
+    program_id: str | None = Field(alias="programId", json_schema_extra={"example": ""}, default=None)
     sync_task_ids: List[str] = Field(alias="syncTaskIds", default_factory=list)
     node_path: List[str] = Field(alias="nodePath", default_factory=list)
     offset: int | None = Field(default=None)
-    status: str | None = Field(default=None)
+    status: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RB_Program_DialogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    robot_model: str | None = Field(alias="robotModel", default=None)
-    title: str | None = Field(default=None)
-    content: str | None = Field(default=None)
+    robot_model: str | None = Field(alias="robotModel", json_schema_extra={"example": ""}, default=None)
+    title: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    content: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RB_Program_LogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    content: str | None = Field(default=None)
-    robot_model: str | None = Field(alias="robotModel", default=None)
+    content: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    robot_model: str | None = Field(alias="robotModel", json_schema_extra={"example": ""}, default=None)
     type: RB_Program_Log_TypePD | None = Field(default=None)
 
 class Request_Program_At_StartPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    task_id: str | None = Field(alias="taskId", default=None)
+    task_id: str | None = Field(alias="taskId", json_schema_extra={"example": ""}, default=None)
 
 class Request_Program_At_EndPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    task_id: str | None = Field(alias="taskId", default=None)
+    task_id: str | None = Field(alias="taskId", json_schema_extra={"example": ""}, default=None)
 
 class Request_Update_Sub_Task_StatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    sub_task_id: str | None = Field(alias="subTaskId", default=None)
+    sub_task_id: str | None = Field(alias="subTaskId", json_schema_extra={"example": ""}, default=None)
     sub_task_type: RB_Program_Sub_Task_TypePD | None = Field(alias="subTaskType", default=None)
     state: RB_Flow_Manager_ProgramStatePD | None = Field(default=None)
 
 class Request_Exec_Control_ProgramPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    robot_model: str | None = Field(alias="robotModel", default=None)
-    program_id: str | None = Field(alias="programId", default=None)
+    robot_model: str | None = Field(alias="robotModel", json_schema_extra={"example": ""}, default=None)
+    program_id: str | None = Field(alias="programId", json_schema_extra={"example": ""}, default=None)
 
 class Response_Exec_Control_ProgramPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

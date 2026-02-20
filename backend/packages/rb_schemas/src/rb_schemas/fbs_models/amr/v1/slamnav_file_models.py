@@ -9,72 +9,72 @@ NAMESPACE = "SLAMNAV"
 
 class RequestCompressFilesPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    base_dir: str | None = Field(alias="baseDir", default=None)
+    base_dir: str | None = Field(alias="baseDir", json_schema_extra={"example": ""}, default=None)
     source_names: List[str] = Field(alias="sourceNames", default_factory=list)
-    output_name: str | None = Field(alias="outputName", default=None)
+    output_name: str | None = Field(alias="outputName", json_schema_extra={"example": ""}, default=None)
 
 class ResponseCompressFilesPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    base_dir: str | None = Field(alias="baseDir", default=None)
+    base_dir: str | None = Field(alias="baseDir", json_schema_extra={"example": ""}, default=None)
     source_names: List[str] = Field(alias="sourceNames", default_factory=list)
-    output_name: str | None = Field(alias="outputName", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    output_name: str | None = Field(alias="outputName", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestDecompressFilePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    source_path: str | None = Field(alias="sourcePath", default=None)
-    output_path: str | None = Field(alias="outputPath", default=None)
+    source_path: str | None = Field(alias="sourcePath", json_schema_extra={"example": ""}, default=None)
+    output_path: str | None = Field(alias="outputPath", json_schema_extra={"example": ""}, default=None)
 
 class ResponseDecompressFilePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    source_path: str | None = Field(alias="sourcePath", default=None)
-    output_path: str | None = Field(alias="outputPath", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    source_path: str | None = Field(alias="sourcePath", json_schema_extra={"example": ""}, default=None)
+    output_path: str | None = Field(alias="outputPath", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestDeleteFilePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
 
 class ResponseDeleteFilePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetFileMetaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     preferred_chunk_size: int | None = Field(alias="preferredChunkSize", default=None)
 
 class ResponseGetFileMetaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     file_size: int | None = Field(alias="fileSize", default=None)
     chunk_size: int | None = Field(alias="chunkSize", default=None)
     total_chunks: int | None = Field(alias="totalChunks", default=None)
-    mime: str | None = Field(default=None)
-    sha256: str | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    mime: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    sha256: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 class RequestGetFileChunkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     chunk_index: int | None = Field(alias="chunkIndex", default=None)
     chunk_size: int | None = Field(alias="chunkSize", default=None)
 
 class ResponseGetFileChunkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    file_path: str | None = Field(alias="filePath", default=None)
+    file_path: str | None = Field(alias="filePath", json_schema_extra={"example": ""}, default=None)
     chunk_index: int | None = Field(alias="chunkIndex", default=None)
     total_chunks: int | None = Field(alias="totalChunks", default=None)
     offset: int | None = Field(default=None)
     data: List[int] = Field(default_factory=list)
     eof: bool | None = Field(default=None)
-    result: str | None = Field(default=None)
-    message: str | None = Field(default=None)
+    result: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    message: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "RequestCompressFilesPD",

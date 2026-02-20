@@ -10,8 +10,8 @@ NAMESPACE = "IPC"
 class State_LogPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     level: int | None = Field(default=None)
-    timestamp: str | None = Field(default=None)
-    contents: str | None = Field(default=None)
+    timestamp: str | None = Field(json_schema_extra={"example": ""}, default=None)
+    contents: str | None = Field(json_schema_extra={"example": ""}, default=None)
 
 __all__ = [
     "State_LogPD",
