@@ -200,7 +200,7 @@ class AmrMoveService:
                 wz=model.wz
             )
 
-            return None
+            return JSONResponse(status_code=200,content=jsonable_encoder({"message": "success"}))
 
         except ServiceException as e:
             print("[moveJog] ServiceException : ", e.message, e.status_code)
