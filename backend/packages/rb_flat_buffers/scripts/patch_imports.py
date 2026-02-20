@@ -17,6 +17,16 @@ def _collect_top_namespaces(root: Path) -> list[str]:
     return sorted(tops)
 
 
+def _normalize_generated_root(root: Path) -> Path:
+    # 호출자가 .../src 를 넘기는 경우(.../src/rb_flat_buffers 기대)도 자동 보정한다.
+    if _collect_top_namespaces(root):
+        return root
+    nested = root / PREFIX
+    if nested.is_dir() and _collect_top_namespaces(nested):
+        return nested
+    return root
+
+
 def _prefix_import_lines(text: str, *, tops_alt: str) -> str:
     """
     import 문에서만:
@@ -147,8 +157,10 @@ def _read_text_with_fallback(path: Path) -> tuple[str, str]:
 
 
 def patch_generated_tree(root: Path) -> None:
+    root = _normalize_generated_root(root)
     tops = _collect_top_namespaces(root)
     if not tops:
+        print(f"[patch_imports] no namespaces found under: {root}", file=sys.stderr)
         return
     tops_alt = "|".join(re.escape(t) for t in tops)
 
@@ -176,7 +188,7 @@ def patch_generated_tree(root: Path) -> None:
 
         if new != src:
             try:
-                path.write_text(new, encoding=encoding, newline="")
+                path.write_text(new, encoding=encoding)
             except OSError as exc:
                 print(f"[patch_imports] skip unwritable file: {path} ({exc})", file=sys.stderr)
 
