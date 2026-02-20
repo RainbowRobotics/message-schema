@@ -1,8 +1,7 @@
 import asyncio
-import time
+
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
 from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
-from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
 from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
 from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
@@ -21,10 +20,11 @@ from rb_flat_buffers.SLAMNAV.ResponseMoveStop import ResponseMoveStopT
 from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
 from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
 from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
+from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.ResultMove import ResultMoveT
-from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_schemas.sdk import FlowManagerArgs
-from rb_zenoh.exeption import ZenohNoReply
+from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+from rb_zenoh.router import ZenohRouterError
 
 from ..base import RBBaseSDK
 
@@ -56,33 +56,45 @@ class RBAmrMoveSDK(RBBaseSDK):
                     if not self._is_alive:
                         break
 
-                    try:
-                        _, _, obj, _ = await self.zenoh_client.receive_one(
-                            f"amr/{robot_model}/{robot_id}/move/result", flatbuffer_obj_t=ResultMoveT, timeout=1
-                        )
-                    except ZenohNoReply:
-                        print("FLOW MANAGER SOLVER NO REPLY>>>>>>>>>", flush=True)
-                        continue
-                    except Exception as e:
-                        print("FLOW MANAGER SOLVER ERROR>>>>>>>>>", e, flush=True)
-                        raise RuntimeError(str(e)) from e
+                    # _, _, obj, _ = await self.zenoh_client.receive_one(
+                    #     f"amr/{robot_model}/{robot_id}/move/result", flatbuffer_obj_t=ResultMoveT, timeout=1
+                    # )
+                    # if obj is None:
+                    #     continue
+
+                    # print(f"FLOW MANAGER SOLVER RESULT>>>>>>>>> {obj}", flush=True)
+
+                    # if obj.get("id") != req_id:
+                    #     continue
+
+                    # if obj.get("result") == "success":
+                    #     print("FLOW MANAGER SOLVER DONE", flush=True)
+                    #     flow_manager_args.done()
+                    #     break
+                    # elif obj.get("result") == "fail" or obj.get("result") == "cancel":
+                    #     raise RuntimeError(obj.get("message"))
+
+                    _, _, obj, _ = await self.zenoh_client.receive_one(
+                        f"amr/{robot_model}/{robot_id}/moveStatus", flatbuffer_obj_t=MoveStatusT, timeout=1
+                    )
 
                     if obj is None:
                         continue
 
-                    print(f"FLOW MANAGER SOLVER RESULT>>>>>>>>> {obj}", flush=True)
-
-                    if obj.get("id") != req_id:
+                    if obj.get("moveState").get("move_id") != req_id:
                         continue
 
-                    if obj.get("result") == "success":
+                    if obj.get("moveState").get("move_result") == "success":
                         print("FLOW MANAGER SOLVER DONE", flush=True)
                         flow_manager_args.done()
                         break
-                    elif obj.get("result") == "fail" or obj.get("result") == "cancel":
-                        raise RuntimeError(obj.get("message"))
+                    elif obj.get("moveState").get("move_result") == "fail":
+                        raise RuntimeError("Move Fail")
+                    elif obj.get("moveState").get("move_result") == "cancel":
+                        raise RuntimeError("Move Cancel")
+
                 except ZenohNoReply:
-                    continue
+                    raise RuntimeError("No Reply")
                 except asyncio.CancelledError as e:
                     print(f"FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
                     break
