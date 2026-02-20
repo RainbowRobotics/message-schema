@@ -56,7 +56,7 @@ class AppSettings(BaseSettings):
     MONGO_URI: str | None = None
     MONGO_DB_NAME: str | None = "rrs"
 
-    #influxDB
+    # influxDB
     INFLUXDB_URL_DEV: str = "http://rrs-influxdb-dev:8086"
     INFLUXDB_URL_PROD: str = "http://127.0.0.1:8086"
     INFLUXDB_URL: str | None = None
@@ -111,17 +111,17 @@ def create_app(
         if not settings.no_init_db:
             await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
-        #influxdb
+        # influxdb
         try:
             if Path(settings.INFLUXDB_TOKEN_FILE).exists():
-                print(f"token file exists: {settings.INFLUXDB_TOKEN_FILE}",flush=True)
+                print(f"token file exists: {settings.INFLUXDB_TOKEN_FILE}", flush=True)
                 with open(settings.INFLUXDB_TOKEN_FILE, encoding="utf-8") as f:
                     read_token = f.read().strip()
             else:
                 read_token = settings.INFLUXDB_TOKEN
 
-            print(f"settings.INFLUXDB_TOKEN: {settings.INFLUXDB_TOKEN}",flush=True)
-            print(f"read_token: {read_token}",flush=True)
+            print(f"settings.INFLUXDB_TOKEN: {settings.INFLUXDB_TOKEN}", flush=True)
+            print(f"read_token: {read_token}", flush=True)
             await init_influxdb(app, settings.INFLUXDB_URL, read_token, settings.INFLUXDB_ORG)
         except Exception as e:
             rb_log.error(f"[InfluxDB] Initialization failed: {e}")

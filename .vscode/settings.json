@@ -92,5 +92,6 @@
   "editor.formatOnSave": true,
   "ruff.lint.enable": true,
   "editor.tabSize": 4,
-  "files.eol": "\n"
+"files.eol": "\n",
+"python-envs.pythonProjects": []
 }
