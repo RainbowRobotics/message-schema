@@ -2,6 +2,7 @@ import asyncio
 
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
 from rb_flat_buffers.SLAMNAV.MovePose import MovePoseT
+from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.RequestMoveCircular import RequestMoveCircularT
 from rb_flat_buffers.SLAMNAV.RequestMoveGoal import RequestMoveGoalT
 from rb_flat_buffers.SLAMNAV.RequestMovePause import RequestMovePauseT
@@ -20,11 +21,8 @@ from rb_flat_buffers.SLAMNAV.ResponseMoveStop import ResponseMoveStopT
 from rb_flat_buffers.SLAMNAV.ResponseMoveTarget import ResponseMoveTargetT
 from rb_flat_buffers.SLAMNAV.ResponseMoveXLinear import ResponseMoveXLinearT
 from rb_flat_buffers.SLAMNAV.ResponseMoveYLinear import ResponseMoveYLinearT
-from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
-from rb_flat_buffers.SLAMNAV.ResultMove import ResultMoveT
 from rb_schemas.sdk import FlowManagerArgs
-from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
-from rb_zenoh.router import ZenohRouterError
+from rb_zenoh.exeption import ZenohNoReply
 
 from ..base import RBBaseSDK
 
@@ -81,20 +79,22 @@ class RBAmrMoveSDK(RBBaseSDK):
                     if obj is None:
                         continue
 
-                    if obj.get("moveState").get("move_id") != req_id:
-                        continue
+                    print(f"FLOW MANAGER MOVESTATUS >>>>>>>>>>> {obj.get("moveState").get("moveId")} {req_id} {obj.get("moveState").get("moveResult")}", flush=True)
 
-                    if obj.get("moveState").get("move_result") == "success":
+                    if obj.get("moveState").get("moveId") != req_id:
+                        raise RuntimeError("Move ID Mismatch")
+
+                    if obj.get("moveState").get("moveResult") == "success":
                         print("FLOW MANAGER SOLVER DONE", flush=True)
                         flow_manager_args.done()
                         break
-                    elif obj.get("moveState").get("move_result") == "fail":
+                    elif obj.get("moveState").get("moveResult") == "fail":
                         raise RuntimeError("Move Fail")
-                    elif obj.get("moveState").get("move_result") == "cancel":
+                    elif obj.get("moveState").get("moveResult") == "cancel":
                         raise RuntimeError("Move Cancel")
 
-                except ZenohNoReply:
-                    raise RuntimeError("No Reply")
+                except ZenohNoReply as e:
+                    raise RuntimeError(str(e)) from e
                 except asyncio.CancelledError as e:
                     print(f"FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
                     break
