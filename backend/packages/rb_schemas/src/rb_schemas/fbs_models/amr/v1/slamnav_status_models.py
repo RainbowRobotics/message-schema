@@ -88,14 +88,14 @@ class StatusMapPD(BaseModel):
 
 class StatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    condition: StatusConditionPD | None = Field(default=None)
-    imu: StatusImuPD | None = Field(default=None)
-    motor: List[StatusMotorPD] = Field(default_factory=list)
-    power: StatusPowerPD | None = Field(default=None)
-    robot_state: StatusRobotStatePD | None = Field(alias="robotState", default=None)
-    robot_safety_io_state: StatusRobotSafetyIoStatePD | None = Field(alias="robotSafetyIoState", default=None)
-    setting: StatusSettingPD | None = Field(default=None)
-    map: StatusMapPD | None = Field(default=None)
+    condition: dict | None = Field(default=None)
+    imu: dict | None = Field(default=None)
+    motor: List[dict] = Field(default_factory=list)
+    power: dict | None = Field(default=None)
+    robot_state: dict | None = Field(alias="robotState", default=None)
+    robot_safety_io_state: dict | None = Field(alias="robotSafetyIoState", default=None)
+    setting: dict | None = Field(default=None)
+    map: dict | None = Field(default=None)
 
 class StatusMoveStatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

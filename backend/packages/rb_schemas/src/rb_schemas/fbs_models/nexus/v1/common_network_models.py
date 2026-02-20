@@ -79,7 +79,7 @@ class Request_Network_GetWifiListPD(BaseModel):
 
 class Response_Network_GetWifiListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    list: List[WifiPD] = Field(default_factory=list)
+    list: List[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

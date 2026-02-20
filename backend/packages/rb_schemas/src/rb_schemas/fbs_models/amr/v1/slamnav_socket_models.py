@@ -35,32 +35,25 @@ class PathPosePD(BaseModel):
 
 class Lidar2DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    points: List[Point2DPD] = Field(default_factory=list)
+    points: List[dict] = Field(default_factory=list)
+    pose: dict | None = Field(default=None)
 
 class Lidar3DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-
-class ResponseLidar3DPD(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    points: List[Point3DPD] = Field(default_factory=list)
+    points: List[dict] = Field(default_factory=list)
+    pose: dict | None = Field(default=None)
 
 class MappingCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    points: List[Point3DPD] = Field(default_factory=list)
+    points: List[dict] = Field(default_factory=list)
 
 class GlobalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    path: List[str] = Field(default_factory=list)
+    path: List[dict] = Field(default_factory=list)
 
 class LocalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    id: str | None = Field(default=None)
-    path: List[str] = Field(default_factory=list)
+    path: List[dict] = Field(default_factory=list)
 
 __all__ = [
     "Point2DPD",
