@@ -14,6 +14,7 @@ from rb_flat_buffers.IPC.Response_Get_Absolute_Value import Response_Get_Absolut
 from rb_flat_buffers.IPC.Response_Get_Relative_Value import Response_Get_Relative_ValueT
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_modules.log import rb_log
+from rb_schemas.fbs_models.manipulate.v1.func_flow_models import Request_MotionSpeedBarPD
 from rb_schemas.sdk import FlowManagerArgs
 from rb_utils.flow_manager import safe_eval_expr
 from rb_utils.parser import to_json
@@ -688,13 +689,19 @@ class RBManipulateProgramSDK(RBBaseSDK):
         *,
         robot_model: str,
         option: Literal[
-            "USER_FRAME_SELECTION", "OUT_COLLISION", "SELF_COLLISION", "FIXED_SPEED", "SHIFT"
+            "USER_FRAME_SELECTION",
+            "OUT_COLLISION",
+            "SELF_COLLISION",
+            "FIXED_SPEED",
+            "SHIFT",
+            "SPEED",
         ],
         out_collision: Request_Set_Out_Collision_ParaSchema | None = None,
         self_collision: Request_Set_Self_Collision_ParaSchema | None = None,
         user_frame_selection: Request_Set_User_Frame_SelectionSchema | None = None,
         fixed_speed: Request_Set_Fixed_Speed_ModeSchema | None = None,
         shift: Request_Set_ShiftSchema | None = None,
+        speed: Request_MotionSpeedBarPD | None = None,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
         """
@@ -707,6 +714,7 @@ class RBManipulateProgramSDK(RBBaseSDK):
             self_collision: 충돌 감지 설정
             user_frame_selection: 사용자 프레임 설정
             shift: 좌표계 시프트 설정
+            speed: 속도 조절바 설정
             flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
         """
 
@@ -766,6 +774,15 @@ class RBManipulateProgramSDK(RBBaseSDK):
                 shift_no=shift["shift_no"],
                 shift_mode=shift["shift_mode"],
                 target=shift["target"],
+            )
+
+        elif option == "SPEED":
+            if speed is None:
+                raise RuntimeError("Speed failed: speed is required")
+
+            rb_manipulate_config_sdk.call_speedbar(
+                robot_model=robot_model,
+                alpha=speed["alpha"],
             )
 
         if flow_manager_args is not None:
