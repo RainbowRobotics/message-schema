@@ -55,5 +55,14 @@
     "components": [
       "test"
     ]
+  },
+  "test1": {
+    "model": "test1",
+    "be_service": "amr",
+    "alias": "amrTest1",
+    "useCharge": false,
+    "components": [
+      "test1"
+    ]
   }
 }
