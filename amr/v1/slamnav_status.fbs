@@ -210,6 +210,8 @@ table Status {
     category    :       Data Structure
     usage       :       이동 상태
     field
+        - move_id       :       move 명령의 id ( 최근에 accept 된 명령 반환 )
+        - move_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - auto_move     :       자동 이동 상태 ( "stop" / "move" / "pause" / "error" / "not ready" / "vir" )
         - dock_move     :       도킹 이동 상태 ( "stop" )
         - jog_move      :       조그 이동 상태 ( "none" )
@@ -220,6 +222,8 @@ table Status {
         - multi_state   :       multi 상태  ( "none" / "move" / "complete" / "fail" / "obstacle" / "cancel" )
 */
 table StatusMoveState {
+    move_id: string;
+    move_result: string;
     auto_move: string;
     dock_move: string;
     jog_move: string;
