@@ -36,7 +36,7 @@ class Response_ReadPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     result: int | None = Field(default=None)
     payload_dlc: int | None = Field(alias="payloadDlc", default=None)
-    payload: dict | None = Field(default=None)
+    payload: N_32_iPD | None = Field(default=None)
 
 class Request_WritePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -46,7 +46,7 @@ class Request_WritePD(BaseModel):
     function_code: int | None = Field(alias="functionCode", default=None)
     register_addr: int | None = Field(alias="registerAddr", default=None)
     payload_dlc: int | None = Field(alias="payloadDlc", default=None)
-    payload: dict | None = Field(default=None)
+    payload: N_32_iPD | None = Field(default=None)
     timeout_ms: int | None = Field(alias="timeoutMs", default=None)
 
 class Response_WritePD(BaseModel):

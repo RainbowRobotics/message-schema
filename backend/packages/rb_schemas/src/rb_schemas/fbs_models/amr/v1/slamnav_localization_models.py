@@ -17,12 +17,12 @@ class LocalizationPosePD(BaseModel):
 class RequestLocalizationInitPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
 
 class ResponseLocalizationInitPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -33,7 +33,7 @@ class RequestLocalizationRandomInitPD(BaseModel):
 class ResponseLocalizationRandomInitPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -44,7 +44,7 @@ class RequestLocalizationAutoInitPD(BaseModel):
 class ResponseLocalizationAutoInitPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -55,7 +55,7 @@ class RequestLocalizationSemiAutoInitPD(BaseModel):
 class ResponseLocalizationSemiAutoInitPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -66,7 +66,7 @@ class RequestLocalizationStartPD(BaseModel):
 class ResponseLocalizationStartPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -77,7 +77,7 @@ class RequestLocalizationStopPD(BaseModel):
 class ResponseLocalizationStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -85,7 +85,7 @@ class ResultLocalizationPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     command: str | None = Field(default=None)
-    pose: dict | None = Field(default=None)
+    pose: LocalizationPosePD | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

@@ -21,17 +21,17 @@ class Request_Update_Step_StatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     step_id: str | None = Field(alias="stepId", default=None)
     task_id: str | None = Field(alias="taskId", default=None)
-    state: dict | None = Field(default=None)
+    state: RB_Flow_Manager_ProgramStatePD | None = Field(default=None)
     error: str | None = Field(default=None)
 
 class Request_Update_All_Step_StatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     task_id: str | None = Field(alias="taskId", default=None)
-    state: dict | None = Field(default=None)
+    state: RB_Flow_Manager_ProgramStatePD | None = Field(default=None)
 
 class Request_Update_Executor_StatePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    state: dict | None = Field(default=None)
+    state: RB_Flow_Manager_ProgramStatePD | None = Field(default=None)
     error: str | None = Field(default=None)
 
 __all__ = [

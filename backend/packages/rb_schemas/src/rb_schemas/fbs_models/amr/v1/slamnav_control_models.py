@@ -48,19 +48,19 @@ class RequestGetSafetyFlagPD(BaseModel):
 class ResponseGetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    safety_flag: List[dict] = Field(alias="safetyFlag", default_factory=list)
+    safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
 class RequestSetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    safety_flag: List[dict] = Field(alias="safetyFlag", default_factory=list)
+    safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
 
 class ResponseSetSafetyFlagPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    safety_flag: List[dict] = Field(alias="safetyFlag", default_factory=list)
+    safety_flag: List[SafetyFlagPD] = Field(alias="safetyFlag", default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -143,8 +143,8 @@ class RequestGetObsBoxPD(BaseModel):
 class ResponseGetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    min: dict | None = Field(default=None)
-    max: dict | None = Field(default=None)
+    min: ObsBoxPD | None = Field(default=None)
+    max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
@@ -152,15 +152,15 @@ class ResponseGetObsBoxPD(BaseModel):
 class RequestSetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    min: dict | None = Field(default=None)
-    max: dict | None = Field(default=None)
+    min: ObsBoxPD | None = Field(default=None)
+    max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
 
 class ResponseSetObsBoxPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    min: dict | None = Field(default=None)
-    max: dict | None = Field(default=None)
+    min: ObsBoxPD | None = Field(default=None)
+    max: ObsBoxPD | None = Field(default=None)
     range: float | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
