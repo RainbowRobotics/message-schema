@@ -19,6 +19,7 @@ status_zenoh_router = ZenohRouter()
 async def on_sub_slamnav_status(*, topic, obj):
     await amr_status_service.set_status(topic, obj)
 
+
 @status_zenoh_router.subscribe(
     "amr/*/*/moveStatus",
     flatbuffer_obj_t=MoveStatusT,

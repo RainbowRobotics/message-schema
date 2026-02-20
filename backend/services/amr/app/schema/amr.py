@@ -16,6 +16,7 @@ class AmrResponseStatusEnum(str, Enum):
     DONE    = "done"
     UNKNOWN = "unknown"
 
+
 class AmrResponseResultEnum(str, Enum):
     """
     [AMR 응답 결과값 정의]

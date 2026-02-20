@@ -44,7 +44,7 @@ class SafetyFlag(BaseModel):
 class RBAmrControlSDK(RBBaseSDK):
     """Rainbow Robotics AMR Control SDK"""
 
-    async def control_get_safety_field(self, robot_model: str, req_id: str) -> ResponseGetSafetyFieldT:
+    async def control_get_safety_field(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyFieldT:
         """
         [안전 필드 조회]
         - ResponseGetSafetyFieldT 객체 반환
@@ -56,7 +56,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/getSafetyField",
+            f"{robot_model}/{robot_id}/control/getSafetyField",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetSafetyFieldT,
             flatbuffer_buf_size=125,
@@ -68,7 +68,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_safety_field(self, robot_model: str, req_id: str, safety_field: int) -> ResponseSetSafetyFieldT:
+    async def control_set_safety_field(self, robot_model: str, robot_id: str, req_id: str, safety_field: int) -> ResponseSetSafetyFieldT:
         """
         [안전 필드 설정]
         - safety_field: 안전 필드 번호
@@ -82,7 +82,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/setSafetyField",
+            f"{robot_model}/{robot_id}/control/setSafetyField",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetSafetyFieldT,
             flatbuffer_buf_size=125,
@@ -94,7 +94,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_get_safety_flag(self, robot_model: str, req_id: str) -> ResponseGetSafetyFlagT:
+    async def control_get_safety_flag(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyFlagT:
         """
         [안전 플래그 조회]
         - ResponseGetSafetyFlagT 객체 반환
@@ -106,7 +106,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/getSafetyFlag",
+            f"{robot_model}/{robot_id}/control/getSafetyFlag",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetSafetyFlagT,
             flatbuffer_buf_size=125,
@@ -118,7 +118,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_safety_flag(self, robot_model: str, req_id: str, reset_flag: list[SafetyFlag]) -> ResponseSetSafetyFlagT:
+    async def control_set_safety_flag(self, robot_model: str, robot_id: str, req_id: str, reset_flag: list[SafetyFlag]) -> ResponseSetSafetyFlagT:
         """
         [안전 플래그 설정]
         - reset_flag: 안전 플래그 목록
@@ -140,7 +140,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/setSafetyFlag",
+            f"{robot_model}/{robot_id}/control/setSafetyFlag",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetSafetyFlagT,
             flatbuffer_buf_size=125,
@@ -152,7 +152,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_get_safety_io(self, robot_model: str, req_id: str) -> ResponseGetSafetyIoT:
+    async def control_get_safety_io(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyIoT:
         """
         [안전 IO 조회]
         - ResponseGetSafetyIoT 객체 반환
@@ -163,7 +163,7 @@ class RBAmrControlSDK(RBBaseSDK):
         req.id = req_id
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/getSafetyIo",
+            f"{robot_model}/{robot_id}/control/getSafetyIo",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetSafetyIoT,
             flatbuffer_buf_size=125,
@@ -175,7 +175,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_safety_io(self, robot_model: str, req_id: str, mcu0_din: list[bool], mcu1_din: list[bool]) -> ResponseSetSafetyIoT:
+    async def control_set_safety_io(self, robot_model: str, robot_id: str, req_id: str, mcu0_din: list[bool], mcu1_din: list[bool]) -> ResponseSetSafetyIoT:
         """
         [안전 IO 설정]
         - mcu0_din: MCU0 Digital Input (8bit)
@@ -191,7 +191,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/setSafetyIo",
+            f"{robot_model}/{robot_id}/control/setSafetyIo",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetSafetyIoT,
             flatbuffer_buf_size=125,
@@ -203,7 +203,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_dock(self, robot_model: str, req_id: str) -> ResponseDockT:
+    async def control_dock(self, robot_model: str, robot_id: str, req_id: str) -> ResponseDockT:
         """
         [도킹 제어]
         - ResponseDockT 객체 반환
@@ -215,7 +215,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/dock",
+            f"{robot_model}/{robot_id}/control/dock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseDockT,
             flatbuffer_buf_size=125,
@@ -227,7 +227,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_undock(self, robot_model: str, req_id: str) -> ResponseUndockT:
+    async def control_undock(self, robot_model: str, robot_id: str, req_id: str) -> ResponseUndockT:
         """
         [도킹 제어]
         - ResponseUndockT 객체 반환
@@ -239,7 +239,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/undock",
+            f"{robot_model}/{robot_id}/control/undock",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseUndockT,
             flatbuffer_buf_size=125,
@@ -251,7 +251,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_dock_stop(self, robot_model: str, req_id: str) -> ResponseDockStopT:
+    async def control_dock_stop(self, robot_model: str, robot_id: str, req_id: str) -> ResponseDockStopT:
         """
         [도킹 제어]
         - ResponsedockStopT 객체 반환
@@ -263,7 +263,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/dockStop",
+            f"{robot_model}/{robot_id}/control/dockStop",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseDockStopT,
             flatbuffer_buf_size=125,
@@ -275,7 +275,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_charge_trigger(self, robot_model: str, req_id: str, switch: bool) -> ResponseChargeTriggerT:
+    async def control_charge_trigger(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseChargeTriggerT:
         """
         [충전 트리거 제어]
         - switch: 충전 트리거 켜기/끄기 (True: 켜기, False: 끄기)
@@ -288,7 +288,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/chargeTrigger",
+            f"{robot_model}/{robot_id}/control/chargeTrigger",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseChargeTriggerT,
             flatbuffer_buf_size=125,
@@ -300,7 +300,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_get_obs_box(self, robot_model: str, req_id: str) -> ResponseGetObsBoxT:
+    async def control_get_obs_box(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetObsBoxT:
         """
         [장애물 박스 조회]
         - ResponseGetObsBoxT 객체 반환
@@ -312,7 +312,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/getObsBox",
+            f"{robot_model}/{robot_id}/control/getObsBox",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseGetObsBoxT,
             flatbuffer_buf_size=125,
@@ -324,7 +324,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_obs_box(self, robot_model: str, req_id: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> ResponseGetObsBoxT:
+    async def control_set_obs_box(self, robot_model: str, robot_id: str, req_id: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> ResponseGetObsBoxT:
         """
         [장애물 박스 설정]
         - min_x: 최소 X 좌표
@@ -354,7 +354,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/setObsBox",
+            f"{robot_model}/{robot_id}/control/setObsBox",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetObsBoxT,
             flatbuffer_buf_size=125,
@@ -366,7 +366,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_led(self, robot_model: str, req_id: str, switch: bool, color: str) -> ResponseSetLedT:
+    async def control_set_led(self, robot_model: str, robot_id: str, req_id: str, switch: bool, color: str) -> ResponseSetLedT:
         """
         [LED 제어]
         - req_id: 요청 ID
@@ -383,7 +383,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/led",
+            f"{robot_model}/{robot_id}/control/led",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetLedT,
             flatbuffer_buf_size=125,
@@ -395,7 +395,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_motor(self, robot_model: str, req_id: str, switch: bool) -> ResponseSetMotorT:
+    async def control_set_motor(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseSetMotorT:
         """
         [모터 제어]
         - req_id: 요청 ID
@@ -410,7 +410,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/motor",
+            f"{robot_model}/{robot_id}/control/motor",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetMotorT,
             flatbuffer_buf_size=125,
@@ -422,7 +422,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_set_jog(self, robot_model: str, req_id: str, switch: bool) -> ResponseSetJogT:
+    async def control_set_jog(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseSetJogT:
         """
         [조이스틱 모드 제어]
         - req_id: 요청 ID
@@ -437,7 +437,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/jog",
+            f"{robot_model}/{robot_id}/control/jog",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseSetJogT,
             flatbuffer_buf_size=125,
@@ -449,7 +449,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_stream_frequency(self, robot_model: str, req_id: str, target: str, frequency: int) -> ResponseStreamFrequencyT:
+    async def control_stream_frequency(self, robot_model: str, robot_id: str, req_id: str, target: str, frequency: int) -> ResponseStreamFrequencyT:
         """
         [스트림 주파수 제어]
         - req_id: 요청 ID
@@ -466,7 +466,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
-            f"{robot_model}/control/streamFrequency",
+            f"{robot_model}/{robot_id}/control/streamFrequency",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=ResponseStreamFrequencyT,
             flatbuffer_buf_size=125,
@@ -477,7 +477,7 @@ class RBAmrControlSDK(RBBaseSDK):
             raise RuntimeError("Call Control Motor failed: obj_payload is None")
 
         return result["obj_payload"]
-    # async def control_sensor_mode(self, robot_model: str, req_id: str, command: str, control: bool, frequency: int) -> ResponseSensorModeT:
+    # async def control_sensor_mode(self, robot_model: str, robot_id: str, req_id: str, command: str, control: bool, frequency: int) -> ResponseSensorModeT:
     #     """
     #     [센서 모드 제어]
     #     - req_id: 요청 ID
@@ -496,7 +496,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
     #     # 2) 요청 전송
     #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/control/sensor",
+    #         f"{robot_model}/{robot_id}/control/sensor",
     #         flatbuffer_req_obj=req,
     #         flatbuffer_res_T_class=ResponseSensorModeT,
     #         flatbuffer_buf_size=125,
@@ -508,7 +508,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
     #     return result["obj_payload"]
 
-    # async def control_path_mode(self, robot_model: str, req_id: str, control: bool, frequency: int) -> ResponsePathModeT:
+    # async def control_path_mode(self, robot_model: str, robot_id: str, req_id: str, control: bool, frequency: int) -> ResponsePathModeT:
     #     """
     #     [경로 모드 제어]
     #     - req_id: 요청 ID
@@ -525,7 +525,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
     #     # 2) 요청 전송
     #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/control/path",
+    #         f"{robot_model}/{robot_id}/control/path",
     #         flatbuffer_req_obj=req,
     #         flatbuffer_res_T_class=ResponsePathModeT,
     #         flatbuffer_buf_size=125,
@@ -537,7 +537,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
     #     return result["obj_payload"]
 
-    # async def control_detect_marker(self, robot_model: str, req_id: str, command: str, camera_number: int, camera_serial: str, marker_size: float) -> ResponseDetectMarkerT:
+    # async def control_detect_marker(self, robot_model: str, robot_id: str, req_id: str, command: str, camera_number: int, camera_serial: str, marker_size: float) -> ResponseDetectMarkerT:
     #     """
     #     [마커 감지 제어]
     #     - req_id: 요청 ID
@@ -558,7 +558,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
     #     # 2) 요청 전송
     #     result = self.zenoh_client.query_one(
-    #         f"{robot_model}/control/detectMarker",
+    #         f"{robot_model}/{robot_id}/control/detectMarker",
     #         flatbuffer_req_obj=req,
     #         flatbuffer_res_T_class=ResponseDetectMarkerT,
     #         flatbuffer_buf_size=125,

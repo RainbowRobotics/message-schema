@@ -3,7 +3,7 @@ import os
 import socketio
 
 _REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
-_SERVICE_SIDS: dict[str, str | None] = {"manipulate": None, "mobility": None, "sensor": None}
+_SERVICE_SIDS: dict[str, str | None] = {"manipulate": None, "amr": None, "sensor": None}
 
 _mgr = socketio.AsyncRedisManager(_REDIS_URL)
 

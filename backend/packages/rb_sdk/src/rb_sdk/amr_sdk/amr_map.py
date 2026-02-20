@@ -25,7 +25,8 @@ from rb_flat_buffers.SLAMNAV.ResponseMappingStop import ResponseMappingStopT
 from rb_flat_buffers.SLAMNAV.ResponseSetMapCloud import ResponseSetMapCloudT
 from rb_flat_buffers.SLAMNAV.ResponseSetMapTopology import ResponseSetMapTopologyT
 from rb_flat_buffers.SLAMNAV.ResponseTopoLoad import ResponseTopoLoadT
-
+from rb_flat_buffers.SLAMNAV.RequestMappingCloudReload import RequestMappingCloudReloadT
+from rb_flat_buffers.SLAMNAV.ResponseMappingCloudReload import ResponseMappingCloudReloadT
 from ..base import RBBaseSDK
 
 
@@ -335,6 +336,32 @@ class RBAmrMapSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
+    async def mapping_reload(self, robot_model: str, robot_id: str, req_id: str) -> ResponseMappingCloudReloadT:
+        """
+        [Mapping Reload 전송]
+        - robot_model: 요청을 보낼 로봇 모델
+        - robot_id: 로봇 아이디
+        - req_id: 요청 ID
+        - ResponseMappingCloudReloadT 객체 반환
+        """
+        # 1) RequestMappingCloudReloadT 객체 생성
+        req = RequestMappingCloudReloadT()
+        req.id = req_id
+
+        # 2) 요청 전송
+        result = self.zenoh_client.query_one(
+            f"{robot_model}/{robot_id}/mapping/reload",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=ResponseMappingCloudReloadT,
+            flatbuffer_buf_size=125,
+        )
+
+        # 3) 결과 처리 및 반환
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Mapping Reload failed: obj_payload is None")
+
+        return result["obj_payload"]
+
     async def map_load(self, robot_model: str, robot_id: str, req_id: str, map_name: str) -> ResponseMapLoadT:
         """
         [Map Load 전송]
@@ -349,6 +376,7 @@ class RBAmrMapSDK(RBBaseSDK):
         req = RequestMapLoadT()
         req.id = req_id
         req.mapName = map_name
+
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
             f"{robot_model}/{robot_id}/map/loadMap",
@@ -358,7 +386,10 @@ class RBAmrMapSDK(RBBaseSDK):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Map Load failed: obj_payload is None")
+
+        return result["obj_payload"]
 
     async def topo_reload(self, robot_model: str, robot_id: str, req_id: str) -> ResponseTopoLoadT:
         """
@@ -382,4 +413,7 @@ class RBAmrMapSDK(RBBaseSDK):
         )
 
         # 3) 결과 처리 및 반환
-        return result["dict_payload"]
+        if result["obj_payload"] is None:
+            raise RuntimeError("Call Topo Load failed: obj_payload is None")
+
+        return result["obj_payload"]
