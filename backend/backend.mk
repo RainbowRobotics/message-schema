@@ -68,13 +68,13 @@ backend.preview: ## Backend 운영 환경 실행
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성
 	@if command -v flatc >/dev/null 2>&1; then \
-		$(PY) "${WORKDIR}/../scripts/backend/generate_flatbuffers.py" \
+		python "${WORKDIR}/../scripts/backend/generate_flatbuffers.py" \
 		  --flatc flatc \
 		  --schemas-root "${WORKDIR}/../schemas" \
 		  --out-dir "${WORKDIR}/packages/rb_flat_buffers/src/rb_flat_buffers"; \
-		$(PY) "${WORKDIR}/packages/rb_flat_buffers/scripts/patch_imports.py" \
+		python "${WORKDIR}/packages/rb_flat_buffers/scripts/patch_imports.py" \
 		  "${WORKDIR}/packages/rb_flat_buffers/src/rb_flat_buffers"; \
-		$(PY) "${WORKDIR}/../scripts/backend/fbs_to_pydantic.py"; \
+		python "${WORKDIR}/../scripts/backend/fbs_to_pydantic.py"; \
 	else \
 		echo "‼️ flatc를 설치해주세요!"; \
 		exit 1; \
