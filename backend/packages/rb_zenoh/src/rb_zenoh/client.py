@@ -642,7 +642,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 1,
         flatbuffer_req_obj: FBPackable,
         flatbuffer_res_T_class: FBRootReadable[T],
         flatbuffer_buf_size: int,
@@ -656,7 +656,21 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 1,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
+    ) -> Iterator[QueryResult[T]]: ...
+
+    @overload
+    def query(
+        self,
+        keyexpr: str,
+        *,
+        timeout: float = 1,
         flatbuffer_req_obj: None = None,
         flatbuffer_res_T_class: None = None,
         flatbuffer_buf_size: int | None = None,
@@ -669,7 +683,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 1,
         flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
@@ -809,7 +823,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
         flatbuffer_req_obj: FBPackable,
         flatbuffer_res_T_class: FBRootReadable[T],
         flatbuffer_buf_size: int,
@@ -823,7 +837,21 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
+    ) -> QueryResult[T]: ...
+
+    @overload
+    def query_one(
+        self,
+        keyexpr: str,
+        *,
+        timeout: float = 0.3,
         flatbuffer_req_obj: None = None,
         flatbuffer_res_T_class: None = None,
         flatbuffer_buf_size: int | None = None,
@@ -836,29 +864,26 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
         flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
         pydantic_res_model: type[TResModel] | None = None,
-    ):
+    ) -> QueryResult[T] | QueryResult[None]:
         try:
-            return (
-                next(
-                    self.query(
-                        keyexpr,
-                        flatbuffer_req_obj=flatbuffer_req_obj,
-                        flatbuffer_res_T_class=flatbuffer_res_T_class,
-                        flatbuffer_buf_size=flatbuffer_buf_size,
-                        timeout=timeout,
-                        target=target,
-                        payload=payload,
-                        pydantic_res_model=pydantic_res_model,
-                    )
+            return next(
+                self.query(
+                    keyexpr,
+                    flatbuffer_req_obj=flatbuffer_req_obj,
+                    flatbuffer_res_T_class=flatbuffer_res_T_class,
+                    flatbuffer_buf_size=flatbuffer_buf_size,
+                    timeout=timeout,
+                    target=target,
+                    payload=payload,
+                    pydantic_res_model=pydantic_res_model,
                 )
-                or {}
             )
         except StopIteration:
             raise ZenohNoReply(timeout) from None
@@ -868,7 +893,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
         flatbuffer_req_obj: FBPackable,
         flatbuffer_res_T_class: FBRootReadable[T],
         flatbuffer_buf_size: int,
@@ -882,7 +907,21 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
+        flatbuffer_req_obj: None = None,
+        flatbuffer_res_T_class: FBRootReadable[T],
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+        pydantic_res_model: type[TResModel] | None = None,
+    ) -> list[QueryResult[T]]: ...
+
+    @overload
+    def query_all(
+        self,
+        keyexpr: str,
+        *,
+        timeout: float = 0.3,
         flatbuffer_req_obj: None = None,
         flatbuffer_res_T_class: None = None,
         flatbuffer_buf_size: int | None = None,
@@ -895,7 +934,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout: int = 0.3,
+        timeout: float = 0.3,
         flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_res_T_class: FBRootReadable[T] | None = None,
         flatbuffer_buf_size: int | None = None,

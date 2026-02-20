@@ -40,7 +40,7 @@ def _drop_missing_module_imports(root: Path, text: str) -> str:
     """
 
     patt = re.compile(
-        rf"^from\s+{re.escape(PREFIX)}\.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\s+import\s+[^\n]*\n",
+        rf"^from\s+{re.escape(PREFIX)}\.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\s+import\s+[^\r\n]*\r?\n?",
         re.M,
     )
 
@@ -136,6 +136,16 @@ def _fix_pack_create_mismatch(text: str) -> str:
     )
 
 
+def _read_text_with_fallback(path: Path) -> tuple[str, str]:
+    # flatc 산출물은 대부분 utf-8이지만, 윈도우 환경에서는 BOM/로컬 인코딩 케이스가 섞일 수 있다.
+    for encoding in ("utf-8", "utf-8-sig", "cp949"):
+        try:
+            return path.read_text(encoding=encoding), encoding
+        except UnicodeDecodeError:
+            continue
+    raise UnicodeDecodeError("unknown", b"", 0, 1, f"unable to decode: {path}")
+
+
 def patch_generated_tree(root: Path) -> None:
     tops = _collect_top_namespaces(root)
     if not tops:
@@ -146,7 +156,11 @@ def patch_generated_tree(root: Path) -> None:
         if path.suffix not in {".py", ".pyi"}:
             continue
 
-        src = path.read_text(encoding="utf-8")
+        try:
+            src, encoding = _read_text_with_fallback(path)
+        except (OSError, UnicodeError) as exc:
+            print(f"[patch_imports] skip unreadable file: {path} ({exc})", file=sys.stderr)
+            continue
 
         # 1) import 라인에서만 프리픽스 부착
         new = _prefix_import_lines(src, tops_alt=tops_alt)
@@ -161,7 +175,10 @@ def patch_generated_tree(root: Path) -> None:
         new = _fix_pack_create_mismatch(new)
 
         if new != src:
-            path.write_text(new, encoding="utf-8")
+            try:
+                path.write_text(new, encoding=encoding, newline="")
+            except OSError as exc:
+                print(f"[patch_imports] skip unwritable file: {path} ({exc})", file=sys.stderr)
 
 
 def main() -> None:

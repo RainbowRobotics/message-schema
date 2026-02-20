@@ -18,11 +18,18 @@ from rb_utils.flow_manager import safe_eval_expr
 from rb_utils.parser import to_json
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError
 
+from rb_sdk.manipulate_sdk.manipulate_config import RBManipulateConfigSDK
 from rb_sdk.manipulate_sdk.manipulate_get_data import RBManipulateGetDataSDK
 
 from ..base import RBBaseSDK
 from .manipulate_io import RBManipulateIOSDK
 from .manipulate_smbc import RBManipulateSMBCSdk
+from .schema.manipulate_config_schema import (
+    Request_Set_Fixed_Speed_ModeSchema,
+    Request_Set_Out_Collision_ParaSchema,
+    Request_Set_Self_Collision_ParaSchema,
+    Request_Set_User_Frame_SelectionSchema,
+)
 from .schema.manipulate_io_schema import FlangeDoutArg
 from .schema.manipulate_move_schema import MoveInputTargetSchema
 from .schema.manipulate_program_schema import (
@@ -33,7 +40,7 @@ from .schema.manipulate_program_schema import (
 rb_manipulate_get_data_sdk = RBManipulateGetDataSDK()
 rb_manipulate_io_sdk = RBManipulateIOSDK()
 rb_manipulate_smbc_sdk = RBManipulateSMBCSdk()
-
+rb_manipulate_config_sdk = RBManipulateConfigSDK()
 class RBManipulateProgramSDK(RBBaseSDK):
     """Rainbow Robotics Manipulate Program SDK"""
 
@@ -630,6 +637,79 @@ class RBManipulateProgramSDK(RBBaseSDK):
                     })
             else:
                 raise RuntimeError("Modbus Client failed: modbus_read or modbus_write is required")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    def setting(
+        self,
+        *,
+        robot_model: str,
+        option: Literal["USER_FRAME_SELECTION", "OUT_COLLISION", "SELF_COLLISION", "FIXED_SPEED"],
+        out_collision: Request_Set_Out_Collision_ParaSchema | None = None,
+        self_collision: Request_Set_Self_Collision_ParaSchema | None = None,
+        user_frame_selection: Request_Set_User_Frame_SelectionSchema | None = None,
+        fixed_speed: Request_Set_Fixed_Speed_ModeSchema | None = None,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """
+        [Setting 호출 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            option: 설정 옵션
+            out_collision: 충돌 감지 설정
+            self_collision: 충돌 감지 설정
+            user_frame_selection: 사용자 프레임 설정
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+
+        print(f"option: {option}", flush=True)
+
+        if option == "USER_FRAME_SELECTION":
+            if user_frame_selection is None:
+                raise RuntimeError("User Frame Selection failed: user_frame_selection is required")
+
+            rb_manipulate_config_sdk.set_userframe_num(
+                robot_model=robot_model,
+                target_user_frame_num=user_frame_selection["target_user_frame_num"],
+            )
+
+        elif option == "OUT_COLLISION":
+            if out_collision is None:
+                raise RuntimeError("Out Collision failed: out_collision is required")
+
+            print(f"out_collision: {out_collision}", flush=True)
+
+            rb_manipulate_config_sdk.set_out_collision_para(
+                robot_model=robot_model,
+                onoff=out_collision["onoff"],
+                react_mode=out_collision["react_mode"],
+                threshold=out_collision["threshold"],
+            )
+        elif option == "SELF_COLLISION":
+            if self_collision is None:
+                raise RuntimeError("Self Collision failed: self_collision is required")
+
+            rb_manipulate_config_sdk.set_self_collision_para(
+                robot_model=robot_model,
+                mode=self_collision["mode"],
+                dist_int=self_collision["dist_int"],
+                dist_ext=self_collision["dist_ext"],
+            )
+
+        elif option == "FIXED_SPEED":
+            if fixed_speed is None:
+                raise RuntimeError("Fixed Speed failed: fixed_speed is required")
+
+            rb_manipulate_config_sdk.set_fixed_speed(
+                robot_model=robot_model,
+                target_move=fixed_speed["target_move"],
+                vel_option=fixed_speed["vel_option"],
+                vel_parameter=fixed_speed["vel_parameter"],
+                acc_option=fixed_speed["acc_option"],
+                acc_parameter=fixed_speed["acc_parameter"],
+            )
 
         if flow_manager_args is not None:
             flow_manager_args.done()

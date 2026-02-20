@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SMBC"
 
 class N_32_iPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    i: list[int] = Field(default_factory=list, min_length=32, max_length=32)
+    i: List[int] = Field(default_factory=list, min_length=32, max_length=32)
 
 class Request_CallWhoAmIPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

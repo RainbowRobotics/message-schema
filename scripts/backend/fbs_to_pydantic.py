@@ -170,9 +170,9 @@ def convert_type(fbs_type: str) -> tuple[str, str | None]:
         base, fixed_len = vec
         py_base = SCALAR_MAP.get(base, pd_name(base.split(".")[-1]))
         if fixed_len is None:
-            return f"list[{py_base}]", None
+            return f"List[{py_base}]", None
         return (
-            f"list[{py_base}]",
+            f"List[{py_base}]",
             f"Field(default_factory=list, min_length={fixed_len}, max_length={fixed_len})",
         )
 
@@ -185,7 +185,7 @@ def convert_type(fbs_type: str) -> tuple[str, str | None]:
 
 def convert_default(py_type: str, raw_default: str | None) -> str:
     if raw_default is None:
-        if py_type.startswith("list["):
+        if py_type.startswith("List["):
             return "Field(default_factory=list)"
         if py_type in {"int", "float", "bool", "str"}:
             return "None"
@@ -211,6 +211,7 @@ def render_module(unit: SchemaUnit) -> str:
     lines.append("from __future__ import annotations")
     lines.append("")
     lines.append("from enum import Enum")
+    lines.append("from typing import List")
     lines.append("from pydantic import BaseModel, ConfigDict, Field")
     lines.append("")
 

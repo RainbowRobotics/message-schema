@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 from .common_struct_models import *  # noqa: F401,F403
@@ -84,7 +85,7 @@ class Response_CallConfigRobotArmPD(BaseModel):
 
 class ST_Box_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=9, max_length=9)
+    f: List[float] = Field(default_factory=list, min_length=9, max_length=9)
 
 class ST_Tool_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

@@ -72,6 +72,63 @@ class RBBaseSDK:
 
     _lock: ClassVar[threading.Lock] = threading.Lock()
 
+    @staticmethod
+    def _is_client_session_alive(client: ZenohClient | None) -> bool:
+        """Zenoh 세션 객체의 기본 생존 상태를 점검한다."""
+        if client is None:
+            return False
+
+        session = getattr(client, "session", None)
+        if session is None:
+            return False
+
+        # zenoh 바인딩 버전에 따라 closed/is_closed 형태가 다를 수 있다.
+        for attr_name in ("is_closed", "closed"):
+            attr = getattr(session, attr_name, None)
+            if attr is None:
+                continue
+            try:
+                value = attr() if callable(attr) else attr
+            except Exception:
+                continue
+            if isinstance(value, bool):
+                return not value
+
+        return True
+
+    @classmethod
+    def _refresh_zenoh_client_for_pid(cls, pid: int, *, force: bool = False) -> ZenohClient:
+        """
+        PID 단위 ZenohClient를 재생성/재연결한다.
+        기존 세션이 죽었거나 라우터 재기동 후 stale 상태일 때 사용.
+        """
+        with cls._lock:
+            current = cls._zenoh_clients.get(pid)
+            if (not force) and cls._is_client_session_alive(current):
+                return current  # pyright: ignore[reportReturnType]
+
+            if current is not None:
+                with contextlib.suppress(Exception):
+                    current.close()
+
+            new_client = ZenohClient()
+            if not cls._is_client_session_alive(new_client):
+                new_client.connect()
+
+            cls._zenoh_clients[pid] = new_client
+            return new_client
+
+    def _ensure_zenoh_client_alive(self, *, force_reconnect: bool = False) -> ZenohClient:
+        """현재 SDK 인스턴스가 살아있는 ZenohClient를 참조하도록 보장한다."""
+        pid = getattr(self, "_pid", os.getpid())
+        client = getattr(self, "zenoh_client", None)
+        if (not force_reconnect) and self._is_client_session_alive(client):
+            return client  # pyright: ignore[reportReturnType]
+
+        refreshed = self._refresh_zenoh_client_for_pid(pid, force=force_reconnect)
+        self.zenoh_client = refreshed
+        return refreshed
+
     # 공통 예외 핸들링: 서브클래스 메서드 자동 래핑
     def __init_subclass__(cls, **kwargs):
         """RBBaseSDK를 상속한 모든 클래스의 public instance method에
@@ -97,6 +154,8 @@ class RBBaseSDK:
 
         async def _async_wrapper(*args, **kwargs):
             try:
+                if args and isinstance(args[0], RBBaseSDK):
+                    args[0]._ensure_zenoh_client_alive()
                 return await fn(*args, **kwargs)
             except FlowControlException as e:
                 raise e
@@ -104,6 +163,16 @@ class RBBaseSDK:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
+                if args and isinstance(args[0], RBBaseSDK):
+                    sdk_self = args[0]
+                    print(f"[{fn.__name__}] zenoh error: {e} -> reconnect and retry once", flush=True)
+                    sdk_self._ensure_zenoh_client_alive(force_reconnect=True)
+                    try:
+                        return await fn(*args, **kwargs)
+                    except (ZenohNoReply, ZenohTransportError) as retry_e:
+                        print(f"[{fn.__name__}] zenoh retry failed: {retry_e}", flush=True)
+                        raise RuntimeError(f"[{fn.__name__}] {retry_e}") from retry_e
+
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
@@ -115,6 +184,8 @@ class RBBaseSDK:
 
         def _sync_wrapper(*args, **kwargs):
             try:
+                if args and isinstance(args[0], RBBaseSDK):
+                    args[0]._ensure_zenoh_client_alive()
                 return fn(*args, **kwargs)
             except FlowControlException as e:
                 raise e
@@ -122,6 +193,16 @@ class RBBaseSDK:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
+                if args and isinstance(args[0], RBBaseSDK):
+                    sdk_self = args[0]
+                    print(f"[{fn.__name__}] zenoh error: {e} -> reconnect and retry once", flush=True)
+                    sdk_self._ensure_zenoh_client_alive(force_reconnect=True)
+                    try:
+                        return fn(*args, **kwargs)
+                    except (ZenohNoReply, ZenohTransportError) as retry_e:
+                        print(f"[{fn.__name__}] zenoh retry failed: {retry_e}", flush=True)
+                        raise RuntimeError(f"[{fn.__name__}] {retry_e}") from retry_e
+
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
                 raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
@@ -159,6 +240,8 @@ class RBBaseSDK:
 
 
                 instance.zenoh_client = RBBaseSDK._zenoh_clients[pid]
+                if not RBBaseSDK._is_client_session_alive(instance.zenoh_client):
+                    instance.zenoh_client = RBBaseSDK._refresh_zenoh_client_for_pid(pid)
 
             return RBBaseSDK._instances[key]
 
@@ -181,6 +264,7 @@ class RBBaseSDK:
         # 공유 ZenohClient 사용
         with RBBaseSDK._lock:
             self.zenoh_client = RBBaseSDK._zenoh_clients[self._pid]
+        self._ensure_zenoh_client_alive()
 
         self.robot_uids = self._get_robot_uids(server=server) if server is not None else {}
 

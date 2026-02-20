@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SLAMNAV"
@@ -22,7 +23,7 @@ class Point3DPD(BaseModel):
 class Lidar2DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    points: list[Point2DPD] = Field(default_factory=list)
+    points: List[Point2DPD] = Field(default_factory=list)
 
 class RequestLidar3DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -31,22 +32,22 @@ class RequestLidar3DPD(BaseModel):
 class ResponseLidar3DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    points: list[Point3DPD] = Field(default_factory=list)
+    points: List[Point3DPD] = Field(default_factory=list)
 
 class MappingCloudPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    points: list[Point3DPD] = Field(default_factory=list)
+    points: List[Point3DPD] = Field(default_factory=list)
 
 class GlobalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: List[str] = Field(default_factory=list)
 
 class LocalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: List[str] = Field(default_factory=list)
 
 __all__ = [
     "Point2DPD",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "IPC"
@@ -19,7 +20,7 @@ class NetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     device: str | None = Field(default=None)
     dhcp: bool | None = Field(default=None)
-    dns: list[str] = Field(default_factory=list)
+    dns: List[str] = Field(default_factory=list)
     ssid: str | None = Field(default=None)
     address: str | None = Field(default=None)
     netmask: str | None = Field(default=None)
@@ -43,7 +44,7 @@ class Request_Network_SetNetworkPD(BaseModel):
     address: str | None = Field(default=None)
     netmask: str | None = Field(default=None)
     gateway: str | None = Field(default=None)
-    dns: list[str] = Field(default_factory=list)
+    dns: List[str] = Field(default_factory=list)
 
 class Response_Network_SetNetworkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -52,7 +53,7 @@ class Response_Network_SetNetworkPD(BaseModel):
     address: str | None = Field(default=None)
     netmask: str | None = Field(default=None)
     gateway: str | None = Field(default=None)
-    dns: list[str] = Field(default_factory=list)
+    dns: List[str] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -67,7 +68,7 @@ class Response_Network_ConnectWifiPD(BaseModel):
     address: str | None = Field(default=None)
     gateway: str | None = Field(default=None)
     netmask: str | None = Field(default=None)
-    dns: list[str] = Field(default_factory=list)
+    dns: List[str] = Field(default_factory=list)
     signal: int | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
@@ -78,7 +79,7 @@ class Request_Network_GetWifiListPD(BaseModel):
 
 class Response_Network_GetWifiListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    list: list[WifiPD] = Field(default_factory=list)
+    list: List[WifiPD] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

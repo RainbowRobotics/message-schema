@@ -24,9 +24,9 @@ class ST_Config_UserFramePD(BaseModel):
 class ST_Tool_ParaPD(BaseModel):
     toolName: str
     comMass: float
-    comOffset: list[float]
-    tcpOffset: list[float]
-    tcpEuler: list[float]
+    comOffset: Vec3fPD
+    tcpOffset: Vec3fPD
+    tcpEuler: Vec3fPD
     boxType: int
     boxParameter: ST_Box_ParaPD
 
@@ -34,16 +34,16 @@ class ST_Tool_ParaPD(BaseModel):
 class ST_Config_AreaPD(BaseModel):
     areaName: str
     areaType: int
-    areaOffset: list[float]
-    areaEuler: list[float]
-    areaPara: list[float]
+    areaOffset: Vec3fPD
+    areaEuler: Vec3fPD
+    areaPara: Vec3fPD
 
 
 class Response_CallConfigRobotArmPD(BaseModel):
     outCollOnoff: int
     outCollReact: int
     outCollLimit: float
-    directTeachingSensitivity: list[float]
+    directTeachingSensitivity: NJointfPD
     selfCollMode: int
     selfCollDistanceInter: float
     selfCollDistanceExter: float

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SLAMNAV"
@@ -20,8 +21,8 @@ class MapInfoPD(BaseModel):
     created_at: str | None = Field(alias="createdAt", default=None)
     updated_at: str | None = Field(alias="updatedAt", default=None)
     map_type: str | None = Field(alias="mapType", default=None)
-    cloud_info: list[MapFileInfoPD] = Field(alias="cloudInfo", default_factory=list)
-    topo_info: list[MapFileInfoPD] = Field(alias="topoInfo", default_factory=list)
+    cloud_info: List[MapFileInfoPD] = Field(alias="cloudInfo", default_factory=list)
+    topo_info: List[MapFileInfoPD] = Field(alias="topoInfo", default_factory=list)
 
 class NodePosePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -50,7 +51,7 @@ class NodePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     context: str | None = Field(default=None)
     id: str | None = Field(default=None)
-    links: list[LinkPD] = Field(default_factory=list)
+    links: List[LinkPD] = Field(default_factory=list)
     name: str | None = Field(default=None)
     pose: NodePosePD | None = Field(default=None)
     role: str | None = Field(default=None)
@@ -94,7 +95,7 @@ class RequestMapListPD(BaseModel):
 class ResponseMapListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    list: list[MapInfoPD] = Field(default_factory=list)
+    list: List[MapInfoPD] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
@@ -132,7 +133,7 @@ class ResponseGetMapCloudPD(BaseModel):
     id: str | None = Field(default=None)
     map_name: str | None = Field(alias="mapName", default=None)
     file_name: str | None = Field(alias="fileName", default=None)
-    data: list[float] = Field(default_factory=list)
+    data: List[float] = Field(default_factory=list)
     column_count: uint32PD | None = Field(alias="columnCount", default=None)
     row_count: uint32PD | None = Field(alias="rowCount", default=None)
     result: str | None = Field(default=None)
@@ -143,7 +144,7 @@ class RequestSetMapCloudPD(BaseModel):
     id: str | None = Field(default=None)
     map_name: str | None = Field(alias="mapName", default=None)
     file_name: str | None = Field(alias="fileName", default=None)
-    data: list[float] = Field(default_factory=list)
+    data: List[float] = Field(default_factory=list)
     column_count: uint32PD | None = Field(alias="columnCount", default=None)
     row_count: uint32PD | None = Field(alias="rowCount", default=None)
 
@@ -160,7 +161,7 @@ class RequestSetMapTopologyPD(BaseModel):
     id: str | None = Field(default=None)
     map_name: str | None = Field(alias="mapName", default=None)
     file_name: str | None = Field(alias="fileName", default=None)
-    data: list[NodePD] = Field(default_factory=list)
+    data: List[NodePD] = Field(default_factory=list)
 
 class ResponseSetMapTopologyPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -194,7 +195,7 @@ class ResponseGetMapTopologyPD(BaseModel):
     search_text: str | None = Field(alias="searchText", default=None)
     sort_option: str | None = Field(alias="sortOption", default=None)
     sort_direction: str | None = Field(alias="sortDirection", default=None)
-    data: list[NodePD] = Field(default_factory=list)
+    data: List[NodePD] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 

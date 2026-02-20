@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 from .flow_manager_models import *  # noqa: F401,F403
@@ -24,8 +25,8 @@ class RB_Program_Task_StatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     task_id: str | None = Field(alias="taskId", default=None)
     program_id: str | None = Field(alias="programId", default=None)
-    sync_task_ids: list[str] = Field(alias="syncTaskIds", default_factory=list)
-    node_path: list[str] = Field(alias="nodePath", default_factory=list)
+    sync_task_ids: List[str] = Field(alias="syncTaskIds", default_factory=list)
+    node_path: List[str] = Field(alias="nodePath", default_factory=list)
     status: str | None = Field(default=None)
     offset: int | None = Field(default=None)
 
@@ -33,8 +34,8 @@ class RB_Program_Task_CheckpointPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     task_id: str | None = Field(alias="taskId", default=None)
     program_id: str | None = Field(alias="programId", default=None)
-    sync_task_ids: list[str] = Field(alias="syncTaskIds", default_factory=list)
-    node_path: list[str] = Field(alias="nodePath", default_factory=list)
+    sync_task_ids: List[str] = Field(alias="syncTaskIds", default_factory=list)
+    node_path: List[str] = Field(alias="nodePath", default_factory=list)
     offset: int | None = Field(default=None)
     status: str | None = Field(default=None)
 
