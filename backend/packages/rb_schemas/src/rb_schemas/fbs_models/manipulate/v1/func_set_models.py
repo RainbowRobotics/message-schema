@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 from .common_struct_models import *  # noqa: F401,F403
@@ -21,7 +22,7 @@ class Request_Set_ShiftPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     shift_no: int | None = Field(alias="shiftNo", default=None)
     shift_mode: int | None = Field(alias="shiftMode", default=None)
-    target: dict | None = Field(default=None)
+    target: MoveInput_TargetPD | None = Field(default=None)
 
 class Request_Set_Out_Collision_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -38,8 +39,8 @@ class Request_Set_Self_Collision_ParaPD(BaseModel):
 class Request_Set_Joint_ImpedancePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     onoff: int | None = Field(default=None)
-    stiffness: dict | None = Field(default=None)
-    torquelimit: dict | None = Field(default=None)
+    stiffness: N_JOINT_fPD | None = Field(default=None)
+    torquelimit: N_JOINT_fPD | None = Field(default=None)
 
 class Request_Set_Free_DrivePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -81,6 +82,14 @@ class Request_Set_Master_ModePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     mode: int | None = Field(default=None)
 
+class Request_Set_Fixed_Speed_ModePD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    target_move: int | None = Field(alias="targetMove", default=None)
+    vel_option: int | None = Field(alias="velOption", default=None)
+    vel_parameter: float | None = Field(alias="velParameter", default=None)
+    acc_option: int | None = Field(alias="accOption", default=None)
+    acc_parameter: float | None = Field(alias="accParameter", default=None)
+
 __all__ = [
     "Request_Set_Tool_ListPD",
     "Request_Set_User_FramePD",
@@ -93,4 +102,5 @@ __all__ = [
     "Request_Set_User_Frame_TCPPD",
     "Request_Set_User_Frame_3PointsPD",
     "Request_Set_Master_ModePD",
+    "Request_Set_Fixed_Speed_ModePD",
 ]

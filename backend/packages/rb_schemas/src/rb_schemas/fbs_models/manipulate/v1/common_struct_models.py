@@ -2,61 +2,62 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "IPC"
 
 class N_INPUT_fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=7, max_length=7)
+    f: List[float] = Field(default_factory=list, min_length=7, max_length=7)
 
 class N_JOINT_fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=7, max_length=7)
+    f: List[float] = Field(default_factory=list, min_length=7, max_length=7)
 
 class N_CARTE_fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=7, max_length=7)
+    f: List[float] = Field(default_factory=list, min_length=7, max_length=7)
 
 class N_DIN_uPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    u: list[int] = Field(default_factory=list, min_length=16, max_length=16)
+    u: List[int] = Field(default_factory=list, min_length=16, max_length=16)
 
 class N_DOUT_uPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    u: list[int] = Field(default_factory=list, min_length=16, max_length=16)
+    u: List[int] = Field(default_factory=list, min_length=16, max_length=16)
 
 class N_DIN_bPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    b: list[int] = Field(default_factory=list, min_length=16, max_length=16)
+    b: List[int] = Field(default_factory=list, min_length=16, max_length=16)
 
 class N_DOUT_bPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    b: list[int] = Field(default_factory=list, min_length=16, max_length=16)
+    b: List[int] = Field(default_factory=list, min_length=16, max_length=16)
 
 class N_AIN_fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=4, max_length=4)
+    f: List[float] = Field(default_factory=list, min_length=4, max_length=4)
 
 class N_AOUT_fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    f: list[float] = Field(default_factory=list, min_length=4, max_length=4)
+    f: List[float] = Field(default_factory=list, min_length=4, max_length=4)
 
 class Vec3fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    v: list[float] = Field(default_factory=list, min_length=3, max_length=3)
+    v: List[float] = Field(default_factory=list, min_length=3, max_length=3)
 
 class Mat3fPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    m: list[float] = Field(default_factory=list, min_length=9, max_length=9)
+    m: List[float] = Field(default_factory=list, min_length=9, max_length=9)
 
 class FloatArray32PD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    arr: list[float] = Field(default_factory=list, min_length=32, max_length=32)
+    arr: List[float] = Field(default_factory=list, min_length=32, max_length=32)
 
 class MoveInput_TargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    tar_values: dict | None = Field(alias="tarValues", default=None)
+    tar_values: N_INPUT_fPD | None = Field(alias="tarValues", default=None)
     tar_frame: int | None = Field(alias="tarFrame", default=None)
     tar_unit: int | None = Field(alias="tarUnit", default=None)
 

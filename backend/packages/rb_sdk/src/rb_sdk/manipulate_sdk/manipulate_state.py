@@ -12,7 +12,13 @@ class RBManipulateStateSDK(RBBaseSDK):
 
 
 
-    def call_powercontrol(self, *, robot_model: str, power_option: int, flow_manager_args: FlowManagerArgs | None = None) -> Response_FunctionsT:
+    def call_powercontrol(
+        self,
+        *,
+        robot_model: str,
+        power_option: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [Power Control 호출 함수]
 
@@ -23,7 +29,14 @@ class RBManipulateStateSDK(RBBaseSDK):
         """
         req = Request_PowerControlT()
         req.powerOption = power_option
-        res = self.zenoh_client.query_one(f"{robot_model}/call_powercontrol", flatbuffer_req_obj=req, flatbuffer_res_T_class=Response_FunctionsT, flatbuffer_buf_size=8)
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_powercontrol",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+            timeout=10
+        )
 
         if res["obj_payload"] is None:
             raise RuntimeError("Call Power Control failed: obj_payload is None")
@@ -33,7 +46,13 @@ class RBManipulateStateSDK(RBBaseSDK):
 
         return res["obj_payload"]
 
-    def call_servocontrol(self, *, robot_model: str, servo_option: int, flow_manager_args: FlowManagerArgs | None = None) -> Response_FunctionsT:
+    def call_servocontrol(
+        self,
+        *,
+        robot_model: str,
+        servo_option: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [Servo Control 호출 함수]
 
@@ -44,7 +63,14 @@ class RBManipulateStateSDK(RBBaseSDK):
         """
         req = Request_ServoControlT()
         req.servoOption = servo_option
-        res = self.zenoh_client.query_one(f"{robot_model}/call_servocontrol", flatbuffer_req_obj=req, flatbuffer_res_T_class=Response_FunctionsT, flatbuffer_buf_size=8)
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_servocontrol",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+            timeout=10
+        )
 
         if res["obj_payload"] is None:
             raise RuntimeError("Call Servo Control failed: obj_payload is None")
@@ -54,7 +80,13 @@ class RBManipulateStateSDK(RBBaseSDK):
 
         return res["obj_payload"]
 
-    def call_referencecontrol(self, *, robot_model: str, reference_option: int, flow_manager_args: FlowManagerArgs | None = None) -> Response_FunctionsT:
+    def call_referencecontrol(
+        self,
+        *,
+        robot_model: str,
+        reference_option: int,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [Reference Control 호출 함수]
 
@@ -65,7 +97,13 @@ class RBManipulateStateSDK(RBBaseSDK):
         """
         req = Request_ReferenceControlT()
         req.refcontrolOption = reference_option
-        res = self.zenoh_client.query_one(f"{robot_model}/call_referencecontrol", flatbuffer_req_obj=req, flatbuffer_res_T_class=Response_FunctionsT, flatbuffer_buf_size=8)
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/call_referencecontrol",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+            timeout=10
+        )
 
         if res["obj_payload"] is None:
             raise RuntimeError("Call Reference Control failed: obj_payload is None")

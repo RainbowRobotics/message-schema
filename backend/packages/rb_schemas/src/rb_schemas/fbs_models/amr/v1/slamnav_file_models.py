@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SLAMNAV"
@@ -9,13 +10,13 @@ NAMESPACE = "SLAMNAV"
 class RequestCompressFilesPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     base_dir: str | None = Field(alias="baseDir", default=None)
-    source_names: list[str] = Field(alias="sourceNames", default_factory=list)
+    source_names: List[str] = Field(alias="sourceNames", default_factory=list)
     output_name: str | None = Field(alias="outputName", default=None)
 
 class ResponseCompressFilesPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     base_dir: str | None = Field(alias="baseDir", default=None)
-    source_names: list[str] = Field(alias="sourceNames", default_factory=list)
+    source_names: List[str] = Field(alias="sourceNames", default_factory=list)
     output_name: str | None = Field(alias="outputName", default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
@@ -70,7 +71,7 @@ class ResponseGetFileChunkPD(BaseModel):
     chunk_index: int | None = Field(alias="chunkIndex", default=None)
     total_chunks: int | None = Field(alias="totalChunks", default=None)
     offset: int | None = Field(default=None)
-    data: list[int] = Field(default_factory=list)
+    data: List[int] = Field(default_factory=list)
     eof: bool | None = Field(default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SLAMNAV"
@@ -9,27 +10,27 @@ NAMESPACE = "SLAMNAV"
 class RequestMultiPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: List[str] = Field(default_factory=list)
 
 class ResponseMultiPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    path: list[str] = Field(default_factory=list)
+    path: List[str] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
 class RequestMultiVobsPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    vobs_robots: list[str] = Field(alias="vobsRobots", default_factory=list)
-    vobs_closures: list[str] = Field(alias="vobsClosures", default_factory=list)
+    vobs_robots: List[str] = Field(alias="vobsRobots", default_factory=list)
+    vobs_closures: List[str] = Field(alias="vobsClosures", default_factory=list)
     is_vobs_c: str | None = Field(alias="isVobsC", default=None)
 
 class ResponseMultiVobsPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    vobs_robots: list[str] = Field(alias="vobsRobots", default_factory=list)
-    vobs_closures: list[str] = Field(alias="vobsClosures", default_factory=list)
+    vobs_robots: List[str] = Field(alias="vobsRobots", default_factory=list)
+    vobs_closures: List[str] = Field(alias="vobsClosures", default_factory=list)
     is_vobs_c: str | None = Field(alias="isVobsC", default=None)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)

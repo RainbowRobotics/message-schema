@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "SLAMNAV"
@@ -34,6 +35,7 @@ class PathPosePD(BaseModel):
 
 class Lidar2DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+<<<<<<< HEAD
     points: list[dict] = Field(default_factory=list)
     pose: dict | None = Field(default=None)
 
@@ -53,6 +55,27 @@ class GlobalPathPD(BaseModel):
 class LocalPathPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     path: list[dict] = Field(default_factory=list)
+=======
+    points: List[Point2DPD] = Field(default_factory=list)
+    pose: PointPosePD | None = Field(default=None)
+
+class Lidar3DPD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    points: List[Point3DPD] = Field(default_factory=list)
+    pose: PointPosePD | None = Field(default=None)
+
+class MappingCloudPD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    points: List[Point3DPD] = Field(default_factory=list)
+
+class GlobalPathPD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    path: List[PathPosePD] = Field(default_factory=list)
+
+class LocalPathPD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    path: List[PathPosePD] = Field(default_factory=list)
+>>>>>>> 0935b61252259a42fd7f12bed74d1107ace1f7e3
 
 __all__ = [
     "Point2DPD",

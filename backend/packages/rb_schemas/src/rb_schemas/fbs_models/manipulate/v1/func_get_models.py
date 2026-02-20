@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 from .common_struct_models import *  # noqa: F401,F403
@@ -19,29 +20,29 @@ class Response_Get_Core_DataPD(BaseModel):
     valid: int | None = Field(default=None)
     type: int | None = Field(default=None)
     payload_num: float | None = Field(alias="payloadNum", default=None)
-    payload_arr: dict | None = Field(alias="payloadArr", default=None)
+    payload_arr: FloatArray32PD | None = Field(alias="payloadArr", default=None)
     payload_str: str | None = Field(alias="payloadStr", default=None)
 
 class Request_Get_Relative_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    relative_value: dict | None = Field(alias="relativeValue", default=None)
-    reference_value: dict | None = Field(alias="referenceValue", default=None)
+    relative_value: MoveInput_TargetPD | None = Field(alias="relativeValue", default=None)
+    reference_value: MoveInput_TargetPD | None = Field(alias="referenceValue", default=None)
     move_type: int | None = Field(alias="moveType", default=None)
 
 class Response_Get_Relative_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     calculated_result: int | None = Field(alias="calculatedResult", default=None)
-    calculated_value: dict | None = Field(alias="calculatedValue", default=None)
+    calculated_value: MoveInput_TargetPD | None = Field(alias="calculatedValue", default=None)
 
 class Request_Get_Absolute_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    reference_value: dict | None = Field(alias="referenceValue", default=None)
+    reference_value: MoveInput_TargetPD | None = Field(alias="referenceValue", default=None)
     move_type: int | None = Field(alias="moveType", default=None)
 
 class Response_Get_Absolute_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     calculated_result: int | None = Field(alias="calculatedResult", default=None)
-    calculated_value: dict | None = Field(alias="calculatedValue", default=None)
+    calculated_value: MoveInput_TargetPD | None = Field(alias="calculatedValue", default=None)
 
 class Request_Get_Tcp_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -49,7 +50,7 @@ class Request_Get_Tcp_ValuePD(BaseModel):
 
 class Response_Get_Tcp_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    carte_info: dict | None = Field(alias="carteInfo", default=None)
+    carte_info: N_CARTE_fPD | None = Field(alias="carteInfo", default=None)
 
 class Request_Get_Joint_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -57,7 +58,7 @@ class Request_Get_Joint_ValuePD(BaseModel):
 
 class Response_Get_Joint_ValuePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    joint_info: dict | None = Field(alias="jointInfo", default=None)
+    joint_info: N_JOINT_fPD | None = Field(alias="jointInfo", default=None)
 
 __all__ = [
     "Request_Get_Core_DataPD",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 NAMESPACE = "IPC"
@@ -17,14 +18,14 @@ class FileMetaPD(BaseModel):
     mime: str | None = Field(default=None)
     chunk_size: int | None = Field(alias="chunkSize", default=None)
     total_chunks: int | None = Field(alias="totalChunks", default=None)
-    sha256: list[int] = Field(default_factory=list)
+    sha256: List[int] = Field(default_factory=list)
 
 class FileChunkPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     session: str | None = Field(default=None)
     index: int | None = Field(default=None)
     offset: int | None = Field(default=None)
-    data: list[int] = Field(default_factory=list)
+    data: List[int] = Field(default_factory=list)
 
 class FileAckPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -39,7 +40,7 @@ class FileRequestPD(BaseModel):
 
 class FileMessagePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    payload: dict | None = Field(default=None)
+    payload: FilePayloadPD | None = Field(default=None)
 
 __all__ = [
     "FilePayloadPD",
