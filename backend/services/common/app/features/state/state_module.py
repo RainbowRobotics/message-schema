@@ -171,11 +171,12 @@ class StateService:
                     if obj is None:
                         continue
 
-                    print("obj>>>", core_sw["sw_name"], obj,flush=True)
-
                     if obj.get("robotState").get("power") is False:
                         core_sw["connected"] = "POWER_OFF"
-                    elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock") is True:
+                    elif (
+                        obj.get("robotState").get("charge") != "none"
+                        or obj.get("robotState").get("dock") is True
+                    ):
                         core_sw["connected"] = "CHARGING"
                     elif obj.get("map").get("mapStatus") != "loaded":
                         core_sw["connected"] = "MAP_NOT_LOADED"
@@ -283,7 +284,10 @@ class StateService:
 
         executor_states = program_service.script_executor.get_all_states()
 
-        is_running = any(state["state"] != RB_Flow_Manager_ProgramState.IDLE for state in executor_states.values())
+        is_running = any(
+            state["state"] != RB_Flow_Manager_ProgramState.IDLE
+            for state in executor_states.values()
+        )
 
         message_dict = t_to_dict(message)
 
@@ -294,12 +298,7 @@ class StateService:
         fire_and_log(socket_client.emit("state_message", message_dict))
 
         if is_running and (message["type"] == 1 or message["type"] == 2):
-            asyncio.create_task(
-                asyncio.to_thread(
-                    program_service.script_executor.stop_all
-                )
-            )
-
+            asyncio.create_task(asyncio.to_thread(program_service.script_executor.stop_all))
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: float | None = 0.5

@@ -1,5 +1,7 @@
 from typing import TypedDict
 
+from rb_sdk.manipulate_sdk.schema.manipulate_move_schema import MoveInputTargetSchema
+
 
 class Request_Save_Tool_ParameterSchema(TypedDict):
     tool_no: int
@@ -25,6 +27,7 @@ class Request_Save_Tool_ParameterSchema(TypedDict):
     box_para_7: float
     box_para_8: float
 
+
 class Request_Save_User_Frame_ParameterSchema(TypedDict):
     userf_no: int
     userf_name: str
@@ -35,6 +38,7 @@ class Request_Save_User_Frame_ParameterSchema(TypedDict):
     userf_ry: float
     userf_rz: float
 
+
 class Request_Set_User_Frame_6DofSchema(TypedDict):
     user_frame_num: int
     setting_option: int
@@ -44,6 +48,7 @@ class Request_Set_User_Frame_6DofSchema(TypedDict):
     target_rx: float
     target_ry: float
     target_rz: float
+
 
 class Request_Set_User_Frame_3PointsSchema(TypedDict):
     user_frame_num: int
@@ -59,6 +64,7 @@ class Request_Set_User_Frame_3PointsSchema(TypedDict):
     point_3_y: float
     point_3_z: float
 
+
 class Request_Save_Area_ParameterSchema(TypedDict):
     area_no: int
     area_name: str
@@ -73,18 +79,22 @@ class Request_Save_Area_ParameterSchema(TypedDict):
     area_para_1: float
     area_para_2: float
 
+
 class Request_Set_Out_Collision_ParaSchema(TypedDict):
     onoff: int
     react_mode: int
     threshold: float
+
 
 class Request_Set_Self_Collision_ParaSchema(TypedDict):
     mode: int
     dist_int: float
     dist_ext: float
 
+
 class Request_Set_User_Frame_SelectionSchema(TypedDict):
     target_user_frame_num: int
+
 
 class Request_Set_Fixed_Speed_ModeSchema(TypedDict):
     target_move: int
@@ -92,3 +102,9 @@ class Request_Set_Fixed_Speed_ModeSchema(TypedDict):
     vel_parameter: float
     acc_option: int
     acc_parameter: float
+
+
+class Request_Set_ShiftSchema(TypedDict):
+    shift_no: int
+    shift_mode: int
+    target: MoveInputTargetSchema

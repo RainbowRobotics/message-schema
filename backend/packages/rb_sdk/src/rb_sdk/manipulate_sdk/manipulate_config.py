@@ -1,3 +1,4 @@
+from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
 from rb_flat_buffers.IPC.Request_CallConfigControlBox import Request_CallConfigControlBoxT
 from rb_flat_buffers.IPC.Request_CallConfigRobotArm import Request_CallConfigRobotArmT
@@ -16,6 +17,7 @@ from rb_flat_buffers.IPC.Request_Set_Fixed_Speed_Mode import Request_Set_Fixed_S
 from rb_flat_buffers.IPC.Request_Set_Master_Mode import Request_Set_Master_ModeT
 from rb_flat_buffers.IPC.Request_Set_Out_Collision_Para import Request_Set_Out_Collision_ParaT
 from rb_flat_buffers.IPC.Request_Set_Self_Collision_Para import Request_Set_Self_Collision_ParaT
+from rb_flat_buffers.IPC.Request_Set_Shift import Request_Set_ShiftT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
 from rb_flat_buffers.IPC.Request_Set_User_Frame import Request_Set_User_FrameT
 from rb_flat_buffers.IPC.Request_Set_User_Frame_3Points import Request_Set_User_Frame_3PointsT
@@ -35,6 +37,7 @@ from .schema.manipulate_config_schema import (
     Request_Set_User_Frame_3PointsSchema,
     Request_Set_User_Frame_6DofSchema,
 )
+from .schema.manipulate_move_schema import MoveInputTargetSchema
 
 
 class RBManipulateConfigSDK(RBBaseSDK):
@@ -300,7 +303,6 @@ class RBManipulateConfigSDK(RBBaseSDK):
 
         return res["obj_payload"]
 
-
     def set_userframe_num(
         self,
         *,
@@ -425,7 +427,7 @@ class RBManipulateConfigSDK(RBBaseSDK):
         setting_option: int,
         flow_manager_args: FlowManagerArgs | None = None,
     ):
-        """ [Set User Frame TCP 호출 함수]
+        """[Set User Frame TCP 호출 함수]
 
         Args:
             robot_model: 로봇 모델명
@@ -452,7 +454,6 @@ class RBManipulateConfigSDK(RBBaseSDK):
             flow_manager_args.done()
 
         return res["obj_payload"]
-
 
     def set_userframe_3points(
         self,
@@ -814,6 +815,54 @@ class RBManipulateConfigSDK(RBBaseSDK):
 
         if res["obj_payload"] is None:
             raise RuntimeError("Set Fixed Speed failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+        return res["obj_payload"]
+
+    def set_shift(
+        self,
+        *,
+        robot_model: str,
+        shift_no: int,
+        shift_mode: int,
+        target: MoveInputTargetSchema,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
+        """
+        [Set Shift 호출 함수]
+
+        Args:
+            robot_model: 로봇 모델명
+            shift_no: 시프트 번호
+            shift_mode: 시프트 모드 (0: Off, 1: On)
+            target: 시프트 타겟 정보
+            flow_manager_args: RB PFM을 쓸때 전달된 Flow Manager 인자 (done 콜백 등)
+        """
+        req = Request_Set_ShiftT()
+        req.shiftNo = shift_no
+        req.shiftMode = shift_mode
+
+        req.target = MoveInput_TargetT()
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        ni = N_JOINT_fT()
+        ni.f = [float(x) for x in target["tar_values"]]
+
+        req.target.tarValues = ni
+
+        res = self.zenoh_client.query_one(
+            f"{robot_model}/set_shift",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+            timeout=3.0,
+        )
+
+        if res["obj_payload"] is None:
+            raise RuntimeError("Set Shift failed: obj_payload is None")
 
         if flow_manager_args is not None:
             flow_manager_args.done()
