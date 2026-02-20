@@ -1,4 +1,4 @@
-import time
+import contextlib
 from collections.abc import MutableMapping
 from multiprocessing.managers import DictProxy, ListProxy
 from typing import Any, Literal
@@ -35,37 +35,15 @@ class Zenoh_Controller(BaseController):
     def on_init(self, state_dicts):
         self._state_dicts = state_dicts
 
-        # 이미 생성되어 있으면 재사용
+        # on_init은 가볍게 유지: 여기서 전체 task 상태 publish를 돌리면
+        # start 진입 전 지연이 커지므로 실제 상태 전파는 on_start/on_* 이벤트에 맡긴다.
         if self._zenoh_client is None:
             self._zenoh_client = ZenohClient()
+            return
 
-            if self._zenoh_client is None:
-                raise RuntimeError("Zenoh client not initialized")
-
-            # 세션 대기를 비동기적으로 처리 (블로킹 최소화)
-            # 세션이 없어도 publish는 내부 큐에 쌓여서 나중에 전송됨
-            start_time = time.time()
-
-            while self._zenoh_client.session is None:
-                # 0.5초만 기다리고 진행 (3초 → 0.5초)
-                if time.time() - start_time > 0.5:
-                    print("[WARNING] Zenoh session not ready, continuing anyway", flush=True)
-                    break
-                time.sleep(0.01)  # 100ms → 10ms로 단축
-
-        # 초기 상태 업데이트 시도 (실패해도 계속 진행)
-        for task_id in self._state_dicts:
-            try:
-                self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
-            except (ZenohNoReply, ZenohReplyError) as e:
-                rb_log.warning(f"initial state update skipped: {e}")
-            except RuntimeError as e:
-                rb_log.warning(f"initial state update skipped: {e}")
-            except ValueError as e:
-                rb_log.warning(f"initial state update skipped: {e}")
-            except TypeError as e:
-                # 초기화 단계에서는 에러 무시
-                rb_log.warning(f"initial state update skipped: {e}")
+        if self._zenoh_client.session is None:
+            with contextlib.suppress(Exception):
+                self._zenoh_client.connect()
 
     def on_start(self, task_id: str) -> None:
         is_sub_task = self._state_dicts.get(task_id, {}).get("parent_process_id") is not None
@@ -77,7 +55,7 @@ class Zenoh_Controller(BaseController):
                 "rrs/program/at_start", flatbuffer_req_obj=req, flatbuffer_buf_size=8
             )
 
-        self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.RUNNING)
+        self.update_step_state("", task_id, RB_Flow_Manager_ProgramState.WAITING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_stop(self, task_id: str, step_id: str) -> None:
@@ -192,7 +170,10 @@ class Zenoh_Controller(BaseController):
             )
 
     def on_close(self) -> None:
-        pass
+        # ZenohClient는 PID 단위 싱글톤이라 여기서 close하면
+        # 같은 프로세스의 다른 모듈 라우터/클라이언트까지 함께 끊긴다.
+        # 컨트롤러 참조만 해제하고 실제 close는 프로세스 종료 훅에서 처리한다.
+        self._zenoh_client = None
 
     def on_all_complete(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.IDLE)
@@ -221,10 +202,9 @@ class Zenoh_Controller(BaseController):
                 req.state = state
                 req.error = error
 
-                if step_id != "":
-                    self._zenoh_client.publish(
-                        "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
-                    )
+                self._zenoh_client.publish(
+                    "rrs/step/update_state", flatbuffer_req_obj=req, flatbuffer_buf_size=256
+                )
         except Exception as e:
             rb_log.error(f"Error updating step state: {e}")
             raise

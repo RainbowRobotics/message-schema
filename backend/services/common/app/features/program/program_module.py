@@ -643,7 +643,7 @@ class ProgramService(BaseService):
             fire_and_log(
                 socket_client.emit(
                     f"program/task/{task_id}/state", {
-                        "state": execute_state.get("state"),
+                        "state": state,
                         "taskId": task_id,
                         "robotModel": execute_state.get("robot_model"),
                         "stepMode": execute_state.get("step_mode"),
@@ -653,20 +653,21 @@ class ProgramService(BaseService):
 
 
 
-        fire_and_log(
-            socket_client.emit(
-                f"program/task/{task_id}/update_state",
-                {
-                    "stepId": step_id,
-                    "state": state,
-                    "error": error_value,
-                },
-            ),
-            name="emit_step_update_state",
-        )
+        if step_id != "":
+            fire_and_log(
+                socket_client.emit(
+                    f"program/task/{task_id}/update_state",
+                    {
+                        "stepId": step_id,
+                        "state": state,
+                        "error": error_value,
+                    },
+                ),
+                name="emit_step_update_state",
+            )
 
-        if not ObjectId.is_valid(step_id):
-            return
+            if not ObjectId.is_valid(step_id):
+                return
 
         # visited = set()
 

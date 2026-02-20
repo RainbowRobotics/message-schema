@@ -64,6 +64,19 @@ class BaseService:
             except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
                 raise
+            except RuntimeError as e:
+                cause = e.__cause__ or e.__context__
+                if isinstance(cause, ZenohNoReply):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohNoReply(cause.timeout_ms) from e
+                if isinstance(cause, ZenohReplyError):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohReplyError(str(cause), attachment=cause.attachment) from e
+                if isinstance(cause, ZenohTransportError):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohTransportError(str(cause)) from e
+                rb_log.error(f"[{fn.__name__}] runtime error: {e}")
+                raise
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
                 raise
@@ -79,6 +92,19 @@ class BaseService:
                 raise
             except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
+                raise
+            except RuntimeError as e:
+                cause = e.__cause__ or e.__context__
+                if isinstance(cause, ZenohNoReply):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohNoReply(cause.timeout_ms) from e
+                if isinstance(cause, ZenohReplyError):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohReplyError(str(cause), attachment=cause.attachment) from e
+                if isinstance(cause, ZenohTransportError):
+                    rb_log.error(f"[{fn.__name__}] zenoh error: {cause}")
+                    raise ZenohTransportError(str(cause)) from e
+                rb_log.error(f"[{fn.__name__}] runtime error: {e}")
                 raise
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
