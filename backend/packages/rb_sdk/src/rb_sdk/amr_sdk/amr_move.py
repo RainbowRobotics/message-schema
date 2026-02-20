@@ -1,4 +1,3 @@
-
 import asyncio
 import time
 from rb_flat_buffers.SLAMNAV.MoveJog import MoveJogT
@@ -33,7 +32,14 @@ from ..base import RBBaseSDK
 class RBAmrMoveSDK(RBBaseSDK):
     """Rainbow Robotics AMR Move SDK"""
 
-    async def _move_flow_manager_solver(self, *, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None):
+    async def _move_flow_manager_solver(
+        self,
+        *,
+        robot_model: str,
+        robot_id: str,
+        req_id: str,
+        flow_manager_args: FlowManagerArgs | None = None,
+    ):
         """
         [Move 관련 함수에서 사용되는 flow manager 처리 함수]
 
@@ -77,7 +83,8 @@ class RBAmrMoveSDK(RBBaseSDK):
                         raise RuntimeError(obj.get("message"))
                 except ZenohNoReply:
                     continue
-                except asyncio.CancelledError:
+                except asyncio.CancelledError as e:
+                    print(f"FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
                     break
                 except Exception as e:
                     print(f"FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
@@ -90,11 +97,11 @@ class RBAmrMoveSDK(RBBaseSDK):
         robot_model: str,
         robot_id: str,
         req_id: str,
-        goal_id: str | None ,
+        goal_id: str | None,
         goal_name: str | None,
         method: str = "pp",
         preset: int = 0,
-        flow_manager_args: FlowManagerArgs | None = None
+        flow_manager_args: FlowManagerArgs | None = None,
     ) -> ResponseMoveGoalT:
         """
         [목표 위치로 이동]
@@ -124,7 +131,7 @@ class RBAmrMoveSDK(RBBaseSDK):
         )
 
         # 3) 결과 처리 및 반환
-        if result["obj_payload"] is None:
+        if result.get("obj_payload") is None:
             raise RuntimeError("Call Move Target failed: obj_payload is None")
 
         if flow_manager_args is not None:
@@ -137,7 +144,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
@@ -188,7 +195,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
@@ -342,7 +349,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
@@ -382,7 +389,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
@@ -423,7 +430,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
@@ -462,7 +469,7 @@ class RBAmrMoveSDK(RBBaseSDK):
                     robot_model=robot_model,
                     robot_id=robot_id,
                     req_id=req_id,
-                    flow_manager_args=flow_manager_args
+                    flow_manager_args=flow_manager_args,
                 )
             )
 
