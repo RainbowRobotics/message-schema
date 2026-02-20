@@ -20,12 +20,25 @@ class Point3DPD(BaseModel):
     z: float | None = Field(default=None)
     intensity: float | None = Field(default=None)
 
+class PointPosePD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    x: float | None = Field(default=None)
+    y: float | None = Field(default=None)
+    z: float | None = Field(default=None)
+    rz: float | None = Field(default=None)
+
+class PathPosePD(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    x: float | None = Field(default=None)
+    y: float | None = Field(default=None)
+    rz: float | None = Field(default=None)
+
 class Lidar2DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     points: List[Point2DPD] = Field(default_factory=list)
 
-class RequestLidar3DPD(BaseModel):
+class Lidar3DPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
 
@@ -52,9 +65,10 @@ class LocalPathPD(BaseModel):
 __all__ = [
     "Point2DPD",
     "Point3DPD",
+    "PointPosePD",
+    "PathPosePD",
     "Lidar2DPD",
-    "RequestLidar3DPD",
-    "ResponseLidar3DPD",
+    "Lidar3DPD",
     "MappingCloudPD",
     "GlobalPathPD",
     "LocalPathPD",

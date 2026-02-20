@@ -102,7 +102,6 @@ class ConfigService(BaseService):
 
         return {"speedbar": self._min_speedbar}
 
-
     async def repeat_get_all_speedbar(self):
         """
         Repeat get all speedbar

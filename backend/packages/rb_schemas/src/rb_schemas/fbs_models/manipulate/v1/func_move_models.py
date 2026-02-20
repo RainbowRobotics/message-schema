@@ -12,11 +12,11 @@ NAMESPACE = "IPC"
 
 class Request_Move_SmoothJogJPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
 
 class Request_Move_SmoothJogLPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
 
 class Request_Move_SmoothJogStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -24,23 +24,23 @@ class Request_Move_SmoothJogStopPD(BaseModel):
 
 class Request_Move_TickJogJPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_TickJogLPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_ApproachJPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_ApproachLPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_ApproachStopPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -48,13 +48,13 @@ class Request_Move_ApproachStopPD(BaseModel):
 
 class Request_Move_JPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_LPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
 
 class Request_Move_JB_CLRPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -62,9 +62,9 @@ class Request_Move_JB_CLRPD(BaseModel):
 
 class Request_Move_JB_ADDPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
-    type: MoveInput_TypePD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
+    type: dict | None = Field(default=None)
 
 class Request_Move_JB_RUNPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -76,9 +76,9 @@ class Request_Move_LB_CLRPD(BaseModel):
 
 class Request_Move_LB_ADDPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
-    type: MoveInput_TypePD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
+    type: dict | None = Field(default=None)
 
 class Request_Move_LB_RUNPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -90,9 +90,9 @@ class Request_Move_XB_CLRPD(BaseModel):
 
 class Request_Move_XB_ADDPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
-    speed: MoveInput_SpeedPD | None = Field(default=None)
-    type: MoveInput_TypePD | None = Field(default=None)
+    target: dict | None = Field(default=None)
+    speed: dict | None = Field(default=None)
+    type: dict | None = Field(default=None)
     method: int | None = Field(default=None)
 
 class Request_Move_XB_RUNPD(BaseModel):
@@ -101,7 +101,7 @@ class Request_Move_XB_RUNPD(BaseModel):
 
 class Request_Servo_JPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
     t1: float | None = Field(default=None)
     t2: float | None = Field(default=None)
     gain: float | None = Field(default=None)
@@ -109,7 +109,7 @@ class Request_Servo_JPD(BaseModel):
 
 class Request_Servo_LPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    target: MoveInput_TargetPD | None = Field(default=None)
+    target: dict | None = Field(default=None)
     t1: float | None = Field(default=None)
     t2: float | None = Field(default=None)
     gain: float | None = Field(default=None)

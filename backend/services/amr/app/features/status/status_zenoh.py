@@ -33,6 +33,7 @@ async def on_sub_slamnav_moveStatus(*, topic, obj):
     opts=SubscribeOptions(dispatch="queue", overflow="latest_only")
 )
 async def on_sub_slamnav_lidar2d(*, topic, obj):
+    print(f"Lidar2D Sub : {topic}, {obj}", flush=True)
     await amr_status_service.set_lidar2d(topic, obj)
 
 @status_zenoh_router.subscribe(
@@ -40,6 +41,7 @@ async def on_sub_slamnav_lidar2d(*, topic, obj):
     flatbuffer_obj_t=GlobalPathT
 )
 async def on_sub_slamnav_globalPath(*, topic, obj):
+    print(f"GlobalPath Sub : {topic}, {obj}", flush=True)
     await amr_status_service.set_global_path(topic, obj)
 
 @status_zenoh_router.subscribe(
@@ -47,6 +49,7 @@ async def on_sub_slamnav_globalPath(*, topic, obj):
     flatbuffer_obj_t=LocalPathT
 )
 async def on_sub_slamnav_localPath(*, topic, obj):
+    print(f"LocalPath Sub : {topic}, {obj}", flush=True)
     await amr_status_service.set_local_path(topic, obj)
 
 # @status_zenoh_router.subscribe(

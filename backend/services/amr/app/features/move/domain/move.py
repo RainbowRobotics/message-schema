@@ -13,18 +13,19 @@ from datetime import (
 from enum import Enum
 from typing import Any
 
+from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
+    MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
+    RequestMoveXLinearPD,
+    RequestMoveYLinearPD,
+)
 from rb_utils.service_exception import (
     ServiceException,
 )
 
-from app.features.move.move_schema import (
-    Request_Move_CircularPD,
-    Request_Move_GoalPD,
-    Request_Move_LinearPD,
-    Request_Move_RotatePD,
-    Request_Move_TargetPD,
-    RequestMoveJogPD,
-)
 from app.schema.amr import AmrResponseStatusEnum
 
 
@@ -102,18 +103,18 @@ class MoveModel:
         self.robot_model = robot_model
         self.robot_id = robot_id
 
-    def set_move_goal(self, req: Request_Move_GoalPD):
+    def set_move_goal(self, req: RequestMoveGoalPD):
         """
         [AMR 이동 모델 설정]
         """
         self.command = AmrMoveCommandEnum.MOVE_GOAL
         self.method = req.method if req.method is not None else AmrMoveMethodEnum.PP.value
         self.preset = req.preset if req.preset is not None else 0
-        self.goal_id = req.goalId
-        self.goal_name = req.goalName
+        self.goal_id = req.goal_id
+        self.goal_name = req.goal_name
         self.update_at = datetime.now(UTC)
 
-    def set_move_target(self, req: Request_Move_TargetPD):
+    def set_move_target(self, req: RequestMoveTargetPD):
         """
         - req: Request_Move_TargetPD
         - return: None
@@ -121,10 +122,10 @@ class MoveModel:
         self.command = AmrMoveCommandEnum.MOVE_TARGET
         self.method = req.method if req.method is not None else AmrMoveMethodEnum.PP.value
         self.preset = req.preset if req.preset is not None else 0
-        self.goal_pose = req.goalPose
+        self.goal_pose = req.goal_pose
         self.update_at = datetime.now(UTC)
 
-    def set_move_jog(self, req: RequestMoveJogPD):
+    def set_move_jog(self, req: MoveJogPD):
         """
         - req: RequestMoveJogPD
         - return: None
@@ -135,7 +136,7 @@ class MoveModel:
         self.wz = req.wz if req.wz is not None else 0
         self.update_at = datetime.now(UTC)
 
-    def set_move_x_linear(self, req: Request_Move_LinearPD):
+    def set_move_x_linear(self, req: RequestMoveXLinearPD):
         """
         - req: Request_Move_XLinearPD
         - return: None
@@ -145,7 +146,7 @@ class MoveModel:
         self.speed = req.speed
         self.update_at = datetime.now(UTC)
 
-    def set_move_y_linear(self, req: Request_Move_LinearPD):
+    def set_move_y_linear(self, req: RequestMoveYLinearPD):
         """
         - req: Request_Move_XLinearPD
         - return: None
@@ -155,7 +156,7 @@ class MoveModel:
         self.speed = req.speed
         self.update_at = datetime.now(UTC)
 
-    def set_move_circular(self, req: Request_Move_CircularPD):
+    def set_move_circular(self, req: RequestMoveCircularPD):
         """
         - req: Request_Move_CircularPD
         - return: None
@@ -166,7 +167,7 @@ class MoveModel:
         self.speed = req.speed
         self.update_at = datetime.now(UTC)
 
-    def set_move_rotate(self, req: Request_Move_RotatePD):
+    def set_move_rotate(self, req: RequestMoveRotatePD):
         """
         - req: Request_Move_RotatePD
         - return: None

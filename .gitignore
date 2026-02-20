@@ -24,6 +24,8 @@ backend/docker-compose.yml
 backend/docker-compose.dev.yml
 backend/docker-compose.preview.yml
 
+backend/secrets/**
+
 .buildx-cache
 .buildx-cache-amd64
 .buildx-cache-arm64

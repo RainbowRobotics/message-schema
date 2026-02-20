@@ -3,26 +3,30 @@
 """
 
 from fastapi import APIRouter, BackgroundTasks
+from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
+    MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
+    RequestMoveXLinearPD,
+    RequestMoveYLinearPD,
+    ResponseMoveCircularPD,
+    ResponseMoveGoalPD,
+    ResponseMovePausePD,
+    ResponseMoveResumePD,
+    ResponseMoveRotatePD,
+    ResponseMoveStopPD,
+    ResponseMoveTargetPD,
+    ResponseMoveXLinearPD,
+    ResponseMoveYLinearPD,
+)
 
 from app.features.move.move_schema import (
-    Request_Move_ArchiveLogPD,
-    Request_Move_CircularPD,
-    Request_Move_ExportLogPD,
-    Request_Move_GoalPD,
-    Request_Move_LinearPD,
-    Request_Move_LogsPD,
-    Request_Move_RotatePD,
-    Request_Move_TargetPD,
-    RequestMoveJogPD,
-    Response_Move_CircularPD,
-    Response_Move_GoalPD,
-    Response_Move_LinearPD,
-    Response_Move_LogsPD,
-    Response_Move_PausePD,
-    Response_Move_ResumePD,
-    Response_Move_RotatePD,
-    Response_Move_StopPD,
-    Response_Move_TargetPD,
+    RequestMoveArchiveLogPD,
+    RequestMoveExportLogPD,
+    RequestMoveLogsPD,
+    ResponseMoveLogsPD,
 )
 from app.features.move.move_service import AmrMoveService
 
@@ -77,7 +81,7 @@ SLAMNAV로 목표 노드로 주행 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_goal(robot_model: str, robot_id: str, request: Request_Move_GoalPD) -> Response_Move_GoalPD:
+async def slamnav_move_goal(robot_model: str, robot_id: str, request: RequestMoveGoalPD) -> ResponseMoveGoalPD:
     return await amr_move_service.move_goal(robot_model, robot_id, request)
 
 @amr_move_router.post(
@@ -115,7 +119,7 @@ SLAMNAV로 조이스틱 이동 명령을 전달합니다.
     """,
     response_description="이동 명령 처리 결과 반환"
 )
-async def slamnav_move_target(robot_model: str, robot_id: str, request: Request_Move_TargetPD) -> Response_Move_TargetPD:
+async def slamnav_move_target(robot_model: str, robot_id: str, request: RequestMoveTargetPD) -> ResponseMoveTargetPD:
     return await amr_move_service.move_target(robot_model, robot_id, request)
 
 # @amr_move_router.post(
@@ -167,7 +171,7 @@ SLAMNAV로 이동 정지 명령을 전달합니다.
     """,
     response_description="이동 중지 명령 처리 결과 반환"
 )
-async def slamnav_move_stop(robot_model: str, robot_id: str) -> Response_Move_StopPD:
+async def slamnav_move_stop(robot_model: str, robot_id: str) -> ResponseMoveStopPD:
     return await amr_move_service.move_stop(robot_model, robot_id)
 
 
@@ -202,7 +206,7 @@ SLAMNAV로 이동 일시정지 명령을 전달합니다.
     """,
     response_description="이동 일시정지 명령 처리 결과 반환"
 )
-async def slamnav_move_pause(robot_model: str, robot_id: str) -> Response_Move_PausePD:
+async def slamnav_move_pause(robot_model: str, robot_id: str) -> ResponseMovePausePD:
     return await amr_move_service.move_pause(robot_model, robot_id)
 
 @amr_move_router.post(
@@ -236,7 +240,7 @@ SLAMNAV로 이동 일시재개 명령을 전달합니다.
     """,
     response_description="이동 재개 명령 처리 결과 반환"
 )
-async def slamnav_move_resume(robot_model: str, robot_id: str) -> Response_Move_ResumePD:
+async def slamnav_move_resume(robot_model: str, robot_id: str) -> ResponseMoveResumePD:
     return await amr_move_service.move_resume(robot_model, robot_id)
 
 
@@ -268,7 +272,7 @@ SLAMNAV로 조이스틱 이동 명령을 전달합니다.
     """,
     response_description="조이스틱 이동 명령 처리 결과 반환"
 )
-async def slamnav_move_jog(robot_model: str, robot_id: str, request: RequestMoveJogPD) -> None:
+async def slamnav_move_jog(robot_model: str, robot_id: str, request: MoveJogPD):
     return await amr_move_service.move_jog(robot_model, robot_id, request)
 
 @amr_move_router.post(
@@ -312,9 +316,8 @@ SLAMNAV로 X축 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_linear(robot_model: str, robot_id: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+async def slamnav_move_linear(robot_model: str, robot_id: str, request: RequestMoveXLinearPD) -> ResponseMoveXLinearPD:
     return await amr_move_service.move_x_linear(robot_model, robot_id, request)
-
 
 @amr_move_router.post(
     "/{robot_model}/{robot_id}/move/yLinear",
@@ -357,7 +360,7 @@ SLAMNAV로 Y축 선형 이동 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_y_linear(robot_model: str, robot_id: str, request: Request_Move_LinearPD) -> Response_Move_LinearPD:
+async def slamnav_move_y_linear(robot_model: str, robot_id: str, request: RequestMoveYLinearPD) -> ResponseMoveYLinearPD:
     return await amr_move_service.move_y_linear(robot_model, robot_id, request)
 
 
@@ -404,7 +407,7 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_circular(robot_model: str, robot_id: str, request: Request_Move_CircularPD) -> Response_Move_CircularPD:
+async def slamnav_move_circular(robot_model: str, robot_id: str, request: RequestMoveCircularPD) -> ResponseMoveCircularPD:
     return await amr_move_service.move_circular(robot_model, robot_id, request)
 
 @amr_move_router.post(
@@ -448,7 +451,7 @@ SLAMNAV로 회전 명령을 전달합니다.
     """,
     response_description="프로필 이동 명령 처리 결과 반환"
   )
-async def slamnav_move_rotate(robot_model: str, robot_id: str, request: Request_Move_RotatePD) -> Response_Move_RotatePD:
+async def slamnav_move_rotate(robot_model: str, robot_id: str, request: RequestMoveRotatePD) -> ResponseMoveRotatePD:
     return await amr_move_service.move_rotate(robot_model, robot_id, request)
 
 
@@ -483,7 +486,7 @@ async def slamnav_move_rotate(robot_model: str, robot_id: str, request: Request_
     response_description="이동 로그 조회 결과 반환"
 )
 async def slamnav_move_logs(
-    request: Request_Move_LogsPD) -> Response_Move_LogsPD:
+    request: RequestMoveLogsPD) -> ResponseMoveLogsPD:
     """
     - request: RequestAmrMoveLogsPD
     - amr_move_service.get_logs: amr_move_service.get_logs 메서드 호출
@@ -517,7 +520,7 @@ async def slamnav_move_logs(
     """,
     response_description="이동 로그 조회 결과 반환"
 )
-async def archive_move_logs(request: Request_Move_ArchiveLogPD):
+async def archive_move_logs(request: RequestMoveArchiveLogPD):
     """
     - request: RequestAmrMoveArchiveLogPD
     - amr_move_service.archive_logs: amr_move_service.archive_logs 메서드 호출
@@ -543,7 +546,7 @@ async def archive_move_logs(request: Request_Move_ArchiveLogPD):
     """,
     response_description="이동 로그 내보내기 결과 반환"
 )
-async def export_move_logs(request: Request_Move_ExportLogPD, background_tasks: BackgroundTasks):
+async def export_move_logs(request: RequestMoveExportLogPD, background_tasks: BackgroundTasks):
     """
     - request: RequestAmrMoveExportLogPD
     - amr_move_service.export_logs: amr_move_service.export_logs 메서드 호출

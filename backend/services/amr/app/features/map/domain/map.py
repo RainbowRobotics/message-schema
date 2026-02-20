@@ -318,7 +318,7 @@ class MapModel:
                 raise ServiceException("file_name 값이 비어있습니다", status_code=400)
             if not self.file_name.endswith(".zip"):
                 raise ServiceException("file_name 값이 압축 파일 이름이 아닙니다. (확장자: .zip)", status_code=400)
-        elif self.command == AmrMapCommandEnum.MAP_LOAD:
+        elif self.command == AmrMapCommandEnum.MAPPING_SAVE or self.command == AmrMapCommandEnum.MAP_LOAD:
             if self.map_name is None or self.map_name == "":
                 raise ServiceException("map_name 값이 비어있습니다", status_code=400)
         elif self.command == AmrMapCommandEnum.MAP_TOPO_LOAD or self.command == AmrMapCommandEnum.MAPPING_START or self.command == AmrMapCommandEnum.MAPPING_STOP:

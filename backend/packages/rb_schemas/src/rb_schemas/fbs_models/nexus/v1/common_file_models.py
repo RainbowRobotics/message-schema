@@ -40,7 +40,7 @@ class FileRequestPD(BaseModel):
 
 class FileMessagePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    payload: FilePayloadPD | None = Field(default=None)
+    payload: dict | None = Field(default=None)
 
 __all__ = [
     "FilePayloadPD",

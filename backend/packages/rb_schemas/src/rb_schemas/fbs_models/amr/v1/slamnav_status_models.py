@@ -124,15 +124,15 @@ class StatusNodePD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
     name: str | None = Field(default=None)
-    pose: StatusPosePD | None = Field(default=None)
+    pose: dict | None = Field(default=None)
 
 class MoveStatusPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    move_state: StatusMoveStatePD | None = Field(alias="moveState", default=None)
-    pose: StatusPosePD | None = Field(default=None)
-    vel: StatusVelPD | None = Field(default=None)
-    cur_node: StatusNodePD | None = Field(alias="curNode", default=None)
-    goal_node: StatusNodePD | None = Field(alias="goalNode", default=None)
+    move_state: dict | None = Field(alias="moveState", default=None)
+    pose: dict | None = Field(default=None)
+    vel: dict | None = Field(default=None)
+    cur_node: dict | None = Field(alias="curNode", default=None)
+    goal_node: dict | None = Field(alias="goalNode", default=None)
 
 __all__ = [
     "StatusImuPD",

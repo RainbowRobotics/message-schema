@@ -31,7 +31,7 @@ class Request_Save_Gravity_ParameterPD(BaseModel):
 
 class Request_Save_Direct_Teach_SensitivityPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    sensitivity: N_JOINT_fPD | None = Field(default=None)
+    sensitivity: dict | None = Field(default=None)
 
 class Request_Save_Tool_List_ParaPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

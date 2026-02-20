@@ -53,9 +53,9 @@ class NodePD(BaseModel):
     id: str | None = Field(default=None)
     links: List[LinkPD] = Field(default_factory=list)
     name: str | None = Field(default=None)
-    pose: NodePosePD | None = Field(default=None)
+    pose: dict | None = Field(default=None)
     role: str | None = Field(default=None)
-    size: NodeSizePD | None = Field(default=None)
+    size: dict | None = Field(default=None)
     type: str | None = Field(default=None)
 
 class CloudDataPD(BaseModel):

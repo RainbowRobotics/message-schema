@@ -57,7 +57,7 @@ class FloatArray32PD(BaseModel):
 
 class MoveInput_TargetPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    tar_values: N_INPUT_fPD | None = Field(alias="tarValues", default=None)
+    tar_values: dict | None = Field(alias="tarValues", default=None)
     tar_frame: int | None = Field(alias="tarFrame", default=None)
     tar_unit: int | None = Field(alias="tarUnit", default=None)
 

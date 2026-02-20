@@ -19,6 +19,24 @@ from fastapi import BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import rb_log  # pylint: disable=import-error,no-name-in-module
+from rb_schemas.fbs_models.amr.v1.slamnav_move_models import (
+    MoveJogPD,
+    RequestMoveCircularPD,
+    RequestMoveGoalPD,
+    RequestMoveRotatePD,
+    RequestMoveTargetPD,
+    RequestMoveXLinearPD,
+    RequestMoveYLinearPD,
+    ResponseMoveCircularPD,
+    ResponseMoveGoalPD,
+    ResponseMovePausePD,
+    ResponseMoveResumePD,
+    ResponseMoveRotatePD,
+    ResponseMoveStopPD,
+    ResponseMoveTargetPD,
+    ResponseMoveXLinearPD,
+    ResponseMoveYLinearPD,
+)
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.date import convert_dt  # pylint: disable=import-error,no-name-in-module
 from rb_utils.parser import t_to_dict
@@ -34,24 +52,10 @@ from app.features.move.adapter.smtplib import (
 )
 from app.features.move.domain.move import MoveModel
 from app.features.move.move_schema import (
-    Request_Move_ArchiveLogPD,
-    Request_Move_CircularPD,
-    Request_Move_ExportLogPD,
-    Request_Move_GoalPD,
-    Request_Move_LinearPD,
-    Request_Move_LogsPD,
-    Request_Move_RotatePD,
-    Request_Move_TargetPD,
-    RequestMoveJogPD,
-    Response_Move_CircularPD,
-    Response_Move_GoalPD,
-    Response_Move_LinearPD,
-    Response_Move_LogsPD,
-    Response_Move_PausePD,
-    Response_Move_ResumePD,
-    Response_Move_RotatePD,
-    Response_Move_StopPD,
-    Response_Move_TargetPD,
+    RequestMoveArchiveLogPD,
+    RequestMoveExportLogPD,
+    RequestMoveLogsPD,
+    ResponseMoveLogsPD,
 )
 from app.schema.amr import AmrResponseStatusEnum
 from app.socket.socket_client import socket_client
@@ -66,7 +70,7 @@ class AmrMoveService:
         self.email_port = MoveSmtpLibEmailAdapter()
         self._locks = defaultdict(asyncio.Lock)
 
-    async def move_goal(self, robot_model: str, robot_id: str, req: Request_Move_GoalPD, model: MoveModel | None = None) -> Response_Move_GoalPD:
+    async def move_goal(self, robot_model: str, robot_id: str, req: RequestMoveGoalPD, model: MoveModel | None = None) -> ResponseMoveGoalPD:
         """
         [AMR 목표 지점으로 이동]
         """
@@ -116,12 +120,11 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-
     async def move_target(self,
     robot_model: str,
     robot_id: str,
-    req: Request_Move_TargetPD,
-    model:MoveModel | None = None) -> Response_Move_TargetPD:
+    req: RequestMoveTargetPD,
+    model:MoveModel | None = None) -> ResponseMoveTargetPD:
         """
         [AMR 타겟 좌표로 이동]
         """
@@ -171,7 +174,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_jog(self, robot_model: str, robot_id: str, request: RequestMoveJogPD):
+    async def move_jog(self, robot_model: str, robot_id: str, request: MoveJogPD):
         """
         [AMR 조이스틱 이동]
         """
@@ -197,7 +200,7 @@ class AmrMoveService:
                 wz=model.wz
             )
 
-            return None
+            return JSONResponse(status_code=200,content=jsonable_encoder({"message": "success"}))
 
         except ServiceException as e:
             print("[moveJog] ServiceException : ", e.message, e.status_code)
@@ -206,7 +209,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_stop(self, robot_model: str, robot_id: str) -> Response_Move_StopPD:
+    async def move_stop(self, robot_model: str, robot_id: str) -> ResponseMoveStopPD:
         """
         [AMR 이동 중지]
         """
@@ -250,7 +253,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_pause(self, robot_model: str, robot_id: str, model: MoveModel | None = None) -> Response_Move_PausePD:
+    async def move_pause(self, robot_model: str, robot_id: str, model: MoveModel | None = None) -> ResponseMovePausePD:
         """
         [AMR 이동 일시정지]
         """
@@ -294,7 +297,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()} ))
 
-    async def move_resume(self, robot_model: str, robot_id: str, model: MoveModel | None = None) -> Response_Move_ResumePD:
+    async def move_resume(self, robot_model: str, robot_id: str, model: MoveModel | None = None) -> ResponseMoveResumePD:
         """
         [AMR 이동 재개]
         """
@@ -338,7 +341,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_x_linear(self, robot_model: str, robot_id: str, req: Request_Move_LinearPD, model: MoveModel | None = None) -> Response_Move_LinearPD:
+    async def move_x_linear(self, robot_model: str, robot_id: str, req: RequestMoveXLinearPD, model: MoveModel | None = None) -> ResponseMoveXLinearPD:
         """
         [AMR 선형 이동]
         """
@@ -384,7 +387,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_y_linear(self, robot_model: str, robot_id: str, req: Request_Move_LinearPD, model: MoveModel | None = None) -> Response_Move_LinearPD:
+    async def move_y_linear(self, robot_model: str, robot_id: str, req: RequestMoveYLinearPD, model: MoveModel | None = None) -> ResponseMoveYLinearPD:
         """
         [AMR 선형 이동]
         """
@@ -431,7 +434,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_circular(self, robot_model: str, robot_id: str, req: Request_Move_CircularPD, model: MoveModel | None = None) -> Response_Move_CircularPD:
+    async def move_circular(self, robot_model: str, robot_id: str, req: RequestMoveCircularPD, model: MoveModel | None = None) -> ResponseMoveCircularPD:
         """
         [AMR 원형 이동]
         """
@@ -478,7 +481,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "model": model.to_dict()}))
 
-    async def move_rotate(self, robot_model: str, robot_id: str, req: Request_Move_RotatePD, model: MoveModel | None = None) -> Response_Move_RotatePD:
+    async def move_rotate(self, robot_model: str, robot_id: str, req: RequestMoveRotatePD, model: MoveModel | None = None) -> ResponseMoveRotatePD:
         """
         [AMR 원형 이동]
         """
@@ -526,8 +529,8 @@ class AmrMoveService:
 
     async def get_logs(
         self,
-        request: Request_Move_LogsPD
-        ) -> Response_Move_LogsPD:
+        request: RequestMoveLogsPD
+        ) -> ResponseMoveLogsPD:
         """
         [AMR 이동 로그 조회]
         """
@@ -550,7 +553,7 @@ class AmrMoveService:
             rb_log.error(f"[getLogs] ServiceException : {e.message}, {e.status_code}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
 
-    async def archive_logs(self, request: Request_Move_ArchiveLogPD):
+    async def archive_logs(self, request: RequestMoveArchiveLogPD):
         """
         [AMR 이동 로그 아카이브]
         """
@@ -574,7 +577,7 @@ class AmrMoveService:
             rb_log.error(f"[archiveLogs] ServiceException : {e.message}, {e.status_code}")
             return JSONResponse(status_code=e.status_code,content=jsonable_encoder({"message": e.message, "request": request.model_dump()}))
 
-    async def export_logs(self, request: Request_Move_ExportLogPD, background_tasks: BackgroundTasks):
+    async def export_logs(self, request: RequestMoveExportLogPD, background_tasks: BackgroundTasks):
         """
         [AMR 이동 로그 내보내기]
         """
