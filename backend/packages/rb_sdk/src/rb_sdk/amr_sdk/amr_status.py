@@ -51,7 +51,7 @@ class RBAmrStatusSDK(RBBaseSDK):
         - ResponseLidar2D 객체 반환
         """
         _, _, obj, _ = await self.zenoh_client.receive_one(
-            f"amr/{robot_model}/{robot_id}/lidar2d",
+            f"amr/{robot_model}/{robot_id}/socket/lidar2d",
             flatbuffer_obj_t=Lidar2DT
         )
 
@@ -67,7 +67,7 @@ class RBAmrStatusSDK(RBBaseSDK):
         - ResponseGlobalPath 객체 반환
         """
         _, _, obj, _ = await self.zenoh_client.receive_one(
-            f"amr/{robot_model}/{robot_id}/globalPath",
+            f"amr/{robot_model}/{robot_id}/socket/globalPath",
             flatbuffer_obj_t=GlobalPathT
         )
 
@@ -83,7 +83,7 @@ class RBAmrStatusSDK(RBBaseSDK):
         - ResponseLocalPath 객체 반환
         """
         _, _, obj, _ = await self.zenoh_client.receive_one(
-            f"amr/{robot_model}/{robot_id}/localPath",
+            f"amr/{robot_model}/{robot_id}/socket/localPath",
             flatbuffer_obj_t=LocalPathT
         )
 
