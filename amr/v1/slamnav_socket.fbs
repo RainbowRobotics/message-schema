@@ -75,12 +75,10 @@ struct PathPose {
     topic       :       {robotType}/socket/lidar2d
     usage       :       2D 라이다 포인트 클라우드 데이터
     field
-        - id            :       time
         - points        :       2D 포인트 배열 ( num : 360 )
         - pose          :       Lidar 스캔 위치
 */
 table Lidar2D {
-    id: string;
     points: [Point2D];
     pose: PointPose;
 }
@@ -97,13 +95,11 @@ table Lidar2D {
     topic       :       {robotType}/socket/lidar3d
     usage       :       3D 라이다 포인트 클라우드 데이터
     field
-        - id            :       time
         - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
                         :       필요시, point filter로 개수 줄일 수 있음.
         - pose          :       Lidar 스캔 위치
 */
 table Lidar3D {
-    id: string;
     points: [Point3D];
     pose: PointPose;
 }
@@ -120,11 +116,9 @@ table Lidar3D {
     usage       :       매핑 포인트 클라우드 데이터
                 :       RequestMappingCloudReload 가 들어오면, 이때까지 쌓은 데이터 전부를 pub
     field
-        - id            :       time
         - points        :       3D 포인트 배열
 */
 table MappingCloud {
-    id: string;
     points: [Point3D];
 }
 
@@ -144,11 +138,9 @@ table MappingCloud {
     topic       :       {robotType}/socket/globalPath
     usage       :       전역 경로 데이터
     field
-        - id            :       time
         - path          :       경로 포즈 배열 (x, y, rz)
 */
 table GlobalPath {
-    id: string;
     path: [PathPose];
 }
 
@@ -157,10 +149,8 @@ table GlobalPath {
     topic       :       {robotType}/socket/localPath
     usage       :       지역 경로 데이터
     field
-        - id            :       time
         - path          :       경로 포즈 배열 (x, y, rz)
 */
 table LocalPath {
-    id: string;
     path: [PathPose];
 }
