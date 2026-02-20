@@ -303,7 +303,6 @@ class AmrControlService:
                 await self.database_port.upsert(model.to_dict())
             except Exception as e:  # pylint: disable=broad-exception-caught
                 print("[control_set_motor] DB Exception : ", e)
-
             print("============== control_set_motor return ===============")
             return model.to_dict()
         except ServiceException as e:
