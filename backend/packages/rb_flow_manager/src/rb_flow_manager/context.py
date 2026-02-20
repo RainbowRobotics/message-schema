@@ -13,6 +13,7 @@ from multiprocessing.synchronize import (
 )
 from typing import Any, Literal
 
+from rb_sdk.amr import RBAmrSDK
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
 from rb_utils.parser import t_to_dict
@@ -64,6 +65,9 @@ class ExecutionContext:
 
         # parent_process_id가 있으면 부모 변수 저장소를 owner로 사용
         self.sync_state_variables()
+        # 서브프로세스에서 첫 스텝 호출 시점의 lazy init 레이스/지연을 줄이기 위해
+        # ExecutionContext 생성 시 SDK 루트를 선초기화한다.
+        self._ensure_sdk_roots()
 
     def _resolve_variable_owner_state(self) -> dict[str, Any]:
         if self.parent_process_id is not None and self.shared_state_dicts is not None:
@@ -150,10 +154,14 @@ class ExecutionContext:
         if self._sdk_roots is not None:
             return
 
-        self._sdk_roots = {
-            "rb_base_sdk": RBBaseSDK(),
-            "rb_manipulate_sdk": RBManipulateSDK(),
-        }
+        try:
+            self._sdk_roots = {
+                "rb_base_sdk": RBBaseSDK(),
+                "rb_manipulate_sdk": RBManipulateSDK(),
+                "rb_amr_sdk": RBAmrSDK(),
+            }
+        except Exception as e:
+            raise RuntimeError(f"SDK initialization failed in process {self.process_id}: {e}") from e
 
     def get_sdk_function(self, func_name: str) -> Callable | None:
         if not func_name:
