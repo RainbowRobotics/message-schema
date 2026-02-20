@@ -94,7 +94,7 @@ class RequestMapListPD(BaseModel):
 class ResponseMapListPD(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str | None = Field(default=None)
-    map_list: list[dict] = Field(default_factory=list)
+    list: list[dict] = Field(default_factory=list)
     result: str | None = Field(default=None)
     message: str | None = Field(default=None)
 
