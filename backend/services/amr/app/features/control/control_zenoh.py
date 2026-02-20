@@ -1,11 +1,11 @@
 """
 [AMR 이동 Zenoh 어댑터]
 """
-from rb_flat_buffers.SLAMNAV.ResultControlDock import (
-    ResultControlDockT,
-)
 from rb_flat_buffers.SLAMNAV.ResultControlChargeTrigger import (
     ResultControlChargeTriggerT,
+)
+from rb_flat_buffers.SLAMNAV.ResultControlDock import (
+    ResultControlDockT,
 )
 from rb_zenoh.router import (
     ZenohRouter,
