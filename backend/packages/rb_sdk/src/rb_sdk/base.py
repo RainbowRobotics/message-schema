@@ -107,16 +107,18 @@ class RBBaseSDK:
             if (not force) and cls._is_client_session_alive(current):
                 return current  # pyright: ignore[reportReturnType]
 
-            if current is not None:
+            # 중요: ZenohClient는 PID 싱글톤이므로 close()하면 같은 프로세스의
+            # router/subscriber까지 함께 undeclare 된다.
+            # reconnect는 close 대신 connect() 재시도로 처리한다.
+            if current is None:
+                current = ZenohClient()
+                cls._zenoh_clients[pid] = current
+
+            if not cls._is_client_session_alive(current):
                 with contextlib.suppress(Exception):
-                    current.close()
+                    current.connect()
 
-            new_client = ZenohClient()
-            if not cls._is_client_session_alive(new_client):
-                new_client.connect()
-
-            cls._zenoh_clients[pid] = new_client
-            return new_client
+            return current
 
     def _ensure_zenoh_client_alive(self, *, force_reconnect: bool = False) -> ZenohClient:
         """현재 SDK 인스턴스가 살아있는 ZenohClient를 참조하도록 보장한다."""
@@ -166,7 +168,9 @@ class RBBaseSDK:
                 if args and isinstance(args[0], RBBaseSDK):
                     sdk_self = args[0]
                     print(f"[{fn.__name__}] zenoh error: {e} -> reconnect and retry once", flush=True)
-                    sdk_self._ensure_zenoh_client_alive(force_reconnect=True)
+                    sdk_self._ensure_zenoh_client_alive(
+                        force_reconnect=isinstance(e, ZenohTransportError)
+                    )
                     try:
                         return await fn(*args, **kwargs)
                     except (ZenohNoReply, ZenohTransportError) as retry_e:
@@ -196,7 +200,9 @@ class RBBaseSDK:
                 if args and isinstance(args[0], RBBaseSDK):
                     sdk_self = args[0]
                     print(f"[{fn.__name__}] zenoh error: {e} -> reconnect and retry once", flush=True)
-                    sdk_self._ensure_zenoh_client_alive(force_reconnect=True)
+                    sdk_self._ensure_zenoh_client_alive(
+                        force_reconnect=isinstance(e, ZenohTransportError)
+                    )
                     try:
                         return fn(*args, **kwargs)
                     except (ZenohNoReply, ZenohTransportError) as retry_e:
