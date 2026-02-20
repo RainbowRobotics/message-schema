@@ -76,7 +76,7 @@ class RBAmrMoveSDK(RBBaseSDK):
 
         return None
 
-    async def send_move_goal(
+    def send_move_goal(
         self,
         robot_model: str,
         robot_id: str,

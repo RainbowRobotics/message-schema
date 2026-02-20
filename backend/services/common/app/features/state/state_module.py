@@ -172,9 +172,9 @@ class StateService:
 
                     print("obj>>>", core_sw["sw_name"], obj,flush=True)
 
-                    if obj.get("robotState").get("power") == False:
+                    if not obj.get("robotState").get("power"):
                         core_sw["connected"] = "POWER_OFF"
-                    elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock") == True:
+                    elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock"):
                         core_sw["connected"] = "CHARGING"
                     elif obj.get("map").get("mapStatus") != "loaded":
                         core_sw["connected"] = "MAP_NOT_LOADED"
