@@ -171,8 +171,6 @@ class StateService:
                     if obj is None:
                         continue
 
-                    print("obj>>>", core_sw["sw_name"], obj,flush=True)
-
                     if obj.get("robotState").get("power") is False:
                         core_sw["connected"] = "POWER_OFF"
                     elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock") is True:

@@ -3,6 +3,7 @@ from rb_flat_buffers.SLAMNAV.ResultMapLoad import ResultMapLoadT
 from rb_zenoh.router import ZenohRouter
 
 from app.socket.socket_client import socket_client
+
 from .map_api import amr_map_service
 
 map_zenoh_router = ZenohRouter()

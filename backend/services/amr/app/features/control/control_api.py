@@ -6,7 +6,6 @@ from fastapi import APIRouter
 
 from .control_schema import (
     RequestControlChargeTriggerPD,
-    RequestControlDetectMarkerPD,
     RequestControlJogModePD,
     RequestControlLedModePD,
     RequestControlMotorModePD,
@@ -15,8 +14,7 @@ from .control_schema import (
     RequestSetSafetyFlagPD,
     RequestSetSafetyIoPD,
     ResponseControlChargeTriggerPD,
-    ResponseControlDetectMarkerPD,
-      ResponseControlDockPD,
+    ResponseControlDockPD,
     ResponseControlGetObsBoxPD,
     ResponseControlJogModePD,
     ResponseControlLedModePD,

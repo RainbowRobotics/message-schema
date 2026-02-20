@@ -7,6 +7,7 @@ from rb_flat_buffers.SLAMNAV.RequestMapCurrent import RequestMapCurrentT
 from rb_flat_buffers.SLAMNAV.RequestMapDelete import RequestMapDeleteT
 from rb_flat_buffers.SLAMNAV.RequestMapList import RequestMapListT
 from rb_flat_buffers.SLAMNAV.RequestMapLoad import RequestMapLoadT
+from rb_flat_buffers.SLAMNAV.RequestMappingCloudReload import RequestMappingCloudReloadT
 from rb_flat_buffers.SLAMNAV.RequestMappingSave import RequestMappingSaveT
 from rb_flat_buffers.SLAMNAV.RequestMappingStart import RequestMappingStartT
 from rb_flat_buffers.SLAMNAV.RequestMappingStop import RequestMappingStopT
@@ -19,14 +20,14 @@ from rb_flat_buffers.SLAMNAV.ResponseMapCurrent import ResponseMapCurrentT
 from rb_flat_buffers.SLAMNAV.ResponseMapDelete import ResponseMapDeleteT
 from rb_flat_buffers.SLAMNAV.ResponseMapList import ResponseMapListT
 from rb_flat_buffers.SLAMNAV.ResponseMapLoad import ResponseMapLoadT
+from rb_flat_buffers.SLAMNAV.ResponseMappingCloudReload import ResponseMappingCloudReloadT
 from rb_flat_buffers.SLAMNAV.ResponseMappingSave import ResponseMappingSaveT
 from rb_flat_buffers.SLAMNAV.ResponseMappingStart import ResponseMappingStartT
 from rb_flat_buffers.SLAMNAV.ResponseMappingStop import ResponseMappingStopT
 from rb_flat_buffers.SLAMNAV.ResponseSetMapCloud import ResponseSetMapCloudT
 from rb_flat_buffers.SLAMNAV.ResponseSetMapTopology import ResponseSetMapTopologyT
 from rb_flat_buffers.SLAMNAV.ResponseTopoLoad import ResponseTopoLoadT
-from rb_flat_buffers.SLAMNAV.RequestMappingCloudReload import RequestMappingCloudReloadT
-from rb_flat_buffers.SLAMNAV.ResponseMappingCloudReload import ResponseMappingCloudReloadT
+
 from ..base import RBBaseSDK
 
 
