@@ -3,12 +3,15 @@ from rb_flat_buffers.SLAMNAV.Lidar2D import Lidar2DT
 from rb_flat_buffers.SLAMNAV.LocalPath import LocalPathT
 from rb_flat_buffers.SLAMNAV.MoveStatus import MoveStatusT
 from rb_flat_buffers.SLAMNAV.Status import StatusT
+from rb_flat_buffers.SLAMNAV.StatusRobotState import StatusRobotStateT
 from rb_influxdb import flatbuffer_to_point, write_point
 from rb_sdk.amr import RBAmrSDK
 from rb_utils.parser import t_to_dict
+from rb_zenoh.client import ZenohClient
 
 from app.socket.socket_client import socket_client
 
+zenoh_client = ZenohClient()
 rb_amr_sdk = RBAmrSDK()
 class AmrStatusService:
     """

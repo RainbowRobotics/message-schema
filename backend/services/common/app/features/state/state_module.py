@@ -24,6 +24,7 @@ from rb_flat_buffers.IPC.Response_Functions import (
 from rb_flat_buffers.IPC.State_Core import (
     State_CoreT,
 )
+from rb_flat_buffers.SLAMNAV.Status import StatusT
 from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_modules.log import (
     rb_log,
@@ -96,9 +97,9 @@ class StateService:
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
                     f"{component}/state_core", flatbuffer_obj_t=State_CoreT, timeout=0.2
                 )
-            elif be_service == "mobility":
+            elif be_service == "amr":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"{component}/state", flatbuffer_obj_t=State_CoreT, timeout=0.2
+                    f"amr/{component}/status", flatbuffer_obj_t=State_CoreT, timeout=0.2
                 )
             elif be_service == "sensor":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -162,10 +163,29 @@ class StateService:
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
                         core_sw["connected"] = "STABLE"
 
-                elif core_sw["be_service"] == "mobility":
+                elif core_sw["be_service"] == "amr":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
-                        f"{core_sw["sw_name"]}/state",
+                        f"amr/{core_sw["sw_name"]}/*/status", flatbuffer_obj_t=StatusT, timeout=1
                     )
+                    if obj is None:
+                        continue
+
+                    print("obj>>>", core_sw["sw_name"], obj,flush=True)
+
+                    if obj.get("robotState").get("power") == False:
+                        core_sw["connected"] = "POWER_OFF"
+                    elif obj.get("robotState").get("charge") != "none" or obj.get("robotState").get("dock") == True:
+                        core_sw["connected"] = "CHARGING"
+                    elif obj.get("map").get("mapStatus") != "loaded":
+                        core_sw["connected"] = "MAP_NOT_LOADED"
+                    elif obj.get("motor")[0].get("status") != 1:
+                        core_sw["connected"] = "MOTOR_0_ERROR"
+                    elif obj.get("motor")[1].get("status") != 1:
+                        core_sw["connected"] = "MOTOR_1_ERROR"
+                    elif obj.get("robotState").get("localization") != "good":
+                        core_sw["connected"] = "LOCALIZATION_ERROR"
+                    else:
+                        core_sw["connected"] = "STABLE"
                 elif core_sw["be_service"] == "sensor":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
                         f"{core_sw["sw_name"]}/state_core",
