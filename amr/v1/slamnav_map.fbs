@@ -253,7 +253,7 @@ table RequestGetMapCloud {
 table ResponseGetMapCloud {
     id: string;
     map_name: string;
-    data: [float];
+    data: [CloudData];
     result: string;
     message: string;
 }
@@ -271,7 +271,7 @@ table ResponseGetMapCloud {
 table RequestSetMapCloud {
     id: string;
     map_name: string;
-    data: [float];
+    data: [CloudData];
 }
 table ResponseSetMapCloud {
     id: string;
