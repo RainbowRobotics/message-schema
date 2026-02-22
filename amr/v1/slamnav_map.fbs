@@ -183,7 +183,7 @@ table ResponseTopoLoad {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/map/list
     usage       :       맵 목록 조회
     field
@@ -202,7 +202,7 @@ table ResponseMapList {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/map/delete
     usage       :       맵 삭제
     field
@@ -221,7 +221,7 @@ table ResponseMapDelete {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/map/current
     usage       :       현재 맵 조회
     field
@@ -239,27 +239,21 @@ table ResponseMapCurrent {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       Delayed One-shot
     topic       :       {robotType}/map/getCloud
     usage       :       맵 클라우드 조회
     field
         - map_name      :       맵 이름
-        - file_name     :       파일 이름
-        - size          :       cloud 데이터 크기 ???
         - data          :       클라우드 데이터
 */
 table RequestGetMapCloud {
     id: string;
     map_name: string;
-    file_name: string;
 }
 table ResponseGetMapCloud {
     id: string;
     map_name: string;
-    file_name: string;
     data: [float];
-    column_count: uint32;
-    row_count: uint32;
     result: string;
     message: string;
 }
@@ -267,27 +261,21 @@ table ResponseGetMapCloud {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       Delayed One-shot
     topic       :       {robotType}/map/setCloud
     usage       :       맵 클라우드 설정
     field
         - map_name      :       맵 이름
-        - file_name     :       파일 이름
-        - size          :       cloud 데이터 크기 ???
         - data          :       클라우드 데이터
 */
 table RequestSetMapCloud {
     id: string;
     map_name: string;
-    file_name: string;
     data: [float];
-    column_count: uint32;
-    row_count: uint32;
 }
 table ResponseSetMapCloud {
     id: string;
     map_name: string;
-    file_name: string;
     result: string;
     message: string;
 }
@@ -295,7 +283,29 @@ table ResponseSetMapCloud {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       Delayed One-shot
+    topic       :       {robotType}/map/getTopology
+    usage       :       토폴로지 맵 조회
+    field
+        - map_name      :       맵 이름
+        - data          :       노드 데이터
+*/
+table RequestGetMapTopology {
+    id: string;
+    map_name: string;
+}
+table ResponseGetMapTopology {
+    id: string;
+    map_name: string;
+    data: [Node];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
     topic       :       {robotType}/map/setTopology
     usage       :       토폴로지 맵 설정
     field
@@ -305,58 +315,11 @@ table ResponseSetMapCloud {
 table RequestSetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
     data: [Node];
 }
 table ResponseSetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       ???
-    topic       :       {robotType}/map/getTopology
-    usage       :       토폴로지 맵 조회
-    field
-        - map_name      :       맵 이름
-        - file_name     :       파일 이름
-        - page_no       :       페이지 번호
-        - page_size     :       페이지 크기
-        - total_page    :       전체 페이지 수
-        - node_type     :       노드 타입 필터
-        - search_text   :       검색어
-        - sort_option   :       정렬 옵션
-        - sort_direction:       정렬 방향
-        - data          :       노드 데이터
-*/
-table RequestGetMapTopology {
-    id: string;
-    map_name: string;
-    file_name: string;
-    page_no: int;
-    page_size: int;
-    node_type: string;
-    search_text: string;
-    sort_option: string;
-    sort_direction: string;
-}
-table ResponseGetMapTopology {
-    id: string;
-    map_name: string;
-    file_name: string;
-    page_no: int;
-    page_size: int;
-    total_page: int;
-    node_type: string;
-    search_text: string;
-    sort_option: string;
-    sort_direction: string;
-    data: [Node];
     result: string;
     message: string;
 }
