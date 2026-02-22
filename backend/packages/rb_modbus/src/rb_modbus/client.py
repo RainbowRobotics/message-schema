@@ -56,7 +56,13 @@ class ModbusClient:
             if self._client.connected:
                 return
 
-            await self._client.connect()
+            try:
+                await self._client.connect()
+            except Exception as exc:  # noqa: BLE001
+                self._use_count = max(0, self._use_count - 1)
+                raise ModbusClientError(
+                    f"modbus_connect_error:{type(exc).__name__}:{exc}"
+                ) from exc
             if not self._client.connected:
                 self._use_count = max(0, self._use_count - 1)
                 raise ModbusClientError(f"failed_to_connect_modbus:{self.host}:{self.port}")
@@ -115,16 +121,35 @@ class ModbusClient:
             result = await fn(**kwargs, device_id=unit_id)
         except TypeError:
             pass
+        except Exception as exc:  # noqa: BLE001
+            raise ModbusClientError(f"modbus_transport_error:{type(exc).__name__}:{exc}") from exc
         else:
             if hasattr(result, "isError") and result.isError():
-                raise ModbusClientError(f"modbus_error:{result}")
+                self._raise_modbus_error(result)
             return result
 
         try:
             result = await fn(**kwargs, slave=unit_id)
         except TypeError:
-            result = await fn(**kwargs, unit=unit_id)
+            try:
+                result = await fn(**kwargs, unit=unit_id)
+            except Exception as exc:  # noqa: BLE001
+                raise ModbusClientError(
+                    f"modbus_transport_error:{type(exc).__name__}:{exc}"
+                ) from exc
+        except Exception as exc:  # noqa: BLE001
+            raise ModbusClientError(f"modbus_transport_error:{type(exc).__name__}:{exc}") from exc
 
         if hasattr(result, "isError") and result.isError():
-            raise ModbusClientError(f"modbus_error:{result}")
+            self._raise_modbus_error(result)
         return result
+
+    def _raise_modbus_error(self, result: Any):
+        exc_code = getattr(result, "exception_code", None)
+        fn_code = getattr(result, "function_code", None)
+        detail = str(result)
+        if exc_code is not None or fn_code is not None:
+            raise ModbusClientError(
+                f"modbus_error:exception_code={exc_code},function_code={fn_code},detail={detail}"
+            )
+        raise ModbusClientError(f"modbus_error:detail={detail}")
