@@ -1,0 +1,49 @@
+
+namespace SLAMNAV;
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/call_pause
+    usage       :       로봇 동작 전체 일시 정지 ( movePause 동작 )
+    field
+        - result        :       동작 수행 결과 ( "success" / "fail" )
+*/
+table RequestCallPause {
+}
+table ResponseCallPause {
+  result: string;
+  message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/call_resume
+    usage       :       로봇 동작 resume ( moveResume 동작 )
+    field
+        - result        :       동작 수행 결과 ( "success" / "fail" )
+*/
+table RequestCallResume {
+}
+table ResponseCallResume {
+  result: string;
+  message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/call_halt
+    usage       :       로봇 동작 전체 일시 정지 ( moveStop 동작 )
+    field
+        - result        :       동작 수행 결과 ( "success" / "fail" )
+*/
+table RequestCallHalt {
+}
+table ResponseCallHalt {
+  result: string;
+  message: string;
+}

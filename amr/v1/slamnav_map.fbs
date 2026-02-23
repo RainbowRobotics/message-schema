@@ -18,7 +18,7 @@ namespace SLAMNAV;
         - file_type     :       파일 타입
         - file_size     :       파일 크기
 */
-table MapFileInfo {
+table FileInfo {
     file_name: string;
     created_at: string;
     updated_at: string;
@@ -42,8 +42,8 @@ table MapInfo {
     created_at: string;
     updated_at: string;
     map_type: string;
-    cloud_info: [MapFileInfo];
-    topo_info: [MapFileInfo];
+    cloud_info: [FileInfo];
+    topo_info: [FileInfo];
 }
 
 /*
