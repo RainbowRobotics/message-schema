@@ -3,51 +3,43 @@ include "common_struct.fbs";
 
 namespace IPC;
 
-// "set_toollist_num"
 table Request_Set_Tool_List {
   target_tool_num: int;
 }
 
-// "set_userframe_num"
 table Request_Set_User_Frame {
   user_frame_num: int;
 }
 
-// "set_shift"
 table Request_Set_Shift {
-  shift_no:       int; // 시프트 번호 (Shift 0 ~ Shift 7) 8개 Dropdown
-  shift_mode:     int; // 0 : Off, 1 : Adjust L-Move, 2 : Adjust L,J-Move, 3 : Adjust J-Move
+  shift_no:       int;
+  shift_mode:     int;
   target:         MoveInput_Target;
 }
 
-// "set_out_collision_para"
 table Request_Set_Out_Collision_Para {
   onoff:        int;
   react_mode:   int;
   threshold:    float;
 }
 
-// "set_self_collision_para"
 table Request_Set_Self_Collision_Para {
   mode:         int;
   dist_int:     float;
   dist_ext:     float;
 }
 
-// "set_joint_impedance"
 table Request_Set_Joint_Impedance {
   onoff:        int;
   stiffness:    N_JOINT_f;
   torquelimit:  N_JOINT_f;
 }
 
-// "set_freedrive"
 table Request_Set_Free_Drive {
   onoff:        int;
   sensitivity:  float;
 }
 
-// "set_userframe_6dof"
 table Request_Set_User_Frame_6Dof {
   user_frame_num: int;
   setting_option: int;
@@ -59,13 +51,11 @@ table Request_Set_User_Frame_6Dof {
   target_rz: float;
 }
 
-// "set_userframe_tcp"
 table Request_Set_User_Frame_TCP {
   user_frame_num: int;
   setting_option: int;
 }
 
-// "set_userframe_3points"
 table Request_Set_User_Frame_3Points {
   user_frame_num: int;
   setting_option: int;

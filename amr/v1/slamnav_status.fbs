@@ -64,8 +64,6 @@ struct StatusCondition {
     category    :       Data Structure
     usage       :       로봇 상태 플래그
     field
-        - charge        :       충전 상태
-        - dock          :       도킹 상태
         - emo           :       비상정지 상태
         - localization  :       위치 추정 상태 ( "good" / "none" / "fail" )
         - power         :       전원 상태
@@ -78,8 +76,6 @@ struct StatusCondition {
         - sf_operational_stop   :       운영 정지 상태
 */
 table StatusRobotState {
-    charge: string;
-    dock: bool;
     emo: bool;
     localization: string;
     power: bool;
@@ -130,14 +126,9 @@ struct StatusPower {
     bat_percent: float;
     tabos_voltage: float;
     tabos_current: float;
-    tabos_status: float;
-    tabos_ttf: float;
-    tabos_tte: float;
     tabos_soc: float;
     tabos_soh: float;
     tabos_temp: float;
-    tabos_rc: float;
-    tabos_ae: float;
     charge_current: float;
     contact_voltage: float;
 }
@@ -167,6 +158,26 @@ table StatusMap {
 }
 
 
+/*
+    category    :       Data Structure
+    usage       :       도킹 / 충전 상태
+    field
+        - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
+        - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
+        - dock          :       도킹 이동 상태 ( "stop" )
+        - trigger_id    :       charge trigger 명령의 id ( 최근에 accept 된 명령 반환 )
+        - trigger_result:       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
+        - charge          :     충전 상태 ( "" )
+*/
+table StatusChargeState {
+    dock_id: string;
+    dock_result: string;
+    dock: bool;
+    trigger_id: string;
+    trigger_result: string;
+    charge: string;
+}
+
 // -------------------------------------------------
 // -----------                              --------
 // -----------         Pub / Sub            --------
@@ -186,6 +197,7 @@ table StatusMap {
         - robot_safety_io_state :   Safety IO 상태
         - setting       :       설정 정보
         - map           :       맵 상태
+        - dock          :       도킹 상태
 */
 table Status {
     condition: StatusCondition;
@@ -196,6 +208,7 @@ table Status {
     robot_safety_io_state: StatusRobotSafetyIoState;
     setting: StatusSetting;
     map: StatusMap;
+    charge_state: StatusChargeState;
 }
 
 
@@ -217,7 +230,6 @@ table Status {
         - move_id       :       move 명령의 id ( 최근에 accept 된 명령 반환 )
         - move_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - auto_move     :       자동 이동 상태 ( "stop" / "move" / "pause" / "error" / "not ready" / "vir" )
-        - dock_move     :       도킹 이동 상태 ( "stop" )
         - jog_move      :       조그 이동 상태 ( "none" )
         - obs           :       장애물 상태 ( "none" / "near" / "far" / "vir" )
         - path_state    :       경로 상태 ( "none" / "req_path" / "recv_path" )
@@ -229,7 +241,6 @@ table StatusMoveState {
     move_id: string;
     move_result: string;
     auto_move: string;
-    dock_move: string;
     jog_move: string;
     obs: string;
     path_state: string;
@@ -278,6 +289,7 @@ table StatusNode {
     name: string;
     pose: StatusPose;
 }
+
 
 
 // -------------------------------------------------
