@@ -150,7 +150,7 @@ table StatusMap {
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - dock          :       도킹 이동 상태 ( "stop" )
         - trigger_id    :       charge trigger 명령의 id ( 최근에 accept 된 명령 반환 )
-        - trigger_result:       move_result 상태 ( "start" / "success" / "cancel" / "fail" )
+        - trigger_result:       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - charge          :     충전 상태 ( "" )
 */
 table StatusChargeState {
