@@ -54,24 +54,6 @@ class RBAmrMoveSDK(RBBaseSDK):
                     if not self._is_alive:
                         break
 
-                    # _, _, obj, _ = await self.zenoh_client.receive_one(
-                    #     f"amr/{robot_model}/{robot_id}/move/result", flatbuffer_obj_t=ResultMoveT, timeout=1
-                    # )
-                    # if obj is None:
-                    #     continue
-
-                    # print(f"FLOW MANAGER SOLVER RESULT>>>>>>>>> {obj}", flush=True)
-
-                    # if obj.get("id") != req_id:
-                    #     continue
-
-                    # if obj.get("result") == "success":
-                    #     print("FLOW MANAGER SOLVER DONE", flush=True)
-                    #     flow_manager_args.done()
-                    #     break
-                    # elif obj.get("result") == "fail" or obj.get("result") == "cancel":
-                    #     raise RuntimeError(obj.get("message"))
-
                     _, _, obj, _ = await self.zenoh_client.receive_one(
                         f"amr/{robot_model}/{robot_id}/moveStatus", flatbuffer_obj_t=MoveStatusT, timeout=1
                     )
@@ -92,7 +74,6 @@ class RBAmrMoveSDK(RBBaseSDK):
                         raise RuntimeError("Move Fail")
                     elif obj.get("moveState").get("moveResult") == "cancel":
                         raise RuntimeError("Move Cancel")
-
                 except ZenohNoReply as e:
                     raise RuntimeError(str(e)) from e
                 except asyncio.CancelledError as e:
@@ -133,7 +114,7 @@ class RBAmrMoveSDK(RBBaseSDK):
         req.preset = preset
 
         # 2) 요청 전송
-        print(f"=> send_move_goal: {robot_model}/{robot_id}/move/goal")
+        print(f"=> send_move_goal: amr/{robot_model}/{robot_id}/move/goal")
         result = self.zenoh_client.query_one(
             f"amr/{robot_model}/{robot_id}/move/goal",
             flatbuffer_req_obj=req,

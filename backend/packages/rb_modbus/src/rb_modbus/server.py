@@ -33,7 +33,7 @@ class _RoutedDataBlock(_BaseDataBlock):  # type: ignore[misc, valid-type]
     def getValues(self, address, count=1):  # noqa: N802
         values = super().getValues(address, count)
         if self._router is not None:
-            payload_values = values if isinstance(values, (list, tuple)) else None
+            payload_values = values if isinstance(values, list | tuple) else None
             self._router.emit(
                 table=self._table,
                 hook_type="read",

@@ -1,3 +1,4 @@
+import asyncio
 from pydantic import BaseModel
 from rb_flat_buffers.SLAMNAV.ObsBox import ObsBoxT
 from rb_flat_buffers.SLAMNAV.RequestChargeTrigger import RequestChargeTriggerT
@@ -33,6 +34,9 @@ from rb_flat_buffers.SLAMNAV.ResponseSetSafetyIo import ResponseSetSafetyIoT
 from rb_flat_buffers.SLAMNAV.ResponseStreamFrequency import ResponseStreamFrequencyT
 from rb_flat_buffers.SLAMNAV.ResponseUndock import ResponseUndockT
 from rb_flat_buffers.SLAMNAV.SafetyFlag import SafetyFlagT
+from rb_schemas.sdk import FlowManagerArgs
+from rb_flat_buffers.SLAMNAV.Status import StatusT
+from rb_zenoh.exeption import ZenohNoReply
 
 from ..base import RBBaseSDK
 
@@ -44,7 +48,48 @@ class SafetyFlag(BaseModel):
 class RBAmrControlSDK(RBBaseSDK):
     """Rainbow Robotics AMR Control SDK"""
 
-    async def control_get_safety_field(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyFieldT:
+    async def _control_flow_manager_solver(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None):
+        """
+        [Control 관련 함수에서 사용되는 flow manager 처리 함수]
+        """
+        if flow_manager_args is not None:
+            while True:
+                try:
+                    print("FLOW MANAGER SOLVER TRY>>>>>>>>>", flush=True)
+                    if not self._is_alive:
+                        break
+
+                    _, _, obj, _ = await self.zenoh_client.receive_one(
+                        f"amr/{robot_model}/{robot_id}/status", flatbuffer_obj_t=StatusT, timeout=1
+                    )
+
+                    if obj is None:
+                        continue
+
+                    # print(f"FLOW MANAGER STATUS >>>>>>>>>>> {obj.get("moveState").get("moveId")} {req_id} {obj.get("moveState").get("moveResult")}", flush=True)
+
+                    # if obj.get("moveState").get("moveId") != req_id:
+                    #     raise RuntimeError("Move ID Mismatch")
+
+                    # if obj.get("moveState").get("moveResult") == "success":
+                    #     print("FLOW MANAGER SOLVER DONE", flush=True)
+                    #     flow_manager_args.done()
+                    #     break
+                    # elif obj.get("moveState").get("moveResult") == "fail":
+                    #     raise RuntimeError("Move Fail")
+                    # elif obj.get("moveState").get("moveResult") == "cancel":
+                    #     raise RuntimeError("Move Cancel")
+                except ZenohNoReply as e:
+                    raise RuntimeError(str(e)) from e
+                except asyncio.CancelledError as e:
+                    print(f"CONTROL FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
+                    break
+                except Exception as e:
+                    print(f"CONTROL FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
+                    raise RuntimeError(str(e)) from e
+
+
+    async def control_get_safety_field(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseGetSafetyFieldT:
         """
         [안전 필드 조회]
         - ResponseGetSafetyFieldT 객체 반환
@@ -52,7 +97,6 @@ class RBAmrControlSDK(RBBaseSDK):
 
         # 1) RequestGetSafetyFieldT 객체 생성
         req = RequestGetSafetyFieldT()
-        req.id = req_id
 
         # 2) 요청 전송
         result = self.zenoh_client.query_one(
@@ -66,9 +110,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Safety Field failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_safety_field(self, robot_model: str, robot_id: str, req_id: str, safety_field: int) -> ResponseSetSafetyFieldT:
+    async def control_set_safety_field(self, robot_model: str, robot_id: str, req_id: str, safety_field: int, flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetSafetyFieldT:
         """
         [안전 필드 설정]
         - safety_field: 안전 필드 번호
@@ -91,6 +141,12 @@ class RBAmrControlSDK(RBBaseSDK):
         # 3) 결과 처리 및 반환
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Safety Field failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
 
         return result["obj_payload"]
 
@@ -477,6 +533,7 @@ class RBAmrControlSDK(RBBaseSDK):
             raise RuntimeError("Call Control Motor failed: obj_payload is None")
 
         return result["obj_payload"]
+
     # async def control_sensor_mode(self, robot_model: str, robot_id: str, req_id: str, command: str, control: bool, frequency: int) -> ResponseSensorModeT:
     #     """
     #     [센서 모드 제어]
