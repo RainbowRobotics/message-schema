@@ -162,6 +162,19 @@ table StatusMap {
 }
 
 
+/*
+    category    :       Data Structure
+    usage       :       도킹 상태
+    field
+        - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
+        - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
+        - dock_move     :       도킹 이동 상태 ( "stop" )
+*/
+table StatusDock {
+    dock_id: string;
+    dock_result: string;
+    dock_move: string;
+}
 
 // -------------------------------------------------
 // -----------                              --------
@@ -182,6 +195,7 @@ table StatusMap {
         - robot_safety_io_state :   Safety IO 상태
         - setting       :       설정 정보
         - map           :       맵 상태
+        - dock          :       도킹 상태
 */
 table Status {
     condition: StatusCondition;
@@ -192,6 +206,7 @@ table Status {
     robot_safety_io_state: StatusRobotSafetyIoState;
     setting: StatusSetting;
     map: StatusMap;
+    dock: StatusDock;
 }
 
 
@@ -213,7 +228,6 @@ table Status {
         - move_id       :       move 명령의 id ( 최근에 accept 된 명령 반환 )
         - move_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - auto_move     :       자동 이동 상태 ( "stop" / "move" / "pause" / "error" / "not ready" / "vir" )
-        - dock_move     :       도킹 이동 상태 ( "stop" )
         - jog_move      :       조그 이동 상태 ( "none" )
         - obs           :       장애물 상태 ( "none" / "near" / "far" / "vir" )
         - path_state    :       경로 상태 ( "none" / "req_path" / "recv_path" )
@@ -225,7 +239,6 @@ table StatusMoveState {
     move_id: string;
     move_result: string;
     auto_move: string;
-    dock_move: string;
     jog_move: string;
     obs: string;
     path_state: string;

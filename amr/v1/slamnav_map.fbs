@@ -120,20 +120,6 @@ table Node {
     type: string;
 }
 
-/*
-    category    :       Data Structure
-    usage       :       포인트 클라우드 데이터
-    field
-        - x, y, z       :       3D 좌표
-        - intensity     :       강도
-*/
-table CloudData {
-    x: float;
-    y: float;
-    z: float;
-    intensity: float;
-}
-
 
 // -------------------------------------------------
 // -----------                              --------
@@ -245,7 +231,9 @@ table ResponseMapCurrent {
     field
         - map_name      :       맵 이름
         - file_name     :       파일 이름
-        - data          :       클라우드 데이터
+        - data          :       클라우드 벡터 데이터
+        - column_count  :       data column ( "3" / "4" )
+        - row_count     :       data row ( cloud size )
 */
 table RequestGetMapCloud {
     id: string;
@@ -255,7 +243,7 @@ table ResponseGetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    data: [CloudData];
+    data: [float];
     column_count: uint32;
     row_count: uint32;
     result: string;
@@ -271,13 +259,17 @@ table ResponseGetMapCloud {
     field
         - map_name      :       맵 이름
         - file_name     :       파일 이름
-        - data          :       클라우드 데이터
+        - data          :       클라우드 벡터 데이터
+        - column_count  :       data column ( "3" / "4" )
+        - row_count     :       data row ( cloud size )
 */
 table RequestSetMapCloud {
     id: string;
     map_name: string;
     file_name: string;
-    data: [CloudData];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
 }
 table ResponseSetMapCloud {
     id: string;
