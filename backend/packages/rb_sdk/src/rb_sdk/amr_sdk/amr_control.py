@@ -48,9 +48,9 @@ class SafetyFlag(BaseModel):
 class RBAmrControlSDK(RBBaseSDK):
     """Rainbow Robotics AMR Control SDK"""
 
-    async def _control_flow_manager_solver(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None):
+    async def _dock_flow_manager_solver(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None):
         """
-        [Control 관련 함수에서 사용되는 flow manager 처리 함수]
+        [Dock 관련 함수에서 사용되는 flow manager 처리 함수]
         """
         if flow_manager_args is not None:
             while True:
@@ -66,26 +66,66 @@ class RBAmrControlSDK(RBBaseSDK):
                     if obj is None:
                         continue
 
-                    # print(f"FLOW MANAGER STATUS >>>>>>>>>>> {obj.get("moveState").get("moveId")} {req_id} {obj.get("moveState").get("moveResult")}", flush=True)
+                    print(f"FLOW MANAGER STATUS >>>>>>>>>>> {obj.get("chargeState").get("dockId")} {req_id} {obj.get("chargeState").get("dockResult")}", flush=True)
 
-                    # if obj.get("moveState").get("moveId") != req_id:
-                    #     raise RuntimeError("Move ID Mismatch")
+                    if obj.get("chargeState").get("dockId") != req_id:
+                        raise RuntimeError("Dock ID Mismatch")
 
-                    # if obj.get("moveState").get("moveResult") == "success":
-                    #     print("FLOW MANAGER SOLVER DONE", flush=True)
-                    #     flow_manager_args.done()
-                    #     break
-                    # elif obj.get("moveState").get("moveResult") == "fail":
-                    #     raise RuntimeError("Move Fail")
-                    # elif obj.get("moveState").get("moveResult") == "cancel":
-                    #     raise RuntimeError("Move Cancel")
+                    if obj.get("chargeState").get("dockResult") == "success":
+                        print("Dock Flow Manager SOLVER DONE", flush=True)
+                        flow_manager_args.done()
+                        break
+                    elif obj.get("chargeState").get("dockResult") == "fail":
+                        raise RuntimeError("Dock Fail")
+                    elif obj.get("chargeState").get("dockResult") == "cancel":
+                        raise RuntimeError("Dock Cancel")
                 except ZenohNoReply as e:
                     raise RuntimeError(str(e)) from e
                 except asyncio.CancelledError as e:
-                    print(f"CONTROL FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
+                    print(f"DOCK FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
                     break
                 except Exception as e:
-                    print(f"CONTROL FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
+                    print(f"DOCK FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
+                    raise RuntimeError(str(e)) from e
+
+    async def _charge_trigger_flow_manager_solver(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None):
+        """
+        [Charge Trigger 관련 함수에서 사용되는 flow manager 처리 함수]
+        """
+        if flow_manager_args is not None:
+            while True:
+                try:
+                    print("FLOW MANAGER SOLVER TRY>>>>>>>>>", flush=True)
+                    if not self._is_alive:
+                        break
+
+                    _, _, obj, _ = await self.zenoh_client.receive_one(
+                        f"amr/{robot_model}/{robot_id}/status", flatbuffer_obj_t=StatusT, timeout=1
+                    )
+
+                    if obj is None:
+                        continue
+
+                    print(f"FLOW MANAGER STATUS >>>>>>>>>>> {obj.get("chargeState").get("triggerId")} {req_id} {obj.get("chargeState").get("triggerResult")}", flush=True)
+
+                    if obj.get("chargeState").get("triggerId") != req_id:
+                        raise RuntimeError("Trigger ID Mismatch")
+
+                    if obj.get("chargeState").get("triggerResult") == "success":
+                        print("Trigger Flow Manager SOLVER DONE", flush=True)
+                        flow_manager_args.done()
+                        break
+                    elif obj.get("chargeState").get("triggerResult") == "fail":
+                        raise RuntimeError("Trigger Fail")
+                    elif obj.get("chargeState").get("triggerResult") == "cancel":
+                        raise RuntimeError("Trigger Cancel")
+                except ZenohNoReply as e:
+                    raise RuntimeError(str(e)) from e
+                except asyncio.CancelledError as e:
+                    print(f"TRIGGER FLOW MANAGER SOLVER CANCELLED>>>>>>>>> {e}", flush=True)
+                    break
+                except Exception as e:
+                    print(f"TRIGGER FLOW MANAGER SOLVER ERROR>>>>>>>>> {e}", flush=True)
                     raise RuntimeError(str(e)) from e
 
 
@@ -150,7 +190,7 @@ class RBAmrControlSDK(RBBaseSDK):
 
         return result["obj_payload"]
 
-    async def control_get_safety_flag(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyFlagT:
+    async def control_get_safety_flag(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseGetSafetyFlagT:
         """
         [안전 플래그 조회]
         - ResponseGetSafetyFlagT 객체 반환
@@ -172,9 +212,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Reset Safety Flag failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_safety_flag(self, robot_model: str, robot_id: str, req_id: str, reset_flag: list[SafetyFlag]) -> ResponseSetSafetyFlagT:
+    async def control_set_safety_flag(self, robot_model: str, robot_id: str, req_id: str, reset_flag: list[SafetyFlag], flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetSafetyFlagT:
         """
         [안전 플래그 설정]
         - reset_flag: 안전 플래그 목록
@@ -206,9 +252,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Reset Safety Flag failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_get_safety_io(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetSafetyIoT:
+    async def control_get_safety_io(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseGetSafetyIoT:
         """
         [안전 IO 조회]
         - ResponseGetSafetyIoT 객체 반환
@@ -229,9 +281,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Safety IO failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_safety_io(self, robot_model: str, robot_id: str, req_id: str, mcu0_din: list[bool], mcu1_din: list[bool]) -> ResponseSetSafetyIoT:
+    async def control_set_safety_io(self, robot_model: str, robot_id: str, req_id: str, mcu0_din: list[bool], mcu1_din: list[bool], flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetSafetyIoT:
         """
         [안전 IO 설정]
         - mcu0_din: MCU0 Digital Input (8bit)
@@ -257,9 +315,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Safety IO failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_dock(self, robot_model: str, robot_id: str, req_id: str) -> ResponseDockT:
+    async def control_dock(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseDockT:
         """
         [도킹 제어]
         - ResponseDockT 객체 반환
@@ -281,9 +345,22 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Undock failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                self._run_coro_blocking(
+                    self._dock_flow_manager_solver(
+                        robot_model=robot_model,
+                        robot_id=robot_id,
+                        req_id=req_id,
+                        flow_manager_args=flow_manager_args,
+                    )
+                )
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_undock(self, robot_model: str, robot_id: str, req_id: str) -> ResponseUndockT:
+    async def control_undock(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseUndockT:
         """
         [도킹 제어]
         - ResponseUndockT 객체 반환
@@ -305,9 +382,22 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Undock failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                self._run_coro_blocking(
+                    self._dock_flow_manager_solver(
+                        robot_model=robot_model,
+                        robot_id=robot_id,
+                        req_id=req_id,
+                        flow_manager_args=flow_manager_args,
+                    )
+                )
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_dock_stop(self, robot_model: str, robot_id: str, req_id: str) -> ResponseDockStopT:
+    async def control_dock_stop(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseDockStopT:
         """
         [도킹 제어]
         - ResponsedockStopT 객체 반환
@@ -329,9 +419,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Dock Stop failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_charge_trigger(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseChargeTriggerT:
+    async def control_charge_trigger(self, robot_model: str, robot_id: str, req_id: str, switch: bool, flow_manager_args: FlowManagerArgs | None = None) -> ResponseChargeTriggerT:
         """
         [충전 트리거 제어]
         - switch: 충전 트리거 켜기/끄기 (True: 켜기, False: 끄기)
@@ -354,9 +450,22 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Charge Trigger failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                self._run_coro_blocking(
+                    self._charge_trigger_flow_manager_solver(
+                        robot_model=robot_model,
+                        robot_id=robot_id,
+                        req_id=req_id,
+                        flow_manager_args=flow_manager_args,
+                    )
+                )
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_get_obs_box(self, robot_model: str, robot_id: str, req_id: str) -> ResponseGetObsBoxT:
+    async def control_get_obs_box(self, robot_model: str, robot_id: str, req_id: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseGetObsBoxT:
         """
         [장애물 박스 조회]
         - ResponseGetObsBoxT 객체 반환
@@ -378,9 +487,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Obs Box failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_obs_box(self, robot_model: str, robot_id: str, req_id: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float) -> ResponseGetObsBoxT:
+    async def control_set_obs_box(self, robot_model: str, robot_id: str, req_id: str, min_x: float, min_y: float, min_z: float, max_x: float, max_y: float, max_z: float, map_range: float, flow_manager_args: FlowManagerArgs | None = None) -> ResponseGetObsBoxT:
         """
         [장애물 박스 설정]
         - min_x: 최소 X 좌표
@@ -420,9 +535,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Obs Box failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_led(self, robot_model: str, robot_id: str, req_id: str, switch: bool, color: str) -> ResponseSetLedT:
+    async def control_set_led(self, robot_model: str, robot_id: str, req_id: str, switch: bool, color: str, flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetLedT:
         """
         [LED 제어]
         - req_id: 요청 ID
@@ -449,9 +570,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control LED failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_motor(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseSetMotorT:
+    async def control_set_motor(self, robot_model: str, robot_id: str, req_id: str, switch: bool, flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetMotorT:
         """
         [모터 제어]
         - req_id: 요청 ID
@@ -476,9 +603,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Motor failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_set_jog(self, robot_model: str, robot_id: str, req_id: str, switch: bool) -> ResponseSetJogT:
+    async def control_set_jog(self, robot_model: str, robot_id: str, req_id: str, switch: bool, flow_manager_args: FlowManagerArgs | None = None) -> ResponseSetJogT:
         """
         [조이스틱 모드 제어]
         - req_id: 요청 ID
@@ -503,9 +636,15 @@ class RBAmrControlSDK(RBBaseSDK):
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Motor failed: obj_payload is None")
 
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
+
         return result["obj_payload"]
 
-    async def control_stream_frequency(self, robot_model: str, robot_id: str, req_id: str, target: str, frequency: int) -> ResponseStreamFrequencyT:
+    async def control_stream_frequency(self, robot_model: str, robot_id: str, req_id: str, target: str, frequency: int, flow_manager_args: FlowManagerArgs | None = None) -> ResponseStreamFrequencyT:
         """
         [스트림 주파수 제어]
         - req_id: 요청 ID
@@ -531,6 +670,12 @@ class RBAmrControlSDK(RBBaseSDK):
         # 3) 결과 처리 및 반환
         if result["obj_payload"] is None:
             raise RuntimeError("Call Control Motor failed: obj_payload is None")
+
+        if flow_manager_args is not None:
+            if result["dict_payload"].get("result") == "accept":
+                flow_manager_args.done()
+            else:
+                raise RuntimeError(result["dict_payload"].get("message"))
 
         return result["obj_payload"]
 
