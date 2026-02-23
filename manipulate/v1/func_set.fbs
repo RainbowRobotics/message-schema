@@ -102,3 +102,13 @@ table Request_Set_Fixed_Speed_Mode {
     // 2: Fixed mode: Physical
   acc_parameter:    float;
 }
+
+// "set_timeconstraint"
+table Request_Set_TimeConstraint {
+  option:          int;
+    // 0 : Off
+    // 1 : Unit Move Time-Constraint
+    // 2 : Multi Move Time-Constraint
+  time_sec:        float;
+    // Target time(sec)
+}
