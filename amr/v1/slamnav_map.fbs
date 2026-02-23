@@ -238,6 +238,7 @@ table ResponseMapCurrent {
 table RequestGetMapCloud {
     id: string;
     map_name: string;
+    file_name: string;
 }
 table ResponseGetMapCloud {
     id: string;
