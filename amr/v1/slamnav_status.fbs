@@ -175,7 +175,7 @@ table StatusChargeState {
         - mapping_error :       매핑 오차
         - mapping_ratio :       매핑 비율
 */
-struct StatusLocState {
+table StatusLocState {
     loc_id: string;
     loc_result: string;
     loc_status: string;
