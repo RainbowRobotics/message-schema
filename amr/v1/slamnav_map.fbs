@@ -244,6 +244,7 @@ table ResponseMapCurrent {
     usage       :       맵 클라우드 조회
     field
         - map_name      :       맵 이름
+        - file_name     :       파일 이름
         - data          :       클라우드 데이터
 */
 table RequestGetMapCloud {
@@ -253,7 +254,10 @@ table RequestGetMapCloud {
 table ResponseGetMapCloud {
     id: string;
     map_name: string;
+    file_name: string;
     data: [CloudData];
+    column_count: uint32;
+    row_count: uint32;
     result: string;
     message: string;
 }
@@ -266,16 +270,19 @@ table ResponseGetMapCloud {
     usage       :       맵 클라우드 설정
     field
         - map_name      :       맵 이름
+        - file_name     :       파일 이름
         - data          :       클라우드 데이터
 */
 table RequestSetMapCloud {
     id: string;
     map_name: string;
+    file_name: string;
     data: [CloudData];
 }
 table ResponseSetMapCloud {
     id: string;
     map_name: string;
+    file_name: string;
     result: string;
     message: string;
 }
@@ -288,15 +295,38 @@ table ResponseSetMapCloud {
     usage       :       토폴로지 맵 조회
     field
         - map_name      :       맵 이름
+        - file_name     :       파일 이름
+        - page_no       :       페이지 번호
+        - page_size     :       페이지 크기
+        - total_page    :       전체 페이지 수
+        - node_type     :       노드 타입 필터
+        - search_text   :       검색어
+        - sort_option   :       정렬 옵션
+        - sort_direction:       정렬 방향
         - data          :       노드 데이터
 */
 table RequestGetMapTopology {
     id: string;
     map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
 }
 table ResponseGetMapTopology {
     id: string;
     map_name: string;
+    file_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
     data: [Node];
     result: string;
     message: string;
@@ -315,15 +345,16 @@ table ResponseGetMapTopology {
 table RequestSetMapTopology {
     id: string;
     map_name: string;
+    file_name: string;
     data: [Node];
 }
 table ResponseSetMapTopology {
     id: string;
     map_name: string;
+    file_name: string;
     result: string;
     message: string;
 }
-
 
 /*
     category    :       RPC
