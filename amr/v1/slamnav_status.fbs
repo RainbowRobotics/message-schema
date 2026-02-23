@@ -64,8 +64,6 @@ struct StatusCondition {
     category    :       Data Structure
     usage       :       로봇 상태 플래그
     field
-        - charge        :       충전 상태
-        - dock          :       도킹 상태
         - emo           :       비상정지 상태
         - localization  :       위치 추정 상태 ( "good" / "none" / "fail" )
         - power         :       전원 상태
@@ -78,8 +76,6 @@ struct StatusCondition {
         - sf_operational_stop   :       운영 정지 상태
 */
 table StatusRobotState {
-    charge: string;
-    dock: bool;
     emo: bool;
     localization: string;
     power: bool;
@@ -164,16 +160,22 @@ table StatusMap {
 
 /*
     category    :       Data Structure
-    usage       :       도킹 상태
+    usage       :       도킹 / 충전 상태
     field
         - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
-        - dock_move     :       도킹 이동 상태 ( "stop" )
+        - dock          :       도킹 이동 상태 ( "stop" )
+        - trigger_id    :       charge trigger 명령의 id ( 최근에 accept 된 명령 반환 )
+        - trigger_result:       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
+        - charge          :     충전 상태 ( "" )
 */
-table StatusDock {
+table StatusChargeState {
     dock_id: string;
     dock_result: string;
-    dock_move: string;
+    dock: bool;
+    trigger_id: string;
+    trigger_result: string;
+    charge: string;
 }
 
 // -------------------------------------------------
@@ -206,7 +208,7 @@ table Status {
     robot_safety_io_state: StatusRobotSafetyIoState;
     setting: StatusSetting;
     map: StatusMap;
-    dock: StatusDock;
+    charge_state: StatusChargeState;
 }
 
 
