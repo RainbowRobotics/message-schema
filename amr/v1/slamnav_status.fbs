@@ -176,9 +176,9 @@ table StatusChargeState {
         - mapping_ratio :       매핑 비율
 */
 struct StatusLocState {
-    loc_id: float;
-    loc_result: float;
-    loc_status: float;
+    loc_id: string;
+    loc_result: string;
+    loc_status: string;
     inlier_error: float;
     inlier_ratio: float;
     mapping_error: float;
