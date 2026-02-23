@@ -1,0 +1,156 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Data Structure
+    usage       :       2D Point Structure
+    field
+        - x, y          :       2D 좌표
+        - intensity     :       강도
+*/
+struct Point2D {
+    x: float;
+    y: float;
+    intensity: float;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       3D Point Structure
+    field
+        - x, y, z       :       3D 좌표
+        - intensity     :       강도
+*/
+struct Point3D {
+    x: float;
+    y: float;
+    z: float;
+    intensity: float;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       robot pose
+    field
+        - x, y, z       :       3D 좌표 (m)
+        - rz            :       회전각 (rad)
+*/
+struct PointPose {
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+
+
+/*
+    category    :       Data Structure
+    usage       :       경로 Structure
+    field
+        - x, y          :       2D 좌표 (m)
+        - rz            :       회전각 (rad)
+*/
+struct PathPose {
+    x: float;
+    y: float;
+    rz: float;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/lidar2d
+    usage       :       2D 라이다 포인트 클라우드 데이터
+    field
+        - points        :       2D 포인트 배열 ( num : 360 )
+        - pose          :       Lidar 스캔 위치
+*/
+table Lidar2D {
+    points: [Point2D];
+    pose: PointPose;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/lidar3d
+    usage       :       3D 라이다 포인트 클라우드 데이터
+    field
+        - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
+                        :       필요시, point filter로 개수 줄일 수 있음.
+        - pose          :       Lidar 스캔 위치
+*/
+table Lidar3D {
+    points: [Point3D];
+    pose: PointPose;
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/mappingCloud
+    usage       :       매핑 포인트 클라우드 데이터
+                :       RequestMappingCloudReload 가 들어오면, 이때까지 쌓은 데이터 전부를 pub
+    field
+        - points        :       3D 포인트 배열
+*/
+table MappingCloud {
+    points: [Point3D];
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+//  notify  : 현재 parsing 중이나, 사용중이지 않음.
+//          : 구조 변경 예정
+//          : multi_path 와 하나로 합칠 예정.
+//          : 선언 위치는 추후 결정.
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/globalPath
+    usage       :       전역 경로 데이터
+    field
+        - path          :       경로 포즈 배열 (x, y, rz)
+*/
+table GlobalPath {
+    path: [PathPose];
+}
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/localPath
+    usage       :       지역 경로 데이터
+    field
+        - path          :       경로 포즈 배열 (x, y, rz)
+*/
+table LocalPath {
+    path: [PathPose];
+}
