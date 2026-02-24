@@ -3,7 +3,7 @@ namespace SLAMNAV;
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/file/compressFiles
     usage       :       파일 압축
     field
@@ -26,7 +26,7 @@ table ResponseCompressFiles {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/file/decompressFile
     usage       :       파일 압축 해제
     field
@@ -46,7 +46,7 @@ table ResponseDecompressFile {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/file/deleteFile
     usage       :       파일 삭제
     field
@@ -63,7 +63,7 @@ table ResponseDeleteFile {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/file/getFileMeta
     usage       :       파일 메타 조회
     field
@@ -96,7 +96,7 @@ table ResponseGetFileMeta {
 
 /*
     category    :       RPC
-    response    :       ???
+    response    :       One-shot
     topic       :       {robotType}/file/getFileChunk
     usage       :       맵 파일 청크 조회
     field
