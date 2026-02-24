@@ -213,7 +213,7 @@ table ResponseDockStop {
 
 /*
     category    :       RPC
-    response    :       Callback
+    response    :       One-shot
     topic       :       {robotType}/control/chargeTrigger
     usage       :       충전 트리거 On / Off
     field
@@ -423,25 +423,26 @@ table ResultControlDock {
     message: string;
 }
 
+// Callback -> One-shot 으로 변경.
 
-/*
-    category    :       Pub / Sub (Result)
-    topic       :       {robotType}/control/resultChargeTrigger
-    usage       :       도킹 제어 결과 응답
-    field
-        - command       :       control Callback 명령 (string)
-            - "chargeTrigger"
-        - switch        :       true(on) / false(off)
-        - result        :       이동 결과
-            - success       :       동작 성공.
-            - fail          :       동작 실패.
-            - start         :       동작 시작.
-            - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
-*/
-table ResultControlChargeTrigger {
-    id: string;
-    command: string;
-    switch: bool;
-    result: string;
-    message: string;
-}
+// /*
+//     category    :       Pub / Sub (Result)
+//     topic       :       {robotType}/control/resultChargeTrigger
+//     usage       :       도킹 제어 결과 응답
+//     field
+//         - command       :       control Callback 명령 (string)
+//             - "chargeTrigger"
+//         - switch        :       true(on) / false(off)
+//         - result        :       이동 결과
+//             - success       :       동작 성공.
+//             - fail          :       동작 실패.
+//             - start         :       동작 시작.
+//             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+// */
+// table ResultControlChargeTrigger {
+//     id: string;
+//     command: string;
+//     switch: bool;
+//     result: string;
+//     message: string;
+// }
