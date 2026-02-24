@@ -18,7 +18,7 @@ namespace SLAMNAV;
         - file_type     :       파일 타입
         - file_size     :       파일 크기
 */
-table MapFileInfo {
+table FileInfo {
     file_name: string;
     created_at: string;
     updated_at: string;
@@ -42,8 +42,8 @@ table MapInfo {
     created_at: string;
     updated_at: string;
     map_type: string;
-    cloud_info: [MapFileInfo];
-    topo_info: [MapFileInfo];
+    cloud_info: [FileInfo];
+    topo_info: [FileInfo];
 }
 
 /*
@@ -227,7 +227,7 @@ table ResponseMapCurrent {
     category    :       RPC
     response    :       Delayed One-shot
     topic       :       {robotType}/map/getCloud
-    usage       :       맵 클라우드 조회
+    usage       :       맵 클라우드 조회 ( cloud.csv )
     field
         - map_name      :       맵 이름
         - file_name     :       파일 이름
@@ -238,6 +238,7 @@ table ResponseMapCurrent {
 table RequestGetMapCloud {
     id: string;
     map_name: string;
+    file_name: string;
 }
 table ResponseGetMapCloud {
     id: string;
@@ -255,12 +256,12 @@ table ResponseGetMapCloud {
     category    :       RPC
     response    :       Delayed One-shot
     topic       :       {robotType}/map/setCloud
-    usage       :       맵 클라우드 설정
+    usage       :       맵 클라우드 설정 ( cloud.csv )
     field
         - map_name      :       맵 이름
         - file_name     :       파일 이름
         - data          :       클라우드 벡터 데이터
-        - column_count  :       data column ( "3" / "4" )
+        - column_count  :       data column ( 4 )
         - row_count     :       data row ( cloud size )
 */
 table RequestSetMapCloud {
