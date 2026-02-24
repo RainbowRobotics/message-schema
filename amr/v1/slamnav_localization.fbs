@@ -31,9 +31,9 @@ struct LocalizationPose {
 
 /*
     category    :       RPC
-    response    :       One-shot
+    response    :       Callback
     topic       :       {robotType}/localization/init
-    usage       :       위치 초기화 (수동)
+    usage       :       위치 초기화 후 loc 시작.
     field
         - pose          :       초기화 위치
 */
@@ -50,9 +50,9 @@ table ResponseLocalizationInit {
 
 /*
     category    :       RPC
-    response    :       One-shot
+    response    :       Callback
     topic       :       {robotType}/localization/randomInit
-    usage       :       위치 초기화 (랜덤)
+    usage       :       위치 초기화 후 loc 시작. ( sim, 랜덤 )
     field
         - pose          :       초기화된 로봇 위치
 */
@@ -70,7 +70,7 @@ table ResponseLocalizationRandomInit {
     category    :       RPC
     response    :       Callback
     topic       :       {robotType}/localization/autoInit
-    usage       :       위치 초기화 (glbal-localizer 사용.) - 개발 중
+    usage       :       위치 초기화 후 loc 시작. (glbal-localizer 사용.) - 개발 중 
     field
         - pose          :       초기화된 로봇 위치
 */
@@ -88,7 +88,7 @@ table ResponseLocalizationAutoInit {
     category    :       RPC
     response    :       Callback
     topic       :       {robotType}/localization/semiAutoInit
-    usage       :       위치 초기화 (Init Node 에서 위치 추정.)
+    usage       :       위치 초기화 후 loc 시작. (Init Node 에서 위치 추정.)
     field
         - pose          :       초기화된 로봇 위치
 */
@@ -151,8 +151,8 @@ table ResponseLocalizationStop {
     usage       :       위치 결과 응답
     field
         - command       :       Localization Callback 명령 (string)
+            - "init"  "randomInit"
             - "autoInit"  "semiAutoInit"
-            - "start"
         - pose          :       초기화된 로봇 위치
         - result        :       이동 결과
             - success       :       동작 성공.
