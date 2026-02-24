@@ -133,10 +133,14 @@ table StatusSetting {
     category    :       Data Structure
     usage       :       맵 상태
     field
+        - map_id        :       map 명령의 id ( 최근에 accept 된 명령 반환 )
+        - map_result    :       map_result 상태 ( "start" / "success" / "cancel" / "fail" )
         - map_name      :       현재 맵 이름
         - map_status    :       맵 상태
 */
-table StatusMap {
+table StatusMapState {
+    map_id: string;
+    map_result: string;
     map_name: string;
     map_status: string;
 }
@@ -149,16 +153,12 @@ table StatusMap {
         - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - dock          :       도킹 이동 상태 ( "stop" )
-        - trigger_id    :       charge trigger 명령의 id ( 최근에 accept 된 명령 반환 )
-        - trigger_result:       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - charge          :     충전 상태 ( "" )
 */
 table StatusChargeState {
     dock_id: string;
     dock_result: string;
     dock: bool;
-    trigger_id: string;
-    trigger_result: string;
     charge: string;
 }
 
@@ -230,7 +230,7 @@ table Status {
     robot_state: StatusRobotState;
     robot_safety_io_state: StatusRobotSafetyIoState;
     setting: StatusSetting;
-    map: StatusMap;
+    map_state: StatusMapState;
     charge_state: StatusChargeState;
     loc_state: StatusLocState;
     multi_state: StatusMultiState;
