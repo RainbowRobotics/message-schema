@@ -44,65 +44,6 @@ struct StatusMotor {
     current: float;
 }
 
-/*
-    category    :       Data Structure
-    usage       :       위치 추정 상태
-    field
-        - inlier_error  :       인라이어 오차
-        - inlier_ratio  :       인라이어 비율
-        - mapping_error :       매핑 오차
-        - mapping_ratio :       매핑 비율
-*/
-struct StatusCondition {
-    inlier_error: float;
-    inlier_ratio: float;
-    mapping_error: float;
-    mapping_ratio: float;
-}
-
-/*
-    category    :       Data Structure
-    usage       :       로봇 상태 플래그
-    field
-        - emo           :       비상정지 상태
-        - localization  :       위치 추정 상태 ( "good" / "none" / "fail" )
-        - power         :       전원 상태
-        - sss_recovery  :       SSS 복구 상태
-        - sw_reset      :       소프트웨어 리셋 상태
-        - sw_stop       :       소프트웨어 정지 상태
-        - sw_start      :       소프트웨어 시작 상태
-        - sf_bumper_detect      :       범퍼 감지 상태
-        - sf_obs_detect         :       장애물 감지 상태
-        - sf_operational_stop   :       운영 정지 상태
-*/
-table StatusRobotState {
-    emo: bool;
-    localization: string;
-    power: bool;
-    sss_recovery: bool;
-    sw_reset: bool;
-    sw_stop: bool;
-    sw_start: bool;
-    sf_bumper_detect: bool;
-    sf_obs_detect: bool;
-    sf_operational_stop: bool;
-}
-
-/*
-    category    :       Data Structure
-    usage       :       로봇 Safety IO 상태
-    field
-        - mcu0_dio      :       MCU0 Digital Output (8bit)
-        - mcu1_dio      :       MCU1 Digital Output (8bit)
-        - mcu0_din      :       MCU0 Digital Input (8bit)
-        - mcu1_din      :       MCU1 Digital Input (8bit)
-*/
-table StatusRobotSafetyIoState {
-    mcu0_dio: [bool];
-    mcu1_dio: [bool];
-    mcu0_din: [bool];
-    mcu1_din: [bool];
-}
 
 /*
     category    :       Data Structure
@@ -135,6 +76,49 @@ struct StatusPower {
 
 /*
     category    :       Data Structure
+    usage       :       로봇 상태 플래그
+    field
+        - emo           :       비상정지 상태
+        - power         :       전원 상태
+        - sss_recovery  :       SSS 복구 상태
+        - sw_reset      :       소프트웨어 리셋 상태
+        - sw_stop       :       소프트웨어 정지 상태
+        - sw_start      :       소프트웨어 시작 상태
+        - sf_bumper_detect      :       범퍼 감지 상태
+        - sf_obs_detect         :       장애물 감지 상태
+        - sf_operational_stop   :       운영 정지 상태
+*/
+table StatusRobotState {
+    emo: bool;
+    power: bool;
+    sss_recovery: bool;
+    sw_reset: bool;
+    sw_stop: bool;
+    sw_start: bool;
+    sf_bumper_detect: bool;
+    sf_obs_detect: bool;
+    sf_operational_stop: bool;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       로봇 Safety IO 상태
+    field
+        - mcu0_dio      :       MCU0 Digital Output (8bit)
+        - mcu1_dio      :       MCU1 Digital Output (8bit)
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+*/
+table StatusRobotSafetyIoState {
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+}
+
+
+/*
+    category    :       Data Structure
     usage       :       설정 정보
     field
         - platform_type :       플랫폼 타입
@@ -149,10 +133,14 @@ table StatusSetting {
     category    :       Data Structure
     usage       :       맵 상태
     field
+        - map_id        :       map 명령의 id ( 최근에 accept 된 명령 반환 )
+        - map_result    :       map_result 상태 ( "start" / "success" / "cancel" / "fail" )
         - map_name      :       현재 맵 이름
         - map_status    :       맵 상태
 */
-table StatusMap {
+table StatusMapState {
+    map_id: string;
+    map_result: string;
     map_name: string;
     map_status: string;
 }
@@ -165,18 +153,55 @@ table StatusMap {
         - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - dock          :       도킹 이동 상태 ( "stop" )
-        - trigger_id    :       charge trigger 명령의 id ( 최근에 accept 된 명령 반환 )
-        - trigger_result:       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - charge          :     충전 상태 ( "" )
 */
 table StatusChargeState {
     dock_id: string;
     dock_result: string;
     dock: bool;
-    trigger_id: string;
-    trigger_result: string;
     charge: string;
 }
+
+
+/*
+    category    :       Data Structure
+    usage       :       위치 추정 상태
+    field
+        - loc_id        :       localization 명령의 id ( 최근에 accept 된 명령 반환 )
+        - loc_result    :       localization_result 상태 ( "move" / "success" / "cancel" / "fail" )
+        - loc_status    :       위치 추정 상태 ( "good" / "none" / "fail" )
+        - inlier_error  :       인라이어 오차
+        - inlier_ratio  :       인라이어 비율
+        - mapping_error :       매핑 오차
+        - mapping_ratio :       매핑 비율
+*/
+table StatusLocState {
+    loc_id: string;
+    loc_result: string;
+    loc_status: string;
+    inlier_error: float;
+    inlier_ratio: float;
+    mapping_error: float;
+    mapping_ratio: float;
+}
+
+
+/*
+    category    :       Data Structure
+    usage       :       멀티 상태
+    field
+        - multi_id      :       multi 경로 id (RequestMultiPath::id 값 사용.)
+        - multi_result  :       multi_result 상태 id ( "move" / "success" / "cancel" / "fail" )
+        - multi_step    :       로봇 경로 step
+        - multi_state   :       multi 상태  ( "none" / "move" / "complete" / "fail" / "obstacle" / "cancel" )
+*/
+table StatusMultiState {
+    multi_id: string;
+    multi_result: string;
+    multi_step: int;
+    multi_state: string;
+}
+
 
 // -------------------------------------------------
 // -----------                              --------
@@ -189,7 +214,6 @@ table StatusChargeState {
     topic       :       {robotType}/status
     usage       :       로봇 전체 상태 정보
     field
-        - condition     :       위치 추정 상태
         - imu           :       IMU 센서 상태
         - motor         :       모터 상태 배열
         - power         :       전원 상태
@@ -200,15 +224,16 @@ table StatusChargeState {
         - dock          :       도킹 상태
 */
 table Status {
-    condition: StatusCondition;
     imu: StatusImu;
     motor: [StatusMotor];
     power: StatusPower;
     robot_state: StatusRobotState;
     robot_safety_io_state: StatusRobotSafetyIoState;
     setting: StatusSetting;
-    map: StatusMap;
+    map_state: StatusMapState;
     charge_state: StatusChargeState;
+    loc_state: StatusLocState;
+    multi_state: StatusMultiState;
 }
 
 
@@ -233,9 +258,6 @@ table Status {
         - jog_move      :       조그 이동 상태 ( "none" )
         - obs           :       장애물 상태 ( "none" / "near" / "far" / "vir" )
         - path_state    :       경로 상태 ( "none" / "req_path" / "recv_path" )
-        - multi_id      :       multi 경로 id (RequestMultiPath::id 값 사용.)
-        - step          :       로봇 경로 step
-        - multi_state   :       multi 상태  ( "none" / "move" / "complete" / "fail" / "obstacle" / "cancel" )
 */
 table StatusMoveState {
     move_id: string;
@@ -244,9 +266,6 @@ table StatusMoveState {
     jog_move: string;
     obs: string;
     path_state: string;
-    multi_id: string;
-    step: int;
-    multi_state: string;
 }
 
 /*
