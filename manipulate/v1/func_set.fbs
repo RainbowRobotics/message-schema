@@ -102,3 +102,11 @@ table Request_Set_TimeConstraint {
   time_sec:        float;
     // Target time(sec)
 }
+
+// "set_ascii_functioncall"
+table Request_Set_AsciiFunctionCall {
+  option:         int;
+    // 0 : Direct Execution
+    // 1 : Que Message
+  message:        string;
+}
