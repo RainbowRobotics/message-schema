@@ -48,7 +48,7 @@ table RequestGetSafetyField {
 }
 table ResponseGetSafetyField {
     id: string;
-    safety_field: int;
+    safety_field: uint8;
     result: string;
     message: string;
 }
@@ -64,11 +64,11 @@ table ResponseGetSafetyField {
 */
 table RequestSetSafetyField {
     id: string;
-    safety_field: int;
+    safety_field: uint8;
 }
 table ResponseSetSafetyField {
     id: string;
-    safety_field: int;
+    safety_field: uint8;
     result: string;
     message: string;
 }
