@@ -36,8 +36,12 @@ table Request_Set_Joint_Impedance {
 }
 
 table Request_Set_Free_Drive {
-  onoff:        int;
-  sensitivity:  float;
+  onoff:        int;
+  extra_force_frame: int;
+  extra_force_fx: float;
+  extra_force_fy: float;
+  extra_force_fz: float;
+  sensitivity:  float;
 }
 
 table Request_Set_User_Frame_6Dof {
