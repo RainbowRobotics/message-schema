@@ -68,6 +68,10 @@ table Response_CallConfigControlBox{
   user_frame_5: ST_Config_UserFrame;
   user_frame_6: ST_Config_UserFrame;
   user_frame_7: ST_Config_UserFrame;
+
+  eout_special_func: N_DOUT_b;
+  ein_special_func: N_DIN_b;
+  ein_filter_count: N_DIN_u;
 }
 
 table Response_CallConfigRobotArm{
@@ -85,6 +89,10 @@ table Response_CallConfigRobotArm{
   gravity_gz: float;
 
   direct_teaching_sensitivity: N_JOINT_f;
+
+  tout_special_func: N_DOUT_b;
+  tin_special_func: N_DIN_b;
+  tin_filter_count: N_DIN_u;
 }
 
 struct ST_Box_Para {

@@ -36,7 +36,11 @@ table Request_Set_Joint_Impedance {
 }
 
 table Request_Set_Free_Drive {
-  onoff:        int;
+  onoff:  int;
+  extra_force_frame: int;
+  extra_force_fx: float;
+  extra_force_fy: float;
+  extra_force_fz: float;
   sensitivity:  float;
 }
 
@@ -74,4 +78,39 @@ table Request_Set_User_Frame_3Points {
 // "set_master_mode"
 table Request_Set_Master_Mode {
   mode: int;
+}
+
+// "set_fixed_speed"
+table Request_Set_Fixed_Speed_Mode {
+  target_move:      int;
+    // 0: J-Types
+    // 1: L-Types
+  vel_option:       int;
+    // 0: Off
+    // 1: Fixed mode: %
+    // 2: Fixed mode: Physical
+  vel_parameter:    float;
+  acc_option:       int;
+    // 0: Off
+    // 1: Fixed mode: %
+    // 2: Fixed mode: Physical
+  acc_parameter:    float;
+}
+
+// "set_timeconstraint"
+table Request_Set_TimeConstraint {
+  option:          int;
+    // 0 : Off
+    // 1 : Unit Move Time-Constraint
+    // 2 : Multi Move Time-Constraint
+  time_sec:        float;
+    // Target time(sec)
+}
+
+// "set_ascii_functioncall"
+table Request_Set_AsciiFunctionCall {
+  option:         int;
+    // 0 : Direct Execution
+    // 1 : Que Message
+  message:        string;
 }

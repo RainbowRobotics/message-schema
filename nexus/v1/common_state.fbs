@@ -1,0 +1,13 @@
+namespace muscat;
+
+table Core_SW_Info {
+    sw_name: string;
+    alias: string;
+    be_service: string;
+    model: string;
+    connected: string;
+}
+
+table Get_System_States {
+    core_sw_list: [Core_SW_Info];
+}
