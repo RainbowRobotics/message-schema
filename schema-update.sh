@@ -144,11 +144,9 @@ if git show-ref --verify --quiet "refs/remotes/$REMOTE_NAME/$BR"; then
     print_string "success" "Updated $REMOTE_NAME/$BR"
   fi
 else
-  TMP="$BR-tmp"
-  git branch -D "$TMP" 2>/dev/null || true
-  git subtree split --prefix="$SCHEMA_DIR" -b "$TMP" >/dev/null
-  git push "$REMOTE_NAME" "$TMP:refs/heads/$BR"
-  git branch -D "$TMP" >/dev/null
+  REMOTE_MAIN_HEAD="$(git rev-parse "$REMOTE_NAME/main")"
+  NEW_COMMIT="$(printf "Init schemas from main @ %s\n" "$MAIN_COMMIT" | git commit-tree "$LOCAL_TREE" -p "$REMOTE_MAIN_HEAD")"
+  git push "$REMOTE_NAME" "$NEW_COMMIT:refs/heads/$BR"
   print_string "success" "Created $REMOTE_NAME/$BR"
 fi
 
