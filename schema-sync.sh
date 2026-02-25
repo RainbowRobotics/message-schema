@@ -72,10 +72,12 @@ fi
 # subtree가 아직 없는 경우만 add
 if [[ ! -d "$SCHEMA_DIR" ]]; then
   print_string "warning" "${SCHEMA_DIR}가 없어 subtree add를 수행합니다..."
-  git subtree add --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash
+  GIT_EDITOR=true git subtree add --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
+    -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"
 else
   print_string "info" "$REMOTE_NAME/main에서 $SCHEMA_DIR 업데이트 중..."
-  git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash
+  GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
+    -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"
 fi
 
 print_string "success" "동기화 완료!"
