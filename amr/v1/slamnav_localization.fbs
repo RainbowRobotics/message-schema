@@ -104,7 +104,7 @@ table ResponseLocalizationSemiAutoInit {
 
 /*
     category    :       RPC
-    response    :       One-shot
+    response    :       Callback
     topic       :       {robotType}/localization/start
     usage       :       위치 추정 시작
     field
@@ -122,7 +122,7 @@ table ResponseLocalizationStart {
 
 /*
     category    :       RPC
-    response    :       One-shot
+    response    :       Callback
     topic       :       {robotType}/localization/stop
     usage       :       위치 추정 중지
     field
