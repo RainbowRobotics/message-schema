@@ -21,6 +21,8 @@ table Notify_Message {
 
 // publush => "muscat/notify/messages"
 table Notify_Message_List {
+    robot_model: string (required);
+    robot_alias: string; // 로봇 별칭 (안보내면 robot_model 사용)
     messages: [Notify_Message];
 }
 
