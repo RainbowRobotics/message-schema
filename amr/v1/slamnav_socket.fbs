@@ -10,33 +10,6 @@ namespace SLAMNAV;
 
 /*
     category    :       Data Structure
-    usage       :       2D Point Structure
-    field
-        - x, y          :       2D 좌표
-        - intensity     :       강도
-*/
-struct Point2D {
-    x: float;
-    y: float;
-    intensity: float;
-}
-
-/*
-    category    :       Data Structure
-    usage       :       3D Point Structure
-    field
-        - x, y, z       :       3D 좌표
-        - intensity     :       강도
-*/
-struct Point3D {
-    x: float;
-    y: float;
-    z: float;
-    intensity: float;
-}
-
-/*
-    category    :       Data Structure
     usage       :       robot pose
     field
         - x, y, z       :       3D 좌표 (m)
@@ -73,36 +46,42 @@ struct PathPose {
 /*
     category    :       Pub / Sub
     topic       :       {robotType}/socket/lidar2d
-    usage       :       2D 라이다 포인트 클라우드 데이터
+    usage       :       2D / 3D 라이다 포인트 클라우드 데이터
     field
-        - points        :       2D 포인트 배열 ( num : 360 )
+        - data          :       클라우드 벡터 데이터
+        - column_count  :       data column ( "4" )
+        - row_count     :       data row ( cloud size )
         - pose          :       Lidar 스캔 위치
 */
-table Lidar2D {
-    points: [Point2D];
+table LidarData {
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
     pose: PointPose;
 }
 
 
-// -------------------------------------------------
-// -----------                              --------
-// -----------          Pub / Sub           --------
-// -----------                              --------
-// -------------------------------------------------
+// // -------------------------------------------------
+// // -----------                              --------
+// // -----------          Pub / Sub           --------
+// // -----------                              --------
+// // -------------------------------------------------
 
-/*
-    category    :       Pub / Sub
-    topic       :       {robotType}/socket/lidar3d
-    usage       :       3D 라이다 포인트 클라우드 데이터
-    field
-        - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
-                        :       필요시, point filter로 개수 줄일 수 있음.
-        - pose          :       Lidar 스캔 위치
-*/
-table Lidar3D {
-    points: [Point3D];
-    pose: PointPose;
-}
+// /*
+//     category    :       Pub / Sub
+//     topic       :       {robotType}/socket/lidar3d
+//     usage       :       3D 라이다 포인트 클라우드 데이터
+//     field
+//         - points        :       3D 포인트 배열 ( min: 19000 ~ max: 21000 )
+//                         :       필요시, point filter로 개수 줄일 수 있음.
+//         - pose          :       Lidar 스캔 위치
+// */
+// table Lidar3D {
+//     data: [float];
+//     column_count: uint32;
+//     row_count: uint32;
+//     pose: PointPose;
+// }
 
 // -------------------------------------------------
 // -----------                              --------
@@ -116,10 +95,14 @@ table Lidar3D {
     usage       :       매핑 포인트 클라우드 데이터
                 :       RequestMappingCloudReload 가 들어오면, 이때까지 쌓은 데이터 전부를 pub
     field
-        - points        :       3D 포인트 배열
+        - data          :       클라우드 벡터 데이터
+        - column_count  :       data column ( "4" )
+        - row_count     :       data row ( cloud size )
 */
 table MappingCloud {
-    points: [Point3D];
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
 }
 
 
