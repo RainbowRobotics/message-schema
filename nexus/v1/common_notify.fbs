@@ -1,0 +1,39 @@
+include "struct.fbs";
+
+namespace muscat;
+
+enum Notify_Level_Enum:byte { INFO = 0, WARNING = 1, ERROR = 2 }
+enum Notify_ButtonType_Enum:byte { POSITIVE = 0, NEGATIVE = 1, NORMAL = 2 }
+
+table Notify_Button {
+  label: Multilingual_Struct (required); // {ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+  action: string (required);
+  type: Notify_ButtonType_Enum = NORMAL; // 0: POSITIVE, 1: NEGATIVE, 2: NORMAL
+}
+
+table Notify_Message {
+    code: string (required);
+    title: Multilingual_Struct (required); // {ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+    message: Multilingual_Struct; // {ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+    level: Notify_Level_Enum = INFO; // 0: INFO, 1: WARNING, 2: ERROR
+    buttons: [Notify_Button]; // {label: Multilingual_Struct, action: string, type: Notify_ButtonType_Enum}
+}
+
+// publush => "muscat/notify/messages"
+table Notify_Message_List {
+    robot_model: string (required);
+    robot_alias: string; // 로봇 별칭 (안보내면 robot_model 사용)
+    messages: [Notify_Message];
+}
+
+// query => "{robot_model}/read/notify"
+table Request_Read_Notify_Message {
+    code: string (required);
+    action: string (required);
+    extra_payload: string;
+}
+
+// "{robot_model}/read/notify" 에 대한 응답
+table Response_Read_Notify_Message {
+    result: Result_Enum = SUCCESS; // 0: SUCCESS, 1: FAIL
+}

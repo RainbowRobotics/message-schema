@@ -1,0 +1,17 @@
+namespace muscat;
+
+enum Result_Enum:byte { SUCCESS = 0, FAIL = 1 }
+
+table Response_Result {
+  result: Result_Enum = SUCCESS;
+}
+
+table Multilingual_Struct {
+  ko: string;
+  en: string (required);
+  ja: string;
+  zh: string;
+  vi: string;
+  th: string;
+  es: string;
+}
