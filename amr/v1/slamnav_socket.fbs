@@ -1,5 +1,27 @@
 namespace SLAMNAV;
 
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Data Structure
+    usage       :       robot pose
+    field
+        - x, y, z       :       3D 좌표 (m)
+        - rz            :       회전각 (rad)
+*/
+struct PointPose {
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+
 // -------------------------------------------------
 // -----------                              --------
 // -----------          Pub / Sub           --------
@@ -62,7 +84,7 @@ table MappingCloud {
         - column_count  :       data column ( "3" )
         - row_count     :       data row ( path size )
 */
-table PathData {
+table Path {
     data: [float];
     column_count: uint32;
     row_count: uint32;
