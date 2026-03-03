@@ -47,7 +47,6 @@ table Request_Set_Free_Drive {
 table Request_Set_User_Frame_6Dof {
   user_frame_num: int;
   setting_option: int;
-  target_frame: int;
   target_x: float;
   target_y: float;
   target_z: float;
