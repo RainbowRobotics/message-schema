@@ -35,19 +35,19 @@ table ResponseMultiPath {
     field
         - vobs_robots           :       가상 장애물 로봇 목록
         - vobs_closures         :       가상 장애물 클로저 목록
-        - is_vobs_c             :       클로저 변경 여부
+        - is_vobs_c             :       클로저 변경 여부 ( true / false )
 */
 table RequestMultiVobs {
     id: string;
     vobs_robots: [string];
     vobs_closures: [string];
-    is_vobs_c: string;
+    is_vobs_c: bool;
 }
 table ResponseMultiVobs {
     id: string;
     vobs_robots: [string];
     vobs_closures: [string];
-    is_vobs_c: string;
+    is_vobs_c: bool;
     result: string;
     message: string;
 }
