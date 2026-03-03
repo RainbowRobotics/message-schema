@@ -63,11 +63,51 @@ table Request_Update_Sub_Task_State {
   state: flow_manager.RB_Flow_Manager_ProgramState;
 }
 
+// topic: "muscat/pause", "muscat/resume", "muscat/stop"
+// "muscat/stop"은 전체 로봇 프로그램 중지라서 robot_model 보내도 전체 stop
 table Request_Exec_Control_Program {
-  robot_model: string(optional);
-  program_id: string(optional);
+  robot_model: string;
 }
 
 table Response_Exec_Control_Program {
   manipulate_return_value: int(optional);
+}
+
+table PyFM_Variable_Value {
+  value_json: string;
+  type: string; // "global" | "local"
+}
+
+table PyFM_Variable_Entry {
+  key: string (key);
+  value: PyFM_Variable_Value;
+}
+
+table PyFM_Executor_State {
+  is_ui_execution: bool;
+  category: string;
+  robot_model: string;
+  task_id: string (key);
+  step_mode: bool;
+  variables: [PyFM_Variable_Entry];
+  state: string;
+  total_repeat: int;
+  current_repeat: int;
+  is_main_task: bool;
+}
+
+table PyFM_Executor_State_Entry {
+  key: string (key);
+  value: PyFM_Executor_State;
+}
+
+table PyFM_By_Robot_Model_Entry {
+  key: string (key);
+  value: [PyFM_Executor_State_Entry];
+}
+
+// topic: "muscat/executor/state"
+table Response_Get_Executor_State {
+  by_task_id: [PyFM_Executor_State_Entry];
+  by_robot_model: [PyFM_By_Robot_Model_Entry];
 }
