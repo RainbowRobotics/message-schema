@@ -16,7 +16,7 @@ namespace SLAMNAV;
         - value         :       true / false
 */
 table SafetyFlag {
-    name: string;   
+    name: string;
     value: bool;
 }
 /*
