@@ -80,6 +80,7 @@ struct StatusPower {
     field
         - emo           :       비상정지 상태
         - power         :       전원 상태
+        - simul         :       시뮬레이션 모드 상태
         - sss_recovery  :       SSS 복구 상태
         - sw_reset      :       소프트웨어 리셋 상태
         - sw_stop       :       소프트웨어 정지 상태
@@ -91,6 +92,7 @@ struct StatusPower {
 table StatusRobotState {
     emo: bool;
     power: bool;
+    simul: bool;
     sss_recovery: bool;
     sw_reset: bool;
     sw_stop: bool;
