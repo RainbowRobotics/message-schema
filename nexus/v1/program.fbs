@@ -1,12 +1,15 @@
 include "flow_manager.fbs";
 
-attribute optional;
-
 namespace program;
 
 enum RB_Program_Sub_Task_Type: byte {
   SUB_TASK_INSERT,
   SUB_TASK_CHANGE,
+}
+
+enum Response_Program_Result: byte {
+  SUCCESS,
+  FAIL,
 }
 
 table RB_Program_Task_Status {
@@ -70,7 +73,7 @@ table Request_Exec_Control_Program {
 }
 
 table Response_Exec_Control_Program {
-  manipulate_return_value: int(optional);
+  result: Response_Program_Result;
 }
 
 table PyFM_Variable_Value {
@@ -89,7 +92,6 @@ table PyFM_Executor_State {
   robot_model: string;
   task_id: string (key);
   step_mode: bool;
-  variables: [PyFM_Variable_Entry];
   state: string;
   total_repeat: int;
   current_repeat: int;
@@ -108,6 +110,5 @@ table PyFM_By_Robot_Model_Entry {
 
 // topic: "muscat/executor/state"
 table Response_Get_Executor_State {
-  by_task_id: [PyFM_Executor_State_Entry];
   by_robot_model: [PyFM_By_Robot_Model_Entry];
 }
