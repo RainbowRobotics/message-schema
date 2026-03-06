@@ -1,0 +1,146 @@
+
+namespace SLAMNAV;
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       Notify Level Enum
+    field
+        - INFO      :       정보
+        - WARNING   :       경고
+        - ERROR     :       에러
+*/
+enum NotifyLevelEnum:byte { INFO = 0, WARNING = 1, ERROR = 2 }
+/*
+    category    :       Data Structure
+    usage       :       Notify Button Type Enum
+    field
+        - POSITIVE  :       긍정
+        - NEGATIVE  :       부정
+        - NORMAL    :       일반
+*/
+enum NotifyButtonTypeEnum:byte { POSITIVE = 0, NEGATIVE = 1, NORMAL = 2 }
+
+/*
+    category    :       Data Structure
+    usage       :       Multilingual Struct
+    field
+        - ko        :       한국어
+        - en        :       영어
+        - ja        :       일본어
+        - zh        :       중국어
+        - vi        :       베트남어
+        - th        :       태국어
+        - es        :       스페인어
+*/
+table MultilingualStruct {
+  ko: string;
+  en: string (required);
+  ja: string;
+  zh: string;
+  vi: string;
+  th: string;
+  es: string;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       Notify Button
+    field
+        - label       :       버튼 라벨 (한국어, 영어, 일본어, 중국어, 베트남어, 태국어, 스페인어){ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+        - action      :       버튼 액션 (SLAMNAV에서 추후 RequestReadNotifyMessage에서 받고 싶은 action string으로 임의로 설정하여 송신)
+        - type        :       버튼 타입 (POSITIVE, NEGATIVE, NORMAL)
+*/
+table NotifyButton {
+  label: MultilingualStruct (required);
+  action: string (required);
+  type: NotifyButtonTypeEnum = NORMAL;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       Notify Message
+    field
+        - code        :       메시지 코드
+        - title       :       메시지 제목 (한국어, 영어, 일본어, 중국어, 베트남어, 태국어, 스페인어){ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+        - message     :       메시지 내용 (한국어, 영어, 일본어, 중국어, 베트남어, 태국어, 스페인어){ko: string, en: string (required), ja: string, zh: string, vi: string, th: string, es: string}
+        - level       :       메시지 레벨 (INFO, WARNING, ERROR)
+        - buttons     :       버튼 리스트 [NotifyButton]
+*/
+table NotifyMessage {
+    code: string (required);
+    title: MultilingualStruct (required);
+    message: MultilingualStruct;
+    level: NotifyLevelEnum = INFO;
+    buttons: [NotifyButton];
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------           Pub / Sub          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/state_message
+    usage       :       상태 메시지
+    field
+        - type        :       메시지 타입
+        - code        :       메시지 코드
+        - sub_str     :       메시지 내용
+*/
+table StateMessage {
+    type: int;
+    code: int;
+    sub_str: string;
+}
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/notify/messages
+    usage       :       Notify Message List
+    field
+        - robot_model :       로봇 모델
+        - robot_alias :       로봇 별칭 (안보내면 robot_model 사용)
+        - messages    :       메시지 리스트 [NotifyMessage]
+*/
+table NotifyMessageList {
+    robot_model: string (required);
+    robot_alias: string;
+    messages: [NotifyMessage];
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/notify/
+    usage       :       메시지 읽기
+    field
+        - code        :       메시지 코드
+        - action      :       버튼 액션 (이 값을 파싱하여 기능을 수행하면 됨)
+        - extra_payload :       추가 페이로드
+        - result        :       결과 (success / fail)
+        - message       :       메시지
+*/
+table RequestReadNotifyMessage {
+    code: string (required);
+    action: string (required);
+    extra_payload: string;
+}
+table ResponseReadNotifyMessage {
+    result: string;
+    message: string;
+}
