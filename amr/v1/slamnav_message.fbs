@@ -126,7 +126,7 @@ table NotifyMessageList {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/notify/
+    topic       :       {robotType}/notify/action
     usage       :       메시지 읽기
     field
         - code        :       메시지 코드
