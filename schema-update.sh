@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-MAIN_REPO="$(git rev-parse --show-toplevel)"
+MAIN_REPO="$(cygpath -u "$(git rev-parse --show-toplevel)")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 cd "$MAIN_REPO"
