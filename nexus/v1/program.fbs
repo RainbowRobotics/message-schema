@@ -112,11 +112,3 @@ table PyFM_By_Robot_Model_Entry {
 table Response_Get_Executor_State {
   by_robot_model: [PyFM_By_Robot_Model_Entry];
 }
-
-table Request_Get_Digital_Input {
-}
-
-// topic: "{robot_model}/get_digital_input"
-table Response_Get_Digital_Input {
-  digital_input: [byte] (required);
-}

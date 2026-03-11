@@ -115,15 +115,3 @@ table Request_Set_AsciiFunctionCall {
     // 1 : Que Message
   message:        string;
 }
-
-// "set_shift_landmark"
-table Request_Set_Shift_LandMark {
-  shift_mode: int;
-  tolerance: float;
-  reference_point_1: MoveInput_Target;
-  reference_point_2: MoveInput_Target;
-  reference_point_3: MoveInput_Target;
-  present_point_1: MoveInput_Target;
-  present_point_2: MoveInput_Target;
-  present_point_3: MoveInput_Target;
-}
