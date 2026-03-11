@@ -144,3 +144,23 @@ table ResponseReadNotifyMessage {
     result: string;
     message: string;
 }
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/call_whoami
+    usage       :       로봇 정보 조회
+    field
+        - category    :       대분류 ...manipulate, mobile, sesnor
+        - model       :       모델코드
+        - version     :       4.7.1
+        - alias       :       Ui표기용 string 별칭
+*/
+table RequestCallWhoami {
+}
+table ResponseCallWhoami {
+    category    : string;
+    model       : string;
+    version     : string;
+    alias       : string;
+}
