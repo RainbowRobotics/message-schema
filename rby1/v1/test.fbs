@@ -1,0 +1,6 @@
+namespace rby1;
+
+table Test{
+    test: string;
+
+}
