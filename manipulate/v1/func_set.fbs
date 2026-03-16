@@ -127,3 +127,49 @@ table Request_Set_Shift_LandMark {
   present_point_2: MoveInput_Target;
   present_point_3: MoveInput_Target;
 }
+
+// "set_program_flow_manage"
+table Request_Set_ProgramFlowManage {
+    target: int;
+    // Target Component
+        // 0 : All Robot Components
+        // 1 : This Component
+    option: int;
+    // Option
+            // 0 : Stop
+            // 1 : Pause
+            // 2 : Resume
+            // 3 : Reset Collision
+}
+
+// "set_din_function_mask"
+table Request_Set_DinFunctionMask {
+    device: int;
+    // Target Device
+        // 0 : Control Box IO
+        // 1 : Extension IO
+        // 2 : ToolFlange IO
+    port_num: int;
+    // Port Selection
+        // -1: 전체 포트, 0 ~ 15 : 포트번호
+    option: int;
+    // Option
+        // 0 : Disable-Mask Off
+        // 1 : Disable-Mask On
+}
+
+// "set_dout_function_mask"
+table Request_Set_DoutFunctionMask {
+    device: int;
+    // Target Device
+        // 0 : Control Box IO
+        // 1 : Extension IO
+        // 2 : ToolFlange IO
+    port_num: int;
+    // Port Selection
+        // -1: 전체 포트, 0 ~ 15 : 포트번호
+    option: int;
+    // Option
+        // 0 : Disable-Mask Off
+        // 1 : Disable-Mask On
+}
