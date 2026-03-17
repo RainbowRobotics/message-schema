@@ -178,6 +178,26 @@ table ResponseGetDriveParam {
 
 /*
     category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/setting/setDriveParam
+    usage       :       드라이브 파라미터 설정
+    field
+        - params        :       Drive 파라미터 목록
+*/
+table RequestSetDriveParam {
+    id: string;
+    params: [SettingParam];
+}
+table ResponseSetDriveParam {
+    id: string;
+    params: [SettingParam];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
     response    :       One-shot
     topic       :       {robotType}/setting/getSensorInfo
     usage       :       센서 정보 조회
