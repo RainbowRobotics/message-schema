@@ -115,3 +115,35 @@ table Request_Servo_L {
     filter:         float;
 }
 //---------------------------------------------------------------
+// Weaving
+//---------------------------------------------------------------
+// "call_tcp_weaving_off"
+table Request_Wrapper_TcpWeave_Off {
+}
+// "call_tcp_weaving_on"
+table Request_Wrapper_TcpWeave_On {
+    type:               int;
+    axis_torch:         int;
+    axis_weave:         int;
+    plane_option:       int;
+    user_rx:            float;
+    user_ry:            float;
+    user_rz:            float;
+    magnitude_1:        float;
+    magnitude_2:        float;
+    phase_1:            float;
+    phase_2:            float;
+    time_1:             float;
+    time_2:             float;
+    time_3:             float;
+    time_4:             float;
+    time_5:             float;
+    time_6:             float;
+    time_7:             float;
+    time_8:             float;
+    scale_rate:         float;
+    offset_torch:       float;
+    offset_weave:       float;
+    swing_ang:          float;
+    distortion:         float;
+}
