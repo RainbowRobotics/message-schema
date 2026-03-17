@@ -70,7 +70,7 @@ table ResponseLocalizationRandomInit {
     category    :       RPC
     response    :       Callback
     topic       :       {robotType}/localization/autoInit
-    usage       :       위치 초기화 후 loc 시작. (glbal-localizer 사용.) - 개발 중 
+    usage       :       위치 초기화 후 loc 시작. (glbal-localizer 사용.) - 개발 중
     field
         - pose          :       초기화된 로봇 위치
 */
