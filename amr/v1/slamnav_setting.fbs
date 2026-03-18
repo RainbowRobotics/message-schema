@@ -1,3 +1,5 @@
+include "struct.fbs";
+
 namespace SLAMNAV;
 
 
@@ -8,18 +10,33 @@ namespace SLAMNAV;
 // -------------------------------------------------
 
 
+enum SettingParamType:byte { STRING = 0, INT = 1, FLOAT = 2, BOOL = 3, LIST = 4, DICT = 5 }
+
+table SettingCategory {
+    key: string;
+    name: Multilingual_Struct;
+    description: Multilingual_Struct;
+}
+
+
 /*
     category    :       Data Structure
     usage       :       설정 파라미터 구조체
     field
         - key           :       파라미터 키
-        - type          :       파라미터 타입
-        - value         :       파라미터 값
+        - type          :       파라미터 타입 ( STRING, INT, FLOAT, BOOL, LIST, DICT )
+        - value         :       파라미터 값 (어떤 타입이던 string값으로 변환하여 전송)
+        - min           :       파라미터 최소값 (optional)
+        - max           :       파라미터 최대값 (optional)
 */
 table SettingParam {
-    key: string;
-    type: string;
-    value: string;
+    key: string (required);
+    type: SettingParamType;
+    value: string (required);
+    name: Multilingual_Struct;
+    description: Multilingual_Struct;
+    min: string;
+    max: string;
 }
 
 /*
@@ -80,42 +97,96 @@ table ResponseSetRobotType {
 }
 
 
-// config.json 파라미터 정보 (일단 흐린눈)
+// config.json 파라미터 정보 (일단 흐린눈 -> 이제 안돼)
+
 /*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/getSettingCategory
+    usage       :       config 카테고리 조회. 배열로 되어있는 카테고리는 각 별개의 카테고리로 분리
+    field
+        - robot_type    :       조회할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 조회 )
+        - level         :       config 파라미터 레벨 ( 0: 사용자 레벨, 1: 관리자 레벨, 2: 개발자 레벨 )
+        - categories    :       config 파라미터 카테고리 목록
+*/
+table RequestGetSettingCategory {
+    id: string;
+    robot_type: string;
+    level: int;
+}
+table ResponseGetSettingCategory {
+    id: string;
+    robot_type: string;
+    level: int;
+    categories: [string];
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/getSettingParam
+    usage       :       config 파라미터 조회
+    field
+        - robot_type    :       조회할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 조회 )
+        - level         :       config 파라미터 레벨 ( 0: 사용자 레벨, 1: 관리자 레벨, 2: 개발자 레벨 )
+        - category      :       config 파라미터 카테고리
+        - params        :       config 파라미터 목록 (카테고리 하위 + 레벨에 일치하는 파라미터 목록 -> 없으면 빈 배열)
+            - key           :       config 파라미터 키
+            - type          :       config 파라미터 타입
+            - value         :       config 파라미터 값
+            - min           :       config 파라미터 최소값 (nullable)
+            - max           :       config 파라미터 최대값 (nullable)
+        - result        :       config 파라미터 조회 결과
+        - message       :       config 파라미터 조회 메시지
+*/
 table RequestGetSettingParam {
     id: string;
     robot_type: string;
-    params: [SettingParam];
+    level: int;
+    category: string;
 }
 table ResponseGetSettingParam {
     id: string;
     robot_type: string;
+    level: int;
+    category: string;
     params: [SettingParam];
     result: string;
     message: string;
 }
-table RequestSettingParamAll {
-    id: string;
-    robot_type: string;
-}
-table ResponseSettingParamAll {
-    id: string;
-    robot_type: string;
-    params: [SettingParam];
-}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/setSettingParam
+    usage       :       config 파라미터 설정
+    field
+        - robot_type    :       설정할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 설정 )
+        - category      :       config 파라미터 카테고리
+        - param         :       config 수정 파라미터 ( 요청 하나에 하나의 파라미터만 설정 가능 )
+            - key           :       config 파라미터 키
+            - type          :       config 파라미터 타입
+            - value         :       config 파라미터 값
+        - result        :       config 파라미터 설정 결과 ("accept" / "reject")
+        - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
+*/
 table RequestSetSettingParam {
     id: string;
     robot_type: string;
-    params: [SettingParam];
+    category: string;
+    param: SettingParam;
 }
 table ResponseSetSettingParam {
     id: string;
     robot_type: string;
-    params: [SettingParam];
+    category: string;
+    param: SettingParam;
     result: string;
     message: string;
 }
-*/
+
 
 
 /*
