@@ -147,26 +147,3 @@ table Request_Wrapper_TcpWeave_On {
     swing_ang:          float;
     distortion:         float;
 }
-//---------------------------------------------------------------
-// Conveyor
-//---------------------------------------------------------------
-// "call_base_conveyor_off"
-table Request_Wrapper_Conveyor_Off {
-    stop_time_sec: float;
-}
-// "call_base_conveyor_speed"
-table Request_Wrapper_Conveyor_Speed {
-    conv_speed: float;
-    conv_acc_time_sec: float;
-}
-// "call_base_conveyor_on"
-table Request_Wrapper_Conveyor_On {
-    conv_type: int;
-        // Conveyor Type
-            // 0 : No Conveyor
-            // 1 : Linear Conveyor
-            // 2 : Circular Conveyor
-    conv_speed: float;
-    conv_acc_time_sec: float;
-    conv_ref_points: [MoveInput_Target];
-}
