@@ -10,12 +10,12 @@ namespace SLAMNAV;
 // -------------------------------------------------
 
 
-enum SettingParamType:byte { STRING = 0, INT = 1, FLOAT = 2, BOOL = 3, LIST = 4, DICT = 5 }
+enum SettingParamTypeEnum:byte { STRING = 0, INT = 1, FLOAT = 2, BOOL = 3, LIST = 4, DICT = 5 }
 
 table SettingCategory {
     key: string;
-    name: Multilingual_Struct;
-    description: Multilingual_Struct;
+    name: MultilingualStruct;
+    description: MultilingualStruct;
 }
 
 
@@ -31,10 +31,10 @@ table SettingCategory {
 */
 table SettingParam {
     key: string (required);
-    type: SettingParamType;
+    type: SettingParamTypeEnum;
     value: string (required);
-    name: Multilingual_Struct;
-    description: Multilingual_Struct;
+    name: MultilingualStruct;
+    description: MultilingualStruct;
     min: string;
     max: string;
 }

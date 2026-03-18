@@ -1,0 +1,286 @@
+include "struct.fbs";
+include "slamnav_setting.fbs";
+
+namespace SLAMNAV;
+
+// 이 스키마들은 로봇 기능 조회를 위함.
+// 지원하는 로봇 모델의 경우에만 queryable 등록할 것.
+
+enum ChargeStateEnum:byte { NONE = 0, CHARGING = 1, COMPLETE = 2, FAIL = 3, CANCEL = 4 }
+enum ChargeTypeEnum:byte { CABLE = 0, CONTACT = 1, INDUCTIVE = 2 }
+enum BatteryTypeEnum:byte { DEFAULT = 0, TABOS = 1 }
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/charge
+    usage       :       충전 기능 조회
+    field
+        - dock_state        :       도킹 상태 (true 면 도킹 중)
+        - charge_state      :       충전 상태 (ChargeStateEnum)
+        - battery_percent   :       배터리 잔량 (%)
+        - charge_current    :       충전 전류 (A)
+        - contact_voltage   :       접점 전압 (V)
+        - battery_type      :       배터리 타입 (BatteryTypeEnum)
+        - charge_type       :       지원 충전 타입 (배열)
+*/
+table RequestCapabilityDock {
+
+}
+table ResponseCapabilityDock {
+    dock_state: bool;
+    charge_state: ChargeStateEnum;
+    battery_percent: float;
+    charge_current: float;
+    contact_voltage: float;
+    battery_type: BatteryTypeEnum;
+    charge_type: [ChargeTypeEnum];
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/Io
+    usage       :       로봇 IO 상태 조회 ( 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - mcu0_dio      :       MCU0 Digital Output (8bit)
+        - mcu1_dio      :       MCU1 Digital Output (8bit)
+        - mcu0_din      :       MCU0 Digital Input (8bit)
+        - mcu1_din      :       MCU1 Digital Input (8bit)
+*/
+table RequestCapabilitySafetyIo {
+}
+table ResponseCapabilitySafetyIo {
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
+    mcu0_din: [bool];
+    mcu1_din: [bool];
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/camera
+    usage       :       카메라 기능 조회 ( 카메라 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 카메라 활성화 여부
+        - enabled_obs   : 카메라 장애물 감지 활성화 여부
+        - enabled_depth : 카메라 깊이 측정 활성화 여부
+        - enabled_filter: 카메라 필터 활성화 여부
+        - info          : 카메라 정보 목록 (CameraInfo)
+            - connection    : 카메라 연결 상태
+            - index         : 카메라 인덱스
+            - serial        : 카메라 시리얼
+            - tf            : 카메라 트랜스폼 (x, y, z, r, p, y)
+            - color_profile : 카메라 색상 프로필
+            - depth_profile : 카메라 깊이 프로필
+            - type          : 카메라 타입 (CameraTypeEnum)
+*/
+enum CameraTypeEnum:byte { ORBBEC = 0 }
+table CameraInfo {
+    connection: bool;
+    index: int;
+    serial: string;
+    tf: [float];
+    color_profile: int;
+    depth_profile: int;
+    type: CameraTypeEnum;
+}
+table RequestCapabilityCamera {
+}
+table ResponseCapabilityCamera {
+    enabled: bool;
+    enabled_obs: bool;
+    enabled_depth: bool;
+    enabled_filter: bool;
+    info: [CameraInfo];
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/lidar2d
+    usage       :       2D 라이다 기능 조회 ( 2D 라이다 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 라이다 활성화 여부
+        - enabled_obs   : 라이다 장애물 감지 활성화 여부
+        - info          : 라이다 정보 목록 (LidarInfo)
+            - connection    : 라이다 연결 상태
+            - index         : 라이다 인덱스
+            - serial        : 라이다 시리얼
+            - tf            : 라이다 트랜스폼 (x, y, z, r, p, y)
+            - ip            : 라이다 IP 주소
+            - type          : 라이다 타입 (LidarTypeEnum)
+            - safety        : 세이프티 라이다 여부 (Type으로 통합될 수 있을지?)
+*/
+enum LidarTypeEnum:byte { RPLIDAR = 0, SICK = 1, LAKI = 2, LIVOX = 3, HOKUYO = 4 }
+table LidarInfo {
+    connection: bool;
+    index: int;
+    serial: string;
+    tf: [float];
+    ip: string;
+    type: LidarTypeEnum;
+    safety: bool;
+}
+table RequestCapabilityLidar2D {
+}
+table ResponseCapabilityLidar2D {
+    enabled: bool;
+    enabled_obs: bool;
+    info: [LidarInfo];
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/lidar3d
+    usage       :       3D 라이다 기능 조회 ( 3D 라이다 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 라이다 활성화 여부
+        - enabled_obs   : 라이다 장애물 감지 활성화 여부
+        - info          : 라이다 정보 목록 (LidarInfo)
+            - connection    : 라이다 연결 상태
+            - index         : 라이다 인덱스
+            - serial        : 라이다 시리얼
+            - type          : 라이다 타입 (LidarTypeEnum)
+            - safety        : 세이프티 라이다 여부 (Type으로 통합될 수 있을지?)
+*/
+table RequestCapabilityLidar3D {
+}
+table ResponseCapabilityLidar3D {
+    enabled: bool;
+    enabled_obs: bool;
+    info: [LidarInfo];
+}
+
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/imu
+    usage       :       IMU 기능 조회 ( IMU 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : IMU 활성화 여부
+        - info          : IMU 정보 목록 (SensorInfo)
+            - connection    : IMU 연결 상태
+            - index         : IMU 인덱스
+            - serial        : IMU 시리얼
+            - type          : IMU 타입 (IMUTypeEnum)
+*/
+enum IMUTypeEnum:byte { DEFAULT = 0, IMU = 1 }
+table IMUInfo {
+    connection: bool;
+    index: int;
+    serial: string;
+    type: IMUTypeEnum;
+}
+table RequestCapabilityImu {
+}
+table ResponseCapabilityImu {
+    info: [IMUInfo];
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/safetyBumper
+    usage       :       세이프티 범퍼 기능 조회 ( 세이프티 범퍼 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 세이프티 범퍼 활성화 여부
+        - bumper_state  : 세이프티 범퍼 상태
+*/
+table RequestCapabilitySafetyBumper {
+}
+table ResponseCapabilitySafetyBumper {
+    enabled: bool;
+    bumper_state: bool;
+    //bumper_type: BumperTypeEnum;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/safetyInterlock
+    usage       :       세이프티 인터락 기능 조회 ( 세이프티 인터락 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 세이프티 인터락 활성화 여부
+        - interlock_state  : 세이프티 인터락 상태
+*/
+table RequestCapabilitySafetyInterlock {
+}
+table ResponseCapabilitySafetyInterlock {
+    enabled: bool;
+    interlock_state: bool;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/safetyObstacle
+    usage       :       세이프티 장애물 기능 조회 ( 세이프티 장애물 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 세이프티 장애물 활성화 여부
+        - obs_detect    : 세이프티 장애물 감지 여부
+*/
+table RequestCapabilitySafetyObstacle {
+}
+table ResponseCapabilitySafetyObstacle {
+    enabled: bool;
+    obs_detect: bool;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/safetyOperationStop
+    usage       :       세이프티 작업 정지 기능 조회 ( 세이프티 작업 정지 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 세이프티 작업 정지 활성화 여부
+        - operation_stop_state  : 세이프티 작업 정지 상태
+*/
+table RequestCapabilitySafetyOperationStop {
+}
+table ResponseCapabilitySafetyOperationStop {
+    enabled: bool;
+    operation_stop_state: bool;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/safetySpeedControl
+    usage       :       세이프티 속도 제어 기능 조회 ( 세이프티 속도 제어 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - enabled       : 세이프티 속도 제어 활성화 여부
+        - speed_control_state  : 세이프티 속도 제어 상태
+*/
+table RequestCapabilitySafetySpeedControl {
+}
+table ResponseCapabilitySafetySpeedControl {
+    enabled: bool;
+    speed_control_state: bool;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/capability/tabos
+    usage       :       TABOS 기능 조회 ( TABOS 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    field
+        - tabos_voltage   : TABOS 전압
+        - tabos_current   : TABOS 전류
+        - tabos_soc       : TABOS SOC
+        - tabos_soh       : TABOS SOH
+        - tabos_temp      : TABOS 온도
+*/
+table RequestCapabilityTabos {
+}
+table ResponseCapabilityTabos {
+    tabos_voltage: float;
+    tabos_current: float;
+    tabos_soc: float;
+    tabos_soh: float;
+    tabos_temp: float;
+}
