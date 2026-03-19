@@ -1,12 +1,12 @@
 namespace SLAMNAV;
 
-enum Result_Enum:byte { SUCCESS = 0, FAIL = 1 }
+enum ResultEnum:byte { SUCCESS = 0, FAIL = 1 }
 
-table Response_Result {
-  result: Result_Enum = SUCCESS;
+table ResponseResult {
+  result: ResultEnum = SUCCESS;
 }
 
-table Multilingual_Struct {
+table MultilingualStruct {
   ko: string;
   en: string (required);
   ja: string;
