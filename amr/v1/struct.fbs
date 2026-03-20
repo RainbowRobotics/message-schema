@@ -1,9 +1,9 @@
 namespace SLAMNAV;
 
-enum ResultEnum:byte { SUCCESS = 0, FAIL = 1 }
+enum ResultEnum:byte { ACCEPT = 0, REJECT = 1 }
 
 table ResponseResult {
-  result: ResultEnum = SUCCESS;
+  result: ResultEnum = ACCEPT;
 }
 
 table MultilingualStruct {
