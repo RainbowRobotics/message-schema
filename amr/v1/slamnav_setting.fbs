@@ -109,17 +109,18 @@ table ResponseSetRobotType {
         - level         :       config 파라미터 레벨 ( 0: 사용자 레벨, 1: 관리자 레벨, 2: 개발자 레벨 )
         - categories    :       config 파라미터 카테고리 목록
 */
+enum SettingLevelEnum:byte { USER = 0, ADMIN = 1, DEVELOPER = 2 }
 table RequestGetSettingCategory {
     id: string;
     robot_type: string;
-    level: int;
+    level: SettingLevelEnum;
 }
 table ResponseGetSettingCategory {
     id: string;
     robot_type: string;
-    level: int;
+    level: SettingLevelEnum;
     categories: [string];
-    result: string;
+    result: ResultEnum;
     message: string;
 }
 
@@ -144,16 +145,16 @@ table ResponseGetSettingCategory {
 table RequestGetSettingParam {
     id: string;
     robot_type: string;
-    level: int;
+    level: SettingLevelEnum;
     category: string;
 }
 table ResponseGetSettingParam {
     id: string;
     robot_type: string;
-    level: int;
+    level: SettingLevelEnum;
     category: string;
     params: [SettingParam];
-    result: string;
+    result: ResultEnum;
     message: string;
 }
 
@@ -169,7 +170,7 @@ table ResponseGetSettingParam {
             - key           :       config 파라미터 키
             - type          :       config 파라미터 타입
             - value         :       config 파라미터 값
-        - result        :       config 파라미터 설정 결과 ("accept" / "reject")
+        - result        :       config 파라미터 설정 결과 (ResultEnum)
         - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
 */
 table RequestSetSettingParam {
@@ -183,7 +184,7 @@ table ResponseSetSettingParam {
     robot_type: string;
     category: string;
     param: SettingParam;
-    result: string;
+    result: ResultEnum;
     message: string;
 }
 
