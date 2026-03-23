@@ -20,12 +20,12 @@ namespace SLAMNAV;
 table RequestMultiPath {
     id: string;
     path: [string];
-    preset: int;
+    // preset: int;
 }
 table ResponseMultiPath {
     id: string;
-    path: [string];
-    preset: int;
+    // path: [string];
+    // preset: int;
     result: string;
     message: string;
 }
@@ -39,8 +39,6 @@ table ResponseMultiPath {
         - vobs_robots_data      :       가상 장애물 로봇 목록
         - vobs_robots_column    :       data column ( "3" )
         - vobs_robots_row       :       data row ( vobs_robots_data size )
-        - vobs_closures         :       가상 장애물 클로저 목록
-        - is_vobs_c             :       클로저 변경 여부 ( true / false )
 */
 table RequestMultiVobs {
     id: string;
@@ -48,15 +46,12 @@ table RequestMultiVobs {
     vobs_robots_column: uint32;
     vobs_robots_row: uint32;
     vobs_closures: [string];
-    is_vobs_c: bool;
 }
 table ResponseMultiVobs {
     id: string;
     vobs_robots: [float];
     vobs_robots_column: uint32;
     vobs_robots_row: uint32;
-    vobs_closures: [string];
-    is_vobs_c: bool;
     result: string;
     message: string;
 }
