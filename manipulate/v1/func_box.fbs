@@ -12,7 +12,7 @@ table Request_Save_Robot_Code {
 // "save_area_parameter"
 table Request_Save_Area_Para {
     area_no: int;
-    
+
     area_name: string;
     area_type: int;
     area_x: float;
@@ -89,4 +89,10 @@ table Request_SideDout_Pulse {
   time_1 : float;
   time_2 : float;
   time_3 : float;
+}
+
+// "save_globpin_parameter"
+table Request_Save_Global_Pin_Parameter {
+  pin_num: int;
+  pin_name: string;
 }
