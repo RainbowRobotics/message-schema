@@ -1,6 +1,7 @@
 namespace IPC;
 
 table Response_Functions {
+  timestamp_usec_mono: ulong;
   return_value: int;
 }
 
