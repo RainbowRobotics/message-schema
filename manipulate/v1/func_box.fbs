@@ -90,9 +90,3 @@ table Request_SideDout_Pulse {
   time_2 : float;
   time_3 : float;
 }
-
-// "save_globpin_parameter"
-table Request_Save_Global_Pin_Parameter {
-  pin_num: int;
-  pin_name: string;
-}

@@ -1,0 +1,41 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+//---------------------------------------------------------------
+// Record & Replay
+//---------------------------------------------------------------
+// "call_replay_motion_rec_stop"
+table Request_Replay_Motion_Rec_Stop {
+}
+
+// "call_replay_motion_rec_start"
+table Request_Replay_Motion_Rec_Start {
+    mode:       int;
+        // Saving Mode:
+            // 0 : NoSave
+            // 1 : Real Time
+            // 2 : Mile Stone
+    frequency:  float;
+        // Mile Stone Frequency (Hz)
+    filename:   string;
+        // File Name
+}
+
+// "call_replay_motion_run"
+table Request_Replay_Motion_Run {
+    filename:   string;
+    type:       int;
+        // Run Back type
+            // 0 : J-type
+            // 1 : L-type
+    speed:      MoveInput_Speed;
+}
+
+// "call_replay_motion_list"
+table Request_Replay_Motion_List{
+}
+table Response_Replay_Motion_List{
+    filename:   [string];
+}

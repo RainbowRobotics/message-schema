@@ -28,7 +28,7 @@ table Request_Save_Direct_Teach_Sensitivity {
 
 table Request_Save_Tool_List_Para {
     tool_no: int;
-    
+
     tool_name: string;
     tcp_x: float;
     tcp_y: float;
@@ -54,3 +54,8 @@ table Request_Save_Tool_List_Para {
     box_para_8: float;
 }
 
+// "save_globpin_parameter"
+table Request_Save_Global_Pin_Parameter {
+  pin_num: int;
+  pin_name: string;
+}
