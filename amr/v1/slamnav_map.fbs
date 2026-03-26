@@ -108,6 +108,7 @@ table Link {
         - features      :       노드 특성 및 기능 ( "EV_CALL" / "EV_INSIDE" / "CHARGING" / "ARUCO_ALIGN" / "AUTO_DOOR" / "EV_BOARDING" / "CONVEYOR" / "WARNING_BEEP" / "IGNORE_2D" / "IGNORE_3D" / "IGNORE_CAM" / "IGNORE_OBS_2D" / "IGNORE_OBS_3D" / "IGNORE_OBS_CAM" )
         - size          :       노드 크기 ( x, y, z )
         - type          :       노드 타입 ( "GOAL" / "INIT" / "ROUTE" / "ZONE" / "VIRTUAL_WALL" / "OBS" )
+        - role          :       노드 역할 ( 레거시 호환용 )
 */
 table Node {
     context: string;
@@ -115,7 +116,8 @@ table Node {
     links: [Link];
     name: string;
     pose: NodePose;
-    features: [string];
+    //features: [string];
+    role: string;
     size: NodeSize;
     type: string;
 }
