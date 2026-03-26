@@ -61,6 +61,21 @@ table Request_Save_SideDin_FilterCount {
   desired_count: int;
 }
 
+table Request_Save_FlangeDin_SpecialFunc {
+  port_num:         int;
+  desired_function: int;
+}
+
+table Request_Save_FlangeDout_SpecialFunc {
+  port_num:         int;
+  desired_function: int;
+}
+
+table Request_Save_FlangeDin_FilterCount {
+  port_num: int;
+  desired_count: int;
+}
+
 table Request_SideDout_General {
   port_num: int;
   desired_out: int;
