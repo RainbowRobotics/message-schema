@@ -40,12 +40,6 @@ table Request_Save_User_Frame {
     userf_rz: float;
 }
 
-// "save_user_script"
-table Request_Save_User_Script {
-  script_no: int;
-  script_txt: string;
-}
-
 table Request_Save_SideDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
