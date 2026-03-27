@@ -120,3 +120,20 @@ table Request_SideDout_Pulse {
   time_2 : float;
   time_3 : float;
 }
+
+// "save_user_script"
+table Request_Save_User_Script {
+  script_no: int;
+  script_txt: string;
+}
+
+// "save_after_action"
+table Request_Save_After_Action {
+  after_no:       int;//0~15
+  after_option:   int; // 드랍다운 메뉴
+    // 0 : Do nothing
+    // 1 : Run User Script 0
+    // 2 : Run User Script 1
+    // ..
+    // 16 : Run User Script 15
+}
