@@ -7,6 +7,24 @@ namespace SLAMNAV;
 // -----------                              --------
 // -------------------------------------------------
 
+enum LogLevel: byte {
+    UNKNOWN = -1,
+    INFO = 0,
+    WARNING = 1,
+    ERROR = 2,
+    USER = 3,
+    DEBUG = 4,
+    GENERAL = 5,
+}
+
+table SLAMNAVLog {
+    robot_model: string (required);
+    level: LogLevel;
+    timestamp: string;
+    contents: string (required);
+}
+
+
 /*
     category    :       Data Structure
     usage       :       Notify Level Enum
