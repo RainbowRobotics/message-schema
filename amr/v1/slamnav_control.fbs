@@ -214,6 +214,38 @@ table ResponseDockStop {
 /*
     category    :       RPC
     response    :       One-shot
+    topic       :       {robotType}/control/dockPause
+    usage       :       도킹 일시정지
+*/
+table RequestDockPause {
+    id: string;
+}
+table ResponseDockPause {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/dockResume
+    usage       :       도킹 재개
+*/
+table RequestDockResume {
+    id: string;
+}
+table ResponseDockResume {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/chargeTrigger
     usage       :       충전 트리거 On / Off
     field

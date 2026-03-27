@@ -32,6 +32,9 @@ table Request_CallConfigRobotArm {
 table Request_CallConfigToolList {
 }
 
+table Request_CallConfigGlobPinList{
+}
+
 table ST_Config_Area{
   area_name: string;
   area_type: int;
@@ -72,6 +75,9 @@ table Response_CallConfigControlBox{
   eout_special_func: N_DOUT_b;
   ein_special_func: N_DIN_b;
   ein_filter_count: N_DIN_u;
+
+  after_action_list: [ubyte];
+  user_script_list: [string];
 }
 
 table Response_CallConfigRobotArm{
@@ -121,4 +127,11 @@ table Response_CallConfigToolList {
     t_configs_5: ST_Tool_Para;
     t_configs_6: ST_Tool_Para;
     t_configs_7: ST_Tool_Para;
+}
+
+// "call_config_globpinlist"
+table Response_CallConfigGlobPinList{
+  name: [string];
+  pin_j: [MoveInput_Target];
+  pin_l: [MoveInput_Target];
 }
