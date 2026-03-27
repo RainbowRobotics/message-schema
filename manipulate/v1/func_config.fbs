@@ -75,6 +75,9 @@ table Response_CallConfigControlBox{
   eout_special_func: N_DOUT_b;
   ein_special_func: N_DIN_b;
   ein_filter_count: N_DIN_u;
+
+  after_action_list: [ubyte];
+  user_script_list: [string];
 }
 
 table Response_CallConfigRobotArm{
