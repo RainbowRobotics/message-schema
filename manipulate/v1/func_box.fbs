@@ -40,6 +40,12 @@ table Request_Save_User_Frame {
     userf_rz: float;
 }
 
+// "save_user_script"
+table Request_Save_User_Script {
+  script_no: int;
+  script_txt: string;
+}
+
 table Request_Save_SideDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
@@ -51,21 +57,6 @@ table Request_Save_SideDout_SpecialFunc {
 }
 
 table Request_Save_SideDin_FilterCount {
-  port_num: int;
-  desired_count: int;
-}
-
-table Request_Save_ExtDin_SpecialFunc {
-  port_num:         int;
-  desired_function: int;
-}
-
-table Request_Save_ExtDout_SpecialFunc {
-  port_num:         int;
-  desired_function: int;
-}
-
-table Request_Save_ExtDin_FilterCount {
   port_num: int;
   desired_count: int;
 }
@@ -113,21 +104,4 @@ table Request_SideDout_Pulse {
   time_1 : float;
   time_2 : float;
   time_3 : float;
-}
-
-// "save_user_script"
-table Request_Save_User_Script {
-  script_no: int;
-  script_txt: string;
-}
-
-// "save_after_action"
-table Request_Save_After_Action {
-  after_no:       int;//0~15
-  after_option:   int; // 드랍다운 메뉴
-    // 0 : Do nothing
-    // 1 : Run User Script 0
-    // 2 : Run User Script 1
-    // ..
-    // 16 : Run User Script 15
 }
