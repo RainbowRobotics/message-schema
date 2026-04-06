@@ -39,3 +39,185 @@ table Request_Replay_Motion_List{
 table Response_Replay_Motion_List{
     filename:   [string];
 }
+
+
+// "call_weld_arc_on"
+table Request_Weld_Arc_On {
+    // 1. 초기 대기
+        time_start : float;
+            // Time before Arc (sec)
+
+    // 2. 로봇 조건 설정
+        robot_vel :  float;
+        robot_acc :  float;
+            // Robot Speed (mm/s)
+            // Robot Acceleration (mm/ss)
+
+    // 3. 용접 조건 설정
+        cond_mode : int;
+            // 조건 설정 방식 (드랍다운)
+                // 0 : 조건 유지
+                // 1 : 전류, 전압 설정
+                // 2 : 피드레이트, 전압 설정
+                // 3 : 작업 번호 호출
+        cond_jobno : int;
+            // 작업 번호
+        cond_current : float;
+            // 용접 전류 (A)
+        cond_voltage : float;
+            // 용접 전압 (V)
+        cond_feedrate: float;
+            // 피드레이트 (m/min)
+        cond_dynamic : float;
+            // 다이나믹전압(V)
+        cond_syn_opt : int;
+            // Synergic Option (드랍다운)
+                // 0 : Off
+                // 1 : On
+        cond_syn_val : float;
+            // Synergic Parameter
+
+    // 4. Arc On 및 신호감지
+        time_pregas : float;
+            // Time for Pre-Gas (sec)
+        detect_try_num : int;
+            // Arc 신호 감지 횟수 .. 기본값 0
+        detect_timeout : float;
+            // Arc 신호 감지 시간 (sec)
+        detect_timegap : float;
+            // 재시도 간격 시간 (sec)
+
+    // 5. 후속 대기
+        time_ending : float;
+            // Time for Holdong (sec)
+
+}
+
+// "call_weld_arc_off"
+table Request_Weld_Arc_Off {
+    // 1. 초기 대기
+        time_start : float;
+            // Time before Arc (sec)
+
+    // 2. 크레이터 조건 설정
+        cond_mode : int;
+            // 조건 설정 방식 (드랍다운)
+                // 0 : 조건 유지
+                // 1 : 전류, 전압 설정
+                // 2 : 피드레이트, 전압 설정
+                // 3 : 작업 번호 호출
+        cond_jobno : int;
+            // 작업 번호
+        cond_current : float;
+            // 용접 전류 (A)
+        cond_voltage : float;
+            // 용접 전압 (V)
+        cond_feedrate: float;
+            // 피드레이트 (m/min)
+        cond_dynamic : float;
+            // 다이나믹전압(V)
+        cond_syn_opt : int;
+            // Synergic Option (드랍다운)
+                // 0 : Off
+                // 1 : On
+        cond_syn_val : float;
+            // Synergic Parameter
+
+    // 3. 크레이터 유지 시간
+        time_crator : float;
+
+    // 4. 용접 신호 Off
+
+    // 5. 후속 대기
+        time_ending : float;
+            // Time for Holdong (sec)
+}
+
+
+// "call_weld_wire"
+table Request_Weld_Wire {
+    direction:  int;
+        // 0 : Stop
+        // +1 : Forward
+        // -1 : Backward
+}
+// "call_weld_gas"
+table Request_Weld_Gas {
+    gas_onoff: int;
+        // 0 : Stop
+        // 1 : Gas-On
+}
+
+// "call_config_weld"
+table Request_CallConfigWeld {
+}
+table Response_CallConfigWeld {
+    // Device Setting
+        dev_id: int;
+            // Device type
+                // 0 : None
+                // 1 : I/O Signal
+        dev_ip_0: int;
+        dev_ip_1: int;
+        dev_ip_2: int;
+        dev_ip_3: int;
+        dev_port: int;
+            // Deivce IP & Port
+
+    // Output Setting
+        out_pno_arc: int;
+        out_pno_touch: int;
+        out_pno_gas: int;
+        out_pno_inch: int;
+        out_pno_reinch: int;
+            // Arc On Signal
+            // Touch On Signal
+            // Gas On Signal
+            // Wire Inch Signal
+            // Wire Re-Inch Signal
+                // -1: None
+                // 0: Digital Output 0
+                // ...
+                // 15: Digital Output 15
+        out_pno_current: int;
+        out_pno_voltage: int;
+            // Current Setting Port
+            // Voltage Setting Port
+                // -1: None
+                // 0: Analog Output 0
+                // ...
+                // 3: Analog Output 3
+
+    // Input Setting
+        in_pno_ready: int;
+        in_pno_arc: int;
+        in_pno_touch: int;
+        in_pno_gas: int;
+        in_pno_feeder: int;
+        in_pno_error: int;
+            // Welder Ready Signal
+            // Arc Generated Feedback
+            // Touch Signal Feedback
+            // Gas Signal Feedback
+            // Feeder Signal Feedback
+            // Welder Error Signal
+                // -1: None
+                // 0: Digital Input 0
+                // ...
+                // 15: Digital Input 15
+        in_pno_current: int;
+        in_pno_voltage: int;
+            // Current Feedback
+            // Voltage Feedback
+                // -1: None
+                // 0: Analog Input 0
+                // ...
+                // 3: Analog Input 3
+
+    // Conversion Map Setting
+        current_map_value: [float];
+        current_map_output: [float];
+
+        voltage_map_value: [float];
+        voltage_map_output: [float];
+}
