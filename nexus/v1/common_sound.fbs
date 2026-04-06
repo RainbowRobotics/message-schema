@@ -1,14 +1,14 @@
 namespace IPC;
 
+enum Result_Enum:byte { ACCEPT = 0, REJECT = 1, SUCCESS = 2, FAIL = 3 }
+
 // 사운드 상태 조회 ------------------------------------------------
 table Request_Sound_GetStatus {
 }
 
 table Response_Sound_GetStatus {
-    file_name: string;
-    status: string;
     volume: int;
-    repeat_count: int;
+    current_sound: Request_Sound_Play;
 }
 
 // 사운드 재생 요청 ------------------------------------------------
@@ -17,6 +17,7 @@ table Request_Sound_Play {
     file_path: string;
     volume: int;
     repeat_count: int;
+    repeat_delay: int;
 }
 
 table Response_Sound_Play {
@@ -24,13 +25,14 @@ table Response_Sound_Play {
     file_path: string;
     volume: int;
     repeat_count: int;
-    result: string;
+    repeat_delay: int;
+    result: Result_Enum;
     message: string;
 }
 
 // 사운드 종료 요청 ------------------------------------------------
 table Response_Sound_Stop {
-    result: string;
+    result: Result_Enum;
     message: string;
 }
 
@@ -39,6 +41,17 @@ table Request_Sound_Pause_Toggle {
 }
 
 table Response_Sound_Pause_Toggle {
-    result: string;
+    result: Result_Enum;
+    message: string;
+}
+
+// 사운드 볼륨 조절 요청 ------------------------------------------------
+table Request_Sound_SetVolume {
+    volume: int;
+}
+
+table Response_Sound_SetVolume {
+    volume: int;
+    result: Result_Enum;
     message: string;
 }
