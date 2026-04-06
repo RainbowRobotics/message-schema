@@ -124,11 +124,7 @@ table NotifyMessageList {
 */
 table AMRLog {
     robot_model: string (required);
-<<<<<<< HEAD
     level: MuscatLogLevel;
-=======
-    level: Muscat_Log_Level;
->>>>>>> a4f15baf53397b4ec9497ebc14c1a1736449e6b4
     timestamp: string;
     contents: string (required);
 }
