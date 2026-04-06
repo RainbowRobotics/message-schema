@@ -1,3 +1,4 @@
+include "struct.fbs";
 
 namespace SLAMNAV;
 
@@ -43,28 +44,6 @@ enum NotifyLevelEnum:byte { INFO = 0, WARNING = 1, ERROR = 2 }
         - NORMAL    :       일반
 */
 enum NotifyButtonTypeEnum:byte { POSITIVE = 0, NEGATIVE = 1, NORMAL = 2 }
-
-/*
-    category    :       Data Structure
-    usage       :       Multilingual Struct
-    field
-        - ko        :       한국어
-        - en        :       영어
-        - ja        :       일본어
-        - zh        :       중국어
-        - vi        :       베트남어
-        - th        :       태국어
-        - es        :       스페인어
-*/
-table MultilingualStruct {
-  ko: string;
-  en: string (required);
-  ja: string;
-  zh: string;
-  vi: string;
-  th: string;
-  es: string;
-}
 
 /*
     category    :       Data Structure
@@ -145,7 +124,11 @@ table NotifyMessageList {
 */
 table AMRLog {
     robot_model: string (required);
+<<<<<<< HEAD
+    level: MuscatLogLevel;
+=======
     level: Muscat_Log_Level;
+>>>>>>> a4f15baf53397b4ec9497ebc14c1a1736449e6b4
     timestamp: string;
     contents: string (required);
 }

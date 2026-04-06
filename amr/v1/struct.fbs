@@ -16,7 +16,11 @@ table MultilingualStruct {
   es: string;
 }
 
+<<<<<<< HEAD
+enum MuscatLogLevel: byte {
+=======
 enum Muscat_Log_Level: byte {
+>>>>>>> a4f15baf53397b4ec9497ebc14c1a1736449e6b4
     UNKNOWN = -1,
     INFO = 0,
     WARNING = 1,
