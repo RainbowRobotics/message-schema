@@ -15,3 +15,13 @@ table MultilingualStruct {
   th: string;
   es: string;
 }
+
+enum Muscat_Log_Level: byte {
+    UNKNOWN = -1,
+    INFO = 0,
+    WARNING = 1,
+    ERROR = 2,
+    USER = 3,
+    DEBUG = 4,
+    GENERAL = 5,
+}
