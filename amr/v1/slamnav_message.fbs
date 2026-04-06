@@ -134,6 +134,22 @@ table NotifyMessageList {
     messages: [NotifyMessage];
 }
 
+/*
+    category    :       Data Structure
+    usage       :       AMR Log
+    field
+        - robot_model :       로봇 모델
+        - level       :       로그 레벨
+        - timestamp   :       타임스탬프
+        - contents    :       로그 내용
+*/
+table AMRLog {
+    robot_model: string (required);
+    level: Muscat_Log_Level;
+    timestamp: string;
+    contents: string (required);
+}
+
 
 // -------------------------------------------------
 // -----------                              --------
