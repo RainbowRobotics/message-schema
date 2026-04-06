@@ -11,3 +11,7 @@ table Core_SW_Info {
 table Get_System_States {
     core_sw_list: [Core_SW_Info];
 }
+
+table Robot_State {
+    state: string;
+}

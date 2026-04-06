@@ -1,0 +1,8 @@
+namespace info;
+
+table RobotInfo {
+    serial_number: string;
+    model: string;
+    name: string;
+    alias: string;
+}

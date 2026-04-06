@@ -7,11 +7,8 @@ table Request_Sound_GetStatus {
 }
 
 table Response_Sound_GetStatus {
-    file_name: string;
-    status: string;
     volume: int;
-    repeat_count: int;
-    repeat_delay: int;
+    current_sound: Request_Sound_Play;
 }
 
 // 사운드 재생 요청 ------------------------------------------------
@@ -44,6 +41,17 @@ table Request_Sound_Pause_Toggle {
 }
 
 table Response_Sound_Pause_Toggle {
+    result: Result_Enum;
+    message: string;
+}
+
+// 사운드 볼륨 조절 요청 ------------------------------------------------
+table Request_Sound_SetVolume {
+    volume: int;
+}
+
+table Response_Sound_SetVolume {
+    volume: int;
     result: Result_Enum;
     message: string;
 }
