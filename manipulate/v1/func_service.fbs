@@ -41,6 +41,78 @@ table Response_Replay_Motion_List{
 }
 
 
+// "save_weld_parameter"
+table Request_Weld_Save_Parameter {
+    // Device Setting
+        dev_id: int;
+            // Device type
+                // 0 : None
+                // 1 : I/O Signal
+        dev_ip_0: int;
+        dev_ip_1: int;
+        dev_ip_2: int;
+        dev_ip_3: int;
+        dev_port: int;
+            // Deivce IP & Port
+
+    // Output Setting
+        out_pno_arc: int;
+        out_pno_touch: int;
+        out_pno_gas: int;
+        out_pno_inch: int;
+        out_pno_reinch: int;
+            // Arc On Signal
+            // Touch On Signal
+            // Gas On Signal
+            // Wire Inch Signal
+            // Wire Re-Inch Signal
+                // -1: None
+                // 0: Digital Output 0
+                // ...
+                // 15: Digital Output 15
+        out_pno_current: int;
+        out_pno_voltage: int;
+            // Current Setting Port
+            // Voltage Setting Port
+                // -1: None
+                // 0: Analog Output 0
+                // ...
+                // 3: Analog Output 3
+
+    // Input Setting
+        in_pno_ready: int;
+        in_pno_arc: int;
+        in_pno_touch: int;
+        in_pno_gas: int;
+        in_pno_feeder: int;
+        in_pno_error: int;
+            // Welder Ready Signal
+            // Arc Generated Feedback
+            // Touch Signal Feedback
+            // Gas Signal Feedback
+            // Feeder Signal Feedback
+            // Welder Error Signal
+                // -1: None
+                // 0: Digital Input 0
+                // ...
+                // 15: Digital Input 15
+        in_pno_current: int;
+        in_pno_voltage: int;
+            // Current Feedback
+            // Voltage Feedback
+                // -1: None
+                // 0: Analog Input 0
+                // ...
+                // 3: Analog Input 3
+
+    // Conversion Map Setting
+        current_map_value: [float];
+        current_map_output: [float];
+
+        voltage_map_value: [float];
+        voltage_map_output: [float];
+}
+
 // "call_weld_arc_on"
 table Request_Weld_Arc_On {
     // 1. 초기 대기
