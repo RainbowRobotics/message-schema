@@ -74,7 +74,12 @@ print_string "info" "$REMOTE_NAME/main → ${SCHEMA_DIR} 동기화 중..."
 git rm -r --cached --quiet -- "$SCHEMA_DIR" 2>/dev/null || true
 rm -rf "$SCHEMA_DIR"
 git read-tree --prefix="$SCHEMA_DIR/" -u "$REMOTE_NAME/main"
-git commit -m "chore: reset $SCHEMA_DIR to $REMOTE_NAME/main"
+
+if git diff --cached --quiet; then
+  print_string "success" "이미 최신 상태입니다"
+else
+  git commit -m "chore: reset $SCHEMA_DIR to $REMOTE_NAME/main"
+fi
 
 print_string "success" "동기화 완료!"
 print_string "info" "origin에 푸시 중..."
