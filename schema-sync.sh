@@ -41,7 +41,7 @@ git remote get-url "$REMOTE_NAME" >/dev/null 2>&1 || {
 print_string "info" "=== $REMOTE_NAME/main과 schemas 동기화 ==="
 echo ""
 print_string "warning" "${SCHEMA_DIR}의 모든 로컬 변경사항이 삭제됩니다"
-print_string "warning" "$REMOTE_NAME/main 기준으로 subtree pull 됩니다"
+print_string "warning" "$REMOTE_NAME/main 기준으로 subtree를 새로 초기화합니다"
 echo ""
 if [[ "$AUTO_YES" != true ]]; then
   read -r -p "계속하시겠습니까? (y/N): " ANS
@@ -69,16 +69,12 @@ if [[ -n "$(git status --porcelain -- "$SCHEMA_DIR")" ]]; then
   git clean -fd -- "$SCHEMA_DIR"
 fi
 
-# subtree가 아직 없는 경우만 add
-if [[ ! -d "$SCHEMA_DIR" ]]; then
-  print_string "warning" "${SCHEMA_DIR}가 없어 subtree add를 수행합니다..."
-  GIT_EDITOR=true git subtree add --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
-    -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"
-else
-  print_string "info" "$REMOTE_NAME/main에서 $SCHEMA_DIR 업데이트 중..."
-  GIT_EDITOR=true git subtree pull --prefix="$SCHEMA_DIR" "$REMOTE_NAME" main --squash \
-    -m "Merge $REMOTE_NAME/main into $SCHEMA_DIR"
-fi
+# 인덱스에서 기존 subtree 제거 후 원격 트리를 바로 덮어쓴다 (커밋 1회)
+print_string "info" "$REMOTE_NAME/main → ${SCHEMA_DIR} 동기화 중..."
+git rm -r --cached --quiet -- "$SCHEMA_DIR" 2>/dev/null || true
+rm -rf "$SCHEMA_DIR"
+git read-tree --prefix="$SCHEMA_DIR/" -u "$REMOTE_NAME/main"
+git commit -m "chore: reset $SCHEMA_DIR to $REMOTE_NAME/main"
 
 print_string "success" "동기화 완료!"
 print_string "info" "origin에 푸시 중..."

@@ -155,7 +155,7 @@ table StatusMapState {
         - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
         - dock          :       도킹 이동 상태 ( "stop" )
-        - charge          :     충전 상태 ( "" )
+        - charge          :     충전 상태 ( "" / "charging" )
 */
 table StatusChargeState {
     dock_id: string;
