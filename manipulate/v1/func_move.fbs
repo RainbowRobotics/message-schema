@@ -170,3 +170,48 @@ table Request_Wrapper_Conveyor_On {
     conv_acc_time_sec: float;
     conv_ref_points: [MoveInput_Target];
 }
+
+// Circle
+// "call_move_cir_axis"
+table Request_Move_CIR_AXIS {
+    center:         MoveInput_Target;
+        // Rotation Center
+    axis:           MoveInput_Target;
+        // Rotation Axis
+    angle:          float;
+        // Rotation Angle (deg)
+    mode:           int;
+        // Orientation Mode (드랍다운)
+            // 0 : Sync
+            // 1 : Constant
+            // 2 : Intended
+    speed:          MoveInput_Speed;
+        // MoveL과 같은 속도 ui 개념
+    radius_option:  int;
+        // Radius Option (드랍다운)
+            // 0 : None
+            // 1 : Rate per revolution
+            // 2 : Size per revolution
+    radius_para:    float;
+        // Radius Parameter
+}
+
+// "call_move_cir_threepoint"
+table Request_Move_CIR_3P {
+    via_p:          MoveInput_Target;
+    goal_p:         MoveInput_Target;
+    mode:           int;
+        // Orientation Mode (드랍다운)
+            // 0 : Sync
+            // 1 : Constant
+            // 2 : Intended
+    speed:          MoveInput_Speed;
+        // MoveL과 같은 속도 ui 개념
+    radius_option:  int;
+        // Radius Option (드랍다운)
+            // 0 : None
+            // 1 : Rate per revolution
+            // 2 : Size per revolution
+    radius_para:    float;
+        // Radius Parameter
+}
