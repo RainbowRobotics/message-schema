@@ -1,0 +1,31 @@
+include "struct.fbs";
+namespace SLAMNAV;
+
+table RequestLiftPower {
+    switch: bool;
+}
+
+table ResponseLiftPower {
+    switch: bool;
+    result: ResultEnum;
+    message: string;
+}
+
+table RequestFootMove {
+    pose: float;
+}
+
+table RequestFootStop {
+}
+
+table ResponseFootMove {
+    pose: float;
+    result: ResultEnum;
+    message: string;
+}
+
+table ResponseFoot {
+    pose: float;
+    result: ResultEnum;
+    message: string;
+}
