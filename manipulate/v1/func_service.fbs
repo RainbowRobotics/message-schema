@@ -293,3 +293,41 @@ table Response_CallConfigWeld {
         voltage_map_value: [float];
         voltage_map_output: [float];
 }
+
+// "call_move_macro"
+table Request_Move_Macro {
+    type:           int;
+        // Motion Macro type (드랍다운)
+            // 0 : Flat Surface
+            // 1 : Round (R)
+            // 2 : Round (H)
+            // 3 : Triangle
+            // 4 : 3D Round
+    corner_pnts:    [MoveInput_Target];
+        // 위에 타입에 따라 갯수가 달라짐
+        // 타입이 0일경우 : 갯수는 4
+        // 타입이 1일경우 : 갯수는 6
+        // 타입이 2일경우 : 갯수는 6
+        // 타입이 3일경우 : 갯수는 3
+        // 타입이 4일경우 : 갯수는 9
+    speed:          MoveInput_Speed;
+        // 속도
+    rotation_mode:  int;
+        // Orientation Option (드랍다운)
+            // 0 : Intended
+            // 1 : Constant
+    gap_num:        int;
+        // Gap Number
+    margin_h_1:     float;
+    margin_h_2:     float;
+    margin_w_1:     float;
+    margin_w_2:     float;
+        // Margin Height 1 (mm)
+        // Margin Height 2 (mm)
+        // Margin Width 1 (mm)
+        // Margin Width 2 (mm)
+    margin_over:    float;
+        // Margin Over (mm)
+    margin_over_para:   float;
+        // Margin Parameter (0~1)
+}

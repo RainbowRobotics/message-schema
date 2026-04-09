@@ -1,0 +1,67 @@
+namespace SAMSUNG;
+
+table RequestGetGeneralLog {
+    date: string;
+}
+
+table Response {
+    result: string;
+    message: string;
+}
+
+table RequestDeleteGeneralLog {
+    date: string;
+}
+
+table RequestSetGeneralLog {
+    date_time: string;
+    machine_id: string;
+    log_type: string;
+    lot_id: string;
+    recipe: string;
+    product_id: string;
+    status: string;
+    scope: string;
+    operation_name: string;
+    operation_status: string;
+    data: string;
+}
+table RequestSetManipulateLog {
+    datetime: string;
+    position: string;
+    x: float;
+    y: float;
+    z: float;
+    rx: float;
+    ry: float;
+    rz: float;
+    base: float;
+    shoulder: float;
+    elbow: float;
+    wrist1: float;
+    wrist2: float;
+}
+
+table RequestSetTorsoLog {
+    datetime: string;
+    x: float;
+    y: float;
+    theta: float;
+}
+
+table RequestSetAMRLog {
+    datetime: string;
+    kind: string;
+    x: float;
+    y: float;
+    theta: float;
+    x_vel: float;
+    y_vel: float;
+    status_front: float;
+    distance_front: float;
+    theta_front: float;
+    status_back: float;
+    distance_back: float;
+    theta_back: float;
+    two_d_marker_recognize_position: float;
+}
