@@ -331,3 +331,35 @@ table Request_Move_Macro {
     margin_over_para:   float;
         // Margin Parameter (0~1)
 }
+
+// "call_pattern_on"
+table Request_Pattern_On {
+    id:             int;
+        // Pattern ID (ID 0 ~ ID 29) (드랍다운)
+    type:           int;
+        // Pattern type
+            // 0 : Line (X)
+            // 1 : Plane (X-Y)
+            // 2 : Cube (X-Y-Z)
+            // 3 : Random
+    corner_pnts:    [MoveInput_Target];
+        // 위에 타입에 따라 갯수가 달라짐
+        // 타입이 0일경우 : 갯수는 2
+        // 타입이 1일경우 : 갯수는 4
+        // 타입이 2일경우 : 갯수는 8
+        // 타입이 3일경우 : 갯수는 랜덤 (+로 추가 가능)
+    count_x:        int;
+        // X-Axis Point Num (기본 값 2)
+    count_y:        int;
+        // Y-Axis Point Num (기본 값 2)
+    count_z:        int;
+        // Z-Axis Point Num (기본 값 2)
+    anchor_pnt:     MoveInput_Target;
+    incremental:    int;
+        // Incremental Count (기본 값 1)
+}
+// "call_pattern_off"
+table Request_Pattern_Off {
+    id:             int;
+        // Pattern ID (ID 0 ~ ID 29) (드랍다운)
+}
