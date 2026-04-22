@@ -363,3 +363,18 @@ table Request_Pattern_Off {
     id:             int;
         // Pattern ID (ID 0 ~ ID 29) (드랍다운)
 }
+
+// "call_calib_tcp_position"
+table Request_Calib_Tcp_Position {
+    joints:    [MoveInput_Target];
+        // 타입은 무조건 Joint (-1)
+        // 관절 각도 전달해야함
+}
+// "call_calib_tcp_orientation"
+table Request_Calib_Tcp_Orientation {
+    frame_option: int;
+        // 정렬 프레임 (드랍다운)
+            // 0 : Global frame
+            // 1 : Local frame
+            // 2 : User frame
+}
