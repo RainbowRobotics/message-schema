@@ -49,6 +49,13 @@ table Request_Pop_JointInfos {
   board_no:           int;
 }
 
+// "call_joint_bno_change"
+table Request_JointBnoChange {
+  channel_no:         int;
+  board_no:           int;
+  target_no:          int;
+}
+
 //------------------------------------------------------
 // "call_powercontrol"
 table Request_PowerControl {
