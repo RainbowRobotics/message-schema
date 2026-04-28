@@ -94,11 +94,15 @@ table Response_CallConfigRobotArm{
   gravity_gy: float;
   gravity_gz: float;
 
-  direct_teaching_sensitivity: N_JOINT_f;
+  direct_teaching_sensitivity: [float];
 
   tout_special_func: N_DOUT_b;
   tin_special_func: N_DIN_b;
   tin_filter_count: N_DIN_u;
+
+  kine_limit_pos_low: [float];            //<------ added after 26-04-28
+  kine_limit_pos_up:  [float];
+  kine_limit_speed:   [float];
 }
 
 struct ST_Box_Para {
