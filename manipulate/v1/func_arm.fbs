@@ -23,7 +23,7 @@ table Request_Save_Gravity_Parameter {
 }
 
 table Request_Save_Direct_Teach_Sensitivity {
-  sensitivity: N_JOINT_f;
+  sensitivity: [float];     //<------ 구조체에서 table 배열로 변경됨 26-04-28
 }
 
 table Request_Save_Tool_List_Para {
