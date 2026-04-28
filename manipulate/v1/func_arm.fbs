@@ -59,3 +59,13 @@ table Request_Save_Global_Pin_Parameter {
   pin_num: int;
   pin_name: string;
 }
+
+// "save_joint_kinematic_limit"
+table Request_Save_Joint_Kinematic_Limit {
+  position_low:   [float];
+    // Position Limit-Low (deg)
+  position_up:    [float];
+    // Position Limit-Up (deg)
+  speed_limit:    [float];
+    // Speed Limit (deg/s)
+}
