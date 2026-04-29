@@ -349,14 +349,14 @@ table Request_Pattern_On {
         // 타입이 2일경우 : 갯수는 8
         // 타입이 3일경우 : 갯수는 랜덤 (+로 추가 가능)
     count_x:        int;
-        // X-Axis Point Num (기본 값 2)
+        // X-Axis Point Num (기본값 2)
     count_y:        int;
-        // Y-Axis Point Num (기본 값 2)
+        // Y-Axis Point Num (기본값 2)
     count_z:        int;
-        // Z-Axis Point Num (기본 값 2)
+        // Z-Axis Point Num (기본값 2)
     anchor_pnt:     MoveInput_Target;
     incremental:    int;
-        // Incremental Count (기본 값 1)
+        // Incremental Count (기본값 1)
 }
 // "call_pattern_off"
 table Request_Pattern_Off {
@@ -377,4 +377,13 @@ table Request_Calib_Tcp_Orientation {
             // 0 : Global frame
             // 1 : Local frame
             // 2 : User frame
+}
+
+// "call_gripper_action"
+table Request_Gripper_Action {
+    gripper_type:   int;
+        // Gripper type (드랍다운)
+    function_list:  int;
+        // Function List (드랍다운)
+    payload:        [float];
 }
