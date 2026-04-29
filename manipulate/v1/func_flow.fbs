@@ -24,7 +24,14 @@ table Request_MotionHalt {
 
 table Request_ProgramBefore {
   option: int;
+  monitoring_name: [string];
 }
+
 table Request_ProgramAfter {
   option: int;
+}
+
+table State_Monitoring_Name {
+  name:   [string];
+  value:  [string];
 }
