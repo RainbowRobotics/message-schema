@@ -387,3 +387,97 @@ table Request_Gripper_Action {
         // Function List (드랍다운)
     payload:        [float];
 }
+
+// "call_arc_sensing_on"
+table Request_Wrapper_ArcSensing_On{
+    // -----------------------
+    // Mode Selection
+    // -----------------------
+    control_type:       int;
+        // Control Mode (드랍다운)
+            // 0 : RT (Half Cycle)
+            // 1 : RT (Full Cycle)
+            // 2 : Every Half Cycle
+            // 3 : Every Full Cycle
+    // -----------------------
+    // Sensing Setting
+    // -----------------------
+    data_grab_point:    int;
+        // Sensing Data Point (드랍다운)
+            // 0 : Analog Input 0
+            // 1 : Analog Input 1
+            // 2 : Analog Input 2
+            // 3 : Analog Input 3
+    data_grab_saturation_mode: int;
+        // Sensing Saturation Mode (드랍다운)
+            // 0 : No Saturation
+            // 1 : Saturation with L and U
+            // 2 : Saturation with hold
+    data_grab_saturation_L: float;
+        // Sensing Saturation Lower Limit (입력란)
+    data_grab_saturation_U: float;
+        // Sensing Saturation Upper Limit (입력란)
+    data_grab_filter_hz: float;
+        // Sensing Data LPF filter (Hz) (입력란)
+            // 기본값 20
+    data_grab_weighting_mode: int;
+        // Sensing Weighting Mode (드랍다운) (기본값 0)
+            // 0 : Curve Weight
+            // 1 : Even Weight
+            // 2 : Linear Weight
+            // 3 : Reduced Linear Weight
+
+    // -----------------------
+    // Target Setting
+    // -----------------------
+    t1:     float;
+        // T1 time (sec), 입력란
+    t2:     float;
+        // T2 time (sec), 입력란
+    dep_target_method:  int;
+        // Depth Direction Target method (드랍다운) <--- 기본값 1
+            // 0 : Desried Value
+            // 1 : Average btw. T1, T2
+    dep_target_a:       float;
+        // Detpth Direction Desired Value (A) (입력란)
+            // 기본값 0
+    sid_target_method:  int;
+        // Weave Direction Target method (드랍다운) <--- 기본값 0
+            // 0 : Desried Value
+            // 1 : Average btw. T1, T2
+    sid_target_a:       float;
+        // Weave Direction Desired Value (A) (입력란)
+            // 기본값 0
+    // -----------------------
+    // Gain Setting
+    // -----------------------
+    gain_dep_p:     float;
+        // Depth Direction P Gain (입력란)
+            // 기본값 0
+    gain_dep_i:     float;
+        // Depth Direction I Gain (입력란)
+            // 기본값 0
+    gain_dep_a:     float;
+        // Depth Direction AntiWind (A) (입력란)
+            // 기본값 0
+    max_dep_dev:    float;
+        // Depth Direction Max Dev.(mm) (입력란)
+            // 기본값 10
+
+    gain_sid_p:     float;
+        // Weave Direction P Gain (입력란)
+            // 기본값 0
+    gain_sid_i:     float;
+        // Weave Direction I Gain (입력란)
+            // 기본값 0
+    gain_sid_a:     float;
+        // Weave Direction AntiWind (A) (입력란)
+            // 기본값 0
+    max_sid_dev:    float;
+        // Weave Direction Max Dev.(mm) (입력란)
+            // 기본값 10
+}
+
+// "call_arc_sensing_off"
+table Request_Wrapper_ArcSensing_Off{
+}
