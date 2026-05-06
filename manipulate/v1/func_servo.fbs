@@ -3,6 +3,8 @@ include "common_struct.fbs";
 
 namespace IPC;
 //------------------------------------------------------
+// Maintenance
+//------------------------------------------------------
 // "call_joint_brake"
 table Request_JointBrake {
   board_no:           int;

@@ -171,7 +171,9 @@ table Request_Wrapper_Conveyor_On {
     conv_ref_points: [MoveInput_Target];
 }
 
+//---------------------------------------------------------------
 // Circle
+//---------------------------------------------------------------
 // "call_move_cir_axis"
 table Request_Move_CIR_AXIS {
     center:         MoveInput_Target;
@@ -214,4 +216,26 @@ table Request_Move_CIR_3P {
             // 2 : Size per revolution
     radius_para:    float;
         // Radius Parameter
+}
+
+//---------------------------------------------------------------
+// Home
+//---------------------------------------------------------------
+// "call_move_home"
+table Request_Move_Home {
+  home_type:      int;
+    // Type (드랍다운)
+      // 0 : Top-Level (Main) Project
+      // 1 : Currently running (Sub) Project
+      // 2 : Zero Posture
+      // 3 : Global Pin 0
+      // 4 : Global Pin 1
+      // ...
+      // 18 : Global Pin 15
+  move_type:      int;
+    // Movement Type (드랍다운)
+      // 0 : Move-J
+      // 1 : Move-L
+  speed:          MoveInput_Speed;
+    // 속도/가속도 설정 (다른것과 동일)
 }
