@@ -173,3 +173,11 @@ table Request_Set_DoutFunctionMask {
         // 0 : Disable-Mask Off
         // 1 : Disable-Mask On
 }
+
+// "set_jacob_speed_mode"
+table Request_Set_JacobSpeedMode {
+  mode:         int;
+    // Mode (드랍다운)
+      // 0 : Active (기본값)
+      // 1 : De-active
+}
