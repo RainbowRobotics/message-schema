@@ -3,11 +3,31 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "call_flange_power"
 table Request_Flange_Power {
     desired_voltage     : int;
 }
 
+// "call_flange_dout"
 table Request_Flange_Digital_Out {
     port_num            : int;
     desired_out         : int;
+}
+
+// "save_flange_din_function"
+table Request_Save_FlangeDin_SpecialFunc {
+  port_num:         int;
+  desired_function: int;
+}
+
+// "save_flange_dout_function"
+table Request_Save_FlangeDout_SpecialFunc {
+  port_num:         int;
+  desired_function: int;
+}
+
+// "save_flange_din_filter"
+table Request_Save_FlangeDin_FilterCount {
+  port_num: int;
+  desired_count: int;
 }

@@ -22,6 +22,7 @@ table Response_CallWhoamI{
 //    ㄴ Control Box  : State_Config_ControlBox
 //    ㄴ Robot Arm    : State_Config_RobotArm
 //    ㄴ Tool List    : State_Config_ToolList
+//    ㄴ GPin List    : State_Config_GlobPinList
 //--------------------------------------------------------------
 table Request_CallConfigControlBox {
 }
@@ -72,12 +73,12 @@ table Response_CallConfigControlBox{
   user_frame_6: ST_Config_UserFrame;
   user_frame_7: ST_Config_UserFrame;
 
-  eout_special_func: N_DOUT_b;
-  ein_special_func: N_DIN_b;
-  ein_filter_count: N_DIN_u;
+  eout_special_func: N_DOUT_b;            //<------ added after 26-02-24
+  ein_special_func: N_DIN_b;              //<------ added after 26-02-24
+  ein_filter_count: N_DIN_u;              //<------ added after 26-02-24
 
-  after_action_list: [ubyte];
-  user_script_list: [string];
+  after_action_list: [ubyte];             //<------ added after 26-03-27 16개 날아갈 예정
+  user_script_list: [string];             //<------ added after 26-03-27 16개 날아갈 예정
 }
 
 table Response_CallConfigRobotArm{
@@ -94,9 +95,9 @@ table Response_CallConfigRobotArm{
   gravity_gy: float;
   gravity_gz: float;
 
-  direct_teaching_sensitivity: [float];
+  direct_teaching_sensitivity: [float];   //<------ 구조체에서 table 배열로 변경됨 26-04-28
 
-  tout_special_func: N_DOUT_b;
+  tout_special_func: N_DOUT_b;            
   tin_special_func: N_DIN_b;
   tin_filter_count: N_DIN_u;
 

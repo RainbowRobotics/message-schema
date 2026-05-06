@@ -42,7 +42,7 @@ table Request_Get_Tcp_Value {
 }
 
 table Response_Get_Tcp_Value {
-    carte_info: N_CARTE_f;
+    carte_info: [float];
 }
 
 table Request_Get_Joint_Value {
@@ -50,6 +50,20 @@ table Request_Get_Joint_Value {
 }
 
 table Response_Get_Joint_Value {
-    joint_info: N_JOINT_f;
+    joint_info: [float];
+}
+//--------------------------------------------------------------
+// "get_digital_input"
+table Request_Get_Digital_Input {
+}
+table Response_Get_Digital_Input {
+    digital_input: [byte];
+}
+//--------------------------------------------------------------
+// "get_digital_output"
+table Request_Get_Digital_Output {
+}
+table Response_Get_Digital_Output {
+    digital_output: [byte];
 }
 //--------------------------------------------------------------
