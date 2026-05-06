@@ -23,14 +23,17 @@ table Request_MotionHalt {
 }
 
 table Request_ProgramBefore {
-  option: int;
-  monitoring_name: [string];
+  option:           int;
+    // 현재 할당된 옵션 없음
+  monitoring_name:  [string];
+    // 모니터링하고자하는 시스템변수 이름
 }
 
 table Request_ProgramAfter {
   option: int;
 }
 
+// "C500XXX/state_monitoring"
 table State_Monitoring_Name {
   name:   [string];
   value:  [string];

@@ -40,16 +40,36 @@ table Request_Save_User_Frame {
     userf_rz: float;
 }
 
+// "save_after_action"
+table Request_Save_After_Action {
+  after_no:       int;//0~15
+  after_option:   int;
+    // 0 : Do nothing
+    // 1 : Run User Script 0
+    // 2 : Run User Script 1
+    // ..
+    // 16 : Run User Script 15
+}
+
+// "save_user_script"
+table Request_Save_User_Script {
+  script_no: int;
+  script_txt: string;
+}
+
+// "save_side_din_function"
 table Request_Save_SideDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
 }
 
+// "save_side_dout_function"
 table Request_Save_SideDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
 }
 
+// "save_side_din_filter"
 table Request_Save_SideDin_FilterCount {
   port_num: int;
   desired_count: int;

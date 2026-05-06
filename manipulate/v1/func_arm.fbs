@@ -56,7 +56,7 @@ table Request_Save_Tool_List_Para {
 
 // "save_globpin_parameter"
 table Request_Save_Global_Pin_Parameter {
-  pin_num: int;
+  pin_num: int; // 0 ~ 15
   pin_name: string;
 }
 

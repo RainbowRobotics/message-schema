@@ -6,21 +6,20 @@ namespace IPC;
 //---------------------------------------------------------------
 // Record & Replay
 //---------------------------------------------------------------
-// "call_replay_motion_rec_stop"
-table Request_Replay_Motion_Rec_Stop {
-}
-
 // "call_replay_motion_rec_start"
 table Request_Replay_Motion_Rec_Start {
     mode:       int;
         // Saving Mode:
             // 0 : NoSave
-            // 1 : Real Time
+            // 1 : Real Time 
             // 2 : Mile Stone
     frequency:  float;
-        // Mile Stone Frequency (Hz)
+        // Mile Stone Frequency (Hz) .. 기본값 1
     filename:   string;
         // File Name
+}
+// "call_replay_motion_rec_stop"
+table Request_Replay_Motion_Rec_Stop {
 }
 
 // "call_replay_motion_run"
@@ -40,6 +39,120 @@ table Response_Replay_Motion_List{
     filename:   [string];
 }
 
+//---------------------------------------------------------------
+// Welding
+//---------------------------------------------------------------
+// "call_weld_wire"
+table Request_Weld_Wire {
+    direction:  int;
+        // 0 : Stop
+        // +1 : Forward
+        // -1 : Backward 
+}
+// "call_weld_gas"
+table Request_Weld_Gas {
+    gas_onoff: int;
+        // 0 : Stop
+        // 1 : Gas-On
+}
+// "call_weld_touch"
+table Request_Weld_Touch {
+    touch_onoff: int;
+        // 0 : Touch Off
+        // 1 : Touch On
+}
+
+// "call_weld_arc_on"
+table Request_Weld_Arc_On {
+    // 1. 초기 대기
+        time_start : float;
+            // Time before Arc (sec)
+
+    // 2. 로봇 조건 설정
+        robot_vel :  float;
+        robot_acc :  float;
+            // Robot Speed (mm/s)
+            // Robot Acceleration (mm/ss)
+
+    // 3. 용접 조건 설정
+        cond_mode : int;
+            // 조건 설정 방식 (드랍다운)
+                // 0 : 조건 유지
+                // 1 : 전류, 전압 설정
+                // 2 : 피드레이트, 전압 설정
+                // 3 : 작업 번호 호출
+        cond_jobno : int;
+            // 작업 번호
+        cond_current : float;
+            // 용접 전류 (A)
+        cond_voltage : float;
+            // 용접 전압 (V)
+        cond_feedrate: float;
+            // 피드레이트 (m/min)
+        cond_dynamic : float;
+            // 다이나믹전압(V)
+        cond_syn_opt : int;
+            // Synergic Option (드랍다운)
+                // 0 : Off
+                // 1 : On
+        cond_syn_val : float;
+            // Synergic Parameter
+
+    // 4. Arc On 및 신호감지
+        time_pregas : float;
+            // Time for Pre-Gas (sec)
+        detect_try_num : int;
+            // Arc 신호 감지 횟수 .. 기본값 0
+        detect_timeout : float;
+            // Arc 신호 감지 시간 (sec)
+        detect_timegap : float;
+            // 재시도 간격 시간 (sec)
+
+    // 5. 후속 대기
+        time_ending : float;
+            // Time for Holdong (sec)
+    
+}
+
+// "call_weld_arc_off"
+table Request_Weld_Arc_Off {
+    // 1. 초기 대기
+        time_start : float;
+            // Time before Arc (sec)
+
+    // 2. 크레이터 조건 설정
+        cond_mode : int;
+            // 조건 설정 방식 (드랍다운)
+                // 0 : 조건 유지
+                // 1 : 전류, 전압 설정
+                // 2 : 피드레이트, 전압 설정
+                // 3 : 작업 번호 호출
+        cond_jobno : int;
+            // 작업 번호
+        cond_current : float;
+            // 용접 전류 (A)
+        cond_voltage : float;
+            // 용접 전압 (V)
+        cond_feedrate: float;
+            // 피드레이트 (m/min)
+        cond_dynamic : float;
+            // 다이나믹전압(V)
+        cond_syn_opt : int;
+            // Synergic Option (드랍다운)
+                // 0 : Off
+                // 1 : On
+        cond_syn_val : float;
+            // Synergic Parameter
+
+    // 3. 크레이터 유지 시간
+        time_crator : float;
+
+    // 4. 용접 신호 Off
+
+    // 5. 후속 대기
+        time_ending : float;
+            // Time for Holdong (sec)
+}
 
 // "save_weld_parameter"
 table Request_Weld_Save_Parameter {
@@ -111,113 +224,6 @@ table Request_Weld_Save_Parameter {
 
         voltage_map_value: [float];
         voltage_map_output: [float];
-}
-
-// "call_weld_arc_on"
-table Request_Weld_Arc_On {
-    // 1. 초기 대기
-        time_start : float;
-            // Time before Arc (sec)
-
-    // 2. 로봇 조건 설정
-        robot_vel :  float;
-        robot_acc :  float;
-            // Robot Speed (mm/s)
-            // Robot Acceleration (mm/ss)
-
-    // 3. 용접 조건 설정
-        cond_mode : int;
-            // 조건 설정 방식 (드랍다운)
-                // 0 : 조건 유지
-                // 1 : 전류, 전압 설정
-                // 2 : 피드레이트, 전압 설정
-                // 3 : 작업 번호 호출
-        cond_jobno : int;
-            // 작업 번호
-        cond_current : float;
-            // 용접 전류 (A)
-        cond_voltage : float;
-            // 용접 전압 (V)
-        cond_feedrate: float;
-            // 피드레이트 (m/min)
-        cond_dynamic : float;
-            // 다이나믹전압(V)
-        cond_syn_opt : int;
-            // Synergic Option (드랍다운)
-                // 0 : Off
-                // 1 : On
-        cond_syn_val : float;
-            // Synergic Parameter
-
-    // 4. Arc On 및 신호감지
-        time_pregas : float;
-            // Time for Pre-Gas (sec)
-        detect_try_num : int;
-            // Arc 신호 감지 횟수 .. 기본값 0
-        detect_timeout : float;
-            // Arc 신호 감지 시간 (sec)
-        detect_timegap : float;
-            // 재시도 간격 시간 (sec)
-
-    // 5. 후속 대기
-        time_ending : float;
-            // Time for Holdong (sec)
-
-}
-
-// "call_weld_arc_off"
-table Request_Weld_Arc_Off {
-    // 1. 초기 대기
-        time_start : float;
-            // Time before Arc (sec)
-
-    // 2. 크레이터 조건 설정
-        cond_mode : int;
-            // 조건 설정 방식 (드랍다운)
-                // 0 : 조건 유지
-                // 1 : 전류, 전압 설정
-                // 2 : 피드레이트, 전압 설정
-                // 3 : 작업 번호 호출
-        cond_jobno : int;
-            // 작업 번호
-        cond_current : float;
-            // 용접 전류 (A)
-        cond_voltage : float;
-            // 용접 전압 (V)
-        cond_feedrate: float;
-            // 피드레이트 (m/min)
-        cond_dynamic : float;
-            // 다이나믹전압(V)
-        cond_syn_opt : int;
-            // Synergic Option (드랍다운)
-                // 0 : Off
-                // 1 : On
-        cond_syn_val : float;
-            // Synergic Parameter
-
-    // 3. 크레이터 유지 시간
-        time_crator : float;
-
-    // 4. 용접 신호 Off
-
-    // 5. 후속 대기
-        time_ending : float;
-            // Time for Holdong (sec)
-}
-
-
-// "call_weld_wire"
-table Request_Weld_Wire {
-    direction:  int;
-        // 0 : Stop
-        // +1 : Forward
-        // -1 : Backward
-}
-// "call_weld_gas"
-table Request_Weld_Gas {
-    gas_onoff: int;
-        // 0 : Stop
-        // 1 : Gas-On
 }
 
 // "call_config_weld"
@@ -293,7 +299,9 @@ table Response_CallConfigWeld {
         voltage_map_value: [float];
         voltage_map_output: [float];
 }
-
+//---------------------------------------------------------------
+// Motion Macro
+//---------------------------------------------------------------
 // "call_move_macro"
 table Request_Move_Macro {
     type:           int;
@@ -331,7 +339,9 @@ table Request_Move_Macro {
     margin_over_para:   float;
         // Margin Parameter (0~1)
 }
-
+//---------------------------------------------------------------
+// Pattern
+//---------------------------------------------------------------
 // "call_pattern_on"
 table Request_Pattern_On {
     id:             int;
@@ -349,21 +359,30 @@ table Request_Pattern_On {
         // 타입이 2일경우 : 갯수는 8
         // 타입이 3일경우 : 갯수는 랜덤 (+로 추가 가능)
     count_x:        int;
-        // X-Axis Point Num (기본값 2)
+        // X-Axis Point Num (기본 값 2)
     count_y:        int;
-        // Y-Axis Point Num (기본값 2)
+        // Y-Axis Point Num (기본 값 2)
     count_z:        int;
-        // Z-Axis Point Num (기본값 2)
+        // Z-Axis Point Num (기본 값 2)
     anchor_pnt:     MoveInput_Target;
     incremental:    int;
-        // Incremental Count (기본값 1)
+        // Incremental Count (기본 값 1)
 }
 // "call_pattern_off"
 table Request_Pattern_Off {
     id:             int;
         // Pattern ID (ID 0 ~ ID 29) (드랍다운)
 }
-
+// "set_pattern_count"
+table Request_Pattern_SetCount {
+    id:             int;
+        // Pattern ID (ID 0 ~ ID 29) (드랍다운)
+    target_count:   int;
+        // Target Pattern Count
+}
+//---------------------------------------------------------------
+// Calibration
+//---------------------------------------------------------------
 // "call_calib_tcp_position"
 table Request_Calib_Tcp_Position {
     joints:    [MoveInput_Target];
@@ -378,7 +397,9 @@ table Request_Calib_Tcp_Orientation {
             // 1 : Local frame
             // 2 : User frame
 }
-
+//---------------------------------------------------------------
+// Gripper
+//---------------------------------------------------------------
 // "call_gripper_action"
 table Request_Gripper_Action {
     gripper_type:   int;
@@ -386,101 +407,152 @@ table Request_Gripper_Action {
     function_list:  int;
         // Function List (드랍다운)
     payload:        [float];
+
+    // -----------------------------------------------
+    // gripper_type == 0 : Dynamixel Motor
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID 
+                // 입력란 (기본값 1)
+            // payload[2] : Motor type
+                // 드랍다운
+                    // 0 : General 
+                    // 1 : XM-Series
+            // payload[3] : Control Mode
+                // 드랍다운
+                    // 0 : Current
+                    // 1 : Position
+                    // 2 : Current-based-Pos
+        // function_list == 1 : Set Goal Current
+            // payload[0] : Target Current (mA)
+                // 입력란
+        // function_list == 2 : Set Goal Position
+            // payload[0] : Target Position (Tick)
+                // 입력란
+
+    // -----------------------------------------------
+    // gripper_type == 1 : DH PG/CG Series
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 1)
+            // payload[2] : Initialize type
+                // 드랍다운
+                    // 0 : Simple Init
+                    // 1 : Full Init
+        // function_list == 1 : Set Goal Position
+            // payload[0] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Spd/Force
+            // payload[0] : Target Position (0~100)
+                // 입력란
+            // payload[1] : Target Speed (0~100)
+                // 입력란
+            // payload[2] : Target Force (0~100)
+                // 입력란
+
+    // -----------------------------------------------
+    // gripper_type == 2 : DH AG Series
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 1)
+            // payload[2] : Initialize type
+                // 드랍다운
+                    // 0 : Simple Init
+                    // 1 : Full Init
+        // function_list == 1 : Set Goal Position
+            // payload[0] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Force
+            // payload[0] : Target Position (0~100)
+                // 입력란
+            // payload[1] : Target Force (0~100)
+                // 입력란
+    // -----------------------------------------------
+    // gripper_type == 3 : Robotiq E-Pick
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 9)....!! 중요 기본값9
+        // function_list == 1 : Reset
+            // 아무런 페이로드/데이터 필요 없음
+        // function_list == 2 : Suction
+            // 아무런 페이로드/데이터 필요 없음
+        // function_list == 3 : Release
+            // 아무런 페이로드/데이터 필요 없음
+        // function_list == 4 : Hold
+            // 아무런 페이로드/데이터 필요 없음
+    // -----------------------------------------------
+    // gripper_type == 4 : Robotiq 2F Series
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 9)....!! 중요 기본값9
+        // function_list == 1 : Set Goal Position
+            // payload[0] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Spd/Force
+            // payload[0] : Target Position (0~100)
+                // 입력란
+            // payload[1] : Target Speed (0~100)
+                // 입력란
+            // payload[2] : Target Force (0~100)
+                // 입력란
+    // -----------------------------------------------
+    // gripper_type == 5 : Robotiq Hand-E Series
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 9)....!! 중요 기본값9
+        // function_list == 1 : Set Goal Position
+            // payload[0] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Spd/Force
+            // payload[0] : Target Position (0~100)
+                // 입력란
+            // payload[1] : Target Speed (0~100)
+                // 입력란
+            // payload[2] : Target Force (0~100)
+                // 입력란
+    // -----------------------------------------------
+    // gripper_type == 6 : Baumer LDS
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange 
+            // payload[1] : Device ID
+                // 입력란 (기본값 1)
+        // function_list == 1 : Function call 
+            // payload[0] : Function List
+                // 드랍다운
+                    // 0 : Laser-On
+                    // 1 : Laser-Off
+                    // 2 : Set Zero Position
+                    // 3 : Factory Rest
 }
-
-// "call_arc_sensing_on"
-table Request_Wrapper_ArcSensing_On{
-    // -----------------------
-    // Mode Selection
-    // -----------------------
-    control_type:       int;
-        // Control Mode (드랍다운)
-            // 0 : RT (Half Cycle)
-            // 1 : RT (Full Cycle)
-            // 2 : Every Half Cycle
-            // 3 : Every Full Cycle
-    // -----------------------
-    // Sensing Setting
-    // -----------------------
-    data_grab_point:    int;
-        // Sensing Data Point (드랍다운)
-            // 0 : Analog Input 0
-            // 1 : Analog Input 1
-            // 2 : Analog Input 2
-            // 3 : Analog Input 3
-    data_grab_saturation_mode: int;
-        // Sensing Saturation Mode (드랍다운)
-            // 0 : No Saturation
-            // 1 : Saturation with L and U
-            // 2 : Saturation with hold
-    data_grab_saturation_L: float;
-        // Sensing Saturation Lower Limit (입력란)
-    data_grab_saturation_U: float;
-        // Sensing Saturation Upper Limit (입력란)
-    data_grab_filter_hz: float;
-        // Sensing Data LPF filter (Hz) (입력란)
-            // 기본값 20
-    data_grab_weighting_mode: int;
-        // Sensing Weighting Mode (드랍다운) (기본값 0)
-            // 0 : Curve Weight
-            // 1 : Even Weight
-            // 2 : Linear Weight
-            // 3 : Reduced Linear Weight
-
-    // -----------------------
-    // Target Setting
-    // -----------------------
-    t1:     float;
-        // T1 time (sec), 입력란
-    t2:     float;
-        // T2 time (sec), 입력란
-    dep_target_method:  int;
-        // Depth Direction Target method (드랍다운) <--- 기본값 1
-            // 0 : Desried Value
-            // 1 : Average btw. T1, T2
-    dep_target_a:       float;
-        // Detpth Direction Desired Value (A) (입력란)
-            // 기본값 0
-    sid_target_method:  int;
-        // Weave Direction Target method (드랍다운) <--- 기본값 0
-            // 0 : Desried Value
-            // 1 : Average btw. T1, T2
-    sid_target_a:       float;
-        // Weave Direction Desired Value (A) (입력란)
-            // 기본값 0
-    // -----------------------
-    // Gain Setting
-    // -----------------------
-    gain_dep_p:     float;
-        // Depth Direction P Gain (입력란)
-            // 기본값 0
-    gain_dep_i:     float;
-        // Depth Direction I Gain (입력란)
-            // 기본값 0
-    gain_dep_a:     float;
-        // Depth Direction AntiWind (A) (입력란)
-            // 기본값 0
-    max_dep_dev:    float;
-        // Depth Direction Max Dev.(mm) (입력란)
-            // 기본값 10
-
-    gain_sid_p:     float;
-        // Weave Direction P Gain (입력란)
-            // 기본값 0
-    gain_sid_i:     float;
-        // Weave Direction I Gain (입력란)
-            // 기본값 0
-    gain_sid_a:     float;
-        // Weave Direction AntiWind (A) (입력란)
-            // 기본값 0
-    max_sid_dev:    float;
-        // Weave Direction Max Dev.(mm) (입력란)
-            // 기본값 10
-}
-// "call_arc_sensing_off"
-table Request_Wrapper_ArcSensing_Off{
-}
-
+//---------------------------------------------------------------
+// Timer
+//---------------------------------------------------------------
 // "call_timer_function"
 table Request_Timmer_Function {
     timer_no:   int;
@@ -490,7 +562,7 @@ table Request_Timmer_Function {
             // ..
             // 9 : Timer 9
     reset_time:  float;
-        // Reset Time (sec)
+        // Reset Time (sec) 
             // 입력란 기본값 0
     option_increase:    int;
         // Timing Option (드랍다운)
@@ -499,5 +571,5 @@ table Request_Timmer_Function {
     option_action:      int;
         // Action Option (드랍다운)
             // 0 : Default
-            // 1 : Stop at Pause State
+            // 1 : Stop at Pause State 
 }

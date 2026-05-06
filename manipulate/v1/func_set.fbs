@@ -3,89 +3,167 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "set_toollist_num"
 table Request_Set_Tool_List {
   target_tool_num: int;
 }
 
+// "set_userframe_num"
 table Request_Set_User_Frame {
   user_frame_num: int;
 }
 
+// "set_shift"
 table Request_Set_Shift {
   shift_no:       int;
   shift_mode:     int;
   target:         MoveInput_Target;
 }
 
+// "set_shift_landmark"
+table Request_Set_Shift_LandMark {
+  shift_mode:     int;
+  tolerance:      float;
+
+  reference_point_1:    MoveInput_Target;
+  reference_point_2:    MoveInput_Target;
+  reference_point_3:    MoveInput_Target;
+
+  present_point_1:      MoveInput_Target;
+  present_point_2:      MoveInput_Target;
+  present_point_3:      MoveInput_Target;
+}
+
+// "set_out_collision_para"
 table Request_Set_Out_Collision_Para {
   onoff:        int;
   react_mode:   int;
   threshold:    float;
 }
 
+// "set_self_collision_para"
 table Request_Set_Self_Collision_Para {
   mode:         int;
   dist_int:     float;
   dist_ext:     float;
 }
 
+// "set_joint_impedance"
 table Request_Set_Joint_Impedance {
   onoff:        int;
+    // 0 : Off
+    // 1 : On Joint Impedance
   stiffness:    [float];
+    // Stiffness (슬라이드 바)
+    // 0~1사이 값 N개
   torquelimit:  [float];
+    // Torque Limit (슬라이드 바)
+    // 0~1사이 값 N개
 }
 
+// "set_freedrive"
 table Request_Set_Free_Drive {
-  onoff:  int;
+  onoff:        int;
+    // Mode Selection
+      // 0 : Off
+      // 1 : On Free Drive
+      // 2 : On When Button Clicked
+
   extra_force_frame: int;
+    // Additional Force Frame
+      // 0 : Global Frame
+      // 1 : Local TCP Frame
+      // 2 : User Frmae
   extra_force_fx: float;
   extra_force_fy: float;
   extra_force_fz: float;
+    // Additional Force value (Nm)
+
   sensitivity:  float;
+    // Operation Sensitivty (슬라이드 바)
+    // 0~1사이 값 
 }
 
+// "set_userframe_6dof"
 table Request_Set_User_Frame_6Dof {
+  // SET 이름: User Frame: Set via XYZ
   user_frame_num: int;
+    // 사용자 좌표계 선택: 8개 옵션
   setting_option: int;
+    // 설정 옵션
+      // 0 : Restore Saved
+      // 1 : Apply Target (Temporary)
+      // 2 : Save Target Permanently
   target_frame: int;
+    // 0 : Global
+    // 1 : Local
+    // 2 : User
   target_x: float;
   target_y: float;
   target_z: float;
   target_rx: float;
   target_ry: float;
   target_rz: float;
+    // 입력 칸 6개 ..
+    // x,y,z는 mm 단위
+    // rx,ry,rz는 deg 단위
 }
 
+// "set_userframe_tcp"
 table Request_Set_User_Frame_TCP {
+  // SET 이름: User Frame: Set via TCP
   user_frame_num: int;
+    // 사용자 좌표계 선택: 8개 옵션
   setting_option: int;
+    // 설정 옵션
+      // 0 : Restore Saved
+      // 1 : Apply Target (Temporary)
+      // 2 : Save Target Permanently
 }
 
+// "set_userframe_3points"
 table Request_Set_User_Frame_3Points {
+  // SET 이름: User Frame: Set via 3 Points
   user_frame_num: int;
+    // 사용자 좌표계 선택: 8개 옵션
   setting_option: int;
+    // 설정 옵션
+      // 0 : Restore Saved
+      // 1 : Apply Target (Temporary)
+      // 2 : Save Target Permanently
   order_option: int;
+    // Point Ordeing
+      // 0 : Origin->X Axis->XY Plane
+      // 1 : Origin->Y Axis->YZ Plane
+      // 2 : Origin->Z Axis->ZX Plane
   point_1_x: float;
   point_1_y: float;
   point_1_z: float;
+    // Point-1 3개 x,y,z (mm)
   point_2_x: float;
   point_2_y: float;
   point_2_z: float;
+    // Point-2 3개 x,y,z (mm)
   point_3_x: float;
   point_3_y: float;
   point_3_z: float;
+    // Point 3 3개 x,y,z (mm)
 }
 
 // "set_master_mode"
 table Request_Set_Master_Mode {
   mode: int;
+  // 0: Off
+  // 1: Reflected Joint Angle 
+  // 2: Syncronized Cartesian
 }
 
 // "set_fixed_speed"
 table Request_Set_Fixed_Speed_Mode {
   target_move:      int;
     // 0: J-Types
-    // 1: L-Types
+    // 1: L-Types (Position)
+    // 2 :L-Types (Orientation)
   vel_option:       int;
     // 0: Off
     // 1: Fixed mode: %
@@ -98,80 +176,73 @@ table Request_Set_Fixed_Speed_Mode {
   acc_parameter:    float;
 }
 
+// "set_speedbar"
+table Request_Set_SpeedBar {
+  alpha: float;
+}
+
 // "set_timeconstraint"
 table Request_Set_TimeConstraint {
-  option:          int;
+  option:     int;
     // 0 : Off
     // 1 : Unit Move Time-Constraint
     // 2 : Multi Move Time-Constraint
-  time_sec:        float;
+  time_sec:   float;
     // Target time(sec)
 }
 
 // "set_ascii_functioncall"
 table Request_Set_AsciiFunctionCall {
-  option:         int;
+  option:     int;
     // 0 : Direct Execution
     // 1 : Que Message
-  message:        string;
-}
-
-// "set_shift_landmark"
-table Request_Set_Shift_LandMark {
-  shift_mode: int;
-  tolerance: float;
-  reference_point_1: MoveInput_Target;
-  reference_point_2: MoveInput_Target;
-  reference_point_3: MoveInput_Target;
-  present_point_1: MoveInput_Target;
-  present_point_2: MoveInput_Target;
-  present_point_3: MoveInput_Target;
-}
-
-// "set_program_flow_manage"
-table Request_Set_ProgramFlowManage {
-    target: int;
-    // Target Component
-        // 0 : All Robot Components
-        // 1 : This Component
-    option: int;
-    // Option
-            // 0 : Stop
-            // 1 : Pause
-            // 2 : Resume
-            // 3 : Reset Collision
+  message:    string;
 }
 
 // "set_din_function_mask"
 table Request_Set_DinFunctionMask {
-    device: int;
-    // Target Device
-        // 0 : Control Box IO
-        // 1 : Extension IO
-        // 2 : ToolFlange IO
-    port_num: int;
-    // Port Selection
-        // -1: 전체 포트, 0 ~ 15 : 포트번호
-    option: int;
-    // Option
-        // 0 : Disable-Mask Off
-        // 1 : Disable-Mask On
+  device:     int;
+    // 0 : Control Box IO
+    // 1 : Extension IO
+    // 2 : ToolFlange IO
+  port_num:   int;
+    // 0 ~ 15 : 포트번호
+  option:     int;
+    // 0 : Disable-Mask Off
+    // 1 : Disable-Mask On
 }
 
 // "set_dout_function_mask"
 table Request_Set_DoutFunctionMask {
-    device: int;
-    // Target Device
-        // 0 : Control Box IO
-        // 1 : Extension IO
-        // 2 : ToolFlange IO
-    port_num: int;
-    // Port Selection
-        // -1: 전체 포트, 0 ~ 15 : 포트번호
-    option: int;
-    // Option
-        // 0 : Disable-Mask Off
-        // 1 : Disable-Mask On
+  device:     int;
+    // 0 : Control Box IO
+    // 1 : Extension IO
+    // 2 : ToolFlange IO
+  port_num:   int;
+    // 0 ~ 15 : 포트번호
+  option:     int;
+    // 0 : Disable-Mask Off
+    // 1 : Disable-Mask On
+}
+
+// "set_program_flow_manage"
+table Request_Set_ProgramFlowManage {
+  target:     int;
+    // 0 : All Robot Components
+    // 1 : This Component
+  option:     int;
+    // 0 : Stop
+    // 1 : Pause
+    // 2 : Resume 
+    // 3 : Reset Collision
+}
+
+// "set_home_joint_info"
+table Request_Set_HomeJointInfo {
+  home_type:      int;
+    // 0 : 최상위 홈
+    // 1 : 기타...서브프로그램 등
+  joint_angles:   [float];
 }
 
 // "set_jacob_speed_mode"

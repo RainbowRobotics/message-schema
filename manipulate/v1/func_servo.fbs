@@ -8,7 +8,11 @@ namespace IPC;
 // "call_joint_brake"
 table Request_JointBrake {
   board_no:           int;
-  brake_optioin:      int;
+  brake_optioin:      int; //드랍다운
+        // 0 : Close
+        // 1 : Open (Hard)
+        // 2 : Weak
+        // 3 : Close only
 }
 
 // "call_joint_encoder_zero"
@@ -19,6 +23,13 @@ table Request_JointEncoderZero {
 // "call_joint_sensor_reset"
 table Request_JointSensorReset {
   board_no:           int;
+}
+
+// "call_joint_bno_change"
+table Request_JointBnoChange {
+  channel_no:         int;
+  board_no:           int;
+  target_no:          int;
 }
 
 // "pop_joint_gain_pos"
