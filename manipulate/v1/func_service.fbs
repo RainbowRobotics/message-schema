@@ -477,7 +477,27 @@ table Request_Wrapper_ArcSensing_On{
         // Weave Direction Max Dev.(mm) (입력란)
             // 기본값 10
 }
-
 // "call_arc_sensing_off"
 table Request_Wrapper_ArcSensing_Off{
+}
+
+// "call_timer_function"
+table Request_Timmer_Function {
+    timer_no:   int;
+        // Timer Number (드랍다운)
+            // 0 : Timer 0
+            // 1 : Timer 1
+            // ..
+            // 9 : Timer 9
+    reset_time:  float;
+        // Reset Time (sec)
+            // 입력란 기본값 0
+    option_increase:    int;
+        // Timing Option (드랍다운)
+            // 0 : Default
+            // 1 : Sync with Speed Bar
+    option_action:      int;
+        // Action Option (드랍다운)
+            // 0 : Default
+            // 1 : Stop at Pause State
 }
