@@ -1,0 +1,20 @@
+namespace muscat;
+
+enum Muscat_Message_Type: byte {
+    INFO = 0,
+    WARNING = 1,
+    ERROR = 2,
+    USER = 3,
+    DEBUG = 4,
+    GENERAL = 5,
+}
+
+table Muscat_Message {
+    type: Muscat_Message_Type;
+    is_toast: bool;
+    code: int;
+    str_code: string;
+    sub_str: string;
+}
+
+root_type Muscat_Message;
