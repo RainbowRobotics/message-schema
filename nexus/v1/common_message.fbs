@@ -6,7 +6,7 @@ enum Muscat_Message_Type: byte {
     ERROR = 2,
     USER = 3,
     DEBUG = 4,
-    GENERAL = 6,
+    GENERAL = 5,
 }
 
 table Muscat_Message {
