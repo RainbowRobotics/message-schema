@@ -1,0 +1,7 @@
+namespace IPC;
+
+table ResponseFrsGetState {
+    url: string;
+    connection: bool;
+    state: int;
+}
