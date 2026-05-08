@@ -80,44 +80,86 @@ table NodeSize {
 
 /*
     category    :       Data Structure
-    usage       :       토폴로지 링크 (node.json format)
+    usage       :       존 폴리곤 꼭짓점 (v2)
     field
-        - id            :       링크 ID
-        - dir           :       주행 방향 ( "FORWARD" / "REVERSE" )
-        - method        :       이동 방법 ( "PP" / "HPP" / "QD" )
-        - speed         :       이동 속도
-        - safety_field  :       안전 필드 번호
+        - x             :       x 좌표
+        - y             :       y 좌표
 */
-table Link {
-    id: string;
-    dir: string;
-    method: string;
-    speed: float;
-    safety_field: int;
+struct Point2D {
+    x: float;
+    y: float;
 }
 
 /*
     category    :       Data Structure
-    usage       :       토폴로지 노드 (node.json format)
+    usage       :       토폴로지 존 (v2)
     field
-        - context       :       노드 context
-        - id            :       노드 ID
-        - links         :       연결된 링크 목록
+        - id            :       존 ID (UUID)
+        - name          :       존 이름
+        - type          :       존 타입 ( "NO_ENTRY" / "IGNORE_LIDAR_2D" / "IGNORE_LIDAR_3D" )
+        - polygon       :       폴리곤 꼭짓점 목록 ( [[x,y], ...] )
+*/
+table Zone {
+    id: string;
+    name: string;
+    type: string;
+    polygon: [Point2D];
+}
+
+/*
+    category    :       Data Structure
+    usage       :       토폴로지 메타데이터 (v2)
+    field
+        - created_at    :       생성 일시 (ISO 8601)
+        - site          :       맵 사이트 식별자 ( 예: "samsung_bldgA_1F" )
+*/
+table Metadata {
+    created_at: string;
+    site: string;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       토폴로지 링크 (v2)
+    field
+        - id            :       링크 ID (UUID)
+        - from          :       출발 노드 ID
+        - to            :       도착 노드 ID
+        - dir           :       주행 방향 ( "FORWARD" / "REVERSE" )
+        - method        :       이동 방법 ( "PP" / "HPP" / "QD" )
+        - speed         :       이동 속도
+        - safety_field  :       안전 필드 번호
+        - avoid_range   :       장애물 회피 범위
+*/
+table Link {
+    id: string;
+    from: string;
+    to: string;
+    dir: string;
+    method: string;
+    speed: float;
+    safety_field: int;
+    avoid_range: float;
+}
+
+/*
+    category    :       Data Structure
+    usage       :       토폴로지 노드 (v2)
+    field
+        - id            :       노드 ID (UUID)
         - name          :       노드 이름
-        - pose          :       노드 위치 ( x, y, z, r, p, y)
-        - features      :       노드 특성 및 기능 ( "EV_CALL" / "EV_INSIDE" / "CHARGING" / "ARUCO_ALIGN" / "AUTO_DOOR" / "EV_BOARDING" / "CONVEYOR" / "WARNING_BEEP" / "IGNORE_2D" / "IGNORE_3D" / "IGNORE_CAM" / "IGNORE_OBS_2D" / "IGNORE_OBS_3D" / "IGNORE_OBS_CAM" )
+        - context       :       노드 context
+        - pose          :       노드 위치 ( x, y, z, rx, ry, rz ) — 각도 단위: degree
         - size          :       노드 크기 ( x, y, z )
-        - type          :       노드 타입 ( "GOAL" / "INIT" / "ROUTE" / "ZONE" / "VIRTUAL_WALL" / "OBS" )
-        - role          :       노드 역할 ( 레거시 호환용 )
+        - type          :       노드 타입 ( "ROUTE" / "GOAL" / "ALIGN" )
+        - features      :       동작 속성 ( "INIT" / "CHARGING" / "AUTO_DOOR" / "ARUCO" / "APRIL" / "V_MARKER" / "TAPE" )
 */
 table Node {
     context: string;
     id: string;
-    links: [Link];
     name: string;
     pose: NodePose;
-    //features: [string];
-    role: string;
+    features: [string];
     size: NodeSize;
     type: string;
 }
@@ -287,7 +329,7 @@ table ResponseSetMapCloud {
     category    :       RPC
     response    :       Delayed One-shot
     topic       :       {robotType}/map/getTopology
-    usage       :       토폴로지 맵 조회
+    usage       :       토폴로지 맵 조회 (v2)
     field
         - map_name      :       맵 이름
         - file_name     :       파일 이름
@@ -298,7 +340,11 @@ table ResponseSetMapCloud {
         - search_text   :       검색어
         - sort_option   :       정렬 옵션
         - sort_direction:       정렬 방향
-        - data          :       노드 데이터
+        - format_version:       포맷 버전 ( "2.0" )
+        - nodes         :       노드 목록
+        - links         :       링크 목록
+        - zones         :       존 목록
+        - metadata      :       메타데이터
 */
 table RequestGetMapTopology {
     id: string;
@@ -322,7 +368,11 @@ table ResponseGetMapTopology {
     search_text: string;
     sort_option: string;
     sort_direction: string;
-    data: [Node];
+    format_version: string;
+    nodes: [Node];
+    links: [Link];
+    zones: [Zone];
+    metadata: Metadata;
     result: string;
     message: string;
 }
@@ -332,16 +382,20 @@ table ResponseGetMapTopology {
     category    :       RPC
     response    :       Delayed One-shot
     topic       :       {robotType}/map/setTopology
-    usage       :       토폴로지 맵 설정
+    usage       :       토폴로지 맵 설정 (v2)
     field
         - map_name      :       맵 이름
-        - data          :       노드 데이터
+        - nodes         :       노드 목록
+        - links         :       링크 목록
+        - zones         :       존 목록
 */
 table RequestSetMapTopology {
     id: string;
     map_name: string;
     file_name: string;
-    data: [Node];
+    nodes: [Node];
+    links: [Link];
+    zones: [Zone];
 }
 table ResponseSetMapTopology {
     id: string;

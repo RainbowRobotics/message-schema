@@ -453,4 +453,5 @@ table ResultControlDock {
     command: string;
     result: string;
     message: string;
+    station_learned: bool = false;
 }
