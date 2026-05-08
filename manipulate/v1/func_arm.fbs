@@ -3,18 +3,21 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "save_collision_parameter"
 table Request_Save_Collision_Parameter {
   onoff: int;
   react: int;
   threshold: float;
 }
 
+// "save_selfcoll_parameter"
 table Request_Save_SelfColl_Parameter {
   mode: int;
   dist_internal: float;
   dist_external: float;
 }
 
+// "save_gravity_parameter"
 table Request_Save_Gravity_Parameter {
   mode: int;
   gx: float;
@@ -22,10 +25,12 @@ table Request_Save_Gravity_Parameter {
   gz: float;
 }
 
+// "save_direct_teach_sensitivity"
 table Request_Save_Direct_Teach_Sensitivity {
   sensitivity: [float];     //<------ 구조체에서 table 배열로 변경됨 26-04-28
 }
 
+// "save_tool_parameter"
 table Request_Save_Tool_List_Para {
     tool_no: int;
 
