@@ -81,7 +81,7 @@ table Request_Set_Free_Drive {
 
   sensitivity:  float;
     // Operation Sensitivty (슬라이드 바)
-    // 0~1사이 값 
+    // 0~1사이 값
 }
 
 // "set_userframe_6dof"
@@ -154,7 +154,7 @@ table Request_Set_User_Frame_3Points {
 table Request_Set_Master_Mode {
   mode: int;
   // 0: Off
-  // 1: Reflected Joint Angle 
+  // 1: Reflected Joint Angle
   // 2: Syncronized Cartesian
 }
 
@@ -233,7 +233,7 @@ table Request_Set_ProgramFlowManage {
   option:     int;
     // 0 : Stop
     // 1 : Pause
-    // 2 : Resume 
+    // 2 : Resume
     // 3 : Reset Collision
 }
 
@@ -251,4 +251,19 @@ table Request_Set_JacobSpeedMode {
     // Mode (드랍다운)
       // 0 : Active (기본값)
       // 1 : De-active
+}
+
+// "set_self_vibration_mode"
+table Request_Set_SelfVibrationMode{
+  mode:         int;
+    // Mode (드랍다운)
+      // 0 : Off
+      // 1 : On
+  time:         float;
+    // Time (sec)       (입력란)
+  frequency:    float;
+    // Frequency (Hz)   (입력란)
+  magnitudes:    [float];
+    // Magnitude (0~1)
+      // 관절 별 슬라이드 바
 }
