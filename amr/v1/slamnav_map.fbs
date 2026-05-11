@@ -349,7 +349,6 @@ table ResponseSetMapCloud {
 table RequestGetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
     page_no: int;
     page_size: int;
     node_type: string;
@@ -360,7 +359,6 @@ table RequestGetMapTopology {
 table ResponseGetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
     page_no: int;
     page_size: int;
     total_page: int;
@@ -392,7 +390,6 @@ table ResponseGetMapTopology {
 table RequestSetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
     nodes: [Node];
     links: [Link];
     zones: [Zone];
@@ -400,7 +397,6 @@ table RequestSetMapTopology {
 table ResponseSetMapTopology {
     id: string;
     map_name: string;
-    file_name: string;
     result: string;
     message: string;
 }
