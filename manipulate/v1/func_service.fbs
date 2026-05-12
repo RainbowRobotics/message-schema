@@ -11,7 +11,7 @@ table Request_Replay_Motion_Rec_Start {
     mode:       int;
         // Saving Mode:
             // 0 : NoSave
-            // 1 : Real Time 
+            // 1 : Real Time
             // 2 : Mile Stone
     frequency:  float;
         // Mile Stone Frequency (Hz) .. 기본값 1
@@ -47,7 +47,7 @@ table Request_Weld_Wire {
     direction:  int;
         // 0 : Stop
         // +1 : Forward
-        // -1 : Backward 
+        // -1 : Backward
 }
 // "call_weld_gas"
 table Request_Weld_Gas {
@@ -111,7 +111,7 @@ table Request_Weld_Arc_On {
     // 5. 후속 대기
         time_ending : float;
             // Time for Holdong (sec)
-    
+
 }
 
 // "call_weld_arc_off"
@@ -414,12 +414,12 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
-            // payload[1] : Device ID 
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
                 // 입력란 (기본값 1)
             // payload[2] : Motor type
                 // 드랍다운
-                    // 0 : General 
+                    // 0 : General
                     // 1 : XM-Series
             // payload[3] : Control Mode
                 // 드랍다운
@@ -439,7 +439,7 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 1)
             // payload[2] : Initialize type
@@ -463,7 +463,7 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 1)
             // payload[2] : Initialize type
@@ -484,7 +484,7 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 9)....!! 중요 기본값9
         // function_list == 1 : Reset
@@ -501,7 +501,7 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 9)....!! 중요 기본값9
         // function_list == 1 : Set Goal Position
@@ -520,7 +520,7 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 9)....!! 중요 기본값9
         // function_list == 1 : Set Goal Position
@@ -539,10 +539,10 @@ table Request_Gripper_Action {
         // function_list == 0 : Initialize
             // payload[0] : Connection Port
                 // 드랍다운
-                    // 0 : Tool-flange 
+                    // 0 : Tool-flange
             // payload[1] : Device ID
                 // 입력란 (기본값 1)
-        // function_list == 1 : Function call 
+        // function_list == 1 : Function call
             // payload[0] : Function List
                 // 드랍다운
                     // 0 : Laser-On
@@ -562,7 +562,7 @@ table Request_Timmer_Function {
             // ..
             // 9 : Timer 9
     reset_time:  float;
-        // Reset Time (sec) 
+        // Reset Time (sec)
             // 입력란 기본값 0
     option_increase:    int;
         // Timing Option (드랍다운)
@@ -571,5 +571,40 @@ table Request_Timmer_Function {
     option_action:      int;
         // Action Option (드랍다운)
             // 0 : Default
-            // 1 : Stop at Pause State 
+            // 1 : Stop at Pause State
+}
+//---------------------------------------------------------------
+// G code
+//---------------------------------------------------------------
+// "call_move_gcode"
+table Request_Move_Gcode {
+    filename:       string;
+        // Filename
+    gcodeframe:     int;
+        // Frame Selection (드랍다운)
+            // 0 : Global
+            // 1 : Local
+            // 2 : User
+    feed_spd_default:   float;
+    feed_spd_rapid:     float;
+    feed_spd_limit:     float;
+    feed_spd_rotation:  float;
+        // Feed Speed
+            // Feed Default (mm/s) [입력란]
+            // Feed Rapid (mm/s) [입력란]
+            // Feed Max Limit (mm/s) [입력란]
+            // Feed Rotation (deg/s) [입력란]
+
+    default_plane:      int;
+        // Default Plane (드랍다운)
+            // 0 : XY-Plane
+            // 1 : ZX-Plane
+            // 2 : YZ-Plane
+    offset_x:           float;
+    offset_y:           float;
+    offset_z:           float;
+        // Offset
+            // Offset X (mm) [입력란]
+            // Offset Y (mm) [입력란]
+            // Offset Z (mm) [입력란]
 }
