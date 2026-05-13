@@ -607,4 +607,13 @@ table Request_Move_Gcode {
             // Offset X (mm) [입력란]
             // Offset Y (mm) [입력란]
             // Offset Z (mm) [입력란]
+    will_const_sped:         int;
+    will_ignore_unknown:     int;
+        // Option
+            // Will Use Constant Speed [드랍다운]
+                // 0 : Off
+                // 1 : Constant Speed
+            // Will Ignore Unknown Code [드랍다운]
+                // 0 : Off
+                // 1 : Ignore Unknown Code
 }
