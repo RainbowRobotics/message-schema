@@ -53,7 +53,7 @@ table Request_Move_Wait{
 table Response_Move_Wait{
     motion_result:  int;
         // -1 : time out
-        // 0  : good 
+        // 0  : good
         // others
 }
 //---------------------------------------------------------------
@@ -72,7 +72,7 @@ table Request_Move_Home {
       // 18 : Global Pin 15
   move_type:      int;
     // Movement Type (드랍다운)
-      // 0 : Move-J 
+      // 0 : Move-J
       // 1 : Move-L
   speed:          MoveInput_Speed;
     // 속도/가속도 설정 (다른것과 동일)
@@ -154,7 +154,7 @@ table Request_Move_CIR_AXIS {
             // 1 : Rate per revolution
             // 2 : Size per revolution
     radius_para:    float;
-        // Radius Parameter 
+        // Radius Parameter
 }
 
 // "call_move_cir_threepoint"
@@ -174,7 +174,7 @@ table Request_Move_CIR_3P {
             // 1 : Rate per revolution
             // 2 : Size per revolution
     radius_para:    float;
-        // Radius Parameter 
+        // Radius Parameter
 }
 //---------------------------------------------------------------
 // Servo Move
@@ -212,17 +212,17 @@ table Request_Trapi_J {
     filter:         float;
 }
 //---------------------------------------------------------------
-// Wrapper
+// Conveyor
 //---------------------------------------------------------------
 // "call_base_conveyor_on"
 table Request_Wrapper_Conveyor_On {
     conv_type:          int;
         // Conveyor Type
-            // 0 : No Conveyor 
-            // 1 : Linear Conveyor 
-            // 2 : Circular Conveyor 
+            // 0 : No Conveyor
+            // 1 : Linear Conveyor
+            // 2 : Circular Conveyor
     conv_speed:         float;
-        // Conveyor Speed (mm/s) 
+        // Conveyor Speed (mm/s)
     conv_acc_time_sec:  float;
         // Speed Adjusting Time (sec)
 
@@ -239,10 +239,12 @@ table Request_Wrapper_Conveyor_Off {
 // "call_base_conveyor_speed"
 table Request_Wrapper_Conveyor_Speed {
     conv_speed:         float;
-        // Conveyor Speed (mm/s) 
+        // Conveyor Speed (mm/s)
     conv_acc_time_sec:  float;
         // Speed Adjusting Time (sec)
 }
+//---------------------------------------------------------------
+// Weaving
 //---------------------------------------------------------------
 // "call_tcp_weaving_on"
 table Request_Wrapper_TcpWeave_On{
@@ -251,7 +253,7 @@ table Request_Wrapper_TcpWeave_On{
             // 0 : None
             // 1 : Trapizoidal
             // 2 : Sine wave
-            // 3 : Polynomial 
+            // 3 : Polynomial
             // 4 : Ellipse
             // 5 : 8-Shape
             // 6 : Lissajous
@@ -302,16 +304,18 @@ table Request_Wrapper_TcpWeave_On{
 table Request_Wrapper_TcpWeave_Off{
 }
 //---------------------------------------------------------------
+// Arc Sensing
+//---------------------------------------------------------------
 // "call_arc_sensing_on"
 table Request_Wrapper_ArcSensing_On{
     // -----------------------
     // Mode Selection
-    // ----------------------- 
+    // -----------------------
     control_type:       int;
         // Control Mode (드랍다운)
             // 0 : RT (Full Cycle)
             // 1 : RT (Half Cycle)
-            // 2 : Every Full Cycle 
+            // 2 : Every Full Cycle
             // 3 : Every Half Cycle
     // -----------------------
     // Sensing Setting
@@ -336,11 +340,11 @@ table Request_Wrapper_ArcSensing_On{
             // 기본값 20
     data_grab_weighting_mode: int;
         // Sensing Weighting Mode (드랍다운) (기본값 0)
-            // 0 : Curve Weight 
+            // 0 : Curve Weight
             // 1 : Even Weight
             // 2 : Linear Weight
             // 3 : Reduced Linear Weight
-    
+
     // -----------------------
     // Target Setting
     // -----------------------
@@ -446,4 +450,141 @@ table Request_Wrapper_ArcSensing_ChangeGain{
             // 기본값 10
 }
 //---------------------------------------------------------------
+// Force
+//---------------------------------------------------------------
+// "call_admittance_force_on"
+table Request_Wrapper_AdmittanceForce_On{
+    // Target Setting
+        frame:  int;
+            // Target Frame [드랍다운]
+                // 0 : Global
+                // 1 : Local
+                // 2 : User
+                // 3 : Target
+        enable_x:   int;
+        enable_y:   int;
+        enable_z:   int;
+        enable_rx:   int;
+        enable_ry:   int;
+        enable_rz:   int;
+            // Enable [체크박스] : 기본값 0 (체크안함)
 
+        target_x:   float;
+        target_y:   float;
+        target_z:   float;
+        target_rx:   float;
+        target_ry:   float;
+        target_rz:   float;
+            // Target Value [입력란] : 기본값 0
+
+        pgain_x:   float;
+        pgain_y:   float;
+        pgain_z:   float;
+        pgain_rx:   float;
+        pgain_ry:   float;
+        pgain_rz:   float;
+            // P-Gain [입력란] : 기본값 1
+
+        igain_x:   float;
+        igain_y:   float;
+        igain_z:   float;
+        igain_rx:   float;
+        igain_ry:   float;
+        igain_rz:   float;
+            // I-Gain [입력란] : 기본값 0
+
+        spdlim_x:   float;
+        spdlim_y:   float;
+        spdlim_z:   float;
+        spdlim_rx:   float;
+        spdlim_ry:   float;
+        spdlim_rz:   float;
+            // Speed Limit [입력란] : 기본값 0
+
+    // Limitation
+        max_dev_pos:    float;
+        max_dev_rot:    float;
+            // Position Max. Deviation (mm) [입력란]
+            // Rotation Max. Deviation (deg) [입력란]
+
+    // Sensor Setting
+        sensor_type:    int;
+            // Sensor Type [드랍다운]
+                // 0: External F/T
+                // 1: Internal F/T
+                // 2: Analog Input 0
+                // 3: Analog Input 1
+                // 4: Analog Input 2
+                // 5: Analog Input 3
+                // 6: Custom
+
+        sensor_cutoffhz: float;
+            // Sensor Filter (Hz) [입력란] ..기본값 20
+        sensor_handle: int;
+            // Sensor Signal Option [드랍다운]
+                // 0: Auto Nulling
+                // 1: Raw Value
+    // Others
+        contact_force:  float;
+            // Contact Detect Force(N) [입력란]..기본값 5
+}
+
+// "call_admittance_force_off"
+table Request_Wrapper_AdmittanceForce_Off{
+}
+
+// "call_admittance_force_change"
+table Request_Wrapper_AdmittanceForce_Change{
+    // Target Setting
+        frame:  int;
+            // Target Frame [드랍다운]
+                // 0 : Global
+                // 1 : Local
+                // 2 : User
+                // 3 : Target
+        enable_x:   int;
+        enable_y:   int;
+        enable_z:   int;
+        enable_rx:   int;
+        enable_ry:   int;
+        enable_rz:   int;
+            // Enable [체크박스] : 기본값 0 (체크안함)
+
+        target_x:   float;
+        target_y:   float;
+        target_z:   float;
+        target_rx:   float;
+        target_ry:   float;
+        target_rz:   float;
+            // Target Value [입력란] : 기본값 0
+
+        pgain_x:   float;
+        pgain_y:   float;
+        pgain_z:   float;
+        pgain_rx:   float;
+        pgain_ry:   float;
+        pgain_rz:   float;
+            // P-Gain [입력란] : 기본값 1
+
+        igain_x:   float;
+        igain_y:   float;
+        igain_z:   float;
+        igain_rx:   float;
+        igain_ry:   float;
+        igain_rz:   float;
+            // I-Gain [입력란] : 기본값 0
+
+        spdlim_x:   float;
+        spdlim_y:   float;
+        spdlim_z:   float;
+        spdlim_rx:   float;
+        spdlim_ry:   float;
+        spdlim_rz:   float;
+            // Speed Limit [입력란] : 기본값 0
+
+    // Limitation
+        max_dev_pos:    float;
+        max_dev_rot:    float;
+            // Position Max. Deviation (mm) [입력란]
+            // Rotation Max. Deviation (deg) [입력란]
+}
