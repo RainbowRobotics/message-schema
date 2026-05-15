@@ -617,3 +617,34 @@ table Request_Move_Gcode {
                 // 0 : Off
                 // 1 : Ignore Unknown Code
 }
+
+// "save_extft_parameter"
+table Request_EXTFT_Save_Parameter {
+    dev_type:   int;
+        // Device Type [드랍다운]
+            // 0 : No Sensor
+            // 1 : AIDIN AFT
+    dev_mount_opt:  int;
+        // Mounting Option [드랍다운]
+            // 0 : Default Mount
+            // 1 : Custom Mount
+    dev_mount_rx:   float;
+    dev_mount_ry:   float;
+    dev_mount_rz:   float;
+        // Custom Mount wrt flange
+            // 각각 입력란 deg
+    dev_filer_hz:   float;
+        // Signal Filter (Hz)
+            // 입력란
+}
+// "call_config_extft"
+table Request_CallConfigEXTFT {
+}
+table Response_CallConfigEXTFT {
+    dev_type:   int;
+    dev_mount_opt:  int;
+    dev_mount_rx:   float;
+    dev_mount_ry:   float;
+    dev_mount_rz:   float;
+    dev_filer_hz:   float;
+}
