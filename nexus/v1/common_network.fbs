@@ -1,6 +1,5 @@
 namespace IPC;
 
-
 table Wifi {
     in_use: bool;
     ssid: string;
@@ -30,6 +29,8 @@ table Response_Network_GetNetwork {
     ethernet: Network;
     wifi: Network;
     bluetooth: Network;
+    result: string;
+    message: string;
 }
 
 // 네트워크 설정 ------------------------------------------------

@@ -1,7 +1,7 @@
 namespace IPC;
 
 table ResponseFrsGetState {
-    url: string;
+    zenoh_url: string;
     connection: bool;
     state: int;
 }

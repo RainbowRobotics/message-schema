@@ -62,6 +62,38 @@ table Request_Pop_JointInfos {
   board_no:           int;
 }
 
+// "set_joint_big_input"
+table Request_Set_JointBigInput{
+  board_no:           int;
+  bigerr:             int;
+    // Big Err Pulse [입력란]
+  inputerr:           int;
+    // Input Err Pulse [입력란]
+}
+
+// "pop_joint_big_input"
+table Request_Pop_JointBigInp{
+  board_no:           int;
+}
+
+// "set_joint_jam_over"
+table Request_Set_JointJamOver{
+  board_no:           int;
+  jam_current:        int;
+    // Jam Err Limit(mA) [입력란]
+  jam_time:           int;
+    // Jam Err Count(0.1s) [입력란]
+  ovr_current:        int;
+    // Ovr Err Limit(mA) [입력란]
+  ovr_time:           int;
+    // Jam Err Count(0.1s) [입력란]
+}
+
+// "pop_joint_jam_over"
+table Request_Pop_JointJamOvr{
+  board_no:           int;
+}
+
 //------------------------------------------------------
 // "call_powercontrol"
 table Request_PowerControl {
