@@ -12,7 +12,8 @@ namespace SLAMNAV;
     category    :       Data Structure
     usage       :       safety Flag Structure
     field
-        - name          :       obstacle, bumper, interlock, operationStop
+        - name          :       emo, obstacle, bumper, interlock, operationStop,
+                                measMismatch, overSpeed, fieldMismatch
         - value         :       true / false
 */
 table SafetyFlag {
@@ -158,6 +159,27 @@ table ResponseSetSafetyIo {
     mcu1_din: [bool];
     mcu0_dio: [bool];
     mcu1_dio: [bool];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/setDetectMode
+    usage       :       safety LiDAR obstacle detection ON/OFF
+                        (현재 상태는 Status.robot_state.detect_mode 펍 참조)
+    field
+        - enable    :       true(ON) / false(OFF)
+*/
+table RequestSetDetectMode {
+    id: string;
+    enable: bool;
+}
+table ResponseSetDetectMode {
+    id: string;
+    enable: bool;
     result: string;
     message: string;
 }
