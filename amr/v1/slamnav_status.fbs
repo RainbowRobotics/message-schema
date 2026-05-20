@@ -94,6 +94,7 @@ struct StatusPower {
         - sf_interlock          :       인터락 정지
         - lidar_field           :       현재 safety LiDAR 필드 번호
         - detect_mode           :       OSSD detect mode ON/OFF
+        - avoid_on              :       장애물 회피 정책 ON/OFF
 */
 table StatusRobotState {
     emo: bool;
@@ -112,6 +113,7 @@ table StatusRobotState {
     sf_interlock: bool;
     lidar_field: uint8;
     detect_mode: bool;
+    avoid_on: bool;
 }
 
 /*
@@ -137,12 +139,10 @@ table StatusRobotSafetyIoState {
     field
         - platform_type :       플랫폼 타입
         - platform_name :       플랫폼 이름
-        - avoid_on      :       장애물 회피 정책 ON/OFF
 */
 table StatusSetting {
     platform_type: string;
     platform_name: string;
-    avoid_on: bool;
 }
 
 /*
