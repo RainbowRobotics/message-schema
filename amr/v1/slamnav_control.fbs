@@ -171,15 +171,15 @@ table ResponseSetSafetyIo {
     usage       :       safety LiDAR obstacle detection ON/OFF
                         (현재 상태는 Status.robot_state.detect_mode 펍 참조)
     field
-        - enable    :       true(ON) / false(OFF)
+        - switch        :       true(on) / false(off)
 */
 table RequestSetDetectMode {
     id: string;
-    enable: bool;
+    switch: bool;
 }
 table ResponseSetDetectMode {
     id: string;
-    enable: bool;
+    switch: bool;
     result: string;
     message: string;
 }
@@ -427,15 +427,15 @@ table ResponseStreamFrequency {
     topic       :       {robotType}/control/setAvoid
     usage       :       장애물 회피 정책 ON/OFF 설정
     field
-        - on            :       true(ON) / false(OFF)
+        - switch        :       true(on) / false(off)
 */
 table RequestSetAvoid {
     id: string;
-    on: bool;
+    switch: bool;
 }
 table ResponseSetAvoid {
     id: string;
-    on: bool;
+    switch: bool;
     result: string;
     message: string;
 }
