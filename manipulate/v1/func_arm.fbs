@@ -82,12 +82,3 @@ table Request_Save_Joint_Kinematic_Limit {
   speed_limit:    [float];
     // Speed Limit (deg/s)
 }
-
-
-// "save_deflection_compensation"
-table Request_Save_DeflectionCompensation {
-  mode: int;
-    // Compensation Mode (드랍다운)
-      // 0 : Off
-      // 1 : Adjust Deflection
-}
