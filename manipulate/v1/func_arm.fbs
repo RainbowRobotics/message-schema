@@ -25,6 +25,14 @@ table Request_Save_Gravity_Parameter {
   gz: float;
 }
 
+// "save_deflection_compensation"
+table Request_Save_DeflectionCompensation {
+  mode: int;
+    // Compensation Mode (드랍다운)
+      // 0 : Off
+      // 1 : Adjust Deflection
+}
+
 // "save_direct_teach_sensitivity"
 table Request_Save_Direct_Teach_Sensitivity {
   sensitivity: [float];     //<------ 구조체에서 table 배열로 변경됨 26-04-28
@@ -73,13 +81,4 @@ table Request_Save_Joint_Kinematic_Limit {
     // Position Limit-Up (deg)
   speed_limit:    [float];
     // Speed Limit (deg/s)
-}
-
-
-// "save_deflection_compensation"
-table Request_Save_DeflectionCompensation {
-  mode: int;
-    // Compensation Mode (드랍다운)
-      // 0 : Off
-      // 1 : Adjust Deflection
 }

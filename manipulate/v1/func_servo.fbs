@@ -42,6 +42,16 @@ table Request_Pop_JointGain_Cur{
   board_no:           int;
 }
 
+// "pop_joint_big_input"
+table Request_Pop_JointBigInp{
+  board_no:           int;
+}
+
+// "pop_joint_jam_over"
+table Request_Pop_JointJamOvr{
+  board_no:           int;
+}
+
 // "set_joint_gain_pos"
 table Request_Set_JointGain_Pos{
   board_no:           int;
@@ -57,11 +67,6 @@ table Request_Set_JointGain_Cur{
   igain:              int;
 }
 
-// "pop_joint_infos"
-table Request_Pop_JointInfos {
-  board_no:           int;
-}
-
 // "set_joint_big_input"
 table Request_Set_JointBigInput{
   board_no:           int;
@@ -69,11 +74,6 @@ table Request_Set_JointBigInput{
     // Big Err Pulse [입력란]
   inputerr:           int;
     // Input Err Pulse [입력란]
-}
-
-// "pop_joint_big_input"
-table Request_Pop_JointBigInp{
-  board_no:           int;
 }
 
 // "set_joint_jam_over"
@@ -89,8 +89,8 @@ table Request_Set_JointJamOver{
     // Jam Err Count(0.1s) [입력란]
 }
 
-// "pop_joint_jam_over"
-table Request_Pop_JointJamOvr{
+// "pop_joint_infos"
+table Request_Pop_JointInfos {
   board_no:           int;
 }
 
@@ -98,11 +98,16 @@ table Request_Pop_JointJamOvr{
 // "call_powercontrol"
 table Request_PowerControl {
   power_option:       int;
+    // 0 : Power Off
+    // 1 : Power On
 }
 
 // "call_servocontrol"
 table Request_ServoControl {
   servo_option:       int;
+    // 0 : 서보온
+    // 1 : 서버온 + 리얼모드
+    // 2 : 비상 직접교시 모드
 }
 
 // "call_referencecontrol"
