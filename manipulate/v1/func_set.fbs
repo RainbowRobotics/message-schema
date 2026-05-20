@@ -267,30 +267,3 @@ table Request_Set_SelfVibrationMode{
     // Magnitude (0~1)
       // 관절 별 슬라이드 바
 }
-
-// "call_vibration_motion_on"
-table Request_Wrapper_VibrationMotion_On{
-    frame:  int;
-        // Frame Select (드랍다운)
-            // 0 : Global
-            // 1 : Local
-            // 2 : User
-            // 3 : Target
-            // 4 : Active Local
-    x_mag:  float;
-    y_mag:  float;
-    z_mag:  float;
-        // Magnitude (mm)
-    x_freq: float;
-    y_freq: float;
-    z_freq: float;
-        // Frequency (Hz)
-    x_phase: float;
-    y_phase: float;
-    z_phase: float;
-        // Phase (deg)
-}
-
-// "call_vibration_motion_off"
-table Request_Wrapper_VibrationMotion_Off{
-}

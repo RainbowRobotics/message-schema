@@ -7,19 +7,19 @@ table State_Core {
   heart_beat:             ubyte;
   timestamp_usec_mono:    ulong;
   
-  joint_q_ref:            N_JOINT_f;
-  joint_q_enc:            N_JOINT_f;
-  joint_t_esti:           N_JOINT_f;
-  joint_t_meas:           N_JOINT_f;
-  joint_temper:           N_JOINT_f;
+  joint_q_ref:            [float];
+  joint_q_enc:            [float];
+  joint_t_esti:           [float];
+  joint_t_meas:           [float];
+  joint_temper:           [float];
 
-  carte_x_ref:            N_CARTE_f;
-  carte_x_enc:            N_CARTE_f;
-  carte_speed_ref:        N_CARTE_f;         //<----added at 260422
-  carte_speed_enc:        N_CARTE_f;         //<----added at 260422
+  carte_x_ref:            [float];
+  carte_x_enc:            [float];
+  carte_speed_ref:        [float];         
+  carte_speed_enc:        [float];         
 
   userf_selection_no:     int;
-  userf_x_ref:            N_CARTE_f;
+  userf_x_ref:            [float];
 
   tool_selection_no:      int;
   tool_name:              string; 

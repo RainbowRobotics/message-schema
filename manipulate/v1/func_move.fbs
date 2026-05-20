@@ -176,6 +176,47 @@ table Request_Move_CIR_3P {
     radius_para:    float;
         // Radius Parameter
 }
+// "call_move_gcode"
+table Request_Move_Gcode {
+    filename:       string;
+        // Filename
+    gcodeframe:     int;
+        // Frame Selection (드랍다운)
+            // 0 : Global
+            // 1 : Local
+            // 2 : User
+    feed_spd_default:   float;
+    feed_spd_rapid:     float;
+    feed_spd_limit:     float;
+    feed_spd_rotation:  float;
+        // Feed Speed
+            // Feed Default (mm/s) [입력란]
+            // Feed Rapid (mm/s) [입력란]
+            // Feed Max Limit (mm/s) [입력란]
+            // Feed Rotation (deg/s) [입력란]
+
+    default_plane:      int;
+        // Default Plane (드랍다운)
+            // 0 : XY-Plane
+            // 1 : ZX-Plane
+            // 2 : YZ-Plane
+    offset_x:           float;
+    offset_y:           float;
+    offset_z:           float;
+        // Offset
+            // Offset X (mm) [입력란]
+            // Offset Y (mm) [입력란]
+            // Offset Z (mm) [입력란]
+    will_const_sped:         int;
+    will_ignore_unknown:     int;
+        // Option
+            // Will Use Constant Speed [드랍다운]
+                // 0 : Off
+                // 1 : Constant Speed
+            // Will Ignore Unknown Code [드랍다운]
+                // 0 : Off
+                // 1 : Ignore Unknown Code
+}
 //---------------------------------------------------------------
 // Servo Move
 //---------------------------------------------------------------
@@ -211,6 +252,7 @@ table Request_Trapi_J {
     timeout:        float;
     filter:         float;
 }
+
 //---------------------------------------------------------------
 // Conveyor
 //---------------------------------------------------------------
@@ -450,8 +492,34 @@ table Request_Wrapper_ArcSensing_ChangeGain{
             // 기본값 10
 }
 //---------------------------------------------------------------
-// Force
-//---------------------------------------------------------------
+// "call_vibration_motion_on"
+table Request_Wrapper_VibrationMotion_On{
+    frame:  int;
+        // Frame Select (드랍다운)
+            // 0 : Global
+            // 1 : Local
+            // 2 : User
+            // 3 : Target
+            // 4 : Active Local
+    x_mag:  float;
+    y_mag:  float;
+    z_mag:  float;
+        // Magnitude (mm)
+    x_freq: float;
+    y_freq: float;
+    z_freq: float;
+        // Frequency (Hz)
+    x_phase: float;
+    y_phase: float;
+    z_phase: float;
+        // Phase (deg)
+}
+
+// "call_vibration_motion_off"
+table Request_Wrapper_VibrationMotion_Off{
+}
+
+
 // "call_admittance_force_on"
 table Request_Wrapper_AdmittanceForce_On{
     // Target Setting
@@ -468,6 +536,128 @@ table Request_Wrapper_AdmittanceForce_On{
         enable_ry:   int;
         enable_rz:   int;
             // Enable [체크박스] : 기본값 0 (체크안함)
+
+        target_x:   float;
+        target_y:   float;
+        target_z:   float;
+        target_rx:   float;
+        target_ry:   float;
+        target_rz:   float;
+            // Target Value [입력란] : 기본값 0
+
+        pgain_x:   float;
+        pgain_y:   float;
+        pgain_z:   float;
+        pgain_rx:   float;
+        pgain_ry:   float;
+        pgain_rz:   float;
+            // P-Gain [입력란] : 기본값 1
+
+        igain_x:   float;
+        igain_y:   float;
+        igain_z:   float;
+        igain_rx:   float;
+        igain_ry:   float;
+        igain_rz:   float;
+            // I-Gain [입력란] : 기본값 0
+
+        spdlim_x:   float;
+        spdlim_y:   float;
+        spdlim_z:   float;
+        spdlim_rx:   float;
+        spdlim_ry:   float;
+        spdlim_rz:   float;
+            // Speed Limit [입력란] : 기본값 0
+
+    // Limitation
+        max_dev_pos:    float;
+        max_dev_rot:    float;
+            // Position Max. Deviation (mm) [입력란]
+            // Rotation Max. Deviation (deg) [입력란]
+
+    // Sensor Setting
+        sensor_type:    int;
+            // Sensor Type [드랍다운]
+                // 0: External F/T
+                // 1: Internal F/T
+                // 2: Analog Input 0
+                // 3: Analog Input 1
+                // 4: Analog Input 2
+                // 5: Analog Input 3
+                // 6: Custom
+
+        sensor_cutoffhz: float;
+            // Sensor Filter (Hz) [입력란] ..기본값 20
+        sensor_handle: int;
+            // Sensor Signal Option [드랍다운]
+                // 0: Auto Nulling
+                // 1: Raw Value
+    // Others
+        contact_force:  float;
+            // Contact Detect Force(N) [입력란]..기본값 5
+}
+
+
+// "call_admittance_force_off"
+table Request_Wrapper_AdmittanceForce_Off{
+}
+
+
+// "call_admittance_force_change"
+table Request_Wrapper_AdmittanceForce_Change{
+    // Target Setting
+        frame:  int;
+            // Target Frame [드랍다운]
+                // 0 : Global
+                // 1 : Local
+                // 2 : User
+                // 3 : Target
+        enable_x:   int;
+        enable_y:   int;
+        enable_z:   int;
+        enable_rx:   int;
+        enable_ry:   int;
+        enable_rz:   int;
+            // Enable [체크박스] : 기본값 0 (체크안함)
+
+        target_x:   float;
+        target_y:   float;
+        target_z:   float;
+        target_rx:   float;
+        target_ry:   float;
+        target_rz:   float;
+            // Target Value [입력란] : 기본값 0
+
+        pgain_x:   float;
+        pgain_y:   float;
+        pgain_z:   float;
+        pgain_rx:   float;
+        pgain_ry:   float;
+        pgain_rz:   float;
+            // P-Gain [입력란] : 기본값 1
+
+        igain_x:   float;
+        igain_y:   float;
+        igain_z:   float;
+        igain_rx:   float;
+        igain_ry:   float;
+        igain_rz:   float;
+            // I-Gain [입력란] : 기본값 0
+
+        spdlim_x:   float;
+        spdlim_y:   float;
+        spdlim_z:   float;
+        spdlim_rx:   float;
+        spdlim_ry:   float;
+        spdlim_rz:   float;
+            // Speed Limit [입력란] : 기본값 0
+
+    // Limitation
+        max_dev_pos:    float;
+        max_dev_rot:    float;
+            // Position Max. Deviation (mm) [입력란]
+            // Rotation Max. Deviation (deg) [입력란]
+}
 
         target_x:   float;
         target_y:   float;

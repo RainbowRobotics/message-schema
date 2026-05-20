@@ -1,14 +1,5 @@
 namespace IPC;
 
-struct N_INPUT_f {
-  f: [float: 7];
-}
-struct N_JOINT_f {
-  f: [float: 7];
-}
-struct N_CARTE_f {
-  f: [float: 7];
-}
 struct N_DIN_u {
   u: [ubyte: 16];
 }
@@ -38,7 +29,7 @@ struct FloatArray32 {
 }
 
 table MoveInput_Target {
-    tar_values:     N_INPUT_f;
+    tar_values:     [float];
     tar_frame:      int;
     tar_unit:       int;
 }
