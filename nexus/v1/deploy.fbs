@@ -15,3 +15,8 @@ table Response_Deploy_Progress {
   service_name: string;
   result: string;
 }
+
+table Deploy_Info {
+  sw_name: string;
+  version: string;
+}
