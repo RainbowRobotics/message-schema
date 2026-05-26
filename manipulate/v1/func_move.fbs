@@ -220,6 +220,7 @@ table Request_Move_Gcode {
 //---------------------------------------------------------------
 // Servo Move
 //---------------------------------------------------------------
+// "call_servo_j"
 table Request_Servo_J {
     target:         MoveInput_Target;
     t1:             float;
@@ -227,7 +228,7 @@ table Request_Servo_J {
     gain:           float;
     filter:         float;
 }
-
+// "call_servo_l"
 table Request_Servo_L {
     target:         MoveInput_Target;
     t1:             float;
@@ -235,7 +236,21 @@ table Request_Servo_L {
     gain:           float;
     filter:         float;
 }
-
+// "call_online_j"
+table Request_Online_J {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    timeout:        float;
+    filter:         float;
+}
+// "call_online_l"
+table Request_Online_L {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    timeout:        float;
+    filter:         float;
+}
+// "call_timestamp_j"
 table Request_TimeStamp_J {
     j_ang:          MoveInput_Target;
     j_vel:          MoveInput_Target;
@@ -243,12 +258,6 @@ table Request_TimeStamp_J {
 
     polynomial:     int;
     timestamp:      float;
-    timeout:        float;
-    filter:         float;
-}
-table Request_Trapi_J {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
     timeout:        float;
     filter:         float;
 }
