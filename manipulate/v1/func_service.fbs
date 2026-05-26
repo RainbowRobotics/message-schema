@@ -614,3 +614,156 @@ table Request_Timmer_Function {
             // 0 : Default
             // 1 : Stop at Pause State
 }
+
+//---------------------------------------------------------------
+// Communication
+//---------------------------------------------------------------
+// "call_config_communication"
+table Request_CallConfigCommunication{
+}
+table Response_CallConfigCommunication{
+    mode_mbus:      int;
+    mode_tcpcmd:    int;
+    mode_tcpdata:   int;
+    mode_udpcmd:    int;
+    mode_udpdata:   int;
+    mode_eipext:    int;
+    mode_eipint:    int;
+    mode_pnet:      int;
+    mode_opcua:     int;
+    mode_mqtt:      int;
+    mode_restapi:   int;
+    mode_rtde:      int;
+    mode_grpc:      int;
+
+    port_mbus:      int;
+    port_tcpcmd:    int;
+    port_tcpdata:   int;
+    port_udpcmd:    int;
+    port_udpdata:   int;
+    port_eipext:    int;
+    port_eipint:    int;
+    port_pnet:      int;
+    port_opcua:     int;
+    port_mqtt:      int;
+    port_restapi:   int;
+    port_rtde:      int;
+    port_grpc:      int;
+}
+// "call_communication_para_mbus"
+table Request_CommunicationMbus {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_tcpcmd"
+table Request_CommunicationTcpCmd {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_tcpdatda"
+table Request_CommunicationTcpData {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_udpcmd"
+table Request_CommunicationUdpCmd {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_udpdatda"
+table Request_CommunicationUdpData {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_eipext"
+table Request_CommunicationEIPext {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_eipint"
+table Request_CommunicationEIPint {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_pnet"
+table Request_CommunicationPNet {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_opcua"
+table Request_CommunicationOpcua {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_mqtt"
+table Request_CommunicationMqtt {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_restapi"
+table Request_CommunicationRestapi {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_rtde"
+table Request_CommunicationRtde {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
+// "call_communication_para_grpc"
+table Request_CommunicationGrpc {
+    mode:   int;
+        // Mode [드랍다운]
+            // 0 : Off
+            // 1 : On
+    port:   int;
+        // Port Number [입력란]
+}
