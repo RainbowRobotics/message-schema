@@ -8,7 +8,7 @@ table ResponseResult {
 
 table MultilingualStruct {
   ko: string;
-  en: string (required);
+  en: string;
   ja: string;
   zh: string;
   vi: string;
