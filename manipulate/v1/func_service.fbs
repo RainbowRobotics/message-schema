@@ -300,6 +300,38 @@ table Response_CallConfigWeld {
         voltage_map_output: [float];
 }
 //---------------------------------------------------------------
+// Software PLC
+//---------------------------------------------------------------
+// "save_softplc_parameter"
+table Request_SoftPLC_Save_Paremeter {
+    plcnum:         int;//0~31
+
+    mode:           int;
+    operation:      int;
+    input_a_type:     int;
+    input_a_select:   int;
+    input_b_type:     int;
+    input_b_select:   int;
+    output_type:    int;
+    output_select:  int;
+    output_value:   int;
+}
+// "call_config_softplc"
+table Request_CallConfigSoftPLC{
+}
+table Response_CallConfigSoftPLC{
+    // 각 배열당 32개 날아갈 예정
+    mode:           [int];
+    operation:      [int];
+    input_a_type:     [int];
+    input_a_select:   [int];
+    input_b_type:     [int];
+    input_b_select:   [int];
+    output_type:    [int];
+    output_select:  [int];
+    output_value:   [int];
+}
+//---------------------------------------------------------------
 // External FT
 //---------------------------------------------------------------
 // "save_extft_parameter"
