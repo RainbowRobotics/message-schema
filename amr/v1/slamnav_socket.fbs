@@ -58,7 +58,7 @@ table LidarData {
     category    :       Pub / Sub
     topic       :       {robotType}/socket/mappingCloud
     usage       :       매핑 포인트 클라우드 데이터
-                :       RequestMappingCloudReload 가 들어오면, 이때까지 쌓은 데이터 전부를 pub
+                :       RequestMappingCloudReload 가 들어오면, mappingKeyFRM형태로 누적된 데이터 발행
     field
         - data          :       클라우드 벡터 데이터
         - column_count  :       data column ( "4" )
@@ -70,6 +70,25 @@ table MappingCloud {
     row_count: uint32;
 }
 
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/mappingKeyFRM
+    usage       :       매핑 키프레임 데이터
+                :       RequestMappingCloudReload 가 들어오면, 이때까지 쌓은 데이터 전부를 pub
+    field
+        - data          :       클라우드 벡터 데이터
+        - column_count  :       data column ( "4" )
+        - row_count     :       data row ( cloud size )
+        - chunk_num     :       청크 총 개수 (청크 당 크기 약 500KB 제한)
+        - chunk_id      :       청크 총 개수 대비 현재 송신되는 데이터의 청크 번호
+*/
+table MappingKeyFRM {
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
+    chunk_num: uint32;
+    chunk_id: uint32;
+}
 
 // -------------------------------------------------
 // -----------                              --------
