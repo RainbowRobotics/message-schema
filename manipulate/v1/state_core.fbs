@@ -49,9 +49,11 @@ table State_Core {
   tool_analog_input:      N_AIN_f;
   tool_analog_output:     N_AOUT_f;
   tool_voltage_output:    float;
+  tool_button:            [ubyte];    //<----added at 260528
 
   motion_mode:            ubyte;
   motion_execution_result: ubyte;
+  motion_sub_index:       int;        //<----added at 260528
   motion_speed_bar:       float;
   motion_is_pause :       ubyte;
 
