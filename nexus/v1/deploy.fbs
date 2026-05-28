@@ -22,12 +22,14 @@ table Deploy_Info {
 }
 
 // 업데이트 가능 여부 조회 요청 (Muscat → SW)
+// topic: "muscat/deploy/{sw_name}/check"
 table Deploy_Check_Request {
   version: string;
 }
 
 // 업데이트 가능 여부 조회 응답 (SW → Muscat)
 // status: "available" | "up_to_date" | "not_available"
+// topic: "muscat/deploy/{sw_name}/check"
 table Deploy_Check_Response {
   status: string;
   current_version: string;
@@ -36,6 +38,7 @@ table Deploy_Check_Response {
 
 // 업데이트 zip 청크 전송 요청 (Muscat → SW)
 // data 필드에 raw zip 청크 바이트를 그대로 담음
+// topic: "muscat/deploy/{sw_name}/update"
 table Deploy_Chunk_Request {
   session_id: string;
   chunk_index: int;
@@ -46,6 +49,7 @@ table Deploy_Chunk_Request {
 
 // 업데이트 청크 전송 응답 (SW → Muscat)
 // status: "received" (중간 청크) | "completed" | "failed" (마지막 청크)
+// topic: "muscat/deploy/{sw_name}/update"
 table Deploy_Chunk_Response {
   status: string;
   chunk_index: int;
