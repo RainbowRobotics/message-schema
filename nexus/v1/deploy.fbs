@@ -46,7 +46,7 @@ table Deploy_Check_Request {
 // status: "available" | "up_to_date" | "not_available"
 // topic: "muscat/deploy/{sw_name}/check"
 table Deploy_Check_Response {
-  status: string;
+  status: Deploy_Check_Status;
   current_version: string;
   message: string;
 }
@@ -66,7 +66,7 @@ table Deploy_Chunk_Request {
 // status: "received" (중간 청크) | "completed" | "failed" (마지막 청크)
 // topic: "muscat/deploy/{sw_name}/update"
 table Deploy_Chunk_Response {
-  status: string;
+  status: Deploy_Chunk_Status;
   chunk_index: int;
   message: string;
 }
