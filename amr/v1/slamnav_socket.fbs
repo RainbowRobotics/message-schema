@@ -111,3 +111,24 @@ table Path {
     column_count: uint32;
     row_count: uint32;
 }
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/trajectory
+    usage       :       예측 주행 trajectory 데이터 (글로벌/맵 좌표계)
+    field
+        - data          :       trajectory 포즈 배열 (x, y, rz)
+        - column_count  :       data column ( "3" )
+        - row_count     :       data row ( trajectory size )
+*/
+table Trajectory {
+    data: [float];
+    column_count: uint32;
+    row_count: uint32;
+}
