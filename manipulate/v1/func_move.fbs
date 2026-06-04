@@ -236,6 +236,16 @@ table Request_Servo_L {
     gain:           float;
     filter:         float;
 }
+// "call_servo_t"
+table Request_Servo_T {
+    target:         [float];
+    time_out:       float;
+    option:         int;
+        // 0 : Gravity + FF + User
+        // 1 : Gravity + User
+        // 2 : FF + User
+        // 3 : User
+}
 // "call_online_j"
 table Request_Online_J {
     target:         MoveInput_Target;
