@@ -11,9 +11,11 @@ table Request_MotionSpeedBar {
 }
 
 table Request_MotionPause {
+  is_pyfm: bool;
 }
 
 table Request_MotionResume {
+  is_pyfm: bool;
 }
 
 table Request_MotionResetOutColl {
