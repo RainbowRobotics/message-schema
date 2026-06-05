@@ -676,3 +676,13 @@ table Request_Wrapper_AdmittanceForce_Change{
             // Position Max. Deviation (mm) [입력란]
             // Rotation Max. Deviation (deg) [입력란]
 }
+
+// "call_wrapper_servo_l_on"
+table Request_Wrapper_ServoL_On{
+    target:         MoveInput_Target;
+    time_gap:       float;//초
+    filter:         float;//0~1
+}
+// "call_wrapper_servo_l_off"
+table Request_Wrapper_ServoL_Off{
+}
