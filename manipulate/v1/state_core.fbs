@@ -9,6 +9,8 @@ table State_Core {
   
   joint_q_ref:            [float];
   joint_q_enc:            [float];
+  joint_q_spd_ref:        [float];//<----added at 260607
+  joint_q_spd_enc:        [float];//<----added at 260607
   joint_t_esti:           [float];
   joint_t_meas:           [float];
   joint_temper:           [float];
@@ -53,7 +55,7 @@ table State_Core {
 
   motion_mode:            ubyte;
   motion_execution_result: ubyte;
-  motion_sub_index:       int;        //<----added at 260528
+  motion_sub_index:       float;        //<----added at 260528 // type is changed from int->float : at 260607
   motion_speed_bar:       float;
   motion_is_pause :       ubyte;
 
@@ -79,6 +81,25 @@ table State_Core {
   forcetorque_int_rx:     float;      //<----added at 260422
   forcetorque_int_ry:     float;      //<----added at 260422
   forcetorque_int_rz:     float;      //<----added at 260422
+
+  ext_axis_ref_0:         float;      //<----added at 260607
+  ext_axis_ref_1:         float;      //<----added at 260607
+  ext_axis_ref_2:         float;      //<----added at 260607
+  ext_axis_ref_3:         float;      //<----added at 260607
+  ext_axis_ref_4:         float;      //<----added at 260607
+  ext_axis_ref_5:         float;      //<----added at 260607
+  ext_axis_enc_0:         float;      //<----added at 260607
+  ext_axis_enc_1:         float;      //<----added at 260607
+  ext_axis_enc_2:         float;      //<----added at 260607
+  ext_axis_enc_3:         float;      //<----added at 260607
+  ext_axis_enc_4:         float;      //<----added at 260607
+  ext_axis_enc_5:         float;      //<----added at 260607
+  additional_system_info_0: float;    //<----added at 260607
+  additional_system_info_1: float;    //<----added at 260607
+  additional_system_info_2: float;    //<----added at 260607
+  additional_system_info_3: float;    //<----added at 260607
+  additional_system_info_4: float;    //<----added at 260607
+  additional_system_info_5: float;    //<----added at 260607
 
   weld_info_tx_chunk:     int;        //<----added at 260422
   weld_info_tx_current:   float;      //<----added at 260422
