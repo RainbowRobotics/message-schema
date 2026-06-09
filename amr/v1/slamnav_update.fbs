@@ -44,8 +44,12 @@ table RequestCurrentVersion {
 }
 table ResponseCurrentVersion {
     id: string;
-    branch: string;
-    version: string;
+    version: string;        // BUILD_VERSION  (git describe --tags)
+    git_commit  : string;   // BUILD_GIT_COMMIT
+    git_branch  : string;   // BUILD_GIT_BRANCH
+    git_author  : string;   // BUILD_GIT_AUTHOR
+    build_date  : string;   // BUILD_DATE
+    build_user  : string;   // BUILD_USER
     result: string;
     message: string;
 }
