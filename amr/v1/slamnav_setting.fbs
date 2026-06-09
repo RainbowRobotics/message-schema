@@ -387,31 +387,3 @@ table ResponseRTSPSubscribe {
     result: string;
     message: string;
 }
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/setting/rtsp/getInfo
-    usage       :       RTSP 정보 조회
-    field
-        - switch        :       true(on) / false(off)
-        - cam_id        :       카메라 ID (특정 카메라만 켜기 / 없으면 전부, switch가 off면 모두 끔)
-        - key_int_max   :       KeyFrame 전송 주기
-*/
-table RTSPInfo{
-    cam_id: int;
-    quality: string;
-    name: string;
-    subscriber_num: int;
-    width: int;
-    height: int;
-    bitrate: int;
-    fps: float;
-}
-table ResponseGetRTSPInfo {
-    cam_num: int;
-    info_list: [RTSPInfo];
-    result: string;
-    message: string;
-}

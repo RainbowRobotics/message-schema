@@ -73,17 +73,26 @@ table ResponseCapabilitySafetyIo {
             - tf            : 카메라 트랜스폼 (x, y, z, r, p, y)
             - color_profile : 카메라 색상 프로필
             - depth_profile : 카메라 깊이 프로필
-            - type          : 카메라 타입 (CameraTypeEnum)
+            - type          : 카메라 타입 ("ORBBEC", "OAK1")
 */
-enum CameraTypeEnum:byte { ORBBEC = 0 }
+table RTSPInfo{
+    cam_id: int;
+    quality: string;
+    name: string;
+    subscriber_num: int;
+    width: int;
+    height: int;
+    bitrate: int;
+    fps: float;
+}
 table CameraInfo {
     connection: bool;
-    index: int;
+    cam_id: int;
     serial: string;
     tf: [float];
     color_profile: int;
     depth_profile: int;
-    type: CameraTypeEnum;
+    type: string;
 }
 table RequestCapabilityCamera {
 }
@@ -92,7 +101,9 @@ table ResponseCapabilityCamera {
     enabled_obs: bool;
     enabled_depth: bool;
     enabled_filter: bool;
+    cam_num: int;
     info: [CameraInfo];
+    rtsp_info: [RTSPInfo];
 }
 
 
