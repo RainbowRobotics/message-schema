@@ -7,7 +7,7 @@ table RequestLiftPower {
 
 table ResponseLiftPower {
     switch: bool;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
@@ -20,12 +20,12 @@ table RequestFootStop {
 
 table ResponseFootMove {
     pose: float;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
 table ResponseFoot {
     pose: float;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
