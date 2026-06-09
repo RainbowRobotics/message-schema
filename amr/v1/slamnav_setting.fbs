@@ -188,6 +188,82 @@ table ResponseSetSettingParam {
     message: string;
 }
 
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/getSettingPresetList
+    usage       :       config 프리셋 목록 조회
+    field
+        - robot_type    :       조회할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 조회 )
+*/
+table RequestGetSettingPresetList {
+    robot_type: string;
+}
+table ResponseGetSettingPresetList {
+    robot_type: string;
+    presets: [int];
+    result: ResultEnum;
+    message: string;
+}
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/getSettingPreset
+    usage       :       config 프리셋 조회
+    field
+        - robot_type    :       조회할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 조회 )
+        - level         :       config 파라미터 레벨 ( 0: 사용자 레벨, 1: 관리자 레벨, 2: 개발자 레벨 )
+        - preset_id     :       config 프리셋 ID
+        - params        :       config 파라미터 목록 (카테고리 하위 + 레벨에 일치하는 파라미터 목록 -> 없으면 빈 배열)
+            - key           :       config 파라미터 키
+            - type          :       config 파라미터 타입
+            - value         :       config 파라미터 값
+            - min           :       config 파라미터 최소값 (nullable)
+            - max           :       config 파라미터 최대값 (nullable)
+        - result        :       config 파라미터 조회 결과
+        - message       :       config 파라미터 조회 메시지
+*/
+table RequestGetSettingPreset {
+    robot_type: string;
+    level: SettingLevelEnum;
+    preset_id: int;
+}
+table ResponseGetSettingPreset {
+    robot_type: string;
+    level: SettingLevelEnum;
+    preset_id: int;
+    params: [SettingParam];
+    result: ResultEnum;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/setSettingPreset
+    usage       :       config 파라미터 설정
+    field
+        - robot_type    :       설정할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 설정 )
+        - category      :       config 파라미터 카테고리
+        - param         :       config 수정 파라미터 ( 요청 하나에 하나의 파라미터만 설정 가능 )
+            - key           :       config 파라미터 키
+            - type          :       config 파라미터 타입
+            - value         :       config 파라미터 값
+        - result        :       config 파라미터 설정 결과 (ResultEnum)
+        - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
+*/
+table RequestSetSettingPreset {
+    robot_type: string;
+    preset_id: int;
+    param: SettingParam;
+}
+table ResponseSetSettingPreset {
+    robot_type: string;
+    preset_id: int;
+    param: SettingParam;
+    result: ResultEnum;
+    message: string;
+}
 
 
 /*
