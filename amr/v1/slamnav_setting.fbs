@@ -67,10 +67,8 @@ table SensorInfo {
         - robot_type    :       로봇 타입
 */
 table RequestGetRobotType {
-    id: string;
 }
 table ResponseGetRobotType {
-    id: string;
     robot_type: string;
     result: string;
     message: string;
@@ -86,11 +84,9 @@ table ResponseGetRobotType {
         - robot_type    :       로봇 타입
 */
 table RequestSetRobotType {
-    id: string;
     robot_type: string;
 }
 table ResponseSetRobotType {
-    id: string;
     robot_type: string;
     result: string;
     message: string;
@@ -111,15 +107,11 @@ table ResponseSetRobotType {
 */
 enum SettingLevelEnum:byte { USER = 0, ADMIN = 1, DEVELOPER = 2 }
 table RequestGetSettingCategory {
-    id: string;
-    robot_type: string;
     level: SettingLevelEnum;
 }
 table ResponseGetSettingCategory {
-    id: string;
-    robot_type: string;
-    level: SettingLevelEnum;
     categories: [string];
+    level: SettingLevelEnum;
     result: ResultEnum;
     message: string;
 }
@@ -143,14 +135,10 @@ table ResponseGetSettingCategory {
         - message       :       config 파라미터 조회 메시지
 */
 table RequestGetSettingParam {
-    id: string;
-    robot_type: string;
     level: SettingLevelEnum;
     category: string;
 }
 table ResponseGetSettingParam {
-    id: string;
-    robot_type: string;
     level: SettingLevelEnum;
     category: string;
     params: [SettingParam];
@@ -174,14 +162,10 @@ table ResponseGetSettingParam {
         - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
 */
 table RequestSetSettingParam {
-    id: string;
-    robot_type: string;
     category: string;
     param: SettingParam;
 }
 table ResponseSetSettingParam {
-    id: string;
-    robot_type: string;
     category: string;
     param: SettingParam;
     result: ResultEnum;
@@ -197,10 +181,8 @@ table ResponseSetSettingParam {
         - robot_type    :       조회할 로봇 타입 ( 값이 없으면 현재 로봇의 모델타입을 조회 )
 */
 table RequestGetSettingPresetList {
-    robot_type: string;
 }
 table ResponseGetSettingPresetList {
-    robot_type: string;
     presets: [int];
     result: ResultEnum;
     message: string;
@@ -224,12 +206,10 @@ table ResponseGetSettingPresetList {
         - message       :       config 파라미터 조회 메시지
 */
 table RequestGetSettingPreset {
-    robot_type: string;
     level: SettingLevelEnum;
     preset_id: int;
 }
 table ResponseGetSettingPreset {
-    robot_type: string;
     level: SettingLevelEnum;
     preset_id: int;
     params: [SettingParam];
@@ -253,12 +233,10 @@ table ResponseGetSettingPreset {
         - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
 */
 table RequestSetSettingPreset {
-    robot_type: string;
     preset_id: int;
     param: SettingParam;
 }
 table ResponseSetSettingPreset {
-    robot_type: string;
     preset_id: int;
     param: SettingParam;
     result: ResultEnum;
@@ -275,10 +253,8 @@ table ResponseSetSettingPreset {
         - params        :       PDU 파라미터 목록
 */
 table RequestGetPduParam {
-    id: string;
 }
 table ResponseGetPduParam {
-    id: string;
     params: [SettingParam];
     result: string;
     message: string;
@@ -294,11 +270,9 @@ table ResponseGetPduParam {
         - params        :       PDU 파라미터 목록
 */
 table RequestSetPduParam {
-    id: string;
     params: [SettingParam];
 }
 table ResponseSetPduParam {
-    id: string;
     params: [SettingParam];
     result: string;
     message: string;
@@ -314,10 +288,8 @@ table ResponseSetPduParam {
         - params        :       Drive 파라미터 목록
 */
 table RequestGetDriveParam {
-    id: string;
 }
 table ResponseGetDriveParam {
-    id: string;
     params: [SettingParam];
     result: string;
     message: string;
@@ -333,11 +305,9 @@ table ResponseGetDriveParam {
         - params        :       Drive 파라미터 목록
 */
 table RequestSetDriveParam {
-    id: string;
     params: [SettingParam];
 }
 table ResponseSetDriveParam {
-    id: string;
     params: [SettingParam];
     result: string;
     message: string;
@@ -354,11 +324,9 @@ table ResponseSetDriveParam {
         - info          :       센서 정보 목록
 */
 table RequestGetSensorInfo {
-    id: string;
     target: string;
 }
 table ResponseGetSensorInfo {
-    id: string;
     target: string;
     info: [SensorInfo];
     result: string;
@@ -376,12 +344,10 @@ table ResponseGetSensorInfo {
         - info          :       센서 정보 목록
 */
 table RequestSetSensorInfo {
-    id: string;
     target: string;
     info: [SensorInfo];
 }
 table ResponseSetSensorInfo {
-    id: string;
     target: string;
     info: [SensorInfo];
     result: string;
@@ -401,13 +367,11 @@ table ResponseSetSensorInfo {
         - switch        :       true(on) / false(off)
 */
 table RequestGetSensorMode {
-    id: string;
     target: string;
     index: int;
     serial: string;
 }
 table ResponseGetSensorMode {
-    id: string;
     target: string;
     index: int;
     serial: string;
@@ -428,14 +392,12 @@ table ResponseGetSensorMode {
         - switch        :       true(on) / false(off)
 */
 table RequestSetSensorMode {
-    id: string;
     target: string;
     index: int;
     serial: string;
     switch: bool;
 }
 table ResponseSetSensorMode {
-    id: string;
     target: string;
     index: int;
     serial: string;

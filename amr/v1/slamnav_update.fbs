@@ -11,7 +11,7 @@ namespace SLAMNAV;
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/update/upgrade
+    topic       :       {robotType}/update
     usage       :       소프트웨어 업데이트
     field
         - branch        :       업데이트 브랜치
@@ -33,16 +33,18 @@ table ResponseUpdate {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/update/curVersion
+    topic       :       {robotType}/update/getCurrentVersion
     usage       :       현재 버전 조회
     field
         - version       :       현재 버전
+        - branch        :       현재 브랜치
 */
 table RequestCurrentVersion {
     id: string;
 }
 table ResponseCurrentVersion {
     id: string;
+    branch: string;
     version: string;
     result: string;
     message: string;
