@@ -112,7 +112,7 @@ table RequestGetSettingCategory {
 table ResponseGetSettingCategory {
     categories: [string];
     level: SettingLevelEnum;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
@@ -142,7 +142,7 @@ table ResponseGetSettingParam {
     level: SettingLevelEnum;
     category: string;
     params: [SettingParam];
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
@@ -158,7 +158,7 @@ table ResponseGetSettingParam {
             - key           :       config 파라미터 키
             - type          :       config 파라미터 타입
             - value         :       config 파라미터 값
-        - result        :       config 파라미터 설정 결과 (ResultEnum)
+        - result        :       config 파라미터 설정 결과 (string)
         - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
 */
 table RequestSetSettingParam {
@@ -168,7 +168,7 @@ table RequestSetSettingParam {
 table ResponseSetSettingParam {
     category: string;
     param: SettingParam;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
@@ -184,7 +184,7 @@ table RequestGetSettingPresetList {
 }
 table ResponseGetSettingPresetList {
     presets: [int];
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 /*
@@ -213,7 +213,7 @@ table ResponseGetSettingPreset {
     level: SettingLevelEnum;
     preset_id: int;
     params: [SettingParam];
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
@@ -229,7 +229,7 @@ table ResponseGetSettingPreset {
             - key           :       config 파라미터 키
             - type          :       config 파라미터 타입
             - value         :       config 파라미터 값
-        - result        :       config 파라미터 설정 결과 (ResultEnum)
+        - result        :       config 파라미터 설정 결과 (string)
         - message       :       config 파라미터 설정 메시지 (결과가 "reject" 일 경우 메시지 존재)
 */
 table RequestSetSettingPreset {
@@ -239,7 +239,7 @@ table RequestSetSettingPreset {
 table ResponseSetSettingPreset {
     preset_id: int;
     param: SettingParam;
-    result: ResultEnum;
+    result: string;
     message: string;
 }
 
