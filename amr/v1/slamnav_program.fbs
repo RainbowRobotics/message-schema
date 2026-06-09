@@ -67,3 +67,47 @@ table ResponseCallWhoami {
     version     : string;
     alias       : string;
 }
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/update
+    usage       :       소프트웨어 업데이트
+    field
+        - branch        :       업데이트 브랜치
+        - version       :       업데이트 버전
+*/
+table RequestUpdate {
+    id: string;
+    branch: string;
+    version: string;
+}
+table ResponseUpdate {
+    id: string;
+    branch: string;
+    version: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/getVersion
+    usage       :       현재 버전 조회
+    field
+        - version       :       현재 버전
+        - branch        :       현재 브랜치
+*/
+table RequestCurrentVersion {
+}
+table ResponseCurrentVersion {
+    version: string;        // BUILD_VERSION  (git describe --tags)
+    git_commit  : string;   // BUILD_GIT_COMMIT
+    git_branch  : string;   // BUILD_GIT_BRANCH
+    git_author  : string;   // BUILD_GIT_AUTHOR
+    build_date  : string;   // BUILD_DATE
+    build_user  : string;   // BUILD_USER
+    result: string;
+    message: string;
+}
