@@ -1,8 +1,3 @@
-<<<<<<< HEAD:schemas/amr/v1/slamnav_sensor.fbs
-=======
-
-
->>>>>>> cafb8c62d52cc5727cc49133041e6fa878c4aaa3:schemas/amr/v1/slamnav_marker.fbs
 include "slamnav_map.fbs";
 namespace SLAMNAV;
 
