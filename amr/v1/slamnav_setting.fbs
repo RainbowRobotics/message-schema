@@ -35,6 +35,7 @@ table SettingCategory {
         - min           :       파라미터 최소값 (optional)
         - max           :       파라미터 최대값 (optional)
         - tick          :       파라미터 눈금 (optional)
+        - unit          :       파라미터 단위 ("m", "cm", "deg", "rad")
 */
 table SettingParam {
     key: string (required);
@@ -47,6 +48,7 @@ table SettingParam {
     min: string;
     max: string;
     tick: string;
+    unit: string;
 }
 
 /*
