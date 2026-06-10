@@ -131,7 +131,7 @@ table RequestSetPrecisionNode {
     marker_id: string;
     node_name: string;
 }
-table ResponseTeachTarget {
+table ResponseSetPrecisionNode {
     marker_id: string;
     node: Node;
     result: string;
