@@ -1,7 +1,7 @@
-namespace SLAMNAV;
+
 
 include "slamnav_map.fbs";
-
+namespace SLAMNAV;
 
 // -------------------------------------------------
 // -----------                              --------
