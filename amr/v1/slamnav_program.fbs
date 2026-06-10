@@ -93,7 +93,11 @@ table ResponseUpdate {
 /*
     category    :       RPC
     response    :       One-shot
+<<<<<<< HEAD
+    topic       :       {robotType}/program/getVersion
+=======
     topic       :       {robotType}/getVersion
+>>>>>>> cf557d458676f1a736340e3fbe486d2274f4791f
     usage       :       현재 버전 조회
     field
         - version       :       현재 버전

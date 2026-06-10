@@ -10,7 +10,8 @@ namespace SLAMNAV;
 // -------------------------------------------------
 
 
-enum SettingParamTypeEnum:byte { STRING = 0, INT = 1, FLOAT = 2, BOOL = 3, LIST = 4, DICT = 5 }
+enum SettingParamTypeEnum:byte { STRING = 0, INT = 1, FLOAT = 2, BOOL = 3 }
+enum SettingParamCollectionEnum:byte { SINGLE = 0, LIST = 1 }
 
 table SettingCategory {
     key: string;
@@ -24,19 +25,28 @@ table SettingCategory {
     usage       :       설정 파라미터 구조체
     field
         - key           :       파라미터 키
-        - type          :       파라미터 타입 ( STRING, INT, FLOAT, BOOL, LIST, DICT )
+        - type          :       파라미터 단일 타입 ( STRING, INT, FLOAT, BOOL)
+        - collection    :       파라미터 컬렉션 타입 (SINGLE, LIST)
+        - group         :       파라미터 그룹 (필요시, 중분류 개념, category는 대분류 개념. 둘이 다름)
         - value         :       파라미터 값 (어떤 타입이던 string값으로 변환하여 전송)
+        - enum          :       파라미터 열거형 목록 (값이 null이 아닌경우에는 type을 따르는 enum 으로 판별)
+        - name          :       파라미터 이름 (다국어)
+        - description   :       파라미터 설명 (다국어)
         - min           :       파라미터 최소값 (optional)
         - max           :       파라미터 최대값 (optional)
+        - tick          :       파라미터 눈금 (optional)
 */
 table SettingParam {
     key: string (required);
     type: SettingParamTypeEnum;
+    collection: SettingParamCollectionEnum;
     value: string (required);
+    enum: [string];
     name: MultilingualStruct;
     description: MultilingualStruct;
     min: string;
     max: string;
+    tick: string;
 }
 
 /*
