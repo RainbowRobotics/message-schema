@@ -165,6 +165,7 @@ table ResponseSetSafetyIo {
 
 
 /*
+    /sensor/setSafetyLidar로 옮겨짐!~!!!!! YUJIN
     category    :       RPC
     response    :       One-shot
     topic       :       {robotType}/control/setDetectMode
@@ -439,36 +440,6 @@ table ResponseSetAvoid {
     result: string;
     message: string;
 }
-
-
-// /*
-//     category    :       RPC
-//     response    :       Delayed One-shot
-//     topic       :       {robotType}/control/detectMarker
-//     usage       :       마커 감지 제어
-//     field
-//         - target        :       감지 명령   ( "charuco" / "aruco" ) (현재 미구현이나, 추후 마커 종류를 구분할 경우 추가예정.)
-//         - number        :       카메라 번호
-//         - serial        :       카메라 시리얼
-//         - m_size        :       마커 크기
-//         - tf            :       변환 행렬 (4x4 Matrix)
-// */
-// table RequestDetectMarker {
-//     id: string;
-//     number: int;
-//     serial: string;
-//     m_size: float;
-// }
-// table ResponseDetectMarker {
-//     id: string;
-//     number: int;
-//     serial: string;
-//     m_size: float;
-//     tf: [float];
-//     result: string;
-//     message: string;
-// }
-
 
 // -------------------------------------------------
 // -----------                              --------

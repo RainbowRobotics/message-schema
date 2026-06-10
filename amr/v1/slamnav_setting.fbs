@@ -418,23 +418,3 @@ table ResponseSetSensorMode {
     result: string;
     message: string;
 }
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/setting/rtsp/subscribe
-    usage       :       RTSP 구독 요청
-    field
-        - switch        :       true(on) / false(off)
-        - cam_id        :       카메라 ID (특정 카메라만 켜기 / 없으면 전부, switch가 off면 모두 끔)
-*/
-table RequestRTSPSubscribe {
-    cam_id: int;
-    quality: string;
-}
-table ResponseRTSPSubscribe {
-    cam_id: int;
-    quality: string;
-    result: string;
-    message: string;
-}
