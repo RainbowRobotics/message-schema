@@ -132,3 +132,71 @@ table Trajectory {
     column_count: uint32;
     row_count: uint32;
 }
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       장애물 맵 레이어 ( static / dynamic / collision / virtual )
+                :       빈 레이어(예: 정지 중 collision)는 layers 에서 생략하고 보냄
+    field
+        - name          :       레이어 이름 ( "static", "dynamic", "collision", "virtual" )
+        - data          :       점유 그리드 바이트 ( 길이 = ObsMap.width * ObsMap.height )
+                        :       row-major 순서, data[ v * width + u ] ( v = 행 0..height-1, u = 열 0..width-1 )
+                        :       값: 0 = 빈 공간, 255 = 장애물
+*/
+table ObsMapLayer {
+    name: string;
+    data: [ubyte];
+}
+
+/*
+    category    :       Data Structure
+    usage       :       로봇 점유 박스 및 안전 영역 파라미터 ( STOP / SLOW zone 계산용 )
+    field
+        - obs_box_min_x ~ obs_box_max_y :       로봇 점유 박스 범위 (m)
+        - stop_margin_x :       STOP 존 마진 x (m)
+        - stop_margin_y :       STOP 존 마진 y (m)
+        - slow_margin_x :       SLOW 존 추가 마진 x (m)
+        - slow_margin_y :       SLOW 존 추가 마진 y (m)
+*/
+table ObsMapSafety {
+    obs_box_min_x: float;
+    obs_box_max_x: float;
+    obs_box_min_y: float;
+    obs_box_max_y: float;
+    stop_margin_x: float;
+    stop_margin_y: float;
+    slow_margin_x: float;
+    slow_margin_y: float;
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          Pub / Sub           --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/obsMap
+    usage       :       장애물 맵 데이터 (로봇 중심 로컬 그리드, 갱신 시 발행)
+                :       layers 에 맵을 묶어 한 번에 발행. width / height / grid_size 는 전 레이어 공통.
+    field
+        - layers        :       장애물 맵 레이어 배열 ( static / dynamic / collision / virtual )
+        - width         :       격자 가로 (px), 전 레이어 공통
+        - height        :       격자 세로 (px), 전 레이어 공통
+        - grid_size     :       셀당 실제 거리 (m/px)
+        - safety        :       로봇 박스 + STOP / SLOW zone 파라미터
+*/
+table ObsMap {
+    layers: [ObsMapLayer];
+    width: uint32;
+    height: uint32;
+    grid_size: float;
+    safety: ObsMapSafety;
+}
