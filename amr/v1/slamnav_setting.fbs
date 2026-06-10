@@ -36,6 +36,7 @@ table SettingCategory {
         - max           :       파라미터 최대값 (optional)
         - tick          :       파라미터 눈금 (optional)
         - unit          :       파라미터 단위 ("m", "cm", "deg", "rad")
+        - UI 우선순위 : enum이 있으면 ComboBox, min,max가 있으면 슬라이드, 없으면 TextInput (enum > min/max > text)
 */
 table SettingParam {
     key: string (required);
