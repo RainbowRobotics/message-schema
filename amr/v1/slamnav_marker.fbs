@@ -1,0 +1,125 @@
+namespace SLAMNAV;
+
+include "slamnav_map.fbs";
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------     Marker Registration      --------
+// -----------                              --------
+// -------------------------------------------------
+//
+// 마커 = NODE(type=ALIGN, name=marker_id), 목표 = NODE(type=GOAL).
+// 세부 정보는 node.context 에 key=value; 로 저장.
+
+
+/*
+    category    :       Data Structure
+    usage       :       단일 마커 검출 결과
+    field
+        - cam_id        :       검출 카메라 인덱스
+        - marker_id     :       마커 숫자 ID
+        - type          :       "APRILTAG" / "ARUCO"
+        - pose          :       robot frame pose (rz=yaw, degree)
+        - confidence    :       검출 신뢰도 [0,1]
+        - dist_m        :       마커까지 거리 (m)
+*/
+table MarkerDetection {
+    cam_id: int;
+    marker_id: int;
+    type: string;
+    pose: NodePose;
+    confidence: float;
+    dist_m: float;
+}
+
+
+/*
+    category    :       Publisher
+    response    :       Periodic (~5Hz, 스캔 중에만)
+    topic       :       {robotType}/marker/detected
+    usage       :       검출 마커 목록 송출
+    field
+        - detections    :       검출 마커 목록
+        - stamp         :       타임스탬프 (sec)
+*/
+table MarkerDetectionList {
+    detections: [MarkerDetection];
+    stamp: double;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/marker/scanStart
+    usage       :       마커 검출 시작
+*/
+table RequestMarkerScanStart {
+}
+table ResponseMarkerScanStart {
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/marker/scanStop
+    usage       :       마커 검출 종료
+*/
+table RequestMarkerScanStop {
+}
+table ResponseMarkerScanStop {
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/marker/registerMarker
+    usage       :       마커를 앵커 NODE(type=ALIGN)로 등록
+    field
+        - cam_id        :       사용할 카메라
+        - marker_id     :       마커 숫자 ID (node.name)
+        - type          :       "APRILTAG" / "ARUCO"
+        - mount         :       "WALL" / "FLOOR"
+        - marker_size_m :       마커 한 변 실측 (m)
+*/
+table RequestRegisterMarker {
+    cam_id: int;
+    marker_id: int;
+    type: string;
+    mount: string;
+    marker_size_m: float;
+}
+table ResponseRegisterMarker {
+    node_id: string;
+    pose: NodePose;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/marker/teachTarget
+    usage       :       현재 로봇 자세를 정밀이동 목표(GOAL)로 저장 (마커 보이는 상태)
+    field
+        - marker_node_id    :       앵커 마커 NODE id
+        - target_name       :       목표 이름 (GOAL node.name)
+*/
+table RequestTeachTarget {
+    marker_node_id: string;
+    target_name: string;
+}
+table ResponseTeachTarget {
+    target_node_id: string;
+    pose: NodePose;
+    result: string;
+    message: string;
+}
