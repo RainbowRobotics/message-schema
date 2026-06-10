@@ -96,6 +96,7 @@ table ResponseMarkerScanStop {
         - type          :       "APRILTAG" / "ARUCO"
         - mount         :       "WALL" / "FLOOR"
         - marker_size_m :       마커 한 변 실측 (m)
+        - node          :       저장된 Node 정보
 */
 table RequestRegisterMarker {
     cam_id: int;
@@ -105,8 +106,12 @@ table RequestRegisterMarker {
     marker_size_m: float;
 }
 table ResponseRegisterMarker {
-    node_id: string;
-    pose: NodePose;
+    cam_id: int;
+    marker_id: int;
+    type: string;
+    mount: string;
+    marker_size_m: float;
+    node: Node;
     result: string;
     message: string;
 }
@@ -115,19 +120,20 @@ table ResponseRegisterMarker {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/marker/teachTarget
+    topic       :       {robotType}/marker/setPrecisionNode
     usage       :       현재 로봇 자세를 정밀이동 목표(GOAL)로 저장 (마커 보이는 상태)
     field
-        - marker_node_id    :       앵커 마커 NODE id
-        - target_name       :       목표 이름 (GOAL node.name)
+        - marker_id    :       앵커 마커 NODE id
+        - node_name    :       목표 이름 (GOAL node.name)
+        - node         :       저장된 Node 정보
 */
-table RequestTeachTarget {
-    marker_node_id: string;
-    target_name: string;
+table RequestSetPrecisionNode {
+    marker_id: string;
+    node_name: string;
 }
-table ResponseTeachTarget {
-    target_node_id: string;
-    pose: NodePose;
+table ResponseSetPrecisionNode {
+    marker_id: string;
+    node: Node;
     result: string;
     message: string;
 }
