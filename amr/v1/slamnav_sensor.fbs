@@ -1,11 +1,9 @@
-
-
 include "slamnav_map.fbs";
 namespace SLAMNAV;
 
 // -------------------------------------------------
 // -----------                              --------
-// -----------     Marker Registration      --------
+// -----------     Data Structure           --------
 // -----------                              --------
 // -------------------------------------------------
 //
@@ -33,6 +31,11 @@ table MarkerDetection {
     dist_m: float;
 }
 
+// -------------------------------------------------
+// -----------                              --------
+// -----------     Publish                   --------
+// -----------                              --------
+// -------------------------------------------------
 
 /*
     category    :       Publisher
@@ -48,6 +51,11 @@ table MarkerDetectionList {
     stamp: double;
 }
 
+// -------------------------------------------------
+// -----------                              --------
+// -----------     RPC                       --------
+// -----------                              --------
+// -------------------------------------------------
 
 /*
     category    :       RPC
@@ -120,6 +128,45 @@ table RequestTeachTarget {
 table ResponseTeachTarget {
     target_node_id: string;
     pose: NodePose;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/sensor/rtsp/subscribe
+    usage       :       RTSP 구독 요청
+    field
+        - switch        :       true(on) / false(off)
+        - cam_id        :       카메라 ID (특정 카메라만 켜기 / 없으면 전부, switch가 off면 모두 끔)
+*/
+table RequestRTSPSubscribe {
+    cam_id: int;
+    quality: string;
+}
+table ResponseRTSPSubscribe {
+    cam_id: int;
+    quality: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/sensor/setSafetyLidar
+    usage       :       safety LiDAR obstacle detection ON/OFF
+                        (현재 상태는 Status.robot_state.detect_mode 펍 참조)
+    field
+        - switch        :       true(on) / false(off)
+*/
+table RequestSetSafetyLidar {
+    switch: bool;
+}
+table ResponseSetSafetyLidar {
+    switch: bool;
     result: string;
     message: string;
 }
