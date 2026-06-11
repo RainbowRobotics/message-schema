@@ -95,6 +95,8 @@ struct StatusPower {
         - lidar_field           :       현재 safety LiDAR 필드 번호
         - detect_mode           :       OSSD detect mode ON/OFF
         - avoid_on              :       장애물 회피 정책 ON/OFF
+        - operating_mode        :       운전 모드 ( "auto" / "manual" / "none" )
+        - external_motion       :       명령 없는 외부 기인 모션 (핸드캐리/경사 밀림 등)
 */
 table StatusRobotState {
     emo: bool;
@@ -114,6 +116,8 @@ table StatusRobotState {
     lidar_field: uint8;
     detect_mode: bool;
     avoid_on: bool;
+    operating_mode: string;
+    external_motion: bool;
 }
 
 /*
@@ -351,4 +355,67 @@ table MoveStatus {
     vel: StatusVel;
     cur_node: StatusNode;
     goal_node: StatusNode;
+}
+
+
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Data Structure
+    usage       :       안전 신호 1종의 채널별 상태
+    field
+        - mask          :       채널 비트마스크 (bit0=채널1, bit1=채널2 ... 최대 16채널)
+        - channel_count :       유효 채널 수 (0 = 해당 신호 미장착)
+*/
+struct SafetyChannels {
+    mask: uint16;
+    channel_count: uint8;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/safety
+    usage       :       안전 신호 채널별 상태 (100ms 주기)
+                        켜짐 = mask != 0
+                        불일치 = mask != 0 && mask != (1 << channel_count) - 1
+                        불일치는 300ms(3샘플) 연속 지속 시에만 고장으로 판정할 것 (접점 스위칭 시차 허용)
+                        source_age_ms > 500 이면 PDU 통신 두절 — 표시 무효 처리할 것
+    field
+        - stamp             :       발행 타임스탬프 (sec)
+        - source_age_ms     :       PDU 안전 데이터 마지막 수신 후 경과 (ms)
+        - emo               :       비상정지
+        - bumper            :       범퍼
+        - interlock         :       인터록
+        - obs_detect        :       장애물 감지
+        - meas_mismatch     :       레퍼런스/측정 mismatch
+        - field_mismatch    :       속도/필드 mismatch
+        - over_speed        :       과속
+        - operational_stop  :       동작 정지
+*/
+table StatusSafety {
+    stamp: double;
+    source_age_ms: uint32;
+    emo: SafetyChannels;
+    bumper: SafetyChannels;
+    interlock: SafetyChannels;
+    obs_detect: SafetyChannels;
+    meas_mismatch: SafetyChannels;
+    field_mismatch: SafetyChannels;
+    over_speed: SafetyChannels;
+    operational_stop: SafetyChannels;
 }
