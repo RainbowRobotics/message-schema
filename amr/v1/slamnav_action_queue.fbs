@@ -1,0 +1,41 @@
+// 끊김 없는 주행(continuous driving): action queue push 프로토콜
+// 모델: action 단위 = 단일 edge, action_id = UUIDv7,
+// 큐 = "아직 시작 안 한 대기 action" 버퍼, History = 각 action 상태(진행중/완료/취소/실패).
+
+namespace SLAMNAV;
+
+// 단일 edge action 1개.
+table ActionEntry {
+    action_id: string;        // UUIDv7 (시간순 정렬 = 문자열 정렬). 요청 식별자 겸함.
+    predecessor_id: string;   // 로봇 현재 tail 의 action_id ("" = 빈 큐, cur_node 기준).
+                              // 동시에 낙관적 일치 검사 키.
+    from_node: string;
+    to_node: string;
+}
+
+// ── RPC: enqueue ──  토픽 {robotType}/multi/enqueue
+// edge action 1개를 큐 끝에 append (멱등). 수락 규칙: action.predecessor_id == 로봇 현재 tail.
+table RequestEnqueueAction {
+    action: ActionEntry;
+}
+table ResponseEnqueueAction {
+    result: string;           // "success" / "reject"(tail 불일치=gap/race) / "fail"
+    message: string;          // 디버그용. 큐/tail 실제 상태는 multi/queue·multi/history 로 reconcile.
+}
+
+// ── 상태(1): 현재 대기 큐 ──  토픽 {robotType}/multi/queue
+table StatusActionQueue {
+    entries: [ActionEntry];   // 아직 시작 안 한 대기 action (실행 순). head=다음 시작 대상.
+}
+
+// ── 상태(2): 수행 history ──  토픽 {robotType}/multi/history
+table HistoryActionEntry {
+    action_id: string;
+    status: string;     // ACTIVE(진행중)/DONE(완료)/CANCELED(취소됨)/FAILED(실패)
+    start_time_ms: uint64;    // 수행 시작 (Unix epoch ms)
+    end_time_ms: uint64;      // 종료 (진행중이면 0)
+    action: ActionEntry;      // action 엔티티 전체
+}
+table StatusActionHistory {
+    entries: [HistoryActionEntry];  // 진행중 + 완료 + 취소 이력 (최근 N개 ring)
+}
