@@ -359,6 +359,8 @@ table MoveStatus {
 
 
 
+<<<<<<< HEAD
+=======
 
 // -------------------------------------------------
 // -----------                              --------
@@ -380,6 +382,7 @@ struct SafetyChannels {
 }
 
 
+>>>>>>> 9c4cfcbf290cb2dfcd9b63dd6e44948d64099a3f
 // -------------------------------------------------
 // -----------                              --------
 // -----------         Pub / Sub            --------
@@ -410,6 +413,16 @@ struct SafetyChannels {
 table StatusSafety {
     stamp: double;
     source_age_ms: uint32;
+<<<<<<< HEAD
+    emo: [bool];
+    bumper:  [bool];
+    interlock:  [bool];
+    obs_detect: [bool];
+    meas_mismatch: [bool];
+    field_mismatch: [bool];
+    over_speed: [bool];
+    operational_stop: [bool];
+=======
     emo: SafetyChannels;
     bumper: SafetyChannels;
     interlock: SafetyChannels;
@@ -418,4 +431,5 @@ table StatusSafety {
     field_mismatch: SafetyChannels;
     over_speed: SafetyChannels;
     operational_stop: SafetyChannels;
+>>>>>>> 9c4cfcbf290cb2dfcd9b63dd6e44948d64099a3f
 }
