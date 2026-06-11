@@ -357,32 +357,6 @@ table MoveStatus {
     goal_node: StatusNode;
 }
 
-
-
-<<<<<<< HEAD
-=======
-
-// -------------------------------------------------
-// -----------                              --------
-// -----------       Data Structure         --------
-// -----------                              --------
-// -------------------------------------------------
-
-
-/*
-    category    :       Data Structure
-    usage       :       안전 신호 1종의 채널별 상태
-    field
-        - mask          :       채널 비트마스크 (bit0=채널1, bit1=채널2 ... 최대 16채널)
-        - channel_count :       유효 채널 수 (0 = 해당 신호 미장착)
-*/
-struct SafetyChannels {
-    mask: uint16;
-    channel_count: uint8;
-}
-
-
->>>>>>> 9c4cfcbf290cb2dfcd9b63dd6e44948d64099a3f
 // -------------------------------------------------
 // -----------                              --------
 // -----------         Pub / Sub            --------
@@ -413,7 +387,6 @@ struct SafetyChannels {
 table StatusSafety {
     stamp: double;
     source_age_ms: uint32;
-<<<<<<< HEAD
     emo: [bool];
     bumper:  [bool];
     interlock:  [bool];
@@ -422,14 +395,4 @@ table StatusSafety {
     field_mismatch: [bool];
     over_speed: [bool];
     operational_stop: [bool];
-=======
-    emo: SafetyChannels;
-    bumper: SafetyChannels;
-    interlock: SafetyChannels;
-    obs_detect: SafetyChannels;
-    meas_mismatch: SafetyChannels;
-    field_mismatch: SafetyChannels;
-    over_speed: SafetyChannels;
-    operational_stop: SafetyChannels;
->>>>>>> 9c4cfcbf290cb2dfcd9b63dd6e44948d64099a3f
 }
