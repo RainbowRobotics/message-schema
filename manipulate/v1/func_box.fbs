@@ -3,6 +3,11 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// "call_reboot_pc"
+table Request_Call_Reboot_PC{
+  password: int;
+}
+
 // "save_robot_code"
 table Request_Save_Robot_Code {
   code: int;
