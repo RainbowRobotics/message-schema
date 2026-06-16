@@ -81,8 +81,10 @@ table Request_Move_Home {
 // Move J
 //---------------------------------------------------------------
 table Request_Move_J {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
+    target:         MoveInput_Target (required);
+    speed:          MoveInput_Speed (required);
+
+    ext_axis:       [float];
 }
 //---------------------------------------------------------------
 // Move L
