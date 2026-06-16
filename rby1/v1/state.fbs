@@ -1,0 +1,52 @@
+namespace rby1;
+
+// -------------------------------------------------
+// RB-Y1 RobotState (gRPC 스트림 한 시점 스냅샷)
+// rby1 service 의 on_state 콜백이 zenoh 로 publish,
+// common 이 구독해 state_core 캐시/연결상태 판정에 사용.
+// 필드명은 rb_sdk.schema.rby1_schema.RobotStateTD 와 1:1 대응.
+// -------------------------------------------------
+
+// 단일 관절 상태 (RobotStateTD.joint_states[*])
+table JointState {
+  index:           int;        // 관절 인덱스 (0-based)
+  name:            string;     // 관절 이름 (urdf link, 있을 때만)
+
+  is_ready:        bool;
+  fet_state:       string;     // FETState enum name
+  run_state:       string;     // RunState enum name (예: "ControlOn")
+  init_state:      string;     // InitializationState enum name
+  motor_type:      int;
+  motor_state:     int;
+  power_on:        bool;
+
+  position:        float;      // [rad]
+  velocity:        float;      // [rad/s]
+  current:         float;      // [A]
+  torque:          float;      // [Nm]
+  temperature:     float;      // [°C]
+}
+
+// 제어 매니저 상태 (RobotStateTD.control_manager / ControlManagerStateTD)
+table ControlManagerState {
+  state:                   string;   // ControlManagerState.State enum name
+  control_state:           string;   // ControlState enum name
+  enabled_joint_idx:       [int];
+  time_scale:              float;
+  unlimited_mode_enabled:  bool;
+}
+
+// 전체 RobotState 스냅샷
+table RobotState {
+  robot_model:        string;        // 예: "RBY1-A"
+  timestamp_usec:     ulong;         // 단조증가 타임스탬프 [usec]
+
+  // rby1 on_state 가 미리 계산하는 집계 플래그 (연결상태 판정용)
+  is_power_on:        bool;          // 모든 관절 power_on
+  is_servo_on:        bool;          // 모든 관절 run_state == "ControlOn"
+
+  joint_states:       [JointState];
+  control_manager:    ControlManagerState;
+}
+
+root_type RobotState;
