@@ -90,8 +90,10 @@ table Request_Move_J {
 // Move L
 //---------------------------------------------------------------
 table Request_Move_L {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
+    target:         MoveInput_Target (required);
+    speed:          MoveInput_Speed (required);
+
+    ext_axis:       [float];
 }
 //---------------------------------------------------------------
 // Move JB
