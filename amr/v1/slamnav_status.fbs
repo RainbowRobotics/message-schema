@@ -449,7 +449,7 @@ table InfoCategory {
 */
 table InfoParam {
     name: MultilingualStruct;
-    value: MultilingualStruct;
+    value: string;
     description: MultilingualStruct;
     category_id: string;
     group_id: string;
