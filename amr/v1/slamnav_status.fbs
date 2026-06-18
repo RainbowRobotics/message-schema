@@ -417,7 +417,7 @@ enum InfoParamTypeEnum:byte { STRING = 0, TAG = 1, LED = 2 }
         - category_id   : 카테고리 ID UUID
         - group_id      : 그룹 ID UUID
         - name          : 카테고리, 그룹의 이름명(다국어)
-        - description   : 카테고리, 그룹의 설명(다국어)
+        - description   : (선택) 카테고리, 그룹의 설명(다국어)
         - child_groups  : 카테고리 하위에 속하는 group 리스트
 */
 table InfoGroup {
@@ -440,9 +440,9 @@ table InfoCategory {
     field       :
         - name          : info의 이름명(다국어)
         - value         : info의 값(다국어). string형식이며 number나 boolean의 경우에도 toString()하여 입력할 것
-        - description   : info의 설명(다국어)
-        - category_id   : info가 속하는 카테고리 ID (대분류). 없으면 미분류 항목으로 분류됨
-        - group_id      : info가 속하는 그룹 ID (중분류). 없으면 카테고리 하위 미분류 항목으로 분류됨
+        - description   : (선택) info의 설명(다국어)
+        - category_id   : (선택) info가 속하는 카테고리 ID (대분류). 없으면 미분류 항목으로 분류됨
+        - group_id      : (선택) info가 속하는 그룹 ID (중분류). 없으면 카테고리 하위 미분류 항목으로 분류됨
         - color         : (선택) info의 value값에 색상을 입히고 싶다면 사용(UI와 논의)
         - type          : info 표기방법. 자세한것은 InfoParamTypeEnum 설명 참고
 
