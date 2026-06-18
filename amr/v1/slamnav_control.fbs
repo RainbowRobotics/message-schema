@@ -402,19 +402,35 @@ table ResponseSetJog {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/control/StreamFrequency
+    topic       :       {robotType}/control/getStreamFrequency
+    usage       :       소켓 스트림 주파수 조회
+    field
+        - target        :       스트림 대상 ( "camera", "lidar2d", "lidar3d", "path" )
+        - frequency     :       데이터 전송 주파수 (0 ~ 10 Hz)
+*/
+table RequestGetStreamFrequency {
+    target: string;
+}
+table ResponseGetStreamFrequency {
+    target: string;
+    frequency: int;
+    result: string;
+    message: string;
+}
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/setStreamFrequency
     usage       :       소켓 스트림 주파수 설정
     field
         - target        :       스트림 대상 ( "camera", "lidar2d", "lidar3d", "path" )
         - frequency     :       데이터 전송 주파수 (0 ~ 10 Hz)
 */
-table RequestStreamFrequency {
-    id: string;
+table RequestSetStreamFrequency {
     target: string;
     frequency: int;
 }
-table ResponseStreamFrequency {
-    id: string;
+table ResponseSetStreamFrequency {
     target: string;
     frequency: int;
     result: string;
