@@ -242,7 +242,7 @@ table Request_Set_HomeJointInfo {
   home_type:      int;
     // 0 : 최상위 홈
     // 1 : 기타...서브프로그램 등
-  joint_angles:   [float];
+  joint_angles:   [float] (required);
 }
 
 // "set_jacob_speed_mode"
@@ -263,7 +263,15 @@ table Request_Set_SelfVibrationMode{
     // Time (sec)       (입력란)
   frequency:    float;
     // Frequency (Hz)   (입력란)
-  magnitudes:    [float];
+  magnitudes:    [float] (required);
     // Magnitude (0~1)
       // 관절 별 슬라이드 바
+}
+
+// "set_external_axis_sync"
+table Request_Set_ExternalAxisSync {
+  mode:         int;
+    // Synchro Mode (드랍다운)
+      // 0 : Sync Off
+      // 1 : Sync Onf
 }
