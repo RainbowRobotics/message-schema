@@ -1,3 +1,4 @@
+include "struct.fbs";
 namespace SLAMNAV;
 
 
@@ -95,6 +96,8 @@ struct StatusPower {
         - lidar_field           :       현재 safety LiDAR 필드 번호
         - detect_mode           :       OSSD detect mode ON/OFF
         - avoid_on              :       장애물 회피 정책 ON/OFF
+        - operating_mode        :       운전 모드 ( "auto" / "manual" / "none" )
+        - external_motion       :       명령 없는 외부 기인 모션 (핸드캐리/경사 밀림 등)
 */
 table StatusRobotState {
     emo: bool;
@@ -114,6 +117,8 @@ table StatusRobotState {
     lidar_field: uint8;
     detect_mode: bool;
     avoid_on: bool;
+    operating_mode: string;
+    external_motion: bool;
 }
 
 /*
@@ -351,4 +356,104 @@ table MoveStatus {
     vel: StatusVel;
     cur_node: StatusNode;
     goal_node: StatusNode;
+}
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/safety
+    usage       :       안전 신호 채널별 상태 (100ms 주기)
+                        켜짐 = mask != 0
+                        불일치 = mask != 0 && mask != (1 << channel_count) - 1
+                        불일치는 300ms(3샘플) 연속 지속 시에만 고장으로 판정할 것 (접점 스위칭 시차 허용)
+                        source_age_ms > 500 이면 PDU 통신 두절 — 표시 무효 처리할 것
+    field
+        - stamp             :       발행 타임스탬프 (sec)
+        - source_age_ms     :       PDU 안전 데이터 마지막 수신 후 경과 (ms)
+        - emo               :       비상정지
+        - bumper            :       범퍼
+        - interlock         :       인터록
+        - obs_detect        :       장애물 감지
+        - meas_mismatch     :       레퍼런스/측정 mismatch
+        - field_mismatch    :       속도/필드 mismatch
+        - over_speed        :       과속
+        - operational_stop  :       동작 정지
+*/
+table StatusSafety {
+    stamp: double;
+    source_age_ms: uint32;
+    emo: [bool];
+    bumper:  [bool];
+    interlock:  [bool];
+    obs_detect: [bool];
+    meas_mismatch: [bool];
+    field_mismatch: [bool];
+    over_speed: [bool];
+    operational_stop: [bool];
+}
+
+/*
+    category    : Enum
+    usage       : Info 파라미터 표시 타입
+    enum        :
+        - STRING    : 그냥 value값 그대로 표시
+        - TAG       : value값을 tag형태로 표시
+        - LED       : value값이 boolean일때 true면 color 색상으로 LED 표시, false면 회색 처리
+        -
+*/
+enum InfoParamTypeEnum:byte { STRING = 0, TAG = 1, LED = 2 }
+
+/*
+    category    : RPC
+    usage       : info 카테고리와 group (대분류/중분류 느낌)
+                  UI에서는 이 카테고리/그룹을 받고 항목에 맞춰 InfoParam을 표시
+    topic       : {robotType}/info/category
+    field       :
+        - category_id   : 카테고리 ID UUID
+        - group_id      : 그룹 ID UUID
+        - name          : 카테고리, 그룹의 이름명(다국어)
+        - description   : (선택) 카테고리, 그룹의 설명(다국어)
+        - child_groups  : 카테고리 하위에 속하는 group 리스트
+*/
+table InfoGroup {
+    group_id: string;
+    name: MultilingualStruct;
+    description: MultilingualStruct;
+}
+table InfoCategory {
+    category_id: string;
+    name: MultilingualStruct;
+    description: MultilingualStruct;
+    child_groups: [InfoGroup];
+}
+
+/*
+    category    : PUB
+    usage       : info 정보 표시
+                  SLAMNAV2에서 자체적으로 추가/삭제 가능한 구조
+    topic       : {robotType}/infoStatus
+    field       :
+        - name          : info의 이름명(다국어)
+        - value         : info의 값(다국어). string형식이며 number나 boolean의 경우에도 toString()하여 입력할 것
+        - description   : (선택) info의 설명(다국어)
+        - category_id   : (선택) info가 속하는 카테고리 ID (대분류). 없으면 미분류 항목으로 분류됨
+        - group_id      : (선택) info가 속하는 그룹 ID (중분류). 없으면 카테고리 하위 미분류 항목으로 분류됨
+        - color         : (선택) info의 value값에 색상을 입히고 싶다면 사용(UI와 논의)
+        - type          : info 표기방법. 자세한것은 InfoParamTypeEnum 설명 참고
+
+*/
+table InfoParam {
+    name: MultilingualStruct;
+    value: string;
+    description: MultilingualStruct;
+    category_id: string;
+    group_id: string;
+    color: string;
+    type: InfoParamTypeEnum;
 }

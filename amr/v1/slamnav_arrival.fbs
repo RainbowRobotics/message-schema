@@ -1,0 +1,26 @@
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/multi/arrival
+    usage       :       FMS 가 멀티 로봇의 목적지 도착을 통지
+                        (도착 진입 1회 + 도착 유지 동안 주기 재발행)
+    field
+        - robot_id      :       로봇 ID
+        - node_id       :       도착한 노드 ID
+        - reason        :       도착 사유 ( "destination_arrived" )
+        - timestamp     :       발행 시각 (epoch milliseconds)
+*/
+table MultiArrival {
+    robot_id: string;
+    node_id: string;
+    reason: string;
+    timestamp: int64;
+}

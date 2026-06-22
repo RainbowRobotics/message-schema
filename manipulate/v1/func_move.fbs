@@ -7,7 +7,9 @@ namespace IPC;
 // Jog - Smooth
 //---------------------------------------------------------------
 table Request_Move_SmoothJogJ{
-    target:         MoveInput_Target;
+    target:         MoveInput_Target (required);
+
+    ext_axis:       [float];
 }
 table Request_Move_SmoothJogL{
     target:         MoveInput_Target;
@@ -19,8 +21,10 @@ table Request_Move_SmoothJogStop{
 // Jog - Tick
 //---------------------------------------------------------------
 table Request_Move_TickJogJ {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
+    target:         MoveInput_Target (required);
+    speed:          MoveInput_Speed (required);
+
+    ext_axis:       [float];
 }
 table Request_Move_TickJogL {
     target:         MoveInput_Target;
@@ -81,15 +85,19 @@ table Request_Move_Home {
 // Move J
 //---------------------------------------------------------------
 table Request_Move_J {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
+    target:         MoveInput_Target (required);
+    speed:          MoveInput_Speed (required);
+
+    ext_axis:       [float];
 }
 //---------------------------------------------------------------
 // Move L
 //---------------------------------------------------------------
 table Request_Move_L {
-    target:         MoveInput_Target;
-    speed:          MoveInput_Speed;
+    target:         MoveInput_Target (required);
+    speed:          MoveInput_Speed (required);
+
+    ext_axis:       [float];
 }
 //---------------------------------------------------------------
 // Move JB
@@ -100,6 +108,8 @@ table Request_Move_JB_ADD {
     target:         MoveInput_Target;
     speed:          MoveInput_Speed;
     type:           MoveInput_Type;
+
+    ext_axis:       [float];
 }
 table Request_Move_JB_RUN {
 }

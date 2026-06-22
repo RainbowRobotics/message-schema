@@ -13,6 +13,8 @@ namespace SLAMNAV;
     response    :       One-shot
     topic       :       {robotType}/multi/path
     usage       :       멀티 로봇 경로 설정
+    deprecated  :       사용 중단 예정. action queue 프로토콜(multi/enqueue, slamnav_action_queue.fbs)로 대체.
+                        호환을 위해 정의만 유지하며, 신규 사용 금지.
     field
         - path          :       노드 ID 리스트
         - preset	:	preset

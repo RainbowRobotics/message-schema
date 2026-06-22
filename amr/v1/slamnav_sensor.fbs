@@ -88,7 +88,7 @@ table ResponseMarkerScanStop {
 /*
     category    :       RPC
     response    :       Delayed One-shot
-    topic       :       {robotType}/marker/registerMarker
+    topic       :       {robotType}/marker/register
     usage       :       마커를 앵커 NODE(type=ALIGN)로 등록
     field
         - cam_id        :       사용할 카메라
@@ -128,11 +128,11 @@ table ResponseRegisterMarker {
         - node         :       저장된 Node 정보
 */
 table RequestSetPrecisionNode {
-    marker_id: string;
+    marker_id: int;
     node_name: string;
 }
 table ResponseSetPrecisionNode {
-    marker_id: string;
+    marker_id: int;
     node: Node;
     result: string;
     message: string;

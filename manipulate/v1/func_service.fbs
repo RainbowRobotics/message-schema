@@ -799,3 +799,97 @@ table Request_CommunicationGrpc {
     port:   int;
         // Port Number [입력란]
 }
+//---------------------------------------------------------------
+// External Axis
+//---------------------------------------------------------------
+// "call_config_extaxis"
+table Request_CallConfigExtAxis{
+}
+table Response_CallConfigExtAxis{
+    // 각 배열에는 7개 값이 들어감
+    type:       [int];
+        // Type [드랍다운]
+            // 0 : No
+            // 1 : Revolute
+            // 2 : Linear
+    device:     [int];
+        // Device [드랍다운]
+            // 0 : RSauto
+    max_a:      [float];
+        // Max-Acc [입력란]
+    max_v:      [float];
+        // Max-Vel [입력란]
+    min_p:      [float];
+        // Min-Pos [입력란]
+    max_p:      [float];
+        // Max-Pos [입력란]
+    jog_a:      [float];
+        // Jog-A rate [입력란]
+    jog_v:      [float];
+        // Jog-V rate [입력란]
+    encoder:    [float];
+        // Encoder Resol [입력란]
+    reduction:  [float];
+        // Reduction Rate [입력란]
+
+    // 아래 9개 항목은 Ui에는 표시 안함 (미래 용)
+    offset_x:   [float];
+    offset_y:   [float];
+    offset_z:   [float];
+
+    axis_x:   [float];
+    axis_y:   [float];
+    axis_z:   [float];
+
+    dummyaxis_x:   [float];
+    dummyaxis_y:   [float];
+    dummyaxis_z:   [float];
+}
+// "call_extaxis_para_basic"
+table Request_ExtAxis_Para_Basic{
+    joint_no:   int;
+        // 0 ~ 6 ..총 7개 중 하나의 인덱스
+    type:       int;
+        // Type [드랍다운]
+            // 0 : No
+            // 1 : Revolute
+            // 2 : Linear
+    device:     int;
+        // Device [드랍다운]
+            // 0 : RSauto
+    max_a:      float;
+        // Max-Acc [입력란]
+    max_v:      float;
+        // Max-Vel [입력란]
+    min_p:      float;
+        // Min-Pos [입력란]
+    max_p:      float;
+        // Max-Pos [입력란]
+    jog_a:      float;
+        // Jog-A rate [입력란]
+    jog_v:      float;
+        // Jog-V rate [입력란]
+    encoder:    float;
+        // Encoder Resol [입력란]
+    reduction:  float;
+        // Reduction Rate [입력란]
+}
+
+// "call_extaxis_calib_clr"
+table Request_ExtAxis_Calib_Clear {
+    joint_no:   int;
+        // External Axis No [드랍다운]
+            // 0 ~ 6
+}
+// "call_extaxis_calib_add"
+table Request_ExtAxis_Calib_Add {
+    joint_no:   int;
+        // External Axis No [드랍다운]
+            // 0 ~ 6
+}
+// "call_extaxis_calib_run"
+table Request_ExtAxis_Calib_Run {
+    joint_no:   int;
+        // External Axis No [드랍다운]
+            // 0 ~ 6
+}

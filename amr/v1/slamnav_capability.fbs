@@ -74,6 +74,7 @@ table ResponseCapabilitySafetyIo {
             - color_profile : 카메라 색상 프로필
             - depth_profile : 카메라 깊이 프로필
             - type          : 카메라 타입 ("ORBBEC", "OAK1")
+            - data_age_ms   : 마지막 프레임 수신 후 경과 (ms, 무효=UINT32_MAX)
 */
 table RTSPInfo{
     cam_id: int;
@@ -93,6 +94,7 @@ table CameraInfo {
     color_profile: int;
     depth_profile: int;
     type: string;
+    data_age_ms: uint32;
 }
 table RequestCapabilityCamera {
 }
@@ -123,6 +125,7 @@ table ResponseCapabilityCamera {
             - ip            : 라이다 IP 주소
             - type          : 라이다 타입 (LidarTypeEnum)
             - safety        : 세이프티 라이다 여부 (Type으로 통합될 수 있을지?)
+            - data_age_ms   : 마지막 스캔 수신 후 경과 (ms, 무효=UINT32_MAX)
 */
 enum LidarTypeEnum:byte { RPLIDAR = 0, SICK = 1, LAKI = 2, LIVOX = 3, HOKUYO = 4 }
 table LidarInfo {
@@ -133,6 +136,7 @@ table LidarInfo {
     ip: string;
     type: LidarTypeEnum;
     safety: bool;
+    data_age_ms: uint32;
 }
 table RequestCapabilityLidar2D {
 }
@@ -156,6 +160,7 @@ table ResponseCapabilityLidar2D {
             - serial        : 라이다 시리얼
             - type          : 라이다 타입 (LidarTypeEnum)
             - safety        : 세이프티 라이다 여부 (Type으로 통합될 수 있을지?)
+            - data_age_ms   : 마지막 스캔 수신 후 경과 (ms, 무효=UINT32_MAX)
 */
 table RequestCapabilityLidar3D {
 }
@@ -179,6 +184,7 @@ table ResponseCapabilityLidar3D {
             - index         : IMU 인덱스
             - serial        : IMU 시리얼
             - type          : IMU 타입 (IMUTypeEnum)
+            - data_age_ms   : PDU 마지막 수신 후 경과 (ms, 무효=UINT32_MAX)
 */
 enum IMUTypeEnum:byte { DEFAULT = 0, IMU = 1 }
 table IMUInfo {
@@ -186,6 +192,7 @@ table IMUInfo {
     index: int;
     serial: string;
     type: IMUTypeEnum;
+    data_age_ms: uint32;
 }
 table RequestCapabilityImu {
 }

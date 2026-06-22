@@ -88,12 +88,14 @@ table State_Core {
   ext_axis_ref_3:         float;      //<----added at 260607
   ext_axis_ref_4:         float;      //<----added at 260607
   ext_axis_ref_5:         float;      //<----added at 260607
+  ext_axis_ref_6:         float;          //<----added at 260616
   ext_axis_enc_0:         float;      //<----added at 260607
   ext_axis_enc_1:         float;      //<----added at 260607
   ext_axis_enc_2:         float;      //<----added at 260607
   ext_axis_enc_3:         float;      //<----added at 260607
   ext_axis_enc_4:         float;      //<----added at 260607
   ext_axis_enc_5:         float;      //<----added at 260607
+  ext_axis_enc_6:         float;          //<----added at 260616
   additional_system_info_0: float;    //<----added at 260607
   additional_system_info_1: float;    //<----added at 260607
   additional_system_info_2: float;    //<----added at 260607

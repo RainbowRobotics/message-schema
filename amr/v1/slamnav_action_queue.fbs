@@ -4,38 +4,100 @@
 
 namespace SLAMNAV;
 
-// 단일 edge action 1개.
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       Data Structure
+    usage       :       단일 edge action 1개
+    field
+        - action_id         :       UUIDv7 (시간순 정렬 = 문자열 정렬). 요청 식별자 겸함.
+        - predecessor_id    :       로봇 현재 tail 의 action_id ("" = 빈 큐, cur_node 기준).
+                                    동시에 낙관적 일치 검사 키.
+        - from_node         :       시작 노드 ID
+        - to_node           :       도착 노드 ID
+*/
 table ActionEntry {
-    action_id: string;        // UUIDv7 (시간순 정렬 = 문자열 정렬). 요청 식별자 겸함.
-    predecessor_id: string;   // 로봇 현재 tail 의 action_id ("" = 빈 큐, cur_node 기준).
-                              // 동시에 낙관적 일치 검사 키.
+    action_id: string;
+    predecessor_id: string;
     from_node: string;
     to_node: string;
 }
 
-// ── RPC: enqueue ──  토픽 {robotType}/multi/enqueue
-// edge action 1개를 큐 끝에 append (멱등). 수락 규칙: action.predecessor_id == 로봇 현재 tail.
+
+/*
+    category    :       Data Structure
+    usage       :       수행 history 항목 1개
+    field
+        - action_id         :       action ID
+        - status            :       ACTIVE(진행중) / DONE(완료) / CANCELED(취소됨) / FAILED(실패)
+        - start_time_ms     :       수행 시작 (Unix epoch ms)
+        - end_time_ms       :       종료 (진행중이면 0)
+        - action            :       action 엔티티 전체
+*/
+table HistoryActionEntry {
+    action_id: string;
+    status: string;
+    start_time_ms: uint64;
+    end_time_ms: uint64;
+    action: ActionEntry;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/multi/enqueue
+    usage       :       edge action 1개를 큐 끝에 append (멱등).
+                        수락 규칙: action.predecessor_id == 로봇 현재 tail.
+    field
+        - action            :       append 할 edge action
+*/
 table RequestEnqueueAction {
     action: ActionEntry;
 }
 table ResponseEnqueueAction {
-    result: string;           // "success" / "reject"(tail 불일치=gap/race) / "fail"
-    message: string;          // 디버그용. 큐/tail 실제 상태는 multi/queue·multi/history 로 reconcile.
+    result: string;     // "success" / "reject"(tail 불일치=gap/race) / "fail"
+    message: string;    // 디버그용. 큐/tail 실제 상태는 multi/queue·multi/history 로 reconcile.
 }
 
-// ── 상태(1): 현재 대기 큐 ──  토픽 {robotType}/multi/queue
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/multi/queue
+    usage       :       현재 대기 큐 상태
+    field
+        - entries           :       아직 시작 안 한 대기 action (실행 순). head=다음 시작 대상.
+*/
 table StatusActionQueue {
-    entries: [ActionEntry];   // 아직 시작 안 한 대기 action (실행 순). head=다음 시작 대상.
+    entries: [ActionEntry];
 }
 
-// ── 상태(2): 수행 history ──  토픽 {robotType}/multi/history
-table HistoryActionEntry {
-    action_id: string;
-    status: string;     // ACTIVE(진행중)/DONE(완료)/CANCELED(취소됨)/FAILED(실패)
-    start_time_ms: uint64;    // 수행 시작 (Unix epoch ms)
-    end_time_ms: uint64;      // 종료 (진행중이면 0)
-    action: ActionEntry;      // action 엔티티 전체
-}
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/multi/history
+    usage       :       수행 history 상태
+    field
+        - entries           :       진행중 + 완료 + 취소 이력 (최근 N개 ring)
+*/
 table StatusActionHistory {
-    entries: [HistoryActionEntry];  // 진행중 + 완료 + 취소 이력 (최근 N개 ring)
+    entries: [HistoryActionEntry];
 }
