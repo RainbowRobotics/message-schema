@@ -1,0 +1,22 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+// "call_config_safety"
+table Request_CallConfigSafety {
+  safety_addr:           int;
+    // 전체 요청 시 -1 줘야함
+}
+table Response_CallConfigSafety {
+    // 이름 // 주소 // 값
+    list_name:          [string];
+    list_addr:          [int];
+    list_value:         [int];
+}
+
+// "save_safety_parameter"
+table Request_Safety_Save_Parameter {
+    target_addr:        int;
+    target_value:       int;
+}
