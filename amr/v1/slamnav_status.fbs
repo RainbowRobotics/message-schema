@@ -457,3 +457,35 @@ table InfoParam {
     color: string;
     type: InfoParamTypeEnum;
 }
+
+/*
+    category    : RPC
+    usage       : info 카테고리/그룹 목록 요청 (인자 없음 — 전체 카테고리 조회)
+    topic       : {robotType}/info/category
+*/
+table RequestGetInfoCategory {
+}
+
+/*
+    category    : RPC
+    usage       : info 카테고리/그룹 목록 응답 봉투 (대분류/중분류)
+    topic       : {robotType}/info/category
+    field       :
+        - categories    : InfoCategory 리스트
+*/
+table ResponseGetInfoCategory {
+    categories: [InfoCategory];
+}
+
+/*
+    category    : PUB
+    usage       : info 항목 전체를 리스트로 묶어 1회 발행하는 봉투.
+                  개별 InfoParam 을 N번 publish 하지 않고 원자적으로 한 번에 보낸다.
+                  (수신측이 전체 집합을 한 번에 받고, 미수신=삭제로 판정 가능)
+    topic       : {robotType}/infoStatus
+    field       :
+        - infos     : InfoParam 항목 리스트
+*/
+table InfoStatus {
+    infos: [InfoParam];
+}
