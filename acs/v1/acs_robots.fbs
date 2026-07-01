@@ -1,0 +1,84 @@
+namespace ACS;
+
+table Pose {
+    node_id: string;
+    name_name: string;
+    x: float = null;
+    y: float = null;
+    rz: float = null;
+}
+table Param {
+    key: string;
+    value: string;
+}
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/state/robots/getOptimalRobot
+    usage       : 작업 진행 전 최적 로봇 탐색 후 반환
+    field       :
+        - pose      : 로봇의 도착지 (node_id, name_name, x, y, rz)
+        - options   : 최적 로봇 탐색 시 옵션 값 ("DISTANCE":거리우선, "BATTERY_LOW":배터리낮음우선)
+        - robot_id  : 최적 로봇 시리얼 값. 찾을 수 없으면 null
+*/
+table RequestGetOptimalRobot {
+    pose: Pose;
+    options: [string];
+}
+table ResponseGetOptimalRobot {
+    robot_id: string;
+}
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/state/setScenario
+    usage       : 시나리오 이력 로그
+    field       :
+        - scenario_id   : 시나리오 ID
+        - task_id       : 태스크 ID
+        - robot_id      : 매칭된 로봇 시리얼
+        - params        : 태스크 진행에 사용되는 파라미터
+        - status        : 시나리오 진행 상태 ("pending", "running", "paused", "done", "error")
+        - success       : 이력 저장 결과
+        - message       : 이력 저장 실패 시 메시지
+*/
+table RequestSetScenario {
+    scenario_id: string;
+    task_id: string;
+    robot_id: string;
+    params: [Param];
+    status: string;
+}
+table ResponseSetScenario {
+    success: bool;
+    message: string;
+}
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/muscat/program/run
+    usage       : 머스캣 프로그램 실행
+    field       :
+        - robot_id      : 로봇 시리얼
+        - program_id    : 실행할 프로그램 ID
+        - params        : 파라미터
+        - success       : 수행 저장 결과
+        - message       : 수행 실패 시 메시지
+*/
+table RequestMuscatProgramRun {
+    robot_id: string;
+    program_id: string;
+    params: [Param];
+}
+table ResponseMuscatProgramRun {
+    program_id: string;
+    success: bool;
+    message: string;
+    params: [Param];
+}
+
