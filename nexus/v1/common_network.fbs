@@ -33,6 +33,14 @@ table Response_Network_GetNetwork {
     message: string;
 }
 
+table Request_Network_GetLocalIp {
+    target: string;
+}
+
+table Response_Network_GetLocalIp {
+    local_ip: string;
+}
+
 // 네트워크 설정 ------------------------------------------------
 table Request_Network_SetNetwork {
     ssid: string;

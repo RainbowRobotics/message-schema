@@ -4,4 +4,5 @@ table ResponseFrsGetState {
     zenoh_url: string;
     connection: bool;
     state: int;
+    local_ip: string;
 }
