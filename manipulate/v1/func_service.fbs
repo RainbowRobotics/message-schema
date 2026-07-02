@@ -622,6 +622,46 @@ table Request_Gripper_Action {
                     // 1 : Laser-Off
                     // 2 : Set Zero Position
                     // 3 : Factory Rest
+    // -----------------------------------------------
+    // gripper_type == 7 : OnRobot 2FG7
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 8 : OnRobot 2FG14
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+            // payload[2] : Finger Orientation
+                // 드랍다운
+                    // 0 : Inward
+                    // 1 : Outward
+            // payload[3] : Finger length
+                // 입력란
+            // payload[4] : Finger Tip Width
+                // 입력란
+        // function_list == 1 : Set Goal Pos
+            // payload[0] : Grip Direction
+                // 드랍다운
+                    // 0 : External Grip
+                    // 1 : Internal Grip
+                    // 2 : Stop
+            // payload[1] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Spd/Force
+            // payload[0] : Grip Direction
+                // 드랍다운
+                    // 0 : External Grip
+                    // 1 : Internal Grip
+                    // 2 : Stop
+            // payload[1] : Target Position (0~100)
+                // 입력란
+            // payload[2] : Target Speed (0~100)
+                // 입력란
+            // payload[3] : Target Force (0~100)
+                // 입력란
 }
 //---------------------------------------------------------------
 // Timer
