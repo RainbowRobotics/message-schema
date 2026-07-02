@@ -26,9 +26,9 @@ table Request_Network_GetNetwork {
 }
 
 table Response_Network_GetNetwork {
-    ethernet: Network;
-    wifi: Network;
-    bluetooth: Network;
+    ethernet: [Network];
+    wifi: [Network];
+    bluetooth: [Network];
     result: string;
     message: string;
 }
