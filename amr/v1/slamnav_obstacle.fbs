@@ -1,0 +1,75 @@
+// SN(로봇) 보고 장애물: 주행 불가 판단 시 SN 이 자기 상태를 단방향 발행.
+// 소비 경로: fms
+
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       Obstacle Pose Structure
+*/
+struct ObstaclePose {
+    x: float;
+    y: float;
+}
+
+
+/*
+    category    :       Data Structure
+    usage       :       노드 참조. node_id 를 알면 node_id 우선,
+                        모르면 pose 만 채움 → 수신측(obstacle-service)이 최근접 node 로 정규화.
+    field
+        - node_id           :       노드 ID ("" 이면 pose 사용)
+        - pose              :       위치 (node_id 없을 때만 사용, 생략 가능)
+*/
+table ObstacleNodeRef {
+    node_id: string;
+    pose: ObstaclePose;
+}
+
+
+/*
+    category    :       Data Structure
+    usage       :       인지한 장애물 1건
+    field
+        - location          :       장애물 위치 (필수)
+        - hold_seconds      :       >0 이면 자동 해제 TTL 을 이 값(초)으로 override
+                                    (0 이면 수신측 기본 TTL 사용)
+        - first_detected_ms :       SN 이 최초 인지한 시각 (SN 시계, Unix epoch ms).
+*/
+table ObstacleInfo {
+    location: ObstacleNodeRef;
+    hold_seconds: long;
+    first_detected_ms: long;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/obstacle
+    usage       :       SN 이 주행 불가(장애물 인지) 시 자기 상태를 발행.
+                        obstacle 유무가 곧 상태: 값이 있으면 주행 불가(장애물 유효),
+                        null(생략) 로 발행하면 해제 통지.
+    field
+        - publish_time_ms   :       발행 시각 (SN 시계, Unix epoch ms)
+        - obstacle          :       인지한 장애물. null = 장애물 없음(해제 통지).
+        - reachable         :       현재 위치에서 이동 가능한 안전 노드
+                                    (escape 힌트, 생략 가능. obstacle 있을 때만 의미)
+*/
+table StatusObstacle {
+    publish_time_ms: long;
+    obstacle: ObstacleInfo;
+    reachable: ObstacleNodeRef;
+}
