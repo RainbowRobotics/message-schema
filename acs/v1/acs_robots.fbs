@@ -81,4 +81,3 @@ table ResponseMuscatProgramRun {
     message: string;
     params: [Param];
 }
-
