@@ -128,7 +128,7 @@ table Metadata {
         - dir           :       주행 방향 ( "FORWARD" / "REVERSE" )
         - method        :       이동 방법 ( "PP" / "HPP" / "QD" )
         - speed         :       이동 속도
-        - safety_field  :       안전 필드 번호
+        - safety_field  :       링크 주행 시 라이다 안전 필드 id ( -1 = 미지정, config SAFETY_FIELD_SELECT 룰 → SAFETY_FIELD_DEFAULT 순 fallback )
         - avoid_range   :       장애물 회피 범위
 */
 table Link {
@@ -138,7 +138,7 @@ table Link {
     dir: string;
     method: string;
     speed: float;
-    safety_field: int;
+    safety_field: int = -1;
     avoid_range: float;
 }
 
@@ -153,6 +153,7 @@ table Link {
         - size          :       노드 크기 ( x, y, z )
         - type          :       노드 타입 ( "ROUTE" / "GOAL" / "ALIGN" )
         - features      :       동작 속성 ( "INIT" / "CHARGING" / "AUTO_DOOR" / "ARUCO" / "APRIL" / "V_MARKER" / "TAPE" )
+        - safety_field  :       회전 시 라이다 안전 필드 id ( -1 = 미지정, config SAFETY_FIELD_SELECT 룰 → SAFETY_FIELD_DEFAULT 순 fallback )
 */
 table Node {
     context: string;
@@ -162,6 +163,7 @@ table Node {
     features: [string];
     size: NodeSize;
     type: string;
+    safety_field: int = -1;
 }
 
 
