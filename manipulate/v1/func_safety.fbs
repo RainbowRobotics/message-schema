@@ -20,3 +20,10 @@ table Request_Safety_Save_Parameter {
     target_addr:        int;
     target_value:       int;
 }
+
+// "call_safety_state_idle"
+table Request_Safety_State_Idle {
+    target_option:             int;
+        // 0 : reset only state
+        // 1 : reset state + flag
+}
