@@ -68,6 +68,14 @@ table Request_Update_Sub_Task_State {
 
 // topic: "muscat/pause", "muscat/resume", "muscat/stop"
 // "muscat/stop"은 전체 로봇 프로그램 중지라서 robot_model 보내도 전체 stop
+table Request_Program_Execution {
+  program_id: string;
+  program_name: string;
+}
+table Response_Program_Execution {
+  result: Response_Program_Result;
+}
+
 table Request_Exec_Control_Program {
   robot_model: string;
 }
