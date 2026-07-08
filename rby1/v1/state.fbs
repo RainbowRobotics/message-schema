@@ -36,6 +36,13 @@ table ControlManagerState {
   unlimited_mode_enabled:  bool;
 }
 
+// 배터리 상태 (RobotStateTD.battery_state / BatteryStateTD)
+table BatteryState {
+  voltage:       float;   // [V]
+  current:       float;   // [A]
+  level_percent: float;   // 0.0 ~ 100.0
+}
+
 // 전체 RobotState 스냅샷
 table RobotState {
   robot_model:        string;        // 예: "RBY1-A"
@@ -47,6 +54,7 @@ table RobotState {
 
   joint_states:       [JointState];
   control_manager:    ControlManagerState;
+  battery_state:      BatteryState;
 }
 
 root_type RobotState;
