@@ -21,6 +21,15 @@ table Network {
     signal: int;
 }
 
+// topic : muscat/network/status
+table NetworkStatus {
+    ethernet: [Network];
+    wifi: [Network];
+    local_ip: string;
+    frs_ip: string;
+}
+
+
 // 네트워크 정보 요청 ------------------------------------------------
 table Request_Network_GetNetwork {
 }
