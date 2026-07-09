@@ -256,7 +256,6 @@ table Status {
     charge_state: StatusChargeState;
     loc_state: StatusLocState;
     multi_state: StatusMultiState;
-    boot_time: double;
 }
 
 
