@@ -294,6 +294,41 @@ table ResponseSetPduParam {
 
 /*
     category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/setting/getBatteryPolicy
+    usage       :       배터리 정책(상한/하한 SOC) 조회
+    field
+        - params        :       battery_max_soc(충전 상한), battery_min_soc(미션 중단 하한)
+*/
+table RequestGetBatteryPolicy {
+}
+table ResponseGetBatteryPolicy {
+    params: [SettingParam];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/setting/setBatteryPolicy
+    usage       :       배터리 정책(상한/하한 SOC) 설정
+    field
+        - params        :       battery_max_soc(상한 — PDU 전송), battery_min_soc(하한)
+*/
+table RequestSetBatteryPolicy {
+    params: [SettingParam];
+}
+table ResponseSetBatteryPolicy {
+    params: [SettingParam];
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
     response    :       Delayed One-shot
     topic       :       {robotType}/setting/getDriveParam
     usage       :       드라이브 파라미터 조회
