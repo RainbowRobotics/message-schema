@@ -243,6 +243,7 @@ table StatusMultiState {
         - setting       :       설정 정보
         - map           :       맵 상태
         - dock          :       도킹 상태
+        - boot_time     :       slamnav 부팅 시각 (Unix epoch, sec)
 */
 table Status {
     imu: StatusImu;
@@ -255,6 +256,7 @@ table Status {
     charge_state: StatusChargeState;
     loc_state: StatusLocState;
     multi_state: StatusMultiState;
+    boot_time: double;
 }
 
 
