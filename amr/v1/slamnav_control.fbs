@@ -457,6 +457,27 @@ table ResponseSetAvoid {
     message: string;
 }
 
+
+/*
+    category    :       RPC
+    response    :       Delayed One-shot
+    topic       :       {robotType}/control/setCrossing
+    usage       :       교행(crossing) 정책 ON/OFF 설정
+                        (FMS 가 교행 판정 시 SN 에 통지, safety field 전환은 SN 자체 판단)
+    field
+        - crossing      :       true(on) / false(off)
+*/
+table RequestSetCrossing {
+    id: string;
+    crossing: bool;
+}
+table ResponseSetCrossing {
+    id: string;
+    crossing: bool;
+    result: string;
+    message: string;
+}
+
 // -------------------------------------------------
 // -----------                              --------
 // -----------     Pub / Sub  (Result )     --------
