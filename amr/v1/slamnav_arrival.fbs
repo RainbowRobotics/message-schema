@@ -10,17 +10,21 @@ namespace SLAMNAV;
 /*
     category    :       Pub / Sub
     topic       :       {robotType}/multi/arrival
-    usage       :       FMS 가 멀티 로봇의 목적지 도착을 통지
-                        (도착 진입 1회 + 도착 유지 동안 주기 재발행)
+    usage       :       FMS 가 멀티 로봇의 상태를 주기 발행 (존 내 모든 로봇 heartbeat).
+                        도착 여부(reason)와 hold 여부/출처를 함께 실어 보낸다.
     field
         - robot_id      :       로봇 ID
-        - node_id       :       도착한 노드 ID
-        - reason        :       도착 사유 ( "destination_arrived" )
+        - node_id       :       현재 노드 ID (도착 시 도착 노드)
+        - reason        :       상태 사유 ( "destination_arrived" | 로봇 state("move"/"stop"/"pause") )
         - timestamp     :       발행 시각 (epoch milliseconds)
+        - is_hold       :       FMS hold 여부 (true 면 FMS 가 이 로봇을 잡고 있음)
+        - hold_source   :       hold 출처 ( "none" | "user_input" | "auto_detected" )
 */
 table MultiArrival {
     robot_id: string;
     node_id: string;
     reason: string;
     timestamp: int64;
+    is_hold: bool;
+    hold_source: string;
 }
