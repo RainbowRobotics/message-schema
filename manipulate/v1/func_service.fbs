@@ -683,6 +683,42 @@ table Request_Gripper_Action {
                 // 입력란
             // payload[2] : Target Force (0~100)
                 // 입력란
+    // -----------------------------------------------
+    // gripper_type == 11 : OnRobot 3FG15
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 12 : OnRobot 3FG25
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+            // payload[2] : Finger Length(mm)
+                // 입력란 (기본값 49)
+            // payload[3] : Finger Position
+                // 드랍다운
+                    // 0 : Install-1
+                    // 1 : Install-2
+                    // 2 : Install-3
+            // payload[4] : Finger Diameter(mm)
+                // 입력란 (기본값 13.5)
+            // payload[6] : Grip Type
+                // 드랍다운
+                    // 0 : External Grip
+                    // 1 : Internal Grip
+        // function_list == 1 : Set Goal Pos/Force
+            // payload[0] : Move Type
+                // 드랍다운
+                    // 0 : Grip
+                    // 1 : Move
+                    // 2 : Stop
+                    // 3 : Flexible
+            // payload[1] : Target Position (0~100)
+                // 입력란
+            // payload[2] : Target Force (0~100)
+                // 입력란
 }
 //---------------------------------------------------------------
 // Timer
