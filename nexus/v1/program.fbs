@@ -91,6 +91,14 @@ table RequestProgramStart {
   program_name: string;
   params: [Variable];
 }
+table ResponseProgramStart {
+  program_id: string;
+  program_name: string;
+  params: [Variable];
+  result: string;
+  message: string;
+}
+
 
 // topic: "muscat/pause", "muscat/resume", "muscat/stop"
 // "muscat/stop"은 전체 로봇 프로그램 중지라서 robot_model 보내도 전체 stop
