@@ -66,6 +66,32 @@ table Request_Update_Sub_Task_State {
   state: flow_manager.RB_Flow_Manager_ProgramState;
 }
 
+enum VariableType: byte {
+  STRING,
+  NUMBER,
+  BOOLEAN
+}
+table Variable {
+  key: string;
+  type: VariableType;
+  value: string;
+}
+/* 헷갈려서 새로만듬
+    topic : muscat/program/start
+    params :
+      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
+      - program_name : 프로그램 이름 값
+      - params : 프로그램 시작 시 업데이트할 변수 리스트
+        - key : 변수 키값
+        - type : 변수 타입 (VariableType)
+        - value: 변수 값 stringify
+*/
+table RequestProgramStart {
+  program_id: string;
+  program_name: string;
+  params: [Variable];
+}
+
 // topic: "muscat/pause", "muscat/resume", "muscat/stop"
 // "muscat/stop"은 전체 로봇 프로그램 중지라서 robot_model 보내도 전체 stop
 table Request_Program_Execution {
