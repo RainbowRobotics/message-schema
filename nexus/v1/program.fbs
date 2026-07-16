@@ -66,40 +66,6 @@ table Request_Update_Sub_Task_State {
   state: flow_manager.RB_Flow_Manager_ProgramState;
 }
 
-enum VariableType: byte {
-  STRING,
-  NUMBER,
-  BOOLEAN
-}
-table Variable {
-  key: string;
-  type: VariableType;
-  value: string;
-}
-/* 헷갈려서 새로만듬
-    topic : muscat/program/start
-    params :
-      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
-      - program_name : 프로그램 이름 값
-      - params : 프로그램 시작 시 업데이트할 변수 리스트
-        - key : 변수 키값
-        - type : 변수 타입 (VariableType)
-        - value: 변수 값 stringify
-*/
-table RequestProgramStart {
-  program_id: string;
-  program_name: string;
-  params: [Variable];
-}
-table ResponseProgramStart {
-  program_id: string;
-  program_name: string;
-  params: [Variable];
-  result: string;
-  message: string;
-}
-
-
 // topic: "muscat/pause", "muscat/resume", "muscat/stop"
 // "muscat/stop"은 전체 로봇 프로그램 중지라서 robot_model 보내도 전체 stop
 table Request_Program_Execution {
@@ -162,3 +128,341 @@ table Request_Get_Digital_Input {
 table Response_Get_Digital_Input {
   digital_input: [byte] (required);
 }
+
+
+
+
+// ------------------------- Program 신규 추가된 스키마 (허유진)
+
+
+//---------------------------------------------------------------------------
+//                             Data Structure
+//---------------------------------------------------------------------------
+
+enum VariableType: byte {
+  STRING,
+  NUMBER,
+  BOOLEAN
+}
+table Variable {
+  key: string;
+  type: VariableType;
+  value: string;
+}
+enum ProgramState : byte {
+  IDLE = 0,
+  RUNNING = 1,
+  PAUSED = 2,
+  WAITING = 3,
+  STOPPED = 4,
+  POST_START = 5,
+  COMPLETED = 6,
+  ERROR = 7
+}
+table Program {
+  program_id: string;
+  robot_model: string;
+  name: string;
+  repeat_cnt: int = 1;
+  state: ProgramState = STOPPED;
+  last_loaded_at: ulong;
+  created_at: ulong;
+  updated_at: ulong;
+}
+enum TaskType : byte {
+  MAIN = 0,
+  SUB = 1,
+  EVENT_SUB = 2
+}
+enum SubTaskType : byte {
+  INSERT = 0,
+  CHANGE = 1
+}
+enum TaskExtension : byte {
+  PYTHON = 0
+}
+table MainTaskBegin {
+  position: string;
+  is_enable: bool;
+  speed_ratio: float;
+  variables: [string];
+}
+table Task {
+  task_id: string;
+  raw_task_id: string;
+  program_id: string;
+  parent_task_id: string;
+  robot_model: string;
+  type: TaskType = MAIN;
+  order: int = 0;
+  script_name: string;
+  script_path: string;
+  begin: MainTaskBegin;
+  extension: TaskExtension = PYTHON;
+  state:ProgramState = IDLE;
+  created_at: ulong;
+  updated_at: ulong;
+}
+table Step {
+  step_id:string;
+  parent_step_id:string;
+  task_id:string;
+  program_id:string;
+  group_id:string;
+
+  sync_step_ids:[string];
+  target_step_id:string;
+
+  name:string;
+
+  // dict<string, Any>를 JSON 문자열로 직렬화
+  variable_json:string;
+
+  method:string;
+
+  // dict<string, Any>를 JSON 문자열로 직렬화
+  args_json:string;
+  post_args_json:string;
+
+  func:string;
+  post_func:string;
+  func_name:string;
+  post_func_name:string;
+
+  summary:string;
+  done_script:string;
+
+  sub_task_script_path:string;
+  sub_task_type:SubTaskType;
+
+  not_ast_eval:bool = false;
+  order:int;
+
+  color:string;
+  highlight:bool = false;
+  disabled:bool = false;
+
+  memo:string;
+
+  allow_children:[string];
+  allow_parents:[string];
+  not_allow_children:[string];
+
+  fix_children:bool = false;
+  require_children:bool = false;
+  require_parent:bool = false;
+
+  disable_delete:bool = false;
+  disable_copy:bool = false;
+
+  group_last_item:bool = false;
+  group_first_item:bool = false;
+
+  is_strict:bool = false;
+
+  // bool | None을 실제로 구분해야 할 때
+  ignore_pause:bool = null;
+
+  state:ProgramState = STOPPED;
+
+  // UTC Unix timestamp milliseconds
+  created_at:ulong;
+  updated_at:ulong;
+}
+table StepTree {
+  step_id: string;
+  children: [StepTree];
+  parent_step_id:string;
+  task_id:string;
+  program_id:string;
+  group_id:string;
+
+  sync_step_ids:[string];
+  target_step_id:string;
+
+  name:string;
+
+  // dict<string, Any>를 JSON 문자열로 직렬화
+  variable_json:string;
+
+  method:string;
+
+  // dict<string, Any>를 JSON 문자열로 직렬화
+  args_json:string;
+  post_args_json:string;
+
+  func:string;
+  post_func:string;
+  func_name:string;
+  post_func_name:string;
+
+  summary:string;
+  done_script:string;
+
+  sub_task_script_path:string;
+  sub_task_type:SubTaskType;
+
+  not_ast_eval:bool = false;
+  order:int;
+
+  color:string;
+  highlight:bool = false;
+  disabled:bool = false;
+
+  memo:string;
+
+  allow_children:[string];
+  allow_parents:[string];
+  not_allow_children:[string];
+
+  fix_children:bool = false;
+  require_children:bool = false;
+  require_parent:bool = false;
+
+  disable_delete:bool = false;
+  disable_copy:bool = false;
+
+  group_last_item:bool = false;
+  group_first_item:bool = false;
+
+  is_strict:bool = false;
+
+  // bool | None을 실제로 구분해야 할 때
+  ignore_pause:bool = null;
+
+  state:ProgramState = STOPPED;
+
+  // UTC Unix timestamp milliseconds
+  created_at:ulong;
+  updated_at:ulong;
+}
+table SubStep {
+  task_id: string;
+  steps: [Step];
+}
+table StepEntry {
+  key: string;
+  value: [StepTree];
+}
+table SubStepEntry {
+  key: string;
+  value: [SubStep];
+}
+
+//---------------------------------------------------------------------------
+//                                  Query
+//---------------------------------------------------------------------------
+
+/*
+    topic : muscat/program/start(stop, pause, resume)
+    description : ACS등 외부에서 Muscat Program을 실행시키는 목적 + 시작 시 localVariables 세팅까지 함께
+    description : 프로그램 실행 종료, 일시정지, 재시작
+    params :
+      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
+      - program_name : 프로그램 이름 값
+      - params : 프로그램 시작 시 업데이트할 변수 리스트
+        - key : 변수 키값
+        - type : 변수 타입 (VariableType)
+        - value: 변수 값 stringify
+*/
+table RequestProgramExecution {
+  program_id: string;
+  program_name: string;
+  params: [Variable];
+}
+table ResponseProgramExecution {
+  program_id: string;
+  program_name: string;
+  params: [Variable];
+  result: string;
+  message: string;
+}
+
+/*
+    topic : muscat/program/getList
+    description : 프로그램 목록을 요청/반환
+    params :
+      - search_name: 검색 이름
+      - order: 정렬 순서(ASC, DESC)
+      - last_load_order:
+      - programs : 프로그램 목록
+        - program_id: 프로그램 ID
+        - robot_model: 로봇 모델명
+        - name: 프로그램 이름
+        - repeat_cnt: 반복 횟수
+        - state: 프로그램 상태
+          - STOPPED
+          - RUNNING
+          - PAUSED
+        - last_loaded_at: 프로그램 마지막 로드 시간
+        - created_at: 프로그램 생성 시간
+        - updated_at: 프로그램 업데이트 시간
+*/
+table RequestGetProgramList {
+  order: string;
+  last_load_order: bool;
+  search_name: string;
+}
+table ResponseGetProgramList {
+  programs: [Program];
+}
+
+/*
+    topic : muscat/program/getProgram
+    description : 프로그램 정보를 요청/반환
+    params :
+      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
+      - program_name : 프로그램 이름 값
+      - params : 프로그램 시작 시 업데이트할 변수 리스트
+        - key : 변수 키값
+        - type : 변수 타입 (VariableType)
+        - value: 변수 값 stringify
+*/
+table RequestGetProgram {
+  program_id: string;
+  program_name: string;
+}
+table ResponseGetProgram {
+  program: Program;
+  main_tasks: [Task];
+  sub_tasks: [Task];
+  main_steps: [StepEntry];
+  sub_steps: [SubStepEntry];
+}
+
+/*
+    topic : muscat/program/getMainTask
+    description : 메인 Task 정보를 요청/반환
+    params :
+      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
+      - program_name : 프로그램 이름 값
+*/
+table RequestGetMainTask {
+  program_id: string;
+  program_name: string;
+}
+table ResponseGetMainTask {
+  tasks: [Task];
+}
+
+/*
+    topic : muscat/program/getStepList
+    description : 메인 Task 정보를 요청/반환
+    params :
+      - program_id : 프로그램 ID값 (program_name이랑 둘 중 하나만 있으면 됨)
+      - program_name : 프로그램 이름 값
+*/
+table RequestGetStepList {
+  program_id: string;
+  program_name: string;
+  task_id: string;
+}
+table ResponseGetStepList {
+  steps: [Step];
+  step_tree: [StepTree];
+}
+
+
+//---------------------------------------------------------------------------
+//                                  Publish
+//---------------------------------------------------------------------------
