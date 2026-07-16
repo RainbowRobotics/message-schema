@@ -748,6 +748,24 @@ table Request_Gripper_Action {
                     // 2 : Idle
             // payload[3] : Channel B Pressure (0~100%)
                 // 입력란 (기본값 100)
+    // -----------------------------------------------
+    // gripper_type == 15 : OnRobot MG10
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+        // function_list == 1 : Action
+            // payload[0] : Command Mode
+                // 드랍다운
+                    // 0 : Disengage
+                    // 1 : Engage
+                    // 2 : Engage+Smart Grip
+                    // 3 : Auto-Calibration
+            // payload[1] : Magnetic Strength(0~100%)
+                // 입력란
 }
 //---------------------------------------------------------------
 // Timer
