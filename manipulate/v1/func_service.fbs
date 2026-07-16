@@ -719,6 +719,35 @@ table Request_Gripper_Action {
                 // 입력란
             // payload[2] : Target Force (0~100)
                 // 입력란
+    // -----------------------------------------------
+    // gripper_type == 13 : OnRobot VG10
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 14 : OnRobot VGC10
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+            // payload[2] : Power Consumption (%)
+                // 입력란 (기본값 100)
+        // function_list == 1 : Action
+            // payload[0] : Channel A Function
+                // 드랍다운
+                    // 0 : Release
+                    // 1 : Grip
+                    // 2 : Idle
+            // payload[1] : Channel A Pressure (0~100%)
+                // 입력란 (기본값 100)
+            // payload[2] : Channel B Function
+                // 드랍다운
+                    // 0 : Release
+                    // 1 : Grip
+                    // 2 : Idle
+            // payload[3] : Channel B Pressure (0~100%)
+                // 입력란 (기본값 100)
 }
 //---------------------------------------------------------------
 // Timer
