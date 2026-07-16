@@ -1,0 +1,48 @@
+namespace ACS;
+
+/*
+    category    : RPC
+    topic       : acs/task/execution/run
+    usage       : Scenario Task를 Flow Manager에서 실행
+*/
+table RequestExecutionRun {
+    task_id: string;
+    repeat_count: int = 1;
+}
+
+table ResponseExecutionRun {
+    process_id: string;
+    started: bool;
+    message: string;
+}
+
+/*
+    category    : RPC
+    topic       : acs/task/execution/state
+    usage       : Flow Manager 실행 상태 조회
+*/
+table RequestExecutionState {
+    process_id: string;
+}
+
+table ResponseExecutionState {
+    process_id: string;
+    success: bool;
+    state_json: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    topic       : acs/task/execution/stop, pause, resume
+    usage       : Flow Manager 실행 제어
+*/
+table RequestExecutionControl {
+    process_id: string;
+}
+
+table ResponseExecutionControl {
+    process_id: string;
+    success: bool;
+    message: string;
+}
