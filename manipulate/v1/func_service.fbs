@@ -766,6 +766,108 @@ table Request_Gripper_Action {
                     // 3 : Auto-Calibration
             // payload[1] : Magnetic Strength(0~100%)
                 // 입력란
+    // -----------------------------------------------
+    // gripper_type == 16 : OnRobot SoftGripper
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+            // payload[2] : Silicon Model
+                // 드랍다운
+                    // 0 : None
+                    // 1 : Type a-h
+                    // 2 : Type a-s
+                    // 3 : Type b-H
+        // function_list == 1 : Action
+            // payload[0] : Target Width (mm)
+                // 입력란
+            // payload[1] : Command Mode
+                // 드랍다운
+                    // 0 : Move
+                    // 1 : Stop
+            // payload[2] : Grip Mode
+                // 드랍다운
+                    // 0 : General Mode
+                    // 1 : Gentle Grip Mode
+    // -----------------------------------------------
+    // gripper_type == 17 : OnRobot VGP20
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+        // function_list == 1 : Action
+            // Channel-A
+                // payload[0] : Pressure(0~100%)
+                    // 입력란
+                // payload[1] : Time-Output
+                    // 드랍다운
+                        // 0 : Use
+                        // 1 : Not use
+                // payload[2] : Active/Ignore
+                    // 드랍다운
+                        // 0 : Active
+                        // 1 : Ignore
+            // Channel-B
+                // payload[3] : Pressure(0~100%)
+                    // 입력란
+                // payload[4] : Time-Output
+                    // 드랍다운
+                        // 0 : Use
+                        // 1 : Not use
+                // payload[5] : Active/Ignore
+                    // 드랍다운
+                        // 0 : Active
+                        // 1 : Ignore
+            // Channel-C
+                // payload[6] : Pressure(0~100%)
+                    // 입력란
+                // payload[7] : Time-Output
+                    // 드랍다운
+                        // 0 : Use
+                        // 1 : Not use
+                // payload[8] : Active/Ignore
+                    // 드랍다운
+                        // 0 : Active
+                        // 1 : Ignore
+            // Channel-D
+                // payload[9] : Pressure(0~100%)
+                    // 입력란
+                // payload[10] : Time-Output
+                    // 드랍다운
+                        // 0 : Use
+                        // 1 : Not use
+                // payload[11] : Active/Ignore
+                    // 드랍다운
+                        // 0 : Active
+                        // 1 : Ignore
+    // -----------------------------------------------
+    // gripper_type == 18 : OnRobot Sander
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 65)....!! 중요 기본값65
+            // payload[2] : RPM Deviation Level (RPM)
+                // 입력란 (기본값 300)
+            // payload[3] : Vibraion Limit Level (g)
+                // 입력란 (기본값 10)
+        // function_list == 1 : Action
+            // payload[0] : Command Mode
+                // 드랍다운
+                    // 0 : Motor Stop
+                    // 1 : Motor Start
+                    // 2 : LED Off
+                    // 3 : LED On
+            // payload[1] : Target RPM (RPM)
+                // 입력란 (기본값 1500)
 }
 //---------------------------------------------------------------
 // Timer
