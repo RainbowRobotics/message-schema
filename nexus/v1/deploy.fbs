@@ -49,6 +49,9 @@ table Deploy_Check_Response {
   status: Deploy_Check_Status;
   current_version: string;
   message: string;
+  ftp_upload_path: string;
+  ftp_id: string;
+  ftp_pw: string;
 }
 
 // 업데이트 zip 청크 전송 요청 (Muscat → SW)
@@ -60,6 +63,7 @@ table Deploy_Chunk_Request {
   total_chunks: int;
   is_last: bool;
   data: [ubyte];
+  is_ftp: bool;
 }
 
 // 업데이트 청크 전송 응답 (SW → Muscat)
