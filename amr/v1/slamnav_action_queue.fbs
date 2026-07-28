@@ -30,6 +30,8 @@ table ActionEntry {
 }
 
 
+
+
 /*
     category    :       Data Structure
     usage       :       수행 history 항목 1개
