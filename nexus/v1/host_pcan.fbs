@@ -1,0 +1,168 @@
+namespace IPC;
+
+// =========================================================================
+//                            Data Structures
+// =========================================================================
+table CanMessage {
+    arbitration_id:uint;
+    data:[ubyte];
+    dlc:ubyte;
+
+    is_extended_id:bool = false;
+    is_remote_frame:bool = false;
+
+    is_fd:bool = false;
+    bitrate_switch:bool = false;
+
+    is_error_frame:bool = false;
+    error_state_indicator:bool = false;
+    channel:string;
+    timestamp:double;
+}
+enum CANState:ubyte {
+    DISCONNECTED = 0,
+    ACTIVE = 1,
+    WARNING = 2,
+    PASSIVE = 3,
+    BUS_OFF = 4,
+    ERROR = 5
+}
+table CANStatus {
+    connected:bool;
+    state:CANState;
+    interface:string;
+    channel:string;
+    bitrate:uint;
+    fd:bool;
+    data_bitrate:uint = 0;
+    rx_count:ulong;
+    tx_count:ulong;
+    last_error:string;
+}
+
+// =========================================================================
+//                                  Query
+// =========================================================================
+
+/*
+    topic : muscat/can/connect
+    params :
+        - channel : 채널식별자
+        - interface : 인터페이스 식별자
+        - bitrate : 전송 속도
+        - fd : CAN FD 여부
+        - data_bitrate : 데이터 전송 속도
+        - receive_own_messages : 자기 수신 메시지 수신 여부
+        - success : 성공 여부
+        - message : 실패 시 메시지
+*/
+table RequestCANConnect {
+    interface:string;
+    channel:string;
+    bitrate:uint = 500000;
+    fd:bool = false;
+    data_bitrate:uint;
+    receive_own_messages:bool = false;
+}
+table ResponseCANConnect {
+    success:bool;
+    channel:string;
+    message:string;
+}
+
+/*
+    topic : muscat/can/disconnect
+    params :
+        - channel : 채널식별자
+        - success : 성공 여부
+        - message : 실패 시 메시지
+*/
+table RequestCANDisconnect {
+    channel:string;
+}
+table ResponseCANDisconnect {
+    success:bool;
+    channel:string;
+    message:string;
+}
+
+
+/*
+    topic : muscat/can/status
+    params :
+        - channel : 채널식별자
+        - success : 성공 여부
+        - message : 실패 시 메시지
+*/
+table RequestCANStatus {
+    channel: string;
+}
+table ResponseCANStatus {
+    status: CANStatus;
+}
+
+/*
+    topic : muscat/can/statusAll
+    params :
+        - channel : 채널식별자
+        - success : 성공 여부
+        - message : 실패 시 메시지
+*/
+table RequestCANStatusAll {
+}
+table ResponseCANStatusAll {
+    status:[CANStatus];
+}
+
+/*
+    topic : muscat/can/transmit
+    params :
+        - channel : 채널 식별자
+        - message
+            - arbitration_id : CAN ID. Standard면 11bit, Extended면 29bit
+            - data  : CAN Payload. Classical CAN 최대 8byte, CAN FD 최대 64byte
+            - dlc : Data Length Code. Classical CAN 0~8, CAN FD 0~15
+            - is_extended_id : 29bit Extended CAN ID 여부
+            - is_remote_frame : RTR(Remote Transmission Request) 여부
+            - is_fd : CAN FD 프레임 여부
+            - bitrate_switch : CAN FD의 BRS(Bit Rate Switch) 여부
+        - success : 성공 여부
+        - tx_count : 전송 카운트
+        - message : 실패 시 메시지
+*/
+table RequestCANTransmit {
+    channel: string;
+    message: CanMessage;
+}
+table ResponseCANTransmit {
+    success: bool;
+    tx_count: ulong;
+    message: string;
+}
+
+
+// =========================================================================
+//                                  Publish
+// =========================================================================
+
+/*
+    topic : muscat/can/receive
+    params :
+        - message
+            - arbitration_id : CAN ID. Standard면 11bit, Extended면 29bit
+            - data  : CAN Payload. Classical CAN 최대 8bit, CAN FD 최대 64bit
+            - dlc : Data Length Code. 0-8bit
+            - is_extended_id : 29bit Extended CAN ID 여부
+            - is_remote_frame : RTR(Remote Transmission Request) 여부
+            - is_error_frame : Error Frame 여부
+            - is_fd : CAN FD 프레임 여부
+            - bitrate_switch : CAN FD의 BRS(Bit Rate Switch) 여부
+            - channel : 채널식별자
+            - timestamp : 수신시간
+            - error_state_indicator : 에러 상태 표시기
+        - rx_count : 수신 카운트
+*/
+table ResponseCANReceive {
+    message:CanMessage;
+    rx_count:ulong;
+}
