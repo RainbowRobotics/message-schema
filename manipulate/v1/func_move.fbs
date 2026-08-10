@@ -550,6 +550,17 @@ table Request_Wrapper_VibrationMotion_On{
 table Request_Wrapper_VibrationMotion_Off{
 }
 
+// setting()의 VIBRATION_MOTION_BASED 옵션 파라미터. On/Off table 자체는 위 그대로
+// 개별 wire 요청으로 계속 쓰인다 — 이건 파이썬 파라미터 타이핑 전용 union.
+union VibrationMotionKind {
+    Request_Wrapper_VibrationMotion_On,
+    Request_Wrapper_VibrationMotion_Off,
+}
+
+table Request_Wrapper_VibrationMotion_Base {
+    motion: VibrationMotionKind;
+}
+
 
 // "call_admittance_force_on"
 table Request_Wrapper_AdmittanceForce_On{
