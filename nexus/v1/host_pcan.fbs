@@ -3,7 +3,7 @@ namespace IPC;
 // =========================================================================
 //                            Data Structures
 // =========================================================================
-table CanMessage {
+table CANMessage {
     arbitration_id:uint;
     data:[ubyte];
     dlc:ubyte;
@@ -59,7 +59,7 @@ table CANStatus {
 table RequestCANConnect {
     interface:string;
     channel:string;
-    bitrate:uint = 500000;
+    bitrate:uint = 1000000;
     fd:bool = false;
     data_bitrate:uint;
     receive_own_messages:bool = false;
@@ -132,7 +132,7 @@ table ResponseCANStatusAll {
 */
 table RequestCANTransmit {
     channel: string;
-    message: CanMessage;
+    message: CANMessage;
 }
 table ResponseCANTransmit {
     success: bool;
@@ -163,6 +163,6 @@ table ResponseCANTransmit {
         - rx_count : 수신 카운트
 */
 table ResponseCANReceive {
-    message:CanMessage;
+    message:CANMessage;
     rx_count:ulong;
 }
