@@ -3,11 +3,7 @@ namespace IPC;
 // =========================================================================
 //                            Data Structures
 // =========================================================================
-<<<<<<< HEAD
 table CANMessage {
-=======
-table CanMessage {
->>>>>>> 8d19fafc4c665a97f6143c05387f9f4bde8d7ae6
     arbitration_id:uint;
     data:[ubyte];
     dlc:ubyte;
@@ -63,11 +59,7 @@ table CANStatus {
 table RequestCANConnect {
     interface:string;
     channel:string;
-<<<<<<< HEAD
     bitrate:uint = 1000000;
-=======
-    bitrate:uint = 500000;
->>>>>>> 8d19fafc4c665a97f6143c05387f9f4bde8d7ae6
     fd:bool = false;
     data_bitrate:uint;
     receive_own_messages:bool = false;
@@ -140,11 +132,7 @@ table ResponseCANStatusAll {
 */
 table RequestCANTransmit {
     channel: string;
-<<<<<<< HEAD
     message: CANMessage;
-=======
-    message: CanMessage;
->>>>>>> 8d19fafc4c665a97f6143c05387f9f4bde8d7ae6
 }
 table ResponseCANTransmit {
     success: bool;
@@ -175,10 +163,6 @@ table ResponseCANTransmit {
         - rx_count : 수신 카운트
 */
 table ResponseCANReceive {
-<<<<<<< HEAD
     message:CANMessage;
-=======
-    message:CanMessage;
->>>>>>> 8d19fafc4c665a97f6143c05387f9f4bde8d7ae6
     rx_count:ulong;
 }
