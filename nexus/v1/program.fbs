@@ -60,6 +60,11 @@ table Request_Program_At_End {
   task_id: string;
 }
 
+table Reponse_Program_At_Start_Or_End {
+  result: Response_Program_Result;
+  message: string;
+}
+
 table Request_Update_Sub_Task_State {
   sub_task_id: string;
   sub_task_type: RB_Program_Sub_Task_Type;
