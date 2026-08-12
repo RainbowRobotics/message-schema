@@ -200,3 +200,32 @@ table ObsMap {
     grid_size: float;
     safety: ObsMapSafety;
 }
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/socket/camDepth/{cam_id}
+    usage       :       카메라 depth 프레임 (카메라마다 별도 토픽, 전체 수신은 socket/camDepth/* )
+                :       프레임이 없을 때(카메라 미연결 / depth 비활성)도 생략하지 않고 빈 data 로 발행한다.
+    field
+        - cam_id        :       카메라 인덱스 ( 토픽과 동일, 로깅 편의용 )
+        - width         :       depth 가로 (px)
+        - height        :       depth 세로 (px)
+        - scale         :       depth 원시값을 m 로 바꾸는 계수
+        - fx, fy        :       depth intrinsic 초점거리 (px)
+        - cx, cy        :       depth intrinsic 주점 (px)
+        - stamp         :       프레임 취득 시각 (sec)
+        - data          :       PNG 무손실 인코딩 바이트 ( 16bit 그레이스케일 )
+                        :       디코드하면 width x height row-major uint16, 단위 mm, 0 = 무효 픽셀
+*/
+table CamDepth {
+    cam_id: uint32;
+    width: uint32;
+    height: uint32;
+    scale: float;
+    fx: float;
+    fy: float;
+    cx: float;
+    cy: float;
+    stamp: double;
+    data: [ubyte];
+}
