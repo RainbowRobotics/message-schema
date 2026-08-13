@@ -300,3 +300,15 @@ table Request_Set_MoveBreak {
     // Stopping Time (정지시간)
       // 입력란 (sec)
 }
+
+// "set_joint_reference_filter"
+// Joint Reference Filter (관절 지령 필터)
+table Request_Set_JointRef_Filter {
+  mode:         int;
+    // Filter Mode (드랍다운)
+      // 0 : Off (System Default)
+      // 1 : Adjust Custom Filter
+  filter_percent: float;
+    // Filter (%)
+      // 슬라이드 바 (0~100%)
+}
