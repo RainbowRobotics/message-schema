@@ -276,6 +276,14 @@ table Request_Set_ExternalAxisSync {
       // 1 : Sync Onf
 }
 
+// "set_self_collision_blind"
+// Self-Coll Detection Blind (자가 충돌 감지 해제)
+table Request_Set_SelfCollBlind {
+  time:         float;
+    // Detection Blind Time (sec)
+      // 입력란
+}
+
 // "set_tcp_speed_bound"
 // TCP Speed Bound (TCP 속도 제한)
 table Request_Set_TcpSpeedBound {
