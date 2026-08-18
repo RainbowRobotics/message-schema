@@ -31,3 +31,41 @@ table Request_Save_FlangeDin_FilterCount {
   port_num: int;
   desired_count: int;
 }
+
+// "save_flange_bootup_mount_tool"
+// Flange Boot-up Tool List Selection
+table Request_Save_Flange_Boot_ToolList {
+  tool_num: int;
+    // Tool List Number (드랍다운)
+      // 0 : Tool number 0
+      // ..
+      // 7 : Tool number 7
+}
+
+// "save_flange_bootup_dc_voltage"
+// Flange Boot-up DC Voltage 
+table Request_Save_Flange_Boot_DCvoltage {
+  voltage_value: int;
+    // DC Voltage (드랍다운)
+      // 0 : 0 V
+      // 1 : 12 V
+      // 2 : 24 V
+}
+
+// "save_flange_dt_button_role"
+// Flange Direct Teaching Button
+table Request_Save_Flange_DTbutton_Role {
+  working_mode: int;
+    // Working Mode (드랍다운)
+      // 0 : Use
+      // 1 : Not Use
+}
+
+// "save_flange_vibration_sensor"
+// Flange Vibration (IMU) Sensor
+table Request_Save_Flange_Vibration_Sensor {
+  working_mode: int;
+    // Working Mode (드랍다운)
+      // 0 : Use
+      // 1 : Not Use
+}

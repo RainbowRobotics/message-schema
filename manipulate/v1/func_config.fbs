@@ -23,6 +23,7 @@ table Response_CallWhoamI{
 //    ㄴ Robot Arm    : State_Config_RobotArm
 //    ㄴ Tool List    : State_Config_ToolList
 //    ㄴ GPin List    : State_Config_GlobPinList
+//    ㄴ Flange Role  : State_Config_FlangeRole
 //--------------------------------------------------------------
 table Request_CallConfigControlBox {
 }
@@ -34,6 +35,9 @@ table Request_CallConfigToolList {
 }
 
 table Request_CallConfigGlobPinList{
+}
+
+table Request_CallConfigFlangeOption{
 }
 
 table ST_Config_Area{
@@ -141,4 +145,20 @@ table Response_CallConfigGlobPinList{
   name: [string];
   pin_j: [MoveInput_Target];
   pin_l: [MoveInput_Target];
+}
+
+// "call_config_flangeoption"
+table Response_CallConfigFlangeOption {
+  bootup_tool_number: int;
+    // 0 ~ 7 의 툴 리스트 선택 번호
+  bootup_dc_voltage: int;
+    // 0 : 0V
+    // 1 : 12V
+    // 2 : 24V
+  dt_button_mode: int;
+    // 0 : Use
+    // 1 : Not Use
+  vibration_sensor_mode: int;
+    // 0 : Use
+    // 1 : Not Use
 }
