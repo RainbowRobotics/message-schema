@@ -134,7 +134,15 @@ table Response_Get_Digital_Input {
   digital_input: [byte] (required);
 }
 
+// topic: "muscat/change/program"
+table Request_Change_Program {
+  program_id: string;
+  program_name: string;
+}
 
+table Response_Change_Program {
+
+}
 
 
 // ------------------------- Program 신규 추가된 스키마 (허유진)
