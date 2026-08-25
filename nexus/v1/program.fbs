@@ -1,6 +1,7 @@
 include "flow_manager.fbs";
+include "struct.fbs";
 
-namespace program;
+namespace muscat;
 
 enum RB_Program_Sub_Task_Type: byte {
   SUB_TASK_INSERT,
@@ -144,6 +145,15 @@ table Response_Change_Program {
 
 }
 
+table Request_Get_Variable_List {
+}
+
+table Response_Get_Variable_List {
+  example_value: string;
+  value_type: string;
+  description: Multilingual_Struct;
+}
+
 
 // ------------------------- Program 신규 추가된 스키마 (허유진)
 
@@ -157,11 +167,13 @@ enum VariableType: byte {
   NUMBER,
   BOOLEAN
 }
+
 table Variable {
   key: string;
   type: VariableType;
   value: string;
 }
+
 enum ProgramState : byte {
   IDLE = 0,
   RUNNING = 1,
@@ -172,6 +184,7 @@ enum ProgramState : byte {
   COMPLETED = 6,
   ERROR = 7
 }
+
 table Program {
   program_id: string;
   robot_model: string;
@@ -182,24 +195,29 @@ table Program {
   created_at: ulong;
   updated_at: ulong;
 }
+
 enum TaskType : byte {
   MAIN = 0,
   SUB = 1,
   EVENT_SUB = 2
 }
+
 enum SubTaskType : byte {
   INSERT = 0,
   CHANGE = 1
 }
+
 enum TaskExtension : byte {
   PYTHON = 0
 }
+
 table MainTaskBegin {
   position: string;
   is_enable: bool;
   speed_ratio: float;
   variables: [string];
 }
+
 table Task {
   task_id: string;
   raw_task_id: string;
@@ -216,6 +234,7 @@ table Task {
   created_at: ulong;
   updated_at: ulong;
 }
+
 table Step {
   step_id:string;
   parent_step_id:string;
@@ -282,6 +301,7 @@ table Step {
   created_at:ulong;
   updated_at:ulong;
 }
+
 table StepTree {
   step_id: string;
   children: [StepTree];
