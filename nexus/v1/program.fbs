@@ -13,6 +13,21 @@ enum Response_Program_Result: byte {
   FAIL,
 }
 
+enum VariableType: byte {
+  STRING,
+  NUMBER,
+  BOOLEAN,
+  LIST
+}
+
+table Variable {
+  key: string;
+  type: VariableType;
+  value: string;
+  description: Multilingual_Struct;
+}
+
+
 table RB_Program_Task_Status {
   task_id: string;
   program_id: string;
@@ -149,10 +164,9 @@ table Request_Get_Variable_List {
 }
 
 table Response_Get_Variable_List {
-  example_value: string;
-  value_type: string;
-  description: Multilingual_Struct;
+  list: [Variable] (required);
 }
+
 
 
 // ------------------------- Program 신규 추가된 스키마 (허유진)
@@ -161,18 +175,6 @@ table Response_Get_Variable_List {
 //---------------------------------------------------------------------------
 //                             Data Structure
 //---------------------------------------------------------------------------
-
-enum VariableType: byte {
-  STRING,
-  NUMBER,
-  BOOLEAN
-}
-
-table Variable {
-  key: string;
-  type: VariableType;
-  value: string;
-}
 
 enum ProgramState : byte {
   IDLE = 0,
