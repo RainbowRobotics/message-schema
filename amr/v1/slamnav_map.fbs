@@ -297,6 +297,39 @@ table ResponseGetMapCloud {
     message: string;
 }
 
+/*
+    category    :       RPC (kickoff) + Pub/Sub (chunk stream)
+    response    :       One-shot (메타) + map/cloudStream 로 청크 스트리밍
+    topic       :       {robotType}/map/getCloudStream
+    usage       :       맵 클라우드/las 파일을 raw octet 청크로 스트리밍
+                        ( 수백 MB 파일 대응 — getCloud 처럼 통째 reply 하지 않고
+                          map/cloudStream 토픽으로 청크를 순차 발행 )
+    field
+        - map_name      :       맵 이름 ( ~/data/maps/<map_name> )
+        - file_name     :       파일 이름 ( 예: "cloud.csv", "map.las" )
+        - chunk_size    :       원하는 청크 크기 (0 이면 기본값 1MB. 64KB ~ 8MB clamp)
+        - stream_topic  :       청크가 발행될 토픽 ( "map/cloudStream" )
+        - file_size     :       전체 파일 크기 (bytes)
+        - total_chunks  :       청크 개수 ( file_size 0 이면 0 )
+        - mime          :       파일 타입 ( .csv -> text/csv, 그외 application/octet-stream )
+*/
+table RequestGetMapCloudStream {
+    map_name: string;
+    file_name: string;
+    chunk_size: uint32;
+}
+table ResponseGetMapCloudStream {
+    map_name: string;
+    file_name: string;
+    stream_topic: string;
+    file_size: uint64;
+    chunk_size: uint32;
+    total_chunks: uint32;
+    mime: string;
+    result: string;
+    message: string;
+}
+
 
 /*
     category    :       RPC
