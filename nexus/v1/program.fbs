@@ -1,6 +1,7 @@
 include "flow_manager.fbs";
+include "struct.fbs";
 
-namespace program;
+namespace muscat;
 
 enum RB_Program_Sub_Task_Type: byte {
   SUB_TASK_INSERT,
@@ -11,6 +12,21 @@ enum Response_Program_Result: byte {
   SUCCESS,
   FAIL,
 }
+
+enum VariableType: byte {
+  STRING,
+  NUMBER,
+  BOOLEAN,
+  LIST
+}
+
+table Variable {
+  key: string;
+  type: VariableType;
+  value: string;
+  description: Multilingual_Struct;
+}
+
 
 table RB_Program_Task_Status {
   task_id: string;
@@ -134,6 +150,22 @@ table Response_Get_Digital_Input {
   digital_input: [byte] (required);
 }
 
+// topic: "muscat/change/program"
+table Request_Change_Program {
+  program_id: string;
+  program_name: string;
+}
+
+table Response_Change_Program {
+
+}
+
+table Request_Get_Variable_List {
+}
+
+table Response_Get_Variable_List {
+  list: [Variable] (required);
+}
 
 
 
@@ -144,16 +176,6 @@ table Response_Get_Digital_Input {
 //                             Data Structure
 //---------------------------------------------------------------------------
 
-enum VariableType: byte {
-  STRING,
-  NUMBER,
-  BOOLEAN
-}
-table Variable {
-  key: string;
-  type: VariableType;
-  value: string;
-}
 enum ProgramState : byte {
   IDLE = 0,
   RUNNING = 1,
@@ -164,6 +186,7 @@ enum ProgramState : byte {
   COMPLETED = 6,
   ERROR = 7
 }
+
 table Program {
   program_id: string;
   robot_model: string;
@@ -174,24 +197,29 @@ table Program {
   created_at: ulong;
   updated_at: ulong;
 }
+
 enum TaskType : byte {
   MAIN = 0,
   SUB = 1,
   EVENT_SUB = 2
 }
+
 enum SubTaskType : byte {
   INSERT = 0,
   CHANGE = 1
 }
+
 enum TaskExtension : byte {
   PYTHON = 0
 }
+
 table MainTaskBegin {
   position: string;
   is_enable: bool;
   speed_ratio: float;
   variables: [string];
 }
+
 table Task {
   task_id: string;
   raw_task_id: string;
@@ -208,6 +236,7 @@ table Task {
   created_at: ulong;
   updated_at: ulong;
 }
+
 table Step {
   step_id:string;
   parent_step_id:string;
@@ -274,6 +303,7 @@ table Step {
   created_at:ulong;
   updated_at:ulong;
 }
+
 table StepTree {
   step_id: string;
   children: [StepTree];

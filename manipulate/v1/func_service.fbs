@@ -77,26 +77,27 @@ table Request_Weld_Arc_On {
     // 3. 용접 조건 설정
         cond_mode : int;
             // 조건 설정 방식 (드랍다운)
-                // 0 : 조건 유지
-                // 1 : 전류, 전압 설정
-                // 2 : 피드레이트, 전압 설정
-                // 3 : 작업 번호 호출
+                // 0 : 용접 조건 변경
+                // 0 : 이전 조건 유지
+        cond_option: int;
+            // Options (드랍다운)
+                // 0 : N/A
         cond_jobno : int;
-            // 작업 번호
+            // 작업/메모리 번호 (입력란: 기본값 1)
         cond_current : float;
             // 용접 전류 (A)
         cond_voltage : float;
             // 용접 전압 (V)
         cond_feedrate: float;
-            // 피드레이트 (m/min)
-        cond_dynamic : float;
-            // 다이나믹전압(V)
-        cond_syn_opt : int;
-            // Synergic Option (드랍다운)
-                // 0 : Off
-                // 1 : On
-        cond_syn_val : float;
-            // Synergic Parameter
+            // 피드레이트 (m/min, i/min)
+        cond_arccontrol : float;
+            // Arc Control
+        cond_arclength : float;
+            // Arc Length
+        cond_para1: float;
+            // Parameter 1
+        cond_para2: float;
+            // Parameter 2
 
     // 4. Arc On 및 신호감지
         time_pregas : float;
@@ -123,26 +124,27 @@ table Request_Weld_Arc_Off {
     // 2. 크레이터 조건 설정
         cond_mode : int;
             // 조건 설정 방식 (드랍다운)
-                // 0 : 조건 유지
-                // 1 : 전류, 전압 설정
-                // 2 : 피드레이트, 전압 설정
-                // 3 : 작업 번호 호출
+                // 0 : 용접 조건 변경
+                // 0 : 이전 조건 유지
+        cond_option: int;
+            // Options (드랍다운)
+                // 0 : N/A
         cond_jobno : int;
-            // 작업 번호
+            // 작업/메모리 번호 (입력란: 기본값 1)
         cond_current : float;
             // 용접 전류 (A)
         cond_voltage : float;
             // 용접 전압 (V)
         cond_feedrate: float;
-            // 피드레이트 (m/min)
-        cond_dynamic : float;
-            // 다이나믹전압(V)
-        cond_syn_opt : int;
-            // Synergic Option (드랍다운)
-                // 0 : Off
-                // 1 : On
-        cond_syn_val : float;
-            // Synergic Parameter
+            // 피드레이트 (m/min, i/min)
+        cond_arccontrol : float;
+            // Arc Control
+        cond_arclength : float;
+            // Arc Length
+        cond_para1: float;
+            // Parameter 1
+        cond_para2: float;
+            // Parameter 2
 
     // 3. 크레이터 유지 시간
         time_crator : float;
@@ -218,6 +220,54 @@ table Request_Weld_Save_Parameter {
                 // ...
                 // 3: Analog Input 3
 
+    // Hardware Setting
+        hw_process_type: int;
+            // Process Type (드랍다운)
+                // 0 : CV MIG 
+                // 1 : Pulse
+                // 2 : HD MIG
+                // 3 : RMD
+        hw_wire_type: int;
+            // Wire Type (드랍다운)
+                // 0 : Steel (ER70X) 
+                // 1 : Metal (EXXC)
+                // 2 : Flux (EXXT)
+                // 3 : AL (4XXX)
+                // 4 : AL (4943)
+                // 5 : AL (5XXX)
+                // 6 : SS (ER3XX)
+                // 7 : SS (ER4XX)
+        hw_wire_size: int;
+            // Wire Size (드랍다운)
+                // 0 : 0.8mm
+                // 1 : 0.9mm
+                // 2 : 1.0mm
+                // 3 : 1.2mm(0.045)
+                // 4 : 1.2mm(3/64)
+                // 5 : 1.4mm
+                // 6 : 1.6mm
+                // 7 : 2.0mm
+                // 8 : 2.4mm
+        hw_gas_type: int;
+            // Gas Type (드랍다운)
+                // 0 : 100% Ar
+                // 1 : 98% Ar+2% CO2
+                // 2 : 95% Ar+5% CO2
+                // 3 : 90% Ar+10% CO2
+                // 4 : 85% Ar+15% CO2
+                // 5 : 80% Ar+20% CO2
+                // 6 : 75% Ar+25% CO2
+                // 7 : 100% CO2
+                // 8 : 98% Ar+2% O2
+                // 9 : 95% Ar+5% O2
+                // 10 : 100% He
+                // 11 : 75% He+25% Ar
+                // 12 : 50% He+50% Ar
+                // 13 : 25% He+75% Ar
+                // 14 : 81% Ar+18% He+1% CO2
+                // 15 : 66% Ar+33% He+1% CO2
+                // 16 : 90% He+7.5% Ar+2.5% CO2
+
     // Conversion Map Setting
         current_map_value: [float];
         current_map_output: [float];
@@ -291,6 +341,54 @@ table Response_CallConfigWeld {
                 // 0: Analog Input 0
                 // ...
                 // 3: Analog Input 3
+
+    // Hardware Setting
+        hw_process_type: int;
+            // Process Type (드랍다운)
+                // 0 : CV MIG 
+                // 1 : Pulse
+                // 2 : HD MIG
+                // 3 : RMD
+        hw_wire_type: int;
+            // Wire Type (드랍다운)
+                // 0 : Steel (ER70X) 
+                // 1 : Metal (EXXC)
+                // 2 : Flux (EXXT)
+                // 3 : AL (4XXX)
+                // 4 : AL (4943)
+                // 5 : AL (5XXX)
+                // 6 : SS (ER3XX)
+                // 7 : SS (ER4XX)
+        hw_wire_size: int;
+            // Wire Size (드랍다운)
+                // 0 : 0.8mm
+                // 1 : 0.9mm
+                // 2 : 1.0mm
+                // 3 : 1.2mm(0.045)
+                // 4 : 1.2mm(3/64)
+                // 5 : 1.4mm
+                // 6 : 1.6mm
+                // 7 : 2.0mm
+                // 8 : 2.4mm
+        hw_gas_type: int;
+            // Gas Type (드랍다운)
+                // 0 : 100% Ar
+                // 1 : 98% Ar+2% CO2
+                // 2 : 95% Ar+5% CO2
+                // 3 : 90% Ar+10% CO2
+                // 4 : 85% Ar+15% CO2
+                // 5 : 80% Ar+20% CO2
+                // 6 : 75% Ar+25% CO2
+                // 7 : 100% CO2
+                // 8 : 98% Ar+2% O2
+                // 9 : 95% Ar+5% O2
+                // 10 : 100% He
+                // 11 : 75% He+25% Ar
+                // 12 : 50% He+50% Ar
+                // 13 : 25% He+75% Ar
+                // 14 : 81% Ar+18% He+1% CO2
+                // 15 : 66% Ar+33% He+1% CO2
+                // 16 : 90% He+7.5% Ar+2.5% CO2
 
     // Conversion Map Setting
         current_map_value: [float];
@@ -868,6 +966,49 @@ table Request_Gripper_Action {
                     // 3 : LED On
             // payload[1] : Target RPM (RPM)
                 // 입력란 (기본값 1500)
+    // -----------------------------------------------
+    // gripper_type == 19 : JRT JEGB
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 20 : JRT JEGG
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 21 : JRT JEGC
+    // -----------------------------------------------
+    // -----------------------------------------------
+    // gripper_type == 22 : JRT JEGH
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Product Model
+                // 드랍다운
+                    // 그리퍼 타입이 19일 경우...
+                    // 0 : JEGB 4285
+                    // 1 : JEGB 42140
+                    // 그리퍼 타입이 20일 경우...
+                    // 0 : JEGG 2008
+                    // 1 : JEGG 2510
+                    // 2 : JEGG 3521
+                    // 3 : JEGG 4230
+                    // 그리퍼 타입이 21일 경우...
+                    // 0 : JEGC 2870
+                    // 1 : JEGC 28150\
+                    // 그리퍼 타입이 22일 경우...
+                    // 0 : JEGH 3520
+                    // 1 : JEGH 4232
+                    // 2 : JEGH 4226
+        // function_list == 1 : Set Parameter
+            // payload[0] : Speed (0~100%)
+                // 입력란 (기본값 80)
+            // payload[1] : Acceleration (0~100%)
+                // 입력란 (기본값 80)
+            // payload[2] : Force (0~100%)
+                // 입력란 (기본값 80)
+        // function_list == 2 : Goto Target
+            // payload[0] : Target Position (0~100%)
+                // 입력란 (기본값 0)
 }
 //---------------------------------------------------------------
 // Timer

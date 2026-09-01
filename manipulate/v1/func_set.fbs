@@ -275,3 +275,48 @@ table Request_Set_ExternalAxisSync {
       // 0 : Sync Off
       // 1 : Sync Onf
 }
+
+// "set_self_collision_blind"
+// Self-Coll Detection Blind (자가 충돌 감지 해제)
+table Request_Set_SelfCollBlind {
+  time:         float;
+    // Detection Blind Time (sec)
+      // 입력란
+}
+
+// "set_tcp_speed_bound"
+// TCP Speed Bound (TCP 속도 제한)
+table Request_Set_TcpSpeedBound {
+  mode:         int;
+    // Bound Mode (드랍다운)
+      // 0 : Bound Off (System Default)
+      // 1 : Bound On
+  speed_parameter:  float;
+    // TCP Speed
+      // 입력란 (mm / s)
+}
+
+// "set_move_break"
+// Move Break/Block (동작 정지/차단)
+table Request_Set_MoveBreak {
+  mode:         int;
+    // Break/Block Mode (드랍다운)
+      // 0 : Off (해제)
+      // 1 : Continuous Block (지속 차단)
+      // 2 : Break Once (일회성 정지)
+  stopping_time: float;
+    // Stopping Time (정지시간)
+      // 입력란 (sec)
+}
+
+// "set_joint_reference_filter"
+// Joint Reference Filter (관절 지령 필터)
+table Request_Set_JointRef_Filter {
+  mode:         int;
+    // Filter Mode (드랍다운)
+      // 0 : Off (System Default)
+      // 1 : Adjust Custom Filter
+  filter_percent: float;
+    // Filter (%)
+      // 슬라이드 바 (0~100%)
+}
