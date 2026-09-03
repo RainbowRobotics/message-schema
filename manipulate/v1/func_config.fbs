@@ -40,6 +40,9 @@ table Request_CallConfigGlobPinList{
 table Request_CallConfigFlangeOption{
 }
 
+table Request_CallConfigNetwork{
+}
+
 table ST_Config_Area{
   area_name: string;
   area_type: int;
@@ -161,4 +164,26 @@ table Response_CallConfigFlangeOption {
   vibration_sensor_mode: int;
     // 0 : Use
     // 1 : Not Use
+}
+
+// "call_config_network"
+table Response_CallConfigNetwork {
+  static_vs_dhcp:   int;
+    // Setting Mode (드랍다운)
+      // 0 : Static 
+      // 1 : DHCP 
+  addr_0: int;//IP 0 .. 3
+  addr_1: int;
+  addr_2: int;
+  addr_3: int;
+
+  mask_0: int;//Mask 0 .. 3
+  mask_1: int;
+  mask_2: int;
+  mask_3: int;
+
+  gate_0: int;//Gateway 0 .. 3
+  gate_1: int;
+  gate_2: int;
+  gate_3: int;
 }
