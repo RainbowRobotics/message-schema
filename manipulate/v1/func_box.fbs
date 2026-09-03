@@ -56,6 +56,30 @@ table Request_Save_After_Action {
     // 16 : Run User Script 15
 }
 
+// "save_network_parameter"
+table Request_Save_Network {
+  static_vs_dhcp:   int;
+    // Setting Mode (드랍다운)
+      // 0 : Static 
+      // 1 : DHCP 
+  addr_0: int;//IP 0 .. 3
+  addr_1: int;
+  addr_2: int;
+  addr_3: int;
+
+  mask_0: int;//Mask 0 .. 3
+  mask_1: int;
+  mask_2: int;
+  mask_3: int;
+
+  gate_0: int;//Gateway 0 .. 3
+  gate_1: int;
+  gate_2: int;
+  gate_3: int;
+}
+
+
+
 // "save_user_script"
 table Request_Save_User_Script {
   script_no: int;
