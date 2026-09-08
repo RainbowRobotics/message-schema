@@ -1009,6 +1009,26 @@ table Request_Gripper_Action {
         // function_list == 2 : Goto Target
             // payload[0] : Target Position (0~100%)
                 // 입력란 (기본값 0)
+    // -----------------------------------------------
+    // gripper_type == 23 : AIDIN 2FG
+    // -----------------------------------------------
+        // function_list == 0 : Initialize
+            // payload[0] : Connection Port
+                // 드랍다운
+                    // 0 : Tool-flange
+            // payload[1] : Device ID
+                // 입력란 (기본값 1)
+        // function_list == 1 : Set Goal Position
+            // payload[0] : Target Position (0~100)
+                // 입력란
+        // function_list == 2 : Set Goal Pos/Spd/Force
+            // payload[0] : Target Position (0~100)
+                // 입력란
+            // payload[1] : Target Speed (0~100)
+                // 입력란
+            // payload[2] : Target Force (0~100)
+                // 입력란
+
 }
 //---------------------------------------------------------------
 // Timer

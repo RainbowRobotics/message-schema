@@ -4,6 +4,41 @@ include "common_struct.fbs";
 namespace IPC;
 
 //---------------------------------------------------------------
+// Move waypoint 속성. rb_moveprop::Digital_Output / Analog_Output /
+// Welding_Current / ... 와 1:1로 대응시킨 테이블들.
+//---------------------------------------------------------------
+enum Blend_Mode : ubyte {
+    Continuous = 0,
+    Discrete   = 1,
+}
+
+table Prop_Digital_Output    { port: ubyte; level: bool; }
+table Prop_Analog_Output     { port: ubyte; voltage: float; mode: Blend_Mode = Continuous; }
+table Prop_Welding_Current   { value: float; mode: Blend_Mode = Continuous; }
+table Prop_Welding_Voltage   { value: float; mode: Blend_Mode = Continuous; }
+table Prop_Welding_FeedRate  { value: float; mode: Blend_Mode = Continuous; }
+table Prop_Weaving_Magnitude { value: float; }
+table Prop_Weaving_Speed     { value: float; }
+
+union Move_Property {
+    Prop_Digital_Output,
+    Prop_Analog_Output,
+    Prop_Welding_Current,
+    Prop_Welding_Voltage,
+    Prop_Welding_FeedRate,
+    Prop_Weaving_Magnitude,
+    Prop_Weaving_Speed,
+}
+//---------------------------------------------------------------
+// waypoint 하나에 실리는 속성 목록을 한 곳에 묶어둔 공용 테이블.
+// J/JB/L/LB의 모든 ADD 테이블이 이 테이블 하나만 재사용한다.
+// 나중에 속성 종류가 늘어나도 Move_Property union과 여기 한 곳만 고치면 됨.
+//---------------------------------------------------------------
+table Move_Waypoint_Properties {
+    properties: [Move_Property];
+}
+
+//---------------------------------------------------------------
 // Jog - Smooth
 //---------------------------------------------------------------
 table Request_Move_SmoothJogJ{
@@ -89,6 +124,8 @@ table Request_Move_J {
     speed:          MoveInput_Speed (required);
 
     ext_axis:       [float];
+
+    props:          Move_Waypoint_Properties;//없으면 안 줘도 됨
 }
 //---------------------------------------------------------------
 // Move L
@@ -98,6 +135,8 @@ table Request_Move_L {
     speed:          MoveInput_Speed (required);
 
     ext_axis:       [float];
+
+    props:          Move_Waypoint_Properties;//없으면 안 줘도 됨
 }
 //---------------------------------------------------------------
 // Move JB
@@ -110,6 +149,8 @@ table Request_Move_JB_ADD {
     type:           MoveInput_Type (required);
 
     ext_axis:       [float];
+
+    props:          Move_Waypoint_Properties;//없으면 안 줘도 됨
 }
 table Request_Move_JB_RUN {
 }
@@ -124,6 +165,8 @@ table Request_Move_LB_ADD {
     type:           MoveInput_Type (required);
 
     ext_axis:       [float];
+
+    props:          Move_Waypoint_Properties;//없으면 안 줘도 됨
 }
 table Request_Move_LB_RUN {
     orientation:    int;
@@ -138,6 +181,8 @@ table Request_Move_XB_ADD {
     speed:          MoveInput_Speed;
     type:           MoveInput_Type;
     method:         int;
+
+    props:          Move_Waypoint_Properties;//없으면 안 줘도 됨
 }
 table Request_Move_XB_RUN {
     running_mode:   int;

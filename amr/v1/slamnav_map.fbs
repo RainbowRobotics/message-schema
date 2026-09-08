@@ -317,6 +317,7 @@ table RequestGetMapCloudStream {
     map_name: string;
     file_name: string;
     chunk_size: uint32;
+    id: string;
 }
 table ResponseGetMapCloudStream {
     map_name: string;
@@ -328,6 +329,7 @@ table ResponseGetMapCloudStream {
     mime: string;
     result: string;
     message: string;
+    id: string;
 }
 
 
@@ -528,4 +530,26 @@ table ResultMapLoad {
     map_name: string;
     result: string;
     message: string;
+}
+
+/*
+    category    :       Pub / Sub (chunk stream)
+    topic       :       {robotType}/map/cloudStream
+    usage       :       map/getCloudStream 요청에 대한 raw 파일 청크 스트림.
+                        chunk_index 순서대로 total_chunks 개 발행, 마지막은 eof=true.
+                        file_size 0 이면 eof=true 청크 1개만 발행.
+                        스트림 도중 오류 시 result="reject" + eof=true 청크로 종료.
+*/
+table MapCloudStreamChunk {
+    map_name: string;
+    file_name: string;
+    chunk_index: uint32;
+    total_chunks: uint32;
+    offset: uint64;
+    total_size: uint64;
+    data: [ubyte];
+    eof: bool;
+    result: string;
+    message: string;
+    id: string;
 }
