@@ -34,8 +34,12 @@ union Move_Property {
 // J/JB/L/LB의 모든 ADD 테이블이 이 테이블 하나만 재사용한다.
 // 나중에 속성 종류가 늘어나도 Move_Property union과 여기 한 곳만 고치면 됨.
 //---------------------------------------------------------------
+table Move_Property_Entry {
+    value: Move_Property;
+}
+
 table Move_Waypoint_Properties {
-    properties: [Move_Property];
+    properties: [Move_Property_Entry];
 }
 
 //---------------------------------------------------------------
