@@ -1,0 +1,84 @@
+// 충전소 사용가능 통보: FMS 가 로봇마다 "네 충전소를 지금 쓸 수 있는지" 를 단방향 발행.
+// 소비 경로: SI (dock / undock 판단)
+
+namespace SLAMNAV;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Data Structure
+    usage       :       충전소 점유 때문에 목적지를 못 받은 로봇 1대
+    field
+        - robot_id          :       막힌 로봇 ID
+        - wanted_node       :       그 로봇이 받고 싶었던 노드.
+                                    ⚠ 충전소 노드라고 가정하지 말 것 — 충전소와 이웃 작업노드는
+                                       로봇 부피가 겹칠 만큼 가까울 수 있어, 원한 것은 이웃 노드인데
+                                       자리를 막은 것은 충전소에 도킹한 로봇인 경우가 있다.
+                                       판단은 node_available 로 하고 이 값은 참고용.
+*/
+table ChargingBlockedRobot {
+    robot_id: string;
+    wanted_node: string;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------         Pub / Sub            --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/charging/notice
+    usage       :       FMS 가 충전소가 배정된 로봇 전원에게 "네 충전소를 지금 쓸 수 있는지" 를 발행.
+                        변화 시 즉시 + 주기 재발행(heartbeat). 도킹 중이 아니어도 계속 발행한다.
+                        FMS 는 통보만 하고 dock / undock 을 보내지 않는다 — 판단은 수신측(SI) 몫.
+
+                        수신측 동작 규칙:
+                          작업이 있으면                   → 이 통보를 무시 (작업 우선)
+                          작업 없음 + node_available       → charging_node 로 가서 dock
+                          작업 없음 + !node_available      → standby_node 에서 대기
+                          docked + !node_available         → undock 후 standby_node 로
+
+                        매 메시지가 그 시점의 완전한 사실(레벨)이라 수신측이 상태를 기억할 필요가 없다.
+                        latching 이 아니므로 무수신 2주기 이상이면 stale 로 간주할 것.
+
+                        ⚠ 발행측은 builder.ForceDefaults(true) 필수. 스키마 default 와 같은 스칼라
+                           (node_available=false / docked=false / since_ms=0)는 생략되어
+                           리플렉션·JSON 디코더에서 "필드 없음" 으로 보인다.
+    field
+        - robot_id          :       대상 로봇 ID (토픽과 동일. 와일드카드 구독 시 재확인용)
+        - charging_node     :       이 로봇의 충전소 노드. 설정값(운영자 등록, 고정).
+                                    "" = 충전소 설정 없음 → node_available 은 의미 없음
+        - standby_node      :       충전소를 못 쓸 때 대기할 노드. 설정값
+        - node_available    :       charging_node 를 지금 쓸 수 있는가.
+                                    false = 이 로봇이 그 자리를 점유해서 다른 로봇이 목적지를 못 받고 있다
+                                    (예고가 아니라 이미 벌어진 일)
+        - docked            :       로봇이 보고한 dock 상태 원값 ( StatusChargeState.dock )
+        - blocked_by        :       node_available=false 의 근거 (누가 무엇을 못 받고 있나)
+        - since_ms          :       node_available 이 false 가 된 시각 (epoch milliseconds).
+                                    상태가 유지되는 동안 갱신되지 않는다 — "얼마나 오래 막혔나" 를 재는 값
+        - timestamp         :       발행 시각 (epoch milliseconds)
+
+    ⚠ should_undock / yield_required 같은 명령형 필드를 추가하지 말 것.
+       전부 관측 사실이며, 판단은 수신측 몫이다.
+*/
+table ChargingNotice {
+    robot_id: string;
+
+    charging_node: string;
+    standby_node: string;
+
+    node_available: bool;
+    docked: bool;
+    blocked_by: [ChargingBlockedRobot];
+    since_ms: int64;
+
+    timestamp: int64;
+}
