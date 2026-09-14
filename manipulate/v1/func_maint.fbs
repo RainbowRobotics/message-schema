@@ -1,0 +1,43 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+// ------------------------------------------------
+// Set > Joint Origin Calibration (4개 하위 드랍다운)
+// ------------------------------------------------
+// "call_origin_calib_clr"
+// Clear Data Table
+table Request_OriginCalib_Clear {
+}
+
+// "call_origin_calib_add"
+// Add Data Table
+table Request_OriginCalib_Add {
+  // Joint Angle (deg)
+    joints: [float];
+      // 입력란 7개 J0 ~ J6
+  // Ground Truth TCP
+    tcp_x: float; // (X)
+    tcp_y: float; // (Y)
+    tcp_z: float; // (Z)
+    tcp_rx: float; // (Rx)
+    tcp_ry: float; // (Ry)
+    tcp_rz: float; // (Rz)
+}
+
+// "call_origin_calib_run"
+// Calculate Result from Table
+table Request_OriginCalib_Run {
+  option: int;
+    // Calculation Option (드랍다운)
+      // 0 : Use Position Info 
+      // 1 : Use Position and Orientation
+}
+
+// "call_origin_calib_reflect"
+// Reflect Result to Robot-arm 
+table Request_OriginCalib_Reflect{
+  password: int;
+    // Password (입력란)
+}
