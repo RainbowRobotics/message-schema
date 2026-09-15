@@ -500,35 +500,6 @@ table ResponseGetStepList {
   step_tree: [StepTree];
 }
 
-// setting()의 VIBRATION_MOTION_BASED 옵션 파라미터(program-args) 전용. 실제 로봇으로
-// 나가는 wire RPC 는 IPC 네임스페이스의 Request_Wrapper_VibrationMotion_On/_Off
-// (call_vibration_motion_on/off, func_move.fbs) 로 여전히 분리되어 있다 — 이 table 은
-// onoff 로 그 둘 중 뭘 부를지 고르는 setting() 파라미터 타입일 뿐이며, 그 자체가 wire
-// 로 나가지는 않는다.
-table Request_Wrapper_VibrationMotion{
-    onoff:  int;
-        // 0 : Off
-        // 1 : On
-    frame:  int;
-        // Frame Select (드랍다운)
-            // 0 : Global
-            // 1 : Local
-            // 2 : User
-            // 3 : Target
-            // 4 : Active Local
-    x_mag:  float;
-    y_mag:  float;
-    z_mag:  float;
-        // Magnitude (mm)
-    x_freq: float;
-    y_freq: float;
-    z_freq: float;
-        // Frequency (Hz)
-    x_phase: float;
-    y_phase: float;
-    z_phase: float;
-        // Phase (deg)
-}
 
 //---------------------------------------------------------------------------
 //                                  Publish
