@@ -3,6 +3,7 @@ include "common_struct.fbs";
 
 namespace IPC;
 //--------------------------------------------------------------
+//"get_core_data"
 table Request_Get_Core_Data {
     option      : int;
     name        : string;
@@ -14,6 +15,15 @@ table Response_Get_Core_Data {
     payload_num : float;
     payload_arr : [float];
     payload_str : string;
+}
+
+//"get_core_data_multi"
+table Request_Get_Core_Data_Multi {
+    items:  [Request_Get_Core_Data];
+}
+table Response_Get_Core_Data_Multi {
+    names:  [string];
+    items:  [Response_Get_Core_Data];
 }
 //--------------------------------------------------------------
 table Request_Get_Relative_Value {
