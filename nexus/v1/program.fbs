@@ -1,3 +1,4 @@
+include "manipulate.fbs";
 include "flow_manager.fbs";
 include "struct.fbs";
 
@@ -213,92 +214,7 @@ enum TaskExtension : byte {
   PYTHON = 0
 }
 
-// Program Step의 interface()/vision() dispatcher가 사용하는 정규화 payload.
-// PyFM의 동적 dict와 변수 참조는 SDK binding 경계에서 이 타입으로 변환한다.
-table WriteRegisterValues { values: [long]; }
-table TrajectoryWaypoint { values: [double]; }
-table TrajectoryNameInput {
-  variable_name: string;
-  waypoints: [TrajectoryWaypoint];
-}
-table PhotoneoJointTarget {
-  input_method: int = null;
-  tar_frame: int = null;
-  tar_unit: int = null;
-  ref_point: [double];
-  tar_values: [double];
-}
 
-table InterfaceModbusClientPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  register_addr: int = null; payload: WriteRegisterValues; number_of_read: int = null;
-}
-table InterfaceMcProtocolPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  register_addr: int = null; protocol: string; address_type: string;
-  payload: WriteRegisterValues; number_of_read: int = null;
-}
-table InterfaceXgtProtocolPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  register_addr: int = null; cpu_type: string; device_type: string;
-  payload: WriteRegisterValues; number_of_read: int = null;
-}
-table InterfaceSocketPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  payload: string; write_type: string; split: string;
-}
-table InterfaceMechMindPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  project_id: int = null; recipe_id: int = null; expected_count: int = null;
-  position: string;
-}
-table InterfacePhotoneoPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  vision_system_id: int = null;
-  start_joint: PhotoneoJointTarget; end_joint: PhotoneoJointTarget;
-  point_variable_name: string;
-  trajectory_start_to_approach: string; trajectory_approach_to_grasp: string;
-  trajectory_grasp_to_deapproach: string; trajectory_deapproach_to_end: string;
-  solution_id: int = null; current_solution_id: string;
-  trajectory_name: TrajectoryNameInput;
-  pnt_type: int = null; pnt_para: double = null;
-}
-table InterfacePickitPayload {
-  type: string; issue_core: string; server_ip: string;
-  server_port: int = null; function_code: int = null;
-  return_variable_name: string; resolve_option: string; timeout_sec: double = null;
-  pickit_mode: string;
-  calib_method: int = null; calib_camera_mount: int = null;
-  pick_point_name: string; remaining_count_name: string; model_id_or_type_name: string;
-  retry_count: int = null; gripper_pose_name: string; reference_pick_point_id_name: string;
-  setup_id: int = null; product_id: int = null;
-  cylinder_length: double = null; cylinder_diameter: double = null;
-}
-
-union VisionInterfacePayload {
-  InterfaceMechMindPayload,
-  InterfacePhotoneoPayload,
-  InterfacePickitPayload
-}
-
-union InterfacePayload {
-  InterfaceModbusClientPayload,
-  InterfaceMcProtocolPayload,
-  InterfaceXgtProtocolPayload,
-  InterfaceSocketPayload
-}
 
 table MainTaskBegin {
   position: string;
@@ -584,35 +500,6 @@ table ResponseGetStepList {
   step_tree: [StepTree];
 }
 
-// setting()의 VIBRATION_MOTION_BASED 옵션 파라미터(program-args) 전용. 실제 로봇으로
-// 나가는 wire RPC 는 IPC 네임스페이스의 Request_Wrapper_VibrationMotion_On/_Off
-// (call_vibration_motion_on/off, func_move.fbs) 로 여전히 분리되어 있다 — 이 table 은
-// onoff 로 그 둘 중 뭘 부를지 고르는 setting() 파라미터 타입일 뿐이며, 그 자체가 wire
-// 로 나가지는 않는다.
-table Request_Wrapper_VibrationMotion{
-    onoff:  int;
-        // 0 : Off
-        // 1 : On
-    frame:  int;
-        // Frame Select (드랍다운)
-            // 0 : Global
-            // 1 : Local
-            // 2 : User
-            // 3 : Target
-            // 4 : Active Local
-    x_mag:  float;
-    y_mag:  float;
-    z_mag:  float;
-        // Magnitude (mm)
-    x_freq: float;
-    y_freq: float;
-    z_freq: float;
-        // Frequency (Hz)
-    x_phase: float;
-    y_phase: float;
-    z_phase: float;
-        // Phase (deg)
-}
 
 //---------------------------------------------------------------------------
 //                                  Publish
