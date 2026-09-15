@@ -599,16 +599,6 @@ table Request_Wrapper_VibrationMotion_On{
 table Request_Wrapper_VibrationMotion_Off{
 }
 
-union VibrationMotionKind {
-    Request_Wrapper_VibrationMotion_On,
-    Request_Wrapper_VibrationMotion_Off
-}
-
-
-table Request_Wrapper_VibrationMotion_Base {
-    motion: VibrationMotionKind;
-}
-
 
 // "call_admittance_force_on"
 table Request_Wrapper_AdmittanceForce_On{

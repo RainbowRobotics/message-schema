@@ -37,6 +37,14 @@ table Response_Get_Absolute_Value {
     calculated_value:   MoveInput_Target;
 }
 //--------------------------------------------------------------
+// SDK 내부 집계 결과 (RBManipulateProgramSDK::set_pin_point_or_joint 반환).
+// 대응하는 wire 메시지는 없다 — Relative/Absolute 계산 결과를 공통 타입으로
+// 되돌려주기 위한 struct 정의용. 필드는 Response_Get_{Relative,Absolute}_Value 와 동일.
+table Response_Get_Value {
+    calculated_result:  int;
+    calculated_value:   MoveInput_Target;
+}
+//--------------------------------------------------------------
 table Request_Get_Tcp_Value {
     option: int;
 }
