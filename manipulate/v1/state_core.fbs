@@ -113,6 +113,10 @@ table State_Core {
   weld_info_rx_voltage:   float;      //<----added at 260422
   weld_info_rx_feedrate:  float;      //<----added at 260422
 
+  safety_raw_data_a0:    int;        //<----added at 260919
+  safety_raw_data_a1:    int;        //<----added at 260919
+  safety_raw_data_b0:    int;        //<----added at 260919
+  safety_raw_data_b1:    int;        //<----added at 260919
 }
 
 root_type State_Core;
