@@ -117,6 +117,8 @@ table State_Core {
   safety_raw_data_a1:    int;        //<----added at 260919
   safety_raw_data_b0:    int;        //<----added at 260919
   safety_raw_data_b1:    int;        //<----added at 260919
+
+  realtime_feedback:      int;      //<----added at 260919
 }
 
 root_type State_Core;

@@ -320,3 +320,9 @@ table Request_Set_JointRef_Filter {
     // Filter (%)
       // 슬라이드 바 (0~100%)
 }
+
+// "set_realtime_index"
+// "pub_realtime_index"
+table Request_Set_RealTime_Index {
+  target_index: int;
+}
