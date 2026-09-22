@@ -326,3 +326,8 @@ table Request_Set_JointRef_Filter {
 table Request_Set_RealTime_Index {
   target_index: int;
 }
+
+// "set_wrist_singularity_mode"
+table Request_Set_WristSingular_Mode {
+  target_mode: int;
+}
