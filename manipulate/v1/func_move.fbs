@@ -121,6 +121,19 @@ table Request_Move_Home {
     // 속도/가속도 설정 (다른것과 동일)
 }
 //---------------------------------------------------------------
+// Move Align
+//---------------------------------------------------------------
+// "call_move_align_tcp"
+table Request_Move_AlignTcp {
+    speed:          MoveInput_Speed (required);
+    target_frame:   int;
+        // 0 : Global
+        // 1 : Local
+        // 2 : User
+    tolerance:      float;
+        // align tolerance angle in degree uint
+}
+//---------------------------------------------------------------
 // Move J
 //---------------------------------------------------------------
 table Request_Move_J {
