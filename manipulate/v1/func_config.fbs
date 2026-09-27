@@ -26,12 +26,15 @@ table Response_CallWhoamI{
 //    ㄴ GPin List    : State_Config_GlobPinList
 //    ㄴ Flange Role  : State_Config_FlangeRole
 //--------------------------------------------------------------
+// "call_config_controlbox"
 table Request_CallConfigControlBox {
 }
 
+// "call_config_robotarm"
 table Request_CallConfigRobotArm {
 }
 
+// "call_config_toollist"
 table Request_CallConfigToolList {
 }
 
@@ -103,17 +106,43 @@ table Response_CallConfigRobotArm{
   gravity_gy: float;
   gravity_gz: float;
 
+  // -----------------------------------------------
+  // sensitivity
+  // -----------------------------------------------
   direct_teaching_sensitivity: [float];   //<------ 구조체에서 table 배열로 변경됨 26-04-28
 
   tout_special_func: N_DOUT_b;
   tin_special_func: N_DIN_b;
   tin_filter_count: N_DIN_u;
 
+  // -----------------------------------------------
+  // Joint Kinematic Limit
+  // -----------------------------------------------
   kine_limit_pos_low: [float];            //<------ added after 26-04-28
   kine_limit_pos_up:  [float];
   kine_limit_speed:   [float];
 
+  // -----------------------------------------------
+  // Deflection Compensation
+  // -----------------------------------------------
   deflection_compensation_mode: int;      //<------ added after 26-05-10
+    // Mode (드랍다운)
+      // 0 : Off
+      // 1 : Adjust Deflection
+
+  // -----------------------------------------------
+  // Boot-Up Joint Impedance
+  // -----------------------------------------------
+  basic_impedance_mode: int;              //<------ added after 26-09-27
+    // Boot-up Joint Impedance Mode (드랍다운)
+      // 0 : Not Use
+      // 1 : Activate after Real-Mode
+  basic_impedance_stiffness: [float];     //<------ added after 26-09-27
+    // Stiffness (슬라이드 바)
+      // 화면에는 0~100%, 실제 통신 주고 받는건 0~1
+  basic_impedance_torqelimit: [float];    //<------ added after 26-09-27
+    // Torque Limit (슬라이드 바)
+      // 화면에는 0~100%, 실제 통신 주고 받는건 0~1
 }
 
 struct ST_Box_Para {
