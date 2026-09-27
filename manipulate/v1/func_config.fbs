@@ -38,12 +38,19 @@ table Request_CallConfigRobotArm {
 table Request_CallConfigToolList {
 }
 
+// "call_config_gripperattach"
+table Request_CallConfigGripperAttach {
+}
+
+// "call_config_globpinlist"
 table Request_CallConfigGlobPinList{
 }
 
+// "call_config_flangeoption"
 table Request_CallConfigFlangeOption{
 }
 
+// "call_config_network"
 table Request_CallConfigNetwork{
 }
 
@@ -171,6 +178,25 @@ table Response_CallConfigToolList {
     t_configs_5: ST_Tool_Para;
     t_configs_6: ST_Tool_Para;
     t_configs_7: ST_Tool_Para;
+}
+
+table Response_CallConfigGripperAttach {
+  attach_option: int;
+    // Default Gripper Attachment (드랍다운)
+      // -1: Not Mounted
+      // 0 ~ : Gripper 기능에 있는 그리퍼 순서대로 리스트
+  pubdata_type_0: int;
+  pubdata_type_1: int;
+  pubdata_type_2: int;
+  pubdata_type_3: int;
+    // Publish Data type 0,1,2,3 (드랍다운 4개)
+      // 0 : Not Assigned
+      // 1 : Position Reference 
+      // 2 : Position Feedback
+      // 3 : Speed Reference 
+      // 4 : Speed Feedback 
+      // 5 : Force Reference 
+      // 6 : Force Feedback 
 }
 
 // "call_config_globpinlist"
