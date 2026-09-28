@@ -38,6 +38,20 @@ table Request_Save_Direct_Teach_Sensitivity {
   sensitivity: [float];     //<------ 구조체에서 table 배열로 변경됨 26-04-28
 }
 
+// "save_basic_joint_impedance"
+table Request_Save_Basic_Joint_Impedance {
+  basic_impedance_mode: int;              //<------ added after 26-09-27
+    // Boot-up Joint Impedance Mode (드랍다운)
+      // 0 : Not Use
+      // 1 : Activate after Real-Mode
+  basic_impedance_stiffness: [float];     //<------ added after 26-09-27
+    // Stiffness (슬라이드 바)
+      // 화면에는 0~100%, 실제 통신 주고 받는건 0~1
+  basic_impedance_torqelimit: [float];    //<------ added after 26-09-27
+    // Torque Limit (슬라이드 바)
+      // 화면에는 0~100%, 실제 통신 주고 받는건 0~1
+}
+
 // "save_tool_parameter"
 table Request_Save_Tool_List_Para {
     tool_no: int;
@@ -65,6 +79,26 @@ table Request_Save_Tool_List_Para {
     box_para_6: float;
     box_para_7: float;
     box_para_8: float;
+}
+
+// "save_gripper_attachment"
+table Request_Save_Gripper_Attachment {
+  attach_option: int;
+    // Default Gripper Attachment (드랍다운)
+      // -1: Not Mounted
+      // 0 ~ : Gripper 기능에 있는 그리퍼 순서대로 리스트
+  pubdata_type_0: int;
+  pubdata_type_1: int;
+  pubdata_type_2: int;
+  pubdata_type_3: int;
+    // Publish Data type 0,1,2,3 (드랍다운 4개)
+      // 0 : Not Assigned
+      // 1 : Position Reference 
+      // 2 : Position Feedback
+      // 3 : Speed Reference 
+      // 4 : Speed Feedback 
+      // 5 : Force Reference 
+      // 6 : Force Feedback 
 }
 
 // "save_globpin_parameter"
