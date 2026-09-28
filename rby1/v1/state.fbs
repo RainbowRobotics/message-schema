@@ -56,8 +56,7 @@ table RobotState {
   control_manager:    ControlManagerState;
   battery_state:      BatteryState;
 
-  // Smooth jog 세션 상태 "start" | "stop" (RBRby1SDK.smooth_status). 조그 중 control_state 는 Executing 이라
-  // 프론트는 이 값이 "start" 면 move 버튼을 막지 않는다. 테이블 끝에 추가 (기존 필드 id 유지).
+  // Smooth jog 세션 상태 "start" | "stop"
   smooth_status:      string;
 }
 
