@@ -130,6 +130,10 @@ table Metadata {
         - speed         :       이동 속도
         - safety_field  :       링크 주행 시 라이다 안전 필드 id ( -1 = 미지정, config SAFETY_FIELD_SELECT 룰 → SAFETY_FIELD_DEFAULT 순 fallback )
         - avoid_range   :       장애물 회피 범위
+        - stop_margin_x :       링크 주행 시 STOP 존 마진 x (m) ( -1 = 미지정, config OBS_PATH_MARGIN_X fallback )
+        - stop_margin_y :       링크 주행 시 STOP 존 마진 y (m) ( -1 = 미지정, config OBS_PATH_MARGIN_Y fallback )
+        - slow_margin_x :       링크 주행 시 SLOW 존 추가 마진 x (m) ( -1 = 미지정, config OBS_SAFE_MARGIN_X fallback )
+        - slow_margin_y :       링크 주행 시 SLOW 존 추가 마진 y (m) ( -1 = 미지정, config OBS_SAFE_MARGIN_Y fallback )
 */
 table Link {
     id: string;
@@ -140,6 +144,10 @@ table Link {
     speed: float;
     safety_field: int = -1;
     avoid_range: float;
+    stop_margin_x: float = -1;
+    stop_margin_y: float = -1;
+    slow_margin_x: float = -1;
+    slow_margin_y: float = -1;
 }
 
 /*
