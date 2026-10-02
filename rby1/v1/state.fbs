@@ -43,6 +43,14 @@ table BatteryState {
   level_percent: float;   // 0.0 ~ 100.0
 }
 
+// 손·T5 자세 (FK, RBRby1SDK.cartesians_from_position) — link_torso_5 / ee_right / ee_left.
+// 각 값은 [x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg] (Base 기준, R = Rz·Ry·Rx — manipulate tar_values 와 같은 규약)
+table CartesianStates {
+  torso:     [double];
+  right_arm: [double];
+  left_arm:  [double];
+}
+
 // 전체 RobotState 스냅샷
 table RobotState {
   robot_model:        string;        // 예: "RBY1-A"
@@ -58,6 +66,11 @@ table RobotState {
 
   // Smooth jog 세션 상태 "start" | "stop"
   smooth_status:      string;
+
+  // 손·T5 자세 (FK). common 이 get_joint_states 로 프론트에 전달. 테이블 끝에 추가.
+  cartesian_states:       CartesianStates;
+  // link_torso_5 기준 손 자세 (right_arm/left_arm 만, torso 비움) — move_l/smoothjog_l reference="link_torso_5" 용
+  cartesian_states_torso: CartesianStates;
 }
 
 root_type RobotState;
