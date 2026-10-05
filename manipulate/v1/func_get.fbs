@@ -8,7 +8,6 @@ table Request_Get_Core_Data {
     option      : int;
     name        : string;
 }
-
 table Response_Get_Core_Data {
     valid       : int;
     type        : int;//0=number, 1=array, 2=string,
@@ -24,6 +23,33 @@ table Request_Get_Core_Data_Multi {
 table Response_Get_Core_Data_Multi {
     names:  [string];
     items:  [Response_Get_Core_Data];
+}
+//--------------------------------------------------------------
+// "get_core_function"
+table Request_Get_Core_Function {
+    option      : int;
+        // 미래를 위한 것 일단 0
+    name        : string;
+        // 함수 이름
+    payload_numbers : [float];
+    payload_strings : [string];
+}
+table Response_Get_Core_Function {
+    valid       : int;
+        // 0 또는 1 (유효한 함수일 경우 1)
+    type        : int;//0=number, 1=array, 2=string,
+    payload_num : float;
+    payload_arr : [float];
+    payload_str : string;
+}
+
+// "get_core_function_multi"
+table Request_Get_Core_Function_Multi {
+    items:  [Request_Get_Core_Function];
+}
+table Response_Get_Core_Function_Multi {
+    names:  [string];
+    items:  [Response_Get_Core_Function];
 }
 //--------------------------------------------------------------
 table Request_Get_Relative_Value {
