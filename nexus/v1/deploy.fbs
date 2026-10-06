@@ -71,6 +71,6 @@ table Deploy_Chunk_Request {
 // topic: "muscat/deploy/{sw_name}/update"
 table Deploy_Chunk_Response {
   status: Deploy_Chunk_Status;
-  chunk_index: int;
+  chunk_index: int (deprecated);
   message: string;
 }
