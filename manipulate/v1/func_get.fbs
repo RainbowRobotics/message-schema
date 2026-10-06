@@ -25,31 +25,38 @@ table Response_Get_Core_Data_Multi {
     items:  [Response_Get_Core_Data];
 }
 //--------------------------------------------------------------
-// "get_core_function"
-table Request_Get_Core_Function {
-    option      : int;
-        // 미래를 위한 것 일단 0
-    name        : string;
-        // 함수 이름
-    payload_numbers : [float];
-    payload_strings : [string];
+table Val_Number     { v: float; }
+table Val_String     { v: string; }
+table Val_Number_Arr { v: [float]; }
+table Val_String_Arr { v: [string]; }
+union Func_Value {
+    Val_Number, Val_String, Val_Number_Arr, Val_String_Arr,
 }
-table Response_Get_Core_Function {
-    valid       : int;
-        // 0 또는 1 (유효한 함수일 경우 1)
-    type        : int;//0=number, 1=array, 2=string,
-    payload_num : float;
-    payload_arr : [float];
-    payload_str : string;
+// union 을 바로 vector 에 담으면 Python flatc 가 지원하지 않아서 테이블로 한 번 감쌈
+table Func_Arg {
+    arg_name:  string; // 비우면 위치 인자, 채우면 키워드 인자
+    arg_value: Func_Value;
 }
 
-// "get_core_function_multi"
-table Request_Get_Core_Function_Multi {
-    items:  [Request_Get_Core_Function];
+
+table Func_Call {
+    func: string (required);
+    args: [Func_Arg];
 }
-table Response_Get_Core_Function_Multi {
-    names:  [string];
-    items:  [Response_Get_Core_Function];
+
+table Func_Return {
+    execution_result: int;     // 0 = OK, -1 = 모르는 함수, -2 = 인자 개수/타입 불일치, -3 = 함수 안에서 예외
+    execution_error_msg:        string;
+    function_return:       Func_Value;
+}
+
+// "get_core_function"
+table Request_Get_Core_Function {
+    items: [Func_Call];
+}
+
+table Response_Get_Core_Function {
+    items: [Func_Return];
 }
 //--------------------------------------------------------------
 table Request_Get_Relative_Value {
