@@ -8,7 +8,6 @@ table Request_Get_Core_Data {
     option      : int;
     name        : string;
 }
-
 table Response_Get_Core_Data {
     valid       : int;
     type        : int;//0=number, 1=array, 2=string,
@@ -24,6 +23,40 @@ table Request_Get_Core_Data_Multi {
 table Response_Get_Core_Data_Multi {
     names:  [string];
     items:  [Response_Get_Core_Data];
+}
+//--------------------------------------------------------------
+table Val_Number     { v: float; }
+table Val_String     { v: string; }
+table Val_Number_Arr { v: [float]; }
+table Val_String_Arr { v: [string]; }
+union Func_Value {
+    Val_Number, Val_String, Val_Number_Arr, Val_String_Arr,
+}
+// union 을 바로 vector 에 담으면 Python flatc 가 지원하지 않아서 테이블로 한 번 감쌈
+table Func_Arg {
+    arg_name:  string; // 비우면 위치 인자, 채우면 키워드 인자
+    arg_value: Func_Value;
+}
+
+
+table Func_Call {
+    func: string (required);
+    args: [Func_Arg];
+}
+
+table Func_Return {
+    execution_result: int;     // 0 = OK, -1 = 모르는 함수, -2 = 인자 개수/타입 불일치, -3 = 함수 안에서 예외
+    execution_error_msg:        string;
+    function_return:       Func_Value;
+}
+
+// "get_core_function"
+table Request_Get_Core_Function {
+    items: [Func_Call];
+}
+
+table Response_Get_Core_Function {
+    items: [Func_Return];
 }
 //--------------------------------------------------------------
 table Request_Get_Relative_Value {
