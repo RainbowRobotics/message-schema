@@ -331,3 +331,15 @@ table Request_Set_RealTime_Index {
 table Request_Set_WristSingular_Mode {
   target_mode: int;
 }
+
+// "set_oprange_check"
+// Operation Range Check
+table Request_Set_Range_Check {
+  mode: int;
+    // Check Mode (드랍다운)
+      // 0 : Finish Check
+      // 1 : Start Check
+  option: int;
+    // Data Option (드랍다운)
+      // 0 : Reference
+}
