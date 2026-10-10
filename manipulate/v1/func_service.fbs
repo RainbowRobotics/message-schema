@@ -470,6 +470,14 @@ table Request_EXTFT_Stream_OnOff {
 // "call_extft_id_change"
 table Request_EXTFT_ID_Change {
 }
+// "set_extft_software_nulling"
+// FT Sensor Software Nulling
+table Request_EXTFT_Software_Nulling {
+  mode: int;
+    // Nulling Mode (드랍다운)
+      // 0 : Return to Original value
+      // 1 : Start Software Nulling 
+}
 //---------------------------------------------------------------
 // Motion Macro
 //---------------------------------------------------------------
