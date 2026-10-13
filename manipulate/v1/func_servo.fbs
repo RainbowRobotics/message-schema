@@ -115,3 +115,10 @@ table Request_ReferenceControl {
   refcontrol_option:  int;
 }
 //------------------------------------------------------
+
+// "pop_gravity_vector"
+table Request_Pop_GravityVector {
+  gravity_option:     int;
+    // 0 : Measured
+    // 1 : Setted
+}
