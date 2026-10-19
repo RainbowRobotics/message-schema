@@ -1,0 +1,110 @@
+namespace IPC;
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------          RPC(Query)          --------
+// -----------                              --------
+// -------------------------------------------------
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       amr/{robot_model}/sound/status
+    usage       :       host의 현재 사운드 재생 상태 조회
+    field
+        - volume       :       현재 출력 볼륨
+        - current_sound:       현재 재생 요청 정보 (미재생 시 각 필드는 기본값)
+*/
+table Request_Sound_GetStatus {
+}
+
+table Response_Sound_GetStatus {
+    volume: int;
+    current_sound: Request_Sound_Play;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       amr/{robot_model}/sound/play
+    usage       :       host에서 사운드 파일 재생 시작
+                        재생 완료를 기다리지 않고 시작 결과를 반환
+    field
+        - file_name    :       public/sounds에서 찾을 파일명 (file_path가 없을 때 사용)
+        - file_path    :       재생할 사운드 파일 경로
+        - volume       :       재생 볼륨 (0 이상)
+        - repeat_count :       총 재생 횟수 (0이면 stop 요청까지 반복)
+        - repeat_delay :       반복 재생 간격 (초, 0이면 지연 없음)
+        - result       :       처리 결과
+        - message      :       결과 메시지
+*/
+table Request_Sound_Play {
+    file_name: string;
+    file_path: string;
+    volume: int;
+    repeat_count: int;
+    repeat_delay: int;
+}
+
+table Response_Sound_Play {
+    file_name: string;
+    file_path: string;
+    volume: int;
+    repeat_count: int;
+    repeat_delay: int;
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       amr/{robot_model}/sound/stop
+    usage       :       현재 재생 중인 사운드 종료
+    field
+        - result       :       처리 결과
+        - message      :       결과 메시지
+*/
+table Response_Sound_Stop {
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       amr/{robot_model}/sound/pause
+    usage       :       현재 사운드의 일시정지/재개 상태 토글
+    field
+        - result       :       처리 결과
+        - message      :       토글 후 상태 메시지 (일시정지/재생)
+*/
+table Request_Sound_Pause_Toggle {
+}
+
+table Response_Sound_Pause_Toggle {
+    result: string;
+    message: string;
+}
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       amr/{robot_model}/sound/volume
+    usage       :       host 출력 볼륨 설정
+    field
+        - volume       :       설정할 볼륨 (0 이상)
+        - result       :       처리 결과
+        - message      :       결과 메시지
+*/
+table Request_Sound_SetVolume {
+    volume: int;
+}
+
+table Response_Sound_SetVolume {
+    volume: int;
+    result: string;
+    message: string;
+}
