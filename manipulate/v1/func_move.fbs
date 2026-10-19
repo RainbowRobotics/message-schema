@@ -250,6 +250,26 @@ table Request_Move_CIR_3P {
     radius_para:    float;
         // Radius Parameter
 }
+
+// "call_move_push"
+table Request_Move_Push {
+    force_type: int;
+        // Sensor Type
+            // 0 : Internal Joint
+            // 1 : External F/T
+    frame_type: int;
+        // Frame Selection (드랍다운)
+            // 0 : Global
+            // 1 : Local
+            // 2 : User
+    sensitivity_x: float;
+    sensitivity_y: float;
+    sensitivity_z: float;
+        // Sensitivity (슬라이드바)
+            // ui표현은 0~100 
+            // 실제 보낼 때는 0~1
+}
+
 // "call_move_gcode"
 table Request_Move_Gcode {
     filename:       string;

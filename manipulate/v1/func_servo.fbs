@@ -52,6 +52,11 @@ table Request_Pop_JointJamOvr{
   board_no:           int;
 }
 
+// "pop_joint_dq_axis"
+table Request_Pop_JointDQAxis{
+  board_no:           int;
+}
+
 // "set_joint_gain_pos"
 table Request_Set_JointGain_Pos{
   board_no:           int;
@@ -113,6 +118,23 @@ table Request_ServoControl {
 // "call_referencecontrol"
 table Request_ReferenceControl {
   refcontrol_option:  int;
+}
+
+// "call_shortcircuit_check"
+table Request_ShortCiruitCheck {
+}
+
+// "call_force_eater_on"
+table Request_ForceEaterOn {
+  time_sec: float;
+    // Time (sec) //(입력란)
+}
+
+// "pop_can_message_check"
+table Request_Pop_CANMessageCheck {
+  range_optoin: int; //(드랍다운)
+    // 0 : Control Box
+    // 1 : Control Box + Robot
 }
 //------------------------------------------------------
 
