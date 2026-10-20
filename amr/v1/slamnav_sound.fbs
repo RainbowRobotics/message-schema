@@ -1,4 +1,4 @@
-namespace IPC;
+namespace SLAMNAV;
 
 
 // -------------------------------------------------
@@ -17,12 +17,12 @@ namespace IPC;
         - volume       :       현재 출력 볼륨
         - current_sound:       현재 재생 요청 정보 (미재생 시 각 필드는 기본값)
 */
-table Request_Sound_GetStatus {
+table RequestSoundGetStatus {
 }
 
-table Response_Sound_GetStatus {
+table ResponseSoundGetStatus {
     volume: int;
-    current_sound: Request_Sound_Play;
+    current_sound: RequestSoundPlay;
 }
 
 /*
@@ -40,7 +40,7 @@ table Response_Sound_GetStatus {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Sound_Play {
+table RequestSoundPlay {
     file_name: string;
     file_path: string;
     volume: int;
@@ -48,7 +48,7 @@ table Request_Sound_Play {
     repeat_delay: int;
 }
 
-table Response_Sound_Play {
+table ResponseSoundPlay {
     file_name: string;
     file_path: string;
     volume: int;
@@ -67,7 +67,7 @@ table Response_Sound_Play {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Response_Sound_Stop {
+table ResponseSoundStop {
     result: string;
     message: string;
 }
@@ -81,10 +81,10 @@ table Response_Sound_Stop {
         - result       :       처리 결과
         - message      :       토글 후 상태 메시지 (일시정지/재생)
 */
-table Request_Sound_Pause_Toggle {
+table RequestSoundPauseToggle {
 }
 
-table Response_Sound_Pause_Toggle {
+table ResponseSoundPauseToggle {
     result: string;
     message: string;
 }
@@ -99,11 +99,11 @@ table Response_Sound_Pause_Toggle {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Sound_SetVolume {
+table RequestSoundSetVolume {
     volume: int;
 }
 
-table Response_Sound_SetVolume {
+table ResponseSoundSetVolume {
     volume: int;
     result: string;
     message: string;

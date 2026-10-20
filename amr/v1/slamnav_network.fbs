@@ -1,4 +1,4 @@
-namespace IPC;
+namespace SLAMNAV;
 
 
 // -------------------------------------------------
@@ -19,7 +19,7 @@ namespace IPC;
         - channel      :       무선 채널
         - rate         :       전송률
 */
-table Wifi {
+table WifiInfo {
     in_use: bool;
     ssid: string;
     signal: int;
@@ -41,7 +41,7 @@ table Wifi {
         - gateway      :       기본 게이트웨이
         - signal       :       무선 신호 세기 (값이 없으면 0)
 */
-table Network {
+table NetworkInfo {
     device: string;
     dhcp: bool;
     dns: [string];
@@ -62,9 +62,9 @@ table Network {
         - local_ip     :       대상 서버 접속 경로에 사용되는 host 로컬 IP
         - frs_ip       :       DB에 등록된 대상 서버 IP
 */
-table NetworkStatus {
-    ethernet: [Network];
-    wifi: [Network];
+table NetworkStatusInfo {
+    ethernet: [NetworkInfo];
+    wifi: [NetworkInfo];
     local_ip: string;
     frs_ip: string;
 }
@@ -89,13 +89,13 @@ table NetworkStatus {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Network_GetNetwork {
+table RequestNetworkGetNetwork {
 }
 
-table Response_Network_GetNetwork {
-    ethernet: [Network];
-    wifi: [Network];
-    bluetooth: [Network];
+table ResponseNetworkGetNetwork {
+    ethernet: [NetworkInfo];
+    wifi: [NetworkInfo];
+    bluetooth: [NetworkInfo];
     result: string;
     message: string;
 }
@@ -109,11 +109,11 @@ table Response_Network_GetNetwork {
         - target       :       대상 host 또는 protocol/host:port 형식의 주소
         - local_ip     :       target 방향으로 선택된 host 로컬 IP
 */
-table Request_Network_GetLocalIp {
+table RequestNetworkGetLocalIp {
     target: string;
 }
 
-table Response_Network_GetLocalIp {
+table ResponseNetworkGetLocalIp {
     local_ip: string;
 }
 
@@ -133,7 +133,7 @@ table Response_Network_GetLocalIp {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Network_SetNetwork {
+table RequestNetworkSetNetwork {
     ssid: string;
     dhcp: bool;
     address: string;
@@ -142,7 +142,7 @@ table Request_Network_SetNetwork {
     dns: [string];
 }
 
-table Response_Network_SetNetwork {
+table ResponseNetworkSetNetwork {
     ssid: string;
     dhcp: bool;
     address: string;
@@ -169,12 +169,12 @@ table Response_Network_SetNetwork {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Network_ConnectWifi {
+table RequestNetworkConnectWifi {
     ssid: string;
     password: string;
 }
 
-table Response_Network_ConnectWifi {
+table ResponseNetworkConnectWifi {
     ssid: string;
     address: string;
     gateway: string;
@@ -196,12 +196,12 @@ table Response_Network_ConnectWifi {
         - result       :       처리 결과
         - message      :       결과 메시지
 */
-table Request_Network_GetWifiList {
+table RequestNetworkGetWifiList {
     rescan: bool;
 }
 
-table Response_Network_GetWifiList {
-    list: [Wifi];
+table ResponseNetworkGetWifiList {
+    list: [WifiInfo];
     result: string;
     message: string;
 }
