@@ -61,12 +61,14 @@ table Network {
         - wifi         :       Wi-Fi 인터페이스 목록
         - local_ip     :       대상 서버 접속 경로에 사용되는 host 로컬 IP
         - frs_ip       :       DB에 등록된 대상 서버 IP
+        - internet     :       외부망(인터넷) 접속 가능 여부. false 면 폐쇄망/오프라인
 */
 table NetworkStatus {
     ethernet: [Network];
     wifi: [Network];
     local_ip: string;
     frs_ip: string;
+    internet: bool;
 }
 
 
