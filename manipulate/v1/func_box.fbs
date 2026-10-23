@@ -14,11 +14,6 @@ table Request_Save_Robot_Code {
   option: int;
 }
 
-// "call_persist_joint_erase"
-table Request_Erase_PersistJoint {
-  target_angle: [float];
-}
-
 // "save_area_parameter"
 table Request_Save_Area_Para {
     area_no: int;
@@ -30,7 +25,7 @@ table Request_Save_Area_Para {
     area_z: float;
     area_rx: float;
     area_ry: float;
-    area_rz: float;
+    area_rz: float;z
 
     area_para_0: float;
     area_para_1: float;
