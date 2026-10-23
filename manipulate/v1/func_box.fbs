@@ -14,7 +14,6 @@ table Request_Save_Robot_Code {
   option: int;
 }
 
-
 // "save_area_parameter"
 table Request_Save_Area_Para {
     area_no: int;
