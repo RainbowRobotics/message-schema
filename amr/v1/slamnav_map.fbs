@@ -192,14 +192,10 @@ table Node {
 table RequestMapLoad {
     id: string;
     map_name: string;
-    cloud_file: string;
-    topo_file: string;
 }
 table ResponseMapLoad {
     id: string;
     map_name: string;
-    cloud_file: string;
-    topo_file: string;
     result: string;
     message: string;
 }
@@ -215,13 +211,11 @@ table ResponseMapLoad {
 */
 table RequestTopoLoad {
     id: string;
-    topo_file: string;
     // map_name: string;    // need not to declear
 }
 table ResponseTopoLoad {
     id: string;
     map_name: string;
-    topo_file: string;
     result: string;
     message: string;
 }
@@ -279,8 +273,6 @@ table RequestMapCurrent {
 table ResponseMapCurrent {
     id: string;
     map_name: string;
-    cloud_file: string;
-    topo_file: string;
     result: string;
     message: string;
 }
