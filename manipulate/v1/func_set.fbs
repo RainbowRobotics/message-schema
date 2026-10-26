@@ -343,3 +343,18 @@ table Request_Set_Range_Check {
     // Data Option (드랍다운)
       // 0 : Reference
 }
+
+// "set_remote_tcp"
+// Remote TCP
+table Request_Set_RemoteTCP {
+  mode: int;
+    // Remote TCP Mode (드랍다운)
+      // 0 : Not Use
+      // 1 : Use
+  ref_setting: [float];
+    // Setting Reference Point (드랍다운)
+      // 포인트 리스트 중 하나 선택. 값 7개 전달
+  ref_runtime: [float];
+    // Runtime Reference Point (드랍다운)
+      // 포인트 리스트 중 하나 선택. 값 7개 전달
+}
