@@ -25,6 +25,10 @@ table Request_Save_Area_Para {
 
     area_name: string;
     area_type: int;
+      // 0 : None
+      // 1 : Sphere
+      // 2 : Capsule
+      // 3 : Box
     area_x: float;
     area_y: float;
     area_z: float;
@@ -95,12 +99,26 @@ table Request_Save_User_Script {
 table Request_Save_SideDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : R=Power On
+    // 2 : R=Power Off
+    // 3 : R=Servo On Robot
+    // ....
+    // 25: R=SpeedBar20% /F=Recover
+    // 26: R=SpeedBar50% /F=Recover
 }
 
 // "save_side_dout_function"
 table Request_Save_SideDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : H=System Ready
+    // 2 : H=Heatbeat 1sec
+    // 3 : H=Bypass Dout #
+    // ....
+    // 30: H=Joints in-position Pin 14
+    // 31: H=Joints in-position Pin 15
 }
 
 // "save_side_din_filter"
@@ -112,11 +130,25 @@ table Request_Save_SideDin_FilterCount {
 table Request_Save_ExtDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : R=Power On
+    // 2 : R=Power Off
+    // 3 : R=Servo On Robot
+    // ....
+    // 25: R=SpeedBar20% /F=Recover
+    // 26: R=SpeedBar50% /F=Recover
 }
 
 table Request_Save_ExtDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : H=System Ready
+    // 2 : H=Heatbeat 1sec
+    // 3 : H=Bypass Dout #
+    // ....
+    // 30: H=Joints in-position Pin 14
+    // 31: H=Joints in-position Pin 15
 }
 
 table Request_Save_ExtDin_FilterCount {
@@ -143,12 +175,18 @@ table Request_SideDout_Bitcombination {
   port_end        : int;
   desired_value   : int;
   direction_option : int;
+    // 0 : Normal Direction
+    // 1 : Inverse Direction
 }
 
 table Request_SideDout_Pulse {
   port_num : int;
   block_mode : int;
   direction : int;
+    // 0 : General Type
+    // 1 : Inversion Type
+    // 2 : General Type (Non-Block)
+    // 3 : Inversion Type (Non-Block)
   time_1 : float;
   time_2 : float;
   time_3 : float;
@@ -173,12 +211,18 @@ table Request_ExtDout_Bitcombination {
   port_end        : int;
   desired_value   : int;
   direction_option : int;
+    // 0 : Normal Direction
+    // 1 : Inverse Direction
 }
 
 table Request_ExtDout_Pulse {
   port_num : int;
   block_mode : int;
   direction : int;
+    // 0 : General Type
+    // 1 : Inversion Type
+    // 2 : General Type (Non-Block)
+    // 3 : Inversion Type (Non-Block)
   time_1 : float;
   time_2 : float;
   time_3 : float;

@@ -18,12 +18,26 @@ table Request_Flange_Digital_Out {
 table Request_Save_FlangeDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : R=Power On
+    // 2 : R=Power Off
+    // 3 : R=Servo On Robot
+    // ....
+    // 25: R=SpeedBar20% /F=Recover
+    // 26: R=SpeedBar50% /F=Recover
 }
 
 // "save_flange_dout_function"
 table Request_Save_FlangeDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
+    // 0 : None
+    // 1 : H=System Ready
+    // 2 : H=Heatbeat 1sec
+    // 3 : H=Bypass Dout #
+    // ....
+    // 30: H=Joints in-position Pin 14
+    // 31: H=Joints in-position Pin 15
 }
 
 // "save_flange_din_filter"

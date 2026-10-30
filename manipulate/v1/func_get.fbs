@@ -63,6 +63,12 @@ table Request_Get_Relative_Value {
     relative_value :    MoveInput_Target;
     reference_value:    MoveInput_Target;
     move_type:          int;
+      // 0 : Move J
+      // 1 : Move L
+      // 2 : Move JB
+      // 3 : Move LB
+      // 4 : Move PB
+      // 5 : Move XB
 }
 
 table Response_Get_Relative_Value {
@@ -73,6 +79,12 @@ table Response_Get_Relative_Value {
 table Request_Get_Absolute_Value {
     reference_value:    MoveInput_Target;
     move_type:          int;
+      // 0 : Move J
+      // 1 : Move L
+      // 2 : Move JB
+      // 3 : Move LB
+      // 4 : Move PB
+      // 5 : Move XB
 }
 
 table Response_Get_Absolute_Value {
