@@ -482,6 +482,69 @@ table Request_Wrapper_TcpWeave_On{
 table Request_Wrapper_TcpWeave_Off{
 }
 //---------------------------------------------------------------
+// Weaving 2
+//---------------------------------------------------------------
+// 베지어 위빙의 점 하나 (단위: mm, sec / 핸들은 절대좌표)
+struct Weave_Bezier_Point {
+    anchor_x:   float;
+    anchor_y:   float;
+    in_x:       float;
+    in_y:       float;
+    out_x:      float;
+    out_y:      float;
+    dwell:      float;
+        // 첫 점의 dwell 은 무시
+}
+
+// "call_tcp_weaving_bezier_on"
+table Request_Wrapper_TcpWeaveBezier_On{
+    axis_torch:         int; 
+        // Torch Direction Axis (드랍다운)
+            // 0 : TCP +X Axis
+            // 1 : TCP +Y Axis
+            // 2 : TCP +Z Axis
+            // 3 : TCP -X Axis
+            // 4 : TCP -Y Axis
+            // 5 : TCP -Z Axis
+    axis_weave:         int;
+        // Weaving Direction Axis (드랍다운)
+            // 0 : TCP +X Axis
+            // 1 : TCP +Y Axis
+            // 2 : TCP +Z Axis
+            // 3 : TCP -X Axis
+            // 4 : TCP -Y Axis
+            // 5 : TCP -Z Axis
+    plane_option:       int;
+        // Weaving Plane Selection:
+            // 0 : Present TCP Frame
+            // 1 : Follow base-trajectory
+    user_rx:            float; //입력란
+    user_ry:            float; //입력란
+    user_rz:            float; //입력란
+        // User Orientation:
+        // Rx('), Ry('), Rz(')
+    points:             [Weave_Bezier_Point];
+        // 한 주기 형상 (2 ~ 64개)
+        // 첫 점 anchor = (0, 0), 마지막 점 anchor = (L, 0), 0 < L <= 100
+    scale_rate:         float = 1.0;
+        // Scale (x), 폭(y)에만 적용
+    offset_torch:       float;
+        // Offset Torch Direction (mm)
+    offset_weave:       float;
+        // Offset Weaving Direction (mm)
+    swing_ang:          float;
+        // Swing Angle('), y / Ymax 에 비례
+    smooth_delta:       float = 0.3;
+        // Corner Smoothing Width (mm), 0 이면 스무딩 없음
+    dir_update_dist:    float = 0.5;
+        // plane_option = 1 일 때 진행 방향 갱신 거리 (mm), 최소 0.05
+}
+
+// "call_tcp_weaving_bezier_off"
+table Request_Wrapper_TcpWeaveBezier_Off{
+}
+
+//---------------------------------------------------------------
 // Arc Sensing
 //---------------------------------------------------------------
 // "call_arc_sensing_on"
