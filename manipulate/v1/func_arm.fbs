@@ -6,13 +6,19 @@ namespace IPC;
 // "save_collision_parameter"
 table Request_Save_Collision_Parameter {
   onoff: int;
+    // 0 : Off
+    // 1 : On
   react: int;
+    // 0 : Pause Movement
+    // 1 : Evasion Stop
   threshold: float;
 }
 
 // "save_selfcoll_parameter"
 table Request_Save_SelfColl_Parameter {
   mode: int;
+    // 0 : Stopped just before self-collision
+    // 1 : Speed control during self-collision
   dist_internal: float;
   dist_external: float;
 }
@@ -20,6 +26,8 @@ table Request_Save_SelfColl_Parameter {
 // "save_gravity_parameter"
 table Request_Save_Gravity_Parameter {
   mode: int;
+    // 0 : Static
+    // 1 : Dynamic
   gx: float;
   gy: float;
   gz: float;
@@ -70,6 +78,10 @@ table Request_Save_Tool_List_Para {
     mass_z: float;
 
     box_type: int;
+      // 0 : None
+      // 1 : Sphere
+      // 2 : Capsule
+      // 3 : Box
     box_para_0: float;
     box_para_1: float;
     box_para_2: float;

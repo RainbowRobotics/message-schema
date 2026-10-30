@@ -31,14 +31,28 @@ struct FloatArray32 {
 table MoveInput_Target {
     tar_values:     [float];
     tar_frame:      int;
+      // -1 : Joint Frame
+      //  0 : Global Frame
+      //  1 : Tool Frame
+      //  2 : User Frame
+      //  3 : Target Frame
     tar_unit:       int;
+      // 0 : mm/deg
+      // 1 : m/rad
+      // 2 : inch/deg
 }
 table MoveInput_Type{
     pnt_type:       int;
+      // 0 : Blend (%)
+      // 1 : Blend (mm)
+      // 2 : Linear Type (MoveLB, MovePB 전용)
+      // 3 : Corner Type (MoveLB, MovePB 전용)
     pnt_para:       float;
 }
 table MoveInput_Speed {
     spd_mode:       int;
+      // 0 : %-based
+      // 1 : Absolute/physical value
     spd_vel_para:   float;
     spd_acc_para:   float;
 }

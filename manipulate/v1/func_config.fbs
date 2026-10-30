@@ -57,6 +57,10 @@ table Request_CallConfigNetwork{
 table ST_Config_Area{
   area_name: string;
   area_type: int;
+    // 0 : None
+    // 1 : Sphere
+    // 2 : Capsule
+    // 3 : Box
   area_offset: Vec3f;
   area_euler: Vec3f;
   area_para: Vec3f;
@@ -105,10 +109,14 @@ table Response_CallConfigRobotArm{
   out_coll_limit: float;
 
   self_coll_mode: int;
+    // 0 : Stopped just before self-collision
+    // 1 : Speed control during self-collision
   self_coll_distance_inter: float;
   self_coll_distance_exter: float;
 
   gravity_mode: int;
+    // 0 : Static
+    // 1 : Dynamic
   gravity_gx: float;
   gravity_gy: float;
   gravity_gz: float;
@@ -166,6 +174,10 @@ table ST_Tool_Para {
   tcp_euler:Vec3f;
 
   box_type:int;
+    // 0 : None
+    // 1 : Sphere
+    // 2 : Capsule
+    // 3 : Box
   box_parameter:ST_Box_Para;
 }
 

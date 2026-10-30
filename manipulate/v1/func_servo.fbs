@@ -118,6 +118,8 @@ table Request_ServoControl {
 // "call_referencecontrol"
 table Request_ReferenceControl {
   refcontrol_option:  int;
+    // 0 : Simulation
+    // 1 : Real
 }
 
 // "call_shortcircuit_check"

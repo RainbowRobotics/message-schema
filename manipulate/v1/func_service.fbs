@@ -163,6 +163,8 @@ table Request_Weld_Save_Parameter {
             // Device type
                 // 0 : None
                 // 1 : I/O Signal
+                // 2 : Miller M.Bus
+                // 3 : Aotai M.Bus
         dev_ip_0: int;
         dev_ip_1: int;
         dev_ip_2: int;
@@ -285,6 +287,8 @@ table Response_CallConfigWeld {
             // Device type
                 // 0 : None
                 // 1 : I/O Signal
+                // 2 : Miller M.Bus
+                // 3 : Aotai M.Bus
         dev_ip_0: int;
         dev_ip_1: int;
         dev_ip_2: int;
@@ -405,13 +409,51 @@ table Request_SoftPLC_Save_Paremeter {
     plcnum:         int;//0~31
 
     mode:           int;
+        // 0 : Off
+        // 1 : On (Always)
+        // 2 : On (Idle)
+        // 3 : On (Playing)
+        // 4 : On (Moving)
     operation:      int;
+        // 0 : == (Comparison)
+        // 1 : != (Comparison)
+        // 2 : > (Comparison)
+        // 3 : < (Comparison)
+        // 4 : >= (Comparison)
+        // 5 : <= (Comparison)
+        // 6 : And && (And Logical)
+        // 7 : Or || (Or Logical)
+        // 8 : + (Add Math)
+        // 9 : X (Mutiply Math)
+        // 10 : & (And Math)
+        // 11 : | (Or Math)
     input_a_type:     int;
+        // 0 : IO Signal
+        // 1 : System Status
+        // 2 : System Parameter
+        // 3 : Data Communication
+        // 4 : Data Dummy
+        // 5 : Signal Level
+        // 6 : User Number
     input_a_select:   int;
+        // Input A Type에 따라 옵션이 달라짐
     input_b_type:     int;
+        // 0 : IO Signal
+        // 1 : System Status
+        // 2 : System Parameter
+        // 3 : Data Communication
+        // 4 : Data Dummy
+        // 5 : Signal Level
+        // 6 : User Number
     input_b_select:   int;
+        // Input B Type에 따라 옵션이 달라짐
     output_type:    int;
+        // 0 : Signal Output
+        // 1 : Ex System Function
+        // 2 : Value Substitution
+        // 3 : Value Direct Enter
     output_select:  int;
+        // Output Type에 따라 옵션이 달라짐
     output_value:   int;
 }
 // "call_config_softplc"
@@ -437,8 +479,9 @@ table Request_EXTFT_Save_Parameter {
     dev_type:   int;
         // Device Type [드랍다운]
             // 0 : No Sensor
-            // 1 : AIDIN AFT
-            // 2 : Robotous 60HA01
+            // 1 : AIDIN Standard
+            // 2 : AIDIN AFT
+            // 3 : Robotous 60HA01
     dev_mount_opt:  int;
         // Mounting Option [드랍다운]
             // 0 : Default Mount
@@ -457,7 +500,13 @@ table Request_CallConfigEXTFT {
 }
 table Response_CallConfigEXTFT {
     dev_type:   int;
+        // 0 : No Sensor
+        // 1 : AIDIN Standard
+        // 2 : AIDIN AFT
+        // 3 : Robotous 60HA01
     dev_mount_opt:  int;
+        // 0 : Default Mount
+        // 1 : Custom Mount
     dev_mount_rx:   float;
     dev_mount_ry:   float;
     dev_mount_rz:   float;
@@ -583,8 +632,15 @@ table Request_Calib_Tcp_Orientation {
 table Request_Gripper_Action {
     gripper_type:   int;
         // Gripper type (드랍다운)
+            // 0 : Dynamixel Motor
+            // 1 : DH PG/CG Series
+            // 2 : DH AG Series
+            // ...
+            // 22 : JRT JEGH
+            // 23 : AG2-P70
     function_list:  int;
         // Function List (드랍다운)
+            // 아래 참조
     payload:        [float];
 
     // -----------------------------------------------
