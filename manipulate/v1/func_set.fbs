@@ -53,6 +53,7 @@ table Request_Set_Joint_Impedance {
   onoff:        int;
     // 0 : Off
     // 1 : On Joint Impedance
+    // 2 : Recover to System Default
   stiffness:    [float];
     // Stiffness (슬라이드 바)
     // 0~1사이 값 N개
