@@ -14,6 +14,31 @@ table Request_Save_Robot_Code {
   option: int;
 }
 
+// "call_send_can"
+table Request_Send_CAN_Msg {
+  channel: int;
+    // Channel [드랍다운 2개]
+      // Ch 0
+      // Ch 1
+  id: int;
+    // CAN ID [입력창]
+  dlc: int;
+    // DLC [드랍다운 9개]
+      // 0 = DLC 0
+      // 1 = DLC 1
+      // ..
+      // 8 = DLC 8
+  d0: int;
+  d1: int;
+  d2: int;
+  d3: int;
+  d4: int;
+  d5: int;
+  d6: int;
+  d7: int;
+    // D0 ~ D7 [입력란 8개 .. 숫자3개 들어갈 폭이면 됨]
+}
+
 // "call_persist_joint_erase"
 table Request_Erase_PersistJoint {
   target_angle: [float];
