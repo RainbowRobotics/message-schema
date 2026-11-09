@@ -1,0 +1,49 @@
+namespace ACS;
+
+/*
+    category    : Data Structure
+    usage       : Task 실행 명령의 접수·실행 시작 상태 (Task 최종 완료 상태와 구분)
+    field
+        - RECEIVED : 접수 후 실행 시작을 처리 중
+        - STARTED  : Task 서비스가 실행 시작과 process_id를 응답함
+        - REJECTED : 필수값·중복 충돌·활성 상태 검사로 거절함
+        - FAILED   : 활성 상태 조회나 Task 실행 시작에 실패함
+*/
+enum TaskCommandStatus: byte { RECEIVED = 0, STARTED = 1, REJECTED = 2, FAILED = 3 }
+
+/*
+    category    : Data Structure
+    topic       : acs/state/execution/run
+    usage       : State가 보관하는 실행 요청 기록. 기존 RequestExecutionRun을 직접 받아 이 기록을 반환
+    field
+        - intake_id   : State가 발급한 접수 ID (접수 전 거절이면 비어 있음)
+        - source      : 명령을 보낸 integration 이름
+        - external_id : 외부 업무 ID
+        - status      : 접수·실행 시작 상태
+        - scenario_id : 실행 시 검사한 활성 Scenario ID
+        - task_id     : External이 선택한 Task ID
+        - process_id  : Task 서비스가 발급한 실행 ID
+        - message     : 거절·실패 사유
+*/
+table TaskCommandIntake {
+    intake_id: string;
+    source: string;
+    external_id: string;
+    status: TaskCommandStatus;
+    scenario_id: string;
+    task_id: string;
+    process_id: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    topic       : acs/state/execution/get
+    usage       : 접수된 명령의 실행 시작 결과 조회
+    field
+        - intake_id : 조회할 접수 ID
+        - found     : 기록이 존재하면 true
+        - intake    : 찾은 접수 기록
+*/
+table RequestTaskCommandGet { intake_id: string; }
+table ResponseTaskCommandGet { found: bool; intake: TaskCommandIntake; }

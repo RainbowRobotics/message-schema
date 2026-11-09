@@ -1,0 +1,39 @@
+namespace ACS;
+
+/*
+    category    : Data Structure
+    usage       : ACS 로그 수준 (muscat.Muscat_Log_Level과 같은 값)
+*/
+enum AcsLogLevel: byte {
+    UNKNOWN = -1,
+    INFO = 0,
+    WARNING = 1,
+    ERROR = 2,
+    USER = 3,
+    DEBUG = 4,
+    GENERAL = 5,
+}
+
+/*
+    category    : Pub / Sub
+    topic       : acs/{service}/log/write
+    usage       : ACS 서비스 로그(rb_log). common 서비스가 구독해 MongoDB에 일괄 저장
+                : muscat.Muscat_Log와 같은 한 줄 로그에 로봇별 조회용 필드만 더함
+    field
+        - service       : 로그를 남긴 ACS 서비스 이름 ( "common" / "scenario" / "task" / "state" )
+        - level         : 로그 수준
+        - timestamp     : 발생 시각 ( ISO 8601 UTC, 밀리초 )
+        - contents      : 로그 한 줄
+        - robot_id      : 로봇 이벤트의 대상 로봇 ID ( 일반 로그는 비움 )
+        - event_type    : 로봇 이벤트 종류 ( "move" / "status" / "localization" / "map" / "connection" / "occupancy" / "command" )
+        - process_id    : 관련 Task 실행 ID ( Task 점유·해제 이벤트일 때 )
+*/
+table AcsLog {
+    service: string (required);
+    level: AcsLogLevel;
+    timestamp: string;
+    contents: string (required);
+    robot_id: string;
+    event_type: string;
+    process_id: string;
+}

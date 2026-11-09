@@ -1,5 +1,11 @@
 # Message Schema 사용 방법 
 
+## External → State 실행 명령
+
+External → State `acs/state/execution/run`은 기존 `acs/v1/execution.fbs`의 `RequestExecutionRun`을 직접 받습니다. 출처·외부 업무 ID는 `params`의 `acs.source`·`acs.external_id` 예약 키이며 State가 검사 후 분리합니다. `task_command.fbs`에는 기존 실행 결과 기록·상태·조회 모델만 남기고 TaskCommand·TaskCommandSubmit 요청/응답 wrapper는 제거했습니다. 실행 스키마와 State → Task 계약은 유지합니다.
+기존 `event.fbs`의 Event Policy 선택 계약은 교체했습니다. External과 State의 호출부·생성 모델을 함께 갱신해야 합니다.
+FBS 생성 모델 외의 필수값·범위 검증은 각 서비스가 수행합니다.
+
 이 레포지토리는 Git Subtree 방식으로 사용하는 message-schema를 관리합니다.
 `schemas/` 디렉토리는 **직접 커밋 금지**이며, **반드시 제공된 Make 명령을 사용**해야 합니다.
 
