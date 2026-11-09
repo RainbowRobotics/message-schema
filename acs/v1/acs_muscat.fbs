@@ -1,0 +1,17 @@
+namespace ACS;
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/checkAvailability
+    usage       : 작업 진행 전 로봇의 가용성 확인 (수동 조작 모드거나 기타 이유로 작업을 진행할 수 없는 경우를 판별하기 위함)
+    field       :
+        - availability: 로봇의 가용성 상태 (True: 사용 가능, False: 사용 불가능)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestCheckAMRAvailability {
+}
+table ResponseCheckAMRAvailability {
+    availability: bool;
+    message: string;
+}
