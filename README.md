@@ -194,4 +194,3 @@ make schema-update
 - 직접 커밋 금지, make 명령만 사용
 - `schema-update` = **PR 생성**
 - `schema-sync` = **main 기준 동기화**
-- **main 머지는 반드시 리뷰 후 수동 승인**
