@@ -1,6 +1,5 @@
 # Message Schema 사용 방법 
 
-
 이 레포지토리는 Git Subtree 방식으로 사용하는 message-schema를 관리합니다.
 `schemas/` 디렉토리는 **직접 커밋 금지**이며, **반드시 제공된 Make 명령을 사용**해야 합니다.
 
