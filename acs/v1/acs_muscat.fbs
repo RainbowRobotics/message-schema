@@ -15,3 +15,39 @@ table ResponseCheckAMRAvailability {
     availability: bool;
     message: string;
 }
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/setManualMode
+    usage       : 로봇의 수동조작 모드 설정 
+        - 상위에서 설정 가능하게 해도 되는가?에 대해서는 우선 고민으로 두고 미리 만들어두기
+    field       :
+        - mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestSetAMRManualMode {
+    mode: bool;
+}
+table ResponseSetAMRManualMode {
+    mode: bool;
+    message: string;
+}
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/getManualMode
+    usage       : 로봇의 수동조작 모드 조회
+    field       :
+        - mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestGetAMRManualMode {
+}
+table ResponseGetAMRManualMode {
+    mode: bool;
+    message: string;
+}
