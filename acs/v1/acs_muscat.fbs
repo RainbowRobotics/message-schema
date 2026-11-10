@@ -51,3 +51,18 @@ table ResponseGetAMRManualMode {
     mode: bool;
     message: string;
 }
+
+
+/*
+    category    : PUB
+    response    : -
+    topic       : muscat/{robot_serial}/status
+    usage       : SLAMNAV2가 올리는 status·moveStatus 외에 Muscat이 판단하는 로봇 상태
+        - 값이 바뀌면 바로, 그 외에는 1초마다 발행한다 (수신 측은 재시작 뒤 1초 안에 현재 값을 받는다)
+        - 새 필드는 끝에만 추가한다 (이전 버전과 호환)
+    field       :
+        - manual_mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+*/
+table MuscatStatus {
+    manual_mode: bool;
+}
