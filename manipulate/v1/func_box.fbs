@@ -50,6 +50,10 @@ table Request_Save_Area_Para {
 
     area_name: string;
     area_type: int;
+        // 0 : Nothing
+        // 1 : Sphere
+        // 2 : Capsule
+        // 3 : Box
     area_x: float;
     area_y: float;
     area_z: float;
@@ -60,6 +64,12 @@ table Request_Save_Area_Para {
     area_para_0: float;
     area_para_1: float;
     area_para_2: float;
+
+    area_purpose: int;
+      // Area Purpose
+        // 0 : N/A
+        // 1 : Self collision detection
+        // 2 : PFL Check Area
 }
 
 // "save_user_frame_parameter"

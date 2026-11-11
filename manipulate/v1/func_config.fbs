@@ -60,6 +60,7 @@ table ST_Config_Area{
   area_offset: Vec3f;
   area_euler: Vec3f;
   area_para: Vec3f;
+  area_purpose: int;
 }
 
 table ST_Config_UserFrame{
