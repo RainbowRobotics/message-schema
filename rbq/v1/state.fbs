@@ -1,0 +1,39 @@
+namespace rbq;
+
+// -------------------------------------------------
+// RBQ RobotState (로봇 Network ZenohBridge rbq/state/robot 한 프레임)
+// rbq service 가 로봇 RobotState_t(rcl/Structs.h)를 풀어 {model}/state 로 publish,
+// common 이 구독해 state_core 캐시/연결상태 판정/배터리에 사용.
+// -------------------------------------------------
+
+// 단일 관절 (다리 12, 팔 부착 시 19)
+table JointState {
+  index:        int;
+  connected:    bool;
+  temperature:  float;    // 보드 온도 [°C]
+  position:     float;    // [rad]
+  torque:       float;
+}
+
+table BatteryState {
+  voltage:       float;   // [V]
+  current:       float;   // [A]
+  level_percent: float;   // 0 ~ 100
+}
+
+table RobotState {
+  robot_model:    string;   // 예: "RBQ10"
+  timestamp_usec: ulong;    // rbq service 수신 시각 [usec]
+
+  gait_id:        byte;     // -1 제어 OFF / 0 앉음 / 1 서있음 / 3 걷기 …
+  is_standing:    bool;     // 실제로 서 있음 (gait 종류 무관)
+  is_fall:        bool;
+  imu_ok:         bool;
+  ext_joy:        bool;     // 외부 고수준 명령(SDK·SLAM) 조종 중
+
+  battery_state:  BatteryState;
+  rpy:            [float];  // IMU roll/pitch/yaw [rad]
+  joint_states:   [JointState];
+}
+
+root_type RobotState;
