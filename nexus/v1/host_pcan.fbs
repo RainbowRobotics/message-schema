@@ -166,3 +166,17 @@ table ResponseCANReceive {
     message:CANMessage;
     rx_count:ulong;
 }
+
+/*
+    [ PCAN 수신 프레임 묶음 ]
+    - 토픽 : muscat/can/receive-batch
+    - 설명 : 수신 프레임을 짧은 주기(10 ms)로 모아 한 번에 발행. 프레임마다 발행하는 muscat/can/receive와
+             같은 프레임을 수신 순서대로 담으며, 구독 측 메시지 처리 횟수를 줄이기 위해 사용
+    - 응답 :
+        - messages : 수신 순서대로의 CAN 프레임 목록 (각 항목은 ResponseCANReceive.message와 동일)
+        - rx_count : 묶음 마지막 프레임 기준 수신 카운트
+*/
+table ResponseCANReceiveBatch {
+    messages:[CANMessage];
+    rx_count:ulong;
+}
