@@ -1259,6 +1259,11 @@ table Response_CallConfigExtAxis{
     dummyaxis_x:   [float];
     dummyaxis_y:   [float];
     dummyaxis_z:   [float];
+
+    can_id: [int];
+        // ID Address [입력란]
+    can_ch: [int];
+        // Channel [입력란]
 }
 // "call_extaxis_para_basic"
 table Request_ExtAxis_Para_Basic{
@@ -1288,6 +1293,10 @@ table Request_ExtAxis_Para_Basic{
         // Encoder Resol [입력란]
     reduction:  float;
         // Reduction Rate [입력란]
+    can_id:     int;
+        // ID Address [입력란]
+    can_ch:     int;
+        // Channel [입력란]
 }
 
 // "call_extaxis_calib_clr"
