@@ -77,7 +77,6 @@ table ResponseSendACS {
     variables: [ACSVariable];
 }
 
-
 /*
     category    : PUB
     response    : -
