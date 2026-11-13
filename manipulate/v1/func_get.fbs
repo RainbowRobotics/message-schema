@@ -63,12 +63,6 @@ table Request_Get_Relative_Value {
     relative_value :    MoveInput_Target;
     reference_value:    MoveInput_Target;
     move_type:          int;
-      // 0 : Move J
-      // 1 : Move L
-      // 2 : Move JB
-      // 3 : Move LB
-      // 4 : Move PB
-      // 5 : Move XB
 }
 
 table Response_Get_Relative_Value {
@@ -79,12 +73,6 @@ table Response_Get_Relative_Value {
 table Request_Get_Absolute_Value {
     reference_value:    MoveInput_Target;
     move_type:          int;
-      // 0 : Move J
-      // 1 : Move L
-      // 2 : Move JB
-      // 3 : Move LB
-      // 4 : Move PB
-      // 5 : Move XB
 }
 
 table Response_Get_Absolute_Value {
@@ -130,3 +118,20 @@ table Response_Get_Digital_Output {
     digital_output: [byte];
 }
 //--------------------------------------------------------------
+// "call_datalog_start"
+table Request_Data_Log_Start{
+    names: [string];
+}
+// "call_datalog_done"
+table Request_Data_Log_Done{
+}
+// "call_datalog_get"
+table Request_Data_Log_Get{
+}
+table Response_Data_Log_Get_Unit{
+    name: string;
+    data: [float];
+}
+table Response_Data_Log_Get{
+    datas: [Response_Data_Log_Get_Unit];
+}

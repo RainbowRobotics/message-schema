@@ -1,0 +1,443 @@
+namespace ACS;
+
+/*
+    FRS → ACS 로봇 맵 상태 계약 (초안 v1, 2026-10-29, FRS 1차 검토 R1~R4·C1~C3 반영)
+
+    적용 상태: 2026-10-30 기준 설계 검토용 초안이며 Map·State 런타임에 연결하지 않았다.
+               현재 연동은 frs/map/deploy-status/v1 JSON 알림과 기존 FRS REST 재조회를 사용한다.
+               아래 토픽·revision 동기화·배차 판정은 이 초안의 목표 계약이며 구현 완료를 뜻하지 않는다.
+
+    흐름    : FRS가 발행·조회를 연다 → ACS Map `frs` 모듈이 받아 State로 넘긴다. ACK는 없다.
+              이벤트는 "바뀌었다"는 알림이면서 그 대상의 상태 전체를 싣는다. 기준은 조회 응답이다.
+              발행 누락 대비(outbox·재시도)는 FRS 내부 구현이며 이 계약에 넣지 않는다.
+    key     :
+        - 발행 frs/{server_id}/robots/{amr_serial}/map/events/v1         EventFrsRobotMap
+        - 조회 frs/{server_id}/robots/{amr_serial}/map/state/v1          ResponseFrsGetRobotMapStates (* 가능)
+        - 발행 frs/{server_id}/workspaces/{workspace_id}/maps/events/v1  EventFrsMapCatalog
+        - 조회 frs/{server_id}/workspaces/{workspace_id}/maps/state/v1   ResponseFrsGetMapCatalogs (* 가능)
+        - 조회 frs/{server_id}/map/revisions/v1                          ResponseFrsGetMapRevisions (30초마다)
+    버전    : key의 /v1만 쓴다. 필드 추가는 v1 안에서 하고, 기존 필드 의미를 바꾸면 v2로 간다.
+    식별    :
+        - server_id    : ACS 연결 설정이 가리키는 논리 FRS. FRS 인스턴스가 여러 개여도 같은 값이다.
+        - epoch        : 그 FRS 데이터의 세대(예: UUID 문자열). 일반 재시작에서는 그대로 두고,
+                         DB 복원·초기화로 revision이 되돌아갈 수 있을 때만 바꾼다.
+        - workspace_id : FRS Workspace ID(UUID). 어느 Workspace에도 속하지 않은 맵은 예약 값 "_unassigned"로 묶는다.
+                         빈 값은 "모름"이며 "_unassigned"와 다르다. key에는 빈 값을 쓰지 않는다.
+
+    revision:
+        - 1부터 시작하고 DB에 저장한다. 0은 쓰지 않는다.
+        - 그 메시지(로봇 상태 하나, 워크스페이스 카탈로그 하나)에 담기는 값이 하나라도 바뀌면 1 오른다.
+          revision·updated_at 자체는 증가 원인이 아니다. 조회·재발행·같은 결과 재전송은 저장된 revision과 updated_at을 그대로 쓴다.
+        - 비교 범위:
+            state_revision    : (server_id, epoch, amr_serial). Agent가 아니라 로봇 serial 기준이다.
+                                Agent 해제·다른 Agent에 serial 재할당 뒤 같은 로봇이 돌아와도 1로 되돌리지 않고 이어서 올린다.
+            catalog_revision  : (server_id, epoch, workspace_id)
+            topology_revision : (server_id, epoch, map_id)
+        - topology_revision은 그 맵의 로드된 Topology가 바뀔 때 1 오른다. "바뀐다"는 ACS가 쓰는 범위 기준이다:
+          로드된 Topology 선택(topologyId 교체)이나 본문(topologyData의 노드·링크 문서) 변경. 같은 mapVersion 안의 수정도 포함한다.
+          이름·설명·상태 표시만 바뀐 것은 올리지 않는다. 기존 topologyVersion이나 Topology 엔티티 version을 그대로 쓰지 않는다
+          (다른 topology_id가 같은 version 숫자를 가질 수 있다). 이 v1에서 topology_revision은 Topology 내용 식별에만 쓰며,
+          맵 파일 전체(Cloud 등)가 같다는 뜻으로 넓혀 해석하지 않는다.
+        - 출처: 로봇에 적용된 revision(loaded_topology_revision, FrsMapOperation.topology_revision)은 지금 server_id·epoch·map_id의
+          내용 계보와 이어진 것을 FRS가 확인했을 때만 값으로 준다. 다른 FRS에서 온 Agent, epoch 교체 전 기록처럼 출처를 확인하지 못한
+          값은 다시 확인할 때까지 null이다. 옛 기록의 숫자를 새 epoch 값으로 바꿔 붙이지 않는다.
+          이전 epoch에 발행한 명령의 늦은 보고·outbox 항목은 지금 epoch 상태에 반영하지 않는다(FRS 구현).
+
+    Topology 본문:
+        - 본문은 새 Zenoh 조회 없이 기존 REST `GET /api/v1/topologies/loaded?mapId={map_id}`(ACS Map 창구 경유)로 받는다.
+        - FRS는 이 응답에 `topologyRevision`(같은 응답의 topologyData와 같은 내용 snapshot의 revision)과 `epoch`를 더한다.
+          특정 revision을 고르는 요청은 없다. 늘 지금 본문과 그 revision을 함께 준다.
+        - 받는 쪽은 카탈로그가 아니라 본문 응답의 topologyRevision으로 캐시를 기록한다.
+          응답 revision이 카탈로그보다 작으면 다시 받고, 크면 응답 값으로 기록한 뒤 카탈로그를 다시 맞춘다.
+          응답 epoch가 아는 epoch와 다르면 기록하지 않고 전체를 다시 맞춘다.
+          topologyRevision이 없는 응답(구형 FRS)은 revision 모름으로 기록하고 그 맵은 STALE을 판정하지 않는다.
+
+    조회 응답:
+        - 성공·실패는 응답 table의 result로 알린다. result가 COMPLETE인 응답만 그 조회 범위의 완전 목록이다.
+          FRS 내부 조회 실패(Fleet·DB 등)·시간 초과·부분 결과는 COMPLETE가 아니며, 정상 빈 목록으로 바꿔 보내지 않는다.
+        - 전송 실패(Zenoh 오류 응답, 응답 없음, 시간 초과)와 COMPLETE가 아닌 응답은 모두 실패로 본다.
+          실패하면 받는 쪽은 가진 상태를 지우지 않고 그대로 둔다.
+        - 응답자는 server_id마다 하나다. 한 조회에 응답 하나를 보내고 그 안에 목록 전체를 담는다(* 조회도 같다).
+          받는 쪽은 응답이 둘 이상 오면 실패로 보고, 일부 응답을 전체 목록으로 쓰지 않는다.
+        - 페이지는 없다(one-shot). 한 응답 한도(초안 값, FRS 확인 필요): 로봇 상태 2,000대, 카탈로그 500개, revision 10,000개,
+          어느 것이든 8 MiB. 넘으면 LIMIT_EXCEEDED로 목록 없이 답한다. 받는 쪽은 revision 목록을 받아 대상별 조회로 나눠 받는다.
+        - 삭제: 삭제 이벤트는 없다. COMPLETE인 전체 목록(* 조회·revision 조회)에서 빠진 로봇·Workspace, COMPLETE인 대상별 조회의 빈 목록은
+          FRS가 관리하지 않는 것으로 보고 받는 쪽 캐시에서 지운다(최대 30초 늦음). 실패한 조회로는 지우지 않는다.
+        - 카탈로그 범위는 그 Workspace에 직접 속한 로드된 맵만이다. 하위 Workspace 포함이 필요하면 받는 쪽이 FRS Workspace 트리로 합친다.
+
+    받는 쪽 반영:
+        - 같은 epoch에서 지금 가진 것보다 revision이 크면 통째로 바꾸고, 같거나 작으면 버린다.
+          이벤트와 조회 응답에 같은 규칙을 쓰므로 조회 중 받은 이벤트를 따로 모아 둘 필요가 없다.
+        - 아는 것과 epoch가 다른 이벤트는 바로 반영하지 않는다. revision 일괄 조회로 현재 epoch를 확인한 뒤
+          조회 결과로 전체를 다시 맞춘다(늦게 도착한 이전 세대 이벤트로 상태가 되돌아가는 것을 막는다).
+          epoch가 바뀌면 이전 epoch의 로봇 상태·카탈로그·Topology revision 기록을 모두 버린다.
+        - 30초마다 revision 일괄 조회를 하고, revision이 다른 대상만 다시 조회한다.
+          마지막 이벤트 한 건을 놓쳐 뒤이은 변경이 없을 때도 이 확인으로 맞춘다.
+
+    필수 값과 검증:
+        - FlatBuffers는 필드가 빠져도 메시지를 만들 수 있다(revision 0, serial 없음 등). 주석 규칙만으로 막히지 않으므로
+          보내는 쪽과 받는 쪽이 모두 검증한다.
+        - 필수: server_id·epoch(빈 값 아님), result가 INVALID 아님, 로봇 상태의 amr_serial과 state_revision ≥ 1,
+          카탈로그의 workspace_id와 catalog_revision ≥ 1, 카탈로그 항목의 map_id, revision 목록 항목의 대상 ID와 revision ≥ 1.
+        - 필수 값이 없거나 enum에 정의되지 않은 값이 오면 그 메시지 전체를 깨진 것으로 보고 버린다(로그만 남김).
+          "FRS 상태 없음"이나 NONE·CONFIRMED 같은 정상 값으로 바꾸지 않는다.
+        - ulong은 JS에서 bigint 또는 정밀도를 지키는 문자열로 다룬다. API JSON으로 넘길 때 Number로 바꾸지 않는다.
+    값 없음 :
+        - 문자열이 비었거나 없으면 "모름·없음"이다. 선택 숫자(= null)가 null이면 "확인 못 함"이다.
+        - "정보 없음"은 "불일치"가 아니다. 판정에서 불일치로 보지 않고 미확인으로 다룬다.
+    시각    : *_at은 ISO 8601 UTC 문자열이다. 표시용이며 순서 판단에 쓰지 않는다.
+              updated_at은 FRS에서 그 상태가 바뀐 시각이며, ACS가 받은 시각을 대신하지 않는다.
+    범위 밖 : 로봇 보유 맵 전체 목록과 작업별 전체 이력은 이 계약에 넣지 않는다(ACS 미사용, 필요하면 별도 조회).
+              로드 전 점유 확인(FRS → ACS 질의)도 v1에 넣지 않는다. 처음에는 운영 규칙으로 작업 중 로드를 제한한다.
+
+    ACS 배차 판정 (로봇마다 위에서부터 처음 걸리는 줄을 적용한다)
+        "정보 없음"을 "불일치"로 보지 않아야 레거시 로봇이 앞 줄에 걸려 7번 허용 정책이 무효가 되지 않는다.
+        STALE은 FRS 화면도 같은 규칙(6번)으로 계산한다.
+        1. ACS에서 로봇 연결이 끊김, 또는 로봇 status를 마지막으로 받은 뒤 설정 시간이 지남   → 제외, 경고(연결·status 없음)
+        2. 로봇 status의 로드 단계가 로드됨이 아님(로드 중·맵 없음·로드 실패·확인 안 됨)       → 제외, 경고(로드 단계)
+        3. load_operation_state가 QUEUED·RUNNING·UNKNOWN                                       → 제외, 작업 중인 로봇이면 충돌 경고,
+                                                                                                  UNKNOWN은 운영자 확인 필요
+        4. loaded_map_name과 로봇 status 맵 이름이 둘 다 있고 서로 다름                         → 제외, 경고(이름 불일치)
+        5. identity_status가 MISMATCH                                                          → 제외, 경고(식별 불일치)
+        6. 같은 loaded_map_id에 대해 loaded_topology_revision과 카탈로그 topology_revision이
+           둘 다 있고 서로 다름(STALE)                                                          → 제외, 경고(옛 Topology)
+        7. FRS 로봇 상태 없음(FRS가 관리하지 않는 로봇·아직 못 받음), identity_status가 UNCONFIRMED,
+           이름이나 revision 한쪽이 없음, 카탈로그에 그 맵이 없음, 카탈로그 조회 실패            → 허용, 미확인 경고(설정으로 제외 가능)
+        8. 그 밖(CONFIRMED이고 위 조건에 걸리지 않음)                                           → 허용
+        - FRS 로봇 상태가 없으면 3~6번을 건너뛰고 7번을 적용한다. 1·2번(ACS가 직접 받는 로봇 연결·status)은 언제나 적용한다.
+        - "FRS 로봇 상태 없음"은 COMPLETE인 조회로 확인한 경우만이다. 조회가 실패하면 마지막으로 받은 상태를 그대로 쓴다.
+        - FRS 연결이 끊기면 마지막으로 받은 상태를 쓰되 CONFIRMED에도 미확인 경고를 붙인다.
+          배차 전체를 막을지는 기존 배차 기본 맵 판정(State dispatch_module.check_dispatch_map)이 정한다.
+        - 받는 쪽은 FRS 연결 상태와 마지막 성공 조회 시각(Map frs 모듈), 로봇 status 마지막 수신 시각(State)을 따로 둔다.
+          1번은 로봇 status 수신 시각으로, FRS 쪽 신선도는 연결 상태와 마지막 성공 조회 시각으로 본다.
+        - 작업 결과(last_operation의 SKIPPED·FAILURE 등)는 표시만 하고 판정에 쓰지 않는다.
+*/
+
+
+/*
+    category    : Enum
+    usage       : 조회 응답의 결과. 값이 없으면 INVALID이며 깨진 응답으로 본다.
+    value       :
+        - INVALID        : 값 없음·알 수 없음. 목록을 쓰지 않는다
+        - COMPLETE       : 그 조회 범위의 완전 목록. 빈 목록이면 "대상 없음"이 확실하다
+        - FAILED         : FRS 내부 조회 실패(Fleet·DB 등). 목록 없이 답하고 error_code·error_message를 채운다
+        - LIMIT_EXCEEDED : 한 응답 한도를 넘음. 목록 없이 답한다. 받는 쪽은 대상별 조회로 나눠 받는다
+*/
+enum FrsQueryResult : byte {
+    INVALID = 0,
+    COMPLETE = 1,
+    FAILED = 2,
+    LIMIT_EXCEEDED = 3,
+}
+
+
+/*
+    category    : Enum
+    usage       : 로봇의 로드 작업 진행 상태. 값이 없으면 UNKNOWN이다(배차를 막는 쪽 기본값).
+    규칙        :
+        - 근거는 FRS에 영속된 commandId별 로드 명령 기록이다(기존 미확인 작업 기록 포함). 명령마다 QUEUED·RUNNING·UNKNOWN·종료 중
+          하나이고, 로봇 값은 끝나지 않은 명령을 모아 정한다: 하나라도 UNKNOWN이면 UNKNOWN, 아니면 하나라도 RUNNING이면 RUNNING,
+          아니면 하나라도 QUEUED면 QUEUED, 끝나지 않은 명령이 없으면 NONE. 한 명령의 종료·SKIPPED만으로 다른 명령이 남은 로봇을
+          NONE으로 바꾸지 않는다.
+        - 처음 값(새 계약 적용, FRS 재시작)도 같은 명령 기록으로 정한다. 끝나지 않은 명령이 없음을 확인하면 NONE,
+          끝나지 않았는데 지금 상태를 확인 못 한 명령이 있으면 UNKNOWN. 레거시 Agent(실제 시작 보고 미지원·내용 revision 미보고)라는
+          이유만으로 UNKNOWN으로 두지 않고, 확인 없이 일괄 NONE으로 채우지도 않는다.
+        - 시간 초과·TTL·보유 맵 목록만으로는 NONE으로 바꾸지 않는다. 근거는 그 명령의 종료 결과나 Agent 실행 상태 확인이다.
+        - DEPLOY 단계(파일 받기·검사·백업·압축 풀기·재구성)는 RUNNING이 아니다. 파일 보관만 하는 배포(loadAfterDeploy=false)는
+          이 값을 바꾸지 않는다. loadAfterDeploy=true 배포는 파일 보관 중에도 QUEUED이고 실제 로드 시작부터 RUNNING이다.
+          기존 LOADING_MAP 단계가 프로그램마다 무엇을 확인한 시점인지(실제 로드 시작인지)는 FRS 구현에서 대조한다.
+    value       :
+        - UNKNOWN : 진입 - 끝나지 않은 명령의 지금 상태를 FRS가 확인할 수 없음(재시작 뒤 종료 결과 미수신, Agent 실행 상태 미확인)
+                    종료 - 확인 결과에 따라 실행 전 대기 → QUEUED, 실제 실행 중 → RUNNING, 종료 확인 → 그 명령 종료
+                           확인되지 않으면 그대로 두고 운영자가 볼 수 있게 표시한다. 수동 해제 절차는 FRS 구현 항목이다.
+        - NONE    : 진입 - 끝나지 않은 로드 명령이 없음이 명령 기록으로 확인됨
+                    종료 - 로드 명령(또는 loadAfterDeploy=true 배포에 딸린 로드 예약)이 영속 저장됨 → QUEUED
+        - QUEUED  : 진입 - 명령·예약이 FRS에 영속 저장됨. 발행보다 먼저 저장하고 명령별 기록으로 로봇 값을 계산하므로,
+                           늦게 처리된 QUEUED가 이미 받은 종료 결과를 되돌리지 않는다(지금 코드의 발행 후 알림 시점을 그대로 쓰지 않는다)
+                    종료 - Agent가 실제 로드 시작을 보고 → RUNNING, 종료 결과(SUCCESS·FAILURE·SKIPPED) → 그 명령 종료,
+                           상태 확인 불가 → UNKNOWN
+        - RUNNING : 진입 - Agent가 실제 로드 실행을 시작함
+                    종료 - 종료 결과(SUCCESS·FAILURE) → 그 명령 종료, 상태 확인 불가 → UNKNOWN
+*/
+enum FrsMapLoadOperationState : byte {
+    UNKNOWN = 0,
+    NONE = 1,
+    QUEUED = 2,
+    RUNNING = 3,
+}
+
+
+/*
+    category    : Enum
+    usage       : FRS가 지금 활성(로드된) 맵을 배포 기록(보유 맵)과 이어서 확인한 결과. 값이 없으면 UNCONFIRMED다.
+                  다시 판정하는 때는 로드 종료 결과를 받을 때다. 파일 보관만 성공한 배포는 바꾸지 않는다.
+                  CONFIRMED는 맵 연결 확인이며 Topology 최신성을 보증하지 않는다. STALE(로봇의 Topology가 옛것)은 여기 넣지 않고,
+                  받는 쪽이 loaded_topology_revision과 카탈로그 topology_revision을 비교해 정한다
+                  (Topology를 고칠 때마다 로봇 상태를 다시 보내지 않기 위해서다).
+    근거        :
+        - 지금 활성 맵에 대한 보고만 쓴다. 로봇이 A를 쓰는 중에 B의 파일 보관 실패·B 패키지 무결성 실패를 A의 MISMATCH로 옮기지 않는다.
+        - 버전·체크섬 비교는 같은 맵·같은 배포 유형·선택한 패키지끼리만 한다. FULL_MAP과 TOPOLOGY_ONLY ZIP 체크섬은 비교하지 않는다.
+        - 명령과 맞지 않아 거절한 보고는 활성 맵 불일치의 근거가 아니다.
+        - Agent가 보고하지 않는 값(활성 버전·체크섬 등)은 추정하지 않는다.
+    value       :
+        - UNCONFIRMED : FRS가 확인하지 못함. 레거시 Agent, 로드 결과에 맵 식별 정보 없음, 로드 성공 보고를 받은 적 없음,
+                        로드 실패나 부분 적용 실패로 활성 내용과의 연결 근거가 깨짐(이때 loaded_map_id 등 마지막 확정 사실은 남긴다)
+        - CONFIRMED   : 활성 맵의 로드 성공 보고가 map_id·로봇 맵 이름에서 그 배포 기록과 같고, 무결성 확인(mapIntegrityOk)이 실패가 아님
+        - MISMATCH    : 활성 맵의 로드 성공 보고가 같은 맵·배포 유형·패키지의 배포 기록과 다름(map_id·이름·버전·체크섬),
+                        또는 활성 맵의 무결성 확인 실패
+*/
+enum FrsMapIdentityStatus : byte {
+    UNCONFIRMED = 0,
+    CONFIRMED = 1,
+    MISMATCH = 2,
+}
+
+
+/*
+    category    : Enum
+    usage       : 작업 단계. DEPLOY는 로봇에 맵 파일 보관, LOAD는 로봇 프로그램의 맵 로드다.
+*/
+enum FrsMapStage : byte {
+    NONE = 0,
+    DEPLOY = 1,
+    LOAD = 2,
+}
+
+
+/*
+    category    : Enum
+    usage       : 작업 한 건의 결과. 표시·이력용이며 배차 판단에 쓰지 않는다(판단은 FrsRobotMapState의 현재 상태로 한다).
+    value       :
+        - NONE    : 작업 정보 없음
+        - QUEUED  : 명령 영속 저장, 실행 대기
+        - STARTED : Agent가 그 단계를 실제로 시작함(DEPLOY는 파일 보관 시작, LOAD는 실제 로드 시작). 두 단계를 섞지 않는다
+        - SUCCESS : DEPLOY는 로봇에 파일 보관 완료, LOAD는 로드 성공 확인
+        - FAILURE : 그 단계 실패(reason_code)
+        - SKIPPED : 사전 검사 등으로 실행하지 않음. 로봇의 현재 맵 사용 가능 여부와는 무관하다
+*/
+enum FrsMapOperationStatus : byte {
+    NONE = 0,
+    QUEUED = 1,
+    STARTED = 2,
+    SUCCESS = 3,
+    FAILURE = 4,
+    SKIPPED = 5,
+}
+
+
+/*
+    category    : Data Structure
+    usage       : 마지막 배포·로드 작업 한 건. 표시용이다.
+    field       :
+        - request_id, deploy_id, command_id : FRS 작업 식별자. 없으면 빈 값
+        - workspace_id, map_id, map_version : 작업 대상 맵
+        - deploy_type       : "FULL_MAP" | "TOPOLOGY_ONLY" | "CSV_ONLY"
+        - checksum          : 배포 ZIP SHA256. 배포 유형이 다르면 서로 비교할 수 없다
+        - topology_revision : 이 작업이 싣는 Topology 내용 revision. 지금 epoch 계보와 이어진 값만 주고, 확인 못 하면 null
+        - reason_code       : 실패·건너뜀 코드. 표시용이며 값 목록은 FRS가 관리한다
+        - reason            : 사람이 읽는 설명
+*/
+table FrsMapOperation {
+    stage: FrsMapStage;
+    status: FrsMapOperationStatus;
+    request_id: string;
+    deploy_id: string;
+    command_id: string;
+    workspace_id: string;
+    map_id: string;
+    map_version: string;
+    deploy_type: string;
+    checksum: string;
+    topology_revision: ulong = null;
+    reason_code: string;
+    reason: string;
+    occurred_at: string;
+}
+
+
+/*
+    category    : Data Structure
+    usage       : 로봇 한 대의 맵 상태 전체. 이벤트와 조회 응답이 같은 table을 쓴다.
+    field       :
+        - state_revision          : (server_id, epoch, amr_serial) 안에서 1부터(필수). 아래 필드가 하나라도 바뀌면 1 오른다
+        - agent_id                : FRS Agent ID. amr_serial과 같다고 가정하지 않는다
+        - amr_serial              : 로봇 serial(필수). ACS robot_id(Muscat 로봇 serial)와 맞추는 값
+        - load_operation_state    : FrsMapLoadOperationState
+        - load_command_ids        : 끝나지 않은(QUEUED·RUNNING·UNKNOWN) 로드 명령 ID 전체. NONE이면 빈 목록
+        - workspace_id            : 로드된 맵의 워크스페이스. 미소속 맵이면 "_unassigned", 모르면 빈 값
+        - loaded_map_id           : FRS가 마지막으로 로드 성공을 확인한 맵. 모르면 빈 값
+        - loaded_map_name         : 로봇 쪽 맵 이름(FRS loadMapName, 예: "test2__topology"). ACS가 로봇 status 맵 이름과 대조한다.
+                                    레거시·모르면 빈 값이며, 그때는 이름을 대조하지 않는다
+        - loaded_map_version      : 로드된 맵의 map_version(바뀌지 않는 값)
+        - loaded_topology_revision: 로봇에 실제로 적용·로드된 Topology 내용 revision. 지금 server_id·epoch·map_id 계보와 이어진 것을
+                                    확인했을 때만 값이고, 그 밖(출처 미확인·다른 FRS에서 온 Agent·epoch 교체 전 기록)은 null(STALE 판정 안 함).
+                                    로드 성공 때 확정하고, 파일 보관만 성공하면 바꾸지 않는다.
+                                    TOPOLOGY_ONLY 배포는 실제로 적용됐을 때만 바꾼다
+        - identity_status         : FrsMapIdentityStatus
+        - identity_reason_code    : identity_status가 CONFIRMED가 아닌 이유. 표시용
+        - last_operation          : 마지막 작업. 없으면 null
+        - updated_at              : FRS에서 이 상태가 마지막으로 바뀐 시각. ACS 수신 시각이 아니다
+*/
+table FrsRobotMapState {
+    state_revision: ulong;
+    agent_id: string;
+    amr_serial: string;
+    load_operation_state: FrsMapLoadOperationState = UNKNOWN;
+    load_command_ids: [string];
+    workspace_id: string;
+    loaded_map_id: string;
+    loaded_map_name: string;
+    loaded_map_version: string;
+    loaded_topology_revision: ulong = null;
+    identity_status: FrsMapIdentityStatus = UNCONFIRMED;
+    identity_reason_code: string;
+    last_operation: FrsMapOperation;
+    updated_at: string;
+}
+
+
+/*
+    category    : Data Structure
+    usage       : 워크스페이스 활성(로드된) 맵 목록의 한 항목
+    field       :
+        - map_id            : FRS Map ID(필수)
+        - map_version       : 바뀌지 않는 값. 내용 변경은 topology_revision으로만 안다
+        - topology_revision : 지금 FRS의 로드된 Topology 내용 revision(위 공통 규칙). 확인 못 하면 null(STALE 판정 안 함).
+                              본문은 REST loaded 조회로 받고, 캐시는 그 응답의 topologyRevision으로 기록한다
+*/
+table FrsMapCatalogEntry {
+    map_id: string;
+    map_name: string;
+    map_version: string;
+    topology_revision: ulong = null;
+}
+
+
+/*
+    category    : Data Structure
+    usage       : 워크스페이스 하나의 활성 맵 목록 전체. 그 Workspace에 직접 속한 로드된 맵만 담는다
+    field       :
+        - workspace_id     : FRS Workspace ID 또는 "_unassigned"(필수)
+        - catalog_revision : (server_id, epoch, workspace_id) 안에서 1부터(필수). 목록 추가·제거, 워크스페이스 소속 변경,
+                             목록 안 맵의 map_name·map_version·topology_revision 등 담긴 값이 바뀌면 1 오른다
+        - maps             : 활성 맵 전체
+*/
+table FrsMapCatalog {
+    workspace_id: string;
+    catalog_revision: ulong;
+    maps: [FrsMapCatalogEntry];
+    updated_at: string;
+}
+
+
+/*
+    category    : Pub / Sub
+    topic       : frs/{server_id}/robots/{amr_serial}/map/events/v1
+    usage       : 로봇 맵 상태가 바뀔 때마다 그 로봇의 상태 전체를 보낸다. ACK 없음
+    field       :
+        - event_id         : 로그 추적용. 중복·순서 판단에는 state.state_revision을 쓴다
+        - server_id, epoch : 위 공통 규칙(필수)
+        - state            : 바뀐 뒤 상태 전체(필수)
+*/
+table EventFrsRobotMap {
+    event_id: string;
+    server_id: string;
+    epoch: string;
+    state: FrsRobotMapState;
+}
+
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : frs/{server_id}/robots/{amr_serial}/map/state/v1  (amr_serial 자리에 * 를 쓰면 전체)
+    usage       : 로봇 맵 상태 현재값 조회. 요청 payload는 비우고 대상은 key로 정한다. 응답 하나에 목록 전체를 담는다
+    field       :
+        - result        : FrsQueryResult. COMPLETE일 때만 states를 쓴다
+        - error_code    : COMPLETE가 아닐 때의 코드. 표시·로그용
+        - error_message : 사람이 읽는 설명
+        - states        : 대상 로봇 상태 전체. COMPLETE에서 빠진 로봇은 FRS가 관리하지 않는 로봇이다
+*/
+table ResponseFrsGetRobotMapStates {
+    result: FrsQueryResult;
+    error_code: string;
+    error_message: string;
+    server_id: string;
+    epoch: string;
+    states: [FrsRobotMapState];
+}
+
+
+/*
+    category    : Pub / Sub
+    topic       : frs/{server_id}/workspaces/{workspace_id}/maps/events/v1
+    usage       : 워크스페이스 활성 맵 목록이나 목록 안 맵 내용이 바뀌면 그 워크스페이스 목록 전체를 보낸다. ACK 없음.
+                  로봇 로드 맵 변경(EventFrsRobotMap)과는 따로 보낸다
+*/
+table EventFrsMapCatalog {
+    event_id: string;
+    server_id: string;
+    epoch: string;
+    catalog: FrsMapCatalog;
+}
+
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : frs/{server_id}/workspaces/{workspace_id}/maps/state/v1  (workspace_id 자리에 * 를 쓰면 전체)
+    usage       : 워크스페이스 활성 맵 목록 현재값 조회. 요청 payload는 비운다. 응답 하나에 목록 전체를 담는다
+    field       :
+        - result, error_code, error_message : ResponseFrsGetRobotMapStates와 같다
+        - catalogs : 대상 Workspace 목록 전체("_unassigned" 포함). COMPLETE에서 빠진 Workspace는 FRS에 없는 것이다
+*/
+table ResponseFrsGetMapCatalogs {
+    result: FrsQueryResult;
+    error_code: string;
+    error_message: string;
+    server_id: string;
+    epoch: string;
+    catalogs: [FrsMapCatalog];
+}
+
+
+/*
+    category    : Data Structure
+    usage       : revision 일괄 조회의 로봇 한 대 항목(둘 다 필수)
+*/
+table FrsRobotMapRevision {
+    amr_serial: string;
+    state_revision: ulong;
+}
+
+
+/*
+    category    : Data Structure
+    usage       : revision 일괄 조회의 워크스페이스 한 개 항목(둘 다 필수)
+*/
+table FrsMapCatalogRevision {
+    workspace_id: string;
+    catalog_revision: ulong;
+}
+
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : frs/{server_id}/map/revisions/v1
+    usage       : 받는 쪽이 30초마다 부르는 가벼운 확인. epoch가 다르면 전체를, 같으면 revision이 다른 대상만 다시 조회한다.
+                  요청 payload는 비운다
+    field       :
+        - result, error_code, error_message : ResponseFrsGetRobotMapStates와 같다. COMPLETE일 때만 목록을 쓴다
+        - robots     : FRS가 관리하는 로봇 전체의 state_revision. COMPLETE에서 빠진 로봇은 FRS 상태 없음으로 다룬다
+        - workspaces : 워크스페이스 전체("_unassigned" 포함)의 catalog_revision
+*/
+table ResponseFrsGetMapRevisions {
+    result: FrsQueryResult;
+    error_code: string;
+    error_message: string;
+    server_id: string;
+    epoch: string;
+    robots: [FrsRobotMapRevision];
+    workspaces: [FrsMapCatalogRevision];
+}

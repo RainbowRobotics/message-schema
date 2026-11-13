@@ -1,3 +1,5 @@
+include "acs_robots.fbs";
+
 namespace ACS;
 
 /*
@@ -8,6 +10,19 @@ namespace ACS;
 table RequestExecutionRun {
     task_id: string;
     repeat_count: int = 1;
+    // 실행 시작 전 local 변수로 넣을 key/value (끝에 추가해 이전 버전과 호환)
+    params: [Param];
+    // 실행할 Task 트리(Scenario `acs/scenario/task/tree` 응답 JSON). Task는 queryable 안에서
+    // Scenario를 다시 조회하지 않으므로 호출자가 채워 보낸다.
+    task_tree_json: string;
+    // Debugger 디버그 실행 여부. 켜져 있을 때만 breakpoint와 step_mode를 적용한다.
+    debug_mode: bool = false;
+    // 디버그 실행에서 breakpoint뿐 아니라 매 Step마다 Next를 기다릴지 여부
+    step_mode: bool = false;
+    // 디버그 실행에서 진입 직전에 멈출 Step ID 목록
+    breakpoint_step_ids: [string];
+    // 첫 회차를 시작할 Step ID. 비우면 처음부터 실행한다.
+    start_step_id: string;
 }
 
 table ResponseExecutionRun {

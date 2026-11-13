@@ -1,0 +1,906 @@
+namespace ACS.External.SMC;
+
+/*
+    SMC CSSD(중앙공급실) 현장 확장 모델입니다. External 서비스 `features/smc`가 사용합니다.
+    flatc로 FlatBuffers 클래스(rb_flat_buffers.ACS.External.SMC)와
+    Pydantic 모델(rb_schemas.fbs_models.acs.external.acs_smc_models, 이름 끝에 PD)을 함께 생성합니다.
+    FlatBuffers enum은 숫자이므로 상태값은 아래 순서의 정수로 주고받습니다.
+*/
+
+/*
+    수술 오더 상태
+        - PENDING   : 요청이 들어와 작업 대기
+        - RUNNING   : 작업 중 (수술 키트 적재 진행 중)
+        - COMPLETED : 작업 완료
+        - ERROR     : 작업 중 오류
+        - BANNED    : 사용자 요청 등으로 자동 작업 및 작업 금지
+*/
+enum SMCSurgeryStatus:byte { PENDING = 0, RUNNING = 1, COMPLETED = 2, ERROR = 3, BANNED = 4 }
+
+/*
+    지도 위 external 자원의 사각형 영역입니다.
+        - map_name : 영역을 지정한 Map 서비스의 맵 이름
+        - x, y     : 사각형 중심의 World 좌표
+        - width    : World 좌표계 기준 너비
+        - height   : World 좌표계 기준 높이
+        - rotation : 반시계 방향 회전각(degree)
+*/
+table SMCMapRectangle {
+    map_name: string;
+    x: double;
+    y: double;
+    width: double;
+    height: double;
+    rotation: double;
+}
+
+/*
+    지도 위 작업 지점의 World 좌표입니다.
+        - x, y : 지도 World 좌표
+*/
+table SMCPose {
+    x: double;
+    y: double;
+}
+
+/*
+    SMC CSSD 카트 모델 및 사이즈 정보
+        - cart_id                   : 카트 식별자
+        - cart_model                : 카트 모델명
+        - cart_level                : 카트 층 수 (하위부터 1부터 시작)
+        - cart_level_height         : 카트 층별 높이 (단위: m)
+        - cart_width                : 카트 너비 (단위: m)
+        - cart_depth                : 카트 깊이 (단위: m)
+        - cart_left_level_occupied  : 카트 왼쪽 층별 점유 여부 (true: 점유, false: 비점유)
+        - cart_right_level_occupied : 카트 오른쪽 층별 점유 여부 (true: 점유, false: 비점유)
+        - node_id                   : 카트가 놓이는 위치의 맵 노드 식별자 (하위 호환을 위해 마지막 필드)
+*/
+table SMCCart {
+    cart_id: string (required);
+    cart_model: string (required);
+    cart_level: int;
+    cart_level_height: [float];
+    cart_width: float;
+    cart_depth: float;
+    cart_left_level_occupied: [bool];
+    cart_right_level_occupied: [bool];
+    map_rectangle: SMCMapRectangle;
+    node_id: string;
+}
+
+/*
+    SMC CSSD 멸균 후 추출 컨베이어 기준정보
+        - conveyor_id        : 컨베이어 식별자
+        - left_node_id              : 이전 버전 호환용 왼쪽 노드 식별자
+        - right_node_id             : 이전 버전 호환용 오른쪽 노드 식별자
+        - start_node_id             : 작업 시작 GOAL 노드 식별자
+        - end_node_id               : 작업 종료 GOAL 노드 식별자
+        - conveyor_level            : 컨베이어 층수
+        - conveyor_level_height     : 컨베이어 층별 높이 (단위: m)
+*/
+table SMCConveyor {
+    conveyor_id: string;
+    left_node_id: string;
+    right_node_id: string;
+    map_rectangle: SMCMapRectangle;
+    start_node_id: string;
+    end_node_id: string;
+    conveyor_level: int;
+    conveyor_level_height: [float];
+}
+
+/*
+    SMC CSSD 병실/수술실 모델 및 상태 정보
+        - room_id     : 병실/수술실 식별자
+        - room_name   : 병실/수술실 이름
+        - room_status : 병실/수술실 상태 (예: "idle", "pending", "running", "error", "banned")
+        - map_name    : 수술실이 속한 맵 이름
+        - node_id     : 수술실 작업 GOAL 노드 식별자
+        - map_rectangle : 지도에 표시할 수술실 영역
+*/
+table SMCRoom {
+    room_id: string;
+    room_name: string (required);
+    room_status: string (required);
+    map_name: string;
+    node_id: string;
+    map_rectangle: SMCMapRectangle;
+}
+
+/*
+    SMC CSSD 선반 모델 및 상태 정보 (임시. 상위 연동 예정이며 임시로 1층 단위로 슬롯 배정)
+        - shelf_id           : 선반 식별자 (생성 시 서버 자동 발급)
+        - shelf_model        : 선반 모델명
+        - shelf_level        : 선반 층 수 (하위부터 1부터 시작)
+        - shelf_level_height : 선반 층별 높이 (단위: m)
+        - shelf_width        : 선반 너비 (단위: m)
+        - shelf_depth        : 선반 깊이 (단위: m)
+        - level_category     : 선반 층별 진료과 코드·카테고리 쌍
+        - start_node_id      : 선반 작업 시작 지점 GOAL 노드 식별자
+        - end_node_id        : 선반 작업 종료 지점 GOAL 노드 식별자
+        - end_pose           : 선반 작업 종료 지점의 World 좌표
+*/
+table SMCCSSDShelf {
+    shelf_id: string;
+    shelf_level: int;
+    shelf_level_height: [float];
+    shelf_width: float;
+    shelf_depth: float;
+    level_category: [SMCSurgicalKitCagetory];
+    map_rectangle: SMCMapRectangle;
+    shelf_model: string;
+    start_node_id: string;
+    end_node_id: string;
+    end_pose: SMCPose;
+}
+
+/*
+    SMC CSSD 수술 오더로 인한 수술 키트 적재 작업 모델 및 상태 정보
+        - surgery_id    : 수술 오더 식별자
+        - status        : 수술 오더 상태 (SMCSurgeryStatus)
+        - cart_id       : 수술 키트 적재 카트 식별자
+        - cart_position : 수술 키트 적재 카트 위치 (0부터 시작)
+        - cart_node_id  : 수술 키트 적재 카트 노드 식별자
+        - kits          : 수술 키트 카테고리 목록
+*/
+table SMCSurgery {
+    surgery_id: string (required);
+    status: SMCSurgeryStatus;
+    cart_id: string (required);
+    cart_position: int;
+    cart_node_id: string;
+    kits: [string];
+}
+
+/*
+    SMC CSSD 멸균 후 추출 수술 키트 모델 및 상태 정보
+        - kit_id      : 수술 키트 식별자 (멸균할 때마다 자동 생성)
+        - department_code : 진료과 코드 (예: "URO")
+        - category    : 수술 키트 카테고리 (예: "Endoscopy")
+        - created_at  : 수술 키트 생성 시각
+        - occupied    : 수술 키트 점유 여부
+        - occupied_by : 수술 키트를 사용하는 수술 ID (점유 중일 때만 존재)
+        - shelf_id    : 수술 키트가 위치한 선반 식별자
+        - shelf_level : 수술 키트가 위치한 선반 층 수 (하위부터 1부터 시작)
+*/
+table SMCSurgicalKits {
+    kit_id: string (required);
+    department_code: string;
+    category: string (required);
+    created_at: string (required);
+    occupied: bool;
+    occupied_by: string;
+    shelf_id: string (required);
+    shelf_level: int;
+}
+
+/* 수술 키트 카테고리. department_code는 진료과 코드(예: URO), category는 분류명(예: Endoscopy)입니다. */
+table SMCSurgicalKitCagetory {
+    department_code: string;
+    category: string (required);
+}
+
+/*
+    SMC 수술 키트 크기/모델 정보
+        - kit_id        : 이전 버전 호환용 식별자 (신규 크기 정의에서는 사용하지 않음)
+        - kit_model     : 수술 키트 모델명 (예: "A", "B", "C". 아래 크기는 모델명에 종속)
+        - kit_height    : 수술 키트 높이 (단위: m)
+        - kit_width     : 수술 키트 너비 (단위: m)
+        - kit_depth     : 수술 키트 깊이 (단위: m)
+        - handle_height : 수술 키트 손잡이 높이 (단위: m)
+*/
+table SMCSurgicalKitsSize {
+    kit_id: string;
+    kit_model: string (required);
+    kit_height: float;
+    kit_width: float;
+    kit_depth: float;
+    handle_height: float;
+}
+
+
+/*
+    아래 요청·응답은 External `features/smc`의 Zenoh queryable(acs/external/smc/<요청>)과 HTTP API(/smc/...)가 함께 씁니다.
+    실패(대상 없음, 중복 생성 등)는 result="fail"과 message로 돌려줍니다.
+*/
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgicalKitList
+    usage       : 멸균 후 추출 수술 키트 목록 조회
+    field       :
+        - kits : 멸균 후 추출 수술 키트 목록
+*/
+table RequestGetSurgicalKitList {
+    department_code: string;    // 지정하면 이 진료과 코드의 키트만 조회합니다(앞뒤 공백 무시).
+    category: string;           // 지정하면 이 분류의 키트만 조회합니다(앞뒤 공백 무시).
+}
+table ResponseGetSurgicalKitList {
+    kits: [SMCSurgicalKits];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgicalKitInfo
+    usage       : 멸균 후 추출 수술 키트 단건 조회
+    field       :
+        - kit_model : 조회할 모델명
+        - kit : 조회한 멸균 후 추출 수술 키트 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetSurgicalKitInfo {
+    kit_id: string;
+}
+table ResponseGetSurgicalKitInfo {
+    kit: SMCSurgicalKits;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgicalKitCategoryList
+    usage       : 수술 키트 카테고리 리스트 반환
+    field       :
+        - categories : 수술 키트 카테고리 리스트
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetSurgicalKitCagetoryList {
+}
+table ResponseGetSurgicalKitCagetoryList {
+    categories: [SMCSurgicalKitCagetory];
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createSurgicalKitCategory
+    usage       : 수술 키트 카테고리 추가 (같은 category가 있으면 실패)
+    field       :
+        - category : 수술 키트 카테고리
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateSurgicalKitCagetory {
+    department_code: string;
+    category: string;
+}
+table ResponseCreateSurgicalKitCagetory {
+    categories: [SMCSurgicalKitCagetory];
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteSurgicalKitCategory
+    usage       : 수술 키트 카테고리 삭제 (일치하는 category가 없으면 실패. 키트 중 사용하는 category가 있으면 실패)
+    field       :
+        - category : 수술 키트 카테고리
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteSurgicalKitCagetory {
+    department_code: string;
+    category: string;
+}
+table ResponseDeleteSurgicalKitCagetory {
+    categories: [SMCSurgicalKitCagetory];
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createSurgicalKit
+    usage       : 멸균 후 추출 수술 키트 생성
+    field       :
+        - kit : 생성할 멸균 후 추출 수술 키트
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateSurgicalKit {
+    department_code: string;
+    category: string;
+}
+table ResponseCreateSurgicalKit {
+    kit: SMCSurgicalKits;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateSurgicalKit
+    usage       : 멸균 후 추출 수술 키트 수정 (kit_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - kit : 수정할 멸균 후 추출 수술 키트
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateSurgicalKit {
+    kit: SMCSurgicalKits;
+}
+table ResponseUpdateSurgicalKit {
+    kit: SMCSurgicalKits;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteSurgicalKit
+    usage       : 멸균 후 추출 수술 키트 삭제 (없으면 실패)
+    field       :
+        - kit_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteSurgicalKit {
+    kit_id: string;
+}
+table ResponseDeleteSurgicalKit {
+    kit_id: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgicalKitSizeList
+    usage       : 수술 키트 크기/모델 목록 조회
+    field       :
+        - sizes : 수술 키트 크기/모델 목록
+*/
+table RequestGetSurgicalKitSizeList {
+}
+table ResponseGetSurgicalKitSizeList {
+    sizes: [SMCSurgicalKitsSize];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgicalKitSize
+    usage       : 수술 키트 크기/모델 단건 조회
+    field       :
+        - kit_id : 조회할 식별자
+        - size : 조회한 수술 키트 크기/모델 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetSurgicalKitSize {
+    kit_id: string;
+    kit_model: string;
+}
+table ResponseGetSurgicalKitSize {
+    size: SMCSurgicalKitsSize;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createSurgicalKitSize
+    usage       : 수술 키트 크기/모델 생성 (같은 kit_model이 있으면 실패)
+    field       :
+        - size : 생성할 수술 키트 크기/모델
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateSurgicalKitSize {
+    size: SMCSurgicalKitsSize;
+}
+table ResponseCreateSurgicalKitSize {
+    size: SMCSurgicalKitsSize;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateSurgicalKitSize
+    usage       : 수술 키트 크기/모델 수정 (kit_model로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - size : 수정할 수술 키트 크기/모델
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateSurgicalKitSize {
+    size: SMCSurgicalKitsSize;
+}
+table ResponseUpdateSurgicalKitSize {
+    size: SMCSurgicalKitsSize;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteSurgicalKitSize
+    usage       : 수술 키트 크기/모델 삭제 (없으면 실패)
+    field       :
+        - kit_model : 삭제할 모델명
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteSurgicalKitSize {
+    kit_id: string;
+    kit_model: string;
+}
+table ResponseDeleteSurgicalKitSize {
+    kit_id: string;
+    result: string;
+    message: string;
+    kit_model: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getConveyorList
+    usage       : 멸균 후 추출 컨베이어 목록 조회
+    field       :
+        - conveyors : 멸균 후 추출 컨베이어 목록
+*/
+table RequestGetConveyorList {
+}
+table ResponseGetConveyorList {
+    conveyors: [SMCConveyor];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getConveyorInfo
+    usage       : 멸균 후 추출 컨베이어 단건 조회
+    field       :
+        - conveyor_id : 조회할 식별자
+        - conveyor : 조회한 멸균 후 추출 컨베이어 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetConveyorInfo {
+    conveyor_id: string;
+}
+table ResponseGetConveyorInfo {
+    conveyor: SMCConveyor;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createConveyor
+    usage       : 멸균 후 추출 컨베이어 생성 (같은 conveyor_id가 있으면 실패)
+    field       :
+        - conveyor : 생성할 멸균 후 추출 컨베이어
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateConveyor {
+    conveyor: SMCConveyor;
+}
+table ResponseCreateConveyor {
+    conveyor: SMCConveyor;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateConveyor
+    usage       : 멸균 후 추출 컨베이어 수정 (conveyor_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - conveyor : 수정할 멸균 후 추출 컨베이어
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateConveyor {
+    conveyor: SMCConveyor;
+}
+table ResponseUpdateConveyor {
+    conveyor: SMCConveyor;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteConveyor
+    usage       : 멸균 후 추출 컨베이어 삭제 (없으면 실패)
+    field       :
+        - conveyor_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteConveyor {
+    conveyor_id: string;
+}
+table ResponseDeleteConveyor {
+    conveyor_id: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getRoomList
+    usage       : 병실/수술실 목록 조회
+    field       :
+        - rooms : 병실/수술실 목록
+*/
+table RequestGetRoomList {
+}
+table ResponseGetRoomList {
+    rooms: [SMCRoom];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getRoomInfo
+    usage       : 병실/수술실 단건 조회
+    field       :
+        - room_id : 조회할 식별자
+        - room : 조회한 병실/수술실 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetRoomInfo {
+    room_id: string;
+}
+table ResponseGetRoomInfo {
+    room: SMCRoom;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createRoom
+    usage       : 병실/수술실 생성 (같은 room_id가 있으면 실패)
+    field       :
+        - room : 생성할 병실/수술실
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateRoom {
+    room: SMCRoom;
+}
+table ResponseCreateRoom {
+    room: SMCRoom;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateRoom
+    usage       : 병실/수술실 수정 (room_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - room : 수정할 병실/수술실
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateRoom {
+    room: SMCRoom;
+}
+table ResponseUpdateRoom {
+    room: SMCRoom;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteRoom
+    usage       : 병실/수술실 삭제 (없으면 실패)
+    field       :
+        - room_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteRoom {
+    room_id: string;
+}
+table ResponseDeleteRoom {
+    room_id: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getCartList
+    usage       : 카트 목록 조회
+    field       :
+        - carts : 카트 목록
+*/
+table RequestGetCartList {
+}
+table ResponseGetCartList {
+    carts: [SMCCart];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getCartInfo
+    usage       : 카트 단건 조회
+    field       :
+        - cart_id : 조회할 식별자
+        - cart : 조회한 카트 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetCartInfo {
+    cart_id: string;
+}
+table ResponseGetCartInfo {
+    cart: SMCCart;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createCart
+    usage       : 카트 생성 (같은 cart_id가 있으면 실패)
+    field       :
+        - cart : 생성할 카트
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateCart {
+    cart: SMCCart;
+}
+table ResponseCreateCart {
+    cart: SMCCart;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateCart
+    usage       : 카트 수정 (cart_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - cart : 수정할 카트
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateCart {
+    cart: SMCCart;
+}
+table ResponseUpdateCart {
+    cart: SMCCart;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteCart
+    usage       : 카트 삭제 (없으면 실패)
+    field       :
+        - cart_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteCart {
+    cart_id: string;
+}
+table ResponseDeleteCart {
+    cart_id: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getShelfList
+    usage       : CSSD 선반 목록 조회
+    field       :
+        - shelves : CSSD 선반 목록
+*/
+table RequestGetShelfList {
+}
+table ResponseGetShelfList {
+    shelves: [SMCCSSDShelf];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getShelfInfo
+    usage       : CSSD 선반 단건 조회
+    field       :
+        - shelf_id : 조회할 식별자
+        - shelf : 조회한 CSSD 선반 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetShelfInfo {
+    shelf_id: string;
+}
+table ResponseGetShelfInfo {
+    shelf: SMCCSSDShelf;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createShelf
+    usage       : CSSD 선반 생성 (shelf_id는 서버가 자동 발급)
+    field       :
+        - shelf : 생성할 CSSD 선반
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateShelf {
+    shelf: SMCCSSDShelf;
+}
+table ResponseCreateShelf {
+    shelf: SMCCSSDShelf;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateShelf
+    usage       : CSSD 선반 수정 (shelf_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - shelf : 수정할 CSSD 선반
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateShelf {
+    shelf: SMCCSSDShelf;
+}
+table ResponseUpdateShelf {
+    shelf: SMCCSSDShelf;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteShelf
+    usage       : CSSD 선반 삭제 (없으면 실패)
+    field       :
+        - shelf_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteShelf {
+    shelf_id: string;
+}
+table ResponseDeleteShelf {
+    shelf_id: string;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgeryList
+    usage       : 수술 오더 목록 조회
+    field       :
+        - surgeries : 수술 오더 목록
+*/
+table RequestGetSurgeryList {
+}
+table ResponseGetSurgeryList {
+    surgeries: [SMCSurgery];
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/getSurgeryInfo
+    usage       : 수술 오더 단건 조회
+    field       :
+        - surgery_id : 조회할 식별자
+        - surgery : 조회한 수술 오더 (없으면 null)
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestGetSurgeryInfo {
+    surgery_id: string;
+}
+table ResponseGetSurgeryInfo {
+    surgery: SMCSurgery;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/createSurgery
+    usage       : 수술 오더 생성 (같은 surgery_id가 있으면 실패)
+    field       :
+        - surgery : 생성할 수술 오더
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestCreateSurgery {
+    surgery: SMCSurgery;
+}
+table ResponseCreateSurgery {
+    surgery: SMCSurgery;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/updateSurgery
+    usage       : 수술 오더 수정 (surgery_id로 찾아 전체 교체, 없으면 실패)
+    field       :
+        - surgery : 수정할 수술 오더
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestUpdateSurgery {
+    surgery: SMCSurgery;
+}
+table ResponseUpdateSurgery {
+    surgery: SMCSurgery;
+    result: string;
+    message: string;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : acs/external/smc/deleteSurgery
+    usage       : 수술 오더 삭제 (없으면 실패)
+    field       :
+        - surgery_id : 삭제할 식별자
+        - result  : 처리 결과 ("success", "fail")
+        - message : 실패 사유
+*/
+table RequestDeleteSurgery {
+    surgery_id: string;
+}
+table ResponseDeleteSurgery {
+    surgery_id: string;
+    result: string;
+    message: string;
+}

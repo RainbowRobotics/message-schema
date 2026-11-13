@@ -3,6 +3,9 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+// -----------------------------------------------------
+// SCB Safety Board
+// -----------------------------------------------------
 // "call_config_safety"
 table Request_CallConfigSafety {
   safety_addr:           int;
@@ -26,4 +29,14 @@ table Request_Safety_State_Idle {
     target_option:             int;
         // 0 : reset only state
         // 1 : reset state + flag
+}
+
+// -----------------------------------------------------
+// PFL
+// -----------------------------------------------------
+// "call_pfl_monitor_start"
+table Request_PFL_Monitor_Start {
+}
+// "call_pfl_monitor_stop"
+table Request_PFL_Monitor_Stop {
 }

@@ -15,7 +15,7 @@ table Param {
 /*
     category    : RPC
     response    : Delayed One-shot
-    topic       : acs/state/robots/getOptimalRobot
+    topic       : acs/state/agents/getOptimalRobot
     usage       : 작업 진행 전 최적 로봇 탐색 후 반환
     field       :
         - pose      : 로봇의 도착지 (node_id, name_name, x, y, rz)
@@ -34,7 +34,7 @@ table ResponseGetOptimalRobot {
 /*
     category    : RPC
     response    : Delayed One-shot
-    topic       : acs/state/setScenario
+    topic       : acs/state/agents/setScenario
     usage       : 시나리오 이력 로그
     field       :
         - scenario_id   : 시나리오 ID
@@ -61,7 +61,7 @@ table ResponseSetScenario {
 /*
     category    : RPC
     response    : Delayed One-shot
-    topic       : acs/muscat/program/run
+    topic       : acs/state/agents/muscatProgramRun
     usage       : 머스캣 프로그램 실행
     field       :
         - robot_id      : 로봇 시리얼

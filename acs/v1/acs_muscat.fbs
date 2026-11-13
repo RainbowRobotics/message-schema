@@ -1,0 +1,92 @@
+namespace ACS;
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/checkAvailability
+    usage       : 작업 진행 전 로봇의 가용성 확인 (수동 조작 모드거나 기타 이유로 작업을 진행할 수 없는 경우를 판별하기 위함)
+    field       :
+        - availability: 로봇의 가용성 상태 (True: 사용 가능, False: 사용 불가능)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestCheckAMRAvailability {
+}
+table ResponseCheckAMRAvailability {
+    availability: bool;
+    message: string;
+}
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/setManualMode
+    usage       : 로봇의 수동조작 모드 설정 
+        - 상위에서 설정 가능하게 해도 되는가?에 대해서는 우선 고민으로 두고 미리 만들어두기
+    field       :
+        - mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestSetAMRManualMode {
+    mode: bool;
+}
+table ResponseSetAMRManualMode {
+    mode: bool;
+    message: string;
+}
+
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/{robot_serial}/getManualMode
+    usage       : 로봇의 수동조작 모드 조회
+    field       :
+        - mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+        - message: 가용성 확인 실패 시 메시지
+*/
+table RequestGetAMRManualMode {
+}
+table ResponseGetAMRManualMode {
+    mode: bool;
+    message: string;
+}
+
+table ACSVariable {
+    name: string;
+    type: string;
+    value: string;
+}
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : muscat/{robot_serial}/sendACS
+    usage       : ACS로 변수 및 상태 전달
+    field       :
+        - command: ACS로 전달할 명령어 ("setVariable", "getVariable" 등)
+        - variables: 변수 목록
+        - processId: 대상 ACS 실행 ID. ACS가 Muscat 프로그램 시작 뒤 RBP_ACS_PROCESS_ID 변수로 넣어 준 값
+*/
+table RequestSendACS {
+    command: string;
+    variables: [ACSVariable];
+    processId: string;
+}
+table ResponseSendACS {
+    variables: [ACSVariable];
+}
+
+/*
+    category    : PUB
+    response    : -
+    topic       : muscat/{robot_serial}/status
+    usage       : SLAMNAV2가 올리는 status·moveStatus 외에 Muscat이 판단하는 로봇 상태
+        - 값이 바뀌면 바로, 그 외에는 1초마다 발행한다 (수신 측은 재시작 뒤 1초 안에 현재 값을 받는다)
+        - 새 필드는 끝에만 추가한다 (이전 버전과 호환)
+    field       :
+        - manual_mode: 로봇의 수동조작 모드 (True: 수동조작모드, False: 자동조작모드)
+*/
+table MuscatStatus {
+    manual_mode: bool;
+}

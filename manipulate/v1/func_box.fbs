@@ -14,6 +14,31 @@ table Request_Save_Robot_Code {
   option: int;
 }
 
+// "call_send_can"
+table Request_Send_CAN_Msg {
+  channel: int;
+    // Channel [드랍다운 2개]
+      // Ch 0
+      // Ch 1
+  id: int;
+    // CAN ID [입력창]
+  dlc: int;
+    // DLC [드랍다운 9개]
+      // 0 = DLC 0
+      // 1 = DLC 1
+      // ..
+      // 8 = DLC 8
+  d0: int;
+  d1: int;
+  d2: int;
+  d3: int;
+  d4: int;
+  d5: int;
+  d6: int;
+  d7: int;
+    // D0 ~ D7 [입력란 8개 .. 숫자3개 들어갈 폭이면 됨]
+}
+
 // "call_persist_joint_erase"
 table Request_Erase_PersistJoint {
   target_angle: [float];
@@ -25,10 +50,10 @@ table Request_Save_Area_Para {
 
     area_name: string;
     area_type: int;
-      // 0 : None
-      // 1 : Sphere
-      // 2 : Capsule
-      // 3 : Box
+        // 0 : Nothing
+        // 1 : Sphere
+        // 2 : Capsule
+        // 3 : Box
     area_x: float;
     area_y: float;
     area_z: float;
@@ -39,6 +64,12 @@ table Request_Save_Area_Para {
     area_para_0: float;
     area_para_1: float;
     area_para_2: float;
+
+    area_purpose: int;
+      // Area Purpose
+        // 0 : N/A
+        // 1 : Self collision detection
+        // 2 : PFL Check Area
 }
 
 // "save_user_frame_parameter"
@@ -99,26 +130,12 @@ table Request_Save_User_Script {
 table Request_Save_SideDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
-    // 0 : None
-    // 1 : R=Power On
-    // 2 : R=Power Off
-    // 3 : R=Servo On Robot
-    // ....
-    // 25: R=SpeedBar20% /F=Recover
-    // 26: R=SpeedBar50% /F=Recover
 }
 
 // "save_side_dout_function"
 table Request_Save_SideDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
-    // 0 : None
-    // 1 : H=System Ready
-    // 2 : H=Heatbeat 1sec
-    // 3 : H=Bypass Dout #
-    // ....
-    // 30: H=Joints in-position Pin 14
-    // 31: H=Joints in-position Pin 15
 }
 
 // "save_side_din_filter"
@@ -130,25 +147,11 @@ table Request_Save_SideDin_FilterCount {
 table Request_Save_ExtDin_SpecialFunc {
   port_num:         int;
   desired_function: int;
-    // 0 : None
-    // 1 : R=Power On
-    // 2 : R=Power Off
-    // 3 : R=Servo On Robot
-    // ....
-    // 25: R=SpeedBar20% /F=Recover
-    // 26: R=SpeedBar50% /F=Recover
 }
 
 table Request_Save_ExtDout_SpecialFunc {
   port_num:         int;
   desired_function: int;
-    // 0 : None
-    // 1 : H=System Ready
-    // 2 : H=Heatbeat 1sec
-    // 3 : H=Bypass Dout #
-    // ....
-    // 30: H=Joints in-position Pin 14
-    // 31: H=Joints in-position Pin 15
 }
 
 table Request_Save_ExtDin_FilterCount {
@@ -175,18 +178,12 @@ table Request_SideDout_Bitcombination {
   port_end        : int;
   desired_value   : int;
   direction_option : int;
-    // 0 : Normal Direction
-    // 1 : Inverse Direction
 }
 
 table Request_SideDout_Pulse {
   port_num : int;
   block_mode : int;
   direction : int;
-    // 0 : General Type
-    // 1 : Inversion Type
-    // 2 : General Type (Non-Block)
-    // 3 : Inversion Type (Non-Block)
   time_1 : float;
   time_2 : float;
   time_3 : float;
@@ -211,18 +208,12 @@ table Request_ExtDout_Bitcombination {
   port_end        : int;
   desired_value   : int;
   direction_option : int;
-    // 0 : Normal Direction
-    // 1 : Inverse Direction
 }
 
 table Request_ExtDout_Pulse {
   port_num : int;
   block_mode : int;
   direction : int;
-    // 0 : General Type
-    // 1 : Inversion Type
-    // 2 : General Type (Non-Block)
-    // 3 : Inversion Type (Non-Block)
   time_1 : float;
   time_2 : float;
   time_3 : float;

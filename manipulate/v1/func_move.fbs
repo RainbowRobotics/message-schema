@@ -866,3 +866,13 @@ table Request_Wrapper_ServoL_On{
 // "call_wrapper_servo_l_off"
 table Request_Wrapper_ServoL_Off{
 }
+// "call_wrapper_online_l_on"
+table Request_Wrapper_OnlineL_On{
+    target:         MoveInput_Target;   // 본궤적에 더해질 offset (x,y,z,rx,ry,rz,(a))
+    speed:          MoveInput_Speed;    // offset 변화 속도/가속도 (spd_mode 0:% / 1:절대값)
+    timeout:        float;              // 초, (0, 10] 마지막 명령 후 경과 시 자동 off
+    filter:         float;              // 0~1
+}
+// "call_wrapper_online_l_off"
+table Request_Wrapper_OnlineL_Off{
+}
