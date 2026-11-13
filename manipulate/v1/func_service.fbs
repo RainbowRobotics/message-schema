@@ -580,6 +580,7 @@ table Request_Calib_Tcp_Orientation {
 // Gripper
 //---------------------------------------------------------------
 // "call_gripper_action"
+// "pub_gripper_action"
 table Request_Gripper_Action {
     gripper_type:   int;
         // Gripper type (드랍다운)
