@@ -406,14 +406,16 @@ table SubStepEntry {
 table RequestProgramExecution {
   program_id: string;
   program_name: string;
-  params: [Variable];
+  params: [Variable] (deprecated); // variables 로 대체
+  variables: [Variable]; // 시작 전 main task 에 주입할 local 변수
 }
 table ResponseProgramExecution {
   program_id: string;
   program_name: string;
-  params: [Variable];
+  params: [Variable] (deprecated); // variables 로 대체
   result: string;
   message: string;
+  variables: [Variable];
 }
 
 /*
