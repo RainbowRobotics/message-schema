@@ -57,7 +57,6 @@ table ACSVariable {
     type: string;
     value: string;
 }
-<<<<<<< HEAD
 
 /*
     category    : RPC
@@ -77,8 +76,6 @@ table RequestSendACS {
 table ResponseSendACS {
     variables: [ACSVariable];
 }
-=======
->>>>>>> 4aedd4e45b40e9b6c861d34abaff4bc301d2bfa2
 
 /*
     category    : RPC
