@@ -18,7 +18,8 @@ enum VariableType: byte {
   STRING,
   NUMBER,
   BOOLEAN,
-  LIST
+  LIST,
+  DICT
 }
 
 table Variable {
