@@ -1231,6 +1231,7 @@ table Response_CallConfigExtAxis{
     device:     [int];
         // Device [드랍다운]
             // 0 : RSauto
+            // 1 : RB Module
     max_a:      [float];
         // Max-Acc [입력란]
     max_v:      [float];
@@ -1278,6 +1279,7 @@ table Request_ExtAxis_Para_Basic{
     device:     int;
         // Device [드랍다운]
             // 0 : RSauto
+            // 1 : RB Module
     max_a:      float;
         // Max-Acc [입력란]
     max_v:      float;
