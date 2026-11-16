@@ -57,6 +57,28 @@ table ACSVariable {
     type: string;
     value: string;
 }
+<<<<<<< HEAD
+
+/*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : muscat/{robot_serial}/sendACS
+    usage       : ACS로 변수 및 상태 전달
+    field       :
+        - command: ACS로 전달할 명령어 ("setVariable", "getVariable" 등)
+        - variables: 변수 목록
+        - processId: 대상 ACS 실행 ID. ACS가 Muscat 프로그램 시작 variables에 RBP_ACS_PROCESS_ID로 담아 보낸 값
+*/
+table RequestSendACS {
+    command: string;
+    variables: [ACSVariable];
+    processId: string;
+}
+table ResponseSendACS {
+    variables: [ACSVariable];
+}
+=======
+>>>>>>> 4aedd4e45b40e9b6c861d34abaff4bc301d2bfa2
 
 /*
     category    : RPC
