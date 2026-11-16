@@ -78,6 +78,33 @@ table ResponseSendACS {
 }
 
 /*
+    category    : RPC
+    response    : Delayed One-shot
+    topic       : acs/map/frs/moveCandidate
+    usage       : 멀티모드일 때 FRS를 통해서 FMS로 이동 후보지 전달
+    field       :
+        - robot_serial: 로봇의 시리얼 번호
+        - map_name: 맵 이름
+        - goals: 이동 후보지 목록
+            - node_id: 후보지 노드 ID
+              priority: 후보지 우선순위
+*/
+table CandidateGoal {
+    node_id: string;
+    priority: int;
+}
+table RequestAMRMoveCandidate {
+    robot_serial: string;
+    map_name: string;
+    goals: [CandidateGoal];
+}
+table ResponseAMRMoveCandidate {
+    success: bool;
+    message: string;
+    robot_serial: string;
+    goals: [CandidateGoal];
+}
+/*
     category    : PUB
     response    : -
     topic       : muscat/{robot_serial}/status
