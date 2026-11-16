@@ -42,6 +42,13 @@ table Request_CoredataPubFrequency {
   frequency_hz: float;
 }
 
+// "call_shared_memory_follow"
+table Request_SharedMemory_Follow {
+  onoff: int;
+    // 0 = Off 
+    // 1 = On
+}
+
 // "C500XXX/state_monitoring"
 table State_Monitoring_Name {
   name:   [string];
