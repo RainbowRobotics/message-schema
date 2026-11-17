@@ -1,0 +1,87 @@
+// rhc queryables, key <prefix>/rpc/<name>. Every response is RpcResponse
+// except rpc/settings (RpcSettings). ACCEPT/REJECT replaces PDU ACK/0xA3.
+namespace RHC;
+
+enum SchemaVersion : ushort { CURRENT = 1 }
+enum Result : byte { ACCEPT = 0, REJECT = 1 }
+enum MoveProfileKind : ubyte { LINEAR_X = 0, LINEAR_Y = 1, ROTATE = 2 }
+enum LimitKind : ubyte { VEL = 0, VEL_JOG = 1, SAFETY = 2, SAFETY_ACC = 3 }
+// Values equal the PDU 0xA2 targets 0x20/0x21/0x30/0x31.
+enum ChargeItem : ubyte { PAD_VOLTAGE = 32, PAD_CURRENT = 33, FULL_SOC = 48, RECHARGE_SOC = 49 }
+
+table RpcResponse {
+  result:Result;
+  reason:string;
+  value:float;
+}
+
+// rpc/motor_init, rpc/motor_off, rpc/stop, rpc/recover
+table RpcEmpty {
+  id:uint;
+}
+
+// rpc/move_profile (target in m or rad, limit_v in m/s or rad/s)
+table RpcMoveProfile {
+  kind:MoveProfileKind;
+  target:float;
+  limit_v:float;
+}
+
+// rpc/set_limits (m/s, m/s^2, rad/s, rad/s^2)
+table RpcSetLimits {
+  kind:LimitKind;
+  v:float;
+  v_acc:float;
+  w:float;
+  w_acc:float;
+}
+
+// rpc/wheel_config
+table RpcWheelConfig {
+  wheel_base:float;
+  wheel_radius:float;
+  motor_direction:float;
+  gear_ratio:float;
+}
+
+// rpc/lx_ly
+table RpcLxLy {
+  lx:float;
+  ly:float;
+}
+
+// rpc/wheel_type (PDU values: 1 diff, 2 qd, 3 mecanum)
+table RpcWheelType {
+  wheel_type:ubyte;
+}
+
+// rpc/clear_error (PDU_SAFETY_CLEAR_CMD 1..6)
+table RpcClearError {
+  code:ubyte;
+}
+
+// rpc/charge/xnergy (0 stop, 1 start, 3 set current A)
+table RpcChargeXnergy {
+  command:ubyte;
+  param:float;
+}
+
+// rpc/charge/set (V, A, %, %)
+table RpcChargeSet {
+  item:ChargeItem = PAD_VOLTAGE;
+  value:float;
+}
+
+// rpc/settings — handshake
+table RpcSettingsRequest {
+  version:ushort;
+}
+
+table RpcSettings {
+  result:Result;
+  version:ushort;
+  robot_type:string;
+  wheel_type:ubyte;
+  firmware:string;
+  reason:string;
+}

@@ -1,0 +1,23 @@
+// rhc local (not in the app_slamnav2 rhci contract): conveyor top module, structure only (rhc conveyor.h).
+//   rpc:  <prefix>/rpc/conveyor (RpcConveyor -> RpcResponse)
+//   out:  <prefix>/conveyor, 10 Hz when CONVEYOR.TYPE is set
+namespace RHC;
+
+enum ConveyorCommand : ubyte { STOP = 1, FORWARD = 2, BACKWARD = 3 }  // values = rhc CONVEYOR_CMD
+
+table RpcConveyor {
+  command:ConveyorCommand = STOP;
+}
+
+table Conveyor {
+  version:ushort = 1;
+  t_ns:ulong;
+  seq:uint;
+  valid:bool;
+  run:ubyte;             // 0 stopped, 1 forward, 2 backward
+  error:bool;
+  error_code:ubyte;      // device specific
+  command:ubyte;         // ConveyorCommand last accepted, 0 none
+}
+
+root_type Conveyor;

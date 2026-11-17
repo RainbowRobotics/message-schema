@@ -1,0 +1,28 @@
+// rhc -> rhci, 10 Hz, key <prefix>/safety. Replaces PDU 0xA1 mid-frequency frame.
+// rhci only refreshes its safety freshness clock when valid == true, so a
+// stale CAN side makes slamnav2 readiness fail closed (SAFETY_STATE_STALE).
+namespace RHC;
+
+table Safety {
+  version:ushort = 1;
+  t_ns:ulong;
+  seq:uint;
+  valid:bool;
+  emo:bool;
+  bumper:ubyte;          // bitmask, 0 = clear
+  plc_op_stop:bool;
+  om_state:ubyte;
+  ri_state:ubyte;
+  charge_state:ubyte;    // 0 until BMS spec lands (rhc-design)
+  lidar_field:ubyte;
+  interlock:ubyte;
+  motor_stop:bool;
+  steer_aligned:bool;    // reserved for QD steering (kinematics P5/P6)
+  // rhc local addition (appended, wire compatible): PDU mid frame safety_state bytes, channel 1 / 2.
+  // bit 0 bumper, 1 interlock, 2 operational stop, 3 speed field mismatch, 4 obstacle, 5 over speed,
+  // 6 ref/meas mismatch, 7 EMO pressed (mobile.cpp parse_safety_v2_mid_freq)
+  sf1:ubyte;
+  sf2:ubyte;
+}
+
+root_type Safety;

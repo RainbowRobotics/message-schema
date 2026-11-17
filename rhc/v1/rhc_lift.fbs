@@ -1,0 +1,73 @@
+// rhc local (not in the app_slamnav2 rhci contract): ORGO lift on the system CAN bus (rhc orgo_lift.h).
+//   rpc:  <prefix>/rpc/lift (RpcLift -> RpcResponse; REJECT when the lift cannot move: see reason)
+//         <prefix>/rpc/lift/param (RpcLiftParam -> RpcResponse; READ_ALL fills the params block of Lift)
+//   out:  <prefix>/lift, 10 Hz
+namespace RHC;
+
+// values = rhc LIFT_CMD. ORIGIN = set origin (4 was INIT, same frame). One shot: ORIGIN, ALARM_CLEAR, EMG_CLEAR, GOTO.
+// MANUAL (per-lift duty, no synchronisation) must be refreshed within 0.5 s or rhc stops it.
+enum LiftCommand : ubyte { STOP = 1, UP = 2, DOWN = 3, ORIGIN = 4, EMG = 5, ALARM_CLEAR = 6, EMG_CLEAR = 7, GOTO = 8,
+                           MANUAL = 9 }
+// values = rhc LIFT_PARAM (orgo_lift.h: units and ranges)
+enum LiftParam : ubyte { READ_ALL = 0, TOP, MAX_DUTY, DIFF_ACCEL, DECEL, IN_POSITION, ALARM_LIMITS, SAVE_POSITION,
+                         CLEAR_ALARM_HISTORY, MCU_RESET }
+
+table RpcLift {
+  command:LiftCommand = STOP;
+  target:int;            // GOTO [pulse], clamped to Top
+  duty1:byte;            // MANUAL [%], + up, clamped to LIFT.MANUAL_DUTY_MAX
+  duty2:byte;
+}
+
+table RpcLiftParam {
+  item:LiftParam;
+  v:[int];               // up to 4 values, LIFT_PARAM order
+}
+
+table Lift {
+  version:ushort = 1;
+  t_ns:ulong;
+  seq:uint;
+  valid:bool;            // status replies fresh (LIFT.STALE)
+  init_done:bool;
+  run:ubyte;             // 0 stopped, 1 running down, 2 running up
+  pos1:ubyte;            // 0x01 middle, 0x02 low, 0x04 high, 0 unknown
+  pos2:ubyte;
+  error_code:ubyte;      // E0..E7 bits: 0x01/0x02 L1/L2 overcurrent, 0x04 low V, 0x08 high V, 0x10/0x20 L1/L2 motor
+  error:bool;
+  can_mode:bool;         // false: DIP SW1 off (manual / PLC), CAN commands ignored
+  current1:float;        // A (LIFT.CURRENT_SCALE)
+  current2:float;
+  command:ubyte;         // LiftCommand being repeated, 0 none
+  hall1:short;           // hall counts (0x2711:02, fitted model), ~0 at the bottom
+  hall2:short;
+  top:int;               // Top position setting [pulse], 0 not read yet
+  height1:float;         // % of top (hall / top, clamped 0..100), < 0 unknown
+  height2:float;
+  fw_version:uint;       // controller firmware: major | minor << 8 | patch << 16
+  error_hi:ubyte;        // E8..E15 bits (deviation, saved data, comm, hall sensors)
+  emg:bool;              // EMG stop latched (rpc EMG_CLEAR releases it)
+  // settings / history from the last READ_ALL (params_valid: every read answered); units as rhc LIFT_PARAMS
+  params_valid:bool;
+  bottom:int;
+  max_duty:ubyte;
+  init_max_duty:ubyte;
+  diff_error:ushort;
+  accel_duty:ubyte;
+  accel_time:ubyte;
+  decel_start:ubyte;
+  decel_pulse:ubyte;
+  decel_duty:ubyte;
+  decel_time:ubyte;
+  in_position:ubyte;
+  sub_driver:ubyte;
+  baud_rs232:ubyte;
+  baud_can1:ubyte;
+  baud_can2:ubyte;
+  over_current:ubyte;    // x100 mA
+  over_voltage:ubyte;    // V
+  under_voltage:ubyte;   // V
+  alarm_history:[ubyte]; // newest first, 0xFF none
+}
+
+root_type Lift;

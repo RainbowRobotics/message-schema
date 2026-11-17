@@ -1,0 +1,10 @@
+// hrc local (not yet in the app_slamnav2 rhci contract): safety lidar field selection, the PDU SET_LIDAR_FIELD
+// (MOTOR_CMD 210) value. Echoed back in Safety.lidar_field.
+//   in:   <prefix>/cmd/lidar_field (latest wins)
+namespace RHC;
+
+table CmdLidarField {
+  field:ubyte;           // 0..63, firmware SetLidarSelection: 6 bits, bit n set = output n on
+}
+
+root_type CmdLidarField;

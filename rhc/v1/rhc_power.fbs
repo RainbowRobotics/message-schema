@@ -1,0 +1,39 @@
+// rhc -> rhci, 1 Hz, key <prefix>/power. Replaces PDU 0xA0 low-frequency frame.
+namespace RHC;
+
+table MotorSlot {
+  connected:bool;
+  status:ubyte;
+  temp:float;            // degC
+  current:float;         // A
+}
+
+table Power {
+  version:ushort = 1;
+  t_ns:ulong;
+  seq:uint;
+  bat_voltage:float;
+  bat_current:float;
+  bat_in:float;
+  bat_out:float;
+  bat_percent:float;     // 0..100, <0 = unknown
+  charge_current:float;
+  contact_voltage:float;
+  wheel_type:ubyte;
+  bms_type:ubyte;
+  motors:[MotorSlot];    // index = motor id, up to 8
+  // rhc local addition (appended, wire compatible): TABOS BMS block as the PDU low frame carries it.
+  // bms_type above = PDU BMS header: 0x0B TABOS valid (fields below), 0x0A none (slamnav2 uses bat_in).
+  tabos_status:ushort;
+  tabos_ttf:ushort;      // min
+  tabos_tte:ushort;      // min
+  tabos_soc:ubyte;       // %
+  tabos_soh:ubyte;       // %
+  tabos_voltage:float;   // V
+  tabos_current:float;   // A, negative = discharging
+  tabos_temp:float;      // degC
+  tabos_rc:float;        // Ah remaining
+  tabos_ae:float;        // Wh available energy
+}
+
+root_type Power;

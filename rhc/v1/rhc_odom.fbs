@@ -1,0 +1,23 @@
+// rhc -> rhci, 50 Hz, key <prefix>/odom. Replaces PDU 0xA2 high-frequency frame.
+namespace RHC;
+
+table Odom {
+  version:ushort = 1;    // SchemaVersion_CURRENT
+  t_ns:ulong;            // rhc CLOCK_MONOTONIC at sample (diagnostics only; rhci stamps receive time)
+  seq:uint;
+  x:float;
+  y:float;
+  theta:float;           // odometry frame, m / m / rad
+  vx:float;
+  vy:float;
+  wz:float;              // body frame, m/s / m/s / rad/s
+  imu_ok:bool;
+  gyr_x:float;
+  gyr_y:float;
+  gyr_z:float;           // rad/s
+  acc_x:float;
+  acc_y:float;
+  acc_z:float;           // m/s^2
+}
+
+root_type Odom;
