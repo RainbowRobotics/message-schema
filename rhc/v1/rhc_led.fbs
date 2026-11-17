@@ -1,9 +1,0 @@
-// hrc local (not yet in the app_slamnav2 rhci contract): LED / signal tower command, the PDU LED_CMD (0xB0) value.
-//   in:   <prefix>/cmd/led (latest wins; slamnav2 led_handler sends every 0.5 s)
-namespace RHC;
-
-table CmdLed {
-  mode:ubyte;            // firmware LED_STATE_ENUM 0..14 (0 default, 1 red, 2 green blinking, 3 cyan, ...)
-}
-
-root_type CmdLed;
