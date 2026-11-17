@@ -1,0 +1,192 @@
+namespace ACS;
+
+/*
+    외부 → FMS 목표 후보 입력 계약 (v1, 2026-11-17)
+
+    흐름    : 외부(ACS 등)가 로봇 하나의 목표 후보 목록을 RPC 로 보낸다 → FMS goal-input-server 가
+              HTTP `POST /api/v1/candidates` 와 **같은 규칙·같은 처리**(검사 → 저장 → FMS 발행)로 받고 결과를 답한다.
+              로봇이 그 목록의 목적지에 도착하면 FMS 가 `amr/{robot_id}/multi/arrival`(SLAMNAV.MultiArrival)의
+              `request_id` 에 이 요청의 `request_id` 를 그대로 돌려준다.
+    key     :
+        - RPC fms/candidates/set/v1        RequestFmsSetGoalCandidates    → ResponseFmsSetGoalCandidates     (설정)
+        - RPC fms/candidates/get/v1        RequestFmsGetGoalCandidates    → ResponseFmsGetGoalCandidates     (조회)
+        - RPC fms/candidates/delete/v1     RequestFmsDeleteGoalCandidates → ResponseFmsDeleteGoalCandidates  (제거)
+              각각 HTTP POST·GET·DELETE /api/v1/candidates[/{robot_id}] 와 같은 처리다.
+    router  : FMS 로봇 라우터(zenoh-router-robot, TCP 7447)와 FMS 내부 라우터 양쪽에서 답한다.
+    버전    : key의 /v1만 쓴다. 필드 추가는 v1 안에서 끝에 하고, 기존 필드 의미를 바꾸면 v2로 간다.
+    명세    : app_fms2 docs/ARRIVAL_REQUEST_ID_API.md
+
+    처리 규칙:
+        - 한 요청 = 로봇 하나의 목표 목록 **전체 교체**다(부분 추가 없음). `goals` 가 빈 배열이면 목표 해제(정지).
+        - `goals` 가 **없으면**(null vector) 거절한다(REJECTED, code "missing_goals"). 빈 목록(해제)과 빠뜨림을
+          구분하기 위해서다 — 빠뜨린 요청이 로봇을 세우면 안 된다.
+        - `workspace`·`map`·`request_id` 는 이번 요청 값으로 바뀐다. 없으면(빈 문자열) 지워진다.
+        - `node_id` 가 빈 목표 항목은 건너뛴다(HTTP 와 같다).
+        - 응답의 result 가 ACCEPTED 일 때만 처리했다(설정·제거는 저장·발행, 조회는 목록을 실었다).
+          REJECTED·UNAVAILABLE 이면 아무것도 바꾸지 않았다.
+        - 제거는 멱등이다 — goal-input 저장소에 없던 로봇이어도 FMS 에 목표 해제를 보낸다(재시도로 풀 수 있게).
+          설정의 빈 goals 와 다른 점은 저장 항목(workspace·map·request_id 포함)까지 지운다는 것뿐이다.
+        - 전송 실패(Zenoh 오류 응답, 응답 없음, 시간 초과)는 결과를 모르는 것이다 — 같은 요청을 다시 보내도 된다
+          (같은 내용이면 FMS 는 정지·재계획 없이 그대로 둔다).
+
+    필수 값과 검증:
+        - 필수: robot_id(빈 값 아님), goals(벡터 존재). 받는 쪽은 Verifier 로 먼저 검증한다 — 깨진 페이로드는
+          REJECTED code "bad_payload".
+        - request_id: 선택. 1~128 바이트 UTF-8, 제어문자 없음. 아니면 REJECTED code "invalid_request_id".
+          FMS 는 값을 해석하지 않고 그대로 돌려준다. 유일성은 보내는 쪽 책임이다.
+        - workspace·map: 다중 workspace 사이트에서는 goals 가 비지 않으면 둘 다 필수(map = 그 workspace 의 맵 이름,
+          예 "1f" — FRS map_id(UUID) 아님). 단일 맵 배포에서는 보지 않는다.
+    값 없음 : 문자열이 비었거나 없으면 "없음"이다.
+*/
+
+/*
+    category    : Data Structure
+    usage       : 목표 후보 하나
+    field
+        - node_id  : 목적지 노드 id
+        - priority : 높을수록 우선. 20 이하는 대기장소·경유지(도착 hold·도착 통보 없음)
+*/
+table FmsGoalCandidate {
+    node_id: string;
+    priority: int;
+}
+
+/*
+    category    : Data Structure
+    usage       : 처리 결과
+    field
+        - INVALID     : 값을 채우지 않은 응답(받는 쪽은 실패로 본다)
+        - ACCEPTED    : 처리했다(설정·제거: 저장하고 FMS 에 발행 / 조회: 목록을 실었다)
+        - REJECTED    : 요청이 규칙에 맞지 않아 거절했다(code 로 분기)
+        - UNAVAILABLE : 지금 확인할 수 없어 거절했다(예: site.json 을 못 읽음). 잠시 뒤 다시 보낸다
+*/
+enum FmsGoalCandidatesResult : byte { INVALID = 0, ACCEPTED = 1, REJECTED = 2, UNAVAILABLE = 3 }
+
+/*
+    category    : RPC
+    topic       : fms/candidates/set/v1
+    usage       : 로봇 하나의 목표 후보 목록 설정(전체 교체)
+    field
+        - robot_id   : 로봇 id (필수)
+        - workspace  : workspace id (다중 workspace 사이트에서 goals 가 비지 않으면 필수)
+        - map        : 그 workspace 의 맵 이름 (위와 같음)
+        - request_id : 이 요청의 id (선택). 도착 통보 MultiArrival.request_id 로 돌아온다
+        - goals      : 목표 후보 목록 (필수. 빈 배열 = 목표 해제)
+*/
+table RequestFmsSetGoalCandidates {
+    robot_id: string;
+    workspace: string;
+    map: string;
+    request_id: string;
+    goals: [FmsGoalCandidate];
+}
+
+/*
+    category    : RPC
+    topic       : fms/candidates/set/v1
+    usage       : 목표 후보 설정 결과
+    field
+        - result     : FmsGoalCandidatesResult
+        - code       : 거절 사유 코드. HTTP POST /api/v1/candidates 의 code 와 같다
+                       (missing_scope · partial_scope · unknown_workspace · robot_not_registered ·
+                        robot_in_other_workspace · unknown_map · map_disabled · site_unreadable ·
+                        invalid_request_id) + 이 RPC 전용 (bad_payload · missing_robot_id · missing_goals).
+                       ACCEPTED 면 빈 값
+        - message    : 사람이 읽는 사유
+        - known      : 거절 시 쓸 수 있는 값 목록(예: unknown_map 이면 그 workspace 의 맵 이름들)
+        - robot_id   : 요청의 robot_id
+        - request_id : 받은 request_id (ACCEPTED 면 저장한 값)
+        - workspace  : 저장한 workspace (ACCEPTED 이고 지정이 있을 때)
+        - map        : 저장한 맵 이름 (위와 같음)
+        - validated  : site.json 과 대조해 확인했다. false 면 단일 맵 배포이거나 맵 미지정으로 받은 것이다
+        - goals      : 저장한 목표 목록(보낸 순서, node_id 빈 항목 제외 — HTTP 응답과 같다)
+*/
+table ResponseFmsSetGoalCandidates {
+    result: FmsGoalCandidatesResult;
+    code: string;
+    message: string;
+    known: [string];
+    robot_id: string;
+    request_id: string;
+    workspace: string;
+    map: string;
+    validated: bool;
+    goals: [FmsGoalCandidate];
+}
+
+/*
+    category    : Data Structure
+    usage       : 로봇 하나의 지금 목표 후보(조회 응답)
+    field
+        - robot_id   : 로봇 id
+        - workspace  : 저장된 workspace (지정이 있을 때)
+        - map        : 저장된 맵 이름 (지정이 있을 때)
+        - request_id : 저장된 request_id (있을 때)
+        - goals      : 저장된 목표 목록(priority 내림차순). 비어 있으면 목표 없음
+*/
+table FmsRobotGoalCandidates {
+    robot_id: string;
+    workspace: string;
+    map: string;
+    request_id: string;
+    goals: [FmsGoalCandidate];
+}
+
+/*
+    category    : RPC
+    topic       : fms/candidates/get/v1
+    usage       : 지금 목표 후보 조회 (HTTP GET /api/v1/candidates[/{robot_id}])
+    field
+        - robot_id : 조회할 로봇. 빈 값이면 goal-input-server 가 들고 있는 전 로봇
+*/
+table RequestFmsGetGoalCandidates {
+    robot_id: string;
+}
+
+/*
+    category    : RPC
+    topic       : fms/candidates/get/v1
+    usage       : 목표 후보 조회 결과
+    field
+        - result  : FmsGoalCandidatesResult. ACCEPTED 일 때만 robots 를 쓴다
+        - code    : 거절 사유 코드(bad_payload). ACCEPTED 면 빈 값
+        - message : 사람이 읽는 사유
+        - robots  : 로봇 하나를 물었으면 항목 1개(목표가 없어도 빈 goals 로 1개 — HTTP 와 같다),
+                    전 로봇을 물었으면 저장된 로봇 전부(robot_id 순)
+*/
+table ResponseFmsGetGoalCandidates {
+    result: FmsGoalCandidatesResult;
+    code: string;
+    message: string;
+    robots: [FmsRobotGoalCandidates];
+}
+
+/*
+    category    : RPC
+    topic       : fms/candidates/delete/v1
+    usage       : 로봇의 목표 후보 제거 = 목표 해제 (HTTP DELETE /api/v1/candidates/{robot_id})
+    field
+        - robot_id : 로봇 id (필수)
+*/
+table RequestFmsDeleteGoalCandidates {
+    robot_id: string;
+}
+
+/*
+    category    : RPC
+    topic       : fms/candidates/delete/v1
+    usage       : 목표 후보 제거 결과
+    field
+        - result   : FmsGoalCandidatesResult
+        - code     : 거절 사유 코드(bad_payload · missing_robot_id). ACCEPTED 면 빈 값
+        - message  : 사람이 읽는 사유
+        - robot_id : 요청의 robot_id
+        - removed  : goal-input 저장소에 있던 것을 지웠나. false 여도(이미 없었어도) FMS 에는 해제를 보냈다
+*/
+table ResponseFmsDeleteGoalCandidates {
+    result: FmsGoalCandidatesResult;
+    code: string;
+    message: string;
+    robot_id: string;
+    removed: bool;
+}
