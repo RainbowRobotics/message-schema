@@ -19,6 +19,15 @@ namespace SLAMNAV;
         - timestamp     :       발행 시각 (epoch milliseconds)
         - is_hold       :       FMS hold 여부 (true 면 FMS 가 이 로봇을 잡고 있음)
         - hold_source   :       hold 출처 ( "none" | "user_input" | "auto_detected" )
+        - request_id    :       이 도착을 만든 목표 요청의 id (선택).
+                                외부가 목표 후보를 보낼 때 실은 request_id
+                                (goal-input-server POST /api/v1/candidates 의 "request_id")를 그대로 돌려준다.
+                                FMS 가 목적지 도착으로 hold 를 건 동안(reason == "destination_arrived" 이거나
+                                is_hold 이면서 hold_source == "auto_detected" 인 도착 hold)만 실리고,
+                                그 외(이동 중·대기·pause hold·user_input hold·요청에 id 가 없었음)에는 빈 문자열이다.
+                                명세: docs/ARRIVAL_REQUEST_ID_API.md
+
+    ⚠ 필드는 반드시 끝에만 추가한다(FlatBuffers 하위호환). request_id 를 모르는 구버전 수신측은 이 필드를 무시한다.
 */
 table MultiArrival {
     robot_id: string;
@@ -27,4 +36,5 @@ table MultiArrival {
     timestamp: int64;
     is_hold: bool;
     hold_source: string;
+    request_id: string;
 }
