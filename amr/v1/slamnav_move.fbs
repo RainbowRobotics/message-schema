@@ -39,6 +39,7 @@ struct MovePose {
         - goal_name     :       목표 노드 이름
         - method        :       이동 방법 ( "pp" / "hpp" )
         - preset        :       프리셋 번호 (햔재 preset_0 만 사용 중.)
+    note        :       goal 이 SHAPE_MARKER 노드면 도착 후 형상 도킹 자동 시작, ResultMove 는 도킹이 끝난 뒤 1회
 */
 table RequestMoveGoal {
     id: string;
@@ -277,6 +278,10 @@ table MoveJog {
             - fail          :       동작 실패.
             - start         :       동작 시작.
             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+        - message       :       부가 정보. SHAPE_MARKER goal 은
+            - "shape_dock_complete err=(<x>mm,<y>mm,<yaw>deg)"  ( success )
+            - "shape_dock_fail:<사유>" / "shape_dock_start_refused:<사유>"  ( fail )
+            - "shape_dock_cancel:<사유>"  ( cancel )
 */
 table ResultMove {
     id: string;

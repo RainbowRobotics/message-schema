@@ -269,6 +269,66 @@ table ResponseDockResume {
 /*
     category    :       RPC
     response    :       One-shot
+    topic       :       {robotType}/control/shapeDock
+    usage       :       형상 도킹 시작 (라이다로 대상 형상 검출, 비접촉 정지). 출발 노드 근처(±0.3 m, 30°)에서 호출
+    field
+        - node_id       :       출발 노드 id (features 에 SHAPE_MARKER). "" = 현재 위치의 SHAPE_MARKER 노드 자동 선택
+        - result        :       accept | reject
+        - message       :       reject 사유 코드 (예: NO_SHAPE_NODE_HERE, NOT_AT_START, LOC_NOT_GOOD, DRIVE_ACTIVE)
+    note        :       운영 경로는 move/goal — SHAPE_MARKER 노드에 도착하면 자동 시작 (slamnav_move.fbs)
+*/
+table RequestShapeDock {
+    id: string;
+    node_id: string;
+}
+table ResponseShapeDock {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/shapeDockStop
+    usage       :       형상 도킹·후퇴 취소 (결과 resultShapeDock = cancel)
+    field
+        - result        :       accept | reject
+*/
+table RequestShapeDockStop {
+    id: string;
+}
+table ResponseShapeDockStop {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
+    topic       :       {robotType}/control/shapeUndock
+    usage       :       형상 도킹 해제 — 진입 반대 방향으로 후퇴 (거리 config SHAPE_DOCK_UNDOCK_OFFSET, 음수 = 로봇 전장).
+                        도킹 상태가 없어도(재기동 직후) 수락
+    field
+        - result        :       accept | reject
+        - message       :       reject 사유 코드 (예: ALREADY_RUNNING, DRIVE_ACTIVE)
+*/
+table RequestShapeUndock {
+    id: string;
+}
+table ResponseShapeUndock {
+    id: string;
+    result: string;
+    message: string;
+}
+
+
+/*
+    category    :       RPC
+    response    :       One-shot
     topic       :       {robotType}/control/chargeTrigger
     usage       :       충전 트리거 On / Off
     field
@@ -504,4 +564,29 @@ table ResultControlDock {
     result: string;
     message: string;
     station_learned: bool = false;
+}
+
+
+/*
+    category    :       Result
+    response    :       -
+    topic       :       {robotType}/control/resultShapeDock
+    usage       :       형상 도킹·해제 결과 (세션 종료 시 1회)
+    field
+        - id            :       shapeDock / shapeUndock 요청 id. move/goal 자동 시작 세션은 ""
+        - command       :       shapeDock | shapeUndock
+        - result        :       success | fail | cancel
+        - reason        :       fail·cancel 사유 "CODE:detail" (예: NO_DETECTION:DETECT 시간 초과, CANCELLED:halt)
+        - err_x         :       최종 추정 오차, 접근축 [m] (음수 = 덜 들어감)
+        - err_y         :       최종 추정 오차, 횡 [m]
+        - err_yaw_deg   :       최종 추정 오차, 각도 [deg]
+*/
+table ResultShapeDock {
+    id: string;
+    command: string;
+    result: string;
+    reason: string;
+    err_x: double;
+    err_y: double;
+    err_yaw_deg: double;
 }
