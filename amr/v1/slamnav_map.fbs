@@ -165,7 +165,7 @@ table Link {
     context
         - SHAPE_MARKER  :       "shape=<형상>;x_off=<m>;y_off=<m>" — 형상 도킹 출발 노드 (type GOAL, 대상 정면 0.7~1.2 m, 대상을 향함)
             - shape         :   형상 이름 [A-Za-z0-9_-] → config/dock_obj_shape/shape_<형상>.json
-            - x_off         :   정지 간격 [m], -0.5 ~ 0 (0 = 맞닿음, -0.05 = 50 mm 앞)
+            - x_off         :   정지 간격 [m], -0.5 ~ -0.01 (최소 10 mm, 0 = 맞닿음 금지, -0.05 = 50 mm 앞)
             - y_off         :   횡 오프셋 [m], -0.3 ~ 0.3 (+ = 진입 방향 왼쪽)
             - dir           :   선택. 진입 방향은 로봇 config SHAPE_DOCK_DIRECTION — 적으면 같아야 함
 */
