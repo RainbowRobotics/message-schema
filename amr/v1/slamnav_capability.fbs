@@ -8,20 +8,22 @@ namespace SLAMNAV;
 
 enum ChargeStateEnum:byte { NONE = 0, CHARGING = 1, COMPLETE = 2, FAIL = 3, CANCEL = 4 }
 enum ChargeTypeEnum:byte { CABLE = 0, CONTACT = 1, INDUCTIVE = 2 }
-enum BatteryTypeEnum:byte { DEFAULT = 0, TABOS = 1 }
+// 배터리 값 출처. NONE = BMS 없음(전압 추정), PDU_BMS = PDU 경유 BMS(TABOS 등), USB_BMS = USB 직결 BMS
+enum BatterySourceEnum:byte { NONE = 0, PDU_BMS = 1, USB_BMS = 2 }
 /*
     category    :       RPC
     response    :       One-shot
     topic       :       {robotType}/capability/charge
     usage       :       충전 기능 조회
     field
-        - dock_state        :       도킹 상태 (true 면 도킹 중)
+        - dock_state        :       도킹 완료 상태 (true = 스테이션 정박. 도킹 진행 중엔 false)
         - charge_state      :       충전 상태 (ChargeStateEnum)
         - battery_percent   :       배터리 잔량 (%)
         - charge_current    :       충전 전류 (A)
         - contact_voltage   :       접점 전압 (V)
-        - battery_type      :       배터리 타입 (BatteryTypeEnum)
-        - charge_type       :       지원 충전 타입 (배열)
+        - battery_type      :       배터리 값 출처 (BatterySourceEnum)
+        - charge_type       :       설정된 충전기 종류(CHARGE_TYPE)의 충전 방식, 1개
+                                    (무선 XNERGY/TABOS/BUZZARD/WPT = INDUCTIVE, 접촉식 RAINBOW = CONTACT)
 */
 table RequestCapabilityDock {
 
@@ -32,7 +34,7 @@ table ResponseCapabilityDock {
     battery_percent: float;
     charge_current: float;
     contact_voltage: float;
-    battery_type: BatteryTypeEnum;
+    battery_type: BatterySourceEnum;
     charge_type: [ChargeTypeEnum];
 }
 
@@ -284,21 +286,29 @@ table ResponseCapabilitySafetySpeedControl {
 /*
     category    :       RPC
     response    :       One-shot
-    topic       :       {robotType}/capability/tabos
-    usage       :       TABOS 기능 조회 ( TABOS 기능 지원안하는 모델의 경우 queryable 하지 않음 )
+    topic       :       {robotType}/capability/bms
+    usage       :       배터리 BMS 조회 (BMS 가 없는 로봇은 source = NONE)
     field
-        - tabos_voltage   : TABOS 전압
-        - tabos_current   : TABOS 전류
-        - tabos_soc       : TABOS SOC
-        - tabos_soh       : TABOS SOH
-        - tabos_temp      : TABOS 온도
+        - source        : 배터리 값 출처 (BatterySourceEnum)
+        - soc           : SOC (%)
+        - voltage       : 팩 전압 (V)
+        - current       : 팩 전류 (A)
+        - temperature   : 온도 (C)
+        - soh           : SOH (%). 제공하지 않는 BMS 는 -1
+        - cell_v_max    : 최대 셀 전압 (V)
+        - cell_v_min    : 최소 셀 전압 (V)
+        - link_lost     : BMS 통신 끊김 (true 면 값이 갱신되지 않음)
 */
-table RequestCapabilityTabos {
+table RequestCapabilityBms {
 }
-table ResponseCapabilityTabos {
-    tabos_voltage: float;
-    tabos_current: float;
-    tabos_soc: float;
-    tabos_soh: float;
-    tabos_temp: float;
+table ResponseCapabilityBms {
+    source: BatterySourceEnum;
+    soc: float;
+    voltage: float;
+    current: float;
+    temperature: float;
+    soh: float = -1;
+    cell_v_max: float;
+    cell_v_min: float;
+    link_lost: bool;
 }
