@@ -116,3 +116,33 @@ table Request_Save_Joint_Kinematic_Limit {
   speed_limit:    [float];
     // Speed Limit (deg/s)
 }
+
+// "save_led_color_option"
+table Request_Save_LEDoption {
+  rule: int;
+        // 0 : DC Engaged
+        // 1 : Servo Running
+        // 2 : Idle
+        // 3 : Moving
+        // 4 : Direct Teaching
+        // 5 : Collision
+        // 6 : Interlock
+        // 7 : N/A
+  color: int;
+    // 특수 드랍다운 ⊙
+        // 0 : Off
+        // 1 : Red
+        // 2 : Green
+        // 3 : Blue
+        // 4 : Yellow
+        // 5 : Purple
+        // 6 : Cyan
+        // 7 : White
+        // 8 : Red - Blinking
+        // 9 : Green - Blinking
+        // 10 : Blue - Blinking
+        // 11 : Yellow - Blinking
+        // 12 : Purple - Blinking
+        // 13 : Cyan - Blinking
+        // 14 : White - Blinking
+}
