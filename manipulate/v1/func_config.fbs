@@ -98,6 +98,8 @@ table Response_CallConfigControlBox{
 
   after_action_list: [ubyte];             //<------ added after 26-03-27 16개 날아갈 예정
   user_script_list: [string];             //<------ added after 26-03-27 16개 날아갈 예정
+
+  core_pub_freq: int;                     //<------ added after 26-11-17
 }
 
 table Response_CallConfigRobotArm{
