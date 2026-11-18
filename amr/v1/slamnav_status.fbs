@@ -173,8 +173,17 @@ table StatusMapState {
     field
         - dock_id       :       dock 명령의 id ( 최근에 accept 된 명령 반환 )
         - dock_result   :       move_result 상태 ( "move" / "success" / "cancel" / "fail" )
-        - dock          :       도킹 이동 상태 ( "stop" )
-        - charge          :     충전 상태 ( "" / "charging" )
+        - dock          :       도킹 완료 여부 (bool). true = 도킹이 끝나 스테이션에 정박한 상태
+                                (도킹 진행 중·언도킹 중엔 false)
+        - charge        :       충전기(FW) 충전 상태 (string). bool 로 해석하지 말 것.
+                                "none"       : 충전 안 함 (IDLE)
+                                "battery_on" : 충전 준비 (배터리 연결, 전류 인가 전)
+                                "charging"   : 충전 중
+                                "finish"     : 충전 정지 — 만충 또는 SOC 정책(BATTERY_MAX_SOC) 도달.
+                                               정박 상태면 dock 은 true 유지
+                                "reject"     : 충전기가 충전을 거부
+                                "ready"      : 예약값 (현재 FW 미사용)
+                                ※ S100 FW 는 "none" / "charging" 두 값만 보낸다.
 */
 table StatusChargeState {
     dock_id: string;
