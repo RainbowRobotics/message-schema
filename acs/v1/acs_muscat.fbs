@@ -94,11 +94,13 @@ table CandidateGoal {
     priority: int;
 }
 table RequestAMRMoveCandidate {
+    req_id: string;
     robot_serial: string;
     map_name: string;
     goals: [CandidateGoal];
 }
 table ResponseAMRMoveCandidate {
+    req_id: string;
     success: bool;
     message: string;
     robot_serial: string;
