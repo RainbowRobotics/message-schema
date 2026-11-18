@@ -153,6 +153,28 @@ table Response_CallConfigRobotArm{
   basic_impedance_torqelimit: [float];    //<------ added after 26-09-27
     // Torque Limit (슬라이드 바)
       // 화면에는 0~100%, 실제 통신 주고 받는건 0~1
+
+  // -----------------------------------------------
+  // LED Option 
+  // -----------------------------------------------
+                                          //<------ added after 26-11-18
+  led_color_option: [int];                // 사실상 8개 넘어갈 예정
+      // 특수 드랍다운 ⊙
+        // 0 : Off
+        // 1 : Red
+        // 2 : Green
+        // 3 : Blue
+        // 4 : Yellow
+        // 5 : Purple
+        // 6 : Cyan
+        // 7 : White
+        // 8 : Red - Blinking
+        // 9 : Green - Blinking
+        // 10 : Blue - Blinking
+        // 11 : Yellow - Blinking
+        // 12 : Purple - Blinking
+        // 13 : Cyan - Blinking
+        // 14 : White - Blinking
 }
 
 struct ST_Box_Para {
