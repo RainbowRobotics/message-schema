@@ -127,7 +127,7 @@ table Request_Save_LEDoption {
         // 4 : Direct Teaching
         // 5 : Collision
         // 6 : Interlock
-        // 7 : N/A
+        // 7 : Others
   color: int;
     // 특수 드랍다운 ⊙
         // 0 : Off
