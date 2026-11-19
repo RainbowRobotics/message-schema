@@ -191,9 +191,22 @@ table ResponseSetDetectMode {
     response    :       Callback
     topic       :       {robotType}/control/dock
     usage       :       도킹 시작
+    field
+        - method        :       도킹 방식. "" 또는 "charge" = 충전 도킹(기존), "object" = 대상 도킹 (object_type 으로 종류 지정)
+        - object_type   :       method "object" 의 대상 종류. "shape" = 형상 도킹(라이다로 대상 형상 검출, 비접촉 정지)
+        - node_id       :       대상 도킹 출발 노드 id (형상: features 에 SHAPE_MARKER). "" = 현재 위치의 노드 자동 선택.
+                                출발 노드 근처(±0.3 m, 30°)에서 호출. "charge" 는 무시
+        - result        :       accept | reject
+        - message       :       reject 사유 코드 (예: UNKNOWN_METHOD, UNKNOWN_OBJECT_TYPE, NO_SHAPE_NODE_HERE, NOT_AT_START,
+                                LOC_NOT_GOOD, DRIVE_ACTIVE)
+    note        :       형상 도킹 운영 경로는 move/goal — SHAPE_MARKER 노드에 도착하면 자동 시작 (slamnav_move.fbs).
+                        결과는 resultDock (method "object", object_type "shape")
 */
 table RequestDock {
     id: string;
+    method: string;
+    object_type: string;
+    node_id: string;
 }
 table ResponseDock {
     id: string;
@@ -207,9 +220,16 @@ table ResponseDock {
     response    :       Callback
     topic       :       {robotType}/control/undock
     usage       :       도킹 해제
+    field
+        - method        :       "" = 현재 정박 상태로 자동 판단 (대상 도킹 정박·대상 앞이면 object, 아니면 charge),
+                                "charge" | "object" = 명시
+        - object_type   :       method "object" 의 대상 종류. "" = 정박 중인 대상, "shape" = 형상 도킹 해제
+                                (진입 반대 방향 후퇴, 거리 config SHAPE_DOCK_UNDOCK_OFFSET, 음수 = 로봇 전장. 도킹 상태가 없어도 수락)
 */
 table RequestUndock {
     id: string;
+    method: string;
+    object_type: string;
 }
 table ResponseUndock {
     id: string;
@@ -223,9 +243,15 @@ table ResponseUndock {
     response    :       One-shot
     topic       :       {robotType}/control/dockStop
     usage       :       도킹 정지
+    field
+        - method        :       "" = 진행 중인 도킹·후퇴 정지 (방식 무관), "charge" | "object" = 그 방식만
+        - object_type   :       method "object" 일 때 "" = 모든 대상, "shape" = 형상 도킹만.
+                                대상 도킹 취소 결과는 resultDock (method "object", result cancel)
 */
 table RequestDockStop {
     id: string;
+    method: string;
+    object_type: string;
 }
 table ResponseDockStop {
     id: string;
@@ -260,66 +286,6 @@ table RequestDockResume {
     id: string;
 }
 table ResponseDockResume {
-    id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/shapeDock
-    usage       :       형상 도킹 시작 (라이다로 대상 형상 검출, 비접촉 정지). 출발 노드 근처(±0.3 m, 30°)에서 호출
-    field
-        - node_id       :       출발 노드 id (features 에 SHAPE_MARKER). "" = 현재 위치의 SHAPE_MARKER 노드 자동 선택
-        - result        :       accept | reject
-        - message       :       reject 사유 코드 (예: NO_SHAPE_NODE_HERE, NOT_AT_START, LOC_NOT_GOOD, DRIVE_ACTIVE)
-    note        :       운영 경로는 move/goal — SHAPE_MARKER 노드에 도착하면 자동 시작 (slamnav_move.fbs)
-*/
-table RequestShapeDock {
-    id: string;
-    node_id: string;
-}
-table ResponseShapeDock {
-    id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/shapeDockStop
-    usage       :       형상 도킹·후퇴 취소 (결과 resultShapeDock = cancel)
-    field
-        - result        :       accept | reject
-*/
-table RequestShapeDockStop {
-    id: string;
-}
-table ResponseShapeDockStop {
-    id: string;
-    result: string;
-    message: string;
-}
-
-
-/*
-    category    :       RPC
-    response    :       One-shot
-    topic       :       {robotType}/control/shapeUndock
-    usage       :       형상 도킹 해제 — 진입 반대 방향으로 후퇴 (거리 config SHAPE_DOCK_UNDOCK_OFFSET, 음수 = 로봇 전장).
-                        도킹 상태가 없어도(재기동 직후) 수락
-    field
-        - result        :       accept | reject
-        - message       :       reject 사유 코드 (예: ALREADY_RUNNING, DRIVE_ACTIVE)
-*/
-table RequestShapeUndock {
-    id: string;
-}
-table ResponseShapeUndock {
     id: string;
     result: string;
     message: string;
@@ -551,12 +517,19 @@ table ResponseSetCrossing {
     field
         - command       :       control Callback 명령 (string)
             - "dock"  "undock"  "dockStop"
+        - method        :       "charge" | "object" (빈 값 = charge, 구버전 호환)
+        - object_type   :       method "object" 의 대상 종류 ("shape")
         - switch        :       true(on) / false(off)
         - result        :       이동 결과
             - success       :       동작 성공.
             - fail          :       동작 실패.
             - start         :       동작 시작.
             - cancel        :       동작 중, 새로운 명령에 의해 기존 동작 취소.
+        - 대상 도킹 전용 (세션 종료 시 1회, move/goal 자동 시작 세션은 id "")
+            - reason        :       fail·cancel 사유 "CODE:detail" (예: NO_DETECTION:DETECT 시간 초과, CANCELLED:halt)
+            - err_x         :       최종 추정 오차, 접근축 [m] (음수 = 덜 들어감)
+            - err_y         :       최종 추정 오차, 횡 [m]
+            - err_yaw_deg   :       최종 추정 오차, 각도 [deg]
 */
 table ResultControlDock {
     id: string;
@@ -564,29 +537,12 @@ table ResultControlDock {
     result: string;
     message: string;
     station_learned: bool = false;
-}
-
-
-/*
-    category    :       Result
-    response    :       -
-    topic       :       {robotType}/control/resultShapeDock
-    usage       :       형상 도킹·해제 결과 (세션 종료 시 1회)
-    field
-        - id            :       shapeDock / shapeUndock 요청 id. move/goal 자동 시작 세션은 ""
-        - command       :       shapeDock | shapeUndock
-        - result        :       success | fail | cancel
-        - reason        :       fail·cancel 사유 "CODE:detail" (예: NO_DETECTION:DETECT 시간 초과, CANCELLED:halt)
-        - err_x         :       최종 추정 오차, 접근축 [m] (음수 = 덜 들어감)
-        - err_y         :       최종 추정 오차, 횡 [m]
-        - err_yaw_deg   :       최종 추정 오차, 각도 [deg]
-*/
-table ResultShapeDock {
-    id: string;
-    command: string;
-    result: string;
+    method: string;
+    object_type: string;
     reason: string;
     err_x: double;
     err_y: double;
     err_yaw_deg: double;
 }
+
+

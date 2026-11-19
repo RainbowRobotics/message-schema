@@ -283,7 +283,7 @@ table MoveJog {
             - "shape_dock_fail:<사유>" / "shape_dock_start_refused:<사유>"  ( fail )
             - "shape_dock_cancel:<사유>"  ( cancel )
           형상 도킹 중 들어온 move/goal (모든 goal):
-            - "shape_dock_running"  ( fail, 접근·검출만 실행 중 — shapeDockStop 후 다시 )
+            - "shape_dock_running"  ( fail, 접근·검출만 실행 중 — control/dockStop 후 다시 )
             - "shape_undock_refused:<사유>"  ( fail, 정박·대상 앞에서 이동 전 후퇴 거부 )
 */
 table ResultMove {
