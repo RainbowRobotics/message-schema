@@ -98,11 +98,6 @@ struct StatusPower {
         - avoid_on              :       장애물 회피 정책 ON/OFF
         - operating_mode        :       운전 모드 ( "auto" / "manual" / "none" )
         - external_motion       :       명령 없는 외부 기인 모션 (핸드캐리/경사 밀림 등)
-        - shape_dock_state      :       형상 도킹 상태 ( "OFF" / "RUNNING" / "DOCKED" / "FAILED" )
-        - shape_dock_node       :       세션 노드 id ( "" = 없음 )
-        - shape_dock_reason     :       마지막 실패·취소 사유 "CODE:detail" ( "" = 없음 )
-        - shape_dock_gap_mm     :       현재 간격 [mm] = 로봇 끝단 ↔ 대상 근접면 ( -1 = 모름 )
-        - shape_dock_goal_gap_mm :      목표 간격 [mm] ( -1 = 노드 없음 )
 */
 table StatusRobotState {
     emo: bool;
@@ -124,11 +119,6 @@ table StatusRobotState {
     avoid_on: bool;
     operating_mode: string;
     external_motion: bool;
-    shape_dock_state: string;
-    shape_dock_node: string;
-    shape_dock_reason: string;
-    shape_dock_gap_mm: float = -1;
-    shape_dock_goal_gap_mm: float = -1;
 }
 
 /*
