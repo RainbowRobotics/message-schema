@@ -1,4 +1,4 @@
-// schemas/acs/v1/contract.fbs — ACS ↔ EVCS zenoh 메시지. 원본은 이 파일 하나.
+// schemas/acs/v1/acs_evcs.fbs — ACS ↔ EVCS zenoh 메시지. 원본은 이 파일 하나.
 //
 // 메시지 하나 = 루트 테이블 하나. 이름은 키에서 바로 나온다:
 //   building/<b>/evcs/<bank>/cmd/<name>   Evcs<Name>Request · Evcs<Name>Response
