@@ -368,6 +368,32 @@ table MoveStatus {
     goal_node: StatusNode;
 }
 
+/*
+    category    :       Pub / Sub
+    topic       :       {robotType}/objectDockStatus
+    usage       :       오브젝트(대상) 도킹 상태 — control/dock method "object" (형상 "shape", 이후 카트 "cart").
+                        충전 도킹 상태(StatusChargeState)와 별개. status 에는 넣지 않는다 (#326 — 타 프로그램 호환성).
+                        발행: 상태·단계가 바뀔 때 즉시 + 세션 중 2 Hz [초안]
+    field
+        - object_type   :       대상 종류 ( "shape" / 이후 "cart" ). "" = 세션 없음
+        - state         :       "OFF" / "RUNNING" / "DOCKED" / "FAILED"
+        - phase         :       RUNNING 중 단계. 형상 = "DETECT" / "PREALIGN" / "APPROACH" / "SETTLE" / "FINAL" / "RETREAT" / "BACKUP",
+                                그 외 ""
+        - node_id       :       세션 노드 id ( "" = 없음 )
+        - reason        :       마지막 실패·취소 사유 "CODE:detail" (resultDock reason 과 같음, "" = 없음)
+        - gap_mm        :       현재 간격 [mm] = 로봇 끝단 ↔ 대상 근접면 ( -1 = 모름 )
+        - goal_gap_mm   :       목표 간격 [mm] = 노드 x_off ( -1 = 노드 없음 )
+*/
+table ObjectDockStatus {
+    object_type: string;
+    state: string;
+    phase: string;
+    node_id: string;
+    reason: string;
+    gap_mm: float = -1;
+    goal_gap_mm: float = -1;
+}
+
 // -------------------------------------------------
 // -----------                              --------
 // -----------         Pub / Sub            --------
