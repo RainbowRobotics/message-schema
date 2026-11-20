@@ -495,6 +495,15 @@ table ResponseGetInfoCategory {
     topic       : {robotType}/infoStatus
     field       :
         - infos     : InfoParam 항목 리스트
+    note        : 다른 프로그램이 읽는 항목 (이름은 InfoParam.name.en 기준, 값은 모두 string)
+        - category_id "docking" / group_id "오브젝트 도킹" : control/dock method "object" 대상 도킹 상태.
+                      충전 도킹과 별개. status 에 두지 않는다 (#326 — status 필드 추가는 타 프로그램 호환성 문제)
+            - Object type           : 대상 종류 = object_type ( "shape" / 이후 "cart" ). 없으면 "-"          ( TAG )
+            - State                 : "OFF" / "RUNNING" / "DOCKED" / "FAILED"                               ( TAG )
+            - Session node          : 세션 노드 id. 없으면 "-"                                                ( STRING )
+            - Fail/cancel reason    : 마지막 실패·취소 사유 "CODE:detail" (resultDock reason 과 같음). 없으면 "-" ( TAG )
+            - Gap                   : 현재 간격 "<mm> mm" = 로봇 끝단 ↔ 대상 근접면. 모르면 "-"               ( STRING )
+            - Goal gap              : 목표 간격 "<mm> mm" (노드 x_off). 노드 없으면 "-"                       ( STRING )
 */
 table InfoStatus {
     infos: [InfoParam];
