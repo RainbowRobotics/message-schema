@@ -47,6 +47,7 @@ table CANStatus {
 /*
     topic : muscat/can/connect
     params :
+        - client_id : 연결을 요청한 클라이언트 식별자 (필수, 재시작해도 바뀌지 않는 값. 예: 플러그인 ID)
         - channel : 채널식별자
         - interface : 인터페이스 식별자
         - bitrate : 전송 속도
@@ -55,6 +56,11 @@ table CANStatus {
         - receive_own_messages : 자기 수신 메시지 수신 여부
         - success : 성공 여부
         - message : 실패 시 메시지
+    설명 :
+        - 같은 채널을 여러 클라이언트가 함께 연결할 수 있다. Host는 채널마다 client_id 목록을 유지한다.
+        - 이미 열린 채널이면 client_id만 목록에 추가한다. 같은 client_id로 다시 요청해도 하나로 취급한다.
+        - socketcan은 인터페이스에 설정된 bitrate와 요청 bitrate가 다르면 거절한다. Host는 bitrate를 바꾸지 않는다.
+        - client_id가 비어 있으면 거절한다.
 */
 table RequestCANConnect {
     interface:string;
@@ -63,6 +69,8 @@ table RequestCANConnect {
     fd:bool = false;
     data_bitrate:uint;
     receive_own_messages:bool = false;
+    // 기존 필드 뒤에 추가: 앞에 넣으면 이전 클라이언트의 interface 값이 client_id로 읽힌다.
+    client_id:string;
 }
 table ResponseCANConnect {
     success:bool;
@@ -73,12 +81,17 @@ table ResponseCANConnect {
 /*
     topic : muscat/can/disconnect
     params :
-        - channel : 채널식별자
+        - client_id : 연결 시 사용한 클라이언트 식별자 (필수)
+        - channel : 채널식별자 (필수)
         - success : 성공 여부
         - message : 실패 시 메시지
+    설명 :
+        - 채널의 client_id 목록에서 이 클라이언트만 제거한다. 목록이 비면 채널을 닫는다.
+        - 목록에 없는 client_id로 요청하면 채널을 그대로 두고 성공으로 응답한다.
 */
 table RequestCANDisconnect {
     channel:string;
+    client_id:string;
 }
 table ResponseCANDisconnect {
     success:bool;
