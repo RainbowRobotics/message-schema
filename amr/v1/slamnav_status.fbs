@@ -503,7 +503,7 @@ table ResponseGetInfoCategory {
             - Session node          : 세션 노드 id. 없으면 "-"                                                ( STRING )
             - Fail/cancel reason    : 마지막 실패·취소 사유 "CODE:detail" (resultDock reason 과 같음). 없으면 "-" ( TAG )
             - Gap                   : 현재 간격 "<mm> mm" = 로봇 끝단 ↔ 대상 근접면. 모르면 "-"               ( STRING )
-            - Goal gap              : 목표 간격 "<mm> mm" (노드 x_off). 노드 없으면 "-"                       ( STRING )
+            - Goal gap              : 목표 간격 "<mm> mm" = 노드 x_off 의 크기 (x_off -0.05 → "50.0 mm"). 노드 없으면 "-" ( STRING )
 */
 table InfoStatus {
     infos: [InfoParam];
