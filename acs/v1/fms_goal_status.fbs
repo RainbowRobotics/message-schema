@@ -1,0 +1,63 @@
+namespace ACS;
+
+/*
+    FMS → 외부 목표 수행 상태 (v1 초안, 2026-11-19)
+
+    흐름    : FMS 가 로봇마다 "지금 요청이 어느 단계이고, 서 있으면 왜인가" 를 발행한다. 외부(ACS · SI)는
+              구독만 한다. 결과(도착 · 취소)는 도착 통보 amr/{robot_id}/multi/arrival(SLAMNAV.MultiArrival)이
+              알려 주고, 이 토픽은 그 사이의 상태를 알려 준다. arrived · canceled 는 도착 통보로 나간 값을
+              그대로 옮긴 것이라 두 토픽이 다른 결과를 말하지 않는다.
+    key     : pub fms/goal_status/{robot_id}/v1   FmsGoalStatus   (전 로봇 구독은 fms/goal_status/** 로)
+    router  : FMS 로봇 라우터(zenoh-router-robot, TCP 7447) — 목표 입력 RPC(fms/candidates/set/v1 등)와 같은 곳.
+    주기    : 로봇마다 약 2초. phase · category · request_id · target_node · blocker_id 가 바뀌면 즉시.
+    버전    : key의 /v1만 쓴다. 필드 추가는 v1 안에서 끝에 하고, 기존 필드 의미를 바꾸면 v2로 간다.
+    명세    : app_fms2 docs/GOAL_STATUS_API.md
+
+    고정 값과 늘어나는 값:
+        - phase    (고정) "none" · "moving" · "waiting" · "arrived" · "canceled"
+        - category (고정) "normal" · "traffic" · "destination" · "robot" · "arrival"
+        - reason · last_stop_reason 은 늘어날 수 있다. 모르는 값은 category 로 처리한다.
+        - detail 은 사람이 읽는 설명(한국어)이다. 파싱하지 않는다.
+    값 없음 : 문자열은 "", 시간(ms)은 -1. 기본값도 늘 실어 보낸다.
+*/
+
+/*
+    category    : Pub / Sub
+    topic       : fms/goal_status/{robot_id}/v1
+    usage       : 로봇 하나의 목표 수행 상태
+    field
+        - robot_id         : 로봇 id
+        - workspace        : 로봇이 속한 workspace (다중 workspace 사이트만, 아니면 "")
+        - map              : 그 workspace 의 맵 이름 (위와 같음)
+        - request_id       : 수행 중인 요청의 id. arrived 면 그 도착을 만든 요청, canceled 면 지워진 요청. 목표가 없으면 ""
+        - phase            : 요청의 단계 (위 고정 값)
+        - target_node      : FMS 가 여러 후보 중 고른 목적지(구역을 넘는 중이면 최종 목적지). 배정이 없으면 ""
+        - category         : 서 있는 이유의 묶음 (위 고정 값). 판단은 이 값으로 한다
+        - reason           : 세부 사유 코드 (예: "node_conflict"). 늘어날 수 있다
+        - detail           : 사람이 읽는 설명
+        - blocker_id       : 막고 있는 로봇 id (없으면 "")
+        - since_ms         : 그 사유가 이어진 시간 (ms, -1 = 모름)
+        - robot_state      : 로봇이 보고한 상태 ("move" · "stop" · "pause" · "error" …)
+        - node_id          : 로봇이 보고한 현재 노드
+        - last_stop_reason : FMS 가 마지막으로 로봇을 세운 이유 코드 (예: "stuck_recover"). 없으면 ""
+        - last_stop_ms_ago : 그 정지 뒤 지난 시간 (ms, -1 = 정지한 적 없음)
+        - timestamp        : 발행 시각 (epoch ms)
+*/
+table FmsGoalStatus {
+    robot_id: string;
+    workspace: string;
+    map: string;
+    request_id: string;
+    phase: string;
+    target_node: string;
+    category: string;
+    reason: string;
+    detail: string;
+    blocker_id: string;
+    since_ms: int64;
+    robot_state: string;
+    node_id: string;
+    last_stop_reason: string;
+    last_stop_ms_ago: int64;
+    timestamp: int64;
+}
