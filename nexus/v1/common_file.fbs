@@ -7,7 +7,10 @@ namespace IPC;
 //   is_last == true: 마지막 청크 → 파일 닫기/완료 (빈 파일은 data 없이 offset 0, is_last true 한 번)
 // ok == false 를 받으면 SDK 는 남은 청크를 보내지 않는다. 전체 크기는 SDK 가 1GB 로 제한.
 table Request_Save_File {
-  path: string;
+  path: string;       // 저장 디렉터리. CoreSW 저장 루트 기준 상대경로 (예: "hello/dir", 루트는 CoreSW 가 결정, 빈 값 = 루트). 앞뒤 '/' 없음, '..'·'.'·빈 구간 없음 (SDK 가 보장)
+  file_name: string;  // 파일 이름, 확장자 포함 (예: "a.tar.gz"). '/'·'\'·NUL 없음, '.'·'..' 아님 (SDK 가 보장)
+  extension: string;  // 확장자, 마지막 '.' 뒤 (예: "gz"). 없으면 빈 값 ("Makefile", ".bashrc")
+  mime_type: string;  // 업로드 시 MIME 타입 (예: "text/plain"). 모르면 빈 값
   offset: ulong;      // 이 청크의 파일 내 시작 위치 (바이트)
   total_size: ulong;  // 전체 파일 크기 (바이트)
   data: [ubyte];      // 청크 데이터
