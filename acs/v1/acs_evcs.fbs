@@ -1,195 +1,459 @@
-// schemas/acs/v1/acs_evcs.fbs — ACS ↔ EVCS zenoh 메시지. 원본은 이 파일 하나.
-//
-// 메시지 하나 = 루트 테이블 하나. 이름은 키에서 바로 나온다:
-//   building/<b>/evcs/<bank>/cmd/<name>   Evcs<Name>Request · Evcs<Name>Response
-//   building/<b>/evcs/<bank>/evt/<name>   Evcs<Name>Event
-//   building/<b>/evcs/config/…            Config<Name>…
-// 주소와 규칙은 contract/README.md. 이 파일은 모양만 정한다.
-//
-// 약속:
-//  - 요청 = 인자만. 응답 = {ok, error | data}. 이벤트 = status 하나 (1초마다, 지금 상태 통째로).
-//  - EVCS 는 사실만 알린다. 사람을 부를지 · 언제 다시 알릴지는 ACS 가 정한다.
-//  - 이유(reason)는 문자열 코드다 — 목록은 README. 모르는 코드는 그대로 보여 준다.
-//  - 모르는 칸은 무시한다 (새 칸은 끝에 붙인다).
-//  - enum 은 모두 ubyte, 값은 0 부터 차례로. JSON 표기에서는 이름 문자열이다.
-//  - 테이블만 쓴다 (struct · union 없음). JSON 표기(flatc --json)가 곧 문서·예제의 모양이다.
-//  - 건물 맵·층 토포는 그 자체가 문서(해시가 바이트에 걸린다)라 JSON 문자열로 싣는다.
-namespace contract;
+namespace ACS;
 
-// ── 공통 ────────────────────────────────────────────────────────────────────
+/*
+    ACS ↔ EVCS(엘리베이터) 계약 (v1)
 
-enum ErrorCode : ubyte {
-  not_at_pickup,                     // 로봇이 출발 자리(B)에 없다
-  dropoff_occupied,                  // 도착 자리(C)에 다른 로봇이 있다
-  busy,                              // 지금은 못 받는다 (호기 없음 · 뱅크 가득 · 설정 적용 대기 · 로봇이 다른 이동 중) — 나중에 다시
-  need_force,                        // 로봇이 캐빈 · 문턱일 수 있어 끝내지 못한다 — 로봇을 꺼낸 뒤 force 로
-  cannot,                            // 지금 그 명령을 할 수 없다 (message 를 본다)
-  invalid                            // 요청이 틀렸다 · 모르는 id
-}
+    흐름    : ACS 가 뱅크 창구로 로봇의 층간 이동(transfer)을 맡기고, EVCS 는 1초마다 지금 상태(status)를 통째로 올린다.
+              설정(건물 맵 · 층 맵 · 업체 접속)은 설정 창구 configure 로만 넣는다.
+    key     :
+        - RPC building/{building}/evcs/{bank}/cmd/transfer    RequestEvcsTransfer  → ResponseEvcsTransfer
+        - RPC building/{building}/evcs/{bank}/cmd/cancel      RequestEvcsCancel    → ResponseEvcsCancel
+        - RPC building/{building}/evcs/{bank}/cmd/resume      RequestEvcsResume    → ResponseEvcsResume
+        - PUB building/{building}/evcs/{bank}/evt/status      EvcsStatus
+        - RPC building/{building}/evcs/config/cmd/configure   RequestEvcsConfigure → ResponseEvcsConfigure
+        - PUB building/{building}/evcs/config/evt/status      EvcsConfigStatus
+    명세    : EVCS 레포 contract/README.md (주소 · 규칙 · reason 코드). 이 파일은 모양만 정한다.
 
-table Violation {
-  rule: string;
-  message: string;
-}
+    약속:
+        - 요청 = 인자만. 응답 = {ok, error | data}. 이벤트 = 지금 상태 통째로 (1초마다).
+        - EVCS 는 사실만 알린다. 사람을 부를지 · 언제 다시 알릴지는 ACS 가 정한다.
+        - 이유(reason)는 문자열 코드다 — 목록은 README. 모르는 코드는 그대로 보여 준다.
+        - 모르는 필드는 무시한다. 새 필드는 끝에만 추가한다.
+        - enum 은 모두 ubyte, 값은 0 부터 차례로. JSON 표기에서는 값 이름 문자열이다.
+        - table 만 쓴다 (struct · union 없음). JSON 표기(flatc --json)가 곧 문서 · 예제의 모양이다.
+        - 건물 맵 · 층 토포는 그 자체가 문서(해시가 바이트에 걸린다)라 JSON 문자열로 싣는다.
+*/
 
-table Error {
-  code: ErrorCode;
-  message: string;
-  violations: [Violation];           // configure 가 invalid 일 때
-}
 
-table Empty {}
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Data Structure         --------
+// -----------                              --------
+// -------------------------------------------------
 
-// ── ACS → EVCS 뱅크 building/<b>/evcs/<bank> ─────────────────────────────────
+/*
+    category    : Data Structure
+    usage       : 명령 거절 코드
+    field
+        - not_at_pickup    : 로봇이 출발 자리(B)에 없다
+        - dropoff_occupied : 도착 자리(C)에 다른 로봇이 있다
+        - busy             : 지금은 못 받는다 (호기 없음 · 뱅크 가득 · 설정 적용 대기 · 로봇이 다른 이동 중) — 나중에 다시
+        - need_force       : 로봇이 캐빈 · 문턱일 수 있어 끝내지 못한다 — 로봇을 꺼낸 뒤 force 로
+        - cannot           : 지금 그 명령을 할 수 없다 (message 를 본다)
+        - invalid          : 요청이 틀렸다 · 모르는 id
+*/
+enum EvcsErrorCode : ubyte { not_at_pickup = 0, dropoff_occupied = 1, busy = 2, need_force = 3, cannot = 4, invalid = 5 }
 
-table EvcsTransferRequest {
-  transfer_id: string (required);    // ACS 가 붙인다 — 같은 id 로 다시 보내면 같은 답
-  robot_id: string (required);
-  from_level: string (required);     // 로봇이 지금 B 에 있는 층
-  to_level: string (required);
-}
-table TransferData {
-  queued: bool;                      // 받았지만 줄에 섰다 (호기가 빌 때까지) — 거짓이면 바로 시작
-}
-table EvcsTransferResponse {
-  ok: bool;
-  error: Error;
-  data: TransferData;
-}
-
-table EvcsCancelRequest {             // transfer_id 와 robot_id 중 하나만
-  transfer_id: string;               // 그 이동을 멈춘다 · 끝낸다
-  robot_id: string;                  // status.alone 의 로봇을 뺐다 — 뱅크 막음을 푼다
-  force: bool;                       // 로봇이 캐빈 · 문턱 밖임을 ACS 가 확인했다 — 세션을 닫는다
-  reason: string;                    // "emergency" — 안전하게 끝낸다 (force 아님). 문턱이면 들어가거나 나와서, 캐빈이면 도착층에서
-}
-table EvcsCancelResponse {
-  ok: bool;
-  error: Error;
-  data: Empty;
+/*
+    category    : Data Structure
+    usage       : 설정 검사에서 어긴 규칙 하나
+    field
+        - rule    : 규칙 id (R-MAP-1 · probe …)
+        - message : 사람 문장
+*/
+table EvcsViolation {
+    rule: string;
+    message: string;
 }
 
-table EvcsResumeRequest {             // 멈춘(stuck) 이동을 잇는다
-  transfer_id: string (required);
-}
-table EvcsResumeResponse {
-  ok: bool;
-  error: Error;
-  data: Empty;
-}
-
-enum Phase : ubyte { calling, boarding, riding, alighting, dropoff, done }
-enum Outcome : ubyte { succeeded, returned, held }
-
-table VendorStep {                   // 업체 세션이 어디까지 왔나 — 보이기만 한다 (목록은 README)
-  code: string;                      // 업체 중립 단계 — called · car_coming · car_at_start · boarding · boarded · car_to_dest · car_at_dest · alighting · alighted · ended
-  raw: string;                       // 업체 원래 단계 이름 · 번호 (표시 · 대조용) — 업체 말이 없으면 빠진다
-  at_ms: long;                       // 그 단계를 안 때 (epoch ms)
-}
-table VendorEnd {                    // 업체가 세션을 끝냈다
-  reason: string;                    // door_time · fault · deadline · no_car · exit_count · emergency · by_us · comm (README)
-  raw: string;                       // 업체 원문 — 업체 말이 없으면 빠진다
-}
-table CarCalls {                     // 호기에 걸린 호출 (건물 맵 층 id)
-  car: [string];                     // 캐빈 안에서 누른 층
-  up: [string];                      // 올라가려고 홀에서 부른 층
-  down: [string];                    // 내려가려고 홀에서 부른 층
+/*
+    category    : Data Structure
+    usage       : 응답의 오류 (ok 가 false 일 때)
+    field
+        - code       : EvcsErrorCode
+        - message    : 사람 문장
+        - violations : configure 가 invalid 일 때 어긴 규칙들
+*/
+table EvcsError {
+    code: EvcsErrorCode;
+    message: string;
+    violations: [EvcsViolation];
 }
 
-table Transfer {
-  transfer_id: string (required);
-  robot_id: string;
-  phase: Phase;
-  car_id: string;                    // 건물 맵 호기 id — 배정 뒤
-  stuck: bool;                       // 멈춰 있다 — 저절로 풀리기도 하고, resume · cancel 을 기다리기도 한다
-  reason: string;                    // stuck 이면 왜 멈췄나, done{returned} 면 왜 돌아갔나
-  outcome: Outcome;                  // done 일 때. done 은 60초 동안 실린다
-  vendor_session: string;            // 업체 세션 id — 세션이 없으면 빠진다
-  started_at_ms: long;               // EVCS 가 업체 호출을 낸 때 (epoch ms)
-  vendor_step: VendorStep;           // 업체 세션이 어디까지 왔나 — 모르면 빠진다
-  vendor_end: VendorEnd;             // 업체가 끝낸 까닭 — 끝내지 않았으면 빠진다
-  place: string;                     // 로봇 몸의 실제 자리 — outside · doorway · cabin. 모르면 빠진다
-  step: string;                      // 트리 단계 — CALL · GET_ON · SEND_ELEVATOR · RIDE · GET_OFF · GO_TO_GOAL · GO_BACK. 모르면 빠진다
-  step_since_ms: long;               // 그 단계에 들어간 때 (epoch ms)
-  session_state: string;             // active · ended — 업체 세션을 연 적이 없으면 빠진다. 새 세션이 열리면 active 로 돌아간다
-  session_end_by: string;            // ended 일 때 robot(EVCS 가 끊음) · vendor(업체가 끊음)
-  session_end_reason: string;        // ended 일 때 까닭 코드
-  session_end_at_ms: long;           // ended 일 때 끝난 때 (epoch ms)
-  actions: [string];                 // 지금 받는 운영자 동작 — resume · send_back · take_out · cancel. 빈 목록 = 받지 않음
-  actions_why: string;               // 받지 않는 동작마다 사람 문장 까닭 (JSON 객체 문자열 {"resume":"비상정지가 눌려 있다", ...})
-  wait: bool;                        // 기다림인가 — 원인이 풀리면 EVCS 가 스스로 잇는다. stuck 일 때만 뜻이 있다
-  done_place: string;                // done 일 때 로봇 자리 — outside · doorway · cabin
-  done_node: string;                 // done 일 때 가까운 노드 — B(출발 입구) · C(도착 출구) · 모르면 빠진다
-  urgent: bool;                      // 비상정지 · 범퍼로 멈춘 채 엘리베이터 세션을 60초 넘게 붙잡고 있다 — 승객이 그 호기를 못 쓴다. 사람을 빨리 보낸다
-}
-table AloneRobot {                   // transfer 없이 이 뱅크의 캐빈 · 문턱에 있는 로봇 — 그 뱅크는 새 transfer 를 받지 않는다
-  robot_id: string (required);
-  car_id: string;
-}
-table Car {                          // 이 뱅크의 호기 한 대 — 업체가 알려 준 지금 모습 (보이기만 한다). 모르는 칸은 없다
-  car_id: string (required);         // 건물 맵 호기 id
-  level: string;                     // 지금 층 (건물 맵 층 id)
-  direction: string;                 // up · down · stop
-  door: string;                      // open · closed · opening · closing
-  mode: string;                      // normal · broken · check · parked · emergency · other
-  at_ms: long;                       // 업체에게서 받은 때 (epoch ms) — 오래됐으면 흐리게
-  calls: CarCalls;                   // 걸린 호출 — 업체가 주지 않으면 빠진다
-}
-table EvcsStatusEvent {              // 1초마다
-  transfers: [Transfer];
-  alone: [AloneRobot];               // 나가면 빠진다
-  accepting: bool;                   // 지금 transfer 를 보내면 뱅크가 받는다 (로봇 조건은 transfer 답이 본다)
-  reason: string;                    // accepting 이 거짓이면 왜 — vendor_offline · bank_full · robot_alone · applying
-  vendor_events: string;             // 업체 실시간 알림 — "ok" | "quiet" (끊겨 조회로만 돈다 · 운행은 막지 않는다). 알림을 안 쓰는 업체는 늘 "ok"
-  cars: [Car];                       // 이 뱅크의 호기들 — 쉬는 호기까지. 이동이 탄 호기는 transfers[].car_id 로 찾는다
+/*
+    category    : Data Structure
+    usage       : 실을 것이 없는 응답의 data
+*/
+table EvcsEmpty {}
+
+/*
+    category    : Data Structure
+    usage       : transfer 수락 응답의 data
+    field
+        - queued : 받았지만 줄에 섰다 (호기가 빌 때까지) — 거짓이면 바로 시작
+*/
+table EvcsTransferData {
+    queued: bool;
 }
 
-// ── ACS → EVCS 설정 building/<b>/evcs/config ────────────────────────────────
+/*
+    category    : Data Structure
+    usage       : transfer 단계
+    field
+        - calling   : 엘리베이터를 불렀다
+        - boarding  : 타는 중
+        - riding    : 캐빈 안에서 가는 중
+        - alighting : 내리는 중
+        - dropoff   : 도착 자리(C)로 가는 중
+        - done      : 끝 (outcome 을 본다)
+*/
+enum EvcsPhase : ubyte { calling = 0, boarding = 1, riding = 2, alighting = 3, dropoff = 4, done = 5 }
 
-table MiriSettings {
-  base_url: string;
-  api_key: string;                   // 비밀값
-  api_secret: string;                // 비밀값
-}
-table UnsSettings {
-  base_url: string;
-  organization_id: string;
-  elevator_type: string;             // TK · FU
-  robot_type: string;                // HTR · LTR
-  client_id: string;
-  client_secret: string;             // 비밀값
-}
-table Vendors {
-  miri: MiriSettings;
-  uns: UnsSettings;
-}
-table Settings {
-  vendors: Vendors;
-  robots: [string];                  // 등록 로봇 id — 있으면 이 로봇만 받는다. [] 이면 아무도, 칸이 없으면(옛 ACS) 모두
-}
+/*
+    category    : Data Structure
+    usage       : 끝난 transfer 의 결과
+    field
+        - succeeded : 도착 자리(C)에 왔다
+        - returned  : 출발 자리(B)로 돌아갔다
+        - held      : 그 자리에 세우고 끝냈다 (cancel{force})
+*/
+enum EvcsOutcome : ubyte { succeeded = 0, returned = 1, held = 2 }
 
-table FloorMap {
-  level: string;
-  topology: string;                  // topology.json 파일 내용 그대로 — sha256 이 건물 맵과 맞아야 한다
-}
-
-table ConfigConfigureRequest {       // 늘 통째로 — 비밀값에 "***" 를 넣으면 지금 값을 쓴다
-  building_map: string (required);   // 건물 맵 JSON 문서 그대로
-  floor_maps: [FloorMap];            // 건물 맵의 층 전부
-  settings: Settings;
-}
-table ConfigureData {
-  map_hash: string;                  // 이 묶음 전체(건물 맵 · 층 맵 · 설정)의 해시. 진행 중 이동이 끝나면 다시 떠서 적용한다 — status.map_hash 로 본다
-}
-table ConfigConfigureResponse {
-  ok: bool;
-  error: Error;
-  data: ConfigureData;
+/*
+    category    : Data Structure
+    usage       : 업체 세션이 어디까지 왔나 — 보이기만 한다 (목록은 README)
+    field
+        - code  : 업체 중립 단계 — called · car_coming · car_at_start · boarding · boarded · car_to_dest · car_at_dest · alighting · alighted · ended
+        - raw   : 업체 원래 단계 이름 · 번호 (표시 · 대조용) — 업체 말이 없으면 빠진다
+        - at_ms : 그 단계를 안 때 (epoch ms)
+*/
+table EvcsVendorStep {
+    code: string;
+    raw: string;
+    at_ms: long;
 }
 
-table ConfigStatusEvent {            // 1초마다
-  map_hash: string;                  // 지금 쓰는 묶음의 해시 (configure 답과 같은 값). "" = 아직 설정이 없다 (뱅크 창구가 없다)
+/*
+    category    : Data Structure
+    usage       : 업체가 세션을 끝낸 까닭
+    field
+        - reason : door_time · fault · deadline · no_car · exit_count · emergency · by_us · comm (README)
+        - raw    : 업체 원문 — 업체 말이 없으면 빠진다
+*/
+table EvcsVendorEnd {
+    reason: string;
+    raw: string;
 }
 
-// flatc 가 스키마 파일을 내려면 하나가 필요하다 — 실제 루트는 키마다 다르다 (머리말 참고).
-root_type EvcsStatusEvent;
+/*
+    category    : Data Structure
+    usage       : 호기에 걸린 호출 (건물 맵 층 id)
+    field
+        - car  : 캐빈 안에서 누른 층
+        - up   : 올라가려고 홀에서 부른 층
+        - down : 내려가려고 홀에서 부른 층
+*/
+table EvcsCarCalls {
+    car: [string];
+    up: [string];
+    down: [string];
+}
+
+/*
+    category    : Data Structure
+    usage       : 진행 중이거나 막 끝난 transfer 하나 (done 은 60초 동안 실린다)
+    field
+        - transfer_id        : ACS 가 붙인 id
+        - robot_id           : 로봇 id
+        - phase              : EvcsPhase
+        - car_id             : 건물 맵 호기 id — 배정 뒤
+        - stuck              : 멈춰 있다 — 저절로 풀리기도 하고, resume · cancel 을 기다리기도 한다
+        - reason             : stuck 이면 왜 멈췄나, done{returned} 면 왜 돌아갔나
+        - outcome            : done 일 때 EvcsOutcome
+        - vendor_session     : 업체 세션 id — 세션이 없으면 빠진다
+        - started_at_ms      : EVCS 가 업체 호출을 낸 때 (epoch ms)
+        - vendor_step        : 업체 세션이 어디까지 왔나 — 모르면 빠진다
+        - vendor_end         : 업체가 끝낸 까닭 — 끝내지 않았으면 빠진다
+        - place              : 로봇 몸의 실제 자리 — outside · doorway · cabin. 모르면 빠진다
+        - step               : 트리 단계 — CALL · GET_ON · SEND_ELEVATOR · RIDE · GET_OFF · GO_TO_GOAL · GO_BACK. 모르면 빠진다
+        - step_since_ms      : 그 단계에 들어간 때 (epoch ms)
+        - session_state      : active · ended — 업체 세션을 연 적이 없으면 빠진다. 새 세션이 열리면 active 로 돌아간다
+        - session_end_by     : ended 일 때 robot(EVCS 가 끊음) · vendor(업체가 끊음)
+        - session_end_reason : ended 일 때 까닭 코드
+        - session_end_at_ms  : ended 일 때 끝난 때 (epoch ms)
+        - actions            : 지금 받는 운영자 동작 — resume · send_back · take_out · cancel. 빈 목록 = 받지 않음
+        - actions_why        : 받지 않는 동작마다 사람 문장 까닭 (JSON 객체 문자열 {"resume":"비상정지가 눌려 있다", ...})
+        - wait               : 기다림인가 — 원인이 풀리면 EVCS 가 스스로 잇는다. stuck 일 때만 뜻이 있다
+        - done_place         : done 일 때 로봇 자리 — outside · doorway · cabin
+        - done_node          : done 일 때 가까운 노드 — B(출발 입구) · C(도착 출구) · 모르면 빠진다
+        - urgent             : 비상정지 · 범퍼로 멈춘 채 엘리베이터 세션을 60초 넘게 붙잡고 있다 — 승객이 그 호기를 못 쓴다
+*/
+table EvcsTransfer {
+    transfer_id: string (required);
+    robot_id: string;
+    phase: EvcsPhase;
+    car_id: string;
+    stuck: bool;
+    reason: string;
+    outcome: EvcsOutcome;
+    vendor_session: string;
+    started_at_ms: long;
+    vendor_step: EvcsVendorStep;
+    vendor_end: EvcsVendorEnd;
+    place: string;
+    step: string;
+    step_since_ms: long;
+    session_state: string;
+    session_end_by: string;
+    session_end_reason: string;
+    session_end_at_ms: long;
+    actions: [string];
+    actions_why: string;
+    wait: bool;
+    done_place: string;
+    done_node: string;
+    urgent: bool;
+}
+
+/*
+    category    : Data Structure
+    usage       : transfer 없이 이 뱅크의 캐빈 · 문턱에 있는 로봇 — 그 뱅크는 새 transfer 를 받지 않는다
+    field
+        - robot_id : 로봇 id
+        - car_id   : 건물 맵 호기 id
+*/
+table EvcsAloneRobot {
+    robot_id: string (required);
+    car_id: string;
+}
+
+/*
+    category    : Data Structure
+    usage       : 이 뱅크의 호기 한 대 — 업체가 알려 준 지금 모습 (보이기만 한다). 모르는 필드는 빠진다
+    field
+        - car_id    : 건물 맵 호기 id
+        - level     : 지금 층 (건물 맵 층 id)
+        - direction : up · down · stop
+        - door      : open · closed · opening · closing
+        - mode      : normal · broken · check · parked · emergency · other
+        - at_ms     : 업체에게서 받은 때 (epoch ms) — 오래됐으면 흐리게
+        - calls     : 걸린 호출 — 업체가 주지 않으면 빠진다
+*/
+table EvcsCar {
+    car_id: string (required);
+    level: string;
+    direction: string;
+    door: string;
+    mode: string;
+    at_ms: long;
+    calls: EvcsCarCalls;
+}
+
+/*
+    category    : Data Structure
+    usage       : 현대 MIRI 접속
+    field
+        - base_url   : API 주소
+        - api_key    : 비밀값
+        - api_secret : 비밀값
+*/
+table EvcsMiriSettings {
+    base_url: string;
+    api_key: string;
+    api_secret: string;
+}
+
+/*
+    category    : Data Structure
+    usage       : U&S 관제플랫폼 접속
+    field
+        - base_url        : API 주소
+        - organization_id : 기관 id
+        - elevator_type   : TK · FU
+        - robot_type      : HTR · LTR
+        - client_id       : 클라이언트 id
+        - client_secret   : 비밀값
+*/
+table EvcsUnsSettings {
+    base_url: string;
+    organization_id: string;
+    elevator_type: string;
+    robot_type: string;
+    client_id: string;
+    client_secret: string;
+}
+
+/*
+    category    : Data Structure
+    usage       : 업체 접속 (건물 맵 banks[].vendor 가 쓰는 업체만)
+    field
+        - miri : EvcsMiriSettings
+        - uns  : EvcsUnsSettings
+*/
+table EvcsVendors {
+    miri: EvcsMiriSettings;
+    uns: EvcsUnsSettings;
+}
+
+/*
+    category    : Data Structure
+    usage       : 운행 설정
+    field
+        - vendors : 업체 접속
+        - robots  : 등록 로봇 id — 있으면 이 로봇만 받는다. [] 이면 아무도, 필드가 없으면(옛 ACS) 모두
+*/
+table EvcsSettings {
+    vendors: EvcsVendors;
+    robots: [string];
+}
+
+/*
+    category    : Data Structure
+    usage       : 층 하나의 토포
+    field
+        - level    : 건물 맵 층 id
+        - topology : topology.json 파일 내용 그대로 — sha256 이 건물 맵과 맞아야 한다
+*/
+table EvcsFloorMap {
+    level: string;
+    topology: string;
+}
+
+/*
+    category    : Data Structure
+    usage       : configure 수락 응답의 data
+    field
+        - map_hash : 이 묶음 전체(건물 맵 · 층 맵 · 설정)의 해시. 진행 중 이동이 끝나면 다시 떠서 적용한다 — EvcsConfigStatus.map_hash 로 본다
+*/
+table EvcsConfigureData {
+    map_hash: string;
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------       Bank (뱅크 창구)        --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : building/{building}/evcs/{bank}/cmd/transfer
+    usage       : 출발 자리(B)에 와 있는 로봇을 to_level 의 도착 자리(C)로 옮긴다 — 지금 태울 수 없으면 거절한다 (대기열 없음)
+    field       :
+        - transfer_id : ACS 가 붙인다 — 같은 id 로 다시 보내면 같은 답
+        - robot_id    : 로봇 id
+        - from_level  : 로봇이 지금 B 에 있는 층
+        - to_level    : 도착 층
+        - ok · error · data : 응답 (data = EvcsTransferData)
+*/
+table RequestEvcsTransfer {
+    transfer_id: string (required);
+    robot_id: string (required);
+    from_level: string (required);
+    to_level: string (required);
+}
+table ResponseEvcsTransfer {
+    ok: bool;
+    error: EvcsError;
+    data: EvcsTransferData;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : building/{building}/evcs/{bank}/cmd/cancel
+    usage       : transfer 를 멈춘다 · 끝낸다. transfer_id 와 robot_id 중 하나만
+    field       :
+        - transfer_id : 그 이동을 멈춘다 · 끝낸다
+        - robot_id    : EvcsStatus.alone 의 로봇을 뺐다 — 뱅크 막음을 푼다
+        - force       : 로봇이 캐빈 · 문턱 밖임을 ACS 가 확인했다 — 세션을 닫는다
+        - reason      : "emergency" — 안전하게 끝낸다 (force 아님). 문턱이면 들어가거나 나와서, 캐빈이면 도착층에서
+        - ok · error · data : 응답 (data = EvcsEmpty)
+*/
+table RequestEvcsCancel {
+    transfer_id: string;
+    robot_id: string;
+    force: bool;
+    reason: string;
+}
+table ResponseEvcsCancel {
+    ok: bool;
+    error: EvcsError;
+    data: EvcsEmpty;
+}
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : building/{building}/evcs/{bank}/cmd/resume
+    usage       : 멈춘(stuck) transfer 를 잇는다
+    field       :
+        - transfer_id : 이을 transfer
+        - ok · error · data : 응답 (data = EvcsEmpty)
+*/
+table RequestEvcsResume {
+    transfer_id: string (required);
+}
+table ResponseEvcsResume {
+    ok: bool;
+    error: EvcsError;
+    data: EvcsEmpty;
+}
+
+/*
+    category    : PUB
+    response    : -
+    topic       : building/{building}/evcs/{bank}/evt/status
+    usage       : 뱅크의 지금 상태 통째로 (1초마다)
+    field       :
+        - transfers     : 진행 중 · 막 끝난 transfer
+        - alone         : transfer 없이 캐빈 · 문턱에 있는 로봇 — 나가면 빠진다
+        - accepting     : 지금 transfer 를 보내면 뱅크가 받는다 (로봇 조건은 transfer 답이 본다)
+        - reason        : accepting 이 거짓이면 왜 — vendor_offline · bank_full · robot_alone · applying
+        - vendor_events : 업체 실시간 알림 — "ok" | "quiet" (끊겨 조회로만 돈다 · 운행은 막지 않는다). 알림을 안 쓰는 업체는 늘 "ok"
+        - cars          : 이 뱅크의 호기들 — 쉬는 호기까지. 이동이 탄 호기는 transfers[].car_id 로 찾는다
+*/
+table EvcsStatus {
+    transfers: [EvcsTransfer];
+    alone: [EvcsAloneRobot];
+    accepting: bool;
+    reason: string;
+    vendor_events: string;
+    cars: [EvcsCar];
+}
+
+
+// -------------------------------------------------
+// -----------                              --------
+// -----------      Config (설정 창구)       --------
+// -----------                              --------
+// -------------------------------------------------
+
+/*
+    category    : RPC
+    response    : One-shot
+    topic       : building/{building}/evcs/config/cmd/configure
+    usage       : 설정 묶음을 통째로 넣는다 — 검사를 통과하면 저장하고 재기동해 적용한다. 비밀값에 "***" 를 넣으면 지금 값을 쓴다
+    field       :
+        - building_map : 건물 맵 JSON 문서 그대로
+        - floor_maps   : 건물 맵의 층 전부
+        - settings     : 운행 설정
+        - ok · error · data : 응답 (data = EvcsConfigureData, 거절이면 error.violations)
+*/
+table RequestEvcsConfigure {
+    building_map: string (required);
+    floor_maps: [EvcsFloorMap];
+    settings: EvcsSettings;
+}
+table ResponseEvcsConfigure {
+    ok: bool;
+    error: EvcsError;
+    data: EvcsConfigureData;
+}
+
+/*
+    category    : PUB
+    response    : -
+    topic       : building/{building}/evcs/config/evt/status
+    usage       : 지금 쓰는 설정 묶음 (1초마다)
+    field       :
+        - map_hash : 지금 쓰는 묶음의 해시 (configure 답과 같은 값). "" = 아직 설정이 없다 (뱅크 창구가 없다)
+*/
+table EvcsConfigStatus {
+    map_hash: string;
+}
+
+// flatc --jsonschema 가 파일을 내려면 하나가 필요하다 — 실제 루트는 key 마다 다르다 (위 key 표).
+root_type EvcsStatus;
