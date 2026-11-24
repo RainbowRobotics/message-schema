@@ -334,6 +334,13 @@ table Request_Move_Gcode {
                 // 0 : Off
                 // 1 : Ignore Unknown Code
 }
+
+// "call_gcode_list"
+table Request_Gcode_List {
+}
+table Response_Gcode_List {
+    filename: [string];
+}
 //---------------------------------------------------------------
 // Servo Move
 //---------------------------------------------------------------
