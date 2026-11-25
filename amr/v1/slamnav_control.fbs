@@ -145,13 +145,13 @@ table ResponseGetSafetyIo {
     topic       :       {robotType}/control/setSafetyIo
     usage       :
     field
-        - mcu0_din      :       MCU0 Digital Input (8bit)
-        - mcu1_din      :       MCU1 Digital Input (8bit)
+        - mcu0_dio      :       MCU0 Digital Output (8bit)
+        - mcu1_dio      :       MCU1 Digital Output (8bit)
 */
 table RequestSetSafetyIo {
     id: string;
-    mcu0_din: [bool];
-    mcu1_din: [bool];
+    mcu0_dio: [bool];
+    mcu1_dio: [bool];
 }
 table ResponseSetSafetyIo {
     id: string;
@@ -544,5 +544,3 @@ table ResultControlDock {
     err_y: double;
     err_yaw_deg: double;
 }
-
-
