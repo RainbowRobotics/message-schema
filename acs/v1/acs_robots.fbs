@@ -7,9 +7,17 @@ table Pose {
     y: float = null;
     rz: float = null;
 }
+/*
+    Param : 이름·값 한 쌍입니다. 실행 변수(RequestExecutionRun.params)와 로봇 이벤트(RobotEvent.params)가 함께 씁니다.
+        - key   : 이름
+        - value : 값 (글자로 담습니다)
+        - type  : 값의 형식 ("string" · "number" · "boolean" · "json"). 비어 있으면 "string"으로 봅니다.
+                  끝에 더한 칸이라 type을 모르는 기존 송수신은 그대로 동작합니다.
+*/
 table Param {
     key: string;
     value: string;
+    type: string;
 }
 
 /*
